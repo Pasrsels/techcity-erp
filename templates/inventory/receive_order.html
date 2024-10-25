@@ -80,8 +80,8 @@
             {% for item in orders %}
             <tr>
                 <span class="d-none" id="rq_{{ item.id }}">{{ item.received_quantity }}</span>
-                <td id="name_{{ item.id }}">{{ item.product.name }}</td>
-                <td>{{ item.product.description }}</td>
+                <td id="name_{{ item.id }}" style="background: #ebeced;">{{ item.product.name }}</td>
+                <td style="background: #ebeced;">{{ item.product.description }}</td>
                 <td id="purchased_quantity_{{ item.id }}">{{ item.quantity }}</td>
                 <td id="q_{{ item.id }}" d>
                     {% if item.received %}
