@@ -151,7 +151,6 @@ def product_list(request):
         'price': item['price'],
         'quantity': item['quantity'],
     } for item in inventory_data]
-
     return JsonResponse(merged_data, safe=False)
 
 @login_required

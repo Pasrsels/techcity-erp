@@ -539,6 +539,7 @@ const receipt = () =>{
     const depositedAmount = document.getElementById('id_deposited');
     const period = document.getElementById('id_period')
     const availableBalance = document.getElementById('availableBalance')
+    const availableBal = document.getElementById('availableBal')
     const previousDue = document.getElementById('previous_due')
     const termsButtons = document.querySelectorAll('.btn');
 
@@ -569,6 +570,7 @@ const receipt = () =>{
        
         // availabe balance 
         availableBalance.textContent = parseFloat(value) - amountDue || 0;
+        availableBal.textContent = parseFloat(value) - amountDue || 0;
         
     })
 
