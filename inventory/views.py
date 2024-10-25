@@ -492,6 +492,7 @@ def inventory_detail(request, id):
 
     inventory = Inventory.objects.get(id=id, branch=request.user.branch)
     logs = ActivityLog.objects.filter(inventory=inventory, branch=request.user.branch).order_by('-timestamp')
+    purchase_order_items = PurchaseOrderItem.objects.all()
 
     sales_data = {}
     stock_in_data = {}
@@ -525,6 +526,7 @@ def inventory_detail(request, id):
     return render(request, 'inventory/inventory_detail.html', {
         'inventory': inventory,
         'logs': logs,
+        'items':purchase_order_items,
         'sales_data': list(sales_data.values()), 
         'stock_in_data': list(stock_in_data.values()),
         'transfer_data': list(transfer_data.values()),

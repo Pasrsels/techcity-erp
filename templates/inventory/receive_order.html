@@ -101,9 +101,9 @@
                             )">
                     {% endif %}
                 </td>
-                <td id="unit_cost">{{ item.unit_cost }}</td>
-                <td id="difference_{{ item.id }}"></td>
-                <td id="actual_unit_cost">{{ item.actual_unit_cost }}</td>
+                <td id="unit_cost" class="text-danger">{{ item.unit_cost }}</td>
+                <td id="difference_{{ item.id }}" class="text-danger"></td>
+                <td id="actual_unit_cost" class="text-danger">{{ item.actual_unit_cost }}</td>
                 <td id="dSp_{{ item.id }}">
                     {% if not item.received %}
                     {% if request.user.role == 'admin' or request.user.role == 'owner' %}
@@ -176,8 +176,6 @@
 
     $('#order_items_table').DataTable({
         paging: false,
-        scrollY: '300px',
-        scrollCollapse: true
     });
 
     document.addEventListener('DOMContentLoaded', function () {

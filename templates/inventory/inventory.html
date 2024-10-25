@@ -139,7 +139,9 @@
 
    </div>  
 <script>
-    new DataTable('#inventory');
+    new DataTable('#inventory', {
+        paging: false,
+    });
     new DataTable('#serviceTable');
     const category = document.querySelector('#id_category');
     const serviceFormButton = document.getElementById('sfBtn');
