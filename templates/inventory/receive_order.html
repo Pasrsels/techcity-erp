@@ -174,8 +174,9 @@
     let dealerExpectedProfitAmnt = 0;
     let editStatus = false;
 
-    new DataTable('#order_items_table', {
-        paging: false, 
+    $('#order_items_table').DataTable({
+        paging: false,
+        scrollY: '300px',
         scrollCollapse: true
     });
 
