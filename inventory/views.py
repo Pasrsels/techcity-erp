@@ -2079,7 +2079,7 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
 
             # adjust quantity
             if inventory.quantity < quantity:
-                quantity_adjustment = inventory.quantity - quantity
+                quantity_adjustment = quantity - inventory.quantity 
                 inventory.quantity -= quantity_adjustment
                 action = 'purchase edit +'
             else:
