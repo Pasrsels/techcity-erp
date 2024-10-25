@@ -2236,7 +2236,8 @@ def cashbook_view(request):
     
     balance_bf = 0 
     
-    previous_entries = Cashbook.objects.filter(issue_date__lt=start_date)
+    previous_entries = Cashbook.objects.filter(issue_date__lt=start_date, branch=request.user.branch)
+
     previous_debit = previous_entries.filter(debit=True).aggregate(Sum('amount'))['amount__sum'] or 0
     previous_credit = previous_entries.filter(credit=True).aggregate(Sum('amount'))['amount__sum'] or 0
     balance_bf = previous_debit - previous_credit

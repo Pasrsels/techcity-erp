@@ -491,7 +491,7 @@ def edit_inventory(request, product_name):
 def inventory_detail(request, id):
 
     inventory = Inventory.objects.get(id=id, branch=request.user.branch)
-    logs = ActivityLog.objects.filter(inventory=inventory, branch=request.user.branch)
+    logs = ActivityLog.objects.filter(inventory=inventory, branch=request.user.branch).order_by('-timestamp')
 
     sales_data = {}
     stock_in_data = {}
@@ -2078,14 +2078,14 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
             quantity_adjustment = 0
 
             # adjust quantity
-            if inventory.quantity > quantity:
+            if inventory.quantity < quantity:
                 quantity_adjustment = inventory.quantity - quantity
                 inventory.quantity -= quantity_adjustment
-                action = 'purchase edit -'
-            else:
-                quantity_adjustment = quantity - inventory.quantity
-                inventory.quantity += quantity_adjustment
                 action = 'purchase edit +'
+            else:
+                quantity_adjustment = inventory.quantity - quantity 
+                inventory.quantity += quantity_adjustment
+                action = 'purchase edit -'
 
             inventory.price = selling_price
             inventory.dealer_price = dealer_price

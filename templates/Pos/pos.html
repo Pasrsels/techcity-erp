@@ -509,16 +509,10 @@ function handlePaymentMethodClick(selectedButton) {
 
 const paymentMethodButtons = document.querySelectorAll(".payment-method button");
 
-function toggleActiveButton(selectedButton) {
-    paymentMethodButtons.forEach(button => {
-        button.classList.remove("active");
-    });
-    selectedButton.classList.add("active");
-}
-
 paymentMethodButtons.forEach(button => {
     button.addEventListener("click", function () {
-        toggleActiveButton(button);
+        paymentMethodButtons.forEach(btn => btn.classList.remove("active"));
+        this.classList.add("active");
         if (button.dataset.name === 'cash') { 
             paymentMethod = button.dataset.name;
         } else if (button.dataset.name === 'ecocash'){
@@ -562,7 +556,6 @@ const receipt = () =>{
         depositedAmount.textContent = value;
 
         const amountDue = parseFloat(previousDue.textContent.split(' ')[1]);
-        console.log((parseFloat(sub) + parseFloat(vatAmount)) + amountDue - value)
        
         // availabe balance 
         availableBalance.textContent = parseFloat(value) - amountDue || 0;
@@ -585,8 +578,8 @@ const receipt = () =>{
 
     
     const displayDueDates = (period) => {
-        const dueDates = calculateNextDueDate(period); // Get due dates
-        const paymentDateElement = document.getElementById('payment_date'); // Get the <p> element
+        const dueDates = calculateNextDueDate(period);
+        const paymentDateElement = document.getElementById('payment_date');
 
         let dateFields = ''; 
 
