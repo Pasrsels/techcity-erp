@@ -101,9 +101,9 @@
                             )">
                     {% endif %}
                 </td>
-                <td id="unit_cost" class="text-danger">{{ item.unit_cost }}</td>
-                <td id="difference_{{ item.id }}" class="text-danger"></td>
-                <td id="actual_unit_cost" class="text-danger fw-bold">{{ item.actual_unit_cost }}</td>
+                <td id="unit_cost" style="background: #ebeced;">{{ item.unit_cost }}</td>
+                <td id="difference_{{ item.id }}" style="background: #ebeced;"></td>
+                <td id="actual_unit_cost" class="fw-bold" style="background: #ebeced;">{{ item.actual_unit_cost }}</td>
                 <td id="dSp_{{ item.id }}">
                     {% if not item.received %}
                     {% if request.user.role == 'admin' or request.user.role == 'owner' %}
