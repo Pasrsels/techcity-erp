@@ -2,14 +2,12 @@
   "ExpandedNodes": [
     "",
     "\\inventory\\filters",
-    "\\static\\css",
-    "\\static\\css\\bootstrap",
-    "\\static\\css\\bootstrap\\css",
+    "\\techcity",
     "\\templates",
     "\\templates\\finance",
     "\\templates\\finance\\customers",
     "\\templates\\inventory"
   ],
-  "SelectedNode": "\\templates\\finance\\customers\\account_statement.html",
+  "SelectedNode": "\\techcity\\settings.py",
   "PreviewInSolutionExplorer": false
 }
