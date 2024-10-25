@@ -439,10 +439,20 @@ function calculateBalance() {
 
     if (paymentTerm === 'cash') {
         balance = amountPaid - total; 
+
+        if (balance < 0) {
+            balance = 0
+        }
+
         balanceLabel.textContent = 'Change';
         balanceDueElement.textContent = Math.abs(balance).toFixed(2);
     } else {
         balance = total - amountPaid; 
+
+        if (balance < 0) {
+            balance = 0
+        }
+
         balanceLabel.textContent = 'Amount Due';
         balanceDueElement.textContent = balance.toFixed(2);
     }

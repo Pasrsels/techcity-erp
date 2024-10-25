@@ -121,6 +121,10 @@
         height: 30px;
         font-size: 12px;
     }
+
+    td{
+        text-align:right !important;
+    }
     </style>
 <div class="receipt-el">
     <div class="receipt">
@@ -149,7 +153,7 @@
         </div>
         <!-- Payment Details -->
         <div class="payment-detail mt-2 d-none">
-          
+
             <div class="side">
                 <p class="payment-method">
                     <span class="fw-bold">Payment:</span>
@@ -165,7 +169,6 @@
                     <button class="btn btn-outline-dark btn-sm btn-terms border text-muted" id="Installment">Monthly Installment</button>
                 </p>
             </div>
-
         </div>
 
         <hr>
@@ -180,9 +183,10 @@
                 </p>
             </div>
             <div>
-                <p><strong>Previous bal:</strong>
-                   <span class="text-primary" style="cursor:pointer;" onclick="customerAccount()" id="id_last_invoice"></span>
-                    <span id="previous_due" class="prv_due text-danger"></span
+                <p>
+                    <strong>Previous bal:</strong>
+                    <span class="text-primary" style="cursor:pointer;" onclick="customerAccount()" id="id_last_invoice"></span>
+                    <span id="previous_due" class="prv_due text-danger"></span>
                 </p>
                 <p><strong>Available bal:</strong> <span id="availableBalance">0.00</span></p>
             </div>
@@ -203,12 +207,11 @@
             </thead>
             <tbody id="receiptTable"></tbody>
         </table>
-
+        <p class="d-flex justify-content-end"><strong>Subtotal:</strong> <span id="id_subtotal"></span></p>
         <hr>
 
         <!-- Totals -->
         <div class="totals">
-            <p><strong>Subtotal:</strong> <span id="id_subtotal"></span></p>
             <p><strong>VAT 15%:</strong> <span id="id_vat"></span></p>
             <p class="d-none"><strong>Previous Due</strong> <span id="tpreviousDue"></span></p>
             <p><strong>Total:</strong> <span id='total_balance_due'></span></p>
@@ -247,7 +250,7 @@
         <div class="paylater">
             <h4>Pay later terms</h4>
             <p>
-                <strong>Date:</strong> 
+                <strong>Date:</strong>
                 <input type="date" id="paylater_date">
             </p>
         </div>
