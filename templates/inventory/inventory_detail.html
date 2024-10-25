@@ -2,6 +2,11 @@
 {% load static%}
 {% block title%} Inventory {% endblock%}
 {% block content %}
+<style>
+    .table-responsive {
+        overflow-x: auto;
+    }
+</style>
    <div class="inventory">
         <div class="inventory-navbar">
             <nav class="d-flex justify-content-between align-items-center bg-dark text-light rounded mb-2 p-2">
@@ -23,8 +28,8 @@
                 <canvas id="inventoryChart"></canvas>
             </div>
 
-            <div class="table-detail mt-2 w-100 atable">
-                <table class='table border rounded display p-2' style="width:100%" id='detailTable'>
+            <div class="table-detail mt-2 w-100 atable table-responsive">
+                <table class='table border rounded display p-2 table-bordered table-responsive' style="width:100%" id='detailTable'>
                     <thead class='bg-primary'>
                         <tr>
                             <th>Date</th>
@@ -56,8 +61,8 @@
                                     {% if log.description %}({{ log.description }}){% endif %}
                                 </small>
                             </td>
-                            <td>{{ log.inventory.dealer_price }}</td>
-                            <td>{{ log.inventory.price }}</td>
+                            <td><small>{{ log.dealer_price }}</small></td>
+                            <td><small>{{ log.selling_price }}</small></td>
                             <td>
                                 <small>
                                     {% if log.action == 'stock in' or log.action == 'Update' or log.action == 'sale cancelled' or log.action == 'Stock in' or log.action == 'purchase edit +' %}
@@ -106,7 +111,9 @@
 
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>  
 <script>
-    new DataTable('#detailTable')
+    new DataTable('#detailTable', {
+        paging: false,
+    })
     
     const chart = $('.charts')
     const table = $('.atable')

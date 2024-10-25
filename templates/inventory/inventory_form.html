@@ -40,7 +40,15 @@
                 </label> 
                 <input type="number" name="price" value={{product.price}} step="0.01" class="numberinput form-control" required id="id_price">
                 <p id="price_error" class="fs-6 text-danger"></p>
-            </div> 
+            </div>
+            <div id="div_id_dealer_price" class="mb-3">
+                <label for="id_dealer_price" class="form-label requiredField">
+                    Wholesale Price
+                    <span class="asteriskField">*</span>
+                </label>
+                <input type="number" name="dealer_price" value={{product.dealer_price}} step="0.01" class="numberinput form-control" required id="id_dealer_price">
+                <p id="price_error" class="fs-6 text-danger"></p>
+            </div>
             <div id="div_id_quantity" class="mb-3"> 
                 <label for="id_quantity" class="form-label requiredField">
                     Quantity

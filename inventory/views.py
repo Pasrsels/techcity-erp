@@ -461,26 +461,30 @@ def edit_inventory(request, product_name):
             
         product.save()
         
-        quantity = int(request.POST['quantity'])
+      
+        selling_price = Decimal(request.POST['price'])
+        dealer_price = Decimal(request.POST['dealer_price'])
         
         # think through
-        inv_product.quantity = quantity
+        quantity = inv_product.quantity
              
         inv_product.price = Decimal(request.POST['price'])
         inv_product.cost = Decimal(request.POST['cost'])
         # inv_product.dealer_price = Decimal(request.POST['dealer_price'])
         inv_product.stock_level_threshold = request.POST['min_stock_level']
-        inv_product.dealer_price = inv_product.dealer_price
+        inv_product.dealer_price = dealer_price
         
         inv_product.save()
         
         ActivityLog.objects.create(
             branch = request.user.branch,
             user=request.user,
-            action= 'Edit' if quantity > 0 else 'removed',
+            action= 'Edit',
             inventory=inv_product,
             quantity=quantity,
             total_quantity=inv_product.quantity,
+            dealer_price = dealer_price,
+            selling_price = selling_price
         )
         
         messages.success(request, f'{product.name} update succesfully')
@@ -2104,7 +2108,9 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
                 quantity=quantity_adjustment,
                 system_quantity = system_quantity,
                 description=f'Stock adjustment ({po_item.purchase_order.batch})',
-                total_quantity=inventory.quantity
+                total_quantity=inventory.quantity,
+                dealer_price = dealer_price,
+                selling_price = selling_price
             )
 
         except Inventory.DoesNotExist:

@@ -293,6 +293,8 @@ class ActivityLog(models.Model):
     action = models.CharField(max_length=20, choices=ACTION_CHOICES)
     quantity = models.IntegerField()
     total_quantity = models.IntegerField()
+    dealer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     system_quantity = models.IntegerField(default=0)
     timestamp = models.DateTimeField(auto_now_add=True)
     description = models.CharField(max_length=255, null=True)
