@@ -31,6 +31,17 @@
         text-align: left;
     }
 
+    th {
+        position: sticky;
+        top: 0;
+        background: white; 
+        z-index: 10; 
+    }
+
+    table {
+        width: 100%;
+    }
+
 
     table {
         width: 100%;
@@ -56,6 +67,7 @@
                 <th>Ordered Quantity</th>
                 <th>Enter Quantity</th>
                 <th>Supplier Cost/unit</th>
+                <th>Expense Cost</th>
                 <th>Landing Cost</th>
                 <th>Enter Wholesale Price</th>
                 <th>Enter Retail Price</th>
@@ -68,7 +80,7 @@
             {% for item in orders %}
             <tr>
                 <span class="d-none" id="rq_{{ item.id }}">{{ item.received_quantity }}</span>
-                <td>{{ item.product.name }}</td>
+                <td id="name_{{ item.id }}">{{ item.product.name }}</td>
                 <td>{{ item.product.description }}</td>
                 <td id="purchased_quantity_{{ item.id }}">{{ item.quantity }}</td>
                 <td id="q_{{ item.id }}" d>
@@ -89,8 +101,9 @@
                             )">
                     {% endif %}
                 </td>
-                <td>{{ item.unit_cost }}</td>
-                <td>{{ item.actual_unit_cost }}</td>
+                <td id="unit_cost">{{ item.unit_cost }}</td>
+                <td id="difference_{{ item.id }}"></td>
+                <td id="actual_unit_cost">{{ item.actual_unit_cost }}</td>
                 <td id="dSp_{{ item.id }}">
                     {% if not item.received %}
                     {% if request.user.role == 'admin' or request.user.role == 'owner' %}
@@ -168,7 +181,22 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         expectedProfitOnLoad();
+        calculateCostDifference();
     });
+
+    function calculateCostDifference() {
+        {% for item in orders %}
+            const actualUnitCost_{{ item.id }} = parseFloat("{{ item.actual_unit_cost }}");
+            const unitCost_{{ item.id }} = parseFloat("{{ item.unit_cost }}");
+            const differenceField_{{ item.id }} = document.querySelector(`#difference_{{ item.id }}`);
+
+            if (differenceField_{{ item.id }}) {
+                const difference = actualUnitCost_{{ item.id }} - unitCost_{{ item.id }};
+                differenceField_{{ item.id }}.textContent = difference.toFixed(2) || 0.00;
+            }
+        {% endfor %}
+    }
+
 
     function expectedProfitOnLoad() {
 
@@ -305,6 +333,7 @@
 
         const itemData = {
             id: itemId,
+            name: document.getElementById(`name_${itemId}`).textContent,
             edit: editStatus,
             quantity: parseInt(quantity),
             selling_price: parseFloat(sellingPrice),
@@ -323,7 +352,6 @@
         })
             .then(response => response.json())
             .then(data => {
-                console.log(data)
                 if (data.success) {
                     // Update the row with the new values
                     document.getElementById(`quantity_${itemId}`)?.replaceWith(`${itemData.quantity}`);

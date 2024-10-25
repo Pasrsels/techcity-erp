@@ -31,6 +31,8 @@
                             <th>By (user)</th>
                             <th>Refence</th>
                             <th>Type</th>
+                            <th>Selling Price</th>
+                            <th>Dealer Price</th>
                             <th>Trans Qnty</th>
                             <th>System Qnty</th>
                             <th>Qnty At Hand</th>
@@ -54,6 +56,7 @@
                                     {% if log.description %}({{ log.description }}){% endif %}
                                 </small>
                             </td>
+                            <td>{{ log.purchase_order }}</td>
                             <td>
                                 <small>
                                     {% if log.action == 'stock in' or log.action == 'Update' or log.action == 'sale cancelled' or log.action == 'Stock in' or log.action == 'purchase edit +' %}

@@ -1999,9 +1999,10 @@ def process_received_order(request):
             return JsonResponse({'success': False, 'message': f'Product with ID: {order_item.product.id} does not exist'}, status=404)
 
         system_quantity = 0 # if new product
+        logger.info(f'')
         try:
             inventory = Inventory.objects.get(product=product, branch=request.user.branch)
-           
+          
             system_quantity = inventory.quantity
             # Update existing inventory
             inventory.cost = cost
