@@ -247,6 +247,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
                 
                 for item in data['cart']:
+                    logger.info(f'product name is {item['product']}')
                     product = Product.objects.get(name=item['product'])
                     logger.info(f'Transfered product: {product.name}')
     
