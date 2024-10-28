@@ -130,8 +130,8 @@ SESSION_AUTH = True
 
 DATABASES = {
    #'default': {
-   #    'ENGINE': 'django.db.backends.postgresql',
-   #     'NAME':  'techcoty',
+    #   'ENGINE': 'django.db.backends.postgresql',
+    #    'NAME':  'techcoty',
    #     'USER': 'postgres',
    #     'PASSWORD': 'neverfail',
    #      'HOST': 'localhost',

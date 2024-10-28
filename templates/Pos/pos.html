@@ -265,7 +265,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="customerAccountTableModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <!--<div class="modal fade" id="customerAccountTableModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
@@ -273,7 +273,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div>-->
 
     <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
@@ -363,7 +363,7 @@ const layby_dates = []
 
 let error = document.querySelector('#error_message');
 
-let customerAccountTableModal = new bootstrap.Modal(document.getElementById('customerAccountTableModal'))
+//let customerAccountTableModal = new bootstrap.Modal(document.getElementById('customerAccountTableModal'))
 
 const currencySelect = document.querySelector('#currency')
 const endOfDayModal = new bootstrap.Modal(document.getElementById('endOfDayModal'));
@@ -545,8 +545,6 @@ const receipt = () =>{
 
     let value;
     let amountDue = previousDue.textContent.split('')[0];
-
-    console.log(previousDue.textContent, amountDue, 'here')
     // default if they is previous due
     
 
@@ -639,7 +637,6 @@ $(document).ready(function() {
     )
     .on('change', function (e){
         clientName = $(this).val()
-        console.log(clientName)
         fetchCustomerAccount(clientName)
         getLastInvoiceNumber(clientName)
     })
@@ -683,7 +680,6 @@ currencySelect.addEventListener(
             data: data,
             }).done(function(response) {
                 const data = response
-                console.log(data)
                 currencyData = []
                 currencyData.push(data)
         })
@@ -865,7 +861,6 @@ function displayProducts(products) {
 
 // Cart 
 async function fetchProductData (product){
-    console.log(initialCurrencyValue)
     if(initialCurrencyValue){
         const id = product.dataset.product
 
@@ -878,7 +873,6 @@ async function fetchProductData (product){
                 throw new Error('Network response was not ok.');
             }
             const product = await response.json();
-            console.log('product', product)
             addItem(product);
             addedToCartProduct = [];
             addedToCartProduct.push(product);
@@ -950,11 +944,10 @@ function totals(){
 
     }else{
         totalAmount = totalAmount - discount
-        console.log(totalAmount)
+        
         discountAmount = calculateTotalAmount(cart) - totalAmount
         vatAmount = totalAmount * 0.15
         payable = totalAmount + vatAmount + delivery;
-        console.log(totalAmount, vatAmount,  delivery, payable)
         
         vat_amount = vatAmount
         payable_amount = payable
@@ -1087,8 +1080,6 @@ async function processCart(el) {
 
     const amountReceived = document.getElementById('id_amount_paid');
 
-    console.log(paymentTerms, Number((amountReceived.value)))
-
     if (!holdStatus) {
         if (Number((amountReceived.value) <= 0) && (paymentTerms === 'cash')) {
             Swal.fire({
@@ -1136,8 +1127,6 @@ async function processCart(el) {
         });
 
         const result = await response.json();
-
-        console.log(result)
 
         if (result.success) {
             cart = [];
@@ -1206,11 +1195,7 @@ async function displayReceipt(invoiceId) {
             payment_terms: payment_terms
         } = invoice;
 
-        console.log(data);
-
-        let prvDue = parseFloat(document.getElementById('tpreviousDue').textContent.split(' ')[1]);
-
-        console.log(prvDue)
+        let prvDue = parseFloat(document.getElementById('tpreviousDue').textContent.split('')[1]);
 
         document.getElementById('rcp-payment')
         document.getElementById('rcp-pterms').textContent = payment_terms;
@@ -1281,7 +1266,7 @@ async function displayReceipt(invoiceId) {
             timer: 2000,
             showConfirmButton: false
         }).then(()=>{
-            loaderModal.hide();
+            //loaderModal.hide();
             receiptModal.show();
         })
 
@@ -1446,10 +1431,8 @@ function setCustomer(customerId){
         }
         const lastInvoice = await response.json();
 
-            console.log('last invoice number', lastInvoice)
-
         // set the last invoice
-        document.getElementById('id_last_invoice').textContent = lastInvoice[0].invoice_number;
+        //document.getElementById('id_last_invoice').textContent = lastInvoice[0].invoice_number;
 
         } catch (error) {
             console.error('Error fetching Last Invoice Number:', error);
@@ -1464,14 +1447,13 @@ function setCustomer(customerId){
             data: { 'type': 'invoice_payments', 'customer_id': 1 },
         }).done(function (response) {
             const data = response
-            console.log(data)
-            displaypaymentsTable(data)
+            //displaypaymentsTable(data)
         })
     }
 
   
     function displaypaymentsTable(data) {
-        customerAccountTableModal.show()
+        //customerAccountTableModal.show()
         customerAccountTable.innerHTML = '';
         data.forEach((d) => {
             customerAccountTable.innerHTML += `

@@ -244,12 +244,15 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                     user = request.user,
                     transfer_ref = Transfer.generate_transfer_ref(request.user.branch.name, branch_to.name)
                 )
+
+                product = Product.objects.get(name=item['product'])
+
                 
                 for item in data['cart']:
     
                     transfer_item = TransferItems(
                         transfer=transfer,
-                        product= Product.objects.get(name=item['product']),
+                        product= product,
                         price=item['price'],
                         quantity=item['quantity'],
                         from_branch= request.user.branch,
@@ -257,6 +260,8 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                     )   
                     transfer.save()         
                     transfer_item.save()
+
+                    logger.info(f'Transfered product: {product.name}')
                     
                     self.deduct_inventory(transfer_item)
                     self.transfer_update_quantity(transfer_item, transfer)  
