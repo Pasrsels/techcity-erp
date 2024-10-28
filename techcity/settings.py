@@ -129,22 +129,22 @@ SESSION_AUTH = True
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-   #'default': {
-   #    'ENGINE': 'django.db.backends.postgresql',
-   #     'NAME':  'techcoty',
-   #     'USER': 'postgres',
-   #     'PASSWORD': 'neverfail',
-   #      'HOST': 'localhost',
-   #     'PORT': '5432'
+    #'default': {
+    #    'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME':  'techcoty',
+    #     'USER': 'postgres',
+    #     'PASSWORD': 'neverfail',
+    #     'HOST': 'localhost',
+    #     'PORT': '5432'
    #}
    'default': {
-      'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+       'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
         'NAME': os.getenv('DB_NAME', 'railway'),
         'USER': os.getenv('DB_USERNAME', 'postgres'),
         'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvDuHLnxhw'),  
         'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
-       'PORT': os.getenv('DB_PORT', '26269'),
-   }
+        'PORT': os.getenv('DB_PORT', '26269'),
+    }
 }
 
 if 'test' in sys.argv:
@@ -271,3 +271,32 @@ EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
 EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 25)) 
 EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
+TWILIO_WHATSAPP_NUMBER = os.getenv('TWILIO_WHATSAPP_NUMBER')
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
+AWS_S3_FILE_OVERWRITE = False 
+
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+"""System APPs Settings"""
+
+# Inventory
+LOW_STOCK_THRESHHOLD =  6
+INVENTORY_EMAIL_NOTIFICATIONS_STATUS = True
+
+# system email 
+SYSTEM_EMAIL = 'system@techcity.co.zw'
+
