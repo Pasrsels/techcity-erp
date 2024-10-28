@@ -206,6 +206,7 @@ class Transfer(models.Model):
     quantity =  models.IntegerField(default=0, null=True)
     total_quantity_track = models.IntegerField(default=0, null=True)
     defective_status = models.BooleanField(default=False)
+    delete = models.BooleanField(default=False, null=True)
     
     @classmethod
     def generate_transfer_ref(self, branch, destination_branch):
@@ -235,6 +236,7 @@ class TransferItems(models.Model):
     quantity = models.IntegerField()
     over_less_quantity = models.IntegerField(null=True, default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    dealer_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     received = models.BooleanField(default=False)
     declined = models.BooleanField(default=False) 
     over_less = models.BooleanField(default=False)

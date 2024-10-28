@@ -47,9 +47,10 @@
                     <td class='transfer-btn' data-id={{ transfer.id }}><small>{{ transfer.transfer_to }}</small></td>
                     <td class='transfer-btn' data-id={{ transfer.id }}><small>{{ transfer.user.username }}</small></td>
                     <td class='transfer-btn' data-id={{ transfer.id }}>
-                        <a href='{% url "inventory:print_transfer" transfer.id %}' class='btn btn-sm'>
+                        <a href='{% url "inventory:print_transfer" transfer.id %}' class='btn border btn-sm'>
                             <i class='bx bx-printer text-light'></i>
                         </a>
+                        <button onclick="cancel({{ transfer.id }})" class="btn  text-light border bx bx-trash"></button>
                     </td>
                 </tr>
                 <tbody  class='bg-primary'>
@@ -164,6 +165,41 @@
             }
         })
     })
+
+    const cancel = (transferId) => {
+        Swal.fire({
+            title: 'Processing...',
+            text: 'Please wait while we processing cancelling the transfer.',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading()
+            }
+        });
+        fetch(`/inventory/delete/transfer/${transferId}/`, {
+            method: "GET",
+        })
+        .then(response => response.json())
+        .then(data => {
+                Swal.close(); 
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Product(s) Cancelled Successfully',
+                showConfirmButton: false,
+                timer: 1500
+            });
+                cart = [];
+                updateCartDisplay();
+                setTimeout(() => {
+                    window.location.href = '{% url "inventory:transfers" %}';
+                }, 1500);
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                Swal.close();
+            });
+    }
 
 </script>
 {% endblock content %}

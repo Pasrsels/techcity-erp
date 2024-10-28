@@ -255,6 +255,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                         transfer=transfer,
                         product= product,
                         price=item['price'],
+                        dealer_price = item['dealer_price'],
                         quantity=item['quantity'],
                         from_branch= request.user.branch,
                         to_branch= transfer.transfer_to,
@@ -287,14 +288,18 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         transfer.quantity += transfer_item.quantity
         transfer.save()
        
-    def activity_log(self,  action, inventory, transfer_item,):
+    def activity_log(self,  action, inventory, transfer_item):
+        logger.info(f'selling_price transfered {transfer_item.dealer_price}: {transfer_item.price}')
         ActivityLog.objects.create(
             invoice = None,
             product_transfer = transfer_item,
             branch = self.request.user.branch,
             user=self.request.user,
             action= action,
+            dealer_price = transfer_item.dealer_price,
+            selling_price = transfer_item.price,
             inventory=inventory,
+            system_quantity = inventory.quantity,
             quantity=transfer_item.quantity,
             total_quantity=inventory.quantity
         )
@@ -303,7 +308,31 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 def delete_transfer(request, transfer_id):
     transfer = get_object_or_404(Transfer, id=transfer_id)
 
-    transfer.delete()
+    transfer_items = TransferItems.objects.filter(transfer=transfer)
+
+    for item in transfer_items:
+        logger.info(f'From branch {item.from_branch}')
+
+        product = Inventory.objects.get(branch=item.from_branch, product=item.product)
+        product.quantity += item.quantity
+
+        logger.info(f'returned product {product}')
+
+        ActivityLog.objects.create(
+            invoice = None,
+            product_transfer = item,
+            branch = request.user.branch,
+            user=request.user,
+            action= 'delete',
+            inventory=product,
+            selling_price = item.price, 
+            dealer_price = item.dealer_price,
+            quantity=item.quantity,
+            total_quantity=product.quantity,
+            description = 'Transfer cancelled'
+        )
+    transfer.delete = True
+    transfer.save()
     
     return JsonResponse({'success':True})
         
@@ -549,7 +578,7 @@ def inventory_transfers(request):
     q = request.GET.get('q', '') 
     branch_id = request.GET.get('branch', '')
 
-    transfers = Transfer.objects.filter(branch=request.user.branch).order_by('-time')
+    transfers = Transfer.objects.filter(branch=request.user.branch, delete=False).order_by('-time')
     transfer_items = TransferItems.objects.all()
     
     if q:
@@ -628,6 +657,9 @@ def receive_inventory(request):
                         user=request.user,
                         action= 'stock in',
                         inventory=existing_inventory,
+                        dealer_price = existing_inventory.price,
+                        selling_price = existing_inventory.dealer_price or 0,
+                        system_quantity = existing_inventory.quantity, 
                         quantity=int(request.POST['quantity']),
                         total_quantity= existing_inventory.quantity,
                         product_transfer=branch_transfer,
@@ -641,7 +673,7 @@ def receive_inventory(request):
                         product=branch_transfer.product,
                         cost=branch_transfer.product.cost,  
                         price=branch_transfer.price,
-                        dealer_price = Product.objects.get(id=branch_transfer.product.id).dealer_price,
+                        dealer_price = branch_transfer.dealer_price or 0,
                         quantity=request.POST['quantity'],
                     )
                     ActivityLog.objects.create(
@@ -650,6 +682,9 @@ def receive_inventory(request):
                         action= 'stock in',
                         inventory=inventory,
                         quantity=inventory.quantity,
+                        selling_price = inventory.price,
+                        dealer_price = inventory.dealer_price or 0,
+                        system_quantity = inventory.quantity, 
                         total_quantity=inventory.quantity,
                         product_transfer=branch_transfer,
                         description = f'received {request.POST['quantity']} out of {branch_transfer.quantity}'
