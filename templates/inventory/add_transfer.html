@@ -52,7 +52,7 @@
                     </div>
                     <div id="div_id_dealer_price" class="mb-1">
                         <label for="id_dealer_price" class="form-label requiredField">
-                            Price
+                            Wholesale Price
                         </label>
                         <input type="number"
                                name="dealer_price" step="0.01"
@@ -135,12 +135,13 @@
     let prodPrice = 0;
     let prodCost = 0;
     let dealerPrice = 0;
-   
+    let productName = '';
 
     const errorEl = document.getElementById('error');
     const prodEl = document.querySelector('#id_price');
     const dealerEl = document.querySelector('#id_dealer_price');
     const submitBtn = document.getElementById('id_submit');
+    const quantityEl = document.getElementById('id_quantity')
 
     $(document).ready(function() {
       $('#id_product').select2(
@@ -160,6 +161,10 @@
             prodPrice=Number(data[0]?.price)
             prodCost = Number(data[0]?.cost) 
             dealerEl.value = Number(data[0]?.dealer_price)
+            quantityEl.value = parseInt(data[0]?.quantity)
+            productName = data[0]?.inventory__product__name
+
+            console.log(data)
            
             prodData = []
             prodData.push(data)
@@ -191,17 +196,16 @@
       }
     )
 
-    //document.querySelector('#id_price').addEventListener(
-    //  'input', ()=>{
-    //    const price = $('#id_price').val()
-    //    console.log(price, prodCost, prodData)
-    //    if (price < prodCost){
-    //      document.querySelector('#quantity_error').innerHTML=`Selling price cannot be less than cost price ${prodCost}`
-    //    }else{
-    //      document.querySelector('#quantity_error').innerHTML=''
-    //    }
-    //  }
-    //)
+    document.querySelector('#id_price').addEventListener(
+      'input', ()=>{
+        const price = $('#id_price').val()
+        if (price < prodCost) {
+          document.querySelector('#quantity_error').innerHTML = `Selling price cannot be less than cost price ${prodCost} for product ${productName}`
+        }else{
+          document.querySelector('#quantity_error').innerHTML=''
+        }
+      }
+    )
     
 
     function isCartEmpty(){
@@ -222,18 +226,19 @@
         isCartEmpty()
         const cartItemsList = document.getElementById("cart-items");
         cartItemsList.innerHTML = ""; 
-      
+
         let total = 0;
         {% comment %} let branch = {{ request.user.branch.name }} {% endcomment %}
-        cart.forEach((item) => {
+       
+        cart.reverse().forEach((item) => {
           const row = document.createElement("tr");
           row.innerHTML = `
-            <td>${item.product}</td>
-            <td>${item.price}</td>
-            <td>${item.quantity}</td>
-            <td>${item.dealer_price}</td>
-            <td>{{ request.user.branch.name }}</td>
-            <td>${item.to_branch}</td>
+            <td id='${item.product}'>${item.product}</td>
+            <td id='${item.product}'>${item.price}</td>
+            <td id='${item.product}'>${item.quantity}</td>
+            <td id='${item.product}'>${item.dealer_price}</td>
+            <td id='${item.product}'>{{ request.user.branch.name }}</td>
+            <td id='${item.product}'>${item.to_branch}</td>
             <td>
                 <button class="btn btn-sm btn-danger" data-id=${item.id} onclick="removeItem(this);">
                   <i class='bx bx-trash-alt'></i>
@@ -275,7 +280,11 @@
         }
 
         if (existingItem) {
-            existingItem.quantity += quantity;
+            existingItem.quantity 
+            Swal.fire({
+                title: `Product ${productName} exists.`,
+                icon:'error'
+            })
         } else {
             const newTransfer = {
                 id: generateUniqueId(),
@@ -287,9 +296,7 @@
                 description: description
             };
             cart.push(newTransfer);
-            cart.reverse();
         }
-
         updateCartDisplay();
         clearFields()
     }
@@ -309,6 +316,7 @@
             'cart': cart,
             'branch_to': toBranchId
         };
+        console.log(data)
 
         Swal.fire({
             title: 'Processing Transfer',
@@ -345,8 +353,8 @@
                 } else {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error!',
-                        text: data.error
+                        title: data.message,
+                        text: data.message
                     });
                 }
             })

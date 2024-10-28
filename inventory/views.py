@@ -273,7 +273,8 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                 
             return JsonResponse({'success': True})
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+            logger.info(e)
+            return JsonResponse({'success': False, 'data': str(e)})
 
     def deduct_inventory(self, transfer_item):
         logger.info(f'from branch -> {transfer_item.from_branch}')
@@ -317,6 +318,7 @@ def delete_transfer(request, transfer_id):
 
                 product = Inventory.objects.get(branch=item.from_branch, product=item.product)
                 product.quantity += item.quantity
+                product.save()
 
                 logger.info(f'returned product {product}')
 
@@ -325,7 +327,7 @@ def delete_transfer(request, transfer_id):
                     product_transfer = item,
                     branch = request.user.branch,
                     user=request.user,
-                    action= 'delete',
+                    action= 'transfer cancel',
                     inventory=product,
                     selling_price = item.price, 
                     dealer_price = item.dealer_price,

@@ -286,7 +286,8 @@ class ActivityLog(models.Model):
         ('deactivated', 'deactivated'),
         ('removed', 'removed'),
         ('purchase edit +', 'purchase edit +'),
-        ('purchase edit -', 'purchase edit -')
+        ('purchase edit -', 'purchase edit -'),
+        ('transfer cancel', 'transfer cancel')
     ]
     
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
