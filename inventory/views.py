@@ -306,35 +306,40 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
 @login_required
 def delete_transfer(request, transfer_id):
-    transfer = get_object_or_404(Transfer, id=transfer_id)
+    try:
+        transfer = get_object_or_404(Transfer, id=transfer_id)
 
-    transfer_items = TransferItems.objects.filter(transfer=transfer)
+        transfer_items = TransferItems.objects.filter(transfer=transfer)
 
-    for item in transfer_items:
-        logger.info(f'From branch {item.from_branch}')
+        with transaction.atomic():
+            for item in transfer_items:
+                logger.info(f'From branch {item.from_branch}')
 
-        product = Inventory.objects.get(branch=item.from_branch, product=item.product)
-        product.quantity += item.quantity
+                product = Inventory.objects.get(branch=item.from_branch, product=item.product)
+                product.quantity += item.quantity
 
-        logger.info(f'returned product {product}')
+                logger.info(f'returned product {product}')
 
-        ActivityLog.objects.create(
-            invoice = None,
-            product_transfer = item,
-            branch = request.user.branch,
-            user=request.user,
-            action= 'delete',
-            inventory=product,
-            selling_price = item.price, 
-            dealer_price = item.dealer_price,
-            quantity=item.quantity,
-            total_quantity=product.quantity,
-            description = 'Transfer cancelled'
-        )
-    transfer.delete = True
-    transfer.save()
-    
-    return JsonResponse({'success':True})
+                ActivityLog.objects.create(
+                    invoice = None,
+                    product_transfer = item,
+                    branch = request.user.branch,
+                    user=request.user,
+                    action= 'delete',
+                    inventory=product,
+                    selling_price = item.price, 
+                    dealer_price = item.dealer_price,
+                    quantity=item.quantity,
+                    total_quantity=product.quantity,
+                    description = 'Transfer cancelled'
+                )
+            transfer.delete = True
+            transfer.save()
+
+        return JsonResponse({'success':True})
+    except Exception as e:
+        return JsonResponse({'success':False, 'message':f'{e}'})
+        
         
 @login_required       
 def transfer_details(request, transfer_id):
