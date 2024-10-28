@@ -142,7 +142,7 @@
            const pSelectedOption = pElement.options[pElement.selectedIndex] 
             let product = pSelectedOption.textContent;
             product = product.split(' [')[0]
-            console.log(product)
+    
            fetch(`/inventory/inventory/?name=${product}`)
           .then(response => response.json())
           .then(data=>{
@@ -173,17 +173,17 @@
       }
     )
 
-    document.querySelector('#id_price').addEventListener(
-      'input', ()=>{
-        const price = $('#id_price').val()
-        console.log(price, prodCost, prodData)
-        if (price < prodCost){
-          document.querySelector('#quantity_error').innerHTML=`Selling price cannot be less than cost price ${prodCost}`
-        }else{
-          document.querySelector('#quantity_error').innerHTML=''
-        }
-      }
-    )
+    //document.querySelector('#id_price').addEventListener(
+    //  'input', ()=>{
+    //    const price = $('#id_price').val()
+    //    console.log(price, prodCost, prodData)
+    //    if (price < prodCost){
+    //      document.querySelector('#quantity_error').innerHTML=`Selling price cannot be less than cost price ${prodCost}`
+    //    }else{
+    //      document.querySelector('#quantity_error').innerHTML=''
+    //    }
+    //  }
+    //)
     
 
     function isCartEmpty(){
@@ -262,6 +262,7 @@
           description:description 
         };
         cart.push(newTransfer);
+        cart.reverse()
       }
     
       updateCartDisplay(); 
