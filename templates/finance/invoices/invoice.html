@@ -323,8 +323,6 @@ input[type="checkbox"] {
         </div>
     </div>
 </div>
-
-<script src="{% static 'assets/DataTables/datatables.min.js' %}"></script>
 <script type="text/javascript">
 
     let invoiceId = '';
@@ -458,6 +456,16 @@ input[type="checkbox"] {
         }
 
         if(validation){
+
+            Swal.fire({
+                title: 'Processing Payment',
+                text: 'Please wait...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                }
+            });
+            
             fetch(`/finance/invoice/update/${invoiceId}/`, {
                 method: "POST",
                 headers: {

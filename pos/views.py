@@ -13,7 +13,8 @@ from loguru import logger
 @transaction.atomic
 def pos(request):
     form = CashWithdrawForm()
-    invoice_count = Invoice.objects.filter(issue_date=timezone.now(), branch=request.user.branch ).count()
+    invoice_count = Invoice.objects.filter(issue_date=timezone.now(), branch=request.user.branch).count()
+    held_invoices_count = Invoice.objects.filter(hold_status=True, branch=request.user.branch).count()
             
     return render(request, 'Pos/pos.html', {'invoice_count':invoice_count, 'form':form})
 

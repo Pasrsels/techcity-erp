@@ -430,7 +430,10 @@ def update_invoice(request, invoice_id):
         
         # get the latest payment for the invoice
         latest_payment = Payment.objects.filter(invoice=invoice).order_by('-payment_date').first()
-        amount_due = latest_payment.amount_due - amount_paid 
+        if latest_payment:
+            amount_due = latest_payment.amount_due - amount_paid 
+        else:
+            amount_due = invoice.amount - invoice.amount_paid 
 
         payment = Payment.objects.create(
             invoice=invoice,
@@ -457,6 +460,23 @@ def update_invoice(request, invoice_id):
         else:
             customer_account_balance.balance -= amount_paid
 
+        description = ''
+        if invoice.hold_status:
+            description = 'Held invoice payment'
+        else:
+            description = 'Invoice payment update'
+        
+        Cashbook.objects.create(
+            issue_date=invoice.issue_date,
+            description=f'({description} {invoice.invoice_number})',
+            debit=True,
+            credit=False,
+            amount=invoice.amount_paid,
+            currency=invoice.currency,
+            branch=invoice.branch
+        )
+
+        invoice.hold_status = False
         account_balance.save()
         customer_account_balance.save()
         invoice.save()
@@ -739,6 +759,13 @@ def held_invoice(items_data, invoice, request, vat_rate):
             action='Sale',
             invoice=invoice
         )
+
+@login_required
+def held_invoice_view(request):
+    form = InvoiceForm()
+    invoices = Invoice.objects.filter(branch=request.user.branch, status=True, hold_status =True).order_by('-invoice_number')
+    logger.info(f'Held invoices: {invoices}')
+    return render(request, 'finance/invoices/held_invoices.html', {'invoices':invoices, 'form':form})
 
 
 def create_invoice_pdf(invoice):
