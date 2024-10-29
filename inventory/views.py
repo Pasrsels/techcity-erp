@@ -633,7 +633,7 @@ def print_transfer(request, transfer_id):
 @transaction.atomic
 def receive_inventory(request):
     transfers =  TransferItems.objects.filter(to_branch=request.user.branch).order_by('-date')
-    all_transfers = Transfer.objects.filter(transfer_to=request.user.branch, delete=True).order_by('-time')    
+    all_transfers = Transfer.objects.filter(transfer_to=request.user.branch, delete=False).order_by('-time')    
 
     if request.method == 'POST':
         transfer_id = request.POST.get('id')  
