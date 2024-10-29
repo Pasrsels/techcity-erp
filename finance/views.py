@@ -463,6 +463,19 @@ def update_invoice(request, invoice_id):
         description = ''
         if invoice.hold_status:
             description = 'Held invoice payment'
+            sale = Sale.objects.create(
+                date=timezone.now(),
+                transaction=invoice,
+                total_amount=invoice.amount # invoice delivery amount
+            )
+            
+            VATTransaction.objects.create(
+                invoice=invoice,
+                vat_type=VATTransaction.VATType.OUTPUT,
+                vat_rate=VATRate.objects.get(status=True).rate,
+                tax_amount=invoice.vat
+            ) 
+
         else:
             description = 'Invoice payment update'
         
@@ -481,7 +494,7 @@ def update_invoice(request, invoice_id):
         customer_account_balance.save()
         invoice.save()
         payment.save()
-
+        
         return JsonResponse({'success': True, 'message': 'Invoice successfully updated'})
     else:
         return JsonResponse({'success': False, 'message': 'Invalid request method.'}) 
@@ -654,7 +667,8 @@ def create_invoice(request):
                         invoice=invoice,
                         date=timezone.now()
                     )
-
+                    stock_transaction.save()
+                    
                     # cost of sales item
                     COGSItems.objects.get_or_create(
                         invoice=invoice,
@@ -685,6 +699,7 @@ def create_invoice(request):
                     transaction=invoice,
                     total_amount=invoice_total_amount
                 )
+                sale.save()
                 
                 #payment
                 Payment.objects.create(
@@ -739,7 +754,7 @@ def held_invoice(items_data, invoice, request, vat_rate):
             vat_rate = vat_rate
         )
                     
-                    # Create StockTransaction for each sold item
+        # Create StockTransaction for each sold item
         stock_transaction = StockTransaction.objects.create(
             item=product,
             transaction_type=StockTransaction.TransactionType.SALE,
@@ -748,7 +763,7 @@ def held_invoice(items_data, invoice, request, vat_rate):
             invoice=invoice,
             date=timezone.now()
         )
-                    
+              
         # stock log  
         ActivityLog.objects.create(
             branch=request.user.branch,
@@ -877,6 +892,9 @@ def invoice_returns(request, invoice_id): # dont forget the payments
         product.quantity += stock_transaction.quantity
         product.save()
 
+        logger.info(f'product quantity {product.quantity}')
+        logger.info(f'stock quantity {stock_transaction.quantity}')
+
         ActivityLog.objects.create(
             invoice=invoice,
             product_transfer=None,
@@ -905,60 +923,64 @@ def invoice_returns(request, invoice_id): # dont forget the payments
 @login_required
 @transaction.atomic
 def delete_invoice(request, invoice_id):
-    invoice = get_object_or_404(Invoice, id=invoice_id)
-    account = get_object_or_404(CustomerAccount, customer=invoice.customer)
-    customer_account_balance = get_object_or_404(CustomerAccountBalances, account=account, currency=invoice.currency)
+    try:
+        invoice = get_object_or_404(Invoice, id=invoice_id)
+        account = get_object_or_404(CustomerAccount, customer=invoice.customer)
+        customer_account_balance = get_object_or_404(CustomerAccountBalances, account=account, currency=invoice.currency)
 
-    sale = get_object_or_404(Sale, transaction=invoice)
-    invoice_payment = get_object_or_404(Payment, invoice=invoice)
-    stock_transactions = invoice.stocktransaction_set.all()  
-    vat_transaction = get_object_or_404(VATTransaction, invoice=invoice)
+        sale = get_object_or_404(Sale, transaction=invoice)
+        invoice_payment = get_object_or_404(Payment, invoice=invoice)
+        stock_transactions = invoice.stocktransaction_set.all()  
+        vat_transaction = get_object_or_404(VATTransaction, invoice=invoice)
 
-    if invoice.payment_status == Invoice.PaymentStatus.PARTIAL:
-        customer_account_balance.balance -= invoice.amount_due
+        with transaction.atomic():
+            if invoice.payment_status == Invoice.PaymentStatus.PARTIAL:
+                customer_account_balance.balance -= invoice.amount_due
 
-    account_types = {
-        'cash': Account.AccountType.CASH,
-        'bank': Account.AccountType.BANK,
-        'ecocash': Account.AccountType.ECOCASH,
-    }
+            account_types = {
+                'cash': Account.AccountType.CASH,
+                'bank': Account.AccountType.BANK,
+                'ecocash': Account.AccountType.ECOCASH,
+            }
 
-    account = get_object_or_404(
-        Account, 
-        name=f"{request.user.branch} {invoice.currency.name} {invoice_payment.payment_method.capitalize()} Account", 
-        type=account_types.get(invoice_payment.payment_method, None)  
-    )
-    account_balance = get_object_or_404(AccountBalance, account=account, currency=invoice.currency, branch=request.user.branch)
-    account_balance.balance -= invoice.amount_paid
+            account = get_object_or_404(
+                Account, 
+                name=f"{request.user.branch} {invoice.currency.name} {invoice_payment.payment_method.capitalize()} Account", 
+                type=account_types.get(invoice_payment.payment_method, None)  
+            )
+            account_balance = get_object_or_404(AccountBalance, account=account, currency=invoice.currency, branch=request.user.branch)
+            account_balance.balance -= invoice.amount_paid
 
-    for stock_transaction in stock_transactions:
-        product = Inventory.objects.get(product=stock_transaction.item, branch=request.user.branch)
-        product.quantity += stock_transaction.quantity
-        product.save()
+            for stock_transaction in stock_transactions:
+                product = Inventory.objects.get(product=stock_transaction.item, branch=request.user.branch)
+                product.quantity += stock_transaction.quantity
+                product.save()
 
-        ActivityLog.objects.create(
-            invoice=invoice,
-            product_transfer=None,
-            branch=request.user.branch,
-            user=request.user,
-            action='sale cancelled',
-            inventory=product,
-            quantity=stock_transaction.quantity,
-            total_quantity=product.quantity
-        )
+                ActivityLog.objects.create(
+                    invoice=invoice,
+                    product_transfer=None,
+                    branch=request.user.branch,
+                    user=request.user,
+                    action='sale return',
+                    inventory=product,
+                    quantity=stock_transaction.quantity,
+                    total_quantity=product.quantity
+                )
 
-    InvoiceItem.objects.filter(invoice=invoice).delete() 
-    StockTransaction.objects.filter(invoice=invoice).delete()
-    Payment.objects.filter(invoice=invoice).delete()
+            InvoiceItem.objects.filter(invoice=invoice).delete() 
+            StockTransaction.objects.filter(invoice=invoice).delete()
+            Payment.objects.filter(invoice=invoice).delete()
 
-    account_balance.save()
-    customer_account_balance.save()
-    sale.delete()
-    vat_transaction.delete()
-    invoice.cancelled=True
-    invoice.save()
+            account_balance.save()
+            customer_account_balance.save()
+            sale.delete()
+            vat_transaction.delete()
+            invoice.cancelled=True
+            invoice.save()
 
-    return JsonResponse({'message': f'Invoice {invoice.invoice_number} successfully deleted'})
+        return JsonResponse({'success':True, 'message': f'Invoice {invoice.invoice_number} successfully deleted'})
+    except Exception as e:
+        return JsonResponse({'success':False, 'message': f"{e}"})
     
     
     

@@ -238,7 +238,7 @@ input[type="checkbox"] {
                     </span>
                     <span>
                         {% if request.user.role == 'admin' %}
-                        <span id='id_delete' data-id="{{ invoice.id }}">
+                        <span id='id_delete' data-id="{{ invoice.id }}" class="text-dark hint--bottom" aria-label='Cancel hold'>
                             <i class='bx bx-minus-circle'></i>
                         </span>
                         {% endif %}
@@ -339,8 +339,6 @@ input[type="checkbox"] {
     const paymentsModal = new bootstrap.Modal(document.getElementById('paymentsModal'));
 
     const deleteBtn = document.querySelectorAll('#id_delete')
-    const deleteContent = document.querySelector('#delete_content')
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
 
     const updateBtn = document.querySelectorAll('#id_update')
     const updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
@@ -458,7 +456,7 @@ input[type="checkbox"] {
         }
 
         if(validation){
-            
+
             Swal.fire({
                 title: 'Processing Payment',
                 text: 'Please wait...',
@@ -506,13 +504,61 @@ input[type="checkbox"] {
         )
     })
 
-    deleteBtn.forEach((btn)=>{
+    deleteBtn.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            invoiceId = btn.dataset.id;
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'You won\'t be able to revert this!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'No, cancel!',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    deleteInvoice();
+                }
+            });
+        });
+    });
+
+    function deleteInvoice() {
+        Swal.fire({
+            title: 'Processing Sales returns',
+            text: 'Please wait...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
+        });
+        fetch(`/finance/invoice/delete/${invoiceId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            if (data.success){
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Sale successfully returned',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.reload();
+                });
+            }else{teBtn.forEach((btn)=>{
         btn.addEventListener(
             'click', ()=>{
                 invoiceId = btn.dataset.id
                 deleteModal.show()
                 console.log(invoiceId)
-            }   
+         dele   }   
         )
     })
 
@@ -533,6 +579,23 @@ input[type="checkbox"] {
         })
         .catch(error => {
             alert(error)
+        });
+    }
+                Swal.fire({
+                    title: 'Error',
+                    text: data.message,
+                    icon: 'Error',
+                    confirmButtonText: 'OK'
+                })
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                title: 'Error!',
+                text: error,
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
         });
     }
 
