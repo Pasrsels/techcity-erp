@@ -22,7 +22,8 @@ def transfers(request):
     if request.user.id != None:
         return { 'transfers_count': TransferItems.objects.filter(
            received=False,
-           to_branch=request.user.branch
+           to_branch=request.user.branch,
+           transfer__delete = False
         ).count()}
     return {}
 
