@@ -6,6 +6,7 @@
     <table class='table table-bordered border table-hover rounded hidden p-2' id='transfers'>
         <thead class='bg-primary'>
             <tr>
+                <th>Type</th>
                 <th>Date</th>
                 <th class='text-center'>Status</th>
                 <th>Trans Ref</th>
@@ -15,73 +16,74 @@
                 <th>Action</th>
             </tr>
             </thead>
-        <tbody>
-                {% for transfer in transfers %}
-               <tr>
-                    <td class='transfer-btn' data-id={{ transfer.id }}><small>{{ transfer.time }} </small></td>
-                    <td class='transfer-btn text-center' data-id={{ transfer.id }}>
-                        <small>
-                            {% if transfer.defective_status %}
-                                <span class='hint--bottom' aria-label='Defective'>
-                                    <i class='bx bxs-circle fs-3 text-defective' ></i>
-                                </span>
-                            {% else %}
-                                {% if transfer.quantity == 0 %}
-                                    <span class='hint--bottom' aria-label='All received'>
-                                        <i class='bx bxs-circle text-received fs-3'></i>
-                                    </span>
-                                {% elif transfer.total_quantity_track < transfer.quantity   and transfer.quantity > 0 %}
-                                    <span class='hint--bottom' aria-label='Partial'>
-                                        <i class='bx bxs-circle text-warning fs-3'></i>
-                                    </span>
-                                {% elif transfer.quantity == transfer.total_quantity_track %}
-                                    <span class='hint--bottom' aria-label='Not yet received'>
-                                        <i class='bx bxs-circle text-danger fs-3'></i>
-                                    </span>
-                                {% endif %}
-                            {% endif %}
-                        </small>
-                    </td>
-                    <td class='transfer-btn' data-id={{ transfer.id }}><small>{{ transfer.transfer_ref }}</small></td>
-                    <td class='transfer-btn' data-id={{ transfer.id }}><small>{{ transfer.description }}</small></td>
-                    <td class='transfer-btn' data-id={{ transfer.id }}><small>{{ transfer.transfer_to }}</small></td>
-                    <td class='transfer-btn' data-id={{ transfer.id }}><small>{{ transfer.user.username }}</small></td>
-                    <td class='transfer-btn' data-id={{ transfer.id }}>
-                        <a href='{% url "inventory:print_transfer" transfer.id %}' class='btn border btn-sm'>
-                            <i class='bx bx-printer text-light'></i>
-                        </a>
-                        <button onclick="cancel({{ transfer.id }})" class="btn  text-light border bx bx-trash"></button>
-                    </td>
-                </tr>
-                <tbody  class='bg-primary'>
-                    {% for item in transfer_items %}
-                        {% if transfer.id == item.transfer.id %}
-                                <tr id="id_items" class="hidden" data-transfer-id="{{ transfer.id }}">
-                                    <td></td>
-                                    <td><small></small></td>
-                                    <td ><small>{{ item.product.name }} x {{ item.quantity }}</small></td>
-                                    <td>
-                                        <small>
-                                            <span>
-                                                (
-                                                    {% if item.declined %}
-                                                        <small class='text-danger'>Declined</small>
-                                                    {% elif item.received %}
-                                                        <small class='text-success'>{{ item.description }}</small>
-                                                    {% else %}
-                                                        <small>Not yet received</small>
-                                                    {% endif %}
-                                                )
-                                            </span>
-                                        </small>
-                                    </td>
-                                </tr>
+            <tbody>
+    {% for transfer in transfers %}
+        <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %}">
+            <td>{% if transfer.transfer_to == request.user.branch %}In{% else %}Out{% endif %}</td>
+            <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.time }}</small></td>
+            <td class='transfer-btn text-center' data-id="{{ transfer.id }}">
+                <small>
+                    {% if transfer.defective_status %}
+                        <span class='hint--bottom' aria-label='Defective'>
+                            <i class='bx bxs-circle fs-3 text-defective'></i>
+                        </span>
+                    {% else %}
+                        {% if transfer.quantity == 0 %}
+                            <span class='hint--bottom' aria-label='All received'>
+                                <i class='bx bxs-circle text-received fs-3'></i>
+                            </span>
+                        {% elif transfer.total_quantity_track < transfer.quantity and transfer.quantity > 0 %}
+                            <span class='hint--bottom' aria-label='Partial'>
+                                <i class='bx bxs-circle text-warning fs-3'></i>
+                            </span>
+                        {% elif transfer.quantity == transfer.total_quantity_track %}
+                            <span class='hint--bottom' aria-label='Not yet received'>
+                                <i class='bx bxs-circle text-danger fs-3'></i>
+                            </span>
                         {% endif %}
-                    {% endfor %}
-                </tbody>
+                    {% endif %}
+                </small>
+            </td>
+            <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_ref }}</small></td>
+            <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.description }}</small></td>
+            <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_to }}</small></td>
+            <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
+            <td class='transfer-btn' data-id="{{ transfer.id }}">
+                <a href="{% url 'inventory:print_transfer' transfer.id %}" class="btn border btn-sm">
+                    <i class='bx bx-printer'></i>
+                </a>
+                <button onclick="cancel({{ transfer.id }})" class="btn border bx bx-trash"></button>
+            </td>
+        </tr>
+        <tbody class="bg-primary">
+            {% for item in transfer_items %}
+                {% if transfer.id == item.transfer.id %}
+                    <tr id="id_items" class="hidden" data-transfer-id="{{ transfer.id }}">
+                        <td></td>
+                        <td><small></small></td>
+                        <td><small>{{ item.product.name }} x {{ item.quantity }}</small></td>
+                        <td>
+                            <small>
+                                <span>
+                                    (
+                                        {% if item.declined %}
+                                            <small class='text-danger'>Declined</small>
+                                        {% elif item.received %}
+                                            <small class='text-success'>{{ item.description }}</small>
+                                        {% else %}
+                                            <small>Not yet received</small>
+                                        {% endif %}
+                                    )
+                                </span>
+                            </small>
+                        </td>
+                    </tr>
+                {% endif %}
             {% endfor %}
-            </div>
         </tbody>
+    {% endfor %}
+</tbody>
+
     </table>
     <div class="modal fade" id="transferItemsModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">

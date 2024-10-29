@@ -270,22 +270,68 @@
         const toBranchId = toSelectedOption.textContent
 
         const description = document.getElementById('id_description').value
-        const existingItem = cart.find((item) => item.product === product)
+        
 
         const dealer_price = document.getElementById('id_dealer_price').value
 
-        if (!product || !quantity || !price || toBranchId === '---------') {
-            errorEl.textContent = 'Please fill in all the fields: Product, Quantity, Destination Branch, and Price.';
+        
+
+        const existingItem = cart.find((item) => item.product === product)
+
+        if (!product) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please fill in the Product field',
+            })
+            document.getElementById('id_product').focus()
+            return;
+        }
+
+        if (!quantity) {
+            document.getElementById('id_quantity').focus();
+            return;
+        }
+
+        if (!price) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please fill in the Price field',
+            })
+            document.getElementById('id_price').focus()
+            return;
+        }
+
+        if (!toBranchId) {
+            Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Please fill in the Branch field',
+            }).then(() => {
+                document.getElementById('id_to').focus()
+            })
             return;
         }
 
         if (existingItem) {
-            existingItem.quantity 
+            existingItem.quantity
             Swal.fire({
                 title: `Product ${productName} exists.`,
-                icon:'error'
+                icon: 'error'
             })
-        } else {
+        }
+
+        else {
+            if (quantity <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Quantity cannot be less than zero or below zero.',
+                })
+                return;
+            }
+
             const newTransfer = {
                 id: generateUniqueId(),
                 product: product,
@@ -296,10 +342,10 @@
                 description: description
             };
             cart.push(newTransfer);
+            updateCartDisplay();
+            clearFields()
         }
-        updateCartDisplay();
-        clearFields()
-    }
+   }
 
     const removeItem = (el) => {
         const id = el.dataset.id;

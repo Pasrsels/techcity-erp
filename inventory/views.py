@@ -585,7 +585,11 @@ def inventory_transfers(request):
     q = request.GET.get('q', '') 
     branch_id = request.GET.get('branch', '')
 
-    transfers = Transfer.objects.filter(branch=request.user.branch, delete=False).order_by('-time')
+    transfers = Transfer.objects.filter(
+    Q(branch=request.user.branch) | Q(transfer_to=request.user.branch),
+        delete=False
+    ).order_by('-time')
+
     transfer_items = TransferItems.objects.all()
     
     if q:

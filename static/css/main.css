@@ -59,10 +59,6 @@
 .techcity .transfer-ibt {
   font-family: lato-Regular;
 }
-.techcity .transfer-btn {
-  background-color: #00c0ef !important;
-  color: white;
-}
 .techcity .hover-dark {
   background: #333;
   color: #fff;
@@ -164,8 +160,8 @@
   text-decoration: none;
   color: #333;
 }
-.techcity .aside-bar aside .menu .menu-link:hover a,
-.techcity .aside-bar aside .settings .menu-link:hover a {
+.techcity .aside-bar aside .menu .menu-link a,
+.techcity .aside-bar aside .settings .menu-link a {
   color: #777;
 }
 .techcity .aside-bar aside .menu .dropdown,
@@ -218,8 +214,8 @@
   text-decoration: none;
   color: #333;
 }
-.techcity .top-bar .nav-bar nav .menu .menu-link:hover a,
-.techcity .top-bar .nav-bar nav .user .menu-link:hover a {
+.techcity .top-bar .nav-bar nav .menu .menu-link a,
+.techcity .top-bar .nav-bar nav .user .menu-link a {
   color: #777;
 }
 .techcity .top-bar .nav-bar nav .dropdown {
@@ -454,6 +450,7 @@
   top: 1%;
   background-color: white;
   border: 1px solid #ddd;
+  border-radius: 15px;
   z-index: 2;
 }
 .techcity .customer-modal p,
