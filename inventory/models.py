@@ -246,6 +246,7 @@ class TransferItems(models.Model):
     over_less_description = models.CharField(max_length=255, null=True, blank=True)
     received_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
     description = models.TextField()
+    receieved_quantity = models.IntegerField(default=0)
 
     def __str__(self):
         return f'{self.product.name} to {self.to_branch}'

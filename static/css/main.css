@@ -59,6 +59,9 @@
 .techcity .transfer-ibt {
   font-family: lato-Regular;
 }
+.techcity .transfer-btn {
+  color: #333;
+}
 .techcity .hover-dark {
   background: #333;
   color: #fff;
