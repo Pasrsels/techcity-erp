@@ -1684,6 +1684,35 @@ def invoice_preview(request, invoice_id):
     invoice_items = InvoiceItem.objects.filter(invoice=invoice)
     return render(request, 'Pos/printable_receipt.html', {'invoice_id':invoice_id, 'invoice':invoice, 'invoice_items':invoice_items})
 
+@login_required
+def remove_item(request, item_id):
+    if request.method == 'DELETE':
+        try:
+            item = InvoiceItem.objects.get(id=item_id)
+            item.delete()
+            return JsonResponse({'success': True})
+        except InvoiceItem.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Item not found'}, status=404)
+
+@login_required
+def replace_item(request, item_id):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        new_item_id = data.get('newItemId')
+
+        try:
+            item = InvoiceItem.objects.get(id=item_id)
+            new_item = InvoiceItem.objects.get(id=new_item_id)
+
+            # Replace the old item with the new one
+            item.name = new_item.name  # Update other relevant fields as needed
+            item.price = new_item.price
+            item.quantity = new_item.quantity
+            item.save()
+
+            return JsonResponse({'success': True})
+        except (InvoiceItem.DoesNotExist, ValueError):
+            return JsonResponse({'success': False, 'error': 'Invalid item'}, status=404)
 
 @login_required
 def invoice_preview_json(request, invoice_id):
