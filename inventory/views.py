@@ -585,8 +585,11 @@ def inventory_transfers(request):
     q = request.GET.get('q', '') 
     branch_id = request.GET.get('branch', '')
 
-    transfers = Transfer.objects.filter(branch=request.user.branch, delete=False).order_by('-time')
     transfer_items = TransferItems.objects.all()
+    transfers = Transfer.objects.filter(
+        Q(branch=request.user.branch) | Q(transfer_to=request.user.branch),
+        delete=False
+    ).order_by('-time')
     
     if q:
         transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
@@ -699,6 +702,7 @@ def receive_inventory(request):
                     messages.success(request, 'Product received')
                     
             branch_transfer.quantity_track = branch_transfer.quantity - int(request.POST['quantity'])
+            branch_transfer.receieved_quantity += int(request.POST['quantity'])
             branch_transfer.received_by = request.user
             branch_transfer.received = True
             branch_transfer.description = f'received {request.POST['quantity']} - {branch_transfer.quantity}'
