@@ -300,3 +300,4 @@ INVENTORY_EMAIL_NOTIFICATIONS_STATUS = True
 # system email 
 SYSTEM_EMAIL = 'system@techcity.co.zw'
 
+

@@ -278,6 +278,7 @@ class ActivityLog(models.Model):
         ('edit', 'Edit'),
         ('transfer', 'Transfer'),
         ('returns', 'returns'),
+        ('sale return', 'sale return'),
         ('sale', 'Sale'), 
         ('declined', 'Declined'),
         ('write off', 'write off'),

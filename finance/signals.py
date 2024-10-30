@@ -72,7 +72,7 @@ def create_cashbook_entry(instance, debit, credit):
     if instance.cancelled or instance.invoice_return:
         Cashbook.objects.create(
                 issue_date=instance.issue_date,
-                description=f'Sales returns ({instance.instance.invoice_number})',
+                description=f'Sales returns ({instance.invoice_number})',
                 debit=credit,
                 credit=debit,
                 amount=instance.amount_paid,
@@ -84,10 +84,10 @@ def create_cashbook_entry(instance, debit, credit):
 def create_invoice_cashbook_entry(sender, instance, **kwargs):
     create_cashbook_entry(instance, debit=True, credit=False)
 
-# @receiver(post_save, sender=Expense)
-# def create_expense_cashbook_entry(sender, instance, **kwargs):
-#     if instance.status == True:
-#         create_cashbook_entry(instance, instance.description, debit=False, credit=True)
+@receiver(post_save, sender=Expense)
+def create_expense_cashbook_entry(sender, instance, **kwargs):
+    if instance.status == True:
+        create_cashbook_entry(instance, instance.description, debit=False, credit=True)
 
 @receiver(post_save, sender=CashTransfers)
 def create_cash_transfer_cashbook_entry(sender, instance, **kwargs):
