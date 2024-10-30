@@ -1000,16 +1000,13 @@ function updateCartDisplay() {
         </td>
         <td><small>${item.product_name}</small></td>
         <td><small>
-            <input class='form-control' type='number' step='0.01' data-id=${item.id} value='${parseFloat(item.price).toFixed(2)}' oninput='updatePrice(this);' style='width:5rem;'/>
+            <input class='form-control' type='number' step='0.01' data-id=${item.id} value='${parseFloat(item.price).toFixed(2)}' oninput='updatePrice(this);' style='width:7rem;'/>
         </small></td>
         <td><small id="total-${item.id}">${currencyData[0][0].symbol + ' ' + (parseInt(item.quantity) * parseFloat(item.price)).toFixed(2)}</small></td>
       `;
       cartItemsList.appendChild(row);
-      total += parseInt(item.quantity) * parseFloat(item.price);
     });
 
-    // Update the total amount in the cart
-    document.getElementById("cart_total").innerText = currencyData[0][0].symbol + ' ' + total.toFixed(2);
 }
 
 function updatePrice(input) {

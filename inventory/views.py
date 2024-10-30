@@ -585,14 +585,6 @@ def inventory_transfers(request):
     q = request.GET.get('q', '') 
     branch_id = request.GET.get('branch', '')
 
-<<<<<<< HEAD
-    transfers = Transfer.objects.filter(
-    Q(branch=request.user.branch) | Q(transfer_to=request.user.branch),
-        delete=False
-    ).order_by('-time')
-
-=======
->>>>>>> fc9b2129afa0ed6add97a92ade97ea54ef5f54a1
     transfer_items = TransferItems.objects.all()
     transfers = Transfer.objects.filter(
         Q(branch=request.user.branch) | Q(transfer_to=request.user.branch),
