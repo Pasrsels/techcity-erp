@@ -311,6 +311,9 @@ def delete_transfer(request, transfer_id):
     try:
         transfer = get_object_or_404(Transfer, id=transfer_id)
 
+        if transfer.receive_status:
+            return JsonResponse({'success':False, 'message':f'Cancel failed the transfer is already received.'})
+
         transfer_items = TransferItems.objects.filter(transfer=transfer)
 
         with transaction.atomic():
@@ -704,6 +707,11 @@ def receive_inventory(request):
                         description = f'received {request.POST['quantity']} out of {branch_transfer.quantity}'
                     )
                     messages.success(request, 'Product received')
+
+            transfer = Transfer.objects.get(id = branch_transfer.transfer.id)
+            if not transfer.receive_status:
+                transfer.receive_status = True;
+                transfer.save()
                     
             branch_transfer.quantity_track = branch_transfer.quantity - int(request.POST['quantity'])
             branch_transfer.receieved_quantity += int(request.POST['quantity'])

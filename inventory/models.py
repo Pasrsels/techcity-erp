@@ -208,7 +208,8 @@ class Transfer(models.Model):
     total_quantity_track = models.IntegerField(default=0, null=True)
     defective_status = models.BooleanField(default=False)
     delete = models.BooleanField(default=False, null=True)
-    
+    receive_status = models.BooleanField(default=False, null=True)
+
     @classmethod
     def generate_transfer_ref(self, branch, destination_branch):
         last_transfer = Transfer.objects.filter(branch__name=branch).order_by('-id').first()
