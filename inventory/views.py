@@ -514,6 +514,7 @@ def edit_inventory(request, product_name):
         # inv_product.dealer_price = Decimal(request.POST['dealer_price'])
         inv_product.stock_level_threshold = request.POST['min_stock_level']
         inv_product.dealer_price = dealer_price
+        inv_product.quantity = request.POST['quantity']
         
         inv_product.save()
         
@@ -659,6 +660,7 @@ def receive_inventory(request):
                     existing_inventory = Inventory.objects.get(product=branch_transfer.product, branch=request.user.branch)
                     existing_inventory.quantity += int(request.POST['quantity'])
                     existing_inventory.price = branch_transfer.price
+                    existing_inventory.cost = branch_transfer.cost
                     existing_inventory.dealer_price = Product.objects.get(id=branch_transfer.product.id).dealer_price
                     existing_inventory.save()
                     
@@ -2367,6 +2369,8 @@ def remove_purchase_order(purchase_order_id, request):
         # Retrieve the purchase order
         purchase_order = PurchaseOrder.objects.get(id=purchase_order_id)
 
+        #logger.info(f'purchase_order: {purchase_order}')
+
         with transaction.atomic():
             
             # Reverse related account transactions
@@ -2404,8 +2408,10 @@ def remove_purchase_order(purchase_order_id, request):
                 other_expenses.delete()
             
             #deduct product quantity
-            items = PurchaseOrderItem.objects.filter(purchase_order=purchase_order)
-            products = Inventory.objects.all()
+            items = PurchaseOrderItem.objects.filter(purchase_order=purchase_order, received=True)
+            products = Inventory.objects.filter(branch=request.user.branch)
+
+            logger.info(f'products in the branch {products}')
 
             for item in items:
                 for prod in products:
