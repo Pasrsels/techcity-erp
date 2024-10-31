@@ -294,26 +294,60 @@ input[type="checkbox"] {
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-body text-center">
-                        <h5>Sales Returns</h5>
-                        <table id="returnsTable" style="width: 100%; border-collapse: collapse;">
+                        <div class="d-flex justify-content-between">
+                            <div class="">
+                                <h5>SALE RETURN</h5>
+                                <p id="id_date">DATE: </p>
+                            </div>
+                            <div>
+                                <h5 id="id_invoice_number"></h5>
+                                <p id="id_invoice_date">DATE: </p>
+                            </div>
+                        </div>
+                        
+                        <table id="returnsTable" class="table" style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr>
-                                    <th>Item</th>
+                                    <th></th>
+                                    <th>Product</th>
                                     <th>Quantity</th>
-                                    <th>Price</th>
-                                    <th>Actions</th>
+                                    <th id="unit_price_header">Price</th>
+                                    <th id="id_total_header">Total</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <!-- Invoice items will be inserted here -->
                             </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3"></td>
+                                    <td class="fw-bold">Total (with VAT)</td>
+                                    <td class="fw-bold" id="id_total"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"></td>
+                                    <td class="fw-bold">Paid</td>
+                                    <td class="fw-bold" id="id_paid"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"></td>
+                                    <td class="fw-bold">Balance</td>
+                                    <td class="fw-bold" id="id_balance"></td>
+                                </tr>
+                            </tfoot>
                         </table>
-                        <!--<div id="totalSection" style="margin-top: 20px;">
-                            <p><strong>Subtotal:</strong> <span id="subtotalAmount">0.00</span></p>
-                            <p><strong>Tax (15%):</strong> <span id="taxAmount">0.00</span></p>
-                            <p><strong>Total:</strong> <span id="totalAmount">0.00</span></p>
-                            <p><strong>Amount Returned:</strong> <span id="amountReturned">0.00</span></p>
-                        </div>-->
+                        <hr />
+                        <h5>Items selected for refund</h5>
+                        <table>
+                            <tbody id="id_refund_items"></tbody>
+                        </table>
+                        <hr/>
+
+                        <h3>Total Refund: <span class="mx-2" id="id_refund_total"></span></h3>
+                        
+                        <hr/>
+
                     </div>
                 </div>
             </div>
@@ -555,21 +589,36 @@ input[type="checkbox"] {
             const row = document.createElement('tr');
             
             row.innerHTML = `
+            <td>
+                <button class='btn' onclick="removeItem(${item.id})"><i class='bx bx-minus text-danger fs-4'></i></button>
+            </td>
             <td>${item.item__product__name}</td>
             <td>${item.quantity}</td>
+            <td>${item.unit_price}</td>
             <td>${(parseFloat(item.unit_price) * item.quantity).toFixed(2)}</td>
             <td>
-                <button class='btn- border' onclick="removeItem(${item.id})"><i class='bx bx-minus-circle'></i></button>
-                <button class='btn- border' onclick="replaceItem(${item.id})"><i class='bx bx-repost'></i></button>
+                <button class='btn' onclick="replaceItem(${item.id})"><i class='bx bx-plus text-success fs-4s'></i></button>
             </td>
         `;
             tableBody.appendChild(row);
             subtotal += item.price * item.quantity;
+
+            
         });
 
         const tax = subtotal * 0.15;
         const total = subtotal + tax;
-        //const amountReturned = calculateAmountReturned(total); 
+        let refundAmount = parseFloat(0.00)
+        //const amountReturned = calculateAmountReturned(total);
+
+        document.getElementById('id_invoice_number').textContent = data.invoice.invoice_number;
+        document.getElementById('id_invoice_date').innerHTML = '<small class="text-muted">' + 'Date: ' + new Date(data.invoice.issue_date).toLocaleString() + '</small>';
+        document.getElementById('id_total_header').textContent = 'Total' + ' ' + `(${data.invoice.currency_symbol})` || 'Total';
+        document.getElementById('unit_price_header').textContent = 'Price' + ' ' + `(${data.invoice.currency_symbol})` || 'Price';
+        document.getElementById('id_total').textContent = data.invoice.amount || 0.00;
+        document.getElementById('id_paid').textContent = data.invoice.amount_paid || 0.00;
+        document.getElementById('id_balance').textContent = data.invoice.amount_due || 0.00;
+        document.getElementById('id_refund_total').textContent = `(${data.invoice.currency_symbol})` + ' ' + refundAmount || 0.00;
         
         //document.getElementById('subtotalAmount').innerText = subtotal.toFixed(2);
         //document.getElementById('taxAmount').innerText = tax.toFixed(2);

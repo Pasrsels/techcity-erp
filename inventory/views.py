@@ -329,7 +329,7 @@ def delete_transfer(request, transfer_id):
                     user=request.user,
                     action= 'transfer cancel',
                     inventory=product,
-                    selling_price = item.price, 
+                    selling_price = item.price,
                     dealer_price = item.dealer_price,
                     quantity=item.quantity,
                     total_quantity=product.quantity,
