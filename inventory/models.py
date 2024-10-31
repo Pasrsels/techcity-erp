@@ -1,3 +1,4 @@
+from email.policy import default
 import random, string, uuid
 from django.db import models
 from company.models import Branch
@@ -247,6 +248,7 @@ class TransferItems(models.Model):
     received_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
     description = models.TextField()
     receieved_quantity = models.IntegerField(default=0)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
         return f'{self.product.name} to {self.to_branch}'

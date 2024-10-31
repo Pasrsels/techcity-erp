@@ -253,7 +253,8 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
     
                     transfer_item = TransferItems(
                         transfer=transfer,
-                        product= product,
+                        product = product,
+                        cost = item['cost'],
                         price=item['price'],
                         dealer_price = item['dealer_price'],
                         quantity=item['quantity'],
@@ -680,10 +681,11 @@ def receive_inventory(request):
                     messages.success(request, 'Product received')
                     
                 else:
+
                     inventory = Inventory.objects.create(
                         branch=request.user.branch,
                         product=branch_transfer.product,
-                        cost=branch_transfer.product.cost,  
+                        cost=branch_transfer.cost,  
                         price=branch_transfer.price,
                         dealer_price = branch_transfer.dealer_price or 0,
                         quantity=request.POST['quantity'],

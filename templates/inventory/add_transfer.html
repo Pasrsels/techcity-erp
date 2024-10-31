@@ -270,11 +270,7 @@
         const toBranchId = toSelectedOption.textContent
 
         const description = document.getElementById('id_description').value
-        
-
         const dealer_price = document.getElementById('id_dealer_price').value
-
-        
 
         const existingItem = cart.find((item) => item.product === product)
 
@@ -335,6 +331,7 @@
             const newTransfer = {
                 id: generateUniqueId(),
                 product: product,
+                cost: prodCost,
                 to_branch: toBranchId,
                 quantity: quantity,
                 price: price,
