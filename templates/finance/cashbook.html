@@ -62,9 +62,9 @@
                         <tr>
                             <th>Date</th>
                             <th>User</th>
-                            <th>Description</th>
+                            <!--<th>Description</th>-->
                             <th>Note</th>
-                            <th>Payee/Payer</th>
+                            <!--<th>Payee/Payer</th>-->
                             <th>Expenses</th>
                             <th>Income</th>
                             <th>Balance</th>
@@ -384,7 +384,6 @@
         });
     }
 
-    
     function filterCashBook() {
         const filter = document.getElementById('filterSelect').value;
         window.location.href = `?filter=${filter}`;

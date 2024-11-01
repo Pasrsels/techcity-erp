@@ -51,7 +51,10 @@
     }
 
     .payment-modal{
+        display:flex;
+        justify-content:center;
         background-color: #fff;
+        margin-top:20px;
         width: 100%;
         max-width: 100%;
         max-height: 100%; 
@@ -82,6 +85,10 @@
         margin: 0px;
     }
 
+    .btn:hover{
+        color: #fff !important;
+    }
+
 </style>
 <body class="techcity">
     <div class='pos'>
@@ -89,15 +96,15 @@
             <div class="nav-bar"> {% include "base/pos_navbar.html" %} </div>
         </div>
         {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-                {{ message }}
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="alert"
-                        aria-label="Close"></button>
-                </div>
-            {% endfor %}
+        {% for message in messages %}
+        <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"></button>
+        </div>
+        {% endfor %}
         {% endif %}
         <div class='row'>
             <div class="aside-bar col-2 text-light"> {% include "base/aside.html" %} </div>
@@ -108,8 +115,8 @@
                             <div class='list-toggle'>
                                 <button id="menu-type" class="btn border bx bx-menu"></button>
                             </div>
-                            <div class="px-1" ><i class="bx bx-search"></i></div>
-                            <div><input type="search" name="q" class="form-control"  id='id_search' placeholder="search..."/></div>
+                            <div class="px-1"><i class="bx bx-search"></i></div>
+                            <div><input type="search" name="q" class="form-control" id='id_search' placeholder="search..." /></div>
                             <div class="">
                                 <button class="btn btn-light btn-sm border" id="out_of_stock">Out of Stock</button>
                             </div>
@@ -118,7 +125,7 @@
                             <select name='category' id="id_category" class="form-select">
                                 <option value="0">All Categories</option>
                                 {% for category in categories%}
-                                    <option value='{{ category.id }}'>{{ category.name }}</option>
+                                <option value='{{ category.id }}'>{{ category.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -138,7 +145,7 @@
                                 <option value=''></option>
                             </select>
                             <div class="avatar-container">
-                                <img src="{% static 'assets/avatar.png' %}" alt="Avatar" class="avatar"> 
+                                <img src="{% static 'assets/avatar.png' %}" alt="Avatar" class="avatar">
                             </div>
                         </div>
                         <div class="d-flex flex-column">
@@ -173,24 +180,20 @@
                     <div class='additional-costs border p-2 d-flex justify-content-between w-100'>
                         <div class='w-50'>
                             <label for="id_discount"><small>Discount</small></label>
-                            <input 
-                                id='id_discount'
-                                type='number'
-                                class='form-control text-center'
-                                placeholder='Discount'
-                                value=0
-                            />
+                            <input id='id_discount'
+                                   type='number'
+                                   class='form-control text-center'
+                                   placeholder='Discount'
+                                   value=0 />
                         </div>
                         <span class='px-2'></span>
                         <div class='w-50'>
                             <label for="id_dc_input"><small>Delivery Charge</small></label>
-                            <input 
-                                id='id_dc_input'
-                                type='number'
-                                class='form-control text-center'
-                                placeholder='Delivery Charge'
-                                value=0
-                            />
+                            <input id='id_dc_input'
+                                   type='number'
+                                   class='form-control text-center'
+                                   placeholder='Delivery Charge'
+                                   value=0 />
                         </div>
                     </div>
                     <div class='totals border d-flex aling-items-center table-responsive table-sm'>
@@ -217,7 +220,7 @@
                     </div>
                     <div class=" w-100 payment-buttons d-flex justify-content-between mt-3">
                         <div class="w-100">
-                            <button class="btn btn-secondary w-100"id='id_pay' >
+                            <button class="btn btn-secondary w-100" id='id_pay'>
                                 Next
                             </button>
                         </div>
@@ -241,7 +244,7 @@
     </div>
 
     </div>
-    
+
     <div class="modal fade" id="clientModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -261,6 +264,17 @@
             </div>
         </div>
     </div>
+
+    <!--<div class="modal fade" id="customerAccountTableModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    {% include 'finance/customers/account_statement.html' %}
+                </div>
+            </div>
+        </div>
+    </div>-->
+
     <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -347,7 +361,9 @@ let vatAmount
 
 const layby_dates = []
 
-let error = document.querySelector('#error_message')
+let error = document.querySelector('#error_message');
+
+//let customerAccountTableModal = new bootstrap.Modal(document.getElementById('customerAccountTableModal'))
 
 const currencySelect = document.querySelector('#currency')
 const endOfDayModal = new bootstrap.Modal(document.getElementById('endOfDayModal'));
@@ -423,10 +439,20 @@ function calculateBalance() {
 
     if (paymentTerm === 'cash') {
         balance = amountPaid - total; 
+
+        if (balance < 0) {
+            balance = 0
+        }
+
         balanceLabel.textContent = 'Change';
         balanceDueElement.textContent = Math.abs(balance).toFixed(2);
     } else {
         balance = total - amountPaid; 
+
+        if (balance < 0) {
+            balance = 0
+        }
+
         balanceLabel.textContent = 'Amount Due';
         balanceDueElement.textContent = balance.toFixed(2);
     }
@@ -493,16 +519,10 @@ function handlePaymentMethodClick(selectedButton) {
 
 const paymentMethodButtons = document.querySelectorAll(".payment-method button");
 
-function toggleActiveButton(selectedButton) {
-    paymentMethodButtons.forEach(button => {
-        button.classList.remove("active");
-    });
-    selectedButton.classList.add("active");
-}
-
 paymentMethodButtons.forEach(button => {
     button.addEventListener("click", function () {
-        toggleActiveButton(button);
+        paymentMethodButtons.forEach(btn => btn.classList.remove("active"));
+        this.classList.add("active");
         if (button.dataset.name === 'cash') { 
             paymentMethod = button.dataset.name;
         } else if (button.dataset.name === 'ecocash'){
@@ -519,13 +539,12 @@ const receipt = () =>{
     const depositedAmount = document.getElementById('id_deposited');
     const period = document.getElementById('id_period')
     const availableBalance = document.getElementById('availableBalance')
+    const availableBal = document.getElementById('availableBal')
     const previousDue = document.getElementById('previous_due')
     const termsButtons = document.querySelectorAll('.btn');
 
     let value;
     let amountDue = previousDue.textContent.split('')[0];
-
-    console.log(previousDue.textContent, amountDue, 'here')
     // default if they is previous due
     
 
@@ -546,10 +565,10 @@ const receipt = () =>{
         depositedAmount.textContent = value;
 
         const amountDue = parseFloat(previousDue.textContent.split(' ')[1]);
-        console.log((parseFloat(sub) + parseFloat(vatAmount)) + amountDue - value)
        
         // availabe balance 
-        availableBalance.textContent = (parseFloat(sub) + parseFloat(vatAmount)) + amountDue - value || 0;
+        availableBalance.textContent = parseFloat(value) - amountDue || 0;
+        availableBal.textContent = parseFloat(value) - amountDue || 0;
         
     })
 
@@ -569,8 +588,8 @@ const receipt = () =>{
 
     
     const displayDueDates = (period) => {
-        const dueDates = calculateNextDueDate(period); // Get due dates
-        const paymentDateElement = document.getElementById('payment_date'); // Get the <p> element
+        const dueDates = calculateNextDueDate(period);
+        const paymentDateElement = document.getElementById('payment_date');
 
         let dateFields = ''; 
 
@@ -619,6 +638,7 @@ $(document).ready(function() {
     .on('change', function (e){
         clientName = $(this).val()
         fetchCustomerAccount(clientName)
+        getLastInvoiceNumber(clientName)
     })
     
 })
@@ -660,7 +680,6 @@ currencySelect.addEventListener(
             data: data,
             }).done(function(response) {
                 const data = response
-                console.log(data)
                 currencyData = []
                 currencyData.push(data)
         })
@@ -842,7 +861,6 @@ function displayProducts(products) {
 
 // Cart 
 async function fetchProductData (product){
-    console.log(initialCurrencyValue)
     if(initialCurrencyValue){
         const id = product.dataset.product
 
@@ -855,7 +873,6 @@ async function fetchProductData (product){
                 throw new Error('Network response was not ok.');
             }
             const product = await response.json();
-            console.log('product', product)
             addItem(product);
             addedToCartProduct = [];
             addedToCartProduct.push(product);
@@ -927,11 +944,10 @@ function totals(){
 
     }else{
         totalAmount = totalAmount - discount
-        console.log(totalAmount)
+        
         discountAmount = calculateTotalAmount(cart) - totalAmount
         vatAmount = totalAmount * 0.15
         payable = totalAmount + vatAmount + delivery;
-        console.log(totalAmount, vatAmount,  delivery, payable)
         
         vat_amount = vatAmount
         payable_amount = payable
@@ -979,16 +995,44 @@ function updateCartDisplay() {
         <td>
             <small class='d-flex align-items-center'>
                 <small class='bx bx-trash-alt text-danger' data-id=${item.id} onclick="removeItem(this);"></small>
-                <small><input class='form-control mx-2' type='number' data-id=${item.inventory_id} value='${item.quantity}' oninput='addOrDreceaseQuantity(this);' style='width:4rem;'/></small>
+                <small><input class='form-control mx-2' type='number' data-id=${item.inventory_id} value='${item.quantity}' oninput='addOrDecreaseQuantity(this);' style='width:4rem;'/></small>
             </small>
         </td>
         <td><small>${item.product_name}</small></td>
-        <td><small>${ currencyData[0][0].symbol + ' ' + parseFloat(item.price).toFixed(2)}</small></td>
-        <td><small>${currencyData[0][0].symbol + ' ' + (parseInt(item.quantity) * parseFloat(item.price)).toFixed(2)}</small></td>
+        <td><small>
+            <input class='form-control' type='number' step='0.01' data-id=${item.id} value='${parseFloat(item.price).toFixed(2)}' oninput='updatePrice(this);' style='width:7rem;'/>
+        </small></td>
+        <td><small id="total-${item.id}">${currencyData[0][0].symbol + ' ' + (parseInt(item.quantity) * parseFloat(item.price)).toFixed(2)}</small></td>
       `;
       cartItemsList.appendChild(row);
+
     });
-  }
+
+}
+
+function updatePrice(input) {
+    const itemId = input.getAttribute("data-id");
+    const newPrice = parseFloat(input.value);
+   
+    // Update the cart item's price and total cost dynamically
+    const cartItem = cart.find(item => item.id == itemId);
+    if (cartItem) {
+        cartItem.price = newPrice;
+        const totalElement = document.getElementById(`total-${itemId}`);
+        totalElement.innerText = currencyData[0][0].symbol + ' ' + (cartItem.quantity * cartItem.price).toFixed(2);
+    }
+    totals();
+
+    // Recalculate the cart total and update the display
+    //updateCartTotal();
+    
+   
+}
+
+function updateCartTotal() {
+    let total = cart.reduce((acc, item) => acc + (item.quantity * item.price), 0);
+    document.getElementById("cart_total").innerText = currencyData[0][0].symbol + ' ' + total.toFixed(2);
+}
 
   function addOrDreceaseQuantity(sm) {
     const item_id = parseInt(sm.dataset.id);
@@ -1064,8 +1108,6 @@ async function processCart(el) {
 
     const amountReceived = document.getElementById('id_amount_paid');
 
-    console.log(paymentTerms, Number((amountReceived.value)))
-
     if (!holdStatus) {
         if (Number((amountReceived.value) <= 0) && (paymentTerms === 'cash')) {
             Swal.fire({
@@ -1113,8 +1155,6 @@ async function processCart(el) {
         });
 
         const result = await response.json();
-
-        console.log(result)
 
         if (result.success) {
             cart = [];
@@ -1183,11 +1223,7 @@ async function displayReceipt(invoiceId) {
             payment_terms: payment_terms
         } = invoice;
 
-        console.log(data);
-
-        let prvDue = parseFloat(document.getElementById('tpreviousDue').textContent.split(' ')[1]);
-
-        console.log(prvDue)
+        let prvDue = parseFloat(document.getElementById('tpreviousDue').textContent.split('')[1]);
 
         document.getElementById('rcp-payment')
         document.getElementById('rcp-pterms').textContent = payment_terms;
@@ -1208,6 +1244,7 @@ async function displayReceipt(invoiceId) {
             newRow.insertCell().textContent = `(${item__product__description})`;
             newRow.insertCell().textContent = quantity;
             newRow.insertCell().textContent = `${unit_price}`;
+            newRow.insertCell().textContent = `${(0.15 * unit_price).toFixed(2)}`;
             newRow.insertCell().textContent = `${quantity * unit_price}`;
         });;
 
@@ -1257,7 +1294,7 @@ async function displayReceipt(invoiceId) {
             timer: 2000,
             showConfirmButton: false
         }).then(()=>{
-            loaderModal.hide();
+            //loaderModal.hide();
             receiptModal.show();
         })
 
@@ -1411,8 +1448,56 @@ function setCustomer(customerId){
     email.textContent = data[0]?.email;
     address.textContent = data[0]?.address;
    
-}
+    }
 
+    const getLastInvoiceNumber = async (customerId) => {
+        try {
+            const response = await fetch(`/pos/last_due_invoice/${customerId}/`);
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok.');
+        }
+        const lastInvoice = await response.json();
+
+        // set the last invoice
+        //document.getElementById('id_last_invoice').textContent = lastInvoice[0].invoice_number;
+
+        } catch (error) {
+            console.error('Error fetching Last Invoice Number:', error);
+        
+        }
+    }
+
+    function customerAccount() {
+        $.ajax({
+            url: '/finance/customer/payments/json/',
+            type: 'GET',
+            data: { 'type': 'invoice_payments', 'customer_id': 1 },
+        }).done(function (response) {
+            const data = response
+            //displaypaymentsTable(data)
+        })
+    }
+
+  
+    function displaypaymentsTable(data) {
+        //customerAccountTableModal.show()
+        customerAccountTable.innerHTML = '';
+        data.forEach((d) => {
+            customerAccountTable.innerHTML += `
+            
+            <tr>
+                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${new Date(d.payment_date).toDateString()}</small></td>
+                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>#${d.invoice__invoice_number}</small></td>
+                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__products_purchased}</small></td>
+                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.invoice__amount}</small></td>
+                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.amount_paid}</small></td>
+                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.amount_due}</small></td>
+                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.user__username}</small></td>
+            </tr>
+            `
+        })
+    }
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== "") {

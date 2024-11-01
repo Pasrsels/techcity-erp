@@ -31,57 +31,62 @@
                     <div class="mb-1">
                         <label for="id_product" class="form-label requiredField">
                             Product
-                        </label> 
+                        </label>
                         <select class="select form-select" id='id_product'>
                             <option value="">-----</option>
                             {% for product in inventory %}
-                                <option value={{product.product.name}}>{{product.product.name}} [{{ product.quantity }}]</option>
+                            <option value={{product.product.name}}>{{product.product.name}} [{{ product.quantity }}]</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div id="div_id_price" class="mb-1">
                         <label for="id_price" class="form-label requiredField">
                             Price
-                        </label> 
-                        <input 
-                            type="number" 
-                            name="price" step="0.01" 
-                            class="numberinput form-control" 
-                            required 
-                            id="id_price"
-                        >
+                        </label>
+                        <input type="number"
+                               name="price" step="0.01"
+                               class="numberinput form-control"
+                               required
+                               id="id_price">
                         <p id="price_error" class="fs-6 text-danger"></p>
-                    </div> 
-                    <div id="div_id_quantity" class="mb-1"> 
+                    </div>
+                    <div id="div_id_dealer_price" class="mb-1">
+                        <label for="id_dealer_price" class="form-label requiredField">
+                            Wholesale Price
+                        </label>
+                        <input type="number"
+                               name="dealer_price" step="0.01"
+                               class="numberinput form-control"
+                               required
+                               id="id_dealer_price">
+                        <p id="dealer_price_error" class="fs-6 text-danger"></p>
+                    </div>
+                    <div id="div_id_quantity" class="mb-1">
                         <label for="id_quantity" class="form-label requiredField">
                             Quantity
-                        </label> 
-                        <input 
-                            type="number" 
-                            name="quantity"
-                            value="" 
-                            min="0" 
-                            class="numberinput form-control" 
-                            required id="id_quantity"
-                        > 
-                        <div id="div_id_description" class="mb-3"> 
+                        </label>
+                        <input type="number"
+                               name="quantity"
+                               value=""
+                               min="0"
+                               class="numberinput form-control"
+                               required id="id_quantity">
+                        <div id="div_id_description" class="mb-3">
                             <label for="id_description" class="form-label requiredField">
-                                Description<span class="asteriskField">*</span> 
-                            </label> 
-                            <textarea 
-                                name="description" 
-                                cols="20" 
-                                rows="2" 
-                                class="textarea form-control" 
-                                required id="id_description"
-                            ></textarea> 
+                                Description<span class="asteriskField">*</span>
+                            </label>
+                            <textarea name="description"
+                                      cols="20"
+                                      rows="2"
+                                      class="textarea form-control"
+                                      required id="id_description"></textarea>
                         </div>
                         <p id="quantity_error" class="fs-6 text-danger"></p>
-                    </div> 
+                    </div>
                     <p class='text-dangr' id='error'></p>
                     <div class='d-flex justify-content-end mb-2'>
                         <button type='button' class='btn btn-secondary btn-sm' id="id_submit" onclick="addItem();">
-                          <i class='bx bx-save' ></i>
+                            <i class='bx bx-save'></i>
                             save
                         </button>
                     </div>
@@ -105,6 +110,7 @@
                 <tr>
                   <th>Product</th>
                   <th>Price</th>
+                  <th>Wholesale Price</th>
                   <th>Quantity</th>
                   <th>Source</th>
                   <th>Destination</th>
@@ -127,11 +133,15 @@
     let searchValue = '';
     let prodQauntity = 0;
     let prodPrice = 0;
-    let prodCost  = 0;
-   
+    let prodCost = 0;
+    let dealerPrice = 0;
+    let productName = '';
 
     const errorEl = document.getElementById('error');
-    const prodEl = document.querySelector('#id_price')
+    const prodEl = document.querySelector('#id_price');
+    const dealerEl = document.querySelector('#id_dealer_price');
+    const submitBtn = document.getElementById('id_submit');
+    const quantityEl = document.getElementById('id_quantity')
 
     $(document).ready(function() {
       $('#id_product').select2(
@@ -140,19 +150,24 @@
       .on('change', function (e){
            const pElement = document.getElementById('id_product')
            const pSelectedOption = pElement.options[pElement.selectedIndex] 
-            let product = pSelectedOption.textContent;
+           let product = pSelectedOption.textContent;
             product = product.split(' [')[0]
-            console.log(product)
-           fetch(`/inventory/inventory/?name=${product}`)
+
+           
+        fetch(`/inventory/inventory/?name=${product}`)
           .then(response => response.json())
           .then(data=>{
             prodEl.value=Number(data[0]?.price)
             prodPrice=Number(data[0]?.price)
-            prodCost=Number(data[0]?.cost)  
+            prodCost = Number(data[0]?.cost) 
+            dealerEl.value = Number(data[0]?.dealer_price)
+            quantityEl.value = parseInt(data[0]?.quantity)
+            productName = data[0]?.inventory__product__name
+
+            console.log(data)
+           
             prodData = []
-            console.log(prodData)
             prodData.push(data)
-            console.log(prodData)
           })
           .catch(error => console.error('Error:', error))
       })
@@ -164,11 +179,19 @@
     document.querySelector('#id_quantity').addEventListener(
       'input', ()=>{
         const quantity = $('#id_quantity').val()
-        console.log(prodData[0][0].quantity)
+        
         if (quantity > prodData[0][0].quantity){
-          document.querySelector('#quantity_error').innerHTML='*Quantity cant be more than source quantity'
+            submitBtn.disabled = true;
+            Swal.fire({
+                icon: 'warning',
+                title: 'Quantity Exceeded',
+                text: 'The quantity you entered exceeds the available source quantity. Please adjust.',
+                confirmButtonText: 'Okay'
+            });
+
         }else{
-          document.querySelector('#quantity_error').innerHTML=''
+            document.querySelector('#quantity_error').innerHTML = '';
+            submitBtn.disabled = false;
         }
       }
     )
@@ -176,9 +199,8 @@
     document.querySelector('#id_price').addEventListener(
       'input', ()=>{
         const price = $('#id_price').val()
-        console.log(price, prodCost, prodData)
-        if (price < prodCost){
-          document.querySelector('#quantity_error').innerHTML=`Selling price cannot be less than cost price ${prodCost}`
+        if (price < prodCost) {
+          document.querySelector('#quantity_error').innerHTML = `Selling price cannot be less than cost price ${prodCost} for product ${productName}`
         }else{
           document.querySelector('#quantity_error').innerHTML=''
         }
@@ -204,17 +226,19 @@
         isCartEmpty()
         const cartItemsList = document.getElementById("cart-items");
         cartItemsList.innerHTML = ""; 
-      
+
         let total = 0;
         {% comment %} let branch = {{ request.user.branch.name }} {% endcomment %}
-        cart.forEach((item) => {
+       
+        cart.reverse().forEach((item) => {
           const row = document.createElement("tr");
           row.innerHTML = `
-            <td>${item.product}</td>
-            <td>${item.price}</td>
-            <td>${item.quantity}</td>
-            <td>{{ request.user.branch.name }}</td>
-            <td>${item.to_branch}</td>
+            <td id='${item.product}'>${item.product}</td>
+            <td id='${item.product}'>${item.price}</td>
+            <td id='${item.product}'>${item.quantity}</td>
+            <td id='${item.product}'>${item.dealer_price}</td>
+            <td id='${item.product}'>{{ request.user.branch.name }}</td>
+            <td id='${item.product}'>${item.to_branch}</td>
             <td>
                 <button class="btn btn-sm btn-danger" data-id=${item.id} onclick="removeItem(this);">
                   <i class='bx bx-trash-alt'></i>
@@ -224,95 +248,168 @@
           cartItemsList.appendChild(row);
         });
       }
-      
 
+    function clearFields() {
+        document.getElementById('id_quantity').value = '';
+        document.getElementById('id_price').value = '';
+        dealerEl.value = '';
+        document.getElementById('id_description').value = '';
+    }
+      
     function addItem() {
         const pElement = document.getElementById('id_product')
-        const pSelectedOption = pElement.options[pElement.selectedIndex] 
+        const pSelectedOption = pElement.options[pElement.selectedIndex]
         let product = pSelectedOption.textContent;
         product = product.split(' [')[0]
 
         const price = Number(document.getElementById('id_price').value)
-        const quantity =  Number(document.getElementById('id_quantity').value)
+        const quantity = Number(document.getElementById('id_quantity').value)
 
         const toElement = document.getElementById('id_to')
         const toSelectedOption = toElement.options[toElement.selectedIndex]
-        const toBranchId =  toSelectedOption.textContent
-        
+        const toBranchId = toSelectedOption.textContent
+
         const description = document.getElementById('id_description').value
+        const dealer_price = document.getElementById('id_dealer_price').value
+
         const existingItem = cart.find((item) => item.product === product)
-        
-        console.log(toBranchId)
-       // Validation checks
-        if (!product || !quantity || !price  || toBranchId === '---------') {
-            errorEl.textContent='Please fill in all the fields: Product, Quantity, Destination Branch and Price.';
+
+        if (!product) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please fill in the Product field',
+            })
+            document.getElementById('id_product').focus()
             return;
         }
-    
-      if (existingItem) {
-        existingItem.quantity += quantity;
-      } else {
-        const newTransfer = {
-          id:generateUniqueId(),
-          product:product, 
-          {% comment %} from_branch: {{ request.user.branch.name }}, {% endcomment %}
-          to_branch:toBranchId,
-          quantity: quantity,
-          price:price,
-          description:description 
-        };
-        cart.push(newTransfer);
-      }
-    
-      updateCartDisplay(); 
-    }
-    
+
+        if (!quantity) {
+            document.getElementById('id_quantity').focus();
+            return;
+        }
+
+        if (!price) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please fill in the Price field',
+            })
+            document.getElementById('id_price').focus()
+            return;
+        }
+
+        if (!toBranchId) {
+            Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Please fill in the Branch field',
+            }).then(() => {
+                document.getElementById('id_to').focus()
+            })
+            return;
+        }
+
+        if (existingItem) {
+            existingItem.quantity
+            Swal.fire({
+                title: `Product ${productName} exists.`,
+                icon: 'error'
+            })
+        }
+
+        else {
+            if (quantity <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Quantity cannot be less than zero or below zero.',
+                })
+                return;
+            }
+
+            const newTransfer = {
+                id: generateUniqueId(),
+                product: product,
+                cost: prodCost,
+                to_branch: toBranchId,
+                quantity: quantity,
+                price: price,
+                dealer_price: dealer_price,
+                description: description
+            };
+            cart.push(newTransfer);
+            updateCartDisplay();
+            clearFields()
+        }
+   }
+
     const removeItem = (el) => {
-        const id = el.dataset.id
+        const id = el.dataset.id;
         cart = cart.filter((item) => item.id !== id);
         updateCartDisplay();
-    }
-    
+    };
+
     function processCart() {
-      const toElement = document.getElementById('id_to');
-      const toSelectedOption = toElement.options[toElement.selectedIndex];
-      const toBranchId =  toSelectedOption.textContent;
+        const toElement = document.getElementById('id_to');
+        const toSelectedOption = toElement.options[toElement.selectedIndex];
+        const toBranchId = toSelectedOption.textContent;
 
-      
-      const data = {
-        'cart':cart, 
-        'branch_to': toBranchId
-      }
+        const data = {
+            'cart': cart,
+            'branch_to': toBranchId
+        };
+        console.log(data)
 
-      console.log(data)
-      
-      fetch("/inventory/process-transfer-cart/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCookie("csrftoken"), 
-        },
-        body: JSON.stringify(data),
-      })
-      .then(response => response.json())
-      .then(data=>{
-          if (data.success) {
-            successModal.show()
-            cart = []; 
-            updateCartDisplay();
-            setTimeout(()=>{
-              window.location.href='{% url "inventory:transfers" %}'
-            }, 1000)
-          } else {
-            errorEl.textContent=data.error;
-          } 
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          errorEl.textContent=data.error;
+        Swal.fire({
+            title: 'Processing Transfer',
+            text: 'Please wait...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
         });
-    }
-    
+
+        fetch("/inventory/process-transfer-cart/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify(data),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Product(s) Transferred Successfully',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    cart = [];
+                    updateCartDisplay();
+                    setTimeout(() => {
+                        window.location.href = '{% url "inventory:transfers" %}';
+                    }, 1500);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: data.message,
+                        text: data.message
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'An unexpected error occurred. Please try again.'
+                });
+            });
+    }    
     function getCookie(name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {

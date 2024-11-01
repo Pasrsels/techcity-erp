@@ -184,13 +184,13 @@ input[type="checkbox"] {
                         <td>
                             <span class="status {% if invoice.payment_status == 'Paid' %}completed{% else %}pending{% endif %}">
                                 {% if invoice.hold_status %}
-                                    Onhold
+                                Onhold
                                 {% else %}
-                                    {% if invoice.payment_status == 'Paid' %}
-                                    Completed
-                                    {% else %}
-                                    Pending
-                                    {% endif %}
+                                {% if invoice.payment_status == 'Paid' %}
+                                Completed
+                                {% else %}
+                                Pending
+                                {% endif %}
                                 {% endif %}
                             </span>
                         </td>
@@ -199,23 +199,15 @@ input[type="checkbox"] {
                         <td><small>{{ invoice.currency.symbol }} {{ invoice.amount_due }}</small></td>
                         <!-- <td><small>{{ invoice.products_purchased }}</small></td> -->
                         <td>
-                            <button class="
-                                payment-btn
+                            <button class="payment-btn">
                                 {% if invoice.amount_due > 0 %}
-                                    due
+                                Due
                                 {% else %}
-                                    paid
-                                {% endif %}
-                            ">
-                                {% if invoice.amount_due > 0 %}
-                                    Due
-                                {% else %}
-                                    Paid
+                                Paid
                                 {% endif %}
                             </button>
                         </td>
                         <!-- <td><small>{{ invoice.user.username }}</small></td> -->
-
                         <!-- Action Column -->
                         <td>
                             <span>
@@ -234,17 +226,17 @@ input[type="checkbox"] {
                                 </span>
                                 {% endif %}
                             </span>
+                            <!--<span>
+                            {% if request.user.role == 'admin' %}
+                            <span data-id="{{ invoice.id }}" id='whatsappBtn'>
+                                <i class='bx bxl-whatsapp'></i>
+                            </span>
+                            {% endif %}
+                        </span>-->
                             <span>
                                 {% if request.user.role == 'admin' %}
-                                <span data-id="{{ invoice.id }}" id='whatsappBtn'>
-                                    <i class='bx bxl-whatsapp'></i>
-                                </span>
-                                {% endif %}
-                            </span>
-                            <span class='px-2'>
-                                {% if request.user.role == 'admin' %}
-                                <span id='id_delete' data-id="{{ invoice.id }}">
-                                    <i class='bx bx-trash'></i>
+                                <span id='id_delete' data-id="{{ invoice.id }}" class="text-dark hint--bottom" aria-label='sales return'>
+                                    <img width="18px" src="{% static 'assets/return.png' %}" />
                                 </span>
                                 {% endif %}
                             </span>
@@ -282,7 +274,7 @@ input[type="checkbox"] {
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-body">
-                        {% include 'finance/invoices/update_receipt.html' %} 
+                        {% include 'finance/invoices/update_receipt.html' %}
                     </div>
                 </div>
             </div>
@@ -298,16 +290,69 @@ input[type="checkbox"] {
             </div>
         </div>
 
-        <div class="modal fade" id="loaderModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal fade" id="receiptItems" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-body text-center">
-                        <i class='bx bx-check-circle h1'></i>
-                        <h2>Payment Successfull</h2>
+                        <div class="d-flex justify-content-between">
+                            <div class="">
+                                <h5>SALE RETURN</h5>
+                                <p id="id_date">DATE: </p>
+                            </div>
+                            <div>
+                                <h5 id="id_invoice_number"></h5>
+                                <p id="id_invoice_date">DATE: </p>
+                            </div>
+                        </div>
+                        
+                        <table id="returnsTable" class="table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th id="unit_price_header">Price</th>
+                                    <th id="id_total_header">Total</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Invoice items will be inserted here -->
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3"></td>
+                                    <td class="fw-bold">Total (with VAT)</td>
+                                    <td class="fw-bold" id="id_total"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"></td>
+                                    <td class="fw-bold">Paid</td>
+                                    <td class="fw-bold" id="id_paid"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"></td>
+                                    <td class="fw-bold">Balance</td>
+                                    <td class="fw-bold" id="id_balance"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <hr />
+                        <h5>Items selected for refund</h5>
+                        <table>
+                            <tbody id="id_refund_items"></tbody>
+                        </table>
+                        <hr/>
+
+                        <h3>Total Refund: <span class="mx-2" id="id_refund_total"></span></h3>
+                        
+                        <hr/>
+
                     </div>
                 </div>
             </div>
         </div>
+
 
         <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
@@ -323,8 +368,6 @@ input[type="checkbox"] {
         </div>
     </div>
 </div>
-
-<script src="{% static 'assets/DataTables/datatables.min.js' %}"></script>
 <script type="text/javascript">
 
     let invoiceId = '';
@@ -339,8 +382,6 @@ input[type="checkbox"] {
     const paymentsModal = new bootstrap.Modal(document.getElementById('paymentsModal'));
 
     const deleteBtn = document.querySelectorAll('#id_delete')
-    const deleteContent = document.querySelector('#delete_content')
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
 
     const updateBtn = document.querySelectorAll('#id_update')
     const updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
@@ -348,7 +389,7 @@ input[type="checkbox"] {
     const loader = new bootstrap.Modal(document.getElementById('loaderModal'));
 
     const error = document.querySelector('#id_amount_error');
-    const loaderModal = new bootstrap.Modal(document.getElementById('loaderModal'));
+    const returnsModal = new bootstrap.Modal(document.getElementById('receiptItems'));
     const tableEl = document.querySelector('#invoiceTable');
     const loaderSpin = document.querySelector('#loader');
 
@@ -458,6 +499,16 @@ input[type="checkbox"] {
         }
 
         if(validation){
+
+            Swal.fire({
+                title: 'Processing Payment',
+                text: 'Please wait...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                }
+            });
+
             fetch(`/finance/invoice/update/${invoiceId}/`, {
                 method: "POST",
                 headers: {
@@ -496,17 +547,113 @@ input[type="checkbox"] {
         )
     })
 
-    deleteBtn.forEach((btn)=>{
-        btn.addEventListener(
-            'click', ()=>{
-                invoiceId = btn.dataset.id
-                deleteModal.show()
-                console.log(invoiceId)
-            }   
-        )
-    })
+    deleteBtn.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            invoiceId = btn.dataset.id;
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'You won\'t be able to revert this!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'No, cancel!',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    salesReturns()
+                    //deleteInvoice(invoiceId);
+                }
+            });
+        });
+    });
 
-    function deleteInvoice(){
+    const salesReturns = () => {
+        fetch(`/finance/invoice/preview/json/${invoiceId}/`, {
+            method: 'GET'
+        })
+            .then(response => response.json())
+            .then(data => {
+                returnsModal.show()
+                displaySales(data);
+                
+            });
+    }
+
+    const displaySales = (data) => {
+        const tableBody = document.querySelector('#returnsTable tbody');
+        tableBody.innerHTML = ''; 
+        let subtotal = 0;
+        console.log(data)
+        data.invoice_items.forEach(item => {
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+            <td>
+                <button class='btn' onclick="removeItem(${item.id})"><i class='bx bx-minus text-danger fs-4'></i></button>
+            </td>
+            <td>${item.item__product__name}</td>
+            <td>${item.quantity}</td>
+            <td>${item.unit_price}</td>
+            <td>${(parseFloat(item.unit_price) * item.quantity).toFixed(2)}</td>
+            <td>
+                <button class='btn' onclick="replaceItem(${item.id})"><i class='bx bx-plus text-success fs-4s'></i></button>
+            </td>
+        `;
+            tableBody.appendChild(row);
+            subtotal += item.price * item.quantity;
+
+            
+        });
+
+        const tax = subtotal * 0.15;
+        const total = subtotal + tax;
+        let refundAmount = parseFloat(0.00)
+        //const amountReturned = calculateAmountReturned(total);
+
+        document.getElementById('id_invoice_number').textContent = data.invoice.invoice_number;
+        document.getElementById('id_invoice_date').innerHTML = '<small class="text-muted">' + 'Date: ' + new Date(data.invoice.issue_date).toLocaleString() + '</small>';
+        document.getElementById('id_total_header').textContent = 'Total' + ' ' + `(${data.invoice.currency_symbol})` || 'Total';
+        document.getElementById('unit_price_header').textContent = 'Price' + ' ' + `(${data.invoice.currency_symbol})` || 'Price';
+        document.getElementById('id_total').textContent = data.invoice.amount || 0.00;
+        document.getElementById('id_paid').textContent = data.invoice.amount_paid || 0.00;
+        document.getElementById('id_balance').textContent = data.invoice.amount_due || 0.00;
+        document.getElementById('id_refund_total').textContent = `(${data.invoice.currency_symbol})` + ' ' + refundAmount || 0.00;
+        
+        //document.getElementById('subtotalAmount').innerText = subtotal.toFixed(2);
+        //document.getElementById('taxAmount').innerText = tax.toFixed(2);
+        //document.getElementById('totalAmount').innerText = total.toFixed(2);
+        //document.getElementById('amountReturned').innerText = amountReturned.toFixed(2);
+    }
+
+    const removeItem = (itemId) => {
+        fetch(`/finance/invoice/remove/${itemId}/`, {
+            method: 'DELETE',
+        })
+            .then(response => {
+                if (response.ok) {
+                    salesReturns();
+                } else {
+                    console.error('Error removing item');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    const replaceItem = (itemId) => {
+        console.log(`Replacing item with ID: ${itemId}`);
+    }
+
+
+    function deleteInvoice() {
+        Swal.fire({
+            title: 'Processing Sales returns',
+            text: 'Please wait...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
+        });
         fetch(`/finance/invoice/delete/${invoiceId}/`, {
             method: 'POST',
             headers: {
@@ -516,46 +663,64 @@ input[type="checkbox"] {
         })
         .then(response => response.json())
         .then(data => {
-            console.log(data)
-            deleteContent.innerHTML=''
-            deleteContent.innerHTML=data.message
-            window.location.reload()
+            console.log(data);
+            if (data.success){
+                Swal.fire({
+                    title: 'Success!',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.reload();
+                });
+            }else{
+                Swal.fire({
+                    title: 'Error',
+                    text: data.message,
+                    icon: 'Error',
+                    confirmButtonText: 'OK'
+                })
+            }
         })
         .catch(error => {
-            alert(error)
+            Swal.fire({
+                title: 'Error!',
+                text: error,
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
         });
     }
 
-    trEl.forEach((tr)=>{
-        tr.addEventListener(
-            'click', ()=>{
-                fetchInvoiceData(tr.dataset.invoiceid)
-            }   
-        )
-    })
-
-    whatsappBtn.addEventListener('click', function() {
-        appModal.show(); 
-        whatsappBtn.disabled = true; 
-
-        const invoiceId = this.dataset.id;
-
-        fetch(`/finance/send_invoice_whatsapp/${invoiceId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            whatsappBtn.disabled = false;
-        })
-        .catch(error => {
-            whatsappBtn.disabled = false; 
-            console.error('Error:', error);
+    trEl.forEach((tr) => {
+        tr.addEventListener('click', () => {
+            fetchInvoiceData(tr.dataset.invoiceid);
         });
     });
+
+
+    //whatsappBtn.addEventListener('click', function() {
+    //    appModal.show(); 
+    //    whatsappBtn.disabled = true; 
+
+    //    const invoiceId = this.dataset.id;
+
+    //    fetch(`/finance/send_invoice_whatsapp/${invoiceId}/`, {
+    //        method: 'POST',
+    //        headers: {
+    //            'Content-Type': 'application/json',
+    //            'X-CSRFToken': getCookie('csrftoken')
+    //        }
+    //    })
+    //    .then(response => response.json())
+    //    .then(data => {
+    //        whatsappBtn.disabled = false;
+    //    })
+    //    .catch(error => {
+    //        whatsappBtn.disabled = false; 
+    //        console.error('Error:', error);
+    //    });
+    //});
 
     async function displayReceipt(invoiceId) {
     try {

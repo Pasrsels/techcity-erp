@@ -1,3 +1,4 @@
+from email.policy import default
 import random, string, uuid
 from django.db import models
 from company.models import Branch
@@ -206,7 +207,9 @@ class Transfer(models.Model):
     quantity =  models.IntegerField(default=0, null=True)
     total_quantity_track = models.IntegerField(default=0, null=True)
     defective_status = models.BooleanField(default=False)
-    
+    delete = models.BooleanField(default=False, null=True)
+    receive_status = models.BooleanField(default=False, null=True)
+
     @classmethod
     def generate_transfer_ref(self, branch, destination_branch):
         last_transfer = Transfer.objects.filter(branch__name=branch).order_by('-id').first()
@@ -235,6 +238,7 @@ class TransferItems(models.Model):
     quantity = models.IntegerField()
     over_less_quantity = models.IntegerField(null=True, default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    dealer_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     received = models.BooleanField(default=False)
     declined = models.BooleanField(default=False) 
     over_less = models.BooleanField(default=False)
@@ -244,6 +248,8 @@ class TransferItems(models.Model):
     over_less_description = models.CharField(max_length=255, null=True, blank=True)
     received_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
     description = models.TextField()
+    receieved_quantity = models.IntegerField(default=0)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
         return f'{self.product.name} to {self.to_branch}'
@@ -270,18 +276,23 @@ class ActivityLog(models.Model):
     ACTION_CHOICES = [
         ('stock in', 'stock in'),
         ('Stock update', 'Stock update'),
+        ('stock adjustment', 'stock adjustment'),
         ('update', 'Update'),
         ('delete', 'Delete'),
         ('edit', 'Edit'),
         ('transfer', 'Transfer'),
         ('returns', 'returns'),
+        ('sale return', 'sale return'),
         ('sale', 'Sale'), 
         ('declined', 'Declined'),
         ('write off', 'write off'),
         ('defective', 'defective'),
         ('activated', 'activated'),
         ('deactivated', 'deactivated'),
-        ('removed', 'removed')
+        ('removed', 'removed'),
+        ('purchase edit +', 'purchase edit +'),
+        ('purchase edit -', 'purchase edit -'),
+        ('transfer cancel', 'transfer cancel')
     ]
     
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
@@ -290,7 +301,10 @@ class ActivityLog(models.Model):
     action = models.CharField(max_length=20, choices=ACTION_CHOICES)
     quantity = models.IntegerField()
     total_quantity = models.IntegerField()
-    timestamp = models.DateField(auto_now_add=True)
+    dealer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    system_quantity = models.IntegerField(default=0)
+    timestamp = models.DateTimeField(auto_now_add=True)
     description = models.CharField(max_length=255, null=True)
     purchase_order = models.ForeignKey(PurchaseOrder, null=True, blank=True, on_delete=models.SET_NULL)
     invoice = models.ForeignKey('finance.invoice', null=True, blank=True, on_delete=models.SET_NULL)

@@ -2,6 +2,11 @@
 {% load static%}
 {% block title%} Inventory {% endblock%}
 {% block content %}
+<style>
+    .table-responsive {
+        overflow-x: auto;
+    }
+</style>
    <div class="inventory">
         <div class="inventory-navbar">
             <nav class="d-flex justify-content-between align-items-center bg-dark text-light rounded mb-2 p-2">
@@ -23,56 +28,63 @@
                 <canvas id="inventoryChart"></canvas>
             </div>
 
-            <div class="table-detail mt-2 w-100 atable">
-                <table class='table border rounded display p-2' style="width:100%" id='detailTable'>
+            <div class="table-detail mt-2 w-100 atable table-responsive">
+                <table class='table border rounded display p-2 table-bordered table-responsive' style="width:100%" id='detailTable'>
                     <thead class='bg-primary'>
                         <tr>
                             <th>Date</th>
                             <th>By (user)</th>
                             <th>Refence</th>
                             <th>Type</th>
+                            <th>Selling Price</th>
+                            <th>Dealer Price</th>
                             <th>Trans Qnty</th>
+                            <th>System Qnty</th>
                             <th>Qnty At Hand</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for log in logs %}
-                            <tr>
-                                <td><small>{{ log.timestamp }}</small></td>
-                                <td><small><span>{{ log.user }}</span></small></td>
-                                {% if log.invoice.invoice_number %}
-                                    <td data-id="{{log.invoice.id}}" id="invoice" style="cursor:pointer;"><small>{{ log.invoice.invoice_number }}</small></td>
-                                {% elif log.product_transfer %}
-                                    <td data-id="{{ log.product_transfer.id }}" id="transfer" style="cursor:pointer;"><small>{{ log.product_transfer.transfer.transfer_ref }}</small></td>
-                                {% else %}
-                                    <td data-id="{{ log.purchase_order.id }}" id="purchase_order" style="cursor:pointer;"><small>{{ log.purchase_order.order_number }}</small></td>
-                                {% endif %}
-                                <td>
-                                    <small style='width:20px !important;'>
-                                        {{ log.action }} 
-                                        {% if log.description %}({{ log.description }}){% endif %}
-                                    </small>
-                                </td>
-                                <td><small>
-                                    {% if log.action == 'stock in' or log.action == 'Update' or log.action == 'sale cancelled' or log.action == 'Stock in' %}
-                                        <span class='text-success'>{{log.quantity}}</span>
-                                        <i class='text-success bx bx-chevron-up'></i>
+                        <tr>
+                            <td><small>{{ log.timestamp }}</small></td>
+                            <td><small><span>{{ log.user }}</span></small></td>
+                            {% if log.invoice.invoice_number %}
+                            <td data-id="{{log.invoice.id}}" id="invoice" style="cursor:pointer;"><small>{{ log.invoice.invoice_number }}</small></td>
+                            {% elif log.product_transfer %}
+                            <td data-id="{{ log.product_transfer.id }}" id="transfer" style="cursor:pointer;"><small>{{ log.product_transfer.transfer.transfer_ref }}</small></td>
+                            {% else %}
+                            <td data-id="{{ log.purchase_order.id }}" id="purchase_order" style="cursor:pointer;"><small>{{ log.purchase_order.order_number }}</small></td>
+                            {% endif %}
+                            <td>
+                                <small style='width:20px !important;'>
+                                    {{ log.action }}
+                                    {% if log.description %}({{ log.description }}){% endif %}
+                                </small>
+                            </td>
+                            <td><small>{{ log.dealer_price }}</small></td>
+                            <td><small>{{ log.selling_price }}</small></td>
+                            <td>
+                                <small>
+                                    {% if log.action == 'stock in' or log.action == 'Update' or log.action == 'sale cancelled' or log.action == 'Stock in' or log.action == 'purchase edit +' or log.action == 'transfer cancel' or log.action == 'sale return' %}
+                                    <span class='text-success'>{{log.quantity}}</span>
+                                    <i class='text-success bx bx-chevron-up'></i>
                                     {% elif log.action == 'defective'%}
-                                        <span class='text-danger'>{{log.quantity}}</span>
-                                        <i class='text-danger bx bx-chevron-down'></i>
+                                    <span class='text-danger'>{{log.quantity}}</span>
+                                    <i class='text-danger bx bx-chevron-down'></i>
                                     {% elif log.action == 'Decline'%}
-                                        <span class='text-danger'>{{log.quantity}}</span>
-                                        <i class='text-danger bx bxs-circle bx-rotate-90 bx-tada'></i>
+                                    <span class='text-danger'>{{log.quantity}}</span>
+                                    <i class='text-danger bx bxs-circle bx-rotate-90 bx-tada'></i>
                                     {% elif log.action == 'Edit' or log.action == 'deactivated' or log.action == 'activated'%}
-                                        <span class='text-dark'>{{log.quantity}}</span>
+                                    <span class='text-dark'>{{log.quantity}}</span>
                                     {% else %}
-                                        <span class='text-danger'>{{log.quantity}}</span>
-                                        <i class='text-danger bx bx-chevron-down'></i>
+                                    <span class='text-danger'>{{log.quantity}}</span>
+                                    <i class='text-danger bx bx-chevron-down'></i>
                                     {% endif %}
-                                    </small>
-                                </td>
-                                <td><small>{{log.total_quantity}}</small></td>
-                            </tr>
+                                </small>
+                            </td>
+                            <td><small>{{log.total_quantity}}</small></td>
+                            <td><small>{{log.total_quantity}}</small></td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>  
@@ -99,7 +111,9 @@
 
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>  
 <script>
-    new DataTable('#detailTable')
+    new DataTable('#detailTable', {
+        paging: false,
+    })
     
     const chart = $('.charts')
     const table = $('.atable')

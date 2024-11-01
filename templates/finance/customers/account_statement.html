@@ -88,39 +88,5 @@
                 </div>
             </div>
         </div>
-
-    <div class="print-hide">
-        <a href='{% url 'finance:print_account_statement' customer.id %}' type="button" class="btn btn-primary  d-grid w-100">
-            <i class='bx bx-printer' ></i>
-            Print
-        </a>
-        <div class="mt-1"></div>
-        <button type="button" id="mailBtn" class="btn btn-secondary d-grid w-100">
-            <i class='bx bx-mail-send' ></i>
-            email
-        </button>
-    </div>
 </div>
-
-<script>
-   const c_id = {{customer.id}}
-    const mailBtn = document.querySelector('#mailBtn')
-
-    const emailLoader = new bootstrap.Modal(document.querySelector('#mailModal'))
-    
-    mailBtn.addEventListener('click', () => {
-        emailLoader.show()
-        $.ajax({
-            url: `/finance/customer/account/${c_id}/`,
-            type: 'GET',
-            data: {'email_bool': 'yes'}
-            }).done(function(response) {
-                const data = response
-                if(data.message){
-                    document.querySelector('.email').textContent=data.message
-                }
-            })
-        });
-
-</script>
 {% endblock %}

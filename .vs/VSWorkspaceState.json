@@ -3,8 +3,14 @@
     "",
     "\\inventory",
     "\\inventory\\filters",
-    "\\techcity"
+    "\\static",
+    "\\static\\css",
+    "\\techcity",
+    "\\techcity\\__pycache__",
+    "\\templates",
+    "\\templates\\inventory",
+    "\\templates\\inventory\\components"
   ],
-  "SelectedNode": "\\techcity\\settings.py",
+  "SelectedNode": "\\finance\\views.py",
   "PreviewInSolutionExplorer": false
 }
