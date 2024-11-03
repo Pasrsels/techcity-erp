@@ -1,4 +1,4 @@
-from finance.models import Account
+from apps.finance.models import Account
 
 def account_identifier(request, currency, payment_method):
     """Identifies the account name and the account type to be debited or credited."""

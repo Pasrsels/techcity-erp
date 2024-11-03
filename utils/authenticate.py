@@ -1,4 +1,4 @@
-from users.models import User
+from apps.users.models import User
 
 
 def authenticate_user(email, password):

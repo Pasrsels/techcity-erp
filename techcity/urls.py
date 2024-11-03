@@ -6,15 +6,15 @@ from django.urls import include, path
 from django.views import defaults as default_views
 
 urlpatterns = [
-    path('pos/', include('pos.urls', namespace='pos')),
+    path('pos/', include('apps.pos.urls', namespace='pos')),
     path("admin/", admin.site.urls),
-    path('users/', include('users.urls', namespace='users')),
-    path('', include('company.urls', namespace='company')),
-    path('finance/', include('finance.urls', namespace='finance')),
-    path('settings/', include('settings.urls', namespace='settings')),
+    path('users/', include('apps.users.urls', namespace='users')),
+    path('', include('apps.company.urls', namespace='company')),
+    path('finance/', include('apps.finance.urls', namespace='finance')),
+    path('settings/', include('apps.settings.urls', namespace='settings')),
     # path('analytics/', include('Analytics.urls', namespace='analytics')),
-    path('inventory/', include('inventory.urls', namespace='inventory')),
-    path('dashboard/', include('Dashboard.urls', namespace='dashboard')),
+    path('inventory/', include('apps.inventory.urls', namespace='inventory')),
+    path('dashboard/', include('apps.Dashboard.urls', namespace='dashboard')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
