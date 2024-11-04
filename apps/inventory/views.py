@@ -2056,7 +2056,7 @@ def process_received_order(request):
         order_item.dealer_expected_profit = dealer_expected_profit
         order_item.received = True
 
-        #order_item.check_received() revisit the model method
+        order_item.check_received()
 
         # Update or create inventory
         try:

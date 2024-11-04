@@ -5,6 +5,7 @@ from apps.company.models import Branch
 from django.db.models import Sum
 from django.utils import timezone
 from django.db.models import F
+from loguru import logger
 
 class BatchCode(models.Model):
     code = models.CharField(max_length=255)
@@ -141,6 +142,8 @@ class PurchaseOrderItem(models.Model):
             if not item.received:
                 all_received = False
             break
+
+        logger.info(f'Received status ={all_received}')
 
         purchase_order = PurchaseOrder.objects.get(order_number=order_number)
         purchase_order.received = all_received
