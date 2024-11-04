@@ -1,9 +1,3 @@
-"""
-This module defines the core data models for our Company management application:
-
-* **Company:**  Represents a physical or company store with associated information.
-* **Branch:** Represents a branch location belonging to a company.
-"""
 from django.db import models
 
 
@@ -13,8 +7,8 @@ def company_logo_path(instance, filename):
 
 class Company(models.Model):
     """
-    Represents a physical or online store within the system. Companies can contain multiple branches.
-    
+    Represents a physical or online store within the system. Companies can \t
+    contain multiple branches.
     Attributes:
         name (str): The name of the store.
         description (str):  Optional textual description of the store.
@@ -24,8 +18,7 @@ class Company(models.Model):
         email (str): Optional contact email for the store.
         phone_number (str): Optional contact phone number.
         timezone (str):  Optional timezone of the store (for localization).
-        is_active (bool): Flag to indicate if the store is currently active. 
-    """
+        is_active (bool): Flag to indicate if the store is currently active."""
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     address = models.CharField(max_length=255, blank=True)
@@ -56,8 +49,7 @@ class Branch(models.Model):
         store (ForeignKey): The parent Store associated with the branch.
         name (str): The name of the branch.
         description (str): Optional textual description of the branch.
-        address (str): Optional physical address of the branch. 
-    """
+        address (str): Optional physical address of the branch."""
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     address = models.CharField(max_length=255, blank=True)
