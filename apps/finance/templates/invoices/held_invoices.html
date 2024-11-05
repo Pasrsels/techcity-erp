@@ -4,12 +4,7 @@
 {% block title%} Held Invoice{% endblock%}
 {% block content %}
 <style>
-    .finance {
-    /* font-family: Arial, sans-serif; */
-    background-color: #f7f7f7;
-    padding: 20px;
-}
-
+  
 .table-container {
     max-width: 100%;
     margin: auto;
@@ -32,15 +27,6 @@ thead th {
     cursor: pointer;
 }
 
-tbody td {
-    padding: 12px 15px;
-    border-bottom: 1px solid #eee;
-}
-
-tbody tr:hover {
-    background-color: #f1f1f1;
-}
-
 input[type="checkbox"] {
     cursor: pointer;
 }
@@ -49,16 +35,6 @@ input[type="checkbox"] {
     padding: 5px 10px;
     border-radius: 5px;
     font-size: 0.9em;
-}
-
-.status.completed {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.status.pending {
-    background-color: #f8d7da;
-    color: #721c24;
 }
 
 .payment-btn {
@@ -77,44 +53,6 @@ input[type="checkbox"] {
 .payment-btn.due {
     background-color: #dc3545;
     color: white;
-}
-
-/* Table Container to allow scrolling */
-.table-container {
-    max-height: 600px;
-    overflow-y: auto;
-    position: relative;
-}
-
-/* Sticky Search Bar */
-.sticky-top-search {
-    position: sticky;
-    top: 0;
-    background-color: white;
-    z-index: 100;
-    padding: 10px 0;
-    border-bottom: 2px solid #ccc;
-}
-
-/* Sticky Table Header */
-.sticky-header th {
-    position: sticky;
-    top: 56px; 
-    z-index: 99;
-    background-color: #007bff; 
-    color: white;
-    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
-}
-
-.table-scroll {
-    width: 100%;
-    display: block;
-}
-
-/* Custom Scrollbar Styling */
-.table-container::-webkit-scrollbar {
-    width: 2.5px; 
-    background-color: #f1f1f1;
 }
 
 .table-container::-webkit-scrollbar-thumb {
