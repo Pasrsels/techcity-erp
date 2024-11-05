@@ -1,4 +1,4 @@
- celery==5.4.0
+celery==5.4.0
 channels==4.1.0
 crispy-bootstrap5==0.7
 cssselect2==0.7.0
