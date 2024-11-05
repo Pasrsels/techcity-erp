@@ -16,6 +16,17 @@
                 <h5 class="fw-bold px-2 mt-2">Add Transfer</h5>
             </div>
             <div class="d-flex align-items-center">
+                <div id="div_id_transfer_to" class="d-flex align-items-center">
+                    <label for="id_transfer_to" class="form-label requiredField mx-2">Destination</label>
+                    <select name="transfer_to" class="select form-select" required id="id_to">
+                        <option value="" selected>---------</option>
+                        {% for branch in branches %}
+                            {% if branch.name != request.user.branch.name %}
+                                <option value="{{ branch.id }}">{{ branch.name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
         </div>
         
@@ -48,17 +59,6 @@
             <div class="col col-4">
                 <form class="d-flex flex-column mt-2 w-100" method="post">
                     {% csrf_token %}
-                    <div id="div_id_transfer_to" class="mb-1">
-                        <label for="id_transfer_to" class="form-label requiredField">Destination Branches</label>
-                        <select name="transfer_to" class="select w-100 multiple-select" required id="id_to" multiple="'multiple">
-                            <option value="">Branches</option>
-                            {% for branch in branches %}
-                                {% if branch.name != request.user.branch.name %}
-                                    <option value="{{ branch.id }}">{{ branch.name }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                    </div>
                     <div class="mb-1">
                         <label for="id_product" class="form-label requiredField">Product</label>
                         <select class="select form-select" id="id_product">
@@ -69,10 +69,6 @@
                         </select>
                     </div>
                     <!--will come back-->
-
-                    <div class="tables d-flex">
-
-                    </div>
                     <div class="{% if request.user.role == 'sales' %} d-none {% endif %}">
                         <div id="div_id_price" class="mb-1">
                             <label for="id_price" class="form-label requiredField">Price</label>
@@ -80,7 +76,7 @@
                             <p id="price_error" class="fs-6 text-danger"></p>
                         </div>
                         <div id="div_id_dealer_price" class="mb-1">
-                            <label for="id_dealer_price class="form-label requiredField">Wholesale Price</label>
+                            <label for="id_dealer_price" class="form-label requiredField">Wholesale Price</label>
                             <input type="number" name="dealer_price" step="0.01" class="numberinput form-control" required id="id_dealer_price">
                             <p id="dealer_price_error" class="fs-6 text-danger"></p>
                         </div>
@@ -127,70 +123,63 @@
   const submitBtn = document.getElementById('id_submit');
   const quantityEl = document.getElementById('id_quantity')
 
-//   $(function() {
-//     $('.multiple-select').multipleSelect()
-//   })
-
-  new SlimSelect({
-        select: '.multiple-select'
-    })
-
-    $('#id_to').on('change', function() {
-        let listBranches = []
-        let selectedBranchName = $(this).find("option:selected").text() + ' '; 
-        listBranches.push(selectedBranchName)
-        $(this).find("option:selected").val = false;
-        console.log("Selected Branch Name:", listBranches);
-    });
-
-
-    const displayForm = (selectedBranchName) =>{
-        let usedBranches = [];
-
-
-    }
-
-
   if (userRole === 'sales'){
       salesPerson = true
     }
 
-  // Initialize SlimSelect with a placeholder
-    new SlimSelect({
-        select: '#id_product',
-        placeholder: 'Select Product'
-    });
+    //$(document).ready(function () {
+    //    $('#id_to').select2({
+    //        placeholder: "Select branches",
+    //        closeOnSelect: false,
+    //        allowClear: true, 
+    //        templateResult: formatOption, 
+    //        templateSelection: formatSelection 
+    //    });
+    //});
 
-    $(document).ready(function() {
-        // Listen for change events on the SlimSelect dropdown
-        $('#id_product').on('change', function() {
-            const pElement = document.getElementById('id_product');
-            const pSelectedOption = pElement.options[pElement.selectedIndex];
-            let product = pSelectedOption ? pSelectedOption.textContent : '';
+    //// Function to render checkboxes
+    //function formatOption(option) {
+    //    if (!option.id) return option.text; 
 
-            // Fetch product data based on selected product name
-            fetch(`/inventory/inventory/?name=${product}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Update fields with product data if available
-                    if (data.length > 0) {
-                        const productData = data[0];
-                        prodEl.value = Number(productData.price);
-                        prodPrice = Number(productData.price);
-                        prodCost = Number(productData.cost);
-                        dealerEl.value = Number(productData.dealer_price);
-                        quantityEl.value = parseInt(productData.quantity);
-                        productName = productData.inventory__product__name;
+    //    // Render each option with a checkbox
+    //    return $('<span><input type="checkbox" style="margin-right: 8px;"> ' + option.text + '</span>');
+    //}
 
-                        // Store product data for further use
-                        prodData = [];
-                        prodData.push(data);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        });
-    });
+    //// Function to display selected items
+    //function formatSelection(selectedOptions) {
+    //    return selectedOptions.map(option => option.text).join(', '); 
+    //}
 
+
+  $(document).ready(function() {
+    $('#id_product').select2(
+        {placeholder: 'Select Product'}
+    )
+    .on('change', function (e){
+         const pElement = document.getElementById('id_product')
+         const pSelectedOption = pElement.options[pElement.selectedIndex]
+         let product = pSelectedOption.textContent;
+        product = $('#id_product').val()
+
+      fetch(`/inventory/inventory/?name=${product}`)
+        .then(response => response.json())
+        .then(data=>{
+          console.log(data)
+          prodEl.value=Number(data[0]?.price)
+          prodPrice=Number(data[0]?.price)
+          prodCost = Number(data[0]?.cost)
+          dealerEl.value = Number(data[0]?.dealer_price)
+          quantityEl.value = parseInt(data[0]?.quantity)
+          productName = data[0]?.inventory__product__name
+
+      
+          prodData = []
+          prodData.push(data)
+        })
+        .catch(error => console.error('Error:', error))
+    })
+
+})
 
   const successModal = new bootstrap.Modal(document.querySelector('#successModal'))
 
