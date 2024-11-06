@@ -1,24 +1,24 @@
- .venv/
- env/
- migrations/
- */migrations/*
+.venv/
+env/
+migrations/
+*/migrations/*
 .env
- *.pyc
- *~
- *.swp
- application.log
- .idea/
- .vscode/
- test.png
- *.lock
- *.log
- *.DS_Store
- .google/*
+*.pyc
+*~
+*.swp
+application.log
+.idea/
+.vscode/
+test.png
+*.lock
+*.log
+*.DS_Store
+.google/*
 *.iml
 *.xml
- *.cpython-312.pyc
- */__pycache__/*
- *.pyc
+*.cpython-312.pyc
+*/__pycache__/*
+*.pyc
 .vs/
 .pyc
 .requirements.txt
