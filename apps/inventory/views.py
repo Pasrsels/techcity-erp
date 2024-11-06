@@ -2399,7 +2399,7 @@ def edit_purchase_order_data(request, po_id):
 def supplier_view(request):
     suppliers = Supplier.objects.all()
     form = AddSupplierForm()
-    return render(request, 'Supplier/suppliers.html', {
+    return render(request, 'Supplier/Suppliers.html', {
         'form':form,
         'suppliers':suppliers
     })
