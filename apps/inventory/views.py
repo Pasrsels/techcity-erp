@@ -1350,7 +1350,11 @@ def purchase_orders(request):
         }
     )
 
-    
+from django.db import transaction
+from decimal import Decimal
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+
 @login_required
 def create_purchase_order(request):
     if request.method == 'GET':
@@ -1371,7 +1375,7 @@ def create_purchase_order(request):
                 'batch_codes':batch_codes
             }
         )
-
+     
     if request.method == 'POST':
         try:
             data = json.loads(request.body) 
@@ -1393,9 +1397,8 @@ def create_purchase_order(request):
         except json.JSONDecodeError:
             return JsonResponse({'success': False, 'message': 'Invalid JSON payload'}, status=400)
 
+        # Extract data from purchase_order_data
         batch = purchase_order_data['batch']
-        logger.info(batch)
-        supplier_id = purchase_order_data['supplier']
         delivery_date = purchase_order_data['delivery_date']
         status = purchase_order_data['status']
         notes = purchase_order_data['notes']
@@ -1404,28 +1407,15 @@ def create_purchase_order(request):
         tax_amount = Decimal(purchase_order_data['tax_amount'])
         other_amount = Decimal(purchase_order_data['other_amount'])
         payment_method = purchase_order_data.get('payment_method')
-    
-        if not all([supplier_id, delivery_date, status, total_cost, payment_method, batch]):
+
+        if not all([batch, delivery_date, status, total_cost, payment_method]):
             return JsonResponse({'success': False, 'message': 'Missing required fields'}, status=400)
-
-        # validation for batch code
-        if len(batch.split(' ')) != 2:
-            return JsonResponse({'success':False, 'message':'Please write the batch input in this format: Batch X, where X is the batch number'})
-        else:
-            if batch.split(' ')[1] not in [f'{n}' for n in range(10000)]:
-                return JsonResponse({'success':False, 'message':'Please write the batch input in this format: Batch X, where X is the batch number'})
-
-        try:
-            supplier = Supplier.objects.get(id=supplier_id)
-        except Supplier.DoesNotExist:
-            return JsonResponse({'success': False, 'message': f'Supplier with ID {supplier_id} not found'}, status=404)
 
         try:
             with transaction.atomic():
                 purchase_order = PurchaseOrder(
                     order_number=PurchaseOrder.generate_order_number(),
                     batch=batch,
-                    supplier=supplier,
                     delivery_date=delivery_date,
                     status=status,
                     notes=notes,
@@ -1433,19 +1423,20 @@ def create_purchase_order(request):
                     discount=discount,
                     tax_amount=tax_amount,
                     other_amount=other_amount,
-                    branch = request.user.branch,
-                    is_partial = False,
-                    received = False,
-                    hold = hold
+                    branch=request.user.branch,
+                    is_partial=False,
+                    received=False,
+                    hold=hold
                 )
                 purchase_order.save()
-                
+
                 purchase_order_items_bulk = []
                 for item_data in purchase_order_items_data:
-                    product_name = (item_data['product'])
+                    product_name = item_data['product']
                     quantity = int(item_data['quantity'])
                     unit_cost = Decimal(item_data['price'])
                     actual_unit_cost = Decimal(item_data['actualPrice'])
+                    supplier_ids = item_data.get('supplier', [])
 
                     if not all([product_name, quantity, unit_cost]):
                         transaction.set_rollback(True)
@@ -1456,6 +1447,15 @@ def create_purchase_order(request):
                     except Product.DoesNotExist:
                         transaction.set_rollback(True)
                         return JsonResponse({'success': False, 'message': f'Product with Name {product_name} not found'}, status=404)
+
+                    # Set the suppliers for the product
+                    if supplier_ids:
+                        suppliers = Supplier.objects.filter(id__in=supplier_ids)
+                        product.suppliers.set(suppliers)  # Assign suppliers to the product
+
+                    product.batch += f'{batch}, '
+                    product.price = 0
+                    product.save()
 
                     purchase_order_items_bulk.append(
                         PurchaseOrderItem(
@@ -1469,15 +1469,12 @@ def create_purchase_order(request):
                         )
                     )
 
-                    product.batch = product.batch + f'{batch}, '
-                    product.price = 0
-                    product.save()
-
                 PurchaseOrderItem.objects.bulk_create(purchase_order_items_bulk)
 
+                # Handle expenses
                 expense_bulk = []
                 for expense in unique_expenses:
-                    name = expense['name'] 
+                    name = expense['name']
                     amount = expense['amount']
                     expense_bulk.append(
                         otherExpenses(
@@ -1488,42 +1485,37 @@ def create_purchase_order(request):
                     )
                 otherExpenses.objects.bulk_create(expense_bulk)
 
-                # cost allocations
-                logger.info('processing cost allocations ....')
+                # Cost allocations
                 costs_list = []
                 for cost in cost_allocations:
                     costs_list.append(
                         costAllocationPurchaseOrder(
-                            purchase_order = purchase_order,
-                            allocated = cost['allocated'],
-                            allocationRate = cost['allocationRate'],
-                            expense_cost = cost['expCost'],
-                            price = cost['price'],
-                            quantity = float(cost['price']),
-                            product = cost['product'],
-                            total = cost['total'],
-                            total_buying = cost['totalBuying']
+                            purchase_order=purchase_order,
+                            allocated=cost['allocated'],
+                            allocationRate=cost['allocationRate'],
+                            expense_cost=cost['expCost'],
+                            price=cost['price'],
+                            quantity=float(cost['price']),
+                            product=cost['product'],
+                            total=cost['total'],
+                            total_buying=cost['totalBuying']
                         )
                     )
-                logger.info(f'processing cost allocations .... {costs_list}')
                 costAllocationPurchaseOrder.objects.bulk_create(costs_list)
 
-                logger.info('Cost allocations processed :)')
-                    
-                # update finance accounts (vat, cashbook, expense, account_transaction_log)'
-                if purchase_order.hold == False:
-                    if purchase_order.status in ['Received', 'received']:
+                # Process finance updates
+                if not purchase_order.hold:
+                    if purchase_order.status.lower() == 'received':
                         if_purchase_order_is_received(
                             request, 
                             purchase_order, 
                             tax_amount, 
                             payment_method
                         )       
+
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
-
         return JsonResponse({'success': True, 'message': 'Purchase order created successfully'})
-
        
 @login_required    
 def if_purchase_order_is_received(request, purchase_order, tax_amount, payment_method):

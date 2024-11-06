@@ -25,41 +25,43 @@ class ProductCategory(models.Model):
     def __str__(self):
         return self.name
 
+class Supplier(models.Model):
+    """Model for suppliers."""
+    name = models.CharField(max_length=255)
+    contact_person = models.CharField(max_length=255)
+    phone = models.CharField(max_length=255)
+    email = models.EmailField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
 class Product(models.Model):
     """Model for products."""
-
-    tax_choices = [
+    TAX_CHOICES = [
         ('exempted', 'Exempted'),
         ('standard', 'Standard'),
         ('zero rated', 'Zero Rated')
     ]
     
-    batch = models.CharField(max_length = 255, blank=True, default='')
-    supplier = models.ForeignKey('inventory.Supplier', on_delete=models.CASCADE, null = True)
+    batch = models.CharField(max_length=255, blank=True, default='')
     name = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     quantity = models.IntegerField(default=0, null=True)
-    category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, null=True)
-    tax_type = models.CharField(max_length=50, choices=tax_choices, null=True)
+    category = models.ForeignKey('ProductCategory', on_delete=models.SET_NULL, null=True)
+    tax_type = models.CharField(max_length=50, choices=TAX_CHOICES, null=True)
     min_stock_level = models.IntegerField(default=0, null=True)
     description = models.TextField()
     end_of_day = models.BooleanField(default=False, null=True)
-    service =  models.BooleanField(default=False, null=True)
+    service = models.BooleanField(default=False, null=True)
     dealer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
+    suppliers = models.ManyToManyField(Supplier, related_name="products")
+
+    def __str__(self):
+        return self.name
+
     
-    def __str__(self):
-        return self.name
-
-class Supplier(models.Model):
-    name = models.CharField(max_length=255)
-    contact_person = models.CharField(max_length=255)
-    phone = models.CharField(max_length=255)
-    email = models.EmailField(max_length=255)
-    products = models.ForeignKey('inventory.Inventory', on_delete=models.CASCADE, null=True)
-
-    def __str__(self):
-        return self.name
 
 class PurchaseOrder(models.Model):
     """Model for purchase orders."""
@@ -72,7 +74,6 @@ class PurchaseOrder(models.Model):
     ]
 
     order_number = models.CharField(max_length=100, unique=True)
-    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True)
     order_date = models.DateTimeField(default=timezone.now)
     delivery_date = models.DateField(null=True, blank=True)
     total_cost = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
@@ -108,6 +109,7 @@ class PurchaseOrder(models.Model):
 
     def __str__(self):
         return f"PO {self.order_number} - {self.supplier}"
+    
 
 class PurchaseOrderItem(models.Model):
 
@@ -150,6 +152,7 @@ class PurchaseOrderItem(models.Model):
 
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"
+    
 
 class costAllocationPurchaseOrder(models.Model):
     purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE)
@@ -164,9 +167,11 @@ class costAllocationPurchaseOrder(models.Model):
 
     def __str__(self) -> str:
         return f'{self.purchase_order}: {self.product}'
+    
 
 class ProductDetail(models.Model):
     purchase_order = models.ForeignKey(PurchaseOrderItem, on_delete=models.CASCADE) 
+
 
 class otherExpenses(models.Model):
 
@@ -178,6 +183,7 @@ class otherExpenses(models.Model):
 
     def __str__(self) -> str:
         return f'{self.purchase_order} : {self.name} -> {self.amount}'
+    
 
 class Inventory(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
@@ -200,6 +206,7 @@ class Inventory(models.Model):
     
     def __str__(self):
         return f'{self.branch.name} : ({self.product.name}) quantity ({self.quantity})'
+    
     
 class Transfer(models.Model):
     transfer_ref = models.CharField(max_length=20)
@@ -232,6 +239,7 @@ class Transfer(models.Model):
     
     def __str__(self):
         return self.transfer_ref
+    
 
 class TransferItems(models.Model):
     date = models.DateTimeField(auto_now_add=True)
