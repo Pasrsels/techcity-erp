@@ -24,7 +24,6 @@ class ProductCategory(models.Model):
     def __str__(self):
         return self.name
 
-
 class Product(models.Model):
     """Model for products."""
 
@@ -377,6 +376,3 @@ class reorderSettings(models.Model):
     number_of_days_to = models.FloatField(null=True)
     order_enough_stock = models.BooleanField(default=False)
     date_created = models.DateField(auto_now_add=True)
-
-    
-
