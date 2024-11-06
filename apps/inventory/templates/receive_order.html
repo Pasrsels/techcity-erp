@@ -76,16 +76,16 @@
                 <th>Actions</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="receive_table">
             {% for item in orders %}
-            <tr id="tr_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %}">
+            <tr id="tr_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
                 <span class="d-none" id="rq_{{ item.id }}">{{ item.received_quantity }}</span>
-                <td id="name_{{ item.id }}" style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %}">{{ item.product.name }}</td>
-                <td style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %}">{{ item.product.description }}</td>
-                <td id="purchased_quantity_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %}">{{ item.quantity }}</td>
-                <td id="q_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %}" d>
+                <td id="name_{{ item.id }}" style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.product.name }}</td>
+                <td style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.product.description }}</td>
+                <td id="purchased_quantity_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.quantity }}</td>
+                <td id="q_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild" d>
                     {% if item.received %}
-                    <div class="rounded {% if item.received_quantity < purchase_quantity %}bg-warning{% endif %}">Received [{{item.received_quantity}}]</div>
+                    <div class="rounded {% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">Received [{{item.received_quantity}}]</div>
                     {% else %}
                     <input type="number"
                            value="{% if item.received_quantity > 0 %} {{ item.received_quantity }} {% else %} {{ item.quantity }} {% endif %}"
@@ -101,10 +101,10 @@
                             )">
                     {% endif %}
                 </td>
-                <td id="unit_cost" style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %}">{{ item.unit_cost }}</td>
-                <td id="difference_{{ item.id }}" style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %}"></td>
-                <td id="actual_unit_cost" class="fw-bold" style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %}">{{ item.actual_unit_cost }}</td>
-                <td id="dSp_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %}">
+                <td id="unit_cost" style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.unit_cost }}</td>
+                <td id="difference_{{ item.id }}" style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild"></td>
+                <td id="actual_unit_cost" class="fw-bold" style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.actual_unit_cost }}</td>
+                <td id="dSp_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
                     {% if not item.received %}
                     {% if request.user.role == 'admin' or request.user.role == 'owner' %}
                     <input type="text"
@@ -124,7 +124,7 @@
                     <span id="d_{{ item.id }}">{{ item.product.dealer_price }}</span>
                     {% endif %}
                 </td>
-                <td id="sP_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %}">
+                <td id="sP_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
                     {% if not item.received %}
                     {% if request.user.role == 'admin' or request.user.role == 'owner' %}
                     <input type="text"
@@ -144,9 +144,9 @@
                     <span id="s_{{ item.id }}">{{ item.product.price }}</span>
                     {% endif %}
                 </td>
-                <td id="dealer_profit_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %}">{{ item.dealer_expected_profit }}</td>
-                <td id="profit_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %}">{{ item.expected_profit }}</td>
-                <td class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %}">
+                <td id="dealer_profit_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.dealer_expected_profit }}</td>
+                <td id="profit_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.expected_profit }}</td>
+                <td class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
                     {% if not item.received %}
                     <span class="d-flex">
                         <button class="btn btn-outline-dark btn-sm" id="submit_{{ item.id }}" style="display:none;" onclick="submitItem('{{ item.id }}')">Submit</button>

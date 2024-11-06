@@ -34,14 +34,14 @@
                         <tbody>
                             {% for order in orders %}
                                 <tr>
-                                    <td class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.order_date }}</small></td>
-                                    <td class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.delivery_date }}</small></td>
-                                    <td class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.batch|lower }}</small></td>
-                                    <td class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.supplier.name }}</small></td>
-                                    <td class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.total_cost }}</small></td>
-                                    <td class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.notes }}</small></td>
-                                    <td class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.status }}</small></td>
-                                    <td class="{% if order.is_partial %}bg-warning text-dark{% endif %}">
+                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.order_date }}</small></td>
+                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.delivery_date }}</small></td>
+                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.batch|lower }}</small></td>
+                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.supplier.name }}</small></td>
+                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.total_cost }}</small></td>
+                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.notes }}</small></td>
+                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.status }}</small></td>
+                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}">
                                         <a href="{% url 'inventory:purchase_order_detail' order.id %}" class="btn bx bx-show"></a>
                                         <a href="{% url 'inventory:print_purchase_order' order.id %}" class="btn bx bx-printer mx-1"></a>
                                         {% if order.status != 'received' %}
@@ -113,7 +113,19 @@
         const successModal = new bootstrap.Modal(document.getElementById('successModal'));
         const changeStatussubmitBtn = document.getElementById('c_sbtn');
 
-        
+        // green received
+        const receive = () =>{
+            {% for order in orders %}
+                if (`${order.received}`){
+                    document.getElementById(`id_${order.id}`).classList.add('bg-success')
+                    console.log(order.id,  document.getElementById(`id_${order.id}`))
+                }   
+            {% endfor %}
+        }
+
+        receive()
+
+    
         function confirmDeletePurchaseOrder(purchase_order_id) {
             Swal.fire({
                 title: 'Are you sure?',

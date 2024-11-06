@@ -291,15 +291,8 @@
             }
         }
     }
+
     .finance { 
-        // .transfers,
-        // .qoutations,
-        // .customers{
-        //     display: none;
-        // }
-        // .sale{
-        //     display:block;
-        // }
         .card{
             border:none;
         }
@@ -318,7 +311,61 @@
                 border-bottom-width:none !important ;
             }
          }
+
+         .main-page{
+            #sidebar-section {
+                transition: all 0.3s ease;
+            }
+        
+            nav {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        
+            .table-responsive {
+                overflow-x: auto;
+            }
+            ::-webkit-scrollbar {
+                margin-top:10px;
+                height: 5px; 
+                width: 5px; 
+            }
+        
+            ::-webkit-scrollbar-track {
+                background: transparent;
+            }
+        
+            ::-webkit-scrollbar-thumb {
+                background-color: #fff;
+                border-radius: 10px;
+            }
+         }
+
+         .cashbook{
+            .chat-messages {
+                max-height: 300px;
+                overflow-y: auto;
+                border: 1px solid #ccc;
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+            
+            .chat-message {
+                margin-bottom: 15px;
+            }
+            
+            .chat-message strong {
+                color: #007bff;
+            }
+            
+            .chat-message small {
+                display: block;
+                color: #888;
+                margin-top: 5px;
+            }  
+         }
     }
+
     .pos{
         height:100vh;
         #product-list{

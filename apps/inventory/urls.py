@@ -25,12 +25,10 @@ urlpatterns = [
     # product
     path('create/product/', product, name='product'),
     
-    # supplier
-    path('suppliers/list', suppliers, name='suppliers'),
-    path('edit/supplier/', edit_supplier, name='edit_supplier'),
-    path('create/supplier/', create_supplier, name='create_supplier'),
-    path('supplier/json/list/', supplier_list_json, name='supplier_list_json'),
-    
+    # suppliers
+    path("suppliers/", supplier_view, name="suppliers"),
+    path("suppliers/", supplier_add, name="add_supplier"),
+
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),
     

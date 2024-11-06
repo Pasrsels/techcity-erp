@@ -287,6 +287,46 @@
 .techcity .finance .main-content .recent {
   border-bottom-width: none !important;
 }
+.techcity .finance .main-page #sidebar-section {
+  transition: all 0.3s ease;
+}
+.techcity .finance .main-page nav {
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.techcity .finance .main-page .table-responsive {
+  overflow-x: auto;
+}
+.techcity .finance .main-page ::-webkit-scrollbar {
+  margin-top: 10px;
+  height: 5px;
+  width: 5px;
+}
+.techcity .finance .main-page ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.techcity .finance .main-page ::-webkit-scrollbar-thumb {
+  background-color: #fff;
+  border-radius: 10px;
+}
+.techcity .finance .cashbook .chat-messages {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.techcity .finance .cashbook .chat-message {
+  margin-bottom: 15px;
+}
+.techcity .finance .cashbook .chat-message strong {
+  color: #007bff;
+}
+.techcity .finance .cashbook .chat-message small {
+  display: block;
+  color: #888;
+  margin-top: 5px;
+}
 .techcity .pos {
   height: 100vh;
 }
