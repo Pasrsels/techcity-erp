@@ -1844,17 +1844,13 @@ def sales_price_list_pdf(request, order_id):
         'quantity'
     )
 
-    
     # Convert products queryset to a dictionary for easy lookup by product ID
     product_prices = {product['product__name']: product for product in products}
-
-    logger.info(product_prices)
    
     for item in items:
         product_name = item.product
         logger.info(product_name)
         product_data = product_prices.get(product_name)
-        logger.info(product_data)
 
         item.description = product_data['product__description']
 
@@ -2409,6 +2405,14 @@ def supplier_view(request):
         'form':form,
         'suppliers':suppliers
     })
+
+@login_required
+def supplier_list_json(request):
+    suppliers = Supplier.objects.all().values(
+        'id',
+        'name'
+    )
+    return JsonResponse(list(suppliers), safe=False)
 
 @login_required
 def supplier_add(request):
