@@ -52,12 +52,11 @@ class Product(models.Model):
         return self.name
 
 class Supplier(models.Model):
-    """Model to represent suppliers."""
     name = models.CharField(max_length=255)
-    contact_name = models.CharField(max_length=255)
-    email = models.EmailField()
-    phone = models.CharField(max_length=20)
-    address = models.TextField()
+    contact_person = models.CharField(max_length=255)
+    phone = models.CharField(max_length=255)
+    email = models.EmailField(max_length=255)
+    products = models.ForeignKey('inventory.Inventory', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.name
@@ -123,7 +122,7 @@ class PurchaseOrderItem(models.Model):
     dealer_expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
     def receive_items(self, quantity):
-       
+    
         self.received_quantity += quantity
         if self.received_quantity >= self.quantity:
             self.received = True
@@ -382,4 +381,3 @@ class reorderSettings(models.Model):
     date_created = models.DateField(auto_now_add=True)
 
     
-
