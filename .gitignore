@@ -21,3 +21,4 @@
  *.pyc
 .vs/
 .pyc
+.requirements.txt
