@@ -489,12 +489,12 @@ def activate_inventory(request, product_id):
 
 @admin_required
 @login_required
-def edit_inventory(request, product_name):
-    inv_product = Inventory.objects.get(product__name=product_name, branch=request.user.branch)
+def edit_inventory(request, product_id):
+    inv_product = Inventory.objects.get(product__id=product_id, branch=request.user.branch)
 
     if request.method == 'POST':
         
-        product = Product.objects.get(name=product_name)
+        product = Product.objects.get(id=product_id)
         product.name=request.POST['name']
         # product.batch_code=request.POST['batch_code']
         product.description=request.POST['description']
