@@ -1844,21 +1844,27 @@ def sales_price_list_pdf(request, order_id):
         'quantity'
     )
 
+    
     # Convert products queryset to a dictionary for easy lookup by product ID
     product_prices = {product['product__name']: product for product in products}
+
+    logger.info(product_prices)
    
     for item in items:
         product_name = item.product
+        logger.info(product_name)
         product_data = product_prices.get(product_name)
+        logger.info(product_data)
 
         if product_data:
             item.dealer_price = product_data['dealer_price']
             item.selling_price = product_data['price']
+            item.description = product_data['product__description']
         else:
             item.dealer_price = 0
             item.selling_price = 0
-
-        item.description = product_data['product__description']
+            item.description = product_data['product__description']
+            
 
     context = {'items': items}
 

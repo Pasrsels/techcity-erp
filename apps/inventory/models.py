@@ -367,6 +367,7 @@ class Service(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     tax_type = models.CharField(max_length=50, choices=tax_choices)
     category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, null=True)
+    # branch = models.ForeignKey(branch, on_delete=models.CASCADE)
     description = models.TextField()
     
     def __str__(self):
