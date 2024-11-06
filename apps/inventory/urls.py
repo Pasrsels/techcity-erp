@@ -28,6 +28,7 @@ urlpatterns = [
     # suppliers
     path("suppliers/", supplier_view, name="suppliers"),
     path("suppliers/", supplier_add, name="add_supplier"),
+    path('create_supplier', create_supplier, name='create_supplier'),
 
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),

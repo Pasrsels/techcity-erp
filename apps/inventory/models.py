@@ -35,6 +35,7 @@ class Product(models.Model):
     ]
     
     batch = models.CharField(max_length = 255, blank=True, default='')
+    supplier = models.ForeignKey('inventory.Supplier', on_delete=models.CASCADE, null = True)
     name = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
