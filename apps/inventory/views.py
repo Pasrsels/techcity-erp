@@ -2395,6 +2395,36 @@ def edit_purchase_order_data(request, po_id):
 
     except Exception as e:
         return JsonResponse({"success":False, 'message':f'{e}'})
+@login_required
+def supplier_view(request):
+    suppliers = Supplier.objects.all()
+    form = AddSupplierForm()
+    return render(request, 'Supplier/suppliers.html', {
+        'form':form,
+        'suppliers':suppliers
+    })
+
+@login_required
+def supplier_add(request):
+    """
+        payload = {
+            name,
+            contact_person,
+            email,
+            product,
+            address
+        }
+    """
+    if request.method == 'POST':
+        form = AddSupplierForm(request.post or None)
+        if form.is_valid():
+            form.save()
+            messages.info(request, 'Supplier details successfully saved')
+            return redirect('inventory:suppliers')
+        messages.info(request, 'Invalid form details')
+        return redirect('inventory:suppliers')
+    messages.info(request, 'Invalid request')
+    return redirect('inventory:suppliers')
     
 @login_required
 def product(request):
