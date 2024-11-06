@@ -1849,17 +1849,19 @@ def sales_price_list_pdf(request, order_id):
    
     for item in items:
         product_name = item.product
+        logger.info(product_name)
         product_data = product_prices.get(product_name)
+
+        item.description = product_data['product__description']
 
         if product_data:
             item.dealer_price = product_data['dealer_price']
             item.selling_price = product_data['price']
+            item.description = product_data['product__description']
         else:
             item.dealer_price = 0
             item.selling_price = 0
-
-        item.description = product_data['product__description']
-
+            
     context = {'items': items}
 
     template = get_template('pdf_templates/price_list.html')
@@ -2405,6 +2407,14 @@ def supplier_view(request):
     })
 
 @login_required
+def supplier_list_json(request):
+    suppliers = Supplier.objects.all().values(
+        'id',
+        'name'
+    )
+    return JsonResponse(list(suppliers), safe=False)
+
+@login_required
 def supplier_add(request):
     """
         payload = {
@@ -2425,6 +2435,42 @@ def supplier_add(request):
         return redirect('inventory:suppliers')
     messages.info(request, 'Invalid request')
     return redirect('inventory:suppliers')
+
+@login_required
+def create_supplier(request):
+    #payload
+    """
+        name 
+        contact
+        email
+        phone 
+        address
+    """
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        
+        name = data['name']
+        contact = data['contact']
+        email = data['email']
+        phone = data['phone']
+        address = data['address']
+        
+        if not name or not contact or not email or not phone or not address:
+            return JsonResponse({'success': False, 'message':'Fill in all the form data'}, status=400)
+        
+        if Supplier.objects.filter(email=email).exists():
+            return JsonResponse({'success': False, 'message':f'Supplier{name} already exists'}, status=400)
+        
+        supplier = Supplier(
+            name = name,
+            contact_name = contact,
+            email = email,
+            phone = phone,
+            address = address
+        )
+        supplier.save()
+        logger.info(f'Supplier successfully created {supplier.name}')
+        return JsonResponse({'success': True}, status=200)
     
 @login_required
 def product(request):
