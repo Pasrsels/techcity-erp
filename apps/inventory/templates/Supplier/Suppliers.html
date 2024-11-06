@@ -1,0 +1,48 @@
+<!-- templates/suppliers/supplier_list.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier List</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+<tbody>
+    <h1>Supplier List</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Contact Number</th>
+                <th>Email</th>
+                <th>Address</th>
+                <th>Contact person</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for supplier in suppliers %}
+            <tr>
+                <td><a href="{% /home/tee/projects/techcity-erp/apps/inventory/templates/inventory.html'inventory..supplier %}">{{ supplier.name }}</a></td>
+                <td>{{ supplier.name }}</td>
+                <td>{{ supplier.contact_number }}</td>
+                <td>{{ supplier.email }}</td>
+                <td>{{ supplier.address }}</td>
+                <td>{{supplier.contact person}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

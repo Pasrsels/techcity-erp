@@ -122,7 +122,7 @@ def register_company_view(request):
                 },
                 status=500
             )
-    return render(request, 'registration/registration.html')
+    return render(request, 'registration.html')
 
 
 def branch_list(request):

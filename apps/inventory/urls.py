@@ -25,7 +25,10 @@ urlpatterns = [
     # product
     path('create/product/', product, name='product'),
     
-    
+    # suppliers
+    path("suppliers/", supplier_view, name="suppliers"),
+    path("suppliers/", supplier_add, name="add_supplier"),
+
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),
     
