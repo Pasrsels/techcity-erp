@@ -1,0 +1,412 @@
+@font-face {
+  font-family: Lato-Regular;
+  src: url("../fonts/Lato/Lato-Regular.ttf");
+}
+.techcity {
+  overflow: hidden;
+  font-family: graphik;
+  font-size: 0.9rem;
+}
+.techcity .account-statement {
+  font-family: lato-Regular;
+}
+@media print {
+  .techcity .account-statement header, .techcity .account-statement footer {
+    display: none;
+  }
+  .techcity .account-statement .print-hide {
+    display: none;
+  }
+  .techcity .account-statement body {
+    font-size: 12pt;
+  }
+  .techcity .account-statement a {
+    color: black;
+    text-decoration: underline;
+  }
+}
+.techcity .withdrawals td {
+  background-color: #0d6efd !important;
+  color: white;
+}
+.techcity .transfer-ibt {
+  font-family: lato-Regular;
+}
+.techcity .transfer-btn {
+  background-color: #0d6efd !important;
+  color: white;
+}
+.techcity .hover-dark {
+  background: #333;
+  color: #fff;
+}
+.techcity .cursor-pointer {
+  cursor: pointer;
+}
+.techcity .hidden {
+  display: none;
+}
+.techcity .loader {
+  height: 80vh;
+}
+.techcity .table-scroll {
+  height: 80vh;
+  overflow-y: auto;
+}
+.techcity .customer-table {
+  height: 80vh;
+  overflow-y: auto;
+}
+.techcity td {
+  height: 5px !important;
+}
+.techcity .bg {
+  background: #373f4c;
+  color: #fff;
+}
+@font-face {
+  font-family: "graphik";
+  src: url("../assets/fonts/GraphikRegular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
+.techcity th {
+  font-weight: bold !important;
+  opacity: 0.9;
+  color: #5f5f60 !important;
+  font-size: 0.8125rem;
+}
+.techcity .initials {
+  background: #535d6e;
+  color: #fff;
+  font-size: 0.6rem;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.techcity .initials .content {
+  padding: 0.5rem;
+}
+.techcity .td-contents {
+  height: 30px;
+  display: flex;
+  align-items: center;
+}
+.techcity a {
+  text-decoration: none;
+}
+.techcity .col-2 {
+  background: #373f4c !important;
+  width: 15%;
+}
+.techcity .col-lg-10,
+.techcity .col-12 {
+  width: 85%;
+}
+.techcity .aside-bar {
+  transition: transform 0.5;
+}
+.techcity .aside-bar aside {
+  position: relative;
+  height: 100vh;
+  background: #373f4c !important;
+}
+.techcity .aside-bar aside .aside-logo {
+  margin-left: 0.7rem;
+}
+.techcity .aside-bar aside a {
+  color: #fff !important;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  font-size: 0.8125rem;
+}
+.techcity .aside-bar aside a i {
+  font-size: 1.25rem;
+}
+.techcity .aside-bar aside .menu .menu-link,
+.techcity .aside-bar aside .settings .menu-link {
+  cursor: pointer;
+}
+.techcity .aside-bar aside .menu .menu-link a,
+.techcity .aside-bar aside .settings .menu-link a {
+  text-decoration: none;
+  color: #333;
+}
+.techcity .aside-bar aside .menu .menu-link:hover a,
+.techcity .aside-bar aside .settings .menu-link:hover a {
+  color: #777;
+}
+.techcity .aside-bar aside .menu .dropdown,
+.techcity .aside-bar aside .settings .dropdown {
+  position: relative;
+}
+.techcity .aside-bar aside .menu .dropdown .dropdown-menu,
+.techcity .aside-bar aside .settings .dropdown .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: none;
+  border: none;
+}
+.techcity .aside-bar aside .menu .dropdown:hover .dropdown-menu,
+.techcity .aside-bar aside .settings .dropdown:hover .dropdown-menu {
+  display: block;
+}
+.techcity .aside-bar aside .menu .dropdown:hover .dropdown-menu .dropdown-link a,
+.techcity .aside-bar aside .settings .dropdown:hover .dropdown-menu .dropdown-link a {
+  color: #333 !important;
+}
+.techcity .aside-bar aside .menu .dropdown:hover .dropdown-menu .dropdown-link:hover a,
+.techcity .aside-bar aside .settings .dropdown:hover .dropdown-menu .dropdown-link:hover a {
+  color: #999 !important;
+}
+.techcity .aside-bar aside .menu li,
+.techcity .aside-bar aside .settings li {
+  padding-bottom: 5px;
+}
+.techcity .aside-bar aside .settings {
+  position: absolute;
+  bottom: 0;
+}
+@media (max-width: 990px) {
+  .techcity .aside-bar {
+    transform: translateX(-100);
+    display: none;
+  }
+}
+.techcity .top-bar .nav-bar nav {
+  height: 56px;
+}
+.techcity .top-bar .nav-bar nav .menu .menu-link,
+.techcity .top-bar .nav-bar nav .user .menu-link {
+  cursor: pointer;
+}
+.techcity .top-bar .nav-bar nav .menu .menu-link a,
+.techcity .top-bar .nav-bar nav .user .menu-link a {
+  text-decoration: none;
+  color: #333;
+}
+.techcity .top-bar .nav-bar nav .menu .menu-link:hover a,
+.techcity .top-bar .nav-bar nav .user .menu-link:hover a {
+  color: #777;
+}
+.techcity .top-bar .nav-bar nav .dropdown {
+  position: relative;
+}
+.techcity .top-bar .nav-bar nav .dropdown .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: none;
+  border: none;
+}
+.techcity .top-bar .nav-bar nav .dropdown:hover .dropdown-menu {
+  display: block;
+}
+.techcity .top-bar .nav-bar nav .dropdown:hover .dropdown-menu .dropdown-link a {
+  color: #333 !important;
+}
+.techcity .top-bar .nav-bar nav .dropdown:hover .dropdown-menu .dropdown-link:hover a {
+  color: #999 !important;
+}
+@media (max-width: 929px) {
+  .techcity .top-bar .col-10 {
+    width: 100% !important;
+  }
+  .techcity .top-bar .col-10 nav .menu .menu-links a {
+    font-size: 17px;
+  }
+}
+.techcity .login {
+  height: 100vh;
+}
+.techcity .inventory #id_time_frame .col:hover {
+  background: #373f4c;
+  color: white;
+}
+.techcity .inventory .card {
+  border: none;
+}
+.techcity .inventory .add-product .add-product-nav {
+  height: 56px;
+}
+.techcity .inventory .table-detail {
+  table-layout: fixed;
+  width: 100%;
+}
+.techcity .inventory .transfers-table td {
+  height: -moz-fit-content;
+  height: fit-content;
+}
+.techcity .finance .invoice-table {
+  height: 80vh;
+  overflow-y: auto;
+}
+.techcity .finance .card {
+  border: none;
+}
+.techcity .finance .main-content {
+  flex: 1;
+  padding-right: 20px;
+}
+.techcity .finance .main-content .sidebar {
+  flex: 1;
+  background-color: #f0f0f0;
+  padding: 10px;
+}
+.techcity .finance .main-content .sidebar h3 {
+  margin-top: 0;
+}
+.techcity .finance .main-content .recent {
+  border-bottom-width: none !important;
+}
+.techcity .pos {
+  height: 100vh;
+}
+.techcity .pos #product-list {
+  height: 80vh;
+  overflow-y: auto;
+}
+.techcity .pos .products .col-3 {
+  height: 150px !important;
+}
+.techcity .pos .products .card {
+  height: 150px !important;
+  background: #8BC34A;
+}
+.techcity .pos .products .card p {
+  margin-top: -20px !important;
+}
+.techcity .pos .products li {
+  cursor: pointer;
+}
+.techcity .pos .products li:hover {
+  background: lightgrey;
+}
+.techcity .pos .products li:nth-child(even) {
+  background: lightgrey;
+}
+.techcity .pos .product-search .form-control,
+.techcity .pos .product-search .form-select {
+  border: none !important;
+}
+.techcity .pos .search-bar {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  padding: 4px 8px;
+  width: 300px;
+}
+.techcity .pos .search-bar #search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0;
+}
+.techcity .pos .search-bar .avatar-container {
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
+  border-radius: 50%;
+}
+.techcity .pos .search-bar .avatar {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+.techcity .pos .add-items-area .top {
+  height: 10vh;
+}
+.techcity .pos .add-items-area .table .head {
+  background: #ff6600 !important;
+}
+.techcity .pos .add-items-area .table th {
+  font-size: 0.8rem;
+}
+.techcity .pos .add-items-area .table-items {
+  height: 30vh;
+  margin-top: -16px;
+}
+.techcity .pos .add-items-area .totals {
+  height: 20vh;
+  margin-bottom: 5px;
+}
+.techcity .pos .add-items-area .payment-buttons {
+  height: 20vh;
+}
+.techcity .pos .loader-parent .loader {
+  position: absolute;
+  top: calc(50% - 32px);
+  left: calc(50% - 32px);
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+}
+.techcity .pos .loader-parent .inner {
+  position: absolute;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+.techcity .pos .loader-parent .inner.one {
+  left: 0%;
+  top: 0%;
+  animation: rotate-one 1s linear infinite;
+  border-bottom: 3px solid #f06721;
+}
+.techcity .pos .loader-parent .inner.two {
+  right: 0%;
+  top: 0%;
+  animation: rotate-two 1s linear infinite;
+  border-right: 3px solid #1da5db;
+}
+.techcity .pos .loader-parent .inner.three {
+  right: 0%;
+  bottom: 0%;
+  animation: rotate-three 1s linear infinite;
+  border-top: 3px solid #000;
+}
+@keyframes rotate-one {
+  0% {
+    transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg);
+  }
+}
+@keyframes rotate-two {
+  0% {
+    transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg);
+  }
+}
+@keyframes rotate-three {
+  0% {
+    transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg);
+  }
+}
+.techcity .analytics .aside-content .col {
+  display: flex;
+  align-items: center;
+}
+.techcity .analytics .aside-content .col p {
+  font-size: 0.8125em;
+}
+.techcity .users .card {
+  border: none;
+}/*# sourceMappingURL=main.css.map */

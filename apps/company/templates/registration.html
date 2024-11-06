@@ -1,0 +1,308 @@
+{% load static i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="Techcity Pos System"/>
+    <meta name="Author"content="casy moyo" />
+    <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}"/>
+
+    {% block css %}
+        <link rel="stylesheet" href="{% static 'css/main.css'%}">
+        <link rel="stylesheet" href="{% static 'css/bootstrap/css/bootstrap.css'%}">
+        <link rel="stylesheet" href="{% static 'assets/hint.css/hint.min.css'%}">
+        <link rel="stylesheet" href="{% static 'assets/DataTables/datatables.min.css'%}">
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+        <link href='{% static "assets/boxicons/css/boxicons.css"%}' rel='stylesheet'>
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+        
+    {% endblock css %}
+    
+
+    <script src="{% static 'js/jquery.js'%}"></script>
+    <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'assets/DataTables/datatables.min.js' %}"></script>
+    {% comment %} <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script> {% endcomment %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <title>
+        {% block title %}Registration{% endblock title %}
+    </title>
+    <style>
+        .custom-file-input {
+            display: none; 
+        }
+        
+        .custom-file-label {
+            display: inline-block;
+            padding: .5rem 1.5rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #495057;
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: .25rem;
+            cursor: pointer;
+        }
+        
+        
+    </style>
+</head>+
+<body>
+{% comment %} Registration {% endcomment %}
+    <div class="Registration d-flex justify-content-center align-items-center" style="height: 100vh;">
+        <div class="w-75">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+            <div id="company_info" class="border rounded p-4">
+                    <div class="d-flex justify-content-between">
+                        <h5>Enter Company Details</h5>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="id_company_logo" name="logo">
+                            <label class="custom-file-label" for="id_company_logo">
+                                <i class='bx bx-image-add'></i> Upload Logo
+                            </label>
+                            <span id="file-name"></span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name:</label>
+                        <input type="text" id="name" name="name" class="form-control" required>
+                    </div>
+        
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address:</label>
+                        <input type="text" id="address" name="address" class="form-control">
+                    </div>
+        
+                    <div class="mb-3">
+                        <label for="domain" class="form-label">Domain:</label>
+                        <input type="text" id="domain" name="domain" class="form-control">
+                    </div>
+        
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email:</label>
+                        <input type="email" id="email" name="email" class="form-control">   
+        
+                    </div>
+        
+                    <div class="mb-3">
+                        <label for="phone_number" class="form-label">Phone Number:</label>
+                        <input type="text" id="phone_number" name="phone_number" class="form-control">   
+        
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description:</label>
+                        <textarea id="description" name="description" class="form-control"></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary">next</button>
+                    </div>
+
+                
+
+            </div>
+
+            <div id="user_info" class="border rounded p-4" style="display: none;">
+                <h5>Owner Information</h5>
+                    <div class="mb-3">
+                        <label for="first_name" class="form-label">First Name:</label>
+                        <input type="text" id="first_name" name="first_name" class="form-control">   
+    
+                    </div>
+                    <div class="mb-3">
+                        <label for="last_name" class="form-label">Last Name:</label>
+                        <input type="text" id="last_name" name="last_name" class="form-control">
+                    </div>
+                    <div class="mb-3"> 
+                        <label for="username" class="form-label">Username:</label>
+                        <input type="text" id="username" name="username" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password1" class="form-label">Password:</label>
+                        <input type="password" id="password1" name="password1" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password2" class="form-label">Confirm Password:</label>
+                        <input type="password" id="password2" name="password2" class="form-control">
+                    </div>
+
+                    <p class="text-danger" id="c_error"></p>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary">Back</button>
+                        <button type="button" class="btn btn-primary" id="id_save">Save</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-dialog-right">
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            <h5>Registration was Successfull</h5>
+                            <p>As the redirect completes, please make sure to create the following</p>
+                            <ul>
+                                <li>Add branches, if your company just have one please add it.</li>
+                                <li>Add Currency and make it the default.</li>
+                            </ul>
+                            <p>Just wait few moments for the redirect to complete......</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+    <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const companyForm = document.getElementById('company_info');
+        const userForm = document.getElementById('user_info');
+        const nextButton = companyForm.querySelector('button[type="button"]');
+        const backButton = userForm.querySelector('button[type="button"]');
+        const saveButton = userForm.querySelector('#id_save');
+
+        const fileInput = document.getElementById('id_company_logo');
+        const fileNameDisplay = document.getElementById('file-name');
+
+        const passwordInput = document.getElementById('password1');
+        const confirmPasswordInput = document.getElementById('password2');
+
+        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+
+        const errorEl = document.getElementById('c_error');
+
+      
+        function checkRequiredFields(form) {
+            let allFilled = true;
+            const requiredInputs = form.querySelectorAll('input[required], textarea[required]');
+
+            requiredInputs.forEach(input => {
+                if (input.value.trim() === '') {
+                    allFilled = false;
+                }
+            });
+
+            return allFilled;
+        }
+
+       
+        companyForm.querySelectorAll('input, textarea').forEach(input => {
+            input.addEventListener('input', () => {
+                nextButton.disabled = !checkRequiredFields(companyForm);
+            });
+        });
+
+   
+        userForm.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', () => {
+                saveButton.disabled = !(checkRequiredFields(userForm) && validatePasswords());
+            });
+        });
+
+        confirmPasswordInput.addEventListener('input', () => {
+            validatePasswords();
+        });
+
+        function validatePasswords() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            if (password !== confirmPassword) {
+                errorEl.textContent = 'Passwords do not match';
+                return false;
+            } else {
+                errorEl.textContent = '';
+                return true;
+            }
+        }
+
+        fileInput.addEventListener('change', (event) => {
+            const filePath = event.target.value;
+            const fileName = filePath.split('\\').pop() || filePath.split('/').pop();
+            fileNameDisplay.textContent = fileName;
+        });
+
+        nextButton.addEventListener('click', () => {
+            if (checkRequiredFields(companyForm)) {
+                companyForm.style.display = 'none';
+                userForm.style.display = 'block';
+            }
+        });
+
+        backButton.addEventListener('click', () => {
+            companyForm.style.display = 'block';
+            userForm.style.display = 'none';
+        });
+
+        saveButton.addEventListener('click', () => {
+            if (checkRequiredFields(userForm) && validatePasswords()) {
+                const companyData = {
+                    name: document.getElementById('name').value,
+                    address: document.getElementById('address').value,
+                    domain: document.getElementById('domain').value,
+                    email: document.getElementById('email').value,
+                    phone_number: document.getElementById('phone_number').value,
+                    description: document.getElementById('description').value,
+                    logo: document.getElementById('id_company_logo').files[0]
+                };
+
+                const userData = {
+                    first_name: document.getElementById('first_name').value,
+                    last_name: document.getElementById('last_name').value,
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password1').value,
+                    confirm_password: document.getElementById('password2').value
+                };
+
+                const csrftoken = getCookie('csrftoken');
+
+                fetch("{% url 'company:register_company' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body: JSON.stringify({'company_data': companyData, 'user_data': userData})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        successModal.show()
+
+                        setTimeout(()=>{
+                            window.location.href = "{% url 'users:login' %}";
+                        }, 10000)
+                        
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+
+    </script>
+</body>
+</html>

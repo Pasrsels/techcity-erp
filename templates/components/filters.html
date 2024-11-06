@@ -1,0 +1,25 @@
+{% load static %}
+{% block content %}
+<script src="{% static 'js/jquery.js'%}"></script>
+<script>
+    document.querySelector('#id_report').addEventListener(
+        'click', ()=>{
+            const data = {
+                search: $('#id_search').val(),
+                category: $('#id_category').val(),
+                endDate:$('#id_end_date').val(),
+                startDate: $('#id_start_date').val(),
+            }
+            console.log(data.category)
+            $.ajax({
+                url: '{% url 'finance:expenses_report'%}',
+                type: 'GET',
+                data: data,
+                }).done((response)=>{
+                    console.log(response.message)
+                    console.log(response)
+                })
+        }
+    )
+</script>
+{% endblock content %}

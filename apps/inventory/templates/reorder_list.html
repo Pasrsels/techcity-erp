@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static%}
+{% block title%} Re order {% endblock%}
+{% block content %}
+   <div class="inventory">
+        <div class="inventory-navbar">
+            <nav class="d-flex justify-content-between align-items-center rounded p-2">
+                <div class="d-flex  align-items-center">
+                    <div>
+                        <h5 class='mt-1 fw-bold'>Product Re-order List</h5>
+                    </div>
+                </div>
+                <div class="search d-flex align-items-center">
+                    <div class="reorder-basket btn mx-1">
+                        <i class='bx bx-basket text-light fs-5'></i>
+                        <small class='badge text-danger' style='position:relative; top:-10px; left:-7px;' id="reorder_quantity">1</small>
+                    </div> 
+                    <div class="mx-2">
+                        <button type="button" class="btn btn-outline-dark" id="createList">
+                            create order list
+                        </button>
+                    </div>
+                    <div>
+                        <a href="{% url 'inventory:clear_reorder_list' %}" type="button" class="btn btn-outline-dark">
+                            clear list
+                        </a>
+                    </div>
+                    <div class="mx-2">
+                        <span>
+                            <a href='?download=true' class="btn btn-outline-dark">
+                                excel
+                                <i class='bx bx-download'></i>
+                            </a>        
+                        </span>
+                    </div>
+                    <div></div>
+                        <span>
+                            <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#reorderSettingsModal">
+                                <i class='bx bx-cog'></i>
+                            </a>        
+                        </span>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        <div>
+        {% include 'components/loader.html' %}
+        <div class="table-detail table-scroll hidden mt-2" id="reorderTable">
+            <table class='table border rounded p-2'>
+                <thead class='bg-primary'>
+                        <th>Date</th>
+                        <th>Product</th>
+                        <th>Available Quantity</th>
+                        <th>Last Day Received</th>
+                        <th>Average Sales</th>
+                        <th>Quantity</th>
+                        <th>Quantity To Be Ordered</th>
+                        <th>Cost</th>
+                        <th>Action</th>
+                    
+                </thead>
+                <tbody id="reorderData">
+                    {% for product in reorder_list %}
+                        <tr>
+                            <td><small>{{ product.product.product.name }}</small></td>
+                            <td><small>{{ product.product.quantity }}</small></td>
+                            <td><small>{{ product.quantity }}</small></td>
+                            <td><small>{{ product.cost }}</small></td>
+                            <td id='remove' data-id={{ product.id }}><small><i class='bx bx-trash'></i>remove</small></td>
+                        </tr>
+                    {% endfor %}
+                    <tfoot>
+                        <td class=''>Total</td>
+                        <td class=''></td>
+                        <td class=''></td>
+                        <td class='fw-bold'></td>
+                    </tfoot>
+                </tbody>
+            </table>  
+            
+            <div class="modal fade" id="removeModal" tabindex="-1" aria-labelledby="transferModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Remove product from list</h5>
+                            <button class='btn btn-secondary w-100' id='removeBtn'>Yes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="transferModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content text-center">
+                        <h5 class="p-3">Success</h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="reorderModal" tabindex="-1" aria-labelledby="transferModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content p-2 ">
+                        <h5 class="'fw-bold">Create Order List</h5>
+                        <div class="mt-2">
+                            <select class="form-select" id="id_category">
+                                <option value="">All products</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <table class="table table-striped mt-2"  id="addReorderTableList">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Quantity</th>
+                                    <th>Description</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Settings Modal -->
+        <div class="modal fade" id="reorderSettingsModal" tabindex="-1" aria-labelledby="reorderSettingsModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="reorderSettingsModalLabel">Create Reorder Setting</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                    <form method="POST" id="reorderSettingsForm">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="bDhvSqLEO0SysVNDyAvvy1BNXCmvgSf4VDGXsfEsJ8A1w3VUozCvRPslTrFSXMGc">
+                        
+    
+    <div id="div_id_supplier" class="mb-3"> <label for="id_supplier" class="form-label requiredField">
+                    Supplier<span class="asteriskField">*</span> </label> <input type="text" name="supplier" maxlength="255" class="textinput form-control" required id="id_supplier"> </div> <div class="mb-3"> 
+                    </div> 
+                    <div id="div_id_number_of_days_from" class="mb-3"> 
+                        </div> 
+                    <div id="div_id_number_of_days_to" class="mb-3"> 
+                        <label for="id_number_of_days_to" class="form-label requiredField">
+                        Number of days to<span class="asteriskField">*</span> 
+                    </label> 
+                    <input type="number" name="number_of_days_to" step="any" class="numberinput form-control" required id="id_number_of_days_to"> </div> <div class="mb-3"> 
+                        <div id="div_id_order_enough_stock" class="mb-3 form-check"> 
+                            <input type="checkbox" name="order_enough_stock" class="checkboxinput form-check-input" id="id_order_enough_stock">
+                            <label for="id_order_enough_stock" class="form-check-label">
+                                Order enough stock from 
+                            </label> 
+                            <label for="id_number_of_days_from" class="form-label requiredField">
+                                Number of days from<span class="asteriskField">*</span> 
+                            </label> 
+                            <input type="number" name="number_of_days_from" step="any" class="numberinput form-control" required id="id_number_of_days_from">     
+                        </div> 
+
+                    <div id="div_id_quantity_suggestion" class="mb-3 form-check"> <input type="checkbox" name="quantity_suggestion" class="checkboxinput form-check-input" id="id_quantity_suggestion"> <label for="id_quantity_suggestion" class="form-check-label">
+                        Dont suggestion quantity
+                    </label> </div> 
+
+                    </div>
+    
+                    </form>
+                    </div>
+                    <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="submitReorderForm">Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>   
+   </div> 
+<script>
+    let product_id = '';
+    let action = '';
+    let productData = []
+
+    const removeModal = new bootstrap.Modal(document.getElementById('removeModal'));
+    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    const reorderModal = new bootstrap.Modal(document.getElementById('reorderModal'));
+
+    const removeBtn = document.querySelector('#removeBtn')
+    const rmToggle = document.querySelectorAll('#remove')
+    const orderList = document.querySelector('#orderList')
+    const createList = document.querySelector('#createList')
+    const reorderData = document.querySelector('#reorderData')
+
+    const loader = document.querySelector('#loader');
+    const tableEl = document.querySelector('#reorderTable');
+
+    function loaderFunc(){
+        setTimeout(()=>{
+            loader.classList.add('hidden');
+            loader.classList.remove('d-flex')
+            tableEl.classList.remove('hidden')
+        }, 300)
+    }
+    loaderFunc()
+
+    function fetchData(){
+        fetch('{% url "inventory:create_order_list" %}', {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"), 
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data)
+            productData.push(data)
+            displayOrderData(data)
+        })
+            .catch((error) => {
+            console.error("Error:", error);
+        });
+    }
+    fetchData()
+
+    function fetchOrderData(){
+        fetch('{% url "inventory:reorder_list_json" %}', {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"), 
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            reorderData.innerHTML=''
+            data.forEach((data)=>{
+                console.log(data.quantity)
+                reorderData.innerHTML += `
+                    <td>${data.date}</td>
+                    <td>${data?.product__product__name}</td>
+                    <td>${data?.product__quantity}</td>
+                    <td><input id='order_quantity' data-id=${data?.id} value=${data.quantity ? data.quantity : 0} oninput='addQuantity(this)' class='form-control'/></td>
+                    <td><input id='order_cost' class='form-control'/></td>
+                    <td><button onclick='deleteItem(this)' data-id=${data?.id} class='btn btn-sm btn-danger'><i class='bx bx-trash'></i>remove</button>
+                `
+            })
+        })
+            .catch((error) => {
+            console.error("Error:", error);
+        });
+    }
+    fetchOrderData()
+
+    function addQuantity(input){
+        const inputValue = input.value
+        const reorderId = parseInt(input.dataset.id)
+
+        if(inputValue){
+            fetch('{% url "inventory:add_reoder_quantity" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ quantity:inputValue,  reorder_id:reorderId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    fetchOrderData(); 
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => console.error('Error adding to order list:', error));
+        }
+    }
+
+    createList.addEventListener('click', ()=>{
+        reorderModal.show()
+    })
+
+    rmToggle.forEach((btn)=>{
+        btn.addEventListener('click', ()=>{
+            product_id = btn.dataset.id
+            removeModal.show()
+        })
+    
+    })
+
+    function deleteItem(el){
+        product_id = el.dataset.id
+        deleteClear()
+    }
+
+    
+
+    function displayOrderData(data){
+        orderList.innerHTML = ''
+        data.forEach((data)=>{
+            console.log(data.reorder)
+            orderList.innerHTML += `
+               ${ data?.reorder ? `
+               `:`
+                <tr>
+                    <td>${data?.product__name}</td>
+                    <td>${data?.quantity}</td>
+                    <td>${data?.product__description}</td>
+                    <td>
+                        <button class='btn btn-primary btn-sm' data-id=${data.id} onclick='add(this)'>add product</button>
+                    </td>
+                </tr>
+               `}
+            `
+    })}
+
+    function add(el){
+        const productId = el.dataset.id
+        fetch('{% url "inventory:create_order_list" %}', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"), 
+            },
+            body: JSON.stringify({'id':productId}),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                fetchOrderData()
+                fetchData()
+                loaderFunc()
+                reorderModal.show()
+            } else {
+                alert(data.message)
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+        });
+    }
+
+
+    function deleteClear(){
+        const data = {'product_id':product_id}
+
+        fetch('{% url "inventory:clear_reorder_list" %}', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"), 
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data)
+            if (data.success) {
+                removeModal.hide()
+                successModal.show()
+                setTimeout(() => {
+                    window.location.href='{% url "inventory:reorder_list" %}';
+                }, 2000);
+            } else {
+                alert(data.message)
+            }
+        })
+        .catch((error) => {
+        console.error("Error:", error);
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+</script>  
+{% endblock content %}
