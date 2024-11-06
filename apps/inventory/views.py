@@ -1856,6 +1856,8 @@ def sales_price_list_pdf(request, order_id):
         product_data = product_prices.get(product_name)
         logger.info(product_data)
 
+        item.description = product_data['product__description']
+
         if product_data:
             item.dealer_price = product_data['dealer_price']
             item.selling_price = product_data['price']
@@ -1863,9 +1865,7 @@ def sales_price_list_pdf(request, order_id):
         else:
             item.dealer_price = 0
             item.selling_price = 0
-            item.description = product_data['product__description']
             
-
     context = {'items': items}
 
     template = get_template('pdf_templates/price_list.html')
