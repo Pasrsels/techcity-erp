@@ -11,4 +11,4 @@ class Services(models.Model):
     measurement = models.CharField(max_length= 255)
     recorded = models.DecimalField(max_digits=10, decimal_places=4)
     date = models.DateField()
-    types = models.ForeignKey('types', max_length= 255, on_delete=models.CASCADE, null=True)
+    Types = models.ForeignKey('types', max_length= 255, on_delete=models.CASCADE, null=True)
