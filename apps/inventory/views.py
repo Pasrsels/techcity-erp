@@ -2394,22 +2394,51 @@ def edit_purchase_order_data(request, po_id):
 #testing delete
 @login_required
 def supplier_delete(request):
-    supplier_del = Supplier.objects.get(pk=id)
-    supplier_del.delete()
-    return render(request, 'Supplier/Suppliers.html', {'delete':supplier_del})
+    '''
+        name,contact_person,email,product,address
+    '''
+    if request.method == "POST":
+        try:
+            data = json.loads(request,body)
+
+            name = data.get(name)
+            contact_person = data.get(contact_person)
+            email = data.get(email)
+            product = data.get(product)
+            address = data.get(address)
+
+            if Supplier.objects.filter(email=email).exists():
+                supplier_del = Supplier.objects.get(pk=id)
+                supplier = Supplier(supplier_del, name, contact_person, email, product, address)
+                supplier.delete()
+                return JsonResponse("Successfully deleted f{name}" ,{";success":True}, status = 200)
+            return JsonResponse({"success":False}, status = 400)
+        except Exception as e:
+            return JsonResponse({"cause of problem":e, "message":"encountered an error"})
+
 
 #testing edit view
 @login_required
 def supplier_edit(request):
-    formEdit = EditSupplierForm()
-    if request.method == "POST":
-        formEdit.is_valid()
-        formEdit.save()
-        messages.info("Updated successfully")
-        return redirect(request, 'Suppliers.Suppliers.html', {'formEdit':formEdit})
-    messages.info("Update failed")
-    return redirect(request, 'Supplier.Suppliers.html',)
+     formEdit = EditSupplierForm()
+     if request.method == "POST":
+         
+         try:
+             data = json.loads(request, body)
+             name = data.get(name)
+             conctact_person = data.get(conctact_person)
+             email = data.get(email)
+             product = data.get(product)
+             address = data.get(address)
 
+             if Supplier.objects.filter(email=email).exists():
+                 supplier = Supplier(name,conctact_person,email,product,address)
+                 supplier.save()
+                 messages.info("Updated successfully")
+                 return JsonResponse({'succcess':True}, status = 200)
+             return JsonResponse({"success":False}, status = 400)
+         except Exception as e:
+            return JsonResponse({"Cause of problem":e, "message":"Falied to edit"})
 
 @login_required
 def supplier_view(request):
