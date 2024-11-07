@@ -47,7 +47,8 @@ from . forms import (
     CreateOrderForm,
     noteStatusForm,
     PurchaseOrderStatus,
-    ReorderSettingsForm
+    ReorderSettingsForm,
+    EditSupplierForm
 )
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
@@ -2389,14 +2390,82 @@ def edit_purchase_order_data(request, po_id):
 
     except Exception as e:
         return JsonResponse({"success":False, 'message':f'{e}'})
+
+#testing delete
+@login_required
+def supplier_delete(request):
+    supplier_del = Supplier.objects.get(pk=id)
+    supplier_del.delete()
+    return render(request, 'Supplier/Suppliers.html', {'delete':supplier_del})
+
+#testing edit view
+@login_required
+def supplier_edit(request):
+    formEdit = EditSupplierForm()
+    if request.method == "POST":
+        formEdit.is_valid()
+        formEdit.save()
+        messages.info("Updated successfully")
+        return redirect(request, 'Suppliers.Suppliers.html', {'formEdit':formEdit})
+    messages.info("Update failed")
+    return redirect(request, 'Supplier.Suppliers.html',)
+
+
 @login_required
 def supplier_view(request):
-    suppliers = Supplier.objects.all()
-    form = AddSupplierForm()
-    return render(request, 'Supplier/suppliers.html', {
-        'form':form,
-        'suppliers':suppliers
-    })
+    if request.method == 'GET':
+        suppliers = Supplier.objects.all()
+        form = AddSupplierForm()
+        return render(request, 'Supplier/Suppliers.html', {
+            'form':form,
+            'suppliers':suppliers
+        })
+    
+    if request.method == 'POST':
+        """
+        payload = {
+            name,
+            contact_person,
+            email,
+            product,
+            address
+        }
+        """
+        try:
+            data = json.loads(request.body)
+            logger.info(data)
+
+            name = data.get('name')
+            contact_person = data.get('contact_person')
+            email = data.get('email')
+            phone = data.get('phone')
+            address = data.get('address')
+
+            logger.info(name)
+            
+            # check if all data exists
+            if not name or not contact_person or not email or not phone or not address:
+                return JsonResponse({'success': False, 'message':'Fill in all the form data'}, status=400)
+
+            # check is supplier exists
+            if Supplier.objects.filter(email=email).exists():
+                return JsonResponse({'success': False, 'message':f'Supplier{name} already exists'}, status=400)
+            
+            supplier = Supplier(
+                name = name,
+                contact_person = contact_person,
+                email = email,
+                phone = phone,
+                address = address
+            )
+            supplier.save()
+
+            return JsonResponse({'success': True}, status=200)
+        except Exception as e:
+            logger.info(e)
+            return JsonResponse({'success': False}, status=400)
+    return JsonResponse({'success': False, 'message':'Invalid request'}, status=200)
+
 
 @login_required
 def supplier_list_json(request):
@@ -2405,28 +2474,6 @@ def supplier_list_json(request):
         'name'
     )
     return JsonResponse(list(suppliers), safe=False)
-
-@login_required
-def supplier_add(request):
-    """
-        payload = {
-            name,
-            contact_person,
-            email,
-            product,
-            address
-        }
-    """
-    if request.method == 'POST':
-        form = AddSupplierForm(request.post or None)
-        if form.is_valid():
-            form.save()
-            messages.info(request, 'Supplier details successfully saved')
-            return redirect('inventory:suppliers')
-        messages.info(request, 'Invalid form details')
-        return redirect('inventory:suppliers')
-    messages.info(request, 'Invalid request')
-    return redirect('inventory:suppliers')
 
 @login_required
 def create_supplier(request):

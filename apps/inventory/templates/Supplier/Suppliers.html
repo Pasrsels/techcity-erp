@@ -1,44 +1,152 @@
 {% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
 {% block content %}
-<style>
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    table, th, td {
-        border: 1px solid black;
-    }
-    th, td {
-        padding: 10px;
-        text-align: left;
-    }
-</style>
-<div>
-    <h1>Supplier List</h1>
-    <table id="supplier_list" style="width: 100%;" class="table">
-        <thead>
+<div class="container">
+    <div class="d-flex align-items-center justify-content-between mt-2 rounded shadow header py-2 mb-4">
+        <h5 class="text-light px-1">Supplier List</h5>
+        <!-- Add Supplier Button -->
+        <div class="px-1">
+            <button type="button" class="btn btn-primary btn-sm" id="addButton">
+                <i class="bx bx-plus"></i> Add Supplier
+            </button>
+        </div>
+    </div>
+
+    <table id="supplier_list" class="table table-striped table-bordered" style="width: 100%;">
+        <thead style="background-color: #3734f4; color: white;">
             <tr>
                 <th>Name</th>
+                <th>Products</th>
                 <th>Contact Number</th>
                 <th>Email</th>
                 <th>Address</th>
-                <th>Contact person</th>
+                <th>Contact Person</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for supplier in suppliers %}
             <tr>
-                <td>{{ supplier.name }}</td>
-                <td>{{ supplier.contact_number }}</td>
-                <td>{{ supplier.email }}</td>
-                <td>{{ supplier.address }}</td>
-                <td>{{supplier.contact_person}}</td>
+                <td><small>{{ supplier.name }}</small></td>
+                <td>
+                    <small>
+                        {% if supplier.products.all %}
+                        <ul class="list-unstyled">
+                            {% for product in supplier.products.all %}
+                                <li><small>{{ product.name }}</small></li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                            <small>No products listed</small>
+                        {% endif %}
+                    </small>
+                </td>
+                <td><small>{{ supplier.phone }}</small></td>
+                <td><small>{{ supplier.email }}</small></td>
+                <td><small>{{ supplier.address }}</small></td>
+                <td><small>{{ supplier.contact_person }}</small></td>
+                <td>
+                    <button class="btn btn-sm btn-primary mx-1" onclick="openEditModal({{ supplier.id }})">
+                        <i class="bx bx-edit"></i> Edit
+                    </button>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    <script>
-        new DataTable('#supplier_list')
-    </script>
+
+    <!-- Edit Supplier Modal -->
+    <div class="modal fade" id="editSupplierModal" tabindex="-1" aria-labelledby="editSupplierModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <h5 class="fw-bold">Edit Supplier</h5>
+                    <hr class="rounded">
+                    <form method="post" id="editSupplierForm">
+                        {% csrf_token %}
+                        {{ form | crispy }}
+                        <div class="d-flex justify-content-end">
+                            <button type="reset" class="btn btn-danger btn-sm bx bx-reset mx-2"> Reset </button>
+                            <button type="submit" class="btn btn-secondary btn-sm">
+                                <i class="bx bx-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-{% endblock content %}
+
+<script>
+    // Function to open the edit modal and populate it with supplier data
+    function openEditModal(supplierId) {
+        fetch(`/api/supplier/${supplierId}/`)  // Adjust this URL to match your actual endpoint
+            .then(response => response.json())
+            .then(data => {
+                // Populate form fields with supplier data
+                document.getElementById("id_name").value = data.name;
+                document.getElementById("id_contact_person").value = data.contact_person;
+                document.getElementById("id_phone").value = data.phone;
+                document.getElementById("id_email").value = data.email;
+                document.getElementById("id_address").value = data.address;
+
+                // Show the modal
+                const editModal = new bootstrap.Modal(document.getElementById('editSupplierModal'));
+                editModal.show();
+            })
+            .catch(error => {
+                console.error("Error fetching supplier data:", error);
+                alert("Could not load supplier data. Please try again.");
+            });
+    }
+
+    // Handling form submission for editing supplier data
+    document.getElementById('editSupplierForm').addEventListener('submit', function(event) {
+        event.preventDefault();  // Prevent default form submission
+        
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+        const supplierId = document.querySelector('input[name="selected_supplier_id"]').value;
+
+        fetch(`/api/supplier/${edit_supplier}/`, {
+            method: 'PUT',  // Use 'PUT' or 'PATCH' for updating
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(responseData => {
+            if (responseData.success) {
+                // Hide modal and refresh the page or update the table
+                const editModal = bootstrap.Modal.getInstance(document.getElementById('editSupplierModal'));
+                editModal.hide();
+                window.location.reload();  // Reload to see updated data, or update the table manually
+            } else {
+                alert("Error updating supplier: " + responseData.message);
+            }
+        })
+        .catch(error => console.error("Error updating supplier:", error));
+    });
+
+    // Utility function to get the CSRF token from cookies
+    function getCSRFToken() {
+        let cookieValue = null;
+        const name = 'csrftoken';
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}
