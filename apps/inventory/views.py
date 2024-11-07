@@ -2394,21 +2394,53 @@ def edit_purchase_order_data(request, po_id):
 #testing delete
 @login_required
 def supplier_delete(request):
-    supplier_del = Supplier.objects.get(pk=id)
-    supplier_del.delete()
-    return render(request, 'Supplier/Suppliers.html', {'delete':supplier_del})
+    '''
+        name,contact_person,email,product,address
+    '''
+    if request.method == "POST":
+        try:
+            data = json.loads(request,body)
+
+            name = data.get(name)
+            contact_person = data.get(contact_person)
+            email = data.get(email)
+            product = data.get(product)
+            address = data.get(address)
+
+            if Supplier.objects.filter(email=email).exists():
+                supplier_del = Supplier.objects.get(pk=id)
+                supplier = Supplier(supplier_del, name, contact_person, email, product, address)
+                supplier.delete()
+                messages.info("Supplier deleted successfully: f{name}")
+                return JsonResponse("Successfully deleted f{name}")
+            messages.info("Supplier f{name} doesnot exist in database")
+        except:
+            messages.info("error")
+    return JsonResponse({"success":False})
+
 
 #testing edit view
 @login_required
 def supplier_edit(request):
-    formEdit = EditSupplierForm()
-    if request.method == "POST":
-        formEdit.is_valid()
-        formEdit.save()
-        messages.info("Updated successfully")
-        return redirect(request, 'Suppliers.Suppliers.html', {'formEdit':formEdit})
-    messages.info("Update failed")
-    return redirect(request, 'Supplier.Suppliers.html',)
+     formEdit = EditSupplierForm()
+     if request.method == "POST":
+         
+         try:
+             data = json.loads(request, body)
+             name = data.get(name)
+             conctact_person = data.get(conctact_person)
+             email = data.get(email)
+             product = data.get(product)
+             address = data.get(address)
+
+             if Supplier.objects.filter(email=email).exists():
+                 supplier = Supplier(name,conctact_person,email,product,address)
+                 supplier.save()
+                 messages.info("Updated successfully")
+                 return JsonResponse({'succcess':True})
+         except:
+            messages.info("Update failed")
+     return JsonResponse({"success":False})
 
 
 @login_required
