@@ -2393,28 +2393,42 @@ def edit_purchase_order_data(request, po_id):
 
 #testing delete
 @login_required
-def supplier_delete(request):
+def supplier_delete(request, supplier_id):
     '''
         name,contact_person,email,product,address
     '''
-    if request.method == "POST":
+    if request.method == 'GET':
+        supplier = Supplier.objects.filter(id=supplier_id).values()
+        logger.info(supplier)
+        return JsonResponse({'success':True, 'data':list(supplier)})
+         
+
+    if request.method == "DELETE":
         try:
-            data = json.loads(request,body)
+            data = json(request.body)
 
             name = data.get('name')
             contact_person = data.get('contact_person')
             email = data.get('email')
-            product = data.get('product')
             address = data.get('address')
+            phone = data.get('phone')
 
-            if Supplier.objects.filter(email=email).exists():
-                supplier_del = Supplier.objects.get(pk=id)
-                supplier = Supplier(supplier_del, name, contact_person, email, product, address)
-                supplier.delete()
-                return JsonResponse("Successfully deleted f{name}" ,{";success":True}, status = 200)
-            return JsonResponse({"success":False}, status = 400)
+            supplier = Supplier.objects.get(phone=phone)
+
+            supplier.name=name
+            supplier.contact_person=contact_person
+            supplier.email=email
+            supplier.phone=phone
+            supplier.address=address
+            
+            supplier.delete()
+            logger.info(f'{supplier} delete')
+
+            return JsonResponse({'success':True}, status = 200)
         except Exception as e:
-            return JsonResponse({"cause of problem":e, "message":"encountered an error"})
+            logger.info(e)
+            return JsonResponse({"success":False, "message":f"{e}"})
+    return JsonResponse({"success":False, "message":"Invalid Request"})
 
 
 #testing edit view
