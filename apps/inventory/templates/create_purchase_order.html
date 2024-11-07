@@ -891,7 +891,6 @@
         const pElement = document.getElementById('id_supplier');
         const pSelectedOption = pElement.options[pElement.selectedIndex];
         const supplier = pSelectedOption.textContent;
-        console.log(supplier);
       });
     });
 
@@ -904,7 +903,7 @@
           address: document.getElementById('id_address').value,
         };
       
-        fetch("{% url 'inventory:create_supplier' %}", {
+        fetch("{% url 'inventory:suppliers' %}", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

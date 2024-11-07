@@ -60,39 +60,22 @@
                     <div class="mb-1">
                         <label for="id_product" class="form-label requiredField">Product</label>
                         <select class="select form-select" id="id_product">
-                            <option value="">-----</option>
+                            <option value=""></option>
                             {% for product in inventory %}
                                 <option value="{{ product.id }}">{{ product.product.name }} [{{ product.quantity }}]</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="mt-2">
-                        <button class="btn btn-success btn-sm w-100" id="getValuesButton">Proceed
+                        <button class="btn btn-success btn-sm w-100" id="getValuesButton" type="button">Proceed
                             <i class="bx bx-arrow-right"></i>
                         </button>
                     </div>
-                    <!--will come back-->
-                    <div class="{% if request.user.role == 'sales' %} d-none {% endif %}">
-                        <div id="div_id_price" class="mb-1">
-                            <label for="id_price" class="form-label requiredField">Price</label>
-                            <input type="number" name="price" step="0.01" class="numberinput form-control" required id="id_price">
-                            <p id="price_error" class="fs-6 text-danger"></p>
-                        </div>
-                        <div id="div_id_dealer_price" class="mb-1">
-                            <label for="id_dealer_price" class="form-label requiredField">Wholesale Price</label>
-                            <input type="number" name="dealer_price" step="0.01" class="numberinput form-control" required id="id_dealer_price">
-                            <p id="dealer_price_error" class="fs-6 text-danger"></p>
-                        </div>
-                    </div>
-                    <div id="div_id_quantity" class="mb-1">
-                        <label for="id_quantity" class="form-label requiredField">Quantity</label>
-                        <input type="number" name="quantity" value="" min="0" class="numberinput form-control" required id="id_quantity">
-                    </div>
-                    <div id="div_id_description" class="mb-3">
-                        <label for="id_description" class="form-label requiredField">Description<span class="asteriskField">*</span></label>
-                        <textarea name="description" cols="20" rows="2" class="textarea form-control" required id="id_description"></textarea>
-                    </div>
 
+                    <div class="mt-3- d-flex" style="overflow-x: auto;" id="branchesTable">
+                        <!-- data will be dynamically rendered by js -->
+                    </div>
+                    
                     <p class="text-danger" id="error"></p>
                     <div class="d-flex justify-content-end mb-2">
                         <button type="button" class="btn btn-secondary btn-sm" id="id_submit" onclick="addItem();">
@@ -106,8 +89,6 @@
 
     <div id="successModal"></div>
 </div>
-
-<!--<script src="{% static 'js/productValidation.js' %}"></script>-->
 <script>
   let cart = [];
   let prodData = [];
@@ -135,11 +116,6 @@
         placeholder: 'Select Product'
     });
 
-    new SlimSelect({
-        select: '#id_product',
-        placeholder: 'Select Product'
-    });
-
     function getSelectedValues() {
         const selectElement = document.getElementById('id_to');
         
@@ -156,85 +132,117 @@
 
     document.getElementById('getValuesButton').addEventListener('click', function() {
         const values = getSelectedValues();
-        const product = 
-        displayTables(values)
+        const product = document.getElementById('id_product').value
+        console.log(product)
+        displayTables(values, productName)
     });
 
 
-    const displayTables = (values) => {
-        const tableEl = document.getElementById('branchesTable');
+    const displayTables = (values, product) => {
+        let tableEl = document.getElementById('branchesTable');
+        console.log(productName)
         values.forEach((value)=>{
-            tableEl += `
-
+            tableEl.innerHTML += `
+                <div class='m-3'>
+                    <h5>${product}</h5>
+                    <div class="{% if request.user.role == 'sales' %} d-none {% endif %}">
+                    <div id="div_id_price" class="mb-1">
+                        <label for="id_price" class="form-label requiredField">Price</label>
+                        <input type="number" name="price" step="0.01" class="numberinput form-control" required id="id_price">
+                        <p id="price_error" class="fs-6 text-danger"></p>
+                    </div>
+                    <div id="div_id_dealer_price" class="mb-1">
+                    <label for="id_dealer_price" class="form-label requiredField">Wholesale Price</label>
+                    <input type="number" name="dealer_price" step="0.01" class="numberinput form-control" required id="id_dealer_price">
+                    <p id="dealer_price_error" class="fs-6 text-danger"></p>
+                        </div>
+                    </div>
+                    <div id="div_id_quantity" class="mb-1">
+                        <label for="id_quantity" class="form-label requiredField">Quantity</label>
+                        <input type="number" name="quantity" value="" min="0" class="numberinput form-control" required id="id_quantity">
+                    </div>
+                    <div id="div_id_description" class="mb-3">
+                        <label for="id_description" class="form-label requiredField">Description<span class="asteriskField">*</span></label>
+                        <textarea name="description" cols="20" rows="2" class="textarea form-control" required id="id_description"></textarea>
+                    </div>
+                </div>
             `
-            console.log(value)
         })
 
     }
 
+    document.addEventListener('DOMContentLoaded', function() {
+    new SlimSelect({
+        select: '#id_product',
+        placeholder: 'Select Product'
+    });
 
-  $(document).ready(function() {
-    $('#id_product').select2(
-        {placeholder: 'Select Product'}
-    )
-    .on('change', function (e){
-         const pElement = document.getElementById('id_product')
-         const pSelectedOption = pElement.options[pElement.selectedIndex]
-         let product = pSelectedOption.textContent;
-        product = $('#id_product').val()
+    document.getElementById('id_product').addEventListener('change', function() {
+            const selectElement = document.getElementById('id_product');
+            
+            const selectedOptions = Array.from(selectElement.selectedOptions).map(option => {
+                return {
+                    name: option.text,
+                    value: option.value
+                };
+            });
 
-      fetch(`/inventory/inventory/?name=${product}`)
-        .then(response => response.json())
-        .then(data=>{
-          console.log(data)
-          prodEl.value=Number(data[0]?.price)
-          prodPrice=Number(data[0]?.price)
-          prodCost = Number(data[0]?.cost)
-          dealerEl.value = Number(data[0]?.dealer_price)
-          quantityEl.value = parseInt(data[0]?.quantity)
-          productName = data[0]?.inventory__product__name
+            const product = selectedOptions[0]?.value;
+            productName = selectedOptions[0]?.name;
+            console.log(selectElement.value, 'product')
+            if (product) {
+                fetch(`/inventory/inventory/?name=${product}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        prodEl.value = Number(data[0]?.price);
+                        prodPrice = Number(data[0]?.price);
+                        prodCost = Number(data[0]?.cost);
+                        dealerEl.value = Number(data[0]?.dealer_price);
+                        quantityEl.value = parseInt(data[0]?.quantity);
+                        // productName = data[0]?.inventory__product__name;
 
-      
-          prodData = []
-          prodData.push(data)
-        })
-        .catch(error => console.error('Error:', error))
-    })
+                        prodData = [];
+                        prodData.push(data);
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        });
+    });
 
-})
 
   const successModal = new bootstrap.Modal(document.querySelector('#successModal'))
 
-  document.querySelector('#id_quantity').addEventListener(
-    'input', ()=>{
-      const quantity = $('#id_quantity').val()
+//   document.querySelector('#id_quantity').addEventListener(
+//     'input', ()=>{
+//       const quantity = $('#id_quantity').val()
 
-      if (quantity > prodData[0][0].quantity){
-          submitBtn.disabled = true;
-          Swal.fire({
-              icon: 'warning',
-              title: 'Quantity Exceeded',
-              text: 'The quantity you entered exceeds the available source quantity. Please adjust.',
-              confirmButtonText: 'Okay'
-          });
+//       if (quantity > prodData[0][0].quantity){
+//           submitBtn.disabled = true;
+//           Swal.fire({
+//               icon: 'warning',
+//               title: 'Quantity Exceeded',
+//               text: 'The quantity you entered exceeds the available source quantity. Please adjust.',
+//               confirmButtonText: 'Okay'
+//           });
 
-      }else{
-          document.querySelector('#quantity_error').innerHTML = '';
-          submitBtn.disabled = false;
-      }
-    }
-  )
+//       }else{
+//           document.querySelector('#quantity_error').innerHTML = '';
+//           submitBtn.disabled = false;
+//       }
+//     }
+//   )
 
-  document.querySelector('#id_price').addEventListener(
-    'input', ()=>{
-      const price = $('#id_price').val()
-      if (price < prodCost) {
-        document.querySelector('#quantity_error').innerHTML = `Selling price cannot be less than cost price ${prodCost} for product ${productName}`
-      }else{
-        document.querySelector('#quantity_error').innerHTML=''
-      }
-    }
-  )
+//   document.querySelector('#id_price').addEventListener(
+//     'input', ()=>{
+//       const price = $('#id_price').val()
+//       if (price < prodCost) {
+//         document.querySelector('#quantity_error').innerHTML = `Selling price cannot be less than cost price ${prodCost} for product ${productName}`
+//       }else{
+//         document.querySelector('#quantity_error').innerHTML=''
+//       }
+//     }
+//   )
 
   function generateUniqueId() {
       return Math.floor(Math.random() * 1000000000).toString(36);
