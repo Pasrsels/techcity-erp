@@ -47,9 +47,17 @@
                 <td><small>{{ supplier.address }}</small></td>
                 <td><small>{{ supplier.contact_person }}</small></td>
                 <td>
+<<<<<<< HEAD
                     <button class="btn btn-sm btn-primary mx-1" onclick="openEditModal({{ supplier.id }})">
                         <i class="bx bx-edit"></i> Edit
                     </button>
+=======
+                    <!-- Add action buttons here, such as Edit or Delete -->
+                     <small>
+                        <button class="btn btn-sm bx bx-edit mx-1"></button>
+                        <button class="btn btn- bx bx-trash"></button>
+                     </small>
+>>>>>>> 67323cb5a333d101ec37690f835d26566fb669b1
                 </td>
             </tr>
             {% endfor %}
@@ -61,6 +69,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
+<<<<<<< HEAD
                     <h5 class="fw-bold">Edit Supplier</h5>
                     <hr class="rounded">
                     <form method="post" id="editSupplierForm">
@@ -70,6 +79,18 @@
                             <button type="reset" class="btn btn-danger btn-sm bx bx-reset mx-2"> Reset </button>
                             <button type="submit" class="btn btn-secondary btn-sm">
                                 <i class="bx bx-save"></i> Save Changes
+=======
+                    <h5 class="fw-bold">Add Supplier</h5>
+                    <hr class="rounded">
+                    <form method="post" id="supplierForm">
+                        {% csrf_token %}
+                        {{ form | crispy }}
+                        <div class="d-flex justify-content-end">
+                            <button type="reset" class="btn btn-danger btn-sm bx bx-reset mx-2"></button>
+                            <button type="submit" class="btn btn-secondary btn-sm">
+                                <i class="bx bx-save"></i>
+                                Save
+>>>>>>> 67323cb5a333d101ec37690f835d26566fb669b1
                             </button>
                         </div>
                     </form>
@@ -77,6 +98,95 @@
             </div>
         </div>
     </div>
+<<<<<<< HEAD
+=======
+
+    <script>
+        const addButton = document.getElementById('addButton');
+        const supplierModal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
+
+        addButton.addEventListener('click', () => {
+            supplierModal.show();
+        });
+
+        new DataTable('#supplier_list',{
+            paging:false
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('supplierForm');
+
+            form.addEventListener('submit', function (event) {
+                event.preventDefault(); 
+
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                fetch('{% url "inventory:suppliers" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        supplierModal.hide()
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Supplier added successfully!',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            form.reset();
+                            window.location.reload()
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: data.message,
+                            confirmButtonText: 'Try Again'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Submission Failed',
+                        text: 'There was an error submitting the form. Please try again.',
+                        confirmButtonText: 'OK'
+                    });
+                });
+            });
+
+            function getCSRFToken() {
+                let cookieValue = null;
+                const name = 'csrftoken';
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        });
+
+    </script>
+>>>>>>> 67323cb5a333d101ec37690f835d26566fb669b1
 </div>
 
 <script>

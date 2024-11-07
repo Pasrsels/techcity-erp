@@ -127,6 +127,17 @@ SESSION_AUTH = True
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
+<<<<<<< HEAD
+=======
+#    'default': {
+#      'ENGINE': 'django.db.backends.postgresql',
+#        'NAME':  'techcoty',
+#        'USER': 'postgres',
+#        'PASSWORD': 'neverfail',
+#        'HOST': 'localhost',
+#        'PORT': '5432'
+#   }
+>>>>>>> 67323cb5a333d101ec37690f835d26566fb669b1
     'default': {
       'ENGINE': 'django.db.backends.postgresql',
         'NAME':  'Techcity',
