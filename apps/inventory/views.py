@@ -2401,11 +2401,11 @@ def supplier_delete(request):
         try:
             data = json.loads(request,body)
 
-            name = data.get(name)
-            contact_person = data.get(contact_person)
-            email = data.get(email)
-            product = data.get(product)
-            address = data.get(address)
+            name = data.get('name')
+            contact_person = data.get('contact_person')
+            email = data.get('email')
+            product = data.get('product')
+            address = data.get('address')
 
             if Supplier.objects.filter(email=email).exists():
                 supplier_del = Supplier.objects.get(pk=id)
@@ -2425,11 +2425,11 @@ def supplier_edit(request):
          
          try:
              data = json.loads(request, body)
-             name = data.get(name)
-             conctact_person = data.get(conctact_person)
-             email = data.get(email)
-             product = data.get(product)
-             address = data.get(address)
+             name = data.get('name')
+             conctact_person = data.get('conctact_person')
+             email = data.get('email')
+             product = data.get('product')
+             address = data.get('address')
 
              if Supplier.objects.filter(email=email).exists():
                  supplier = Supplier(name,conctact_person,email,product,address)
