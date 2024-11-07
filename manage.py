@@ -3,7 +3,7 @@
 import os
 import sys
 import dotenv
-dotnv.load_dotenv()
+dotenv.load_dotenv()
 
 
 def main():
