@@ -14,7 +14,7 @@ urlpatterns = [
     path('add_category/', add_product_category, name='add_product_category'),
     path('inventory/branches/', branches_inventory, name='branches_inventory'),
     path('product/json/', inventory_index_json, name='inventory_index_json'),
-    path('edit/<str:product_name>/', edit_inventory, name='edit_inventory'),
+    path('edit/<str:product_id>/', edit_inventory, name='edit_inventory'),
     path('activate/product/<int:product_id>/', activate_inventory, name='activate_inventory'),
     path('defective_product_list/', defective_product_list, name='defective_product_list'),
     path('inventory/branches/json', branches_inventory_json, name='branches_inventory_json'),
@@ -25,12 +25,11 @@ urlpatterns = [
     # product
     path('create/product/', product, name='product'),
     
-    # supplier
-    path('suppliers/list', suppliers, name='suppliers'),
-    path('edit/supplier/', edit_supplier, name='edit_supplier'),
-    path('create/supplier/', create_supplier, name='create_supplier'),
+    # suppliers
+    path("suppliers/", supplier_view, name="suppliers"),
+    path('create_supplier', create_supplier, name='create_supplier'),
     path('supplier/json/list/', supplier_list_json, name='supplier_list_json'),
-    
+
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),
     
