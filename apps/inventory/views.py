@@ -2393,52 +2393,80 @@ def edit_purchase_order_data(request, po_id):
 
 #testing delete
 @login_required
-def supplier_delete(request):
+def supplier_delete(request, supplier_id):
     '''
         name,contact_person,email,product,address
     '''
-    if request.method == "POST":
+    if request.method == 'GET':
+        supplier = Supplier.objects.filter(id=supplier_id).values()
+        logger.info(supplier)
+        return JsonResponse({'success':True, 'data':list(supplier)})
+         
+
+    if request.method == "DELETE":
         try:
-            data = json.loads(request,body)
+            data = json(request.body)
 
             name = data.get('name')
             contact_person = data.get('contact_person')
             email = data.get('email')
-            product = data.get('product')
             address = data.get('address')
+            phone = data.get('phone')
 
-            if Supplier.objects.filter(email=email).exists():
-                supplier_del = Supplier.objects.get(pk=id)
-                supplier = Supplier(supplier_del, name, contact_person, email, product, address)
-                supplier.delete()
-                return JsonResponse("Successfully deleted f{name}" ,{";success":True}, status = 200)
-            return JsonResponse({"success":False}, status = 400)
+            supplier = Supplier.objects.get(phone=phone)
+
+            supplier.name=name
+            supplier.contact_person=contact_person
+            supplier.email=email
+            supplier.phone=phone
+            supplier.address=address
+            
+            supplier.delete()
+            logger.info(f'{supplier} delete')
+
+            return JsonResponse({'success':True}, status = 200)
         except Exception as e:
-            return JsonResponse({"cause of problem":e, "message":"encountered an error"})
+            logger.info(e)
+            return JsonResponse({"success":False, "message":f"{e}"})
+    return JsonResponse({"success":False, "message":"Invalid Request"})
 
 
 #testing edit view
 @login_required
-def supplier_edit(request):
-     formEdit = EditSupplierForm()
-     if request.method == "POST":
+def supplier_edit(request, supplier_id):
+    if request.method == 'GET':
+        supplier = Supplier.objects.filter(id=supplier_id).values()
+        logger.info(supplier)
+        return JsonResponse({'success':True, 'data':list(supplier)})
          
-         try:
-             data = json.loads(request.body)
-             name = data.get('name')
-             conctact_person = data.get('conctact_person')
-             email = data.get('email')
-             product = data.get('product')
-             address = data.get('address')
+    if request.method == "POST":
+         
+        try:
+            data = json.loads(request.body)
+            logger.info(data)
 
-             if Supplier.objects.filter(email=email).exists():
-                 supplier = Supplier(name,conctact_person,email,product,address)
-                 supplier.save()
-                 messages.info("Updated successfully")
-                 return JsonResponse({'succcess':True}, status = 200)
-             return JsonResponse({"success":False}, status = 400)
-         except Exception as e:
-            return JsonResponse({"Cause of problem":e, "message":"Falied to edit"})
+            name = data.get('name')
+            contact_person = data.get('contact_person')
+            email = data.get('email')
+            address = data.get('address')
+            phone = data.get('phone')
+
+            supplier = Supplier.objects.get(phone=phone)
+
+            supplier.name=name
+            supplier.contact_person=contact_person
+            supplier.email=email
+            supplier.phone=phone
+            supplier.address=address
+            
+            supplier.save()
+            logger.info(f'{supplier} saved')
+
+            return JsonResponse({'success':True}, status = 200)
+        except Exception as e:
+            logger.info(e)
+            return JsonResponse({"success":False, "message":f"{e}"})
+    return JsonResponse({"success":False, "message":"Invalid Request"})
 
 @login_required
 def supplier_view(request):
@@ -2504,41 +2532,6 @@ def supplier_list_json(request):
     )
     return JsonResponse(list(suppliers), safe=False)
 
-@login_required
-def create_supplier(request):
-    #payload
-    """
-        name 
-        contact
-        email
-        phone 
-        address
-    """
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        
-        name = data['name']
-        contact = data['contact']
-        email = data['email']
-        phone = data['phone']
-        address = data['address']
-        
-        if not name or not contact or not email or not phone or not address:
-            return JsonResponse({'success': False, 'message':'Fill in all the form data'}, status=400)
-        
-        if Supplier.objects.filter(email=email).exists():
-            return JsonResponse({'success': False, 'message':f'Supplier{name} already exists'}, status=400)
-        
-        supplier = Supplier(
-            name = name,
-            contact_name = contact,
-            email = email,
-            phone = phone,
-            address = address
-        )
-        supplier.save()
-        logger.info(f'Supplier successfully created {supplier.name}')
-        return JsonResponse({'success': True}, status=200)
     
 @login_required
 def product(request):

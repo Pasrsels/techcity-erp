@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
-
 {% block content %}
+/
 <div class="container">
     <div class="d-flex align-items-center justify-content-between mt-2 rounded shadow header py-2 mb-4">
         <h5 class="text-light px-1">Supplier List</h5>
@@ -50,6 +50,11 @@
                     <button class="btn btn-sm btn-primary mx-1" onclick="openEditModal({{ supplier.id }})">
                         <i class="bx bx-edit"></i> Edit
                     </button>
+                    <!-- Add action buttons here, such as Edit or Delete -->
+                     <small>
+                        <button class="btn btn-sm bx bx-edit mx-1"></button>
+                        <button class="btn btn- bx bx-trash"></button>
+                     </small>
                 </td>
             </tr>
             {% endfor %}
@@ -61,25 +66,25 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
-                    <h5 class="fw-bold">Edit Supplier</h5>
+                    <h5 class="fw-bold">Add Supplier</h5>
                     <hr class="rounded">
                     <form method="post" id="editSupplierForm">
                         {% csrf_token %}
                         {{ form | crispy }}
                         <div class="d-flex justify-content-end">
-                            <button type="reset" class="btn btn-danger btn-sm bx bx-reset mx-2"> Reset </button>
+                            <button type="reset" class="btn btn-danger btn-sm bx bx-reset mx-2"></button>
                             <button type="submit" class="btn btn-secondary btn-sm">
-                                <i class="bx bx-save"></i> Save Changes
+                                <i class="bx bx-save"></i>
+                                Save
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+    </div>'
 
-<!-- Add supplier modal -->
+    <!-- Add supplier modal -->
     <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="loaderModalLabel" data-backdrop="static" data-keyboard="false" aria-hidden="true" style="display: none;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -101,87 +106,91 @@
             </div>
         </div>
     </div>
+</div>
 
 <script>
-const addButton = document.getElementById('addButton');
-    const supplierModal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
+    let supId = '';
+     const addButton = document.getElementById('addButton');
+        const supplierModal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
 
-    addButton.addEventListener('click', () => {
-        supplierModal.show();
-    });
+        addButton.addEventListener('click', () => {
+            supplierModal.show();
+        });
 
-    new DataTable('#supplier_list',{
-        paging:false
-    });
+        new DataTable('#supplier_list',{
+            paging:false
+        });
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('supplierForm');
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('supplierForm');
 
-        form.addEventListener('submit', function (event) {
-            event.preventDefault(); 
+            form.addEventListener('submit', function (event) {
+                event.preventDefault(); 
 
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
 
-            fetch('{% url "inventory:suppliers" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCSRFToken()
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    supplierModal.hide()
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: 'Supplier added successfully!',
-                        confirmButtonText: 'OK'
-                    }).then(() => {
-                        form.reset();
-                        window.location.reload()
-                    });
-                } else {
+                fetch('{% url "inventory:suppliers" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        supplierModal.hide()
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Supplier added successfully!',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            form.reset();
+                            window.location.reload()
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: data.message,
+                            confirmButtonText: 'Try Again'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error!',
-                        text: data.message,
-                        confirmButtonText: 'Try Again'
+                        title: 'Submission Failed',
+                        text: 'There was an error submitting the form. Please try again.',
+                        confirmButtonText: 'OK'
                     });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Submission Failed',
-                    text: 'There was an error submitting the form. Please try again.',
-                    confirmButtonText: 'OK'
                 });
             });
-        });
-    })
-    
+        })
 
     // Function to open the edit modal and populate it with supplier data
     function openEditModal(supplierId) {
-        fetch(`/api/supplier/${supplierId}/`)  // Adjust this URL to match your actual endpoint
+        supId = supplierId
+        console.log('supplier', supplierId)
+        fetch(`/inventory/suppliers/edit/${supplierId}/`)  // Adjust this URL to match your actual endpoint
             .then(response => response.json())
             .then(data => {
+                console.log(data.data[0])
                 // Populate form fields with supplier data
-                document.getElementById("id_name").value = data.name;
-                document.getElementById("id_contact_person").value = data.contact_person;
-                document.getElementById("id_phone").value = data.phone;
-                document.getElementById("id_email").value = data.email;
-                document.getElementById("id_address").value = data.address;
+                document.getElementById("id_name").value = data.data[0].name;
+                document.getElementById("id_contact_person").value = data.data[0].contact_person;
+                document.getElementById("id_phone").value = data.data[0].phone;
+                document.getElementById("id_email").value = data.data[0].email;
+                document.getElementById("id_address").value = data.data[0].address;
 
                 // Show the modal
                 const editModal = new bootstrap.Modal(document.getElementById('editSupplierModal'));
@@ -189,7 +198,11 @@ const addButton = document.getElementById('addButton');
             })
             .catch(error => {
                 console.error("Error fetching supplier data:", error);
-                alert("Could not load supplier data. Please try again.");
+                Swal.fire({
+                    text:"Could not load supplier data. Please try again.",
+                    icon: "error",
+                    title: 'Error'
+                })
             });
     }
 
@@ -199,10 +212,9 @@ const addButton = document.getElementById('addButton');
         
         const formData = new FormData(this);
         const data = Object.fromEntries(formData.entries());
-        const supplierId = document.querySelector('input[name="selected_supplier_id"]').value;
 
-        fetch(`/api/supplier/${edit_supplier}/`, {
-            method: 'PUT',  // Use 'PUT' or 'PATCH' for updating
+        fetch(`/inventory/suppliers/edit/${supId}/`, {
+            method: 'POST',  // Use 'PUT' or 'PATCH' for updating
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCSRFToken(),
@@ -211,13 +223,24 @@ const addButton = document.getElementById('addButton');
         })
         .then(response => response.json())
         .then(responseData => {
+            console.log(responseData)
             if (responseData.success) {
                 // Hide modal and refresh the page or update the table
                 const editModal = bootstrap.Modal.getInstance(document.getElementById('editSupplierModal'));
                 editModal.hide();
-                window.location.reload();  // Reload to see updated data, or update the table manually
+                Swal.fire({
+                    text:"Supplier succesfully updated",
+                    icon: "success",
+                    title: 'Success'
+                }).then(()=>{
+                    window.location.reload(); 
+                })
             } else {
-                alert("Error updating supplier: " + responseData.message);
+                Swal.fire({
+                    text:"Error updating supplier: " + responseData.message,
+                    icon: "error",
+                    title: 'Error'
+                })
             }
         })
         .catch(error => console.error("Error updating supplier:", error));

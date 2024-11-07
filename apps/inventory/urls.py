@@ -31,7 +31,7 @@ urlpatterns = [
     
     #testing delete & update
     path("suppliers/delete/", supplier_delete, name="delete_supplier"),
-    path("suppliers/edit/", supplier_edit, name="edit_supplier"),
+    path("suppliers/edit/<int:supplier_id>/", supplier_edit, name="edit_supplier"),
 
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),
