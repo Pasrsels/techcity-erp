@@ -127,7 +127,6 @@ SESSION_AUTH = True
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-<<<<<<< HEAD
    'default': {
      'ENGINE': 'django.db.backends.postgresql',
        'NAME':  'techcoty',
@@ -145,25 +144,6 @@ DATABASES = {
     #      'PORT': os.getenv('DB_PORT', '26269'),
     #  }
 }
-=======
-    'default': {
-      'ENGINE': 'django.db.backends.postgresql',
-        'NAME':  'Techcity',
-        'USER': 'postgres',
-        'PASSWORD': '5052',
-        'HOST': 'localhost',
-        'PORT': '5432'
-   }
-#     'default': {
-#         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-#          'NAME': os.getenv('DB_NAME', 'railway'),
-#          'USER': os.getenv('DB_USERNAME', 'postgres'),
-#          'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvDuHLnxhw'),  
-#          'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
-#          'PORT': os.getenv('DB_PORT', '26269'),
-#      }
- }
->>>>>>> a96a8d6b4c1c1f5f0254af09eae909487b52d612
 
 if 'test' in sys.argv:
     DATABASES = {
