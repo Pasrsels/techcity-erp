@@ -537,13 +537,11 @@
     const savePurchasaeOrderButton = document.getElementById('save_purchase_order')
     
     document.addEventListener('DOMContentLoaded', function() {
-      // Initialize Slim Select
       new SlimSelect({
         select: '#id_product',
         placeholder: 'Select Product'
       });
 
-      // Event listener for the Slim Select dropdown
       document.getElementById('id_product').addEventListener('change', function() {
         const pElement = document.getElementById('id_product');
         const pSelectedOption = pElement.options[pElement.selectedIndex];
@@ -553,7 +551,6 @@
         fetch(`/inventory/inventory/?id=${pElement.value}`)
           .then(response => response.json())
           .then(data => {
-            // Assuming prodData is defined elsewhere to store fetched data
             prodData.push(data);
           })
           .catch(error => console.error('Error:', error));
@@ -565,11 +562,9 @@
     function addExpense() {
       expenseCount++;
       
-      // Create new elements for the expense name and amount
       const row = document.createElement('tr');
       row.id = `expense-row-${expenseCount}`;
 
-      // Name column
       const cell = document.createElement('td');
       cell.colSpan='3';
 
@@ -581,7 +576,6 @@
       nameInput.id = `expense-name-${expenseCount}`;
       nameCell.appendChild(nameInput);
 
-      // Amount column
       const amountCell = document.createElement('td');
       const amountInput = document.createElement('input');
       amountInput.type = 'number';
@@ -591,7 +585,6 @@
       amountInput.oninput = () => calculateExpense();
       amountCell.appendChild(amountInput);
 
-      // Insert the new row into the table
       row.appendChild(cell);
       row.appendChild(nameCell);
       row.appendChild(amountCell);
@@ -600,7 +593,6 @@
       otherRow.insertAdjacentElement('afterend', row);
     }
 
-    // Function to calculate total expenses in 'Other' field
     function calculateExpense() {
       let totalExpense = 0;
       for (let i = 1; i <= expenseCount; i++) {
