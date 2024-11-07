@@ -2,13 +2,13 @@ from django.db import models
 
 # Create your models here.
 class Types(models.Model):
-    name = models.CharField(max_legnth= 255)
+    name = models.CharField(max_length= 255)
 
 class Services(models.Model):
     name = models.CharField(max_length= 255)
-    price = models.FloatField(max_length= 8)
-    cost = models.FloatField(max_length= 8, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     measurement = models.CharField(max_length= 255)
-    recorded = models.FloatField(max_length= 8)
+    recorded = models.DecimalField(max_digits=10, decimal_places=4)
     date = models.DateField()
-    Types = models.ForeignKey(max_length= 255, on_delete=models.CASCADE, null=True)
+    types = models.ForeignKey('types', max_length= 255, on_delete=models.CASCADE, null=True)
