@@ -29,6 +29,10 @@ urlpatterns = [
     path("suppliers/", supplier_view, name="suppliers"),
     path('create_supplier', create_supplier, name='create_supplier'),
     path('supplier/json/list/', supplier_list_json, name='supplier_list_json'),
+    
+    #testing delete & update
+    path("suppliers/delete/", supplier_delete, name="delete_supplier"),
+    path("suppliers/edit/", supplier_edit, name="edit_supplier"),
 
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),

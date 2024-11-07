@@ -1,4 +1,4 @@
- celery==5.4.0
+celery==5.4.0
 channels==4.1.0
 crispy-bootstrap5==0.7
 cssselect2==0.7.0
@@ -42,7 +42,7 @@ platformdirs==4.3.3
 pluggy==1.5.0
 pre-commit==3.4.0
 progressbar==2.5
-psycopg2
+#psycopg2
 pylint-celery==0.3
 pylint-django==2.5.3
 pylint-plugin-utils==0.8.2
@@ -50,7 +50,7 @@ pyOpenSSL==24.0.0
 pypdf==4.3.1
 QtPy==2.4.1
 redis==5.0.8
-regex==2023.12.25
+#regex==2023.12.25
 reportlab==4.0.9
 requests==2.32.3
 service-identity==24.1.0

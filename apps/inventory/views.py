@@ -47,7 +47,8 @@ from . forms import (
     CreateOrderForm,
     noteStatusForm,
     PurchaseOrderStatus,
-    ReorderSettingsForm
+    ReorderSettingsForm,
+    EditSupplierForm
 )
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
@@ -2389,7 +2390,27 @@ def edit_purchase_order_data(request, po_id):
 
     except Exception as e:
         return JsonResponse({"success":False, 'message':f'{e}'})
-    
+
+#testing delete
+@login_required
+def supplier_delete(request):
+    supplier_del = Supplier.objects.get(pk=id)
+    supplier_del.delete()
+    return render(request, 'Supplier/Suppliers.html', {'delete':supplier_del})
+
+#testing edit view
+@login_required
+def supplier_edit(request):
+    formEdit = EditSupplierForm()
+    if request.method == "POST":
+        formEdit.is_valid()
+        formEdit.save()
+        messages.info("Updated successfully")
+        return redirect(request, 'Suppliers.Suppliers.html', {'formEdit':formEdit})
+    messages.info("Update failed")
+    return redirect(request, 'Supplier.Suppliers.html',)
+
+
 @login_required
 def supplier_view(request):
     if request.method == 'GET':
