@@ -1,8 +1,10 @@
 from django.db import models
 
-# Create your models here.
 class Types(models.Model):
     name = models.CharField(max_length= 255)
+
+    def __str__(self):
+        return self.name
 
 class Services(models.Model):
     name = models.CharField(max_length= 255)
@@ -12,3 +14,6 @@ class Services(models.Model):
     recorded = models.DecimalField(max_digits=10, decimal_places=4)
     date = models.DateField()
     Types = models.ForeignKey('types', max_length= 255, on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return f'{self.name}: {self.price}'
