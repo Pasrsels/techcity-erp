@@ -72,13 +72,13 @@
                         </button>
                     </div>
 
-                    <div class="mt-3- d-flex" style="overflow-x: auto;" id="branchesTable">
+                    <div class="mt-3- d-flex" style="overflow-x: auto; background: #fff;" id="branchesTable">
                         <!-- data will be dynamically rendered by js -->
                     </div>
                     
                     <p class="text-danger" id="error"></p>
                     <div class="d-flex justify-content-end mb-2">
-                        <button type="button" class="btn btn-secondary btn-sm" id="id_submit" onclick="addItem();">
+                        <button type="button" class="btn btn-secondary btn-sm" id="id_submit" onclick="saveDataToServer()">
                             <i class="bx bx-save"></i> Save
                         </button>
                     </div>
@@ -99,6 +99,7 @@
   let dealerPrice = 0;
   let productName = '';
   let salesPerson = false;
+  let branchesList = [];
   let userRole = `{{ request.user.role }}`
 
   const errorEl = document.getElementById('error');
@@ -132,44 +133,106 @@
 
     document.getElementById('getValuesButton').addEventListener('click', function() {
         const values = getSelectedValues();
-        const product = document.getElementById('id_product').value
-        console.log(product)
-        displayTables(values, productName)
+        const product = document.getElementById('id_product').value;
+
+        displayTables(values, product);
+
     });
 
+    const displayTables = (values, product, prodData) => {
+    let tableEl = document.getElementById('branchesTable');
 
-    const displayTables = (values, product) => {
-        let tableEl = document.getElementById('branchesTable');
-        console.log(productName)
-        values.forEach((value)=>{
+    values.forEach((value) => {
+        branchesList.push(value?.name);
+
+        // If branch exists, don't include it again
+        if (!branchesList.includes(value)) {
+            const productData = prodData[0]; // Assuming single product data
+
             tableEl.innerHTML += `
-                <div class='m-3'>
-                    <h5>${product}</h5>
+                <div class='m-1 branch-data border p-2 rounded' data-branch-name="${value?.name}">
+                    <h5>${value?.name}</h5>
                     <div class="{% if request.user.role == 'sales' %} d-none {% endif %}">
-                    <div id="div_id_price" class="mb-1">
-                        <label for="id_price" class="form-label requiredField">Price</label>
-                        <input type="number" name="price" step="0.01" class="numberinput form-control" required id="id_price">
-                        <p id="price_error" class="fs-6 text-danger"></p>
-                    </div>
-                    <div id="div_id_dealer_price" class="mb-1">
-                    <label for="id_dealer_price" class="form-label requiredField">Wholesale Price</label>
-                    <input type="number" name="dealer_price" step="0.01" class="numberinput form-control" required id="id_dealer_price">
-                    <p id="dealer_price_error" class="fs-6 text-danger"></p>
+                        <div id="div_id_price" class="mb-1">
+                            <label for="id_price" class="form-label requiredField">Price</label>
+                            <input type="number" name="price" step="0.01" value="${productData.price || ''}" class="numberinput form-control price-input" required>
+                            <p id="price_error" class="fs-6 text-danger"></p>
+                        </div>
+                        <div id="div_id_dealer_price" class="mb-1">
+                            <label for="id_dealer_price" class="form-label requiredField">Wholesale Price</label>
+                            <input type="number" name="dealer_price" step="0.01" value="${productData.dealer_price || ''}" class="numberinput form-control dealer-price-input" required>
+                            <p id="dealer_price_error" class="fs-6 text-danger"></p>
                         </div>
                     </div>
                     <div id="div_id_quantity" class="mb-1">
                         <label for="id_quantity" class="form-label requiredField">Quantity</label>
-                        <input type="number" name="quantity" value="" min="0" class="numberinput form-control" required id="id_quantity">
+                        <input type="number" name="quantity" min="0" value="${productData.quantity || ''}" class="numberinput form-control quantity-input" required>
                     </div>
                     <div id="div_id_description" class="mb-3">
                         <label for="id_description" class="form-label requiredField">Description<span class="asteriskField">*</span></label>
-                        <textarea name="description" cols="20" rows="2" class="textarea form-control" required id="id_description"></textarea>
+                        <textarea name="description" cols="20" rows="2" class="textarea form-control description-input" required>${productData.description || ''}</textarea>
                     </div>
                 </div>
-            `
-        })
+            `;
+        }
+    });
+};
 
-    }
+    const saveDataToServer = () => {
+        const branchElements = document.querySelectorAll('.branch-data');
+        const dataToSend = [];
+
+        branchElements.forEach(branch => {
+            
+            const branchName = branch.dataset.branchName;
+            const price = branch.querySelector('.price-input').value;
+            const dealerPrice = branch.querySelector('.dealer-price-input').value;
+            const quantity = branch.querySelector('.quantity-input').value;
+            const description = branch.querySelector('.description-input').value;
+
+            const pElement = document.getElementById('id_product')
+            const pSelectedOption = pElement.options[pElement.selectedIndex]
+            let product = pSelectedOption.textContent;
+            product = product.split(' [')[0]
+
+            if (!price || !quantity || quantity <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please ensure all fields are filled correctly.'
+                });
+                return;
+            }
+
+            const newItem = {
+                id: generateUniqueId(),  
+                product: product,
+                branch_name: branchName,
+                price: parseFloat(price),
+                dealer_price: parseFloat(dealerPrice),
+                quantity: parseInt(quantity, 10),
+                description: description,
+                cost: prodCost
+            };
+
+            dataToSend.push(newItem);
+            cart.push(newItem);
+        });
+
+        
+        updateCartDisplay();
+
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Items have been added to the cart.',
+            showConfirmButton: false,
+            timer: 1500
+        });
+    };
+
+
 
     document.addEventListener('DOMContentLoaded', function() {
     new SlimSelect({
@@ -178,37 +241,34 @@
     });
 
     document.getElementById('id_product').addEventListener('change', function() {
-            const selectElement = document.getElementById('id_product');
-            
-            const selectedOptions = Array.from(selectElement.selectedOptions).map(option => {
-                return {
-                    name: option.text,
-                    value: option.value
-                };
-            });
-
-            const product = selectedOptions[0]?.value;
-            productName = selectedOptions[0]?.name;
-            console.log(selectElement.value, 'product')
-            if (product) {
-                fetch(`/inventory/inventory/?name=${product}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log(data);
-                        prodEl.value = Number(data[0]?.price);
-                        prodPrice = Number(data[0]?.price);
-                        prodCost = Number(data[0]?.cost);
-                        dealerEl.value = Number(data[0]?.dealer_price);
-                        quantityEl.value = parseInt(data[0]?.quantity);
-                        // productName = data[0]?.inventory__product__name;
-
-                        prodData = [];
-                        prodData.push(data);
-                    })
-                    .catch(error => console.error('Error:', error));
-            }
-        });
+    const selectElement = document.getElementById('id_product');
+    const selectedOptions = Array.from(selectElement.selectedOptions).map(option => {
+        return {
+            name: option.text,
+            value: option.value
+        };
     });
+
+    const product = selectedOptions[0]?.value;
+
+    if (product) {
+        fetch(`/inventory/inventory/?name=${product}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length > 0) {
+                    console.log(data);
+                  
+                    prodData = data;
+
+                    document.getElementById('getValuesButton').addEventListener('click', function() {
+                        const values = getSelectedValues();
+                        displayTables(values, product, prodData);
+                    });
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+});})
 
 
   const successModal = new bootstrap.Modal(document.querySelector('#successModal'))
@@ -252,6 +312,8 @@
       const cartItemsList = document.getElementById("cart-items");
       cartItemsList.innerHTML = "";
 
+      console.log('branches', branchesList)
+
       let total = 0;
       
       cart.reverse().forEach((item) => {
@@ -261,7 +323,7 @@
           <td id='${item.product}'>${item.quantity}</td>
           <td class="${salesPerson ? 'd-none' : ''}" id="${item.product}-price">${item.price}</td>
           <td class="${salesPerson ? 'd-none' : ''}" id="${item.product}-dealer-price">${item.dealer_price}</td>
-          <td id='${item.product}'>${item.to_branch}</td>
+          <td id='${item.product}'>${item.branch_name}</td>
           <td>
               <button class="btn btn-sm btn-danger" data-id=${item.id} onclick="removeItem(this);">
                 <i class='bx bx-trash-alt'></i>
@@ -355,7 +417,7 @@
 
           const newTransfer = {
               id: generateUniqueId(),
-              product: product,
+              product: productName,
               cost: prodCost,
               to_branch: toBranchId,
               quantity: quantity,
