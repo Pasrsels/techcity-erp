@@ -2419,26 +2419,40 @@ def supplier_delete(request):
 
 #testing edit view
 @login_required
-def supplier_edit(request):
-     formEdit = EditSupplierForm()
-     if request.method == "POST":
+def supplier_edit(request, supplier_id):
+    if request.method == 'GET':
+        supplier = Supplier.objects.filter(id=supplier_id).values()
+        logger.info(supplier)
+        return JsonResponse({'success':True, 'data':list(supplier)})
          
-         try:
-             data = json.loads(request, body)
-             name = data.get(name)
-             conctact_person = data.get(conctact_person)
-             email = data.get(email)
-             product = data.get(product)
-             address = data.get(address)
+    if request.method == "POST":
+         
+        try:
+            data = json.loads(request.body)
+            logger.info(data)
 
-             if Supplier.objects.filter(email=email).exists():
-                 supplier = Supplier(name,conctact_person,email,product,address)
-                 supplier.save()
-                 messages.info("Updated successfully")
-                 return JsonResponse({'succcess':True}, status = 200)
-             return JsonResponse({"success":False}, status = 400)
-         except Exception as e:
-            return JsonResponse({"Cause of problem":e, "message":"Falied to edit"})
+            name = data.get('name')
+            contact_person = data.get('contact_person')
+            email = data.get('email')
+            address = data.get('address')
+            phone = data.get('phone')
+
+            supplier = Supplier.objects.get(phone=phone)
+
+            supplier.name=name
+            supplier.contact_person=contact_person
+            supplier.email=email
+            supplier.phone=phone
+            supplier.address=address
+            
+            supplier.save()
+            logger.info(f'{supplier} saved')
+
+            return JsonResponse({'success':True}, status = 200)
+        except Exception as e:
+            logger.info(e)
+            return JsonResponse({"success":False, "message":f"{e}"})
+    return JsonResponse({"success":False, "message":"Invalid Request"})
 
 @login_required
 def supplier_view(request):
