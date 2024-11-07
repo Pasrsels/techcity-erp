@@ -2454,41 +2454,6 @@ def supplier_list_json(request):
     )
     return JsonResponse(list(suppliers), safe=False)
 
-@login_required
-def create_supplier(request):
-    #payload
-    """
-        name 
-        contact
-        email
-        phone 
-        address
-    """
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        
-        name = data['name']
-        contact = data['contact']
-        email = data['email']
-        phone = data['phone']
-        address = data['address']
-        
-        if not name or not contact or not email or not phone or not address:
-            return JsonResponse({'success': False, 'message':'Fill in all the form data'}, status=400)
-        
-        if Supplier.objects.filter(email=email).exists():
-            return JsonResponse({'success': False, 'message':f'Supplier{name} already exists'}, status=400)
-        
-        supplier = Supplier(
-            name = name,
-            contact_name = contact,
-            email = email,
-            phone = phone,
-            address = address
-        )
-        supplier.save()
-        logger.info(f'Supplier successfully created {supplier.name}')
-        return JsonResponse({'success': True}, status=200)
     
 @login_required
 def product(request):
