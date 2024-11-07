@@ -7,7 +7,7 @@ class Types(models.Model):
 class Services(models.Model):
     name = models.CharField(max_length= 255)
     price = models.FloatField(max_length= 8)
-    cost = models.FloatField(max_length= 8, null=True)
-    Types = models.ForeignKey(max_length= 255, on_delete=CASCADE, null=True)
+    cost = models.FloatField(max_length= 8, blank=True)
+    date = models.DateField()
     u_m = models.CharField(max_length= 255)
-
+    Types = models.ForeignKey(max_length= 255, on_delete=models.CASCADE, null=True)
