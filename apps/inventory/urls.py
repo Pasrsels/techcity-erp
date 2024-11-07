@@ -30,7 +30,7 @@ urlpatterns = [
     path('supplier/json/list/', supplier_list_json, name='supplier_list_json'),
     
     #testing delete & update
-    path("suppliers/delete/", supplier_delete, name="delete_supplier"),
+    path("suppliers/delete/<int:supplier_id>/", supplier_delete, name="delete_supplier"),
     path("suppliers/edit/<int:supplier_id>/", supplier_edit, name="edit_supplier"),
 
     # defective
