@@ -2411,12 +2411,10 @@ def supplier_delete(request):
                 supplier_del = Supplier.objects.get(pk=id)
                 supplier = Supplier(supplier_del, name, contact_person, email, product, address)
                 supplier.delete()
-                messages.info("Supplier deleted successfully: f{name}")
-                return JsonResponse("Successfully deleted f{name}")
-            messages.info("Supplier f{name} doesnot exist in database")
-        except:
-            messages.info("error")
-    return JsonResponse({"success":False})
+                return JsonResponse("Successfully deleted f{name}" ,{";success":True}, status = 200)
+            return JsonResponse({"success":False}, status = 400)
+        except Exception as e:
+            return JsonResponse({"cause of problem":e, "message":"encountered an error"})
 
 
 #testing edit view
@@ -2437,21 +2435,10 @@ def supplier_edit(request):
                  supplier = Supplier(name,conctact_person,email,product,address)
                  supplier.save()
                  messages.info("Updated successfully")
-                 return JsonResponse({'succcess':True})
-         except:
-            messages.info("Update failed")
-     return JsonResponse({"success":False})
-
-#add supplier 
-@login_required
-def Add_supplier(request):
-    if request.method == "POST":
-        form = AddSupplierForm()
-        form.is_valid()
-        form.save()
-        messages.info("Save successfully")
-    messages.info("save failed")
-    return redirect(request, 'Supplier/Suppliers.html', {'form':form})
+                 return JsonResponse({'succcess':True}, status = 200)
+             return JsonResponse({"success":False}, status = 400)
+         except Exception as e:
+            return JsonResponse({"Cause of problem":e, "message":"Falied to edit"})
 
 @login_required
 def supplier_view(request):
