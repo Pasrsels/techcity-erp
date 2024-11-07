@@ -2424,7 +2424,7 @@ def supplier_edit(request):
      if request.method == "POST":
          
          try:
-             data = json.loads(request, body)
+             data = json.loads(request.body)
              name = data.get('name')
              conctact_person = data.get('conctact_person')
              email = data.get('email')
