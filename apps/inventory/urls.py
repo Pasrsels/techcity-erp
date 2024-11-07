@@ -29,8 +29,7 @@ urlpatterns = [
     path("suppliers/", supplier_view, name="suppliers"),
     path('supplier/json/list/', supplier_list_json, name='supplier_list_json'),
     
-    #testing delete & update & add
-    path("suppliers/add/", Add_supplier, name="add_supplier")
+    #testing delete & update
     path("suppliers/delete/", supplier_delete, name="delete_supplier"),
     path("suppliers/edit/", supplier_edit, name="edit_supplier"),
 
