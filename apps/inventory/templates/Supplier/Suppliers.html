@@ -79,7 +79,96 @@
     </div>
 </div>
 
+<!-- Add supplier modal -->
+    <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="loaderModalLabel" data-backdrop="static" data-keyboard="false" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <h5 class="fw-bold">Add Supplier</h5>
+                    <hr class="rounded">
+                    <form method="post" id="supplierForm">
+                        {% csrf_token %}
+                        {{ form | crispy }}
+                        <div class="d-flex justify-content-end">
+                            <button type="reset" class="btn btn-danger btn-sm bx bx-reset mx-2"></button>
+                            <button type="submit" class="btn btn-secondary btn-sm">
+                                <i class="bx bx-save"></i>
+                                Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <script>
+const addButton = document.getElementById('addButton');
+    const supplierModal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
+
+    addButton.addEventListener('click', () => {
+        supplierModal.show();
+    });
+
+    new DataTable('#supplier_list',{
+        paging:false
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('supplierForm');
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault(); 
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch('{% url "inventory:suppliers" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    supplierModal.hide()
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Supplier added successfully!',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        form.reset();
+                        window.location.reload()
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: data.message,
+                        confirmButtonText: 'Try Again'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Submission Failed',
+                    text: 'There was an error submitting the form. Please try again.',
+                    confirmButtonText: 'OK'
+                });
+            });
+        });
+
     // Function to open the edit modal and populate it with supplier data
     function openEditModal(supplierId) {
         fetch(`/api/supplier/${supplierId}/`)  // Adjust this URL to match your actual endpoint
