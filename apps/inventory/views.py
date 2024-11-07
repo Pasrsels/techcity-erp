@@ -2445,7 +2445,7 @@ def supplier_edit(request):
 #add supplier 
 @login_required
 def Add_supplier(request):
-    if request.method == "GET":
+    if request.method == "POST":
         form = AddSupplierForm()
         form.is_valid()
         form.save()
