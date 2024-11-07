@@ -2442,6 +2442,16 @@ def supplier_edit(request):
             messages.info("Update failed")
      return JsonResponse({"success":False})
 
+#add supplier 
+@login_required
+def Add_supplier(request):
+    if request.method == "POST":
+        form = AddSupplierForm()
+        form.is_valid()
+        form.save()
+        messages.info("Save successfully")
+    messages.info("save failed")
+    return redirect(request, 'Supplier/Suppliers.html', {'form':form})
 
 @login_required
 def supplier_view(request):
