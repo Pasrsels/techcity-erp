@@ -27,7 +27,6 @@ urlpatterns = [
     
     # suppliers
     path("suppliers/", supplier_view, name="suppliers"),
-    path('create_supplier', create_supplier, name='create_supplier'),
     path('supplier/json/list/', supplier_list_json, name='supplier_list_json'),
 
     # defective
