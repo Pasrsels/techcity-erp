@@ -5,7 +5,7 @@
 <div class="container">
     <div class="d-flex align-items-center justify-content-between mt-2 rounded shadow header py-2 mb-4">
         <h5 class="text-light px-1">Supplier List</h5>
-        <!-- Add Product Button -->
+        <!-- Add Supplier Button -->
         <div class="px-1">
             <button type="button" class="btn btn-primary btn-sm" id="addButton">
                 <i class="bx bx-plus"></i> Add Supplier
@@ -16,13 +16,13 @@
     <table id="supplier_list" class="table table-striped table-bordered" style="width: 100%;">
         <thead style="background-color: #3734f4; color: white;">
             <tr>
-                <th style="font-weight: 500;">Name</th>
-                <th style="font-weight: 500;">Products</th>
-                <th style="font-weight: 500;">Contact Number</th>
-                <th style="font-weight: 500;">Email</th>
-                <th style="font-weight: 500;">Address</th>
-                <th style="font-weight: 500;">Contact Person</th>
-                <th style="font-weight: 500;">Actions</th>
+                <th>Name</th>
+                <th>Products</th>
+                <th>Contact Number</th>
+                <th>Email</th>
+                <th>Address</th>
+                <th>Contact Person</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -47,32 +47,29 @@
                 <td><small>{{ supplier.address }}</small></td>
                 <td><small>{{ supplier.contact_person }}</small></td>
                 <td>
-                    <!-- Add action buttons here, such as Edit or Delete -->
-                     <small>
-                        <button class="btn btn-sm bx bx-edit mx-1"></button>
-                        <button class="btn btn- bx bx-trash"></button>
-                     </small>
+                    <button class="btn btn-sm btn-primary mx-1" onclick="openEditModal({{ supplier.id }})">
+                        <i class="bx bx-edit"></i> Edit
+                    </button>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <!-- Add supplier modal -->
-    <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="loaderModalLabel" data-backdrop="static" data-keyboard="false" aria-hidden="true" style="display: none;">
+    <!-- Edit Supplier Modal -->
+    <div class="modal fade" id="editSupplierModal" tabindex="-1" aria-labelledby="editSupplierModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
-                    <h5 class="fw-bold">Add Supplier</h5>
+                    <h5 class="fw-bold">Edit Supplier</h5>
                     <hr class="rounded">
-                    <form method="post" id="supplierForm">
+                    <form method="post" id="editSupplierForm">
                         {% csrf_token %}
                         {{ form | crispy }}
                         <div class="d-flex justify-content-end">
-                            <button type="reset" class="btn btn-danger btn-sm bx bx-reset mx-2"></button>
+                            <button type="reset" class="btn btn-danger btn-sm bx bx-reset mx-2"> Reset </button>
                             <button type="submit" class="btn btn-secondary btn-sm">
-                                <i class="bx bx-save"></i>
-                                Save
+                                <i class="bx bx-save"></i> Save Changes
                             </button>
                         </div>
                     </form>
@@ -80,92 +77,76 @@
             </div>
         </div>
     </div>
-
-    <script>
-        const addButton = document.getElementById('addButton');
-        const supplierModal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
-
-        addButton.addEventListener('click', () => {
-            supplierModal.show();
-        });
-
-        new DataTable('#supplier_list',{
-            paging:false
-        });
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const form = document.getElementById('supplierForm');
-
-            form.addEventListener('submit', function (event) {
-                event.preventDefault(); 
-
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
-
-                fetch('{% url "inventory:suppliers" %}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCSRFToken()
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        supplierModal.hide()
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: 'Supplier added successfully!',
-                            confirmButtonText: 'OK'
-                        }).then(() => {
-                            form.reset();
-                            window.location.reload()
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: data.message,
-                            confirmButtonText: 'Try Again'
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Submission Failed',
-                        text: 'There was an error submitting the form. Please try again.',
-                        confirmButtonText: 'OK'
-                    });
-                });
-            });
-
-            function getCSRFToken() {
-                let cookieValue = null;
-                const name = 'csrftoken';
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
-        });
-
-    </script>
 </div>
-{% endblock %}
 
+<script>
+    // Function to open the edit modal and populate it with supplier data
+    function openEditModal(supplierId) {
+        fetch(`/api/supplier/${supplierId}/`)  // Adjust this URL to match your actual endpoint
+            .then(response => response.json())
+            .then(data => {
+                // Populate form fields with supplier data
+                document.getElementById("id_name").value = data.name;
+                document.getElementById("id_contact_person").value = data.contact_person;
+                document.getElementById("id_phone").value = data.phone;
+                document.getElementById("id_email").value = data.email;
+                document.getElementById("id_address").value = data.address;
+
+                // Show the modal
+                const editModal = new bootstrap.Modal(document.getElementById('editSupplierModal'));
+                editModal.show();
+            })
+            .catch(error => {
+                console.error("Error fetching supplier data:", error);
+                alert("Could not load supplier data. Please try again.");
+            });
+    }
+
+    // Handling form submission for editing supplier data
+    document.getElementById('editSupplierForm').addEventListener('submit', function(event) {
+        event.preventDefault();  // Prevent default form submission
+        
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+        const supplierId = document.querySelector('input[name="selected_supplier_id"]').value;
+
+        fetch(`/api/supplier/${edit_supplier}/`, {
+            method: 'PUT',  // Use 'PUT' or 'PATCH' for updating
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(responseData => {
+            if (responseData.success) {
+                // Hide modal and refresh the page or update the table
+                const editModal = bootstrap.Modal.getInstance(document.getElementById('editSupplierModal'));
+                editModal.hide();
+                window.location.reload();  // Reload to see updated data, or update the table manually
+            } else {
+                alert("Error updating supplier: " + responseData.message);
+            }
+        })
+        .catch(error => console.error("Error updating supplier:", error));
+    });
+
+    // Utility function to get the CSRF token from cookies
+    function getCSRFToken() {
+        let cookieValue = null;
+        const name = 'csrftoken';
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}
