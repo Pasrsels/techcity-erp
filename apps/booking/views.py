@@ -1,16 +1,9 @@
-<<<<<<< HEAD
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse, HttpResponse
-from .models import *
-from django.views.decorators.csrf import csrf_exempt
-import json
+from django.shortcuts import render
+from .data_utils import get_services_with_details
 
-@csrf_exempt
 def services_page(request):
-    if request.method == "GET":
-        # Handle the main page load, listing all services
-        services = Service.objects.select_related('type').all()
-        return render(request, 'services.html', {'services': services})
+    services = get_services_with_details()
+    return render(request, 'services.html', {'services': services})
 
     elif request.method == "POST":
         # Handle service edit requests (requires form data in request)
