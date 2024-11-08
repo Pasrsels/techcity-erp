@@ -11,9 +11,9 @@ class Members(models.Model):
     Company = models.CharField(max_length= 255, blank= True)
     Age = models.IntegerField(max_length=2, blank=False)
     Gender = models.Choices("M", "F")
-    #ADD MEMBER ACCOUNT FOREGIN KEY
-    #ADD SERVICES FOREIGN KEY
-    #ADD OFFICE SPACES FOREIGN KEY
+    Member_accounts = models.ForeignKey("members_account", on_delete=models.CASCADE)
+    Services = models.ForeignKey("services", on_delete=models.CASCADE)
+    
     #ADD PAYMENTS FOREIGN KEY
 
     #add def funtion to every class
@@ -41,6 +41,9 @@ class Types(models.Model):
 
     def __str__(self):
         return self.name
+
+class Office_spaces(models.Model):
+    Name = models.CharField(max_length= 40, blank=False)
 
 
 class Logs(models.Model):
