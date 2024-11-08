@@ -3,18 +3,18 @@ from django.utils import timezone
 
 class Members(models.Model):
     National_ID = models.CharField(max_length=15, blank=False)
-    Name = models.CharField(max_legnth= 50, blank=False)
+    Name = models.CharField(max_length= 50, blank=False)
     Email = models.EmailField(max_length=255, blank=False)
     Phone = models.CharField(max_length=12, blank=False)
     Address = models.CharField(max_length= 255, blank= False)
     Enrollmnet = models.Choices("permanent","temporary")
     Company = models.CharField(max_length= 255, blank= True)
-    Age = models.IntegerField(max_length=2, blank=False)
+    Age = models.IntegerField(blank=False)
     Gender = models.Choices("M", "F")
-    Member_accounts = models.ForeignKey("members_account", on_delete=models.CASCADE)
-    Services = models.ForeignKey("services", on_delete=models.CASCADE)
-    Office_spaces = models.ForeignKey("office_space", on_delete=models.CASCADE)
-    Payments = models.ForeignKey("payments", on_delete=models.CASCADE)
+    Member_accounts = models.ForeignKey("Member_accounts", on_delete=models.CASCADE)
+    Services = models.ForeignKey("Services", on_delete=models.CASCADE)
+    Office_spaces = models.ForeignKey("Office_spaces", on_delete=models.CASCADE)
+    Payments = models.ForeignKey("Payments", on_delete=models.CASCADE)
 
     #add def funtion to every class
     def __str__(self) -> str:
@@ -22,7 +22,7 @@ class Members(models.Model):
 
 class Member_accounts(models.Model):
     Balance = models.DecimalField(max_digits= 8, decimal_places= 2, default= 0)
-    Payments = models.ForeignKey("payments", on_delete=models.CASCADE)
+    Payments = models.ForeignKey("Payments", on_delete=models.CASCADE)
 
     def __str__(self) -> str:
         return f"{self.Balance}"
@@ -36,7 +36,7 @@ class Payments(models.Model):
 
 class Services(models.Model):
     Name = models.CharField(max_length= 255)
-    Types = models.ForeignKey('types', max_length= 255, on_delete=models.CASCADE, null=True)
+    Types = models.ForeignKey('Types', max_length= 255, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return f'{self.name}, {self.Types.Price}'
@@ -66,8 +66,8 @@ class Logs(models.Model):
     ]
     action = models.CharField(max_length=10, choices=ACTION_CHOICES)
     Services = models.ForeignKey('services', on_delete=models.CASCADE, related_name='logs_file')
-    Members = models.ForeignKey("members")
-    Payments = models.ForeignKey("members")
+    Members = models.ForeignKey("Members", on_delete=models.CASCADE)
+    Payments = models.ForeignKey("Payments", on_delete=models.CASCADE)
     timestamp = models.DateTimeField(default=timezone.now)
 
     def __str__(self) -> str:
