@@ -2397,7 +2397,7 @@ def supplier_V(request, supplier_id):
     if request.method == "GET":
         try:
             supplier = Supplier.objects.filter(id= supplier_id).values()
-            return JsonResponse({'success':True, 'data':list(supplier)})
+            return JsonResponse({'success':True, 'data':list(supplier), 'status':200})
         except Exception as e:
             return JsonResponse({'success':False, 'message':f'{e}', 'status':400})
     return JsonResponse({'success':True, 'message':'invalid request', 'status':400})
