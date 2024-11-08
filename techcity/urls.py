@@ -15,6 +15,7 @@ urlpatterns = [
     # path('analytics/', include('Analytics.urls', namespace='analytics')),
     path('inventory/', include('apps.inventory.urls', namespace='inventory')),
     path('dashboard/', include('apps.Dashboard.urls', namespace='dashboard')),
+    path('booking', include('apps.booking.urls', namespace='booking')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

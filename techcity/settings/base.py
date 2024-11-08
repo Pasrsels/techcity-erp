@@ -54,6 +54,7 @@ THIRD_PARTY_APPS = [
     'apps.pos',
     'apps.settings',
     'apps.Analytics',
+    'apps.booking',
 ]
 
 LOCAL_APPS = [
