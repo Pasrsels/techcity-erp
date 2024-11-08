@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponse
 from .models import *
@@ -47,3 +48,14 @@ def services_page(request):
 
     return HttpResponse(status=405)  # Method not allowed for other cases
 
+=======
+from django.shortcuts import render
+from .views import *
+
+
+
+
+# Create your views here.
+def services_view(request):
+    return render(request, 'services/service.html')
+>>>>>>> 59835ee3b5a75fd2b226a608cf632bf94f69d7b9
