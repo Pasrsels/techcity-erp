@@ -1,7 +1,7 @@
 .venv/
 env/
-# migrations/
-# */migrations/*
+migrations/
+*/migrations/*
 .env
 *.pyc
 *~

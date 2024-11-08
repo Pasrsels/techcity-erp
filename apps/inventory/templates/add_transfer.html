@@ -100,6 +100,7 @@
   let productName = '';
   let salesPerson = false;
   let branchesList = [];
+  let branches = [];
   let userRole = `{{ request.user.role }}`
 
   const errorEl = document.getElementById('error');
@@ -134,6 +135,7 @@
     document.getElementById('getValuesButton').addEventListener('click', function() {
         const values = getSelectedValues();
         const product = document.getElementById('id_product').value;
+        branches = values
 
         displayTables(values, product);
 
@@ -144,10 +146,10 @@
 
     values.forEach((value) => {
         branchesList.push(value?.name);
-
+        console.log('branches', branchesList)
         // If branch exists, don't include it again
         if (!branchesList.includes(value)) {
-            const productData = prodData[0]; // Assuming single product data
+            const productData = prodData[0]; 
 
             tableEl.innerHTML += `
                 <div class='m-1 branch-data border p-2 rounded' data-branch-name="${value?.name}">
@@ -221,6 +223,7 @@
 
         
         updateCartDisplay();
+        console.log(cart)
 
         
         Swal.fire({
@@ -445,7 +448,7 @@
       const data = {
           'cart': cart,
           'salesPerson': salesPerson,
-          'branch_to': toBranchId
+          'branches_to': branches
       };
 
       console.log(data)
