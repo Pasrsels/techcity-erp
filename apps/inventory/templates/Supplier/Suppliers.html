@@ -232,7 +232,7 @@
         const data = Object.fromEntries(formData.entries());
 
         fetch(`/inventory/suppliers/edit/${supId}/`, {
-            method: 'POST',  // Use 'PUT' or 'PATCH' for updating
+            method: 'POST',  
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCSRFToken(),
@@ -284,7 +284,6 @@
             .then(response => response.json())
             .then(responseData => {
                 if (responseData.success) {
-                    // Close the modal and show success message
                     const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteSupplierModal'));
                     deleteModal.hide();
                     Swal.fire({
@@ -292,7 +291,7 @@
                         icon: "success",
                         title: 'Deleted'
                     }).then(() => {
-                        window.location.reload(); // Refresh the page or update the supplier list
+                        window.location.reload(); 
                     });
                 } else {
                     Swal.fire({
