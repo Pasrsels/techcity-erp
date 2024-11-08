@@ -21,7 +21,7 @@ class Members(models.Model):
         return f"{self.National_ID}", f"{self.Name}"
 
 class Member_accounts(models.Model):
-    Balance = models.DecimalField(max_digits= 8, decimal_places= 2, default= 0)
+    Balance = models.DecimalField(max_digits= 8, decimal_places= 2)
     Payments = models.ForeignKey("Payments", on_delete=models.CASCADE)
 
     def __str__(self) -> str:
@@ -43,7 +43,7 @@ class Services(models.Model):
 
 class Types(models.Model):
     Name = models.CharField(max_length= 255)
-    Price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    Price = models.DecimalField(max_digits=10, decimal_places=2)
     Service_duration = models.DateTimeField()
     Promotion = models.BooleanField()
 
