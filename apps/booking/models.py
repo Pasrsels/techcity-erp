@@ -38,22 +38,22 @@ class Types(models.Model):
     Price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     Service_duration = models.DateTimeField()
     Promotion = models.BooleanField()
-    
+
     def __str__(self):
         return self.name
 
 
 class Logs(models.Model):
     ACTION_CHOICES = [
-        ('sale','sale'),
-        ('return','return'),
-        ('cancel','cancel'),
+        ('create','create'),
         ('delete','delete'),
         ('update','update'),
+        ('read','read'),
     ]
-    
-    Services = models.ForeignKey('services', on_delete=models.CASCADE, related_name='logs_file')
     action = models.CharField(max_length=10, choices=ACTION_CHOICES)
+    Services = models.ForeignKey('services', on_delete=models.CASCADE, related_name='logs_file')
+    Members = models.ForeignKey("members")
+    Payments = models.ForeignKey("members")
     timestamp = models.DateTimeField(default=timezone.now)
 
     def __str__(self) -> str:
