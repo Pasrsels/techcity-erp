@@ -2405,25 +2405,9 @@ def supplier_delete(request, supplier_id):
 
     if request.method == "DELETE":
         try:
-            data = json(request.body)
-
-            name = data.get('name')
-            contact_person = data.get('contact_person')
-            email = data.get('email')
-            address = data.get('address')
-            phone = data.get('phone')
-
-            supplier = Supplier.objects.get(phone=phone)
-
-            supplier.name=name
-            supplier.contact_person=contact_person
-            supplier.email=email
-            supplier.phone=phone
-            supplier.address=address
-            
+            supplier = Supplier.objects.get(id=supplier_id)
             supplier.delete()
             logger.info(f'{supplier} delete')
-
             return JsonResponse({'success':True}, status = 200)
         except Exception as e:
             logger.info(e)
