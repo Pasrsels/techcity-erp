@@ -1,4 +1,5 @@
 from django.db import models
+from django import timezone
 
 class Types(models.Model):
     name = models.CharField(max_length= 255)
@@ -17,3 +18,17 @@ class Services(models.Model):
 
     def __str__(self):
         return f'{self.name}: {self.price}'
+
+class Logs(models.Model):
+    ACTION_CHOICES = [
+        ('sale'),
+        ('return'),
+        ('cancel'),
+        ('delete'),
+        ('update'),
+    ]
+    
+    Services = models.ForeignKey('services', on_delete=models.CASCADE, related_name='logs_file')
+    action = models.CharField(max_length=10, choices=ACTION_CHOICES)
+    timestamp = models.DateTimeField(default=timezone.now)
+
