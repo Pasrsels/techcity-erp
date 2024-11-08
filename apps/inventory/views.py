@@ -2419,7 +2419,6 @@ def supplier_delete(request, supplier_id):
             supplier = Supplier.objects.get(id=supplier_id)
             supplier.delete()
             logger.info(f'{supplier} delete')
-
             return JsonResponse({'success':True}, status = 200)
         except Exception as e:
             logger.info(e)
