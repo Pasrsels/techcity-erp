@@ -2391,6 +2391,17 @@ def edit_purchase_order_data(request, po_id):
     except Exception as e:
         return JsonResponse({"success":False, 'message':f'{e}'})
 
+#view
+@login_required
+def supplier_V(request, supplier_id):
+    if request.method == "GET":
+        try:
+            supplier = Supplier.objects.filter(id= supplier_id).values()
+            return JsonResponse({'success':True, 'data':list(supplier)})
+        except Exception as e:
+            return JsonResponse({'success':False, 'message':f'{e}', 'status':400})
+    return JsonResponse({'success':True, 'message':'invalid request', 'status':400})
+
 #testing delete
 @login_required
 def supplier_delete(request, supplier_id):
