@@ -13,25 +13,33 @@ class Members(models.Model):
     Gender = models.Choices("M", "F")
     Member_accounts = models.ForeignKey("members_account", on_delete=models.CASCADE)
     Services = models.ForeignKey("services", on_delete=models.CASCADE)
-    
-    #ADD PAYMENTS FOREIGN KEY
+    Office_spaces = models.ForeignKey("office_space", on_delete=models.CASCADE)
+    Payments = models.ForeignKey("payments", on_delete=models.CASCADE)
 
     #add def funtion to every class
+    def __str__(self) -> str:
+        return f"{self.National_ID}", f"{self.Name}"
 
 class Member_accounts(models.Model):
     Balance = models.DecimalField(max_digits= 8, decimal_places= 2, default= 0)
-    #ADD FOREIGN KEY PAYMENTS
+    Payments = models.ForeignKey("payments", on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        return f"{self.Balance}"
 
 class Payments(models.Model):
     Date = models.CharField(default= timezone.now)
     Amount = models.DecimalField(max_digits= 8, decimal_places= 2)
+
+    def __str__(self) -> str:
+        return f"{self.Amount}"
 
 class Services(models.Model):
     Name = models.CharField(max_length= 255)
     Types = models.ForeignKey('types', max_length= 255, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return f'{self.name}: {self.price}'
+        return f'{self.name}, {self.Types.Price}'
 
 class Types(models.Model):
     Name = models.CharField(max_length= 255)
@@ -40,10 +48,13 @@ class Types(models.Model):
     Promotion = models.BooleanField()
 
     def __str__(self):
-        return self.name
+        return f"{self.Name}"
 
 class Office_spaces(models.Model):
     Name = models.CharField(max_length= 40, blank=False)
+
+    def __str__(self):
+        return f"{self.Name}"
 
 
 class Logs(models.Model):
