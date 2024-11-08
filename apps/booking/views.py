@@ -4,4 +4,4 @@ from .views import *
 
 
 def services_view(request):
-    return render(request, 'services/service.html')
+    return render(request, 'service.html')
