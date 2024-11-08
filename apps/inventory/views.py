@@ -1845,16 +1845,19 @@ def sales_price_list_pdf(request, order_id):
         product_name = item.product
         logger.info(product_name)
         product_data = product_prices.get(product_name)
+        description = ''
 
-        item.description = product_data['product__description'] or ''
+        if product_data['product__description']:
+            description = item.description = product_data['product__description'] 
 
         if product_data:
             item.dealer_price = product_data['dealer_price']
             item.selling_price = product_data['price']
-            item.description = product_data['product__description'] or ''
+            item.description = description
         else:
             item.dealer_price = 0
             item.selling_price = 0
+            item.description = description
             
     context = {'items': items}
 
