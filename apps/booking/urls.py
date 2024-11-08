@@ -5,4 +5,5 @@ app_name = 'booking'
 
 urlpatterns = [
     path('', services_view, name='service')
+    
 ]
