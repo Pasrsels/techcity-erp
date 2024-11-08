@@ -1,5 +1,5 @@
 from django.db import models
-from django import timezone
+from django.utils import timezone
 
 class Types(models.Model):
     name = models.CharField(max_length= 255)
@@ -10,7 +10,7 @@ class Types(models.Model):
 class Services(models.Model):
     name = models.CharField(max_length= 255)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=0, blank=True)
     measurement = models.CharField(max_length= 255)
     recorded = models.DecimalField(max_digits=10, decimal_places=4)
     date = models.DateField()
@@ -21,14 +21,16 @@ class Services(models.Model):
 
 class Logs(models.Model):
     ACTION_CHOICES = [
-        ('sale'),
-        ('return'),
-        ('cancel'),
-        ('delete'),
-        ('update'),
+        ('sale','sale'),
+        ('return','return'),
+        ('cancel','cancel'),
+        ('delete','delete'),
+        ('update','update'),
     ]
     
     Services = models.ForeignKey('services', on_delete=models.CASCADE, related_name='logs_file')
     action = models.CharField(max_length=10, choices=ACTION_CHOICES)
     timestamp = models.DateTimeField(default=timezone.now)
 
+    def __str__(self) -> str:
+        return f"{self.Services.name}, {self.timestamp}"
