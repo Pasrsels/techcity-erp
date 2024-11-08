@@ -1847,7 +1847,7 @@ def sales_price_list_pdf(request, order_id):
         product_data = product_prices.get(product_name)
         description = ''
 
-        if product_data['product__description']:
+        if product_data:
             description = item.description = product_data['product__description'] 
 
         if product_data:
