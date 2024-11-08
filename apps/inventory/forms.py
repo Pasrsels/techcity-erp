@@ -65,6 +65,12 @@ class AddSupplierForm(forms.ModelForm):
         model = Supplier
         fields = '__all__'
 
+#testing supplier edit form
+class EditSupplierForm(forms.ModelForm):
+    class Meta:
+        model = Supplier
+        fields = '__all__'
+
 class CreateOrderForm(forms.ModelForm):
     class Meta:
         model =  PurchaseOrder

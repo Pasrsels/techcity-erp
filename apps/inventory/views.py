@@ -47,7 +47,8 @@ from . forms import (
     CreateOrderForm,
     noteStatusForm,
     PurchaseOrderStatus,
-    ReorderSettingsForm
+    ReorderSettingsForm,
+    EditSupplierForm
 )
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
@@ -711,7 +712,7 @@ def receive_inventory(request):
 
             transfer = Transfer.objects.get(id = branch_transfer.transfer.id)
             if not transfer.receive_status:
-                transfer.receive_status = True;
+                transfer.receive_status = True
                 transfer.save()
                     
             branch_transfer.quantity_track = branch_transfer.quantity - int(request.POST['quantity'])
@@ -1845,12 +1846,12 @@ def sales_price_list_pdf(request, order_id):
         logger.info(product_name)
         product_data = product_prices.get(product_name)
 
-        item.description = product_data['product__description']
+        item.description = product_data['product__description'] or ''
 
         if product_data:
             item.dealer_price = product_data['dealer_price']
             item.selling_price = product_data['price']
-            item.description = product_data['product__description']
+            item.description = product_data['product__description'] or ''
         else:
             item.dealer_price = 0
             item.selling_price = 0
@@ -2390,7 +2391,56 @@ def edit_purchase_order_data(request, po_id):
 
     except Exception as e:
         return JsonResponse({"success":False, 'message':f'{e}'})
-    
+
+#testing delete
+@login_required
+def supplier_delete(request):
+    '''
+        name,contact_person,email,product,address
+    '''
+    if request.method == "POST":
+        try:
+            data = json.loads(request,body)
+
+            name = data.get('name')
+            contact_person = data.get('contact_person')
+            email = data.get('email')
+            product = data.get('product')
+            address = data.get('address')
+
+            if Supplier.objects.filter(email=email).exists():
+                supplier_del = Supplier.objects.get(pk=id)
+                supplier = Supplier(supplier_del, name, contact_person, email, product, address)
+                supplier.delete()
+                return JsonResponse("Successfully deleted f{name}" ,{";success":True}, status = 200)
+            return JsonResponse({"success":False}, status = 400)
+        except Exception as e:
+            return JsonResponse({"cause of problem":e, "message":"encountered an error"})
+
+
+#testing edit view
+@login_required
+def supplier_edit(request):
+     formEdit = EditSupplierForm()
+     if request.method == "POST":
+         
+         try:
+             data = json.loads(request, body)
+             name = data.get('name')
+             conctact_person = data.get('conctact_person')
+             email = data.get('email')
+             product = data.get('product')
+             address = data.get('address')
+
+             if Supplier.objects.filter(email=email).exists():
+                 supplier = Supplier(name,conctact_person,email,product,address)
+                 supplier.save()
+                 messages.info("Updated successfully")
+                 return JsonResponse({'succcess':True}, status = 200)
+             return JsonResponse({"success":False}, status = 400)
+         except Exception as e:
+            return JsonResponse({"Cause of problem":e, "message":"Falied to edit"})
+
 @login_required
 def supplier_view(request):
     if request.method == 'GET':
