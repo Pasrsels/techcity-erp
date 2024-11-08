@@ -2391,17 +2391,6 @@ def edit_purchase_order_data(request, po_id):
     except Exception as e:
         return JsonResponse({"success":False, 'message':f'{e}'})
 
-#view
-@login_required
-def supplier_V(request, supplier_id):
-    if request.method == "GET":
-        try:
-            supplier = Supplier.objects.filter(id= supplier_id).values()
-            return JsonResponse({'success':True, 'data':list(supplier), 'status':200})
-        except Exception as e:
-            return JsonResponse({'success':False, 'message':f'{e}', 'status':400})
-    return JsonResponse({'success':True, 'message':'invalid request', 'status':400})
-
 #testing delete
 @login_required
 def supplier_delete(request, supplier_id):
@@ -2416,7 +2405,6 @@ def supplier_delete(request, supplier_id):
 
     if request.method == "DELETE":
         try:
-<<<<<<< HEAD
             # data = json(request.body)
 
             # name = data.get('name')
@@ -2433,17 +2421,12 @@ def supplier_delete(request, supplier_id):
             # supplier.phone=phone
             # supplier.address=address
             
-            # supplier.delete()
+            # supplier.delete() 
             # logger.info(f'{supplier} delete')
 
             supplier = Supplier.objects.get(id=supplier_id)
             supplier.delete()
 
-=======
-            supplier = Supplier.objects.get(id=supplier_id)
-            supplier.delete()
-            logger.info(f'{supplier} delete')
->>>>>>> 68700fc8ab3477ca8039fb5f0199aa12cb58b230
             return JsonResponse({'success':True}, status = 200)
         except Exception as e:
             logger.info(e)
