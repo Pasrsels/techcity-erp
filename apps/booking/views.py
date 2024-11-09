@@ -10,35 +10,51 @@ def services_view(request):
     services = Services.objects.filter(delete=False)
     return render(request, 'services/service.html')
 
-def service_crud(request, service_id):
+def service_crud(request):
     if request.method == "GET":#View
-        service = Services.objects.filter(id= service_id).values()
+        service = Services.objects.filter(id=id).values()
         return JsonResponse({'success':True, 'data':list(service), 'status': 200})
     elif request.method == "POST":#ADD
         
         data = json.loads(request.body)
-        service_data = data.get('service', [])
-        type_data = data.get('type_data', [])
 
-        name = data.get('Name')
-        
-        service_add = Services(name = name,)
+        service_id = data.get([0]['service_id'])
+        service_name = data.get([0]['service_name'])
+        service_type = data.get([0]['service_type_id'])
+
+        type_id = data.get([1]['type_id'])
+        type_name = data.get([1]['type_name'])
+        type_price = data.get([1]['type_price'])
+        type_service_duration = data.get([1]['type_service_duration'])
+        type_promotion = data.get([1]['type_promotion'])
+
+        if Services.objects.filter(id = service_id).exists() or Services.objects.filter(id = type_id).exists():
+            return JsonResponse({'success': False, 'reason': 'added item already exists', 'status': 400})
+        elif not service_id or  not service_name or not service_type or not type_id or not type_name or not type_price or not type_service_duration or not type_promotion:
+            return JsonResponse({'success': True, 'response': 'please fill in missing fields', 'status': 400})
+        type_add = Types(t_id = type_id, t_name = type_name, t_price = type_price, t_sduration = type_service_duration, t_promo = type_promotion)
+        type_add.save()
+        #not sure on addind type id
+        service_add = Services(s_id = service_id, s_name = service_name, s_type = service_type)
         service_add.save()
-
-        Types.objects.create(
-            name=type_data[0].name
-        )
         return JsonResponse({'success':True, 'status': 200})
     elif request.method == "PUT":
 
         data = json.loads(request.body)
 
-        name = data.get('name')
+        service_id = data.get([0]['service_id'])
+        service_name = data.get([0]['service_name'])
+        service_type = data.get([0]['service_type_id'])
 
-        service_edit = Services.objects.get(id= service_id)
+        type_id = data.get([1]['type_id'])
+        type_name = data.get([1]['type_name'])
+        type_price = data.get([1]['type_price'])
+        type_service_duration = data.get([1]['type_service_duration'])
+        type_promotion = data.get([1]['type_promotion'])
+        
 
-        service_edit.Name = name
-        service_edit.save()
+        Services.objects.get(id= service_id)
+
         return JsonResponse({'success':True, 'status':200})
     
     elif request.method == "DELETE":
