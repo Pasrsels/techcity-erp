@@ -31,7 +31,7 @@ class Supplier(models.Model):
     contact_person = models.CharField(max_length=255)
     phone = models.CharField(max_length=255)
     email = models.EmailField(max_length=255)
-    address = models.CharField(max_length=255, null=True)
+    address = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.name
