@@ -1,4 +1,4 @@
-﻿﻿celery==5.4.0
+﻿﻿# celery==5.4.0
 aiohappyeyeballs==2.4.0
 aiohttp==3.10.5
 aiohttp-retry==2.8.3
@@ -174,26 +174,7 @@ platformdirs==4.3.3
 pluggy==1.5.0
 pre-commit==3.4.0
 progressbar==2.5
-<<<<<<< HEAD
 # psycopg2
-=======
-prometheus_client==0.20.0
-prompt_toolkit==3.0.47
-psutil==6.0.0
-psycopg==3.1.12
-ptyprocess==0.7.0
-pure_eval==0.2.3
-pyasn1==0.6.1
-pyasn1_modules==0.4.1
-pycodestyle==2.12.1
-pycparser==2.22
-pyflakes==3.2.0
-Pygments==2.18.0
-pyHanko==0.25.1
-pyhanko-certvalidator==0.26.3
-PyJWT==2.9.0
-pylint==2.17.7
->>>>>>> c99134fb228abd002065d2181caf34c036caddf7
 pylint-celery==0.3
 pylint-django==2.5.3
 pylint-plugin-utils==0.8.2
