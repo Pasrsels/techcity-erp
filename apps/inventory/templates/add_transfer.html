@@ -135,18 +135,31 @@
     document.getElementById('getValuesButton').addEventListener('click', function() {
         const values = getSelectedValues();
         const product = document.getElementById('id_product').value;
-        branches = values
-
+        console.log('values', values)
+        pushBranches(values)
         displayTables(values, product);
-
     });
+
+    const pushBranches = (values) => {
+        values.forEach((b) => {
+            const branchExists = branches.some(branch => branch.name === b.name);
+            if (!branchExists) {
+                branches.push({
+                    'name': b.name,
+                    'value': b.value
+                });
+                branchesList.push(b.name);
+            }
+        });
+    }
 
     const displayTables = (values, product, prodData) => {
     let tableEl = document.getElementById('branchesTable');
 
+    tableEl.innerHTML = ''
+
     values.forEach((value) => {
-        branchesList.push(value?.name);
-        console.log('branches', branchesList)
+        console.log('branches', branches)
         // If branch exists, don't include it again
         if (!branchesList.includes(value)) {
             const productData = prodData[0]; 
@@ -315,8 +328,6 @@
       const cartItemsList = document.getElementById("cart-items");
       cartItemsList.innerHTML = "";
 
-      console.log('branches', branchesList)
-
       let total = 0;
       
       cart.reverse().forEach((item) => {
@@ -335,6 +346,7 @@
         `;
         cartItemsList.appendChild(row);
       });
+      document.getElementById('branchesTable').innerHTML=''
     }
 
   function clearFields() {
