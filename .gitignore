@@ -1,8 +1,15 @@
+<<<<<<< HEAD
 .venv/
 env/
 <<<<<<< HEAD
 migrations/
 */migrations/*
+=======
+ .venv/
+ env/
+ migrations/
+ */migrations/*
+>>>>>>> 41f8753387e45acff57e2e8143c59fdcd7559057
 .env
 *.pyc
 *~
@@ -31,4 +38,7 @@ test.png
 .pyc
 .requirements.txt
 .base.py
+<<<<<<< HEAD
 dev/*.pyc
+=======
+>>>>>>> 41f8753387e45acff57e2e8143c59fdcd7559057
