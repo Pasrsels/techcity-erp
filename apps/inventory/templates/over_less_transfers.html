@@ -5,20 +5,11 @@
 {% block content %}
    <div class="inventory">
         <div class="inventory-navbar mb-2">
-            <nav class="d-flex justify-content-between align-items-center bg-dark text-light rounded shadow p-2">
-                <div class='fw-bold h5'>Over/Less Transfers</div>
-                <div class="d-flex">
-                    <input
-                        id="search"
-                        name="q"
-                        type="search"
-                        class="form-control"
-                        placeholder="search..."
-                    />
-                </div>
+            <nav class="d-flex justify-content-between align-items-center text-light rounded shadow p-2" style="background:#373f4c;">
+                <div class='h5'>Over/Less Transfers</div>
             </nav>
         </div>
-        <div>
+        <div class="mt-1">
             {% include 'components/loader.html' %}
             <table class='table border table-bordered table-striped table-hover rounded p-2' style='width:100%' id='over_less_transfers'>
                 <thead class='bg-primary'>
@@ -112,7 +103,9 @@
     let o_l_quantity = ''
     let data = [];
 
-    new DataTable('#over_less_transfers')
+    new DataTable('#over_less_transfers',{
+        paging:false
+    })
 
     const formBtn = document.querySelectorAll('#formBtn');
     const loaderModal = new bootstrap.Modal(document.querySelector('#loaderModal'));

@@ -5,7 +5,6 @@ import environ, os
 import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
-#from decouple import config
 from django.apps import apps
 
 env = environ.Env()   
@@ -54,7 +53,7 @@ THIRD_PARTY_APPS = [
     'apps.pos',
     'apps.settings',
     'apps.Analytics',
-    'apps.booking',
+    'apps.booking'
 ]
 
 LOCAL_APPS = [

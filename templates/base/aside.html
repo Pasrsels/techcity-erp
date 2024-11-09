@@ -108,6 +108,12 @@
                 </a>
             </li>
             <li class="menu-link mb-4">
+                <a href="{% url 'booking:services_page' %}">
+                    <i class='bx bx-cog'></i>
+                    <span class='px-2'>Services</span>
+                </a>
+            </li>
+            <li class="menu-link mb-4">
                 <a href="{% url 'company:branch_list' %}">
                     <i class='bx bx-building'></i>
                     <span class='px-2'>Branches</span>
@@ -125,6 +131,7 @@
                     <span class='px-2'>Settings</span>
                 </a>
             </li>
+           
             {% endif %}
 
         </ul>

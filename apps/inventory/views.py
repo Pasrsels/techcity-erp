@@ -232,43 +232,58 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         try:
             with transaction.atomic():
                 data = json.loads(request.body)
-                branch_name = data['branch_to']
+                branches = data['branches_to']
+
+                logger.info(branches)
                 
-                try:
-                    branch_to =  Branch.objects.get(name=branch_name)
-                except Exception as e:
-                    return JsonResponse({'success':False, 'message': f'here {e}'})
+                # create list of branch objects
+                branch_obj_list = []
+                branch_names = ''
+                for branch in branches:
+                    branch_names += f'{branch['name']} '
+                    branch_obj_list.append(Branch.objects.get(id=branch['value']))
                 
-                transfer = Transfer(
-                    transfer_to = branch_to,
+                logger.info(f'Branch objects: {branch_obj_list}')
+                
+                transfer = Transfer.objects.create(
                     branch = request.user.branch,
                     user = request.user,
-                    transfer_ref = Transfer.generate_transfer_ref(request.user.branch.name, branch_to.name)
+                    transfer_ref = Transfer.generate_transfer_ref(request.user.branch.name, branch_names)
                 )
-
                 
-                for item in data['cart']:
-                    logger.info(f'product name is {item['product']}')
-                    product = Product.objects.get(name=item['product'])
-                    logger.info(f'Transfered product: {product.name}')
-    
-                    transfer_item = TransferItems(
-                        transfer=transfer,
-                        product = product,
-                        cost = item['cost'],
-                        price=item['price'],
-                        dealer_price = item['dealer_price'],
-                        quantity=item['quantity'],
-                        from_branch= request.user.branch,
-                        to_branch= transfer.transfer_to,
-                    )   
-                    transfer.save()         
-                    transfer_item.save()
+                #assign many2many objects to transfer branch
+                transfer.transfer_to.set(branch_obj_list),
 
-                    logger.info(f'Transfered product: product saved')
-                    
-                    self.deduct_inventory(transfer_item)
-                    self.transfer_update_quantity(transfer_item, transfer)  
+                logger.info(f'Transfer saved {transfer}')
+
+                for branch_obj in branch_obj_list:
+                    for item in data['cart']:
+                        logger.info(f'Cart Item: {item}')
+                        product = Product.objects.get(name=item['product'])
+                        logger.info(f'Transfered product: {product.name}')
+
+                        branch_name = item['branch_name']
+
+                        logger.info(f'branch name: {branch_name}')
+
+                        if branch_name == branch_obj.name:
+                            transfer_item = TransferItems(
+                                transfer=transfer,
+                                product = product,
+                                cost = item['cost'],
+                                price=item['price'],
+                                dealer_price = item['dealer_price'],
+                                quantity=item['quantity'],
+                                from_branch= request.user.branch,
+                                to_branch= branch_obj,
+                            )   
+                            transfer.save()         
+                            transfer_item.save()
+
+                            logger.info(f'Transfered product: product saved')
+                            
+                            self.deduct_inventory(transfer_item)
+                            self.transfer_update_quantity(transfer_item, transfer)  
                     
                 # send email for transfer alert
                 # transaction.on_commit(lambda: send_transfer_email(request.user.email, transfer.id, transfer.transfer_to.id))
@@ -593,50 +608,36 @@ def inventory_transfers(request):
 
     transfer_items = TransferItems.objects.all()
     transfers = Transfer.objects.filter(
-        Q(branch=request.user.branch) | Q(transfer_to=request.user.branch),
+        Q(branch=request.user.branch) |
+        Q(transfer_to__in=[request.user.branch]),
         delete=False
-    ).order_by('-time')
+    ).order_by('-time').distinct()
     
     if q:
         transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
         
     if branch_id: 
         transfers = transfers.filter(transfer_to__id=branch_id)
-        
-    if request.method == 'POST':
-        form = addTransferForm(request.POST)
-        
-        if form.is_valid():
-            transfer=form.save(commit=False)
-            transfer_to = Branch.objects.get(id=int(request.POST['transfer_to']))
-            transfer.branch = request.user.branch
-            transfer.user = request.user
-            transfer.transfer_ref = Transfer.generate_transfer_ref(transfer.branch.name, transfer_to.name)
-            
-            transfer.save()
-            
-            return redirect('inventory:add_transfer', transfer.transfer_ref)
-            
-        messages.success(request, 'Transfer creation failed')
     
+    logger.info(f'branch transfers: {transfers}')
+        
     return render(request, 'transfers.html', {'transfers': transfers,'search_query': q, 'form':form, 'transfer_items':transfer_items })
 
 @login_required
 def print_transfer(request, transfer_id):
-    
     try:
         transfer = Transfer.objects.get(id=transfer_id)
+        transfer_items = TransferItems.objects.filter(transfer=transfer)
+    
+        return render(request, 'components/ibt.html', {
+            'date':datetime.datetime.now(),
+            'transfer':transfer, 
+            'transfer_items':transfer_items
+        })
     except:
         messages.warning(request, 'Transfer doesnt exists')
         return redirect('inventory:transfers')
-    
-    transfer_items = TransferItems.objects.filter(transfer=transfer)
-    
-    return render(request, 'components/ibt.html', {
-        'date':datetime.datetime.now(),
-        'transfer':transfer, 
-        'transfer_items':transfer_items
-    })
+
     
 @login_required
 @transaction.atomic
@@ -711,7 +712,7 @@ def receive_inventory(request):
 
             transfer = Transfer.objects.get(id = branch_transfer.transfer.id)
             if not transfer.receive_status:
-                transfer.receive_status = True;
+                transfer.receive_status = True
                 transfer.save()
                     
             branch_transfer.quantity_track = branch_transfer.quantity - int(request.POST['quantity'])
@@ -795,7 +796,7 @@ def over_less_list_stock(request):
                 description='write_off'
                 
                 activity_log('Stock in', product, branch_transfer)
-                logger.info(f'quantity {quantity}')
+                
                 DefectiveProduct.objects.create(
                     product = product,
                     branch = request.user.branch,
@@ -1845,12 +1846,12 @@ def sales_price_list_pdf(request, order_id):
         logger.info(product_name)
         product_data = product_prices.get(product_name)
 
-        item.description = product_data['product__description']
+        item.description = product_data['product__description'] or ''
 
         if product_data:
             item.dealer_price = product_data['dealer_price']
             item.selling_price = product_data['price']
-            item.description = product_data['product__description']
+            item.description = product_data['product__description'] or ''
         else:
             item.dealer_price = 0
             item.selling_price = 0

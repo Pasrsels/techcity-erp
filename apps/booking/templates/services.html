@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linkspot Services</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container-fluid">
+    <!-- Header -->
+    <header class="bg-dark text-white text-center py-3 mb-4">
+        <h2>Linkspot</h2>
+    </header>
+    
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <aside class="col-md-2 bg-light p-3">
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link active" href="#">Services</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Members</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Logs</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Settings</a></li>
+            </ul>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="col-md-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5>Services</h5>
+                <button class="btn btn-primary">Add Service</button>
+            </div>
+            
+            <!-- Service Cards -->
+            <div class="row">
+                {% for service in services %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ service.name }}</h5>
+                            <p class="card-text"><strong>Price:</strong> ${{ service.price }}</p>
+                            <p class="card-text"><strong>Duration:</strong> {{ service.duration }}</p>
+                            {% if service.promotion %}
+                            <p class="card-text"><strong>Promotion:</strong> {{ service.promotion }}</p>
+                            {% endif %}
+                            <div class="d-flex justify-content-between mt-3">
+                                <button class="btn btn-outline-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="btn btn-outline-danger">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Bootstrap and jQuery JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+

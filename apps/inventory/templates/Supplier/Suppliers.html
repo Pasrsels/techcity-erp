@@ -46,6 +46,7 @@
                 <td><small>{{ supplier.email }}</small></td>
                 <td><small>{{ supplier.address }}</small></td>
                 <td><small>{{ supplier.contact_person }}</small></td>
+<<<<<<< HEAD
                 <td class="d-flex justify-content-start">
                     <!-- Edit Button -->
                     <button class="btn btn-sm btn-primary mx-1" onclick="openEditModal({{ supplier.id }})">
@@ -59,6 +60,20 @@
                     <button class="btn btn-sm btn-danger mx-1" onclick="confirmDelete({{ supplier.id }})">
                         <i class="bx bx-trash"></i> Delete
                     </button>
+=======
+                <td>
+<<<<<<< HEAD
+                    <!-- Add action buttons here, such as Edit or Delete -->
+                     <small>
+                        <button class="btn btn-sm bx bx-edit mx-1"></button>
+                        <button class="btn btn- bx bx-trash"></button>
+                     </small>
+=======
+                    <button class="btn btn-sm btn-primary mx-1" onclick="openEditModal({{ supplier.id }})">
+                        <i class="bx bx-edit"></i> Edit
+                    </button>
+>>>>>>> booking
+>>>>>>> f9ceb6b82bbd10120610e311bbd1a7de92a351b4
                 </td>
             </tr>
             {% endfor %}
@@ -214,60 +229,3 @@
             });
         });
     });
-
-    function openEditModal(supplierId) {
-        supId = supplierId;
-        fetch(`/inventory/suppliers/edit/${supplierId}/`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("id_name").value = data.data[0].name;
-                document.getElementById("id_contact_person").value = data.data[0].contact_person;
-                document.getElementById("id_phone").value = data.data[0].phone;
-                document.getElementById("id_email").value = data.data[0].email;
-                document.getElementById("id_address").value = data.data[0].address;
-
-                const editModal = new bootstrap.Modal(document.getElementById('editSupplierModal'));
-                editModal.show();
-            })
-            .catch(error => {
-                console.error("Error fetching supplier data:", error);
-                Swal.fire({
-                    text: "Could not load supplier data. Please try again.",
-                    icon: "error",
-                    title: 'Error'
-                });
-            });
-    }
-
-    function openViewModal(supplierId) {
-        fetch(`/inventory/suppliers/view/${supplierId}/`)
-            .then(response => response.json())
-            .then(data => {
-                const supplier = data.data[0];
-                const detailsHTML = `
-                    <p><strong>Name:</strong> ${supplier.name}</p>
-                    <p><strong>Contact Person:</strong> ${supplier.contact_person}</p>
-                    <p><strong>Phone:</strong> ${supplier.phone}</p>
-                    <p><strong>Email:</strong> ${supplier.email}</p>
-                    <p><strong>Address:</strong> ${supplier.address}</p>
-                    <p><strong>Products:</strong></p>
-                    <ul>
-                        ${supplier.products.length > 0 ? supplier.products.map(product => `<li>${product.name}</li>`).join('') : '<li>No products listed</li>'}
-                    </ul>
-                `;
-                document.getElementById("viewSupplierDetails").innerHTML = detailsHTML;
-                const viewModal = new bootstrap.Modal(document.getElementById('viewSupplierModal'));
-                viewModal.show();
-            })
-            .catch(error => {
-                console.error("Error fetching supplier details:", error);
-                Swal.fire({
-                    text: "Could not load supplier details. Please try again.",
-                    icon: "error",
-                    title: 'Error'
-                });
-            });
-    }
-</script>
-
-{% endblock %}
