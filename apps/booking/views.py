@@ -38,6 +38,7 @@ def service_crud(request):
         service_add = Services(s_id = service_id, s_name = service_name, s_type = service_type)
         service_add.save()
         return JsonResponse({'success':True, 'status': 200})
+    #update
     elif request.method == "PUT":
 
         data = json.loads(request.body)
