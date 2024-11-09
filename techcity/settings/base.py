@@ -5,7 +5,6 @@ import environ, os
 import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
-from decouple import config
 from django.apps import apps
 
 env = environ.Env()   
@@ -54,6 +53,7 @@ THIRD_PARTY_APPS = [
     'apps.pos',
     'apps.settings',
     'apps.Analytics',
+    'apps.booking'
 ]
 
 LOCAL_APPS = [
@@ -134,15 +134,15 @@ DATABASES = {
        'PASSWORD': 'neverfail',
        'HOST': 'localhost',
        'PORT': '5432'
-  }
-    # 'default': {
-    #     'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-    #      'NAME': os.getenv('DB_NAME', 'railway'),
-    #      'USER': os.getenv('DB_USERNAME', 'postgres'),
-    #      'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvDuHLnxhw'),  
-    #      'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
-    #      'PORT': os.getenv('DB_PORT', '26269'),
-    #  }
+ }
+#     'default': {
+#         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+#          'NAME': os.getenv('DB_NAME', 'railway'),
+#          'USER': os.getenv('DB_USERNAME', 'postgres'),
+#          'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvDuHLnxhw'),  
+#          'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
+#          'PORT': os.getenv('DB_PORT', '26269'),
+#      }
  }
 
 if 'test' in sys.argv:
