@@ -1,74 +1,217 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linkspot Services</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome for icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-</head>
-<body>
 
+{% block title %}Linkspot - Services{% endblock %}
+
+{% block content %}
 <div class="container-fluid">
-    <!-- Header -->
-    <header class="bg-dark text-white text-center py-3 mb-4">
-        <h2>Linkspot</h2>
-    </header>
-    
     <div class="row">
-        <!-- Sidebar Navigation -->
-        <aside class="col-md-2 bg-light p-3">
-            <ul class="nav flex-column">
-                <li class="nav-item"><a class="nav-link active" href="#">Services</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Members</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Logs</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Settings</a></li>
+        <!-- Sidebar -->
+        <aside class="col-2 bg-dark text-white p-4">
+            <h4 class="mb-4">Linkspot</h4>
+            <ul class="list-unstyled">
+                <li><a href="#" class="text-white">Services</a></li>
+                <li><a href="#" class="text-white">Members</a></li>
+                <li><a href="#" class="text-white">Logs</a></li>
+                <li><a href="#" class="text-white">Settings</a></li>
             </ul>
         </aside>
-        
-        <!-- Main Content Area -->
-        <main class="col-md-10">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <!-- Main Content -->
+        <div class="col-10">
+            <!-- Top Navbar -->
+            <nav class="d-flex justify-content-between align-items-center p-3 bg-primary text-white shadow-sm">
                 <h5>Services</h5>
-                <button class="btn btn-primary">Add Service</button>
-            </div>
-            
+                <button id="addServiceBtn" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#addServiceModal">Add Service</button>
+            </nav>
+
             <!-- Service Cards -->
-            <div class="row">
-                {% for service in services %}
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ service.name }}</h5>
-                            <p class="card-text"><strong>Price:</strong> ${{ service.price }}</p>
-                            <p class="card-text"><strong>Duration:</strong> {{ service.duration }}</p>
-                            {% if service.promotion %}
-                            <p class="card-text"><strong>Promotion:</strong> {{ service.promotion }}</p>
-                            {% endif %}
-                            <div class="d-flex justify-content-between mt-3">
-                                <button class="btn btn-outline-primary">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="btn btn-outline-danger">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </div>
+            <div class="row mt-5">
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-lg border-primary">
+                        <div class="card-body text-center" id="monthlyServiceCard" style="cursor: pointer;">
+                            <h5 class="card-title text-primary">Monthly Services</h5>
+                            <p class="card-text text-muted">Explore our monthly service packages tailored to your needs.</p>
                         </div>
                     </div>
                 </div>
-                {% endfor %}
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-lg border-info">
+                        <div class="card-body text-center" id="hourlyServiceCard" style="cursor: pointer;">
+                            <h5 class="card-title text-info">Hourly Services</h5>
+                            <p class="card-text text-muted">Discover hourly service options for flexible schedules.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </main>
+
+            <!-- Types Table -->
+            <div id="typesTable" class="mt-4">
+                <h5 class="mb-4">Service Types</h5>
+                <table class="table table-striped table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Duration</th>
+                            <th>Promotion</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="typesTableBody">
+                        <!-- Content will be dynamically populated -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Bootstrap and jQuery JS -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-</html>
+<!-- Add Service Modal -->
+<div class="modal fade" id="addServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Add New Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addServiceForm">
+                    <div class="mb-3">
+                        <label for="serviceName" class="form-label">Service Name</label>
+                        <input type="text" class="form-control" id="serviceName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="servicePrice" class="form-label">Price</label>
+                        <input type="number" class="form-control" id="servicePrice" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="serviceDuration" class="form-label">Duration</label>
+                        <input type="text" class="form-control" id="serviceDuration" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="servicePromotion" class="form-label">Promotion</label>
+                        <input type="text" class="form-control" id="servicePromotion">
+                    </div>
+                    <div class="mb-3">
+                        <label for="serviceType" class="form-label">Service Type</label>
+                        <select id="serviceType" class="form-select" required>
+                            <option value="monthly">Monthly</option>
+                            <option value="hourly">Hourly</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="saveServiceBtn">Save Service</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Event listener for Monthly Service Card
+    document.getElementById("monthlyServiceCard").addEventListener("click", function() {
+        fetch("/service_crud/?service_type=monthly")  // Fetch from the API endpoint for monthly services
+            .then(response => response.json())
+            .then(data => {
+                populateTable(data);
+            })
+            .catch(error => console.error("Error fetching monthly services:", error));
+    });
+
+    // Event listener for Hourly Service Card
+    document.getElementById("hourlyServiceCard").addEventListener("click", function() {
+        fetch("/service_crud/?service_type=hourly")  // Fetch from the API endpoint for hourly services
+            .then(response => response.json())
+            .then(data => {
+                populateTable(data);
+            })
+            .catch(error => console.error("Error fetching hourly services:", error));
+    });
+
+    // Function to populate the table with service data
+    function populateTable(data) {
+        const tableBody = document.getElementById("typesTableBody");
+        tableBody.innerHTML = ""; // Clear existing rows
+
+        data.forEach(service => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${service.name}</td>
+                <td>${service.price}</td>
+                <td>${service.duration}</td>
+                <td>${service.promotion ? 'Yes' : 'No'}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="deleteService(${service.id})">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Event listener for saving a new service
+    document.getElementById("saveServiceBtn").addEventListener("click", function() {
+        const serviceName = document.getElementById("serviceName").value;
+        const servicePrice = document.getElementById("servicePrice").value;
+        const serviceDuration = document.getElementById("serviceDuration").value;
+        const servicePromotion = document.getElementById("servicePromotion").value;
+        const serviceType = document.getElementById("serviceType").value;
+
+        const newService = {
+            name: serviceName,
+            price: servicePrice,
+            duration: serviceDuration,
+            promotion: servicePromotion,
+            service_type: serviceType
+        };
+
+        fetch("/service_crud/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(newService)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Service saved:", data);
+            $('#addServiceModal').modal('hide');  // Close the modal
+            // Optionally, refresh the table or show a success message
+        })
+        .catch(error => console.error("Error saving new service:", error));
+    });
+
+    // Function to delete a service
+    function deleteService(serviceId) {
+        const confirmation = confirm("Are you sure you want to delete this service?");
+        if (confirmation) {
+            fetch(`/service_crud/`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ service_id: serviceId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Service deleted successfully.");
+                    // Remove the service row from the table
+                    const row = document.querySelector(`#row-${serviceId}`);
+                    row && row.remove();
+                } else {
+                    alert("Failed to delete the service.");
+                }
+            })
+            .catch(error => console.error("Error deleting service:", error));
+        }
+    }
+</script>
+
+{% endblock content %}
+
 
