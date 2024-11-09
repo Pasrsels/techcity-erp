@@ -1845,16 +1845,19 @@ def sales_price_list_pdf(request, order_id):
         product_name = item.product
         logger.info(product_name)
         product_data = product_prices.get(product_name)
+        description = ''
 
-        item.description = product_data['product__description'] or ''
+        if product_data:
+            description = item.description = product_data['product__description'] 
 
         if product_data:
             item.dealer_price = product_data['dealer_price']
             item.selling_price = product_data['price']
-            item.description = product_data['product__description'] or ''
+            item.description = description
         else:
             item.dealer_price = 0
             item.selling_price = 0
+            item.description = description
             
     context = {'items': items}
 
@@ -2392,17 +2395,6 @@ def edit_purchase_order_data(request, po_id):
     except Exception as e:
         return JsonResponse({"success":False, 'message':f'{e}'})
 
-#view
-@login_required
-def supplier_V(request, supplier_id):
-    if request.method == "GET":
-        try:
-            supplier = Supplier.objects.filter(id= supplier_id).values()
-            return JsonResponse({'success':True, 'data':list(supplier), 'status':200})
-        except Exception as e:
-            return JsonResponse({'success':False, 'message':f'{e}', 'status':400})
-    return JsonResponse({'success':True, 'message':'invalid request', 'status':400})
-
 #testing delete
 @login_required
 def supplier_delete(request, supplier_id):
@@ -2417,9 +2409,28 @@ def supplier_delete(request, supplier_id):
 
     if request.method == "DELETE":
         try:
+            # data = json(request.body)
+
+            # name = data.get('name')
+            # contact_person = data.get('contact_person')
+            # email = data.get('email')
+            # address = data.get('address')
+            # phone = data.get('phone')
+
+            # supplier = Supplier.objects.get(phone=phone)
+
+            # supplier.name=name
+            # supplier.contact_person=contact_person
+            # supplier.email=email
+            # supplier.phone=phone
+            # supplier.address=address
+            
+            # supplier.delete() 
+            # logger.info(f'{supplier} delete')
+
             supplier = Supplier.objects.get(id=supplier_id)
             supplier.delete()
-            logger.info(f'{supplier} delete')
+
             return JsonResponse({'success':True}, status = 200)
         except Exception as e:
             logger.info(e)

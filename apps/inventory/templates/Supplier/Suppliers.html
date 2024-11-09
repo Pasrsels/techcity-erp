@@ -47,8 +47,12 @@
                 <td><small>{{ supplier.address }}</small></td>
                 <td><small>{{ supplier.contact_person }}</small></td>
 <<<<<<< HEAD
+<<<<<<< HEAD
                 <td class="d-flex justify-content-start">
                     <!-- Edit Button -->
+=======
+                <td>
+>>>>>>> e1272d78b9d741394ef2d79e0729cebc8434e6c2
                     <button class="btn btn-sm btn-primary mx-1" onclick="openEditModal({{ supplier.id }})">
                         <i class="bx bx-edit"></i> Edit
                     </button>
@@ -60,6 +64,7 @@
                     <button class="btn btn-sm btn-danger mx-1" onclick="confirmDelete({{ supplier.id }})">
                         <i class="bx bx-trash"></i> Delete
                     </button>
+<<<<<<< HEAD
 =======
                 <td>
 <<<<<<< HEAD
@@ -74,6 +79,8 @@
                     </button>
 >>>>>>> booking
 >>>>>>> f9ceb6b82bbd10120610e311bbd1a7de92a351b4
+=======
+>>>>>>> e1272d78b9d741394ef2d79e0729cebc8434e6c2
                 </td>
             </tr>
             {% endfor %}
@@ -229,3 +236,142 @@
             });
         });
     });
+<<<<<<< HEAD
+=======
+
+    // Function to open the edit modal and populate it with supplier data
+    function openEditModal(supplierId) {
+        supId = supplierId;
+        console.log('supplier', supplierId);
+        fetch(`/inventory/suppliers/edit/${supplierId}/`)  // Adjust this URL to match your actual endpoint
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.data[0]);
+                // Populate form fields with supplier data
+                document.getElementById("id_name").value = data.data[0].name;
+                document.getElementById("id_contact_person").value = data.data[0].contact_person;
+                document.getElementById("id_phone").value = data.data[0].phone;
+                document.getElementById("id_email").value = data.data[0].email;
+                document.getElementById("id_address").value = data.data[0].address;
+
+                // Show the modal
+                const editModal = new bootstrap.Modal(document.getElementById('editSupplierModal'));
+                editModal.show();
+            })
+            .catch(error => {
+                console.error("Error fetching supplier data:", error);
+                Swal.fire({
+                    text: "Could not load supplier data. Please try again.",
+                    icon: "error",
+                    title: 'Error'
+                });
+            });
+    }
+
+    // Handling form submission for editing supplier data
+    document.getElementById('editSupplierForm').addEventListener('submit', function (event) {
+        event.preventDefault();  // Prevent default form submission
+
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+
+        fetch(`/inventory/suppliers/edit/${supId}/`, {
+            method: 'POST',  
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(responseData => {
+            console.log(responseData);
+            if (responseData.success) { 
+                // Hide modal and refresh the page or update the table
+                const editModal = bootstrap.Modal.getInstance(document.getElementById('editSupplierModal'));
+                editModal.hide();
+                Swal.fire({
+                    text: "Supplier successfully updated",
+                    icon: "success",
+                    title: 'Success'
+                }).then(() => {
+                    window.location.reload(); 
+                });
+            } else {
+                Swal.fire({
+                    text: "Error updating supplier: " + responseData.message,
+                    icon: "error",
+                    title: 'Error'
+                });
+            }
+        })
+        .catch(error => console.error("Error updating supplier:", error));
+    });
+
+    // Function to trigger the confirmation modal for deletion
+    function confirmDelete(supplierId) {
+        deleteSupId = supplierId;
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteSupplierModal'));
+        deleteModal.show();
+    }
+
+    // Handle the confirmation of deletion
+    document.getElementById('confirmDeleteButton').addEventListener('click', function () {
+        if (deleteSupId) {
+            fetch(`/inventory/suppliers/delete/${deleteSupId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+            })
+            .then(response => response.json())
+            .then(responseData => {
+                if (responseData.success) {
+                    const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteSupplierModal'));
+                    deleteModal.hide();
+                    Swal.fire({
+                        text: "Supplier successfully deleted.",
+                        icon: "success",
+                        title: 'Deleted'
+                    }).then(() => {
+                        window.location.reload(); 
+                    });
+                } else {
+                    Swal.fire({
+                        text: "Error deleting supplier: " + responseData.message,
+                        icon: "error",
+                        title: 'Error'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error("Error deleting supplier:", error);
+                Swal.fire({
+                    text: "There was an error deleting the supplier. Please try again.",
+                    icon: "error",
+                    title: 'Error'
+                });
+            });
+        }
+    });
+
+    // Utility function to get the CSRF token from cookies
+    function getCSRFToken() {
+        let cookieValue = null;
+        const name = 'csrftoken';
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}
+>>>>>>> e1272d78b9d741394ef2d79e0729cebc8434e6c2

@@ -1,10 +1,18 @@
 .venv/
 env/
+<<<<<<< HEAD
 migrations/
 */migrations/*
 .env
 *.pyc
 *~
+=======
+# /migrations/
+# */migrations/*
+.env
+*.pyc
+*~zz 
+>>>>>>> e1272d78b9d741394ef2d79e0729cebc8434e6c2
 *.swp
 application.log
 .idea/
@@ -22,3 +30,5 @@ test.png
 .vs/
 .pyc
 .requirements.txt
+.base.py
+dev/*.pyc
