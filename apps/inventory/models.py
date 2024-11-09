@@ -57,7 +57,7 @@ class Product(models.Model):
     end_of_day = models.BooleanField(default=False, null=True)
     service = models.BooleanField(default=False, null=True)
     dealer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
-    suppliers = models.ManyToManyField(Supplier, related_name="products")
+    suppliers = models.ManyToManyField(Supplier, related_name="products", null=True)
 
     def __str__(self):
         return self.name
@@ -210,9 +210,9 @@ class Inventory(models.Model):
     
     
 class Transfer(models.Model):
-    transfer_ref = models.CharField(max_length=20)
+    transfer_ref = models.CharField(max_length=100)
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='user_branch')
-    transfer_to = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    transfer_to = models.ManyToManyField(Branch)
     description =  models.CharField(max_length=266)
     date = models.DateField(auto_now_add=True)
     time = models.DateTimeField(auto_now_add=True)
@@ -224,19 +224,15 @@ class Transfer(models.Model):
     receive_status = models.BooleanField(default=False, null=True)
 
     @classmethod
-    def generate_transfer_ref(self, branch, destination_branch):
+    def generate_transfer_ref(self, branch, branches):
+        print(branch, branches)
         last_transfer = Transfer.objects.filter(branch__name=branch).order_by('-id').first()
         if last_transfer:
-            if str(last_transfer.transfer_ref.split(':')[0])[-1] == branch[0]:
-                last_reference_number = int(last_transfer.transfer_ref.split('-')[1]) 
-                new__reference_number = last_reference_number + 1   
-            else:
-                new__reference_number  = 1
-            return f"{branch[:1]}:{destination_branch[:1]}-{new__reference_number:04d}"  
+            last_reference = int(last_transfer.transfer_ref.split(' ')[1])
+            new_reference = f'Ref {last_reference + 1} : {branches}'
         else:
-            new__reference_number = 1
-            return f"{branch[:1]}:{destination_branch[:1]}-{new__reference_number:04d}"  
-    
+            return f'Ref 1 {branch}: {branches}'
+        return new_reference
     
     def __str__(self):
         return self.transfer_ref

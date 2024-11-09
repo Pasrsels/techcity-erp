@@ -232,43 +232,58 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         try:
             with transaction.atomic():
                 data = json.loads(request.body)
-                branch_name = data['branch_to']
+                branches = data['branches_to']
+
+                logger.info(branches)
                 
-                try:
-                    branch_to =  Branch.objects.get(name=branch_name)
-                except Exception as e:
-                    return JsonResponse({'success':False, 'message': f'here {e}'})
+                # create list of branch objects
+                branch_obj_list = []
+                branch_names = ''
+                for branch in branches:
+                    branch_names += f'{branch['name']} '
+                    branch_obj_list.append(Branch.objects.get(id=branch['value']))
                 
-                transfer = Transfer(
-                    transfer_to = branch_to,
+                logger.info(f'Branch objects: {branch_obj_list}')
+                
+                transfer = Transfer.objects.create(
                     branch = request.user.branch,
                     user = request.user,
-                    transfer_ref = Transfer.generate_transfer_ref(request.user.branch.name, branch_to.name)
+                    transfer_ref = Transfer.generate_transfer_ref(request.user.branch.name, branch_names)
                 )
-
                 
-                for item in data['cart']:
-                    logger.info(f'product name is {item['product']}')
-                    product = Product.objects.get(name=item['product'])
-                    logger.info(f'Transfered product: {product.name}')
-    
-                    transfer_item = TransferItems(
-                        transfer=transfer,
-                        product = product,
-                        cost = item['cost'],
-                        price=item['price'],
-                        dealer_price = item['dealer_price'],
-                        quantity=item['quantity'],
-                        from_branch= request.user.branch,
-                        to_branch= transfer.transfer_to,
-                    )   
-                    transfer.save()         
-                    transfer_item.save()
+                #assign many2many objects to transfer branch
+                transfer.transfer_to.set(branch_obj_list),
 
-                    logger.info(f'Transfered product: product saved')
-                    
-                    self.deduct_inventory(transfer_item)
-                    self.transfer_update_quantity(transfer_item, transfer)  
+                logger.info(f'Transfer saved {transfer}')
+
+                for branch_obj in branch_obj_list:
+                    for item in data['cart']:
+                        logger.info(f'Cart Item: {item}')
+                        product = Product.objects.get(name=item['product'])
+                        logger.info(f'Transfered product: {product.name}')
+
+                        branch_name = item['branch_name']
+
+                        logger.info(f'branch name: {branch_name}')
+
+                        if branch_name == branch_obj.name:
+                            transfer_item = TransferItems(
+                                transfer=transfer,
+                                product = product,
+                                cost = item['cost'],
+                                price=item['price'],
+                                dealer_price = item['dealer_price'],
+                                quantity=item['quantity'],
+                                from_branch= request.user.branch,
+                                to_branch= branch_obj,
+                            )   
+                            transfer.save()         
+                            transfer_item.save()
+
+                            logger.info(f'Transfered product: product saved')
+                            
+                            self.deduct_inventory(transfer_item)
+                            self.transfer_update_quantity(transfer_item, transfer)  
                     
                 # send email for transfer alert
                 # transaction.on_commit(lambda: send_transfer_email(request.user.email, transfer.id, transfer.transfer_to.id))
@@ -593,50 +608,36 @@ def inventory_transfers(request):
 
     transfer_items = TransferItems.objects.all()
     transfers = Transfer.objects.filter(
-        Q(branch=request.user.branch) | Q(transfer_to=request.user.branch),
+        Q(branch=request.user.branch) |
+        Q(transfer_to__in=[request.user.branch]),
         delete=False
-    ).order_by('-time')
+    ).order_by('-time').distinct()
     
     if q:
         transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
         
     if branch_id: 
         transfers = transfers.filter(transfer_to__id=branch_id)
-        
-    if request.method == 'POST':
-        form = addTransferForm(request.POST)
-        
-        if form.is_valid():
-            transfer=form.save(commit=False)
-            transfer_to = Branch.objects.get(id=int(request.POST['transfer_to']))
-            transfer.branch = request.user.branch
-            transfer.user = request.user
-            transfer.transfer_ref = Transfer.generate_transfer_ref(transfer.branch.name, transfer_to.name)
-            
-            transfer.save()
-            
-            return redirect('inventory:add_transfer', transfer.transfer_ref)
-            
-        messages.success(request, 'Transfer creation failed')
     
+    logger.info(f'branch transfers: {transfers}')
+        
     return render(request, 'transfers.html', {'transfers': transfers,'search_query': q, 'form':form, 'transfer_items':transfer_items })
 
 @login_required
 def print_transfer(request, transfer_id):
-    
     try:
         transfer = Transfer.objects.get(id=transfer_id)
+        transfer_items = TransferItems.objects.filter(transfer=transfer)
+    
+        return render(request, 'components/ibt.html', {
+            'date':datetime.datetime.now(),
+            'transfer':transfer, 
+            'transfer_items':transfer_items
+        })
     except:
         messages.warning(request, 'Transfer doesnt exists')
         return redirect('inventory:transfers')
-    
-    transfer_items = TransferItems.objects.filter(transfer=transfer)
-    
-    return render(request, 'components/ibt.html', {
-        'date':datetime.datetime.now(),
-        'transfer':transfer, 
-        'transfer_items':transfer_items
-    })
+
     
 @login_required
 @transaction.atomic
@@ -711,7 +712,7 @@ def receive_inventory(request):
 
             transfer = Transfer.objects.get(id = branch_transfer.transfer.id)
             if not transfer.receive_status:
-                transfer.receive_status = True;
+                transfer.receive_status = True
                 transfer.save()
                     
             branch_transfer.quantity_track = branch_transfer.quantity - int(request.POST['quantity'])
@@ -795,7 +796,7 @@ def over_less_list_stock(request):
                 description='write_off'
                 
                 activity_log('Stock in', product, branch_transfer)
-                logger.info(f'quantity {quantity}')
+                
                 DefectiveProduct.objects.create(
                     product = product,
                     branch = request.user.branch,
@@ -1844,16 +1845,19 @@ def sales_price_list_pdf(request, order_id):
         product_name = item.product
         logger.info(product_name)
         product_data = product_prices.get(product_name)
+        description = ''
 
-        item.description = product_data['product__description']
+        if product_data:
+            description = item.description = product_data['product__description'] 
 
         if product_data:
             item.dealer_price = product_data['dealer_price']
             item.selling_price = product_data['price']
-            item.description = product_data['product__description']
+            item.description = description
         else:
             item.dealer_price = 0
             item.selling_price = 0
+            item.description = description
             
     context = {'items': items}
 
@@ -2393,52 +2397,83 @@ def edit_purchase_order_data(request, po_id):
 
 #testing delete
 @login_required
-def supplier_delete(request):
+def supplier_delete(request, supplier_id):
     '''
         name,contact_person,email,product,address
     '''
-    if request.method == "POST":
+    if request.method == 'GET':
+        supplier = Supplier.objects.filter(id=supplier_id).values()
+        logger.info(supplier)
+        return JsonResponse({'success':True, 'data':list(supplier)})
+         
+
+    if request.method == "DELETE":
         try:
-            data = json.loads(request,body)
+            # data = json(request.body)
 
-            name = data.get('name')
-            contact_person = data.get('contact_person')
-            email = data.get('email')
-            product = data.get('product')
-            address = data.get('address')
+            # name = data.get('name')
+            # contact_person = data.get('contact_person')
+            # email = data.get('email')
+            # address = data.get('address')
+            # phone = data.get('phone')
 
-            if Supplier.objects.filter(email=email).exists():
-                supplier_del = Supplier.objects.get(pk=id)
-                supplier = Supplier(supplier_del, name, contact_person, email, product, address)
-                supplier.delete()
-                return JsonResponse("Successfully deleted f{name}" ,{";success":True}, status = 200)
-            return JsonResponse({"success":False}, status = 400)
+            # supplier = Supplier.objects.get(phone=phone)
+
+            # supplier.name=name
+            # supplier.contact_person=contact_person
+            # supplier.email=email
+            # supplier.phone=phone
+            # supplier.address=address
+            
+            # supplier.delete() 
+            # logger.info(f'{supplier} delete')
+
+            supplier = Supplier.objects.get(id=supplier_id)
+            supplier.delete()
+
+            return JsonResponse({'success':True}, status = 200)
         except Exception as e:
-            return JsonResponse({"cause of problem":e, "message":"encountered an error"})
+            logger.info(e)
+            return JsonResponse({"success":False, "message":f"{e}"})
+    return JsonResponse({"success":False, "message":"Invalid Request"})
 
 
 #testing edit view
 @login_required
-def supplier_edit(request):
-     formEdit = EditSupplierForm()
-     if request.method == "POST":
+def supplier_edit(request, supplier_id):
+    if request.method == 'GET':
+        supplier = Supplier.objects.filter(id=supplier_id).values()
+        logger.info(supplier)
+        return JsonResponse({'success':True, 'data':list(supplier)})
          
-         try:
-             data = json.loads(request, body)
-             name = data.get('name')
-             conctact_person = data.get('conctact_person')
-             email = data.get('email')
-             product = data.get('product')
-             address = data.get('address')
+    if request.method == "POST":
+         
+        try:
+            data = json.loads(request.body)
+            logger.info(data)
 
-             if Supplier.objects.filter(email=email).exists():
-                 supplier = Supplier(name,conctact_person,email,product,address)
-                 supplier.save()
-                 messages.info("Updated successfully")
-                 return JsonResponse({'succcess':True}, status = 200)
-             return JsonResponse({"success":False}, status = 400)
-         except Exception as e:
-            return JsonResponse({"Cause of problem":e, "message":"Falied to edit"})
+            name = data.get('name')
+            contact_person = data.get('contact_person')
+            email = data.get('email')
+            address = data.get('address')
+            phone = data.get('phone')
+
+            supplier = Supplier.objects.get(phone=phone)
+
+            supplier.name=name
+            supplier.contact_person=contact_person
+            supplier.email=email
+            supplier.phone=phone
+            supplier.address=address
+            
+            supplier.save()
+            logger.info(f'{supplier} saved')
+
+            return JsonResponse({'success':True}, status = 200)
+        except Exception as e:
+            logger.info(e)
+            return JsonResponse({"success":False, "message":f"{e}"})
+    return JsonResponse({"success":False, "message":"Invalid Request"})
 
 @login_required
 def supplier_view(request):
@@ -2504,41 +2539,6 @@ def supplier_list_json(request):
     )
     return JsonResponse(list(suppliers), safe=False)
 
-@login_required
-def create_supplier(request):
-    #payload
-    """
-        name 
-        contact
-        email
-        phone 
-        address
-    """
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        
-        name = data['name']
-        contact = data['contact']
-        email = data['email']
-        phone = data['phone']
-        address = data['address']
-        
-        if not name or not contact or not email or not phone or not address:
-            return JsonResponse({'success': False, 'message':'Fill in all the form data'}, status=400)
-        
-        if Supplier.objects.filter(email=email).exists():
-            return JsonResponse({'success': False, 'message':f'Supplier{name} already exists'}, status=400)
-        
-        supplier = Supplier(
-            name = name,
-            contact_name = contact,
-            email = email,
-            phone = phone,
-            address = address
-        )
-        supplier.save()
-        logger.info(f'Supplier successfully created {supplier.name}')
-        return JsonResponse({'success': True}, status=200)
     
 @login_required
 def product(request):
