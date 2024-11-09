@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from .models import *
 from django.views.decorators.csrf import csrf_exempt
@@ -10,6 +11,7 @@ def services_view(request):
     services = Services.objects.filter(delete=False)
     return render(request, 'services/service.html')
 
+@login_required
 def service_crud(request):
     if request.method == "GET":#View
         service = Services.objects.filter(id=id).values()
@@ -53,18 +55,19 @@ def service_crud(request):
         type_service_duration = data.get([1]['type_service_duration'])
         type_promotion = data.get([1]['type_promotion'])
         
-
-        Services.objects.get(id= service_id)
-
+        if Services.objects.filter(id = service_id).exists:
+            return JsonResponse({'success': False, 'response': 'this update already exists', 'status': 400})
+        service_update = Services(name = service_name)
+        service_update.save()
         return JsonResponse({'success':True, 'status':200})
     
     elif request.method == "DELETE":
 
         data = json.loads(request.body)
-        
-        name = data.get('Name')
-
-        service_del = Services.objects.get(id= service_id)
-        service_del.delete()
-        return JsonResponse({'success':True, 'status':200})
-    return JsonResponse({'success':True, 'status': 200})
+        service_id = data.get([0]['service_id'])
+        if Services.objects.filter(id = service_id).exists():
+            service_del = Services.objects.get(id= service_id)
+            service_del.delete()
+            return JsonResponse({'success':True, 'status':200})
+        return JsonResponse({'success': False, 'response': 'cannot delete none existing field', 'status': 400})
+    return JsonResponse({'success':False, 'response': 'invalid request', 'status': 400})
