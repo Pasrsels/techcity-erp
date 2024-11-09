@@ -143,7 +143,7 @@ DATABASES = {
          'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
          'PORT': os.getenv('DB_PORT', '26269'),
      }
- }
+  }
 
 if 'test' in sys.argv:
     DATABASES = {

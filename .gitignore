@@ -1,10 +1,10 @@
 .venv/
 env/
-migrations/
-*/migrations/*
+# /migrations/
+# */migrations/*
 .env
 *.pyc
-*~
+*~zz 
 *.swp
 application.log
 .idea/

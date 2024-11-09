@@ -103,7 +103,10 @@ def register_company_view(request):
                 user.phonenumber = company.phone_number
                 user.role = 'admin'
                 user.branch = branch
-                user.password = make_password(user_data['password'])
+
+                logger.info(user.branch)
+                user.password = user_data['password']
+                logger.info(user.password)
                 user.save()
 
             # return message
