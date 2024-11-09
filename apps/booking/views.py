@@ -10,8 +10,8 @@ from django.db import transaction
 
 
 def services_view(request):
-    services = Services.objects.filter(delete=False)
-    return render(request, 'services/service.html')
+    services = Services.objects.all()
+    return render(request, 'service.html')
 
 @login_required
 def service_crud(request):
@@ -49,6 +49,11 @@ def service_crud(request):
             #not sure on addind type id
             service_add = Services(s_id = service_id, s_name = service_name, s_type = service_type)
             service_add.save()
+
+            Logs.objects.create(
+                action = 'create'
+            )
+
             return JsonResponse({'success':True, 'status': 200})
     #update
     elif request.method == "PUT":
