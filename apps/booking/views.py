@@ -84,3 +84,92 @@ def service_crud(request):
             return JsonResponse({'success':True}, status=200)
         return JsonResponse({'success': False, 'response': 'cannot delete none existing field', 'status': 400})
     return JsonResponse({'success':False, 'response': 'invalid request', 'status': 400})
+
+@login_required
+def member_crud(request):
+    #Read
+    if request.method == "GET":
+        member = Members.objects.filter().values()
+        return JsonResponse({'success': True, 'data': list(member)}, status = 200)
+    #Add
+    elif request.method == "POST":
+        data = json(request.body)
+        
+        id = data.get([]['id'])
+        n_ID = data.get([0]['National_ID'])
+        name = data.get([0]['Name'])
+        email = data.get([0]['Email'])
+        phone = data.get([0]['Phone'])
+        adress = data.get([0]['Address'])
+        enrollment = data.get([0]['Enrollment'])
+        company = data.get([0]['Company'])
+        age = data.get([0]['Age'])
+        gender = data.get([0]['Gender'])
+
+        if Members.objects.filter(id = id).exists():
+            return JsonResponse({'success': True, 'response': 'field already exists'}, status = 400)
+        elif not id or not n_ID or not name or not email or not phone or not adress or not enrollment \
+        or not company or not age or not gender:
+            return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
+        
+        member = Members(
+            id = id,
+            National_ID = n_ID,
+            Name = name,
+            Email = email,
+            Phone = phone,
+            Address = adress,
+            Enrollment = enrollment,
+            Company = company,
+            Age = age,
+            Gender = gender
+        )
+        member.save()
+        return JsonResponse({'success': True, 'response': 'Data saved'}, status = 200)
+    #Update
+    elif request.method == "PUT":
+        data = json(request.body)
+
+        id = data.get([]['id'])
+        n_ID = data.get([0]['National_ID'])
+        name = data.get([0]['Name'])
+        email = data.get([0]['Email'])
+        phone = data.get([0]['Phone'])
+        adress = data.get([0]['Address'])
+        enrollment = data.get([0]['Enrollment'])
+        company = data.get([0]['Company'])
+        age = data.get([0]['Age'])
+        gender = data.get([0]['Gender'])
+
+        try:
+            if Members.objects.get(id = id).DoesNotExist():
+                return JsonResponse({'success': False, 'response': 'member doesnot exist in database'}, status = 400)
+            member = Members(
+                id = id,
+                National_ID = n_ID,
+                Name = name,
+                Email = email,
+                Phone = phone,
+                Address = adress,
+                Enrollment = enrollment,
+                Company = company,
+                Age = age,
+                Gender = gender
+            )
+            member.save()
+        except Exception as e:
+            return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
+    elif request.method == "DELETE":
+        data = json(request.body)
+
+        id = data.get([]['id'])
+
+        try:
+            if Members.objects.get(id = id).DoesNotExist():
+                return JsonResponse({'success': False, 'response': 'field doesnot exist in database'}, status = 400)
+            member = Members.objects.get(id = id)
+            member.delete()
+        except Exception as e:
+            return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
+        
+

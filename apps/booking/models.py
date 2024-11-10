@@ -60,9 +60,9 @@ class Office_spaces(models.Model):
 class Logs(models.Model):
     ACTION_CHOICES = [
         ('create','create'),
-        ('name','name'),
-        ('Types','Tpyes'),
-        ('members','members'),
+        ('update','update'),
+        ('read','read'),
+        ('delete','delete'),
     ]
     action = models.CharField(max_length=10, choices=ACTION_CHOICES)
     Services = models.ForeignKey('services', on_delete=models.CASCADE, related_name='logs_file')
