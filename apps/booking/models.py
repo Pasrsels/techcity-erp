@@ -44,7 +44,7 @@ class Services(models.Model):
 class Types(models.Model):
     Name = models.CharField(max_length= 255)
     Price = models.DecimalField(max_digits=10, decimal_places=2)
-    Service_duration = models.DateTimeField()
+    Service_duration = models.CharField(max_length=50)
     Promotion = models.BooleanField()
 
     def __str__(self):
@@ -60,15 +60,15 @@ class Office_spaces(models.Model):
 class Logs(models.Model):
     ACTION_CHOICES = [
         ('create','create'),
-        ('name','name'),
-        ('Types','Tpyes'),
-        ('members','members'),
+        ('update','update'),
+        ('read','read'),
+        ('delete','delete'),
     ]
     action = models.CharField(max_length=10, choices=ACTION_CHOICES)
     Services = models.ForeignKey('services', on_delete=models.CASCADE, related_name='logs_file')
     Members = models.ForeignKey("Members", on_delete=models.CASCADE)
     Payments = models.ForeignKey("Payments", on_delete=models.CASCADE)
-    timestamp = models.DateTimeField(default=timezone.now)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
         return f"{self.Services.name}, {self.timestamp}"
