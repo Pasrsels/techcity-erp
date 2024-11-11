@@ -6,6 +6,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from django.db.models import F
 from loguru import logger
+from apps.finance.models import Currency
 
 class BatchCode(models.Model):
     code = models.CharField(max_length=255)
@@ -35,6 +36,28 @@ class Supplier(models.Model):
 
     def __str__(self):
         return self.name
+
+class SupplierAccount(models.Model):
+    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE)  
+    balance = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+
+    def __str__(self):
+        return f'{self.supplier.name} balance -> {self.balance}'
+
+class SupplierAccountsPayments(models.Model):
+    account = models.ForeignKey(SupplierAccount, on_delete=models.PROTECT)
+    payment_method = models.CharField(max_length=15, choices=[
+        ('cash', 'cash'),
+        ('bank', 'bank'),
+        ('ecocash', 'ecocash')
+    ])
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE) 
+    amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.acccount.supplier.name} amount paid {self.amount}'
 
 
 class Product(models.Model):

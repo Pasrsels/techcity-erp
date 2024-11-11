@@ -2539,6 +2539,15 @@ def supplier_list_json(request):
     )
     return JsonResponse(list(suppliers), safe=False)
 
+
+@login_required
+def supplier_account(request, supplier_id):
+    try:
+        supplier_account = SupplierAccount.objects.get(id=supplier_id)
+        return render(request, 'suppliers/supplier_account.html')
+    except Exception as e:
+        messages.warning(request, 'Supplier account doesnt exists')
+        return redirect('inventory:suppliers')
     
 @login_required
 def product(request):
