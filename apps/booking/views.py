@@ -247,7 +247,7 @@ def member_acc_crud(request):
     #read
     if request.method == "GET":
         member_acc = Member_accounts.objects.all()
-        return JsonResponse({'success': True,}, status = 200)
+        return JsonResponse({'success': True, 'data': member_crud}, status = 200)
     #add
     elif request.method == "POST":
         data = json.loads(request.body)
