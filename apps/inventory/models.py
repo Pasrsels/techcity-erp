@@ -80,7 +80,7 @@ class Product(models.Model):
     end_of_day = models.BooleanField(default=False, null=True)
     service = models.BooleanField(default=False, null=True)
     dealer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
-    suppliers = models.ManyToManyField(Supplier, related_name="products", null=True)
+    suppliers = models.ManyToManyField(Supplier, related_name="products")
 
     def __str__(self):
         return self.name

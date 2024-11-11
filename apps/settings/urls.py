@@ -20,4 +20,6 @@ urlpatterns = [
     path('email/config/save/',  save_email_config, name='save_email_config'),
     path('email/notification/status/', email_notification_status, name='email_notification_status'),
     
+    # tax settings
+    path('update_tax_method/', update_tax_method, name='update_tax_method'),
 ]
