@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 import json
 from django.http.response import HttpResponse, JsonResponse
 from django.db import transaction
-
+from utils import *
 
 @login_required
 def services_view(request):
@@ -48,7 +48,7 @@ def service_crud(request):
                     Types = type_add
                     )
                 service_add.save()
-
+                type_add.save()
                 Logs.objects.create(
                     action = 'create'
                 )
@@ -70,8 +70,20 @@ def service_crud(request):
             type_service_duration = data.get([1]['type_service_duration'])
             type_promotion = data.get([1]['type_promotion'])
             
-            service=Services(Name = service_name)
-            service.save()
+            with transaction.Atomic():
+                service=Services(
+                    Name = service_name,
+                    id = service_id
+                    )
+                type_add = Types(
+                    id = type_id,
+                    Name = type_name, 
+                    Price = type_price, 
+                    Duration = type_service_duration, 
+                    Promotion = type_promotion
+                    )
+                service.save()
+                type_add.save()
             return JsonResponse({'success':True},status = 200)
         except Exception as e:
             return JsonResponse({'success':False, 'response':f'{e}'})
@@ -113,6 +125,7 @@ def member_crud(request):
         return JsonResponse({'success': True, 'data': list(member)}, status = 200)
     #Add
     elif request.method == "POST":
+        #json format
         '''service_data = {
             'service': 1,
         }'''
@@ -151,10 +164,10 @@ def member_crud(request):
         with transaction.atomic():
             try: 
                 # query service
-                service = Services.objects.get(service_data.get())
-                member = Member_accounts.objects.get(member_acc_data.get())
-                office = Office_spaces.objects.get(office_data.get)
-                payments = Payments.objects.get(payments_data.get())
+                service = Services.objects.get(service_data.get('Name'))
+                member = Member_accounts.objects.get(member_acc_data.get('Balance'))
+                office = Office_spaces.objects.get(office_data.get('Name'))
+                payments = Payments.objects.get(payments_data.get('Date','Amount'))
 
                 member = Members(
                     National_ID = n_ID,
@@ -172,6 +185,7 @@ def member_crud(request):
                     Office_spaces = office,
                     Payments = payments
                 )
+
                 member.save()
                 return JsonResponse({'success': True, 'response': 'Data saved'}, status = 200)
             except Exception as e:
@@ -209,9 +223,13 @@ def member_crud(request):
 
         try:
             Members.objects.get(id = m_id)
-                # return JsonResponse({'success': False, 'response': 'member doesnot exist in database'}, status = 400)
-            member = Members(
+            
+            service = Services.objects.get(service_data.get('Name'))
+            member_a = Member_accounts.objects.get(member_acc_data.get('Balance'))
+            office = Office_spaces.objects.get(office_data.get('Name'))
+            payments = Payments.objects.get(payments_data.get('Date','Amount'))
 
+            member = Members(
                 id = m_id,
                 National_ID = n_ID,
                 Name = m_name,
@@ -221,10 +239,14 @@ def member_crud(request):
                 Enrollment = m_enrollment,
                 Company = m_company,
                 Age = m_age,
-                Gender = m_gender
-                
+                Gender = m_gender,
+                Services = service,
+                Member_accounts = member_a,
+                Office_spaces  = office,
+                Payments = payments
             )
-            member.save()
+            member.save() 
+
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
     elif request.method == "DELETE":
@@ -263,11 +285,9 @@ def member_acc_crud(request):
         
         with transaction():
             member_acc = Member_accounts(
-                id = member_id,
                 Balance = member_balance,
             )            
             payments = Payments(
-               id = payments_id,
                Date = payments_date,
                Amount = payments_amount
             )
