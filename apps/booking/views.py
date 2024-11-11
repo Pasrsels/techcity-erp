@@ -16,7 +16,7 @@ def services_view(request):
 @login_required
 def service_crud(request):
     if request.method == "GET":#View
-        service = Services.objects.filter(id=id).values()
+        service = Services.objects.all()
         return JsonResponse({'success':True, 'data':list(service), 'status': 200})
     elif request.method == "POST":#ADD
         
@@ -89,7 +89,7 @@ def service_crud(request):
 def member_crud(request):
     #Read
     if request.method == "GET":
-        member = Members.objects.filter().values()
+        member = Members.objects.all()
         return JsonResponse({'success': True, 'data': list(member)}, status = 200)
     #Add
     elif request.method == "POST":
@@ -172,4 +172,146 @@ def member_crud(request):
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
         
+@login_required
+def member_acc_crud(request):
+    #read
+    if request.method == "GET":
+        member_acc = Member_accounts.objects.all()
+        return JsonResponse({'success': True,}, status = 200)
+    #add
+    elif request.method == "POST":
+        data = json.loads(request.body)
 
+        member_id = data.get([0]['id'])
+        member_balance = data.get([0]['Balance'])
+        payments_id = data.get([1]['id'])
+        payments_date = data.get([1]['Date'])
+        payments_amount = data.get([1]['Amount'])
+
+        if Member_accounts.objects.filter(id = member_id).exists():
+            return JsonResponse({'success': False, 'response': 'cannot add existing field'}, status = 400)
+        elif not member_id or not member_balance or not payments_id or not payments_date or not payments_amount:
+            return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
+        
+        with transaction():
+            member_acc = Member_accounts(
+                id = member_id,
+                Balance = member_balance,
+            )            
+            payments = Payments(
+               id = payments_id,
+               Date = payments_date,
+               Amount = payments_amount
+            )
+            member_acc.save() 
+            payments.save()
+    #update
+    elif request.method == "PUT":
+
+        data = json.loads(request.body)
+
+        member_id = data.get([0]['id'])
+        member_balance = data.get([0]['Balance'])
+        payments_id = data.get([1]['id'])
+        payments_date = data.get([1]['Date'])
+        payments_amount = data.get([1]['Amount'])
+        
+        try:
+            if Member_accounts.objects.get(id = member_id).DoesNotExist():
+                return JsonResponse({'success': False, 'response': 'cannot update none existing field'}, status = 400)
+            elif not member_id or not member_balance or not payments_id or not payments_date or not payments_amount:
+                return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
+            
+            with transaction():
+                member_acc = Member_accounts(
+                    id = member_id,
+                    Balance = member_balance,
+                )            
+                payments = Payments(
+                id = payments_id,
+                Date = payments_date,
+                Amount = payments_amount
+                )
+                member_acc.save() 
+                payments.save()
+                return JsonResponse({'success': True, 'response': 'items updated'}, status = 200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'response':f'{e}'}, status = 200)
+    #delete
+    if request.method == "DELETE":
+        data = json.loads(request.body)
+
+        member_id = data.get([0]['id'])
+
+        if Member_accounts.objects.get(id = member_id).DoesNotExist():
+            return JsonResponse({'success': False, 'response':'cannot delete no existing field'}, status = 400)
+        if not member_id:
+            return JsonResponse({'success': False, 'response': 'empty field please fill'}, status = 400)
+        
+        member_acc_del = Member_accounts.objects.filter(id = member_id)
+        member_acc_del.delete()
+
+def office_crud(request):
+    #read
+    if request.method == "GET":
+        office_view = Office_spaces.objects.all()
+        return JsonResponse({'success': True, 'data': list(office_view)}, status = 200)
+    #add
+    elif request.method == "POST":
+        data = json.loads(request.body)
+
+        office_id = data.get([0]['id'])
+        office_name = data.get([0]['Balance'])
+    
+        if Member_accounts.objects.filter(id = office_id).exists():
+            return JsonResponse({'success': False, 'response': 'cannot add existing field'}, status = 400)
+        elif not office_id or not office_name:
+            return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
+        
+        
+        office_space = Office_spaces(
+            id = office_id,
+            Name = office_name,
+        )            
+        office_space.save() 
+    #update
+    elif request.method == "PUT":
+
+        data = json.loads(request.body)
+
+        office_id = data.get([0]['id'])
+        office_name = data.get([0]['Balance'])
+        
+        try:
+            if Member_accounts.objects.get(id = office_id).DoesNotExist():
+                return JsonResponse({'success': False, 'response': 'cannot update none existing field'}, status = 400)
+            elif not office_id or not office_name:
+                return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
+            
+            office_space = Office_spaces(
+                id = office_id,
+                Balance = office_name,
+            )            
+            
+            office_space.save() 
+            return JsonResponse({'success': True, 'response': 'items updated'}, status = 200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'response':f'{e}'}, status = 200)
+    #delete
+    if request.method == "DELETE":
+        data = json.loads(request.body)
+
+        office_id = data.get([0]['id'])
+
+        try:
+            if Member_accounts.objects.get(id = office_id).DoesNotExist():
+                return JsonResponse({'success': False, 'response':'cannot delete no existing field'}, status = 400)
+            if not office_id:
+                return JsonResponse({'success': False, 'response': 'empty field please fill'}, status = 400)
+            
+            office_del = Member_accounts.objects.filter(id = office_id)
+            office_del.delete()
+            return JsonResponse({'success': True, 'response': 'item deleted'})
+        except Exception as e:
+            return JsonResponse({'success':False, 'response': f'{e}'}, status = 400)
+        
