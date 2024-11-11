@@ -995,7 +995,7 @@ function updateCartDisplay() {
         <td>
             <small class='d-flex align-items-center'>
                 <small class='bx bx-trash-alt text-danger' data-id=${item.id} onclick="removeItem(this);"></small>
-                <small><input class='form-control mx-2' type='number' data-id=${item.inventory_id} value='${item.quantity}' oninput='addOrDecreaseQuantity(this);' style='width:4rem;'/></small>
+                <small><input class='form-control mx-2' type='number' data-id=${item.inventory_id} value='${item.quantity}' oninput='addOrDreceaseQuantity(this);' style='width:4rem;'/></small>
             </small>
         </td>
         <td><small>${item.product_name}</small></td>
@@ -1048,6 +1048,7 @@ function updateCartTotal() {
         cartButton();
         totals();
     }
+    console.log('updated value', cart)
 }
 
 // update tfoot
