@@ -8,7 +8,7 @@ from django.http.response import HttpResponse, JsonResponse
 from django.db import transaction
 
 
-
+@login_required
 def services_view(request):
     services = Services.objects.filter(delete=False)
     return render(request, 'services/service.html')
@@ -386,6 +386,7 @@ def payments_crud(request):
         payments_del.delete()
 
 #office
+@login_required
 def office_crud(request):
     #read
     if request.method == "GET":
