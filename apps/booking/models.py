@@ -11,17 +11,17 @@ class Members(models.Model):
     Company = models.CharField(max_length= 255, blank= True)
     Age = models.IntegerField(blank=False)
     Gender = models.Choices("M", "F")
-    Member_accounts = models.ForeignKey("Member_accounts", on_delete=models.CASCADE)
-    Services = models.ForeignKey("Services", on_delete=models.CASCADE)
-    Office_spaces = models.ForeignKey("Office_spaces", on_delete=models.CASCADE)
-    Payments = models.ForeignKey("Payments", on_delete=models.CASCADE)
-
+    Member_accounts = models.ForeignKey("Member_accounts", on_delete=models.CASCADE, null = True)
+    Services = models.ForeignKey("Services", on_delete=models.CASCADE, null = True)
+    Office_spaces = models.ForeignKey("Office_spaces", on_delete=models.CASCADE, null = True)
+    Payments = models.ForeignKey("Payments", on_delete=models.CASCADE, null = True)
+    delete = models.BooleanField(default=False)
     #add def funtion to every class
     def __str__(self) -> str:
         return f"{self.National_ID}", f"{self.Name}"
 
 class Member_accounts(models.Model):
-    Balance = models.DecimalField(max_digits= 8, decimal_places= 2)
+    Balance = models.DecimalField(max_digits= 8, decimal_places= 2, default= 0.00)
     Payments = models.ForeignKey("Payments", on_delete=models.CASCADE)
 
     def __str__(self) -> str:
@@ -30,6 +30,7 @@ class Member_accounts(models.Model):
 class Payments(models.Model):
     Date = models.CharField(default= timezone.now)
     Amount = models.DecimalField(max_digits= 8, decimal_places= 2)
+
 
     def __str__(self) -> str:
         return f"{self.Amount}"

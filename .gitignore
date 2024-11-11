@@ -1,25 +1,9 @@
-<<<<<<< HEAD
-.venv/
-env/
-<<<<<<< HEAD
-migrations/
-*/migrations/*
-=======
- .venv/
- env/
- migrations/
- */migrations/*
->>>>>>> 41f8753387e45acff57e2e8143c59fdcd7559057
-.env
-*.pyc
-*~
-=======
+
 # /migrations/
 # */migrations/*
 .env
 *.pyc
 *~zz 
->>>>>>> e1272d78b9d741394ef2d79e0729cebc8434e6c2
 *.swp
 application.log
 .idea/
@@ -41,4 +25,4 @@ test.png
 <<<<<<< HEAD
 dev/*.pyc
 =======
->>>>>>> 41f8753387e45acff57e2e8143c59fdcd7559057
+>>>>>>> 74f871f4b5f6a2322d8541b1582042ad7c5c65b0

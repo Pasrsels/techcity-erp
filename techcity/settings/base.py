@@ -129,9 +129,9 @@ SESSION_AUTH = True
 DATABASES = {
    'default': {
      'ENGINE': 'django.db.backends.postgresql',
-       'NAME':  'TECHCITYDB',
+       'NAME':  'techcoty',
        'USER': 'postgres',
-       'PASSWORD': 'NNNNN#02',
+       'PASSWORD': 'neverfail',
        'HOST': 'localhost',
        'PORT': '5433'
  }
