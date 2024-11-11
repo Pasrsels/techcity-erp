@@ -1,164 +1,129 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Services</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-</head>
-<body>
+{% extends "base.html" %}
+{% load static %}
 
-<div class="container">
-    <h2>Services Management</h2>
-    
-    <!-- Button to Open the Add Service Modal -->
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-        Add Service
-    </button>
+{% block content %}
+<div class="container-fluid">
+    <header class="bg-dark text-white p-3">
+        <h1 class="mb-0" style="text-align: left;">LINKSPOT</h1>
+    </header>
 
-    <!-- Services Table -->
-    <table class="table table-striped" id="servicesTable">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Service Name</th>
-                <th>Type Name</th>
-                <th>Price</th>
-                <th>Duration</th>
-                <th>Promotion</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Dynamically populated -->
-        </tbody>
-    </table>
+    <div class="row">
+        <aside class="col-2 bg-dark text-white p-4">
+            <ul class="list-unstyled">
+                <li><a href="{% url 'booking:service' %}" class="text-white">Services</a></li>
+                <li><a href="{% url 'booking:members' %}" class="text-white">Members</a></li>
+                <li><a href="{% url 'booking:payments' %}" class="text-white">Payments</a></li>
+                <li><a href="{% url 'booking:office' %}" class="text-white">Office Spaces</a></li>
+            </ul>
+        </aside>
 
-    <!-- Add Service Modal -->
-    <div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addServiceModalLabel">Add Service</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="col-10">
+            <nav class="d-flex justify-content-between align-items-center p-3 bg-primary text-white shadow-sm">
+                <h5>Office Spaces</h5>
+                <div>
+                    <input type="text" id="searchInput" class="form-control d-inline w-50" placeholder="Search office spaces...">
                 </div>
-                <div class="modal-body">
-                    <form id="addServiceForm">
-                        <div class="mb-3">
-                            <label for="serviceName" class="form-label">Service Name</label>
-                            <input type="text" class="form-control" id="serviceName" required>
+            </nav>
+
+            <div class="row mt-5">
+                {% for letter, num_offices in [('A', 10), ('B', 10), ('C', 10), ('D', 10), ('E', 10), ('F', 12)] %}
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-lg">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Office {{ letter }}</h5>
+                            <div class="d-flex justify-content-center mt-3">
+                                <i class="fas fa-eye me-2 view-office" data-office="{{ letter }}" data-num-offices="{{ num_offices }}" style="cursor: pointer;"></i>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="typeName" class="form-label">Type Name</label>
-                            <input type="text" class="form-control" id="typeName" required>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="modal fade" id="officeModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">Office Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="mb-3">
-                            <label for="typePrice" class="form-label">Price</label>
-                            <input type="number" class="form-control" id="typePrice" required>
+                        <div class="modal-body">
+                            <table class="table table-striped table-bordered table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Office Number</th>
+                                        <th>Office Type</th>
+                                        <th>Status</th>
+                                        <th>View</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="officeTableBody"></tbody>
+                            </table>
                         </div>
-                        <div class="mb-3">
-                            <label for="typeServiceDuration" class="form-label">Duration</label>
-                            <input type="text" class="form-control" id="typeServiceDuration" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="typePromotion" class="form-label">Promotion</label>
-                            <input type="text" class="form-control" id="typePromotion" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Save Service</button>
-                    </form>
+                    </div>
                 </div>
             </div>
+
+            <div class="modal fade" id="occupantModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">Occupant Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong>Member Name:</strong> <span id="occupantName"></span></p>
+                            <p><strong>Start Date & Time:</strong> <span id="startDate"></span></p>
+                            <p><strong>Expected Leave Date & Time:</strong> <span id="leaveDate"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
 <script>
-    // Load Services
-    function loadServices() {
-        $.ajax({
-            url: '{% url "services:service_crud" %}',  // Your API URL
-            method: 'GET',
-            success: function(response) {
-                if (response.success) {
-                    var tbody = $('#servicesTable tbody');
-                    tbody.empty();
-                    response.data.forEach(function(service, index) {
-                        tbody.append(`
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td>${service.Name}</td>
-                                <td>${service.Types.Name}</td>
-                                <td>${service.Types.Price}</td>
-                                <td>${service.Types.Duration}</td>
-                                <td>${service.Types.Promotion}</td>
-                                <td>
-                                    <button class="btn btn-info btn-sm editBtn" data-id="${service.id}" data-bs-toggle="modal" data-bs-target="#editServiceModal">Edit</button>
-                                    <button class="btn btn-danger btn-sm deleteBtn" data-id="${service.id}">Delete</button>
-                                </td>
-                            </tr>
-                        `);
+    document.querySelectorAll('.view-office').forEach(button => {
+        button.addEventListener('click', function () {
+            const officeLetter = this.getAttribute('data-office');
+
+            fetch(`/booking/office_details/${officeLetter}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('officeTableBody');
+                    tableBody.innerHTML = '';
+                    data.offices.forEach(office => {
+                        const statusIcon = office.occupied ? 'text-success' : 'text-danger';
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${office.number}</td>
+                            <td>${office.type}</td>
+                            <td><i class="fas fa-circle ${statusIcon}"></i></td>
+                            <td>${office.occupied ? '<i class="fas fa-eye view-occupant" data-office-number="' + office.number + '" style="cursor: pointer;"></i>' : ''}</td>
+                        `;
+                        tableBody.appendChild(row);
                     });
 
-                    // Event listener for Delete
-                    $('.deleteBtn').on('click', function() {
-                        var serviceId = $(this).data('id');
-                        $.ajax({
-                            url: '{% url "services:service_crud" %}',
-                            method: 'DELETE',
-                            data: JSON.stringify([{ 'service_id': serviceId }]),
-                            contentType: 'application/json',
-                            success: function(response) {
-                                if (response.success) {
-                                    loadServices();
-                                } else {
-                                    alert(response.response);
-                                }
-                            }
+                    document.querySelectorAll('.view-occupant').forEach(icon => {
+                        icon.addEventListener('click', function () {
+                            const officeNumber = this.getAttribute('data-office-number');
+                            fetch(`/booking/occupant_details/${officeNumber}/`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    document.getElementById('occupantName').textContent = data.name;
+                                    document.getElementById('startDate').textContent = data.start_date;
+                                    document.getElementById('leaveDate').textContent = data.leave_date;
+                                    new bootstrap.Modal(document.getElementById('occupantModal')).show();
+                                });
                         });
                     });
-                }
-            }
-        });
-    }
 
-    $(document).ready(function() {
-        loadServices();
-
-        // Add Service Form Submission
-        $('#addServiceForm').submit(function(e) {
-            e.preventDefault();
-
-            var serviceName = $('#serviceName').val();
-            var typeName = $('#typeName').val();
-            var typePrice = $('#typePrice').val();
-            var typeServiceDuration = $('#typeServiceDuration').val();
-            var typePromotion = $('#typePromotion').val();
-
-            $.ajax({
-                url: '{% url "services:service_crud" %}',
-                method: 'POST',
-                data: JSON.stringify([{
-                    'service_name': serviceName,
-                    'type_name': typeName,
-                    'type_price': typePrice,
-                    'type_service_duration': typeServiceDuration,
-                    'type_promotion': typePromotion
-                }]),
-                contentType: 'application/json',
-                success: function(response) {
-                    if (response.success) {
-                        loadServices();
-                        $('#addServiceModal').modal('hide');
-                    } else {
-                        alert(response.response);
-                    }
-                }
-            });
+                    new bootstrap.Modal(document.getElementById('officeModal')).show();
+                });
         });
     });
 </script>
+{% endblock content %}
 
-</body>
-</html>
