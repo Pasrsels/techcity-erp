@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h2>Services Management</h2>
+    
+    <!-- Button to Open the Add Service Modal -->
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+        Add Service
+    </button>
+
+    <!-- Services Table -->
+    <table class="table table-striped" id="servicesTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Service Name</th>
+                <th>Type Name</th>
+                <th>Price</th>
+                <th>Duration</th>
+                <th>Promotion</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Dynamically populated -->
+        </tbody>
+    </table>
+
+    <!-- Add Service Modal -->
+    <div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addServiceModalLabel">Add Service</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addServiceForm">
+                        <div class="mb-3">
+                            <label for="serviceName" class="form-label">Service Name</label>
+                            <input type="text" class="form-control" id="serviceName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="typeName" class="form-label">Type Name</label>
+                            <input type="text" class="form-control" id="typeName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="typePrice" class="form-label">Price</label>
+                            <input type="number" class="form-control" id="typePrice" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="typeServiceDuration" class="form-label">Duration</label>
+                            <input type="text" class="form-control" id="typeServiceDuration" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="typePromotion" class="form-label">Promotion</label>
+                            <input type="text" class="form-control" id="typePromotion" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Service</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Load Services
+    function loadServices() {
+        $.ajax({
+            url: '{% url "services:service_crud" %}',  // Your API URL
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    var tbody = $('#servicesTable tbody');
+                    tbody.empty();
+                    response.data.forEach(function(service, index) {
+                        tbody.append(`
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${service.Name}</td>
+                                <td>${service.Types.Name}</td>
+                                <td>${service.Types.Price}</td>
+                                <td>${service.Types.Duration}</td>
+                                <td>${service.Types.Promotion}</td>
+                                <td>
+                                    <button class="btn btn-info btn-sm editBtn" data-id="${service.id}" data-bs-toggle="modal" data-bs-target="#editServiceModal">Edit</button>
+                                    <button class="btn btn-danger btn-sm deleteBtn" data-id="${service.id}">Delete</button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+
+                    // Event listener for Delete
+                    $('.deleteBtn').on('click', function() {
+                        var serviceId = $(this).data('id');
+                        $.ajax({
+                            url: '{% url "services:service_crud" %}',
+                            method: 'DELETE',
+                            data: JSON.stringify([{ 'service_id': serviceId }]),
+                            contentType: 'application/json',
+                            success: function(response) {
+                                if (response.success) {
+                                    loadServices();
+                                } else {
+                                    alert(response.response);
+                                }
+                            }
+                        });
+                    });
+                }
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        loadServices();
+
+        // Add Service Form Submission
+        $('#addServiceForm').submit(function(e) {
+            e.preventDefault();
+
+            var serviceName = $('#serviceName').val();
+            var typeName = $('#typeName').val();
+            var typePrice = $('#typePrice').val();
+            var typeServiceDuration = $('#typeServiceDuration').val();
+            var typePromotion = $('#typePromotion').val();
+
+            $.ajax({
+                url: '{% url "services:service_crud" %}',
+                method: 'POST',
+                data: JSON.stringify([{
+                    'service_name': serviceName,
+                    'type_name': typeName,
+                    'type_price': typePrice,
+                    'type_service_duration': typeServiceDuration,
+                    'type_promotion': typePromotion
+                }]),
+                contentType: 'application/json',
+                success: function(response) {
+                    if (response.success) {
+                        loadServices();
+                        $('#addServiceModal').modal('hide');
+                    } else {
+                        alert(response.response);
+                    }
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
