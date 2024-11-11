@@ -23,22 +23,21 @@ class Members(models.Model):
 class Member_accounts(models.Model):
     Balance = models.DecimalField(max_digits= 8, decimal_places= 2, default= 0.00)
     Payments = models.ForeignKey("Payments", on_delete=models.CASCADE)
-
+    delete = models.BooleanField(default= False)
     def __str__(self) -> str:
         return f"{self.Balance}"
 
 class Payments(models.Model):
     Date = models.CharField(default= timezone.now)
     Amount = models.DecimalField(max_digits= 8, decimal_places= 2)
-
-
+    
     def __str__(self) -> str:
         return f"{self.Amount}"
 
 class Services(models.Model):
     Name = models.CharField(max_length= 255)
     Types = models.ForeignKey('Types', max_length= 255, on_delete=models.CASCADE, null=True)
-
+    delete = models.BooleanField(default= False)
     def __str__(self):
         return f'{self.name}, {self.Types.Price}'
 
