@@ -30,7 +30,7 @@ class Member_accounts(models.Model):
 class Payments(models.Model):
     Date = models.CharField(default= timezone.now)
     Amount = models.DecimalField(max_digits= 8, decimal_places= 2)
-    
+    Admin_fee = models.DecimalField(max_digits=8 , decimal_places=2)
     def __str__(self) -> str:
         return f"{self.Amount}"
 

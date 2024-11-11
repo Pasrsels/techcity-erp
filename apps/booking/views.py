@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 import json
 from django.http.response import HttpResponse, JsonResponse
 from django.db import transaction
-
+from utils import *
 
 @login_required
 def services_view(request):
@@ -164,22 +164,10 @@ def member_crud(request):
         with transaction.atomic():
             try: 
                 # query service
-                service = Services.objects.get(service_data.get())
-                member = Member_accounts.objects.get(member_acc_data.get())
-                office = Office_spaces.objects.get(office_data.get())
-                payments = Payments.objects.get(payments_data.get())
-
-                type_add = Types(
-                    Name = type_name, 
-                    Price = type_price, 
-                    Duration = type_service_duration, 
-                    Promotion = type_promotion
-                    )
-                type_add.save()
-                service_add = Services(
-                    Name = service_name,
-                    Types = type_add
-                    )
+                service = Services.objects.get(service_data.get('Name'))
+                member = Member_accounts.objects.get(member_acc_data.get('Balance'))
+                office = Office_spaces.objects.get(office_data.get('Name'))
+                payments = Payments.objects.get(payments_data.get('Date','Amount'))
 
                 member = Members(
                     National_ID = n_ID,
@@ -236,6 +224,11 @@ def member_crud(request):
         try:
             Members.objects.get(id = m_id)
             
+            service = Services.objects.get(service_data.get('Name'))
+            member_a = Member_accounts.objects.get(member_acc_data.get('Balance'))
+            office = Office_spaces.objects.get(office_data.get('Name'))
+            payments = Payments.objects.get(payments_data.get('Date','Amount'))
+
             member = Members(
                 id = m_id,
                 National_ID = n_ID,
@@ -246,21 +239,13 @@ def member_crud(request):
                 Enrollment = m_enrollment,
                 Company = m_company,
                 Age = m_age,
-                Gender = m_gender
+                Gender = m_gender,
+                Services = service,
+                Member_accounts = member_a,
+                Office_spaces  = office,
+                Payments = payments
             )
-
-            member_acc = Member_accounts(
-                    id = m_a_id,
-                    Balance = member_balance,
-                )            
-            payments = Payments(
-                id = p_id,
-                Date = payments_date,
-                Amount = payments_amount
-                )
-            member_acc.save() 
-            payments.save()
-            member.save()
+            member.save() 
 
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
