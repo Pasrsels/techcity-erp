@@ -38,7 +38,3 @@ test.png
 .pyc
 .requirements.txt
 .base.py
-<<<<<<< HEAD
-dev/*.pyc
-=======
->>>>>>> 41f8753387e45acff57e2e8143c59fdcd7559057
