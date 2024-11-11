@@ -46,6 +46,7 @@
                 <td><small>{{ supplier.email }}</small></td>
                 <td><small>{{ supplier.address }}</small></td>
                 <td><small>{{ supplier.contact_person }}</small></td>
+
                 <td>
                     <button class="btn bx bx-edit mx-1" onclick="openEditModal({{ supplier.id }})"></button>
                     <!-- Add delete button -->
@@ -55,6 +56,7 @@
             {% endfor %}
         </tbody>
     </table>
+
 
     <!-- Edit Supplier Modal -->
     <div class="modal fade" id="editSupplierModal" tabindex="-1" aria-labelledby="editSupplierModalLabel" aria-hidden="true">
@@ -89,7 +91,7 @@
                     <form method="post" id="supplierForm">
                         {% csrf_token %}
                         {{ form | crispy }}
-                        <div class="d-flex align-items-center ustify-content-between">
+                        <div class="d-flex align-items-center justify-content-between">
                             <button type="reset" class="btn btn-danger btn-sm bx bx-reset mx-2"></button>
                             <button type="submit" class="btn btn-secondary btn-sm">
                                 <i class="bx bx-save"></i>
@@ -154,12 +156,7 @@
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     supplierModal.hide()
