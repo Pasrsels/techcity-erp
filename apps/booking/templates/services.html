@@ -5,10 +5,14 @@
 
 {% block content %}
 <div class="container-fluid">
+    <!-- Header with Left-aligned LINKSPOT Title -->
+    <header class="bg-dark text-white p-3">
+        <h1 class="mb-0" style="text-align: left;">LINKSPOT</h1>
+    </header>
+
     <div class="row">
         <!-- Sidebar -->
         <aside class="col-2 bg-dark text-white p-4">
-            <h4 class="mb-4">Linkspot</h4>
             <ul class="list-unstyled">
                 <li><a href="#" class="text-white">Services</a></li>
                 <li><a href="#" class="text-white">Members</a></li>
@@ -19,10 +23,13 @@
 
         <!-- Main Content -->
         <div class="col-10">
-            <!-- Top Navbar -->
+            <!-- Top Navbar with Search Function -->
             <nav class="d-flex justify-content-between align-items-center p-3 bg-primary text-white shadow-sm">
                 <h5>Services</h5>
-                <button id="addServiceBtn" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#addServiceModal">Add Service</button>
+                <div>
+                    <input type="text" id="searchInput" class="form-control d-inline w-50" placeholder="Search services...">
+                    <button id="addServiceBtn" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#addServiceModal">Add Service</button>
+                </div>
             </nav>
 
             <!-- Service Cards -->
@@ -110,34 +117,28 @@
 </div>
 
 <script>
-    // Event listener for Monthly Service Card
+    // Fetch and display services for each card
     document.getElementById("monthlyServiceCard").addEventListener("click", function() {
-        fetch("/service_crud/?service_type=monthly")  // Fetch from the API endpoint for monthly services
+        fetch("/service_crud/?service_type=monthly")
             .then(response => response.json())
-            .then(data => {
-                populateTable(data);
-            })
+            .then(data => populateTable(data))
             .catch(error => console.error("Error fetching monthly services:", error));
     });
 
-    // Event listener for Hourly Service Card
     document.getElementById("hourlyServiceCard").addEventListener("click", function() {
-        fetch("/service_crud/?service_type=hourly")  // Fetch from the API endpoint for hourly services
+        fetch("/service_crud/?service_type=hourly")
             .then(response => response.json())
-            .then(data => {
-                populateTable(data);
-            })
+            .then(data => populateTable(data))
             .catch(error => console.error("Error fetching hourly services:", error));
     });
 
-    // Function to populate the table with service data
+    // Populate table with service data
     function populateTable(data) {
         const tableBody = document.getElementById("typesTableBody");
-        tableBody.innerHTML = ""; // Clear existing rows
+        tableBody.innerHTML = ""; 
 
         data.forEach(service => {
             const row = document.createElement("tr");
-
             row.innerHTML = `
                 <td>${service.name}</td>
                 <td>${service.price}</td>
@@ -153,56 +154,43 @@
         });
     }
 
-    // Event listener for saving a new service
+    // Save new service
     document.getElementById("saveServiceBtn").addEventListener("click", function() {
-        const serviceName = document.getElementById("serviceName").value;
-        const servicePrice = document.getElementById("servicePrice").value;
-        const serviceDuration = document.getElementById("serviceDuration").value;
-        const servicePromotion = document.getElementById("servicePromotion").value;
-        const serviceType = document.getElementById("serviceType").value;
-
         const newService = {
-            name: serviceName,
-            price: servicePrice,
-            duration: serviceDuration,
-            promotion: servicePromotion,
-            service_type: serviceType
+            name: document.getElementById("serviceName").value,
+            price: document.getElementById("servicePrice").value,
+            duration: document.getElementById("serviceDuration").value,
+            promotion: document.getElementById("servicePromotion").value,
+            service_type: document.getElementById("serviceType").value
         };
 
         fetch("/service_crud/", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newService)
         })
         .then(response => response.json())
         .then(data => {
             console.log("Service saved:", data);
-            $('#addServiceModal').modal('hide');  // Close the modal
-            // Optionally, refresh the table or show a success message
+            $('#addServiceModal').modal('hide');
         })
         .catch(error => console.error("Error saving new service:", error));
     });
 
-    // Function to delete a service
+    // Delete a service
     function deleteService(serviceId) {
         const confirmation = confirm("Are you sure you want to delete this service?");
         if (confirmation) {
             fetch(`/service_crud/`, {
                 method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ service_id: serviceId })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     alert("Service deleted successfully.");
-                    // Remove the service row from the table
-                    const row = document.querySelector(`#row-${serviceId}`);
-                    row && row.remove();
+                    populateTable(data.services); // Refresh table data
                 } else {
                     alert("Failed to delete the service.");
                 }
@@ -210,8 +198,18 @@
             .catch(error => console.error("Error deleting service:", error));
         }
     }
+
+    // Search function
+    document.getElementById("searchInput").addEventListener("keyup", function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll("#typesTableBody tr");
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? "" : "none";
+        });
+    });
 </script>
 
 {% endblock content %}
-
 

@@ -133,7 +133,7 @@ DATABASES = {
        'USER': 'postgres',
        'PASSWORD': 'neverfail',
        'HOST': 'localhost',
-       'PORT': '5432'
+       'PORT': '5433'
  }
 #     'default': {
 #         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
