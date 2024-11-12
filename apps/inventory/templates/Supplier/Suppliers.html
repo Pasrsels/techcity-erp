@@ -239,25 +239,82 @@
             });
     }
 
-    function openViewModal(supplierId) {
-        fetch(`/inventory/suppliers/view/${supplierId}/`)
+    // Handling form submission for editing supplier data
+    document.getElementById('editSupplierForm').addEventListener('submit', function (event) {
+        event.preventDefault();  // Prevent default form submission
+
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+
+        fetch(`/inventory/suppliers/edit/${supId}/`, {
+            method: 'POST',  
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(responseData => {
+            console.log(responseData);
+            if (responseData.success) { 
+                // Hide modal and refresh the page or update the table
+                const editModal = bootstrap.Modal.getInstance(document.getElementById('editSupplierModal'));
+                editModal.hide();
+                Swal.fire({
+                    text: "Supplier successfully updated",
+                    icon: "success",
+                    title: 'Success'
+                }).then(() => {
+                    window.location.reload(); 
+                });
+            } else {
+                Swal.fire({
+                    text: "Error updating supplier: " + responseData.message,
+                    icon: "error",
+                    title: 'Error'
+                });
+            }
+        })
+        .catch(error => console.error("Error updating supplier:", error));
+    });
+
+    // Function to trigger the confirmation modal for deletion
+    function confirmDelete(supplierId) {
+        deleteSupId = supplierId;
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteSupplierModal'));
+        deleteModal.show();
+    }
+
+    // Handle the confirmation of deletion
+    document.getElementById('confirmDeleteButton').addEventListener('click', function () {
+        if (deleteSupId) {
+            fetch(`/inventory/suppliers/delete/${deleteSupId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+            })
             .then(response => response.json())
-            .then(data => {
-                const supplier = data.data[0];
-                const detailsHTML = `
-                    <p><strong>Name:</strong> ${supplier.name}</p>
-                    <p><strong>Contact Person:</strong> ${supplier.contact_person}</p>
-                    <p><strong>Phone:</strong> ${supplier.phone}</p>
-                    <p><strong>Email:</strong> ${supplier.email}</p>
-                    <p><strong>Address:</strong> ${supplier.address}</p>
-                    <p><strong>Products:</strong></p>
-                    <ul>
-                        ${supplier.products.length > 0 ? supplier.products.map(product => `<li>${product.name}</li>`).join('') : '<li>No products listed</li>'}
-                    </ul>
-                `;
-                document.getElementById("viewSupplierDetails").innerHTML = detailsHTML;
-                const viewModal = new bootstrap.Modal(document.getElementById('viewSupplierModal'));
-                viewModal.show();
+            .then(responseData => {
+                if (responseData.success) {
+                    const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteSupplierModal'));
+                    deleteModal.hide();
+                    Swal.fire({
+                        text: "Supplier successfully deleted.",
+                        icon: "success",
+                        title: 'Deleted'
+                    }).then(() => {
+                        window.location.reload(); 
+                    });
+                } else {
+                    Swal.fire({
+                        text: "Error deleting supplier: " + responseData.message,
+                        icon: "error",
+                        title: 'Error'
+                    });
+                }
             })
             .catch(error => {
                 console.error("Error fetching supplier details:", error);
