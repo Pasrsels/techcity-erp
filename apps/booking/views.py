@@ -252,30 +252,46 @@ def member_crud(request):
                     Office_spaces = office_add,
                     Payments = payment_add
                 )
-
-                member.save()
+                Logs.objects.create(
+                    action = 'create'
+                )
+                #member.save() unneccessary
                 return JsonResponse({'success': True, 'response': 'Data saved'}, status = 200)
             except Exception as e:
                 pass
         
     #Update
     elif request.method == "PUT":
+        #get data part of file
         data = json(request.body)
 
-        s_id = service_data.get('id')
-        s_name = service_data.get('name')
+        #selecting specific part of data
+        member_data = data.get('member_data', {})
+        service_data = data.get('service_data', {})
+        member_acc_data = data.get('member_acc_data',{})
+        office_data = data.get('office_data',{})
+        payments_data = data.get('payments_data',{})
+        type_data = data.get('types_data',{})
 
-        m_a_id = member_acc_data.get('id')
-        member_balance = member_acc_data.get('Balance')
-
-        o_id = office_data.get('id')
+        #getting different parts within the data 
+        office_id = office_data.get('id')
         office_name = office_data.get('Name')
 
-        p_id = payments_data.get('id')
+        s_id = service_data.get('id')
+        s_name = service_data.get('Name')
+        s_del = service_data.get('delete')
+        s_type_id = type_data.get('id')
+        s_type_name = type_data.get('Name')
+        service_amount = type_data.get('Price')
+        service_duration = type_data.get('Duration')
+        promotion = type_data.get('Promotion')
+
+        member_balance = member_acc_data.get('Balance')
+        member_acc_del = member_acc_data.get('delete')
         payments_date = payments_data.get('Date')
         payments_amount = payments_data.get('Amount')
+        payments_admin = payments_data.get('Admin_fee')
 
-        m_id = member_data.get('id')
         n_ID = member_data.get('National_ID')
         m_name = member_data.get('Name')
         m_email = member_data.get('Email')
@@ -286,34 +302,64 @@ def member_crud(request):
         m_age = member_data.get('Age')
         m_gender = member_data.get('Gender')
         m_delete = member_data.get('delete')
-       
 
         try:
-            Members.objects.get(id = m_id)
+            Members.objects.get(Phone = m_phone)
             
-            service = Services.objects.get(service_data.get('Name'))
-            member_a = Member_accounts.objects.get(member_acc_data.get('Balance'))
-            office = Office_spaces.objects.get(office_data.get('Name'))
-            payments = Payments.objects.get(payments_data.get('Date','Amount'))
+            with transaction.Atomic():
+                #type add 1
+                types_add = Types.objects.update(
+                        Name = s_type_name,
+                        Price = service_amount,
+                        Duration = service_duration,
+                        Promotion = promotion
+                    )
 
-            member = Members(
-                id = m_id,
-                National_ID = n_ID,
-                Name = m_name,
-                Email = m_email,
-                Phone = m_phone,
-                Address = m_adress,
-                Enrollment = m_enrollment,
-                Company = m_company,
-                Age = m_age,
-                Gender = m_gender,
-                Services = service,
-                Member_accounts = member_a,
-                Office_spaces  = office,
-                Payments = payments
-            )
-            member.save() 
+                # payment add 2
+                payment_add = Payments.objects.update(
+                    #Date
+                    Amount = payments_amount,
+                    Admin_fee = admin_amount
+                )
+                #service add 3
+                service_add = Services.objects.update(
+                    Name = s_name,
+                    Types = types_add,
+                    delete = s_del
+                )
 
+                #member account add 4
+                member_acc_add = Member_accounts.objects.update(
+                    Balance  = bal,
+                    Payments = payment_add,
+                    delete = member_acc_del
+                )
+
+                #office add 5
+                office_add = Office_spaces.objects.update(
+                    Name = office_name
+                )
+                
+                #member add 6
+                member_add = Members.objects.update(
+                    National_ID = n_ID,
+                    Name = m_name,
+                    Email = m_email,
+                    Phone = m_phone,
+                    Address = m_adress,
+                    Enrollment = m_enrollment,
+                    Company = m_company,
+                    Age = m_age,
+                    Gender = m_gender,
+                    delete = m_delete,
+                    Services=service_add,
+                    Member_accounts = member_acc_add,
+                    Office_spaces = office_add,
+                    Payments = payment_add
+                )
+                Logs.objects.update(
+                    action = 'update'
+                )
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
     elif request.method == "DELETE":
@@ -323,10 +369,12 @@ def member_crud(request):
 
         try:
             Members.objects.get(id = id)
-                # return JsonResponse({'success': False, 'response': 'field doesnot exist in database'}, status = 400)
             member = Members.objects.get(id = id)
             member.delete = True
             member.save()
+            Logs.objects.delete(
+                action = 'delete'
+            )
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
 
