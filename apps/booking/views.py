@@ -140,6 +140,7 @@ def member_crud(request):
         s_name = service_data.get('name')
         member_balance = member_acc_data.get('Balance')
         office_name = office_data.get('Name')
+        total_service_amount = service_data.get('service_amount')
 
         payments_date = payments_data.get('Date')
         payments_amount = payments_data.get('Amount')
@@ -168,6 +169,43 @@ def member_crud(request):
                 member = Member_accounts.objects.get(member_acc_data.get('Balance'))
                 office = Office_spaces.objects.get(office_data.get('Name'))
                 payments = Payments.objects.get(payments_data.get('Date','Amount'))
+
+                """"
+                    1. we are going to receive a total amount which consists of admin if its a first payment,
+                    2. we are going to seperate it into 2 thus admin and service amount, 
+                    3. we are going to check if they is an balance
+                """
+
+                if not Members.objects.filter(Phone=m_phone).exists():
+                    admin_amount = 0
+                    service_amount_owing = 0
+                    bal = 0
+                    if total_service_amount > service.Types.price:
+                        amount_amount = total_service_amount - service.Types.price
+                        bal = amount_amount
+                    elif total_service_amount == service.Types.price:
+                        admin_amount = 20
+                        bal = admin_amount
+                    else:
+                        admin_amount = 20
+                        service_amount_owing = service.Types.price - total_service_amount
+                        bal = admin_amount + service_amount_owing
+                else:
+                    """ ndepenyu """
+
+                
+
+                # payment
+                payment = Payments.objects.create(
+                    Amount = total_service_amount,
+                    Admin_fee = admin_amount
+                )
+                #balance
+                balance = Member_accounts.objects.create(
+                    Balance  = bal,
+                )
+
+
 
                 member = Members(
                     National_ID = n_ID,
