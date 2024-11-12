@@ -133,7 +133,7 @@
             .then(response => response.json())
             .then(data => populateTable(data, serviceType))
             .catch(error => console.error("Error fetching services:", error));
-    }
+    }fetchServices
 
     document.getElementById("monthlyServiceCard").addEventListener("click", function() {
         fetchServices("monthly");
@@ -173,11 +173,14 @@
             service_type: document.getElementById("serviceType").value
         };
 
-        fetch("/service_crud/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newService)
-        })
+        fetch(`/service_crud/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify(data)
+            })
         .then(response => response.json())
         .then(data => {
             console.log("Service saved:", data);
@@ -192,7 +195,7 @@
         if (confirmation) {
             fetch(`/service_crud/`, {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" },
+                headers: { 'Content-Type': 'application/json'},
                 body: JSON.stringify({ service_id: serviceId })
             })
             .then(response => response.json())
@@ -208,6 +211,7 @@
         }
     }
 
+
     document.getElementById("searchInput").addEventListener("keyup", function() {
         const searchTerm = this.value.toLowerCase();
         const rows = document.querySelectorAll("#searchResultsBody tr");
@@ -217,6 +221,23 @@
             row.style.display = text.includes(searchTerm) ? "" : "none";
         });
     });
-</script>
+        
+    // Utility function to get the CSRF token from cookies
+    function getCSRFToken() {
+        let cookieValue = null;
+        const name = 'csrftoken';
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+    }
+        return cookieValue;
 
+</script>
 {% endblock content %}

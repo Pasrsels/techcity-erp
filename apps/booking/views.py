@@ -11,7 +11,7 @@ from utils import *
 @login_required
 def services_view(request):
     services = Services.objects.filter(delete=False)
-    return render(request, 'services/service.html')
+    return render(request, 'services.html')
 #services
 @login_required
 def service_crud(request):
