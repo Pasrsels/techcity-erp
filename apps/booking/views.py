@@ -129,21 +129,33 @@ def member_crud(request):
         '''service_data = {
             'service': 1,
         }'''
-
+        #get data part of file
         data = json(request.body)
+
+        #selecting specific part of data
         member_data = data.get('member_data', {})
         service_data = data.get('service_data', {})
         member_acc_data = data.get('member_acc_data',{})
         office_data = data.get('office_data',{})
         payments_data = data.get('payments_data',{})
+        type_data = data.get('types_data',{})
 
-        s_name = service_data.get('name')
-        member_balance = member_acc_data.get('Balance')
+        #getting different parts within the data 
+        
         office_name = office_data.get('Name')
-        total_service_amount = service_data.get('service_amount')
 
+        s_name = service_data.get('Name')
+        s_del = service_data.get('delete')
+        s_type_name = type_data.get('Name')
+        service_amount = type_data.get('Price')
+        service_duration = type_data.get('Duration')
+        promotion = type_data.get('Promotion')
+
+        member_balance = member_acc_data.get('Balance')
+        member_acc_del = member_acc_data.get('delete')
         payments_date = payments_data.get('Date')
         payments_amount = payments_data.get('Amount')
+        payments_admin = payments_data.get('Admin_fee')
 
         n_ID = member_data.get('National_ID')
         m_name = member_data.get('Name')
@@ -165,49 +177,66 @@ def member_crud(request):
         with transaction.atomic():
             try: 
                 # query service
-                service = Services.objects.get(service_data.get('Name'))
-                member = Member_accounts.objects.get(member_acc_data.get('Balance'))
-                office = Office_spaces.objects.get(office_data.get('Name'))
-                payments = Payments.objects.get(payments_data.get('Date','Amount'))
+                # service = Services.objects.get(service_data.get('Name'))
+                # member = Member_accounts.objects.get(member_acc_data.get('Balance'))
+                # office = Office_spaces.objects.get(office_data.get('Name'))
+                # payments = Payments.objects.get(payments_data.get('Date','Amount'))
 
                 """"
                     1. we are going to receive a total amount which consists of admin if its a first payment,
                     2. we are going to seperate it into 2 thus admin and service amount, 
                     3. we are going to check if they is an balance
                 """
-
                 if not Members.objects.filter(Phone=m_phone).exists():
                     admin_amount = 0
-                    service_amount_owing = 0
+                    #service_amount_owing = 0
                     bal = 0
-                    if total_service_amount > service.Types.price:
-                        amount_amount = total_service_amount - service.Types.price
-                        bal = amount_amount
-                    elif total_service_amount == service.Types.price:
-                        admin_amount = 20
+                    if payments_amount > service_amount:
+                        bal = (payments_amount - service_amount) - payments_admin
+                        if bal < 0:
+                            admin_amount = bal
+                    elif payments_amount == service_amount:
+                        admin_amount = -20
                         bal = admin_amount
                     else:
                         admin_amount = 20
-                        service_amount_owing = service.Types.price - total_service_amount
-                        bal = admin_amount + service_amount_owing
-                else:
-                    """ ndepenyu """
-
+                        bal = (service_amount - payments_amount) + admin_amount
                 
+                #types add 1
+                types_add = Types.objects.create(
+                    Name = s_type_name,
+                    Price = service_amount,
+                    Duration = service_duration,
+                    Promotion = promotion
+                )
 
-                # payment
-                payment = Payments.objects.create(
-                    Amount = total_service_amount,
+                # payment add 2
+                payment_add = Payments.objects.create(
+                    #Date
+                    Amount = payments_amount,
                     Admin_fee = admin_amount
                 )
-                #balance
-                balance = Member_accounts.objects.create(
-                    Balance  = bal,
+                #service add 3
+                service_add = Services.objects.create(
+                    Name = s_name,
+                    Types = types_add,
+                    delete = s_del
                 )
 
+                #member account add 4
+                member_acc_add = Member_accounts.objects.create(
+                    Balance  = bal,
+                    Payments = payment_add,
+                    delete = member_acc_del
+                )
 
-
-                member = Members(
+                #office add 5
+                office_add = Office_spaces.objects.create(
+                    Name = office_name
+                )
+                
+                #member add 6
+                member_add = Members.objects.create(
                     National_ID = n_ID,
                     Name = m_name,
                     Email = m_email,
@@ -218,10 +247,10 @@ def member_crud(request):
                     Age = m_age,
                     Gender = m_gender,
                     delete = m_delete,
-                    Services=service,
-                    Member_accounts = member,
-                    Office_spaces = office,
-                    Payments = payments
+                    Services=service_add,
+                    Member_accounts = member_acc_add,
+                    Office_spaces = office_add,
+                    Payments = payment_add
                 )
 
                 member.save()
