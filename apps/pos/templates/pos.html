@@ -328,8 +328,8 @@
 </body>
 
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>
-<script>
-    
+<script type="module" src="{% static 'js/app_modules/taxes.js' %}"></script>
+<script type="module">   
 let cart = [];
 let data = [];
 let respData = [];
@@ -359,7 +359,10 @@ const layby_dates = []
 
 let error = document.querySelector('#error_message');
 
+import { calculateInclusiveTax, calculateExclusiveTax } from "{% static 'js/app_modules/taxes.js' %}";
+
 //let customerAccountTableModal = new bootstrap.Modal(document.getElementById('customerAccountTableModal'))
+console.log(calculateExclusiveTax)
 
 const currencySelect = document.querySelector('#currency')
 const endOfDayModal = new bootstrap.Modal(document.getElementById('endOfDayModal'));
@@ -543,7 +546,6 @@ const receipt = () =>{
     let amountDue = previousDue.textContent.split('')[0];
     // default if they is previous due
     
-
     period.addEventListener('input', ()=>{
         if(period.value < 0){
             Swal.fire({
@@ -927,6 +929,8 @@ function totals(){
 
     delivery_amount = delivery
     vat_amount = vatAmount
+
+    hre
 
     if(discount === 0){
         document.getElementById("id_total_amount").textContent = `${ currencyData[0][0].symbol + ' ' + totalAmount.toFixed(2)}`;
