@@ -13,6 +13,7 @@
         <aside class="col-2 bg-dark text-white p-4">
             <ul class="list-unstyled">
                 <li><a href="#" class="text-white">Services</a></li>
+                <li><a href="#" class="text-white">Offices</a></li>
                 <li><a href="#" class="text-white">Members</a></li>
                 <li><a href="#" class="text-white">Logs</a></li>
                 <li><a href="#" class="text-white">Settings</a></li>
@@ -38,10 +39,48 @@
                             <th>Date Enrolled</th>
                             <th>Office Space</th>
                             <th>Service Type</th>
+                            <th>Balance</th>
+                            <th>Next Payment Date</th>
+                            <th>Payments</th>
                             <th>Operations</th>
                         </tr>
                     </thead>
                     <tbody id="membersTableBody">
+                        {% for member in members %}
+                        <tr>
+                            <td>{{ member.name }}</td>
+                            <td>{{ member.company }}</td>
+                            <td>{{ member.office_space }}</td>
+                            <td>{{ member.date_enrolled }}</td>
+                            <td>{{ member.service_type }}</td>
+                            <td>{{ member.balance }}</td>
+                            <td>
+                                {% if member.payments.last %}
+                                    {{ member.payments.last.next_due_date }}
+                                {% else %}
+                                    No payments recorded
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-info btn-sm" type="button" data-toggle="collapse" data-target="#paymentHistory{{ member.id }}" aria-expanded="false">
+                                    View Payments
+                                </button>
+                                <div class="collapse" id="paymentHistory{{ member.id }}">
+                                    <ul>
+                                        {% for payment in member.payments.all %}
+                                            <li>{{ payment.date_paid }} - {{ payment.amount }}</li>
+                                        {% empty %}
+                                            <li>No payments found</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editMemberModal" onclick="loadMemberData({{ member.id }})">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteMember({{ member.id }})">Delete</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -49,6 +88,7 @@
     </div>
 </div>
 
+<!-- Add Member Modal -->
 <div class="modal fade" id="addMemberModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -73,183 +113,138 @@
                     <div class="mb-3">
                         <label for="officeSpace" class="form-label">Office Space</label>
                         <select id="officeSpace" class="form-select" required>
+                            <option value="">Select Office Space</option>
+                            <option value="Office 1">Office 1</option>
+                            <option value="Office 2">Office 2</option>
+                            <option value="Office 3">Office 3</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="serviceType" class="form-label">Service Type</label>
                         <select id="serviceType" class="form-select" required>
+                            <option value="">Select Service Type</option>
+                            <option value="Basic">Basic</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Exclusive">Exclusive</option>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="balance" class="form-label">Initial Balance</label>
+                        <input type="number" class="form-control" id="balance" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactNumber" class="form-label">Contact Number</label>
+                        <input type="tel" class="form-control" id="contactNumber" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <textarea class="form-control" id="address" rows="3" required></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="saveMemberBtn">Save Member</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="memberDetailModal" tabindex="-1" aria-labelledby="memberDetailModalLabel" aria-hidden="true">
+<!-- Edit Member Modal -->
+<div class="modal fade" id="editMemberModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="memberDetailModalLabel">Member Details</h5>
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title">Edit Member</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="memberDetailForm">
+                <form id="editMemberForm">
                     <div class="mb-3">
-                        <label for="memberGender" class="form-label">Gender</label>
-                        <input type="text" class="form-control" id="memberGender" readonly>
+                        <label for="editMemberName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="editMemberName" required>
                     </div>
                     <div class="mb-3">
-                        <label for="memberAge" class="form-label">Age</label>
-                        <input type="number" class="form-control" id="memberAge" readonly>
+                        <label for="editCompany" class="form-label">Company</label>
+                        <input type="text" class="form-control" id="editCompany" required>
                     </div>
                     <div class="mb-3">
-                        <label for="memberNationalID" class="form-label">National ID</label>
-                        <input type="text" class="form-control" id="memberNationalID" readonly>
+                        <label for="editDateEnrolled" class="form-label">Date Enrolled</label>
+                        <input type="date" class="form-control" id="editDateEnrolled" required>
                     </div>
                     <div class="mb-3">
-                        <label for="memberEmail" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="memberEmail" readonly>
+                        <label for="editOfficeSpace" class="form-label">Office Space</label>
+                        <select id="editOfficeSpace" class="form-select" required>
+                            <option value="">Select Office Space</option>
+                            <option value="Office 1">Office 1</option>
+                            <option value="Office 2">Office 2</option>
+                            <option value="Office 3">Office 3</option>
+                        </select>
                     </div>
                     <div class="mb-3">
-                        <label for="memberContactNumber" class="form-label">Contact Number</label>
-                        <input type="text" class="form-control" id="memberContactNumber" readonly>
+                        <label for="editServiceType" class="form-label">Service Type</label>
+                        <select id="editServiceType" class="form-select" required>
+                            <option value="">Select Service Type</option>
+                            <option value="Basic">Basic</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Exclusive">Exclusive</option>
+                        </select>
                     </div>
                     <div class="mb-3">
-                        <label for="memberAddress" class="form-label">Address</label>
-                        <input type="text" class="form-control" id="memberAddress" readonly>
+                        <label for="editBalance" class="form-label">Balance</label>
+                        <input type="number" class="form-control" id="editBalance" required>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-warning" id="editMemberBtn">Edit Member</button>
+                    <div class="mb-3">
+                        <label for="editEmail" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="editEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editContactNumber" class="form-label">Contact Number</label>
+                        <input type="tel" class="form-control" id="editContactNumber" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editAddress" class="form-label">Address</label>
+                        <textarea class="form-control" id="editAddress" rows="3" required></textarea>
                     </div>
                 </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning" id="updateMemberBtn">Update Member</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    function populateMembersTable(data) {
-        const tableBody = document.getElementById("membersTableBody");
-        tableBody.innerHTML = "";
-        
-        data.forEach(member => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${member.name}</td>
-                <td>${member.company}</td>
-                <td>${member.date_enrolled}</td>
-                <td>${member.office_space}</td>
-                <td>${member.service_type}</td>
-                <td>
-                    <button class="btn btn-info btn-sm viewBtn" data-id="${member.id}">View</button>
-                    <button class="btn btn-warning btn-sm editBtn" data-id="${member.id}">Edit</button>
-                    <button class="btn btn-danger btn-sm deleteBtn" data-id="${member.id}">Delete</button>
-                </td>
-            `;
-            tableBody.appendChild(row);
-        });
-
-        document.querySelectorAll('.viewBtn').forEach(button => {
-            button.addEventListener('click', function() {
-                const memberId = this.dataset.id;
-                viewMemberDetails(memberId);
-            });
-        });
-
-        document.querySelectorAll('.editBtn').forEach(button => {
-            button.addEventListener('click', function() {
-                const memberId = this.dataset.id;
-                editMemberDetails(memberId);
-            });
-        });
-
-        document.querySelectorAll('.deleteBtn').forEach(button => {
-            button.addEventListener('click', function() {
-                const memberId = this.dataset.id;
-                deleteMember(memberId);
-            });
-        });
-    }
-
-    // fetching and displaying member details
-    function viewMemberDetails(memberId) {
-        fetch(`/member_detail/${memberId}/`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("memberGender").value = data.gender;
-                document.getElementById("memberAge").value = data.age;
-                document.getElementById("memberNationalID").value = data.national_id;
-                document.getElementById("memberEmail").value = data.email;
-                document.getElementById("memberContactNumber").value = data.contact_number;
-                document.getElementById("memberAddress").value = data.address;
-                $('#memberDetailModal').modal('show');
-            })
-            .catch(error => console.error("Error fetching member details:", error));
-    }
-
-    function editMemberDetails(memberId) {
-        fetch(`/member_edit/${memberId}/`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("memberName").value = data.name;
-                document.getElementById("company").value = data.company;
-                $('#addMemberModal').modal('show');
-            })
-            .catch(error => console.error("Error fetching member data for editing:", error));
-    }
-
-    function deleteMember(memberId) {
-        if (confirm("Are you sure you want to delete this member?")) {
-            fetch(`/member_delete/${memberId}/`, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert("Member deleted successfully.");
-                    populateMembersTable(data.members);
-                }
-            })
-            .catch(error => console.error("Error deleting member:", error));
+// JavaScript function to load member data into the edit form
+function loadMemberData(id) {
+    // Send AJAX request to get the member data
+    $.ajax({
+        url: '/get_member_data/', // Replace with your actual endpoint
+        type: 'GET',
+        data: { member_id: id },
+        success: function(data) {
+            // Populate the form fields with the retrieved data
+            document.getElementById("editMemberName").value = data.name;
+            document.getElementById("editCompany").value = data.company;
+            document.getElementById("editDateEnrolled").value = data.date_enrolled;
+            document.getElementById("editOfficeSpace").value = data.office_space;
+            document.getElementById("editServiceType").value = data.service_type;
+            document.getElementById("editBalance").value = data.balance;
+            document.getElementById("editEmail").value = data.email;
+            document.getElementById("editContactNumber").value = data.contact_number;
+            document.getElementById("editAddress").value = data.address;
+        },
+        error: function(xhr, status, error) {
+            alert('Error fetching member data!');
         }
-    }
-
-    document.getElementById("saveMemberBtn").addEventListener("click", function() {
-        const newMember = {
-            name: document.getElementById("memberName").value,
-            company: document.getElementById("company").value,
-            date_enrolled: document.getElementById("dateEnrolled").value,
-            office_space: document.getElementById("officeSpace").value,
-            service_type: document.getElementById("serviceType").value
-        };
-
-        fetch("/member_create/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newMember)
-        })
-        .then(response => response.json())
-        .then(data => {
-            $('#addMemberModal').modal('hide');
-            alert("Member added successfully!");
-            populateMembersTable(data.members);
-        })
-        .catch(error => console.error("Error adding member:", error));
     });
-
-    fetch("/members/")
-        .then(response => response.json())
-        .then(data => populateMembersTable(data.members))
-        .catch(error => console.error("Error fetching members:", error));
+}
 </script>
-
-{% endblock content %}
+{% endblock %}
 
