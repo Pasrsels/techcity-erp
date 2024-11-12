@@ -221,15 +221,12 @@
 </div>
 
 <script>
-// JavaScript function to load member data into the edit form
 function loadMemberData(id) {
-    // Send AJAX request to get the member data
     $.ajax({
-        url: '/get_member_data/', // Replace with your actual endpoint
+        url: '/get_member_data/', 
         type: 'GET',
         data: { member_id: id },
         success: function(data) {
-            // Populate the form fields with the retrieved data
             document.getElementById("editMemberName").value = data.name;
             document.getElementById("editCompany").value = data.company;
             document.getElementById("editDateEnrolled").value = data.date_enrolled;
