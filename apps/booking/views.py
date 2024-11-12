@@ -22,12 +22,12 @@ def service_crud(request):
         data = json.loads(request.body)
 
         try:
-            service_name = data.get([0]['service_name'])
+            service_name = data[0]['service_name']
 
-            type_name = data.get([1]['type_name'])
-            type_price = data.get([1]['type_price'])
-            type_service_duration = data.get([1]['type_service_duration'])
-            type_promotion = data.get([1]['type_promotion'])
+            type_name = data[1]['type_name']
+            type_price = data[1]['type_price']
+            type_service_duration = data[1]['type_service_duration']
+            type_promotion = data[1]['type_promotion']
 
             if Services.objects.filter(Name = service_name).exists() or Services.objects.filter(Name = type_name).exists():
                 return JsonResponse({'success': False, 'response': 'added item already exists'}, status=  400)
@@ -59,16 +59,16 @@ def service_crud(request):
     elif request.method == "PUT":
         try:
             data = json.loads(request.body)
-            service_id = data.get([0]['service_id'])
+            service_id = data[0]['service_id']
             service = Services.objects.get(id=service_id)
 
-            service_name = data.get([0]['service_name'])
+            service_name = data[0]['service_name']
 
-            type_id = data.get([1]['type_id'])
-            type_name = data.get([1]['type_name'])
-            type_price = data.get([1]['type_price'])
-            type_service_duration = data.get([1]['type_service_duration'])
-            type_promotion = data.get([1]['type_promotion'])
+            type_id = data[1]['type_id']
+            type_name = data[1]['type_name']
+            type_price = data[1]['type_price']
+            type_service_duration = data[1]['type_service_duration']
+            type_promotion = data[1]['type_promotion']
             
             with transaction.Atomic():
                 service=Services(
@@ -91,7 +91,7 @@ def service_crud(request):
     elif request.method == "DELETE":
 
         data = json.loads(request.body)
-        service_id = data.get([0]['service_id'])
+        service_id = data[0]['service_id']
         if Services.objects.filter(id = service_id).exists():
             service_del = Services.objects.get(id= service_id)
             service_del.delete()
@@ -389,9 +389,9 @@ def member_acc_crud(request):
     elif request.method == "POST":
         data = json.loads(request.body)
 
-        member_balance = data.get([0]['Balance'])
-        payments_date = data.get([1]['Date'])
-        payments_amount = data.get([1]['Amount'])
+        member_balance = data[0]['Balance']
+        payments_date = data[1]['Date']
+        payments_amount = data[1]['Amount']
 
         # if Member_accounts.objects.filter(id = member_id).exists():
         #     return JsonResponse({'success': False, 'response': 'cannot add existing field'}, status = 400)
@@ -413,11 +413,11 @@ def member_acc_crud(request):
 
         data = json.loads(request.body)
 
-        member_id = data.get([0]['id'])
-        member_balance = data.get([0]['Balance'])
-        payments_id = data.get([1]['id'])
-        payments_date = data.get([1]['Date'])
-        payments_amount = data.get([1]['Amount'])
+        member_id = data[0]['id']
+        member_balance = data[0]['Balance']
+        payments_id = data[1]['id']
+        payments_date = data[1]['Date']
+        payments_amount = data[1]['Amount']
         
         try:
             if Member_accounts.objects.get(id = member_id).DoesNotExist():
@@ -444,7 +444,7 @@ def member_acc_crud(request):
     if request.method == "DELETE":
         data = json.loads(request.body)
 
-        member_id = data.get([0]['id'])
+        member_id = data[0]['id']
 
         if Member_accounts.objects.get(id = member_id).DoesNotExist():
             return JsonResponse({'success': False, 'response':'cannot delete no existing field'}, status = 400)
@@ -529,7 +529,7 @@ def office_crud(request):
     elif request.method == "POST":
         data = json.loads(request.body)
 
-        office_name = data.get([0]['Name'])
+        office_name = data[0]['Name']
     
         if Member_accounts.objects.filter(Name = office_name).exists():
             return JsonResponse({'success': False, 'response': 'cannot add existing field'}, status = 400)
@@ -546,8 +546,8 @@ def office_crud(request):
 
         data = json.loads(request.body)
 
-        office_id = data.get([0]['id'])
-        office_name = data.get([0]['Balance'])
+        office_id = data[0]['id']
+        office_name = data[0]['Balance']
         
         try:
             if Member_accounts.objects.get(id = office_id).DoesNotExist():
@@ -568,7 +568,7 @@ def office_crud(request):
     if request.method == "DELETE":
         data = json.loads(request.body)
 
-        office_id = data.get([0]['id'])
+        office_id = data[0]['id']
 
         try:
             if Member_accounts.objects.get(id = office_id).DoesNotExist():

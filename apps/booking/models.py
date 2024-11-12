@@ -29,8 +29,8 @@ class Member_accounts(models.Model):
 
 class Payments(models.Model):
     Date = models.CharField(default= timezone.now)
-    Amount = models.DecimalField(max_digits= 8, decimal_places= 2)
-    Admin_fee = models.DecimalField(max_digits=8 , decimal_places=2)
+    Amount = models.DecimalField(max_digits= 8, decimal_places= 2, default= 0.00)
+    Admin_fee = models.DecimalField(max_digits=8 , decimal_places=2, default= 0.00)
     def __str__(self) -> str:
         return f"{self.Amount}"
 
@@ -44,7 +44,7 @@ class Services(models.Model):
 class Types(models.Model):
     Name = models.CharField(max_length= 255)
     Price = models.DecimalField(max_digits=10, decimal_places=2)
-    Duration = models.CharField(max_length=50)
+    Duration = models.CharField(max_length=50, default='')
     Promotion = models.BooleanField()
 
     def __str__(self):
