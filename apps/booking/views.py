@@ -12,6 +12,17 @@ from utils import *
 def services_view(request):
     services = Services.objects.filter(delete=False)
     return render(request, 'services.html')
+
+@login_required
+def members_view(request):
+    member = Services.objects.filter(delete=False)
+    return render(request, 'members.html')
+
+@login_required
+def offices_view(request):
+    office = Services.objects.all()
+    return render(request, 'offices.html',office)
+
 #services
 @login_required
 def service_crud(request):
@@ -152,7 +163,6 @@ def member_crud(request):
         promotion = type_data.get('Promotion')
 
         member_balance = member_acc_data.get('Balance')
-        member_acc_del = member_acc_data.get('delete')
         payments_date = payments_data.get('Date')
         payments_amount = payments_data.get('Amount')
         payments_admin = payments_data.get('Admin_fee')
@@ -166,7 +176,6 @@ def member_crud(request):
         m_company = member_data.get('Company')
         m_age = member_data.get('Age')
         m_gender = member_data.get('Gender')
-        m_delete = member_data.get('delete')
 
         if Members.objects.filter(Email = m_email).exists():
             return JsonResponse({'success': True, 'response': 'field already exists'}, status = 400)
@@ -214,7 +223,8 @@ def member_crud(request):
                 payment_add = Payments.objects.create(
                     #Date
                     Amount = payments_amount,
-                    Admin_fee = admin_amount
+                    Admin_fee = admin_amount,
+                    Description = f'payment for {m_name}'
                 )
                 #service add 3
                 service_add = Services.objects.create(
@@ -227,7 +237,7 @@ def member_crud(request):
                 member_acc_add = Member_accounts.objects.create(
                     Balance  = bal,
                     Payments = payment_add,
-                    delete = member_acc_del
+                    delete = False
                 )
 
                 #office add 5
@@ -246,7 +256,7 @@ def member_crud(request):
                     Company = m_company,
                     Age = m_age,
                     Gender = m_gender,
-                    delete = m_delete,
+                    delete = False,
                     Services=service_add,
                     Member_accounts = member_acc_add,
                     Office_spaces = office_add,
@@ -259,7 +269,6 @@ def member_crud(request):
                 return JsonResponse({'success': True, 'response': 'Data saved'}, status = 200)
             except Exception as e:
                 pass
-        
     #Update
     elif request.method == "PUT":
         #get data part of file
@@ -287,7 +296,6 @@ def member_crud(request):
         promotion = type_data.get('Promotion')
 
         member_balance = member_acc_data.get('Balance')
-        member_acc_del = member_acc_data.get('delete')
         payments_date = payments_data.get('Date')
         payments_amount = payments_data.get('Amount')
         payments_admin = payments_data.get('Admin_fee')
@@ -301,7 +309,6 @@ def member_crud(request):
         m_company = member_data.get('Company')
         m_age = member_data.get('Age')
         m_gender = member_data.get('Gender')
-        m_delete = member_data.get('delete')
 
         try:
             Members.objects.get(Phone = m_phone)
@@ -319,7 +326,8 @@ def member_crud(request):
                 payment_add = Payments.objects.update(
                     #Date
                     Amount = payments_amount,
-                    Admin_fee = admin_amount
+                    Admin_fee = admin_amount,
+                    Description = f'payment for {m_name}'
                 )
                 #service add 3
                 service_add = Services.objects.update(
@@ -332,7 +340,7 @@ def member_crud(request):
                 member_acc_add = Member_accounts.objects.update(
                     Balance  = bal,
                     Payments = payment_add,
-                    delete = member_acc_del
+                    delete = False
                 )
 
                 #office add 5
@@ -351,7 +359,7 @@ def member_crud(request):
                     Company = m_company,
                     Age = m_age,
                     Gender = m_gender,
-                    delete = m_delete,
+                    delete = False,
                     Services=service_add,
                     Member_accounts = member_acc_add,
                     Office_spaces = office_add,
@@ -377,7 +385,6 @@ def member_crud(request):
             )
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
-
 #member_acc    
 @login_required
 def member_acc_crud(request):
@@ -581,4 +588,3 @@ def office_crud(request):
             return JsonResponse({'success': True, 'response': 'item deleted'})
         except Exception as e:
             return JsonResponse({'success':False, 'response': f'{e}'}, status = 400)
-        
