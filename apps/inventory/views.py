@@ -2546,32 +2546,40 @@ def supplier_payments(request):
                 account = suppliers_acc
             )
             
-
-
-
 @login_required
 def supplier_view(request):
-    supplier_products = Product.objects.all().values('name','suppliers__name', 'category__name')
-    supplier_balances = SupplierAccount.objects.all().values('balance')
+    # supplier_products = Product.objects.all().values('name','suppliers__name', 'category__name')
+    # supplier_balances = SupplierAccount.objects.all().values('balance')
 
+    supplier_products = Product.objects.all()
+    supplier_balances = SupplierAccount.objects.all()
+
+
+    #context data
+    data = {
+        'products':supplier_products,
+        'suppliers':supplier_balances
+    }
+
+    
     #purchase order link to supplier
-    Account_pay =[]
-    Account_rec = []
-    Balance = [item['balance'] for item in supplier_balances]
-    for bal in Balance:
-        count=+1
-        if bal < 0:
-            Account_pay = [count,bal]
-        Account_rec = [count,bal]
+    # Account_pay =[]
+    # Account_rec = []
+    # Balance = [item['balance'] for item in supplier_balances]
+    # for bal in Balance:
+    #     count=+1
+    #     if bal < 0:
+    #         Account_pay.append(balance)
+    #     Account_rec = [count,bal]
+    #Data_front = [supplier_products,Account_pay,Account_rec]
+    #logger.info(Data_front)
 
-    Data_front = [supplier_products,Account_pay,Account_rec]
-    logger.info(Data_front)
     if request.method == 'GET':
         form = AddSupplierForm()
         logger.info(supplier_products.values())
         return render(request, 'Supplier/Suppliers.html', {
             'form':form,
-            'Data': Data_front
+            'Data': data
         })
 
     if request.method == 'POST':
@@ -2612,7 +2620,6 @@ def supplier_view(request):
                 address = address
             )
             supplier.save()
-
             return JsonResponse({'success': True}, status=200)
         except Exception as e:
             logger.info(e)
