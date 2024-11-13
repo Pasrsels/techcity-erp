@@ -22,7 +22,3 @@ test.png
 .pyc
 .requirements.txt
 .base.py
-<<<<<<< HEAD
-dev/*.pyc
-=======
->>>>>>> 74f871f4b5f6a2322d8541b1582042ad7c5c65b0
