@@ -1452,8 +1452,14 @@ def create_purchase_order(request):
 
                     # Set the suppliers for the product
                     if supplier_ids:
+                        logger.info(f'supplier ids: {supplier_ids}')
                         suppliers = Supplier.objects.filter(id__in=supplier_ids)
                         product.suppliers.set(suppliers)  # Assign suppliers to the product
+
+                        # single supplier for purchase order item
+
+                    supplier = Supplier.objects.get(id=supplier_ids)
+                    logger.info(f'supplier ids: {supplier_ids}')
 
                     product.batch += f'{batch}, '
                     product.price = 0
@@ -1467,7 +1473,8 @@ def create_purchase_order(request):
                             unit_cost=unit_cost,
                             actual_unit_cost=actual_unit_cost,
                             received_quantity=0,
-                            received=False
+                            received=False,
+                            supplier = supplier
                         )
                     )
 
@@ -2553,13 +2560,36 @@ def supplier_view(request):
 
     supplier_products = Product.objects.all()
     supplier_balances = SupplierAccount.objects.all()
+    purchase_orders = PurchaseOrderItem.objects.all()
 
+    list_orders = {}
+    for item in purchase_orders:
+        po = PurchaseOrder.objects.get(id=item.purchase_order.id)
+        if list_orders:
+            if list_orders.get(item.supplier):
+                supplier = list_orders.get(item.supplier)
 
-    #context data
-    data = {
-        'products':supplier_products,
-        'suppliers':supplier_balances
-    }
+                if supplier['purchase_order'] == po:
+                    supplier['count'] = supplier['count']
+                else:
+                    supplier['count'] += 1
+
+                supplier['amount'] += item.unit_cost * item.received_quantity
+            else:
+                list_orders[item.supplier] = {
+                'amount': item.unit_cost * item.received_quantity,
+                'purchase_order': po,
+                'count': 1
+            }
+        else:
+            list_orders[item.supplier] = {
+                'amount': item.unit_cost * item.received_quantity,
+                'purchase_order': po,
+                'count': 1
+            }
+                          
+    logger.info(list_orders)
+    logger.info(supplier_products)
 
     
     #purchase order link to supplier
@@ -2577,9 +2607,11 @@ def supplier_view(request):
     if request.method == 'GET':
         form = AddSupplierForm()
         logger.info(supplier_products.values())
-        return render(request, 'Supplier/Suppliers.html', {
+        return render(request, 'Supplier/sup.html', {
             'form':form,
-            'Data': data
+            'products':supplier_products,
+            'suppliers':supplier_balances,
+            'life_time': [list_orders]
         })
 
     if request.method == 'POST':

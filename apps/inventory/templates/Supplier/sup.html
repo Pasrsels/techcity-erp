@@ -12,12 +12,22 @@
                 <td>{{ supplier.supplier.name }}</td>
                 <td>
                     {% for product in products %}
-                        {% if supplier.supplier in product.supplier.all %}
-                            {{ product.category }}
+                        {% if supplier.supplier in product.suppliers.all %}
+                            {{ product.name }}
                         {% endif %}
-                    {% endfof %}
+                    {% endfor %}
                 </td>
-                <td></td>
+                <td>
+                    {% for lf in life_time %}
+                        {{ lf['Supplier']}}
+                        {{ lf }}
+                        {% if lf == supplier %}
+                            {{ lf }}
+                            {{ lf.supplier.count }}
+                            {{ lf.supplier.amount }}
+                        {% endif %}
+                    {% endfor %}
+                </td>
                 <td>
                     {% if supplier.balance > 0 %}
                         {{ supplier.balance }}

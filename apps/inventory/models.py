@@ -132,7 +132,7 @@ class PurchaseOrder(models.Model):
         self.save()
 
     def __str__(self):
-        return f"PO {self.order_number} - {self.supplier}"
+        return f"PO {self.order_number}"
     
 
 class PurchaseOrderItem(models.Model):
@@ -146,6 +146,7 @@ class PurchaseOrderItem(models.Model):
     received = models.BooleanField(default=False, null=True)
     expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     dealer_expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True)
 
     def receive_items(self, quantity):
     
