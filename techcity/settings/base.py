@@ -109,6 +109,9 @@ TEMPLATES = [
                 "finance.context_processors.client_list",
                 "finance.context_processors.currency_list",
                 "finance.context_processors.expense_category_list",
+
+                #finance
+                # "settings.context_processors.tax_method",
             ],
         },
     },
@@ -127,6 +130,7 @@ SESSION_AUTH = True
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
+<<<<<<< HEAD
    'default': {
      'ENGINE': 'django.db.backends.postgresql',
        'NAME':  'Techcity',
@@ -143,6 +147,24 @@ DATABASES = {
 #          'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
 #          'PORT': os.getenv('DB_PORT', '26269'),
 #      }
+=======
+#    'default': {
+#      'ENGINE': 'django.db.backends.postgresql',
+#        'NAME':  'techcoty',
+#        'USER': 'postgres',
+#        'PASSWORD': 'neverfail',
+#        'HOST': 'localhost',
+#        'PORT': '5432'
+#  }
+    'default': {
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+         'NAME': os.getenv('DB_NAME', 'railway'),
+         'USER': os.getenv('DB_USERNAME', 'postgres'),
+         'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvDuHLnxhw'),  
+         'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
+         'PORT': os.getenv('DB_PORT', '26269'),
+     }
+>>>>>>> c7865e3fc1bc94a61044bbd8a9d2c5b378cefb8c
  }
 
 if 'test' in sys.argv:

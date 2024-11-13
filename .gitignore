@@ -22,3 +22,4 @@ test.png
 .pyc
 .requirements.txt
 .base.py
+dev/*.pyc
