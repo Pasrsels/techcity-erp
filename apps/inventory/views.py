@@ -2477,14 +2477,26 @@ def supplier_edit(request, supplier_id):
 
 @login_required
 def supplier_view(request):
+    supplier_products = Product.objects.all().values('name','Supplier__name','Supplier_id')
+    supplier_balances = SupplierAccount.objects.all().values('Balance', 'Supplier_name')
+
+    #purchase order link to supplier
+    
+    Balance = [item['balance'] for item in supplier_balances]
+    for bal in Balance:
+        count=+1
+        if bal < 0:
+            Account_pay = [count,bal]
+        Account_rec = [count,bal]
+
+    Data_front = [supplier_products,Account_pay,Account_rec]
+
     if request.method == 'GET':
-        supplier_products = Product.objects.all().values('name','Supplier__name')
-        supplier_balance = SupplierAccount.objects.all().values('Balance', 'Supplier_name')
         form = AddSupplierForm()
         logger.info(supplier_products.values())
         return render(request, 'Supplier/Suppliers.html', {
             'form':form,
-            'supplier':supplier_products
+            'Data': Data_front
         })
 
     if request.method == 'POST':
