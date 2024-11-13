@@ -2478,13 +2478,15 @@ def supplier_edit(request, supplier_id):
 @login_required
 def supplier_view(request):
     if request.method == 'GET':
-        suppliers = Supplier.objects.all()
+        supplier_products = Product.objects.all().values('name','Supplier__name')
+        supplier_balance = SupplierAccount.objects.all().values('Balance', 'Supplier_name')
         form = AddSupplierForm()
+        logger.info(supplier_products.values())
         return render(request, 'Supplier/Suppliers.html', {
             'form':form,
-            'suppliers':suppliers
+            'supplier':supplier_products
         })
-    
+
     if request.method == 'POST':
         """
         payload = {
