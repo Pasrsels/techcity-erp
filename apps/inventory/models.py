@@ -132,7 +132,7 @@ class PurchaseOrder(models.Model):
         self.save()
 
     def __str__(self):
-        return f"PO {self.order_number} - {self.supplier}"
+        return f"PO {self.order_number}"
     
 
 class PurchaseOrderItem(models.Model):
