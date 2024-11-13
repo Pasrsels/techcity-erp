@@ -31,6 +31,7 @@ class Payments(models.Model):
     Date = models.CharField(default= timezone.now)
     Amount = models.DecimalField(max_digits= 8, decimal_places= 2, default= 0.00)
     Admin_fee = models.DecimalField(max_digits=8 , decimal_places=2, default= 0.00)
+    Description = models.CharField(max_length= 255)
     def __str__(self) -> str:
         return f"{self.Amount}"
 
