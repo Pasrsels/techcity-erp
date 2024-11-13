@@ -2475,13 +2475,88 @@ def supplier_edit(request, supplier_id):
             return JsonResponse({"success":False, "message":f"{e}"})
     return JsonResponse({"success":False, "message":"Invalid Request"})
 
+#payments
+@login_required
+def supplier_payments(request):
+    #add payment
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        supplier_details = data.get('Supplier',{})
+        supplier_acc_payment = data.get('Payments',{})
+        supplier_acc = data.get('Account',{})
+        currency = data.get('Currency',{})
+
+        supplier_name = supplier_details.get('name')
+        supplier_phone = supplier_details.get('phone')
+        supplier_person = supplier_details.get('contact_person')
+        supplier_address = supplier_details.get('address')
+        supplier_email = supplier_details.get('email')
+
+        supplier_amount = supplier_acc_payment.get('amount')
+        supplier_pay_method = supplier_acc_payment.get('payment_method')
+
+        currency_code = currency.get('code')
+        currency_name = currency.get('name')
+        currency_symbol = currency.get('symbol')
+        currency_exchange = currency.get('exchange_rate')
+        currency_default = currency.get('default')
+
+        supplier_acc_bal = supplier_acc.get('balance')
+        
+        if Supplier.objects.filter(phone = supplier_phone).exists():
+            if currency_name == "USD":
+                bal = supplier_acc_bal - supplier_amount
+            elif currency_name == "ZIG":
+                converted_bal = supplier_acc_bal * currency_exchange
+                bal = converted_bal - supplier_amount
+        elif not supplier_name or not supplier_phone or not supplier_person or not supplier_address \
+         or not supplier_email or not supplier_amount or not supplier_pay_method or not currency_code \
+          or not currency_name or not currency_symbol or not currency_exchange or not currency_default \
+          or not supplier_acc_bal:
+            return JsonResponse({'success':False, 'response': 'fill in the fields'}, status = 400)
+        
+        with transaction.Atomic():
+            supplier_info = Supplier(
+                name = supplier_name,
+                phone = supplier_phone,
+                contact_person = supplier_person,
+                address = supplier_address,
+                email = supplier_email
+            )
+
+            currency_info = Currency(
+                code = currency_code,
+                name = currency_name,
+                symbol = currency_symbol,
+                exchange_rate = currency_exchange,
+                default = currency_default
+            )
+
+            suppliers_acc = SupplierAccount.objects.create(
+                balance = bal,
+                supplier = supplier_info,
+                currency = currency_info
+            )
+
+            SupplierAccountsPayments.objects.create(
+                payment_method = supplier_pay_method,
+                currency = currency_info,
+                amount = supplier_amount,
+                account = suppliers_acc
+            )
+            
+
+
+
 @login_required
 def supplier_view(request):
-    supplier_products = Product.objects.all().values('name','Supplier__name','Supplier_id')
-    supplier_balances = SupplierAccount.objects.all().values('Balance', 'Supplier_name')
+    supplier_products = Product.objects.all().values('name','suppliers__name', 'category__name')
+    supplier_balances = SupplierAccount.objects.all().values('balance')
 
     #purchase order link to supplier
-    
+    Account_pay =[]
+    Account_rec = []
     Balance = [item['balance'] for item in supplier_balances]
     for bal in Balance:
         count=+1
@@ -2490,7 +2565,7 @@ def supplier_view(request):
         Account_rec = [count,bal]
 
     Data_front = [supplier_products,Account_pay,Account_rec]
-
+    logger.info(Data_front)
     if request.method == 'GET':
         form = AddSupplierForm()
         logger.info(supplier_products.values())
