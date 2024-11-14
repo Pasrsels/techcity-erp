@@ -20,7 +20,7 @@ urlpatterns = [
     path('inventory/branches/json', branches_inventory_json, name='branches_inventory_json'),
 
     #Stocktake
-    path('stock take/', stock_take, name= 'stocktake'),
+    path('stocktake/', stock_take, name= 'stocktake'),
 
     #batch_code 
     path('batch_code/', batch_code, name='batch_code'),
