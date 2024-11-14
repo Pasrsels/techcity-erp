@@ -2486,75 +2486,27 @@ def supplier_edit(request, supplier_id):
 
 #payments
 @login_required
-def supplier_payments(request):
+def supplier_payments():
     #add payment
-    if request.method == "POST":
-        data = json.loads(request.body)
+    data = PurchaseOrderItem.objects.all().values('id', 'quantity', 'unit_cost', 'purchase_order__id', 'product__name', 'supplier_id')
+    list_entries= []
+    for item in data:
+        item_id = item['id']
+        quantity = item['quantity']
+        unit_cost = item['unit_cost']
+        purchase_order_id = item['purchase_order__id']
+        product_name = item['product__name']
+        supplier_id = item['supplier_id']
+        t_amount = 0
+        if list_entries['id'] == item_id:
+            amount = quantity * unit_cost
+            t_amount = list_entries['amount'] + amount
+            list_entries['amount'] =  t_amount
+        else:
+            amount = quantity * unit_cost
+            list_entries.append({'id': item_id, 'amount': amount})
+    return list_entries    
 
-        supplier_details = data.get('Supplier',{})
-        supplier_acc_payment = data.get('Payments',{})
-        supplier_acc = data.get('Account',{})
-        currency = data.get('Currency',{})
-
-        supplier_name = supplier_details.get('name')
-        supplier_phone = supplier_details.get('phone')
-        supplier_person = supplier_details.get('contact_person')
-        supplier_address = supplier_details.get('address')
-        supplier_email = supplier_details.get('email')
-
-        supplier_amount = supplier_acc_payment.get('amount')
-        supplier_pay_method = supplier_acc_payment.get('payment_method')
-
-        currency_code = currency.get('code')
-        currency_name = currency.get('name')
-        currency_symbol = currency.get('symbol')
-        currency_exchange = currency.get('exchange_rate')
-        currency_default = currency.get('default')
-
-        supplier_acc_bal = supplier_acc.get('balance')
-        
-        if Supplier.objects.filter(phone = supplier_phone).exists():
-            if currency_name == "USD":
-                bal = supplier_acc_bal - supplier_amount
-            elif currency_name == "ZIG":
-                converted_bal = supplier_acc_bal * currency_exchange
-                bal = converted_bal - supplier_amount
-        elif not supplier_name or not supplier_phone or not supplier_person or not supplier_address \
-         or not supplier_email or not supplier_amount or not supplier_pay_method or not currency_code \
-          or not currency_name or not currency_symbol or not currency_exchange or not currency_default \
-          or not supplier_acc_bal:
-            return JsonResponse({'success':False, 'response': 'fill in the fields'}, status = 400)
-        
-        with transaction.Atomic():
-            supplier_info = Supplier(
-                name = supplier_name,
-                phone = supplier_phone,
-                contact_person = supplier_person,
-                address = supplier_address,
-                email = supplier_email
-            )
-
-            currency_info = Currency(
-                code = currency_code,
-                name = currency_name,
-                symbol = currency_symbol,
-                exchange_rate = currency_exchange,
-                default = currency_default
-            )
-
-            suppliers_acc = SupplierAccount.objects.create(
-                balance = bal,
-                supplier = supplier_info,
-                currency = currency_info
-            )
-
-            SupplierAccountsPayments.objects.create(
-                payment_method = supplier_pay_method,
-                currency = currency_info,
-                amount = supplier_amount,
-                account = suppliers_acc
-            )
-            
 @login_required
 def supplier_view(request):
     # supplier_products = Product.objects.all().values('name','suppliers__name', 'category__name')
