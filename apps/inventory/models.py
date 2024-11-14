@@ -237,7 +237,7 @@ class Transfer(models.Model):
     transfer_ref = models.CharField(max_length=100)
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='user_branch')
     transfer_to = models.ManyToManyField(Branch)
-    description =  models.CharField(max_length=255, null= True)
+    description =  models.CharField(max_length=255, null=True, blank=True)
     date = models.DateField(auto_now_add=True)
     time = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
@@ -250,7 +250,7 @@ class Transfer(models.Model):
     @classmethod
     def generate_transfer_ref(self, branch, branches):
         print(branch, branches)
-        last_transfer = Transfer.objects.filter(branch__name=branch).order_by('-id').first()
+        last_transfer = Transfer.objects.filter(branch__name=branch, delete=False).order_by('-id').first()
         if last_transfer:
             last_reference = int(last_transfer.transfer_ref.split(' ')[1])
             new_reference = f'Ref {last_reference + 1} : {branches}'

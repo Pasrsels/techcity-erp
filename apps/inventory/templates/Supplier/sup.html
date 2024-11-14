@@ -18,9 +18,7 @@
                     {% endfor %}
                 </td>
                 <td>
-                    {% for lf in life_time %}
-                        {{ lf['Supplier']}}
-                        {{ lf }}
+                    {% for supplier, details in life_time.items %}
                         {% if lf == supplier %}
                             {{ lf }}
                             {{ lf.supplier.count }}

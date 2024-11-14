@@ -248,7 +248,8 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                 transfer = Transfer.objects.create(
                     branch = request.user.branch,
                     user = request.user,
-                    transfer_ref = Transfer.generate_transfer_ref(request.user.branch.name, branch_names)
+                    transfer_ref = Transfer.generate_transfer_ref(request.user.branch.name, branch_names),
+                    description = 'transfer' #to be actioned
                 )
                 
                 #assign many2many objects to transfer branch
@@ -276,6 +277,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                                 quantity=item['quantity'],
                                 from_branch= request.user.branch,
                                 to_branch= branch_obj,
+                                description=f'from {request.user.branch} to {branch_obj} '
                             )   
                             transfer.save()         
                             transfer_item.save()

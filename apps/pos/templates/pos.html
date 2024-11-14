@@ -328,8 +328,8 @@
 </body>
 
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>
-<script type="module" src="{% static 'js/app_modules/taxes.js' %}"></script>
-<script type="module">   
+
+<script>   
 let cart = [];
 let data = [];
 let respData = [];
@@ -359,10 +359,10 @@ const layby_dates = []
 
 let error = document.querySelector('#error_message');
 
-import { calculateInclusiveTax, calculateExclusiveTax } from "{% static 'js/app_modules/taxes.js' %}";
+// import { calculateInclusiveTax, calculateExclusiveTax } from "{% static 'js/app_modules/taxes.js' %}";
 
-//let customerAccountTableModal = new bootstrap.Modal(document.getElementById('customerAccountTableModal'))
-console.log(calculateExclusiveTax)
+// //let customerAccountTableModal = new bootstrap.Modal(document.getElementById('customerAccountTableModal'))
+// console.log(calculateExclusiveTax)
 
 const currencySelect = document.querySelector('#currency')
 const endOfDayModal = new bootstrap.Modal(document.getElementById('endOfDayModal'));
@@ -929,8 +929,6 @@ function totals(){
 
     delivery_amount = delivery
     vat_amount = vatAmount
-
-    hre
 
     if(discount === 0){
         document.getElementById("id_total_amount").textContent = `${ currencyData[0][0].symbol + ' ' + totalAmount.toFixed(2)}`;
