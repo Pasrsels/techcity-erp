@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static%}
+{% load static %}
 {% load crispy_forms_tags %}
-{% block title%} Purchase Orders {% endblock%}
+{% block title %} Purchase Orders {% endblock %}
 {% block content %}
    <div class="inventory">
         <div class="inventory-navbar">
@@ -17,55 +17,56 @@
             </nav>
         </div>
         <div>
-            <div class=" mt-2 w-100">
-                <table class='table border table-rounded p-2' id='order_table' style="width: 100%;" >
-                        <thead class=''>
+            <div class="mt-2 w-100">
+                <table class='table border table-rounded p-2' id='order_table' style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Delivery Date</th>
+                            <th>Batch</th>
+                            <th>Supplier</th>
+                            <th>Total Cost</th>
+                            <th>Notes</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
                             <tr>
-                                <th>Date</th>
-                                <th>Delivery Date</th>
-                                <th>Batch</th>
-                                <th>Suplier</th>
-                                <th>Total Cost</th>
-                                <th>Notes</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.order_date }}</small></td>
+                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.delivery_date }}</small></td>
+                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.batch|lower }}</small></td>
+                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.supplier.name }}</small></td>
+                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.total_cost }}</small></td>
+                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.notes }}</small></td>
+                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.status }}</small></td>
+                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}">
+                                    <a href="{% url 'inventory:purchase_order_detail' order.id %}" class="btn bx bx-show"></a>
+                                    <a href="{% url 'inventory:print_purchase_order' order.id %}" class="btn bx bx-printer mx-1"></a>
+                                    {% if order.status != 'received' %}
+                                    <button class="btn btn-sm btn-light" data-id={{ order.id }} onclick="status(this)">Change Status</button>
+                                    {% else %}
+                                    {% if order.received %}
+                                    <small class="bg-success fw-bold text-light p-2 rounded text-center w-100">Received</small>
+                                    {% else %}
+                                    <a href="{% url 'inventory:receive_order' order.id %}" class="btn btn-sm btn-outline-dark">
+                                        <small>Receive Order Items</small>
+                                    </a>
+                                    {% endif %}
+                                    {% endif %}
+                                    <a href="{% url 'inventory:edit_po' order.id %}" class="btn btn-outline-dark btn-sm bx bx-edit"></a>
+                                    <button class="btn bx bx-trash btn-outline-dark btn-sm" onclick="confirmDeletePurchaseOrder({{ order.id }})"></button>
+                                    <button class="btn btn-outline-primary btn-sm bx bx-user" onclick="showSupplierDetails({{ order.id }})"></button> <!-- New button -->
+                                </td>
                             </tr>
-                            </thead>
-                        <tbody>
-                            {% for order in orders %}
-                                <tr>
-                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.order_date }}</small></td>
-                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.delivery_date }}</small></td>
-                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.batch|lower }}</small></td>
-                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.supplier.name }}</small></td>
-                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.total_cost }}</small></td>
-                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.notes }}</small></td>
-                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.status }}</small></td>
-                                    <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}">
-                                        <a href="{% url 'inventory:purchase_order_detail' order.id %}" class="btn bx bx-show"></a>
-                                        <a href="{% url 'inventory:print_purchase_order' order.id %}" class="btn bx bx-printer mx-1"></a>
-                                        {% if order.status != 'received' %}
-                                        <button class="btn btn-sm btn-light" data-id={{ order.id }} onclick="status(this)">Change Status</button>
-                                        {% else %}
-                                        {% if order.received %}
-                                        <small class="bg-success fw-bold text-light p-2 rounded text-center w-100">Recieved</small>
-                                        {% else %}
-                                        <a href="{% url 'inventory:receive_order' order.id %}" class="btn btn-sm btn-outline-dark">
-                                            <small>
-                                                Receive Order Items
-                                            </small>
-                                        </a>
-                                        {% endif %}
-                                        {% endif %}
-                                        <a href="{% url 'inventory:edit_po' order.id %}" class="btn btn-outline-dark btn-sm bx bx-edit"></a>
-                                        <button class="btn bx bx-trash btn-outline-dark btn-sm" onclick="confirmDeletePurchaseOrder({{ order.id }})"></button>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
+                        {% endfor %}
+                    </tbody>
                 </table>
             </div>
         </div>
+
+        <!-- Status Change Modal -->
         <div class="modal fade" id="statusFormModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -75,17 +76,15 @@
                             {% csrf_token %}
                             {{ status_form | crispy }}
                             <div class="d-flex justify-content-end">
-                                <div class="">
+                                <div>
                                     <button type="reset" class="btn btn-danger btn-sm w-100">
-                                        <i class='bx bx-reset'></i>
-                                        Reset
+                                        <i class='bx bx-reset'></i> Reset
                                     </button>
                                 </div>
                                 <span class="px-1"></span>
-                                <div class="">
+                                <div>
                                     <button type="button" onclick="changeStatus()" class="btn btn-secondary btn-sm w-100">
-                                        <i class='bx bx-save'></i>
-                                        change
+                                        <i class='bx bx-save'></i> Change
                                     </button>
                                 </div>
                             </div>
@@ -95,37 +94,55 @@
             </div>
         </div>
 
+        <!-- Success Modal -->
         <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-body text-center">
-                        <h5 class="fw-bold">Status Successfully Changed and Related Accounts updated</h5>
+                        <h5 class="fw-bold">Status Successfully Changed and Related Accounts Updated</h5>
                     </div>
                 </div>
             </div>
         </div>
-   </div> 
+
+        <!-- Supplier Details Modal -->
+        <div class="modal fade" id="supplierDetailsModal" tabindex="-1" aria-labelledby="supplierDetailsLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <h5 class="fw-bold">Supplier Details</h5>
+                        <p><strong>Supplier:</strong> <span id="supplierName"></span></p>
+                        <p><strong>Amount Owed:</strong> $<span id="amountOwed"></span></p>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="nextSupplier()">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+   </div>
+
    <script>
         new DataTable('#order_table');
         
         let orderID = '';
         const statusFormModal = new bootstrap.Modal(document.getElementById('statusFormModal'));
         const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-        const changeStatussubmitBtn = document.getElementById('c_sbtn');
+        const supplierDetailsModal = new bootstrap.Modal(document.getElementById('supplierDetailsModal'));
+
+        let suppliers = [];
+        let currentSupplierIndex = 0;
 
         // green received
-        const receive = () =>{
+        const receive = () => {
             {% for order in orders %}
-                if (`${order.received}`){
-                    document.getElementById(`id_${order.id}`).classList.add('bg-success')
-                    console.log(order.id,  document.getElementById(`id_${order.id}`))
-                }   
+                if (`${order.received}`) {
+                    document.getElementById(`id_${order.id}`).classList.add('bg-success');
+                }
             {% endfor %}
-        }
+        };
+        receive();
 
-        receive()
-
-    
         function confirmDeletePurchaseOrder(purchase_order_id) {
             Swal.fire({
                 title: 'Are you sure?',
@@ -170,52 +187,82 @@
                         );
                     });
                 }
-            })
+            });
         }
 
-        function status(td){
-            orderID = td.dataset.id
-            statusFormModal.show()
+        function status(td) {
+            orderID = td.dataset.id;
+            statusFormModal.show();
         }
 
-        function changeStatus(){
+        function changeStatus() {
             const data = {
-                'status':document.getElementById('id_status').value
-            }
-
+                'status': document.getElementById('id_status').value
+            };
             fetch(`/inventory/purchase_orders/status/${orderID}/`, {
                 method: "POST",
                 headers: {
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": getCookie("csrftoken"), 
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
                 },
-                body: JSON.stringify(data),
-              })
-              .then(response => response.json())
-              .then(data=>{
-                  if (data.success) {
-                    statusFormModal.hide()
-                    successModal.show()
-                    setTimeout(()=>{
-                      window.location.reload()
-                    }, 1000)
-                  } else {
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then((result) => {
+                if (result.success) {
+                    successModal.show();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2500);
+                }
+            })
+            .catch((error) => {
+                console.error("Error updating status:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while updating the status.'
+                });
+            });
+        }
+
+        function showSupplierDetails(orderId) {
+            fetch(`/inventory/purchase_order/suppliers/${orderId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    suppliers = data.suppliers;
+                    currentSupplierIndex = 0;
+                    displaySupplier();
+                    supplierDetailsModal.show();
+                })
+                .catch(error => {
+                    console.error("Error fetching suppliers:", error);
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: data.message,
-                      });
-                  } 
-                })
-                .catch((error) => {
-                  console.error("Error:", error);
-                  Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error,
-                  });
+                        text: 'Could not fetch supplier details.'
+                    });
                 });
-        
+        }
+
+        function displaySupplier() {
+            if (suppliers.length > 0 && currentSupplierIndex < suppliers.length) {
+                const supplier = suppliers[currentSupplierIndex];
+                document.getElementById('supplierName').innerText = supplier.name;
+                document.getElementById('amountOwed').innerText = supplier.amount_owed;
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Info',
+                    text: 'No more suppliers in this batch.'
+                });
+                supplierDetailsModal.hide();
+            }
+        }
+
+        function nextSupplier() {
+            currentSupplierIndex += 1;
+            displaySupplier();
         }
    </script>
-{% endblock content %}
+{% endblock %}

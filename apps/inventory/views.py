@@ -2546,16 +2546,28 @@ def supplier_view(request):
     logger.info(list_orders)
     logger.info(supplier_products)
 
+    
+    #purchase order link to supplier
+    # Account_pay =[]
+    # Account_rec = []
+    # Balance = [item['balance'] for item in supplier_balances]
+    # for bal in Balance:
+    #     count=+1
+    #     if bal < 0:
+    #         Account_pay.append(balance)
+    #     Account_rec = [count,bal]
+    #Data_front = [supplier_products,Account_pay,Account_rec]
+    #logger.info(Data_front)
 
     if request.method == 'GET':
         form = AddSupplierForm()
-
-        # logger.info(f'Supplier: {suppliers.values()}')
+        suppliers = Supplier.objects.all()
         return render(request, 'Supplier/Suppliers.html', {
             'form':form,
             'products':supplier_products,
             'suppliers':supplier_balances,
-            'life_time': list_orders
+            'life_time': [list_orders],
+            'suppliers':suppliers
         })
 
     if request.method == 'POST':
