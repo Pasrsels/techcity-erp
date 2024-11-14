@@ -2497,14 +2497,15 @@ def supplier_payments(po):
         purchase_order_id = item['purchase_order__id']
         product_name = item['product__name']
         supplier_id = item['supplier_id']
-        t_amount = 0
-        if list_entries['id'] == item_id:
-            amount = quantity * unit_cost
-            t_amount = list_entries['amount'] + amount
-            list_entries['amount'] =  t_amount
-        else:
-            amount = quantity * unit_cost
-            list_entries.append({'id': item_id, 'amount': amount})
+        for items in list_entries:
+            t_amount = 0
+            if items['id'] == item_id:
+                amount = quantity * unit_cost
+                t_amount = items['amount'] + amount
+                items['amount'] =  t_amount
+            else:
+                amount = quantity * unit_cost
+                items.append({'id': item_id, 'amount': amount})
     return list_entries    
 
 @login_required
