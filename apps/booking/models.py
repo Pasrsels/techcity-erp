@@ -11,40 +11,41 @@ class Members(models.Model):
     Company = models.CharField(max_length= 255, blank= True)
     Age = models.IntegerField(blank=False)
     Gender = models.Choices("M", "F")
-    Member_accounts = models.ForeignKey("Member_accounts", on_delete=models.CASCADE)
-    Services = models.ForeignKey("Services", on_delete=models.CASCADE)
-    Office_spaces = models.ForeignKey("Office_spaces", on_delete=models.CASCADE)
-    Payments = models.ForeignKey("Payments", on_delete=models.CASCADE)
-
+    Member_accounts = models.ForeignKey("Member_accounts", on_delete=models.CASCADE, null = True)
+    Services = models.ForeignKey("Services", on_delete=models.CASCADE, null = True)
+    Office_spaces = models.ForeignKey("Office_spaces", on_delete=models.CASCADE, null = True)
+    Payments = models.ForeignKey("Payments", on_delete=models.CASCADE, null = True)
+    delete = models.BooleanField(default=False)
     #add def funtion to every class
     def __str__(self) -> str:
         return f"{self.National_ID}", f"{self.Name}"
 
 class Member_accounts(models.Model):
-    Balance = models.DecimalField(max_digits= 8, decimal_places= 2)
+    Balance = models.DecimalField(max_digits= 8, decimal_places= 2, default= 0.00)
     Payments = models.ForeignKey("Payments", on_delete=models.CASCADE)
-
+    delete = models.BooleanField(default= False)
     def __str__(self) -> str:
         return f"{self.Balance}"
 
 class Payments(models.Model):
     Date = models.CharField(default= timezone.now)
-    Amount = models.DecimalField(max_digits= 8, decimal_places= 2)
-
+    Amount = models.DecimalField(max_digits= 8, decimal_places= 2, default= 0.00)
+    Admin_fee = models.DecimalField(max_digits=8 , decimal_places=2, default= 0.00)
+    Description = models.CharField(max_length= 255, default='')
     def __str__(self) -> str:
         return f"{self.Amount}"
 
 class Services(models.Model):
     Name = models.CharField(max_length= 255)
     Types = models.ForeignKey('Types', max_length= 255, on_delete=models.CASCADE, null=True)
-
+    delete = models.BooleanField(default= False)
     def __str__(self):
         return f'{self.name}, {self.Types.Price}'
 
 class Types(models.Model):
     Name = models.CharField(max_length= 255)
     Price = models.DecimalField(max_digits=10, decimal_places=2)
-    Service_duration = models.CharField(max_length=50)
+    Duration = models.CharField(max_length=50, default='')
     Promotion = models.BooleanField()
 
     def __str__(self):

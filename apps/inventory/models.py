@@ -76,11 +76,11 @@ class Product(models.Model):
     category = models.ForeignKey('ProductCategory', on_delete=models.SET_NULL, null=True)
     tax_type = models.CharField(max_length=50, choices=TAX_CHOICES, null=True)
     min_stock_level = models.IntegerField(default=0, null=True)
-    description = models.TextField()
+    description = models.TextField(max_length=255, default='')
     end_of_day = models.BooleanField(default=False, null=True)
     service = models.BooleanField(default=False, null=True)
     dealer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
-    suppliers = models.ManyToManyField(Supplier, related_name="products")
+    suppliers = models.ManyToManyField('Supplier', related_name="products")
 
     def __str__(self):
         return self.name
@@ -146,6 +146,7 @@ class PurchaseOrderItem(models.Model):
     received = models.BooleanField(default=False, null=True)
     expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     dealer_expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True)
 
     def receive_items(self, quantity):
     
@@ -236,7 +237,7 @@ class Transfer(models.Model):
     transfer_ref = models.CharField(max_length=100)
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='user_branch')
     transfer_to = models.ManyToManyField(Branch)
-    description =  models.CharField(max_length=266)
+    description =  models.CharField(max_length=255, null=True, blank=True)
     date = models.DateField(auto_now_add=True)
     time = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
@@ -249,7 +250,7 @@ class Transfer(models.Model):
     @classmethod
     def generate_transfer_ref(self, branch, branches):
         print(branch, branches)
-        last_transfer = Transfer.objects.filter(branch__name=branch).order_by('-id').first()
+        last_transfer = Transfer.objects.filter(branch__name=branch, delete=False).order_by('-id').first()
         if last_transfer:
             last_reference = int(last_transfer.transfer_ref.split(' ')[1])
             new_reference = f'Ref {last_reference + 1} : {branches}'
@@ -280,7 +281,7 @@ class TransferItems(models.Model):
     description = models.CharField(max_length=255, null=True, blank=True)
     over_less_description = models.CharField(max_length=255, null=True, blank=True)
     received_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
-    description = models.TextField()
+    description = models.TextField(null=True)
     receieved_quantity = models.IntegerField(default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
@@ -396,7 +397,7 @@ class Service(models.Model):
     tax_type = models.CharField(max_length=50, choices=tax_choices)
     category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, null=True)
     # branch = models.ForeignKey(branch, on_delete=models.CASCADE)
-    description = models.TextField()
+    description = models.TextField(max_length=255, default= '')
     
     def __str__(self):
         return self.name

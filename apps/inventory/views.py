@@ -248,7 +248,8 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                 transfer = Transfer.objects.create(
                     branch = request.user.branch,
                     user = request.user,
-                    transfer_ref = Transfer.generate_transfer_ref(request.user.branch.name, branch_names)
+                    transfer_ref = Transfer.generate_transfer_ref(request.user.branch.name, branch_names),
+                    description = 'transfer' #to be actioned
                 )
                 
                 #assign many2many objects to transfer branch
@@ -276,6 +277,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                                 quantity=item['quantity'],
                                 from_branch= request.user.branch,
                                 to_branch= branch_obj,
+                                description=f'from {request.user.branch} to {branch_obj} '
                             )   
                             transfer.save()         
                             transfer_item.save()
@@ -1452,8 +1454,14 @@ def create_purchase_order(request):
 
                     # Set the suppliers for the product
                     if supplier_ids:
+                        logger.info(f'supplier ids: {supplier_ids}')
                         suppliers = Supplier.objects.filter(id__in=supplier_ids)
                         product.suppliers.set(suppliers)  # Assign suppliers to the product
+
+                        # single supplier for purchase order item
+
+                    supplier = Supplier.objects.get(id=supplier_ids)
+                    logger.info(f'supplier ids: {supplier_ids}')
 
                     product.batch += f'{batch}, '
                     product.price = 0
@@ -1467,7 +1475,8 @@ def create_purchase_order(request):
                             unit_cost=unit_cost,
                             actual_unit_cost=actual_unit_cost,
                             received_quantity=0,
-                            received=False
+                            received=False,
+                            supplier = supplier
                         )
                     )
 
@@ -2475,18 +2484,139 @@ def supplier_edit(request, supplier_id):
             return JsonResponse({"success":False, "message":f"{e}"})
     return JsonResponse({"success":False, "message":"Invalid Request"})
 
+#payments
+@login_required
+def supplier_payments(request):
+    #add payment
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        supplier_details = data.get('Supplier',{})
+        supplier_acc_payment = data.get('Payments',{})
+        supplier_acc = data.get('Account',{})
+        currency = data.get('Currency',{})
+
+        supplier_name = supplier_details.get('name')
+        supplier_phone = supplier_details.get('phone')
+        supplier_person = supplier_details.get('contact_person')
+        supplier_address = supplier_details.get('address')
+        supplier_email = supplier_details.get('email')
+
+        supplier_amount = supplier_acc_payment.get('amount')
+        supplier_pay_method = supplier_acc_payment.get('payment_method')
+
+        currency_code = currency.get('code')
+        currency_name = currency.get('name')
+        currency_symbol = currency.get('symbol')
+        currency_exchange = currency.get('exchange_rate')
+        currency_default = currency.get('default')
+
+        supplier_acc_bal = supplier_acc.get('balance')
+        
+        if Supplier.objects.filter(phone = supplier_phone).exists():
+            if currency_name == "USD":
+                bal = supplier_acc_bal - supplier_amount
+            elif currency_name == "ZIG":
+                converted_bal = supplier_acc_bal * currency_exchange
+                bal = converted_bal - supplier_amount
+        elif not supplier_name or not supplier_phone or not supplier_person or not supplier_address \
+         or not supplier_email or not supplier_amount or not supplier_pay_method or not currency_code \
+          or not currency_name or not currency_symbol or not currency_exchange or not currency_default \
+          or not supplier_acc_bal:
+            return JsonResponse({'success':False, 'response': 'fill in the fields'}, status = 400)
+        
+        with transaction.Atomic():
+            supplier_info = Supplier(
+                name = supplier_name,
+                phone = supplier_phone,
+                contact_person = supplier_person,
+                address = supplier_address,
+                email = supplier_email
+            )
+
+            currency_info = Currency(
+                code = currency_code,
+                name = currency_name,
+                symbol = currency_symbol,
+                exchange_rate = currency_exchange,
+                default = currency_default
+            )
+
+            suppliers_acc = SupplierAccount.objects.create(
+                balance = bal,
+                supplier = supplier_info,
+                currency = currency_info
+            )
+
+            SupplierAccountsPayments.objects.create(
+                payment_method = supplier_pay_method,
+                currency = currency_info,
+                amount = supplier_amount,
+                account = suppliers_acc
+            )
+            
 @login_required
 def supplier_view(request):
-    if request.method == 'GET':
-        suppliers = Supplier.objects.all()
-        form = AddSupplierForm()
+    # supplier_products = Product.objects.all().values('name','suppliers__name', 'category__name')
+    # supplier_balances = SupplierAccount.objects.all().values('balance')
 
-        logger.info(f'Supplier: {suppliers.values()}')
+    supplier_products = Product.objects.all()
+    supplier_balances = SupplierAccount.objects.all()
+    purchase_orders = PurchaseOrderItem.objects.all()
+
+    list_orders = {}
+    for item in purchase_orders:
+        po = PurchaseOrder.objects.get(id=item.purchase_order.id)
+        if list_orders:
+            if list_orders.get(item.supplier):
+                supplier = list_orders.get(item.supplier)
+
+                if supplier['purchase_order'] == po:
+                    supplier['count'] = supplier['count']
+                else:
+                    supplier['count'] += 1
+
+                supplier['amount'] += item.unit_cost * item.received_quantity
+            else:
+                list_orders[item.supplier] = {
+                'amount': item.unit_cost * item.received_quantity,
+                'purchase_order': po,
+                'count': 1
+            }
+        else:
+            list_orders[item.supplier] = {
+                'amount': item.unit_cost * item.received_quantity,
+                'purchase_order': po,
+                'count': 1
+            }
+                          
+    logger.info(list_orders)
+    logger.info(supplier_products)
+
+    
+    #purchase order link to supplier
+    # Account_pay =[]
+    # Account_rec = []
+    # Balance = [item['balance'] for item in supplier_balances]
+    # for bal in Balance:
+    #     count=+1
+    #     if bal < 0:
+    #         Account_pay.append(balance)
+    #     Account_rec = [count,bal]
+    #Data_front = [supplier_products,Account_pay,Account_rec]
+    #logger.info(Data_front)
+
+    if request.method == 'GET':
+        form = AddSupplierForm()
+        suppliers = Supplier.objects.all()
         return render(request, 'Supplier/Suppliers.html', {
             'form':form,
+            'products':supplier_products,
+            'suppliers':supplier_balances,
+            'life_time': [list_orders],
             'suppliers':suppliers
         })
-    
+
     if request.method == 'POST':
         """
         payload = {
@@ -2525,7 +2655,6 @@ def supplier_view(request):
                 address = address
             )
             supplier.save()
-
             return JsonResponse({'success': True}, status=200)
         except Exception as e:
             logger.info(e)
