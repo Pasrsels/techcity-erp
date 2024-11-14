@@ -356,13 +356,12 @@ let sub = 0
 let vatAmount
 
 const layby_dates = []
+const taxMethod = "{{ tax_method }}"
 
 let error = document.querySelector('#error_message');
 
-// import { calculateInclusiveTax, calculateExclusiveTax } from "{% static 'js/app_modules/taxes.js' %}";
-
-// //let customerAccountTableModal = new bootstrap.Modal(document.getElementById('customerAccountTableModal'))
-// console.log(calculateExclusiveTax)
+import { calculateInclusiveTax, calculateExclusiveTax } from "{% static 'js/app_modules/taxes.js' %}";
+console.log(calculateExclusiveTax)
 
 const currencySelect = document.querySelector('#currency')
 const endOfDayModal = new bootstrap.Modal(document.getElementById('endOfDayModal'));
@@ -919,6 +918,8 @@ function totals(){
     let vatAmount = calculateVAT(totalAmount);
     let discount = $('#id_discount').val()
     let delivery = parseFloat($('#id_dc_input').val())
+
+    console.log('vat amout: ', vatAmount)
     
     let payable = totalAmount - vatAmount + delivery;
     
@@ -965,8 +966,13 @@ function calculateTotalAmount(cart) {
 }
 
 function calculateVAT(totalAmount) {
-    const vatRate = 0.15; 
-    return totalAmount * vatRate;
+    if( taxMethod === 'Exclusive'){
+        return calculateExclusiveTax(totalAmount, 0.15)
+    }else if( taxMethod === 'Inclusive'){
+        return calculateExclusiveTax(totalAmount, 0.15)
+    }else{
+        return 0;
+    }
 }
 
 // events for discount and delivery charge
