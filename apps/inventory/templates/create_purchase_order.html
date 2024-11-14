@@ -102,7 +102,7 @@
                     <form class='d-flex flex-column mt-2 w-100 mt-2 w-100 px-2' method='post'>
                         {% csrf_token %}
                         <div class="mb-1">
-                            <label for="id_product" class="form-label requiredField">
+                            <label for="id_id_product" class="form-label requiredField">
                                 Product
                             </label> 
                             <div class="d-flex form-group">
@@ -116,7 +116,7 @@
                             </div>
                         </div>
                         <div class="mb-1">
-                            <label for="id_product" class="form-label requiredField">
+                            <label for="id_s" class="form-label requiredField">
                                 Supplier
                             </label>
                             <div class="d-flex form-group">
@@ -552,25 +552,25 @@
 
  
     document.addEventListener('DOMContentLoaded', function() {
-      new SlimSelect({
-        select: '#id_product',
-        placeholder: 'Select Product'
-      });
 
-      document.getElementById('id_product').addEventListener('change', function() {
-        const pElement = document.getElementById('id_product');
-        const pSelectedOption = pElement.options[pElement.selectedIndex];
-        let product = pSelectedOption.textContent;
-        product = product.split(' [')[0];
+        $('#id_product').select2({
+            placeholder: 'Select Product',
+            width: 'resolve'  
+        });
 
-        fetch(`/inventory/inventory/?id=${pElement.value}`)
-          .then(response => response.json())
-          .then(data => {
-            prodData.push(data);
-          })
-          .catch(error => console.error('Error:', error));
-      });
+        $('#id_product').on('change', function() {
+            const productId = $(this).val();
+            const productName = $(this).find('option:selected').text().split(' [')[0];
+
+            fetch(`/inventory/inventory/?id=${productId}`)
+                .then(response => response.json())
+                .then(data => {
+                    prodData.push(data);
+                })
+                .catch(error => console.error('Error:', error));
+        });
     });
+
     
     calculateExpression('id_p_price', errorId = null)
 
@@ -869,7 +869,7 @@
                 throw new Error('Network response was not ok.');
             }
             const data = await response.json();
-            
+            console.log(data)
             updateProduct(data);
         } catch (error) {
             console.error('Error fetching categories:', error);
@@ -885,7 +885,9 @@
         }
         data.forEach((data)=>{
             prodElement.innerHTML += `<option value=${data.id}>${data.name}</option>`
+            console.log(prodElement.innerHTML)
         })
+        console.log('here', data)
 
     }
 
@@ -897,10 +899,10 @@
 
     document.addEventListener('DOMContentLoaded', function() {
 
-      new SlimSelect({
-        select: '#id_supplier',
-        placeholder: 'Select Supplier'
-      });
+      $('#id_supplier').select2({
+            placeholder: 'Select Product',
+            width: 'resolve'  
+        });
 
       document.getElementById('id_supplier').addEventListener('change', function() {
         const pElement = document.getElementById('id_supplier');
