@@ -83,4 +83,8 @@ urlpatterns = [
     
     #websocket
     path('ws/inventory/<int:branchId>/',InventoryConsumer.as_asgi()),
+
+
+    #stocktake
+    path('stocktake', stock_take, name='stock_take')
 ]

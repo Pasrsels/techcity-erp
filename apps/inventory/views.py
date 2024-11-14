@@ -2731,7 +2731,7 @@ def reorder_settings(request):
 def stock_take(request):
     if request.method == 'GET':
         products = Inventory.objects.filter(branch=request.user.branch)
-        return render(request, 'inventory/stocktake/stocktake.html',{
+        return render(request, 'stocktake/stocktake.html',{
             'products':products
         })
     
