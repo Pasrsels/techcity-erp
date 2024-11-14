@@ -876,18 +876,21 @@
         } 
     }
 
-    function updateProduct(data){
-        const prodElement = document.querySelector('#id_product')
+    function updateProduct(data, newProductId) {
+        const prodElement = document.querySelector('#id_product');
         prodElement.innerHTML = '<option value="">Select Product</option>';
-        
-        while(prodElement.options.length > 1){
-          prodElement.remove(1)
+
+        data.forEach((product) => {
+            const option = document.createElement('option');
+            option.value = product.id;
+            option.textContent = product.name;
+            prodElement.appendChild(option);
+        });
+
+        // Automatically select the newly added product
+        if (newProductId) {
+            prodElement.value = newProductId;
         }
-        data.forEach((data)=>{
-            prodElement.innerHTML += `<option value=${data.id}>${data.name}</option>`
-            console.log(prodElement.innerHTML)
-        })
-        console.log('here', data)
 
     }
 
