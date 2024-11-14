@@ -18,10 +18,9 @@
             <tr>
                 <th>Name</th>
                 <th>Products</th>
-                <th>Contact Number</th>
-                <th>Email</th>
-                <th>Address</th>
-                <th>Contact Person</th>
+                <th>Lifetime</th>
+                <th>Accounts Payable</th>
+                <th>Accounts Receivable</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -42,10 +41,9 @@
                         {% endif %}
                     </small>
                 </td>
-                <td><small>{{ supplier.phone }}</small></td>
-                <td><small>{{ supplier.email }}</small></td>
-                <td><small>{{ supplier.address }}</small></td>
-                <td><small>{{ supplier.contact_person }}</small></td>
+                <td><small>{{ supplier.lifetime }}</small></td>
+                <td><small>{{ supplier.Accounts_Payable }}</small></td>
+                <td><small>{{ supplier.Accounts_Receivable }}</small></td>
                 <td class="d-flex justify-content-start">
                     <!-- Edit Button -->
                     <button class="btn btn-sm btn-primary mx-1" onclick="openEditModal({{ supplier.id }})">
