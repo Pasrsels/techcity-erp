@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Linkspot - Members{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <header class="bg-dark text-white p-3">
+        <h1 class="mb-0" style="text-align: left;">LINKSPOT</h1>
+    </header>
+
+    <div class="row">
+        <aside class="col-2 bg-dark text-white p-4">
+            <ul class="list-unstyled">
+                <li><a href="{% url 'booking:service'%}" class="text-white">Services</a></li>
+                <li><a href="{% url 'booking:office' %}" class="text-white">Offices</a></li>
+                <li><a href="{% url 'booking:member'%}" class="text-white">Members</a></li>
+                <li><a href="#" class="text-white">Logs</a></li>
+                <li><a href="#" class="text-white">Settings</a></li>
+            </ul>
+        </aside>
+
+        <div class="col-10">
+            <nav class="d-flex justify-content-between align-items-center p-3 bg-primary text-white shadow-sm">
+                <h5>Members</h5>
+                <div>
+                    <input type="text" id="searchInput" class="form-control d-inline w-50" placeholder="Search members...">
+                    <button id="addMemberBtn" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#addMemberModal">Add Member</button>
+                </div>
+            </nav>
+
+            <div id="membersTable" class="mt-4">
+                <h5 class="mb-4">Members</h5>
+                <table class="table table-striped table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Date Enrolled</th>
+                            <th>Office Space</th>
+                            <th>Service Type</th>
+                            <th>Balance</th>
+                            <th>Next Payment Date</th>
+                            <th>Payments</th>
+                            <th>Operations</th>
+                        </tr>
+                    </thead>
+                    <tbody id="membersTableBody">
+                        {% for member in members %}
+                        <tr>
+                            <td>{{ member.name }}</td>
+                            <td>{{ member.company }}</td>
+                            <td>{{ member.office_space }}</td>
+                            <td>{{ member.date_enrolled }}</td>
+                            <td>{{ member.service_type }}</td>
+                            <td>{{ member.balance }}</td>
+                            <td>
+                                {% if member.payments.last %}
+                                    {{ member.payments.last.next_due_date }}
+                                {% else %}
+                                    No payments recorded
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-info btn-sm" type="button" data-toggle="collapse" data-target="#paymentHistory{{ member.id }}" aria-expanded="false">
+                                    View Payments
+                                </button>
+                                <div class="collapse" id="paymentHistory{{ member.id }}">
+                                    <ul>
+                                        {% for payment in member.payments.all %}
+                                            <li>{{ payment.date_paid }} - {{ payment.amount }}</li>
+                                        {% empty %}
+                                            <li>No payments found</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editMemberModal" onclick="loadMemberData({{ member.id }})">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteMember({{ member.id }})">Delete</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Member Modal -->
+<div class="modal fade" id="addMemberModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Add New Member</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addMemberForm">
+                    <div class="mb-3">
+                        <label for="memberName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="memberName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="company" class="form-label">Company</label>
+                        <input type="text" class="form-control" id="company" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dateEnrolled" class="form-label">Date Enrolled</label>
+                        <input type="date" class="form-control" id="dateEnrolled" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="officeSpace" class="form-label">Office Space</label>
+                        <select id="officeSpace" class="form-select" required>
+                            <option value="">Select Office Space</option>
+                            <option value="Office 1">Office 1</option>
+                            <option value="Office 2">Office 2</option>
+                            <option value="Office 3">Office 3</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="serviceType" class="form-label">Service Type</label>
+                        <select id="serviceType" class="form-select" required>
+                            <option value="">Select Service Type</option>
+                            <option value="Basic">Basic</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Exclusive">Exclusive</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="balance" class="form-label">Initial Balance</label>
+                        <input type="number" class="form-control" id="balance" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactNumber" class="form-label">Contact Number</label>
+                        <input type="tel" class="form-control" id="contactNumber" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <textarea class="form-control" id="address" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveMemberBtn">Save Member</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Member Modal -->
+<div class="modal fade" id="editMemberModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title">Edit Member</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editMemberForm">
+                    <div class="mb-3">
+                        <label for="editMemberName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="editMemberName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCompany" class="form-label">Company</label>
+                        <input type="text" class="form-control" id="editCompany" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDateEnrolled" class="form-label">Date Enrolled</label>
+                        <input type="date" class="form-control" id="editDateEnrolled" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editOfficeSpace" class="form-label">Office Space</label>
+                        <select id="editOfficeSpace" class="form-select" required>
+                            <option value="">Select Office Space</option>
+                            <option value="Office 1">Office 1</option>
+                            <option value="Office 2">Office 2</option>
+                            <option value="Office 3">Office 3</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editServiceType" class="form-label">Service Type</label>
+                        <select id="editServiceType" class="form-select" required>
+                            <option value="">Select Service Type</option>
+                            <option value="Basic">Basic</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Exclusive">Exclusive</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editBalance" class="form-label">Balance</label>
+                        <input type="number" class="form-control" id="editBalance" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEmail" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="editEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editContactNumber" class="form-label">Contact Number</label>
+                        <input type="tel" class="form-control" id="editContactNumber" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editAddress" class="form-label">Address</label>
+                        <textarea class="form-control" id="editAddress" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning" id="updateMemberBtn">Update Member</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function loadMemberData(id) {
+    $.ajax({
+        url: '/get_member_data/', 
+        type: 'GET',
+        data: { member_id: id },
+        success: function(data) {
+            document.getElementById("editMemberName").value = data.name;
+            document.getElementById("editCompany").value = data.company;
+            document.getElementById("editDateEnrolled").value = data.date_enrolled;
+            document.getElementById("editOfficeSpace").value = data.office_space;
+            document.getElementById("editServiceType").value = data.service_type;
+            document.getElementById("editBalance").value = data.balance;
+            document.getElementById("editEmail").value = data.email;
+            document.getElementById("editContactNumber").value = data.contact_number;
+            document.getElementById("editAddress").value = data.address;
+        },
+        error: function(xhr, status, error) {
+            alert('Error fetching member data!');
+        }
+    });
+}
+</script>
+{% endblock %}
+

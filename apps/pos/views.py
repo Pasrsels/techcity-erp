@@ -8,6 +8,7 @@ from apps.finance.models import Invoice
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from loguru import logger
+from apps.settings.models import TaxSettings
 
 @login_required
 @transaction.atomic
@@ -15,8 +16,16 @@ def pos(request):
     form = CashWithdrawForm()
     invoice_count = Invoice.objects.filter(issue_date=timezone.now(), branch=request.user.branch).count()
     held_invoices_count = Invoice.objects.filter(hold_status=True, branch=request.user.branch).count()
+    tax_method = TaxSettings.objects.get(selected=True)
+
+    logger.info(tax_method)
             
-    return render(request, 'pos.html', {'invoice_count':invoice_count, 'form':form, 'count':held_invoices_count})
+    return render(request, 'pos.html', {
+        'invoice_count':invoice_count, 
+        'form':form, 
+        'count':held_invoices_count,
+        'tax_method': tax_method
+    })
 
 @login_required
 def process_receipt(request):

@@ -1,31 +1,25 @@
-<<<<<<< HEAD
- .venv/
- env/
- migrations/
- */migrations/*
-=======
-.venv/
-env/
-# migrations/
+
+# /migrations/
 # */migrations/*
->>>>>>> 8b5f7dded79d8925be0bb83c529079c7ebcde066
 .env
- *.pyc
- *~
- *.swp
- application.log
- .idea/
- .vscode/
- test.png
- *.lock
- *.log
- *.DS_Store
- .google/*
+*.pyc
+*~zz 
+*.swp
+application.log
+.idea/
+.vscode/
+test.png
+*.lock
+*.log
+*.DS_Store
+.google/*
 *.iml
 *.xml
- *.cpython-312.pyc
- */__pycache__/*
- *.pyc
+*.cpython-312.pyc
+*/__pycache__/*
+*.pyc
 .vs/
 .pyc
 .requirements.txt
+.base.py
+dev/*.pyc

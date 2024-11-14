@@ -18,6 +18,7 @@
                     <ul class='navbar-nav items  mr-auto'>
                         <li class='nav-item px-2 active' data-name="notifications">Email Notifications</li>
                         <li class='nav-item ' data-name="company">Company</li>
+                        <li class="nav-item" data-name="finance">Finance</li>
                         <li class='nav-item px-2' data-name="printer">Printer</li>
                         <li class='nav-item' data-name="cron">Cron Jobs</li>
                     </ul>
@@ -26,6 +27,30 @@
                     <div class='company hidden border p-2'>
                         <h6 class='fw-bold'>Company settings</h6>
                     </div>
+
+                    <div class='finance hidden border p-2'>
+                        <h6 class='fw-bold'>Finance settings</h6>
+                        <table class="table">
+                           <tbody>
+                                <tr>
+                                    <td>Tax Calculation Method</td>
+                                    <td>
+                                        <select name="tax_method" id="tax_method" onchange="updateTaxMethod()">
+                                            <!-- <option value="">Select Tax method</option> -->
+                                            {% for setting in tax_settings %}
+                                                {% if setting.selected %}
+                                                    <option value="{{ setting.id }}" selected>{{ setting.name }}</option>
+                                                {% else %}
+                                                    <option value="{{ setting.id }}">{{ setting.name }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
+                           </tbody>
+                        </table>
+                    </div>
+
                     <div class='cron hidden border p-2'>
                         <h6 class='fw-bold'>Cron Jobs settings</h6>
                     </div>
@@ -103,7 +128,7 @@
                         {# System Printers #}
                         
                         <div class="container">
-{#                            <h3>System Printers</h3>#}
+                            <h3>System Printers</h3>
                             <button id="view-printers-button" class="btn btn-outline-primary mt-3 ">View Available Printers</button>
                             <button id="scan-button" class="btn btn-primary mt-3 mx-4">Scan for Printers</button>
                             <div class="available-printers mt-3">
@@ -145,7 +170,6 @@
                     
                     <div class='notifications border p-2'>
                         <h6 class='fw-bold'>Notifications settings</h6>
-                        
                         {# products notifications #}
                         <div class="table-responsive">
                             <h6 class='mt-4 text-primary'>Products Notifications</h6>
@@ -315,10 +339,6 @@
                                 </tbody>
                             </table>
                         </div>
-                        
-                        
-                        
-                        
                     </div>
                 </div>
             </div>
@@ -415,6 +435,11 @@
     const printerDropdown = document.getElementById('printerSelect');
     const scanButton = document.getElementById('scanButton');
     const selectPrinterBtn = document.getElementById('selectPrinterBtn');
+
+    new SlimSelect({
+        select: '#tax_method',
+        placeholder: 'Select Tax Method'
+    });
  
     
     // load status initially
@@ -623,68 +648,7 @@
         changeNotificationStatus('user_deletion', newStatus, icon, newStatus);
     }
     
-    
-    // {# >>>>>>>>>>>>>> printer settings >>>>>>>>>>> NB:these are bluetooth printers >>>>>>>>#}
-    {#scanButton.addEventListener('click', fetchPrinters);#}
-    {#async function fetchPrinters() {#}
-    {#    loaderModal.show()#}
-    {#    try {#}
-    {#        const response = await fetch('{% url "settings:scan_for_printers" %}');#}
-    {#        const data = await response.json();#}
-    {##}
-    {#        if (data.printers) {#}
-    {#            loaderModal.hide()#}
-    {#            #}
-    {#            populateDropdown(data.printers);#}
-    {#            console.log(data)#}
-    {#        } else {#}
-    {#        handleError(data.error);#}
-    {#        }#}
-    {#    } catch (error) {#}
-    {#        handleError("Error fetching printer data");#}
-    {#    }#}
-    {#}#}
-
-    // Function to populate the dropdown menu
-    {#function populateDropdown(printers) {#}
-    {#printerDropdown.innerHTML = ''; #}
-    {##}
-    {#printers.forEach(printer => {#}
-    {#    const option = document.createElement('option');#}
-    {#    option.value = printer.address;#}
-    {#    option.text = printer.name;#}
-    {#    printerDropdown.add(option);#}
-    {#});#}
-    {##}
-    {#selectPrinterBtn.disabled = false;#}
-    {#}#}
-
-    // Function to handle errors
-    function handleError(message) {
-        document.querySelector('#error_message').value=message
-    }
-
-
-    {#selectPrinterBtn.addEventListener('click', async () => {#}
-    {#    const selectedPrinterAddress = printerDropdown.value;#}
-    {#    const selectedPrinterName = printerDropdown[printerDropdown.selectedIndex].textContent;#}
-    {#    const selectedPrinterPort = '';#}
-    {#    #}
-    {#    #}
-    {#        fetch('{% url "settings:update_or_create_printer" %}', {#}
-    {#            method: 'POST',#}
-    {#            headers: {#}
-    {#            'Content-Type': 'application/json',#}
-    {#            'X-CSRFToken': getCookie('csrftoken')#}
-    {#            },#}
-    {#            body: JSON.stringify({#}
-    {#            printer_address: selectedPrinterAddress,#}
-    {#            printer_name: selectedPrinterName,#}
-    {#            })#}
-    {#        })#}
-    {#    });#}
-
-
+   
     navButtons.forEach((btn)=>{
         btn.addEventListener(
             'click', ()=>{
@@ -914,6 +878,60 @@
             return newPcIdentifier;
         }
     }
+
+    function updateTaxMethod() {
+        const selectedMethod = document.getElementById('tax_method').value;
+
+        Swal.fire({
+            title: 'Processing...',
+            text: 'Updating tax method settings...',
+            icon: 'info',
+            showConfirmButton: false,
+            allowOutsideClick: false
+        });
+
+        $.ajax({
+            url: '{% url "settings:update_tax_method" %}',  
+            method: 'GET',
+            data: {
+                'method': selectedMethod
+            },
+            dataType: 'json',
+            success: function(data) {
+                Swal.close();
+
+                let output = '';
+                if (data.length > 0) {
+                    output += '<ul>';
+                    data.forEach((setting) => {
+                        output += `<li>${setting.name}: ${setting.selected ? 'Selected' : 'Not Selected'}</li>`;
+                    });
+                    output += '</ul>';
+                } else {
+                    output = 'No tax settings found for this method.';
+                }
+
+                document.getElementById('tax-settings').innerHTML = output;
+
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Tax method settings updated successfully.',
+                    icon: 'success',
+                    showConfirmButton: true
+                });
+            },
+            error: function() {
+                Swal.close();
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'There was an error processing your request.',
+                    icon: 'error',
+                    showConfirmButton: true
+                });
+            }
+        });
+    }
+
     
     function getCookie(name) {
         let cookieValue = null;

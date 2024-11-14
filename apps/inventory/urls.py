@@ -19,6 +19,9 @@ urlpatterns = [
     path('defective_product_list/', defective_product_list, name='defective_product_list'),
     path('inventory/branches/json', branches_inventory_json, name='branches_inventory_json'),
 
+    #Stocktake
+    path('stocktake/', stock_take, name= 'stocktake'),
+
     #batch_code 
     path('batch_code/', batch_code, name='batch_code'),
     
@@ -28,11 +31,8 @@ urlpatterns = [
     # suppliers
     path("suppliers/", supplier_view, name="suppliers"),
     path('supplier/json/list/', supplier_list_json, name='supplier_list_json'),
-    
-    #testing delete & update & view
     path("suppliers/delete/<int:supplier_id>/", supplier_delete, name="delete_supplier"),
     path("suppliers/edit/<int:supplier_id>/", supplier_edit, name="edit_supplier"),
-    path("supplier/view/<int:supplier_id>/", supplier_V, name = "supplier_V" ),
 
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),
@@ -83,4 +83,8 @@ urlpatterns = [
     
     #websocket
     path('ws/inventory/<int:branchId>/',InventoryConsumer.as_asgi()),
+
+
+    #stocktake
+    path('stocktake', stock_take, name='stock_take')
 ]
