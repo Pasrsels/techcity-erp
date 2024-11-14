@@ -2567,29 +2567,30 @@ def supplier_view(request):
     list_orders = {}
     for item in purchase_orders:
         po = PurchaseOrder.objects.get(id=item.purchase_order.id)
-        if list_orders:
-            if list_orders.get(item.supplier):
-                supplier = list_orders.get(item.supplier)
+        if item.supplier:
+            if list_orders:
+                if list_orders.get(item.supplier):
+                    supplier = list_orders.get(item.supplier)
 
-                if supplier['purchase_order'] == po:
-                    supplier['count'] = supplier['count']
+                    if supplier['purchase_order'] == po:
+                        supplier['count'] = supplier['count']
+                    else:
+                        supplier['count'] += 1
+
+                    supplier['amount'] += item.unit_cost * item.received_quantity
                 else:
-                    supplier['count'] += 1
-
-                supplier['amount'] += item.unit_cost * item.received_quantity
+                    list_orders[item.supplier] = {
+                    'amount': item.unit_cost * item.received_quantity,
+                    'purchase_order': po,
+                    'count': 1
+                }
             else:
                 list_orders[item.supplier] = {
-                'amount': item.unit_cost * item.received_quantity,
-                'purchase_order': po,
-                'count': 1
-            }
-        else:
-            list_orders[item.supplier] = {
-                'amount': item.unit_cost * item.received_quantity,
-                'purchase_order': po,
-                'count': 1
-            }
-                          
+                    'amount': item.unit_cost * item.received_quantity,
+                    'purchase_order': po,
+                    'count': 1
+                }
+                            
     logger.info(list_orders)
     logger.info(supplier_products)
 

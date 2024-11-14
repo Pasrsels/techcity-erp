@@ -30,20 +30,28 @@
                 <td><small>{{ supplier.name }}</small></td>
                 <td>
                     <small>
-                        {% if supplier.products.all %}
-                        <ul class="list-unstyled">
-                            {% for product in supplier.products.all %}
-                                <li><small>{{ product.name }}</small></li>
-                            {% endfor %}
-                        </ul>
-                        {% else %}
-                            <small>No products listed</small>
-                        {% endif %}
+                        {% for product in products %}
+                            {% if supplier.supplier in product.suppliers.all %}
+                                {{ product.name }}
+                            {% endif %}
+                        {% endfor %}
                     </small>
                 </td>
                 <td><small>{{ supplier.Lifetime}}</small></td>
-                <td><small>{{ supplier.accountspayable}}</small></td>
-                <td><small>{{ supplier.accountsreceivable }}</small></td>
+                <td>
+                    <small>
+                        {% if supplier.balance > 0 %}
+                            {{ supplier.balance }}
+                        {% endif %}
+                    </small>
+                </td>
+                <td>
+                    <small>
+                        {% if supplier.balance < 0 %}
+                            {{ supplier.balance }}
+                        {% endif %}
+                    </small>
+                </td>
 
                 <td>
                     <button class="btn bx bx-edit mx-1" style="color: rgb(18, 201, 233);" onclick="openEditModal({{ supplier.id }})"></button>

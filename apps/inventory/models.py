@@ -146,7 +146,7 @@ class PurchaseOrderItem(models.Model):
     received = models.BooleanField(default=False, null=True)
     expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     dealer_expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, default=1)
 
     def receive_items(self, quantity):
     
