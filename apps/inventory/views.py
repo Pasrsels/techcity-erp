@@ -2486,9 +2486,9 @@ def supplier_edit(request, supplier_id):
 
 #payments
 @login_required
-def supplier_payments():
+def supplier_payments(po):
     #add payment
-    data = PurchaseOrderItem.objects.all().values('id', 'quantity', 'unit_cost', 'purchase_order__id', 'product__name', 'supplier_id')
+    data = PurchaseOrderItem.objects.filter(purchase_order=po).values('id', 'quantity', 'unit_cost', 'purchase_order__id', 'product__name', 'supplier_id')
     list_entries= []
     for item in data:
         item_id = item['id']
@@ -2741,6 +2741,10 @@ def stock_take(request):
             pyhsical_quantity:int
         }
        """
+       data = json.loads(request.body)
+       prod_id = data.get('product_id')
+       phy_quantity = data.get('physical_quantity')
+
        try:
            """
             1. get the product
@@ -2749,8 +2753,19 @@ def stock_take(request):
             4. json to the front {id:inventory.id, different:difference}
            """
            
+           invento = Inventory.objects.filter(product_id = prod_id).values('product__name', 'quantity','id')
+
+           quantity = invento['quantity']
+           inventory_id = invento['id']
+
+           if quantity >= 0:
+               descripancy_value =  quantity - phy_quantity
+               inve= {'inventory_id': inventory_id, 'difference': descripancy_value}
+               return JsonResponse({'success': True, 'data': inve }, status = 200)
+           return JsonResponse({'success': False }, status = 400)
+           
        except Exception as e:
-           return 
+           return JsonResponse({'success': False, 'response': e}, status = 400)
 
 
         
