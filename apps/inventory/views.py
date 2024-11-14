@@ -2557,9 +2557,7 @@ def supplier_payments(request):
             
 @login_required
 def supplier_view(request):
-    # supplier_products = Product.objects.all().values('name','suppliers__name', 'category__name')
-    # supplier_balances = SupplierAccount.objects.all().values('balance')
-
+    
     supplier_products = Product.objects.all()
     supplier_balances = SupplierAccount.objects.all()
     purchase_orders = PurchaseOrderItem.objects.all()
@@ -2592,19 +2590,6 @@ def supplier_view(request):
                           
     logger.info(list_orders)
     logger.info(supplier_products)
-
-    
-    #purchase order link to supplier
-    # Account_pay =[]
-    # Account_rec = []
-    # Balance = [item['balance'] for item in supplier_balances]
-    # for bal in Balance:
-    #     count=+1
-    #     if bal < 0:
-    #         Account_pay.append(balance)
-    #     Account_rec = [count,bal]
-    #Data_front = [supplier_products,Account_pay,Account_rec]
-    #logger.info(Data_front)
 
     if request.method == 'GET':
         form = AddSupplierForm()
