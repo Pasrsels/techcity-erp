@@ -409,5 +409,15 @@ class reorderSettings(models.Model):
     order_enough_stock = models.BooleanField(default=False)
     date_created = models.DateField(auto_now_add=True)
 
+class Stocktake(models.Model):
+    product = models.ForeignKey(Inventory, on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    date = models.DateField()
+
+    def __str__(self):
+        return self.product.product.name
+
+
+
     
 
