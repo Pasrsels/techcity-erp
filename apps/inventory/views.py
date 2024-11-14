@@ -2657,6 +2657,33 @@ def reorder_settings(request):
             return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
         return JsonResponse({'success':False, 'message':'Invalid request'}, status=500)
 
+@login_required
+def stock_take(request):
+    if request.method == 'GET':
+        products = Inventory.objects.filter(branch=request.user.branch)
+        return render(request, 'inventory/stocktake/stocktake.html',{
+            'products':products
+        })
+    
+    if request.method == 'POST':
+       """
+         payload = {
+            product_id:int
+            pyhsical_quantity:int
+        }
+       """
+       try:
+           """
+            1. get the product
+            2. get the quantity
+            3. condition to check between physical_quantity and quantity of the product
+            4. json to the front {id:inventory.id, different:difference}
+           """
+           
+       except Exception as e:
+           return 
+
+
         
                     
         
