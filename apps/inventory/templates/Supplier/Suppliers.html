@@ -7,7 +7,7 @@
         <h5 class="text-light px-1">Supplier List</h5>
         <!-- Add Supplier Button -->
         <div class="px-1">
-            <button type="button" class="btn btn-outline-light btn-sm" id="addButton">
+            <button type="button" class="btn btn-primary btn-sm" id="addButton">
                 <i class="bx bx-plus"></i> Add Supplier
             </button>
         </div>
@@ -41,35 +41,17 @@
                         {% endif %}
                     </small>
                 </td>
-<<<<<<< HEAD
-                <td><small>{{ supplier.lifetime }}</small></td>
-                <td><small>{{ supplier.Accounts_Payable }}</small></td>
-                <td><small>{{ supplier.Accounts_Receivable }}</small></td>
-                <td class="d-flex justify-content-start">
-                    <!-- Edit Button -->
-                    <button class="btn btn-sm btn-primary mx-1" onclick="openEditModal({{ supplier.id }})">
-                        <i class="bx bx-edit"></i> Edit
-                    </button>
-                    <!-- View Button -->
-                    <button class="btn btn-sm btn-info mx-1" onclick="openViewModal({{ supplier.id }})">
-                        <i class="bx bx-show"></i> View
-                    </button>
-                    <!-- Delete Button -->
-                    <button class="btn btn-sm btn-danger mx-1" onclick="confirmDelete({{ supplier.id }})">
-                        <i class="bx bx-trash"></i> Delete
-                    </button>
-=======
-                <td><small>{{ supplier.phone }}</small></td>
-                <td><small>{{ supplier.email }}</small></td>
-                <td><small>{{ supplier.address }}</small></td>
-                <td><small>{{ supplier.contact_person }}</small></td>
+                <td><small>{{ supplier.Lifetime}}</small></td>
+                <td><small>{{ supplier.accountspayable}}</small></td>
+                <td><small>{{ supplier.accountsreceivable }}</small></td>
 
                 <td>
-                    <button class="btn bx bx-edit mx-1" onclick="openEditModal({{ supplier.id }})"></button>
-                    <!-- Add delete button -->
-                    <button class="btn bx bx-trash mx-1" onclick="confirmDelete({{ supplier.id }})"></button>
->>>>>>> f626cf0229e453287bdd07ee552315b636e9e66e
+                    <button class="btn bx bx-edit mx-1" style="color: rgb(18, 201, 233);" onclick="openEditModal({{ supplier.id }})"></button>
+                    <button class="btn bx bx-trash mx-1" style="color: red;" onclick="confirmDelete({{ supplier.id }})"></button>
+                    <button class="btn bx bx-money mx-1" style="color: green;" onclick="openPaymentModal({{ supplier.id }})"></button>
+                    <button class="btn bx bx-history mx-1" style="color: purple;" onclick="openPaymentHistoryModal({{ supplier.id }})"></button>
                 </td>
+                
             </tr>
             {% endfor %}
         </tbody>
@@ -140,7 +122,123 @@
     </div>
 </div>
 
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h5 class="fw-bold">Add Payment</h5>
+                <hr class="rounded">
+                <form method="post" id="paymentForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount</label>
+                        <input type="number" class="form-control" id="amount" name="amount" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="payment_method" class="form-label">Payment Method</label>
+                        <select class="form-control" id="payment_method" name="payment_method" required>
+                            <option value="">Select Payment Method</option>
+                            <option value="Ecocash">Ecocash</option>
+                            <option value="Cash">Cash</option>
+                            <option value="ZimSwitch">ZimSwitch</option>
+                            <option value="MasterCard">MasterCard</option>
+                            <option value="Visa">Visa</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="currency" class="form-label">Currency</label>
+                        <select class="form-control" id="currency" name="currency">
+                            <option value="USD">USD Dollar</option>
+                            <option value="ZiG">ZiG</option>
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary btn-sm mx-2" data-bs-dismiss="modal">Close</button>
+                        <button type="reset" class="btn btn-danger btn-sm mx-2">Reset</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment History Modal -->
+<div class="modal fade" id="paymentHistoryModal" tabindex="-1" aria-labelledby="paymentHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h5 class="fw-bold">Payment History</h5>
+                <hr class="rounded">
+                <div class="d-flex justify-content-between mb-3">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openPaymentModal()">Add Payment</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="toggleCurrencyButton">Switch to ZiG</button>
+                    <button type="button" class="btn btn-danger btn-sm mx-2" data-bs-dismiss="modal">Close</button>
+                </div>
+                <div id="usdTable">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Accounts Payable</th>
+                                <th>User</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in usd_payments %}
+                            <tr>
+                                <td>{{ payment.date }}</td>
+                                <td>{{ payment.amount }}</td>
+                                <td>{{ payment.accounts_payable }}</td>
+                                <td>{{ payment.user }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editPayment({{ payment.id }})">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deletePayment({{ payment.id }})">Delete</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div id="zigTable" style="display: none;">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Accounts Payable</th>
+                                <th>User</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in zig_payments %}
+                            <tr>
+                                <td>{{ payment.date }}</td>
+                                <td>{{ payment.amount }}</td>
+                                <td>{{ payment.accounts_payable }}</td>
+                                <td>{{ payment.user }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editPayment({{ payment.id }})">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deletePayment({{ payment.id }})">Delete</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
 <script>
+    
     let supId = '';
     let deleteSupId = null;
 
@@ -153,9 +251,9 @@
 
     
 
-    new DataTable('#supplier_list', {
-        paging: false,
-    });
+  new DataTable('#supplier_list', {
+         paging: false,
+ });
 
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('supplierForm');
@@ -206,6 +304,31 @@
                 });
             });
         });
+    });
+    // Payment Modal
+    function openPaymentModal(supplierId) {
+            const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            paymentModal.show();
+        }
+
+        // Payment History Modal
+        function openPaymentHistoryModal(supplierId) {
+            const paymentHistoryModal = new bootstrap.Modal(document.getElementById('paymentHistoryModal'));
+            paymentHistoryModal.show();
+        }
+// Toggle between USD and ZiG tables in the Payment History Modal
+document.getElementById('toggleCurrencyButton').addEventListener('click', function() {
+        const usdTable = document.getElementById('usdTable');
+        const zigTable = document.getElementById('zigTable');
+        if (usdTable.style.display === 'none') {
+            usdTable.style.display = 'block';
+            zigTable.style.display = 'none';
+            this.textContent = 'Switch to ZiG';
+        } else {
+            usdTable.style.display = 'none';
+            zigTable.style.display = 'block';
+            this.textContent = 'Switch to USD';
+        }
     });
 
     // Function to open the edit modal and populate it with supplier data

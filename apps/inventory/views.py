@@ -2608,12 +2608,13 @@ def supplier_view(request):
 
     if request.method == 'GET':
         form = AddSupplierForm()
-        logger.info(supplier_products.values())
-        return render(request, 'Supplier/sup.html', {
+        suppliers = Supplier.objects.all()
+        return render(request, 'Supplier/Suppliers.html', {
             'form':form,
             'products':supplier_products,
             'suppliers':supplier_balances,
-            'life_time': [list_orders]
+            'life_time': [list_orders],
+            'suppliers':suppliers
         })
 
     if request.method == 'POST':

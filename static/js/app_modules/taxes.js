@@ -15,7 +15,7 @@
 //     calculateExclusiveTax
 // };
 
-///// in pure javascript we dont use, export key work
+///// in pure javascript we dont use, export 
 
 
 export function calculateInclusiveTax(price, taxRate) {
