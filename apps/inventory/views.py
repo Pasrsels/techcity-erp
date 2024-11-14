@@ -2548,7 +2548,8 @@ def supplier_view(request):
 
     if request.method == 'GET':
         form = AddSupplierForm()
-        logger.info(supplier_products.values())
+
+        logger.info(f'Supplier: {suppliers.values()}')
         return render(request, 'Supplier/Suppliers.html', {
             'form':form,
             'products':supplier_products,

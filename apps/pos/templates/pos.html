@@ -328,7 +328,6 @@
 </body>
 
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>
-
 <script>   
 let cart = [];
 let data = [];
@@ -360,8 +359,8 @@ const taxMethod = "{{ tax_method }}"
 
 let error = document.querySelector('#error_message');
 
-import { calculateInclusiveTax, calculateExclusiveTax } from "{% static 'js/app_modules/taxes.js' %}";
-console.log(calculateExclusiveTax)
+// import { calculateInclusiveTax, calculateExclusiveTax } from "{% static 'js/app_modules/taxes.js' %}";
+// console.log(calculateExclusiveTax)
 
 const currencySelect = document.querySelector('#currency')
 const endOfDayModal = new bootstrap.Modal(document.getElementById('endOfDayModal'));
