@@ -2,19 +2,19 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="container">
-    <div class="d-flex align-items-center justify-content-between mt-2 rounded bg-dark text-light shadow header py-2 mb-4">
+<div class="suppliers">
+    <div class="d-flex align-items-center justify-content-between rounded text-light shadow header py-2 mb-4" style="background: #373f4c;">
         <h5 class="text-light px-1">Supplier List</h5>
         <!-- Add Supplier Button -->
         <div class="px-1">
-            <button type="button" class="btn btn-primary btn-sm" id="addButton">
+            <button type="button" class="btn btn-outline-light btn-sm" id="addButton">
                 <i class="bx bx-plus"></i> Add Supplier
             </button>
         </div>
     </div>
 
     <table id="supplier_list" class="table table-striped table-bordered" style="width: 100%;">
-        <thead style="background-color: #3734f4; color: rgb(33, 29, 29);">
+        <thead>
             <tr>
                 <th>Name</th>
                 <th>Products</th>
@@ -41,6 +41,7 @@
                         {% endif %}
                     </small>
                 </td>
+<<<<<<< HEAD
                 <td><small>{{ supplier.lifetime }}</small></td>
                 <td><small>{{ supplier.Accounts_Payable }}</small></td>
                 <td><small>{{ supplier.Accounts_Receivable }}</small></td>
@@ -57,31 +58,23 @@
                     <button class="btn btn-sm btn-danger mx-1" onclick="confirmDelete({{ supplier.id }})">
                         <i class="bx bx-trash"></i> Delete
                     </button>
+=======
+                <td><small>{{ supplier.phone }}</small></td>
+                <td><small>{{ supplier.email }}</small></td>
+                <td><small>{{ supplier.address }}</small></td>
+                <td><small>{{ supplier.contact_person }}</small></td>
+
+                <td>
+                    <button class="btn bx bx-edit mx-1" onclick="openEditModal({{ supplier.id }})"></button>
+                    <!-- Add delete button -->
+                    <button class="btn bx bx-trash mx-1" onclick="confirmDelete({{ supplier.id }})"></button>
+>>>>>>> f626cf0229e453287bdd07ee552315b636e9e66e
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <!-- View Supplier Modal -->
-    <div class="modal fade" id="viewSupplierModal" tabindex="-1" aria-labelledby="viewSupplierModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <h5 class="fw-bold">Supplier Details</h5>
-                    <hr class="rounded">
-                    <div id="viewSupplierDetails">
-                        <!-- Details will be populated here -->
-                    </div>
-                    <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Edit Supplier Modal -->
     <div class="modal fade" id="editSupplierModal" tabindex="-1" aria-labelledby="editSupplierModalLabel" aria-hidden="true">
@@ -158,8 +151,10 @@
         supplierModal.show();
     });
 
+    
+
     new DataTable('#supplier_list', {
-        paging: false
+        paging: false,
     });
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -213,17 +208,22 @@
         });
     });
 
+    // Function to open the edit modal and populate it with supplier data
     function openEditModal(supplierId) {
         supId = supplierId;
-        fetch(`/inventory/suppliers/edit/${supplierId}/`)
+        console.log('supplier', supplierId);
+        fetch(`/inventory/suppliers/edit/${supplierId}/`)  // Adjust this URL to match your actual endpoint
             .then(response => response.json())
             .then(data => {
+                console.log(data.data[0]);
+                // Populate form fields with supplier data
                 document.getElementById("id_name").value = data.data[0].name;
                 document.getElementById("id_contact_person").value = data.data[0].contact_person;
                 document.getElementById("id_phone").value = data.data[0].phone;
                 document.getElementById("id_email").value = data.data[0].email;
                 document.getElementById("id_address").value = data.data[0].address;
 
+                // Show the modal
                 const editModal = new bootstrap.Modal(document.getElementById('editSupplierModal'));
                 editModal.show();
             })
@@ -315,14 +315,31 @@
                 }
             })
             .catch(error => {
-                console.error("Error fetching supplier details:", error);
+                console.error("Error deleting supplier:", error);
                 Swal.fire({
-                    text: "Could not load supplier details. Please try again.",
+                    text: "There was an error deleting the supplier. Please try again.",
                     icon: "error",
                     title: 'Error'
                 });
             });
+        }
+    });
+
+    // Utility function to get the CSRF token from cookies
+    function getCSRFToken() {
+        let cookieValue = null;
+        const name = 'csrftoken';
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 </script>
-
 {% endblock %}

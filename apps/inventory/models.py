@@ -6,6 +6,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from django.db.models import F
 from loguru import logger
+from apps.finance.models import Currency
 
 class BatchCode(models.Model):
     code = models.CharField(max_length=255)
@@ -36,6 +37,28 @@ class Supplier(models.Model):
     def __str__(self):
         return self.name
 
+class SupplierAccount(models.Model):
+    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE)  
+    balance = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+
+    def __str__(self):
+        return f'{self.supplier.name} balance -> {self.balance}'
+
+class SupplierAccountsPayments(models.Model):
+    account = models.ForeignKey(SupplierAccount, on_delete=models.PROTECT)
+    payment_method = models.CharField(max_length=15, choices=[
+        ('cash', 'cash'),
+        ('bank', 'bank'),
+        ('ecocash', 'ecocash')
+    ])
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE) 
+    amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.acccount.supplier.name} amount paid {self.amount}'
+
 
 class Product(models.Model):
     """Model for products."""
@@ -53,11 +76,11 @@ class Product(models.Model):
     category = models.ForeignKey('ProductCategory', on_delete=models.SET_NULL, null=True)
     tax_type = models.CharField(max_length=50, choices=TAX_CHOICES, null=True)
     min_stock_level = models.IntegerField(default=0, null=True)
-    description = models.TextField()
+    description = models.TextField(max_length=255, default='')
     end_of_day = models.BooleanField(default=False, null=True)
     service = models.BooleanField(default=False, null=True)
     dealer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
-    suppliers = models.ManyToManyField(Supplier, related_name="products")
+    suppliers = models.ManyToManyField('Supplier', related_name="products")
 
     def __str__(self):
         return self.name
@@ -109,7 +132,7 @@ class PurchaseOrder(models.Model):
         self.save()
 
     def __str__(self):
-        return f"PO {self.order_number} - {self.supplier}"
+        return f"PO {self.order_number}"
     
 
 class PurchaseOrderItem(models.Model):
@@ -123,6 +146,7 @@ class PurchaseOrderItem(models.Model):
     received = models.BooleanField(default=False, null=True)
     expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     dealer_expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True)
 
     def receive_items(self, quantity):
     
@@ -210,10 +234,10 @@ class Inventory(models.Model):
     
     
 class Transfer(models.Model):
-    transfer_ref = models.CharField(max_length=20)
+    transfer_ref = models.CharField(max_length=100)
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='user_branch')
-    transfer_to = models.ForeignKey(Branch, on_delete=models.CASCADE)
-    description =  models.CharField(max_length=266)
+    transfer_to = models.ManyToManyField(Branch)
+    description =  models.CharField(max_length=255, null=True, blank=True)
     date = models.DateField(auto_now_add=True)
     time = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
@@ -224,19 +248,15 @@ class Transfer(models.Model):
     receive_status = models.BooleanField(default=False, null=True)
 
     @classmethod
-    def generate_transfer_ref(self, branch, destination_branch):
-        last_transfer = Transfer.objects.filter(branch__name=branch).order_by('-id').first()
+    def generate_transfer_ref(self, branch, branches):
+        print(branch, branches)
+        last_transfer = Transfer.objects.filter(branch__name=branch, delete=False).order_by('-id').first()
         if last_transfer:
-            if str(last_transfer.transfer_ref.split(':')[0])[-1] == branch[0]:
-                last_reference_number = int(last_transfer.transfer_ref.split('-')[1]) 
-                new__reference_number = last_reference_number + 1   
-            else:
-                new__reference_number  = 1
-            return f"{branch[:1]}:{destination_branch[:1]}-{new__reference_number:04d}"  
+            last_reference = int(last_transfer.transfer_ref.split(' ')[1])
+            new_reference = f'Ref {last_reference + 1} : {branches}'
         else:
-            new__reference_number = 1
-            return f"{branch[:1]}:{destination_branch[:1]}-{new__reference_number:04d}"  
-    
+            return f'Ref 1 {branch}: {branches}'
+        return new_reference
     
     def __str__(self):
         return self.transfer_ref
@@ -261,7 +281,7 @@ class TransferItems(models.Model):
     description = models.CharField(max_length=255, null=True, blank=True)
     over_less_description = models.CharField(max_length=255, null=True, blank=True)
     received_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
-    description = models.TextField()
+    description = models.TextField(null=True)
     receieved_quantity = models.IntegerField(default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
@@ -377,7 +397,7 @@ class Service(models.Model):
     tax_type = models.CharField(max_length=50, choices=tax_choices)
     category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, null=True)
     # branch = models.ForeignKey(branch, on_delete=models.CASCADE)
-    description = models.TextField()
+    description = models.TextField(max_length=255, default= '')
     
     def __str__(self):
         return self.name

@@ -1,0 +1,16 @@
+[
+    {
+        "id": 1,
+        "name": "Office Space",
+        "promotion": "10% off first month",
+        "price": "$500",
+        "duration": "1 month"
+    },
+    {
+        "id": 2,
+        "name": "Meeting Room",
+        "promotion": "No promotion",
+        "price": "$30",
+        "duration": "1 hour"
+    }
+]

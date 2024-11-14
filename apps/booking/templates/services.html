@@ -12,9 +12,14 @@
     <div class="row">
         <aside class="col-2 bg-dark text-white p-4">
             <ul class="list-unstyled">
+<<<<<<< HEAD
                 <li><a href="#" class="text-white">Services</a></li>
                 <li><a href="#" class="text-white">Offices</a></li>
                 <li><a href="#" class="text-white">Members</a></li>
+=======
+                <li><a href="]" class="text-white">Services</a></li>
+                <li><a href="{% url 'booking:member' %}" class="text-white">Members</a></li>
+>>>>>>> f626cf0229e453287bdd07ee552315b636e9e66e
                 <li><a href="#" class="text-white">Logs</a></li>
                 <li><a href="#" class="text-white">Settings</a></li>
             </ul>
@@ -134,7 +139,11 @@
             .then(response => response.json())
             .then(data => populateTable(data, serviceType))
             .catch(error => console.error("Error fetching services:", error));
+<<<<<<< HEAD
     }
+=======
+    }fetchServices
+>>>>>>> f626cf0229e453287bdd07ee552315b636e9e66e
 
     document.getElementById("monthlyServiceCard").addEventListener("click", function() {
         fetchServices("monthly");
@@ -174,11 +183,22 @@
             service_type: document.getElementById("serviceType").value
         };
 
+<<<<<<< HEAD
         fetch("/service_crud/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newService)
         })
+=======
+        fetch(`/service_crud/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify(data)
+            })
+>>>>>>> f626cf0229e453287bdd07ee552315b636e9e66e
         .then(response => response.json())
         .then(data => {
             console.log("Service saved:", data);
@@ -193,7 +213,11 @@
         if (confirmation) {
             fetch(`/service_crud/`, {
                 method: "DELETE",
+<<<<<<< HEAD
                 headers: { "Content-Type": "application/json" },
+=======
+                headers: { 'Content-Type': 'application/json'},
+>>>>>>> f626cf0229e453287bdd07ee552315b636e9e66e
                 body: JSON.stringify({ service_id: serviceId })
             })
             .then(response => response.json())
@@ -209,6 +233,10 @@
         }
     }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> f626cf0229e453287bdd07ee552315b636e9e66e
     document.getElementById("searchInput").addEventListener("keyup", function() {
         const searchTerm = this.value.toLowerCase();
         const rows = document.querySelectorAll("#searchResultsBody tr");
@@ -218,6 +246,29 @@
             row.style.display = text.includes(searchTerm) ? "" : "none";
         });
     });
+<<<<<<< HEAD
 </script>
 
 {% endblock content %}
+=======
+        
+    // Utility function to get the CSRF token from cookies
+    function getCSRFToken() {
+        let cookieValue = null;
+        const name = 'csrftoken';
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+    }
+        return cookieValue;
+
+</script>
+{% endblock content %}
+>>>>>>> f626cf0229e453287bdd07ee552315b636e9e66e

@@ -8,6 +8,16 @@
         display: flex;
         align-items: center;
     }
+    .branch{
+        background: #5897fb;
+        height: 80px;
+    }
+    .custom-input-size{
+        font-size: 10px;
+    }
+    .custom-input-width{
+        width: 30px;
+    }
 </style>
 <div class="inventory">
     <div class="add-transfer">
@@ -100,6 +110,7 @@
   let productName = '';
   let salesPerson = false;
   let branchesList = [];
+  let branches = [];
   let userRole = `{{ request.user.role }}`
 
   const errorEl = document.getElementById('error');
@@ -134,43 +145,61 @@
     document.getElementById('getValuesButton').addEventListener('click', function() {
         const values = getSelectedValues();
         const product = document.getElementById('id_product').value;
-
+        console.log('values', values)
+        pushBranches(values)
         displayTables(values, product);
-
     });
+
+    const pushBranches = (values) => {
+        values.forEach((b) => {
+            const branchExists = branches.some(branch => branch.name === b.name);
+            if (!branchExists) {
+                branches.push({
+                    'name': b.name,
+                    'value': b.value
+                });
+                branchesList.push(b.name);
+            }
+        });
+    }
 
     const displayTables = (values, product, prodData) => {
     let tableEl = document.getElementById('branchesTable');
 
-    values.forEach((value) => {
-        branchesList.push(value?.name);
+    tableEl.innerHTML = ''
 
+    values.forEach((value) => {
+        console.log('branches', branches)
         // If branch exists, don't include it again
         if (!branchesList.includes(value)) {
-            const productData = prodData[0]; // Assuming single product data
+            const productData = prodData[0]; 
 
             tableEl.innerHTML += `
                 <div class='m-1 branch-data border p-2 rounded' data-branch-name="${value?.name}">
-                    <h5>${value?.name}</h5>
-                    <div class="{% if request.user.role == 'sales' %} d-none {% endif %}">
+                    <div class='d-flex justify-content-center align-items-center branch text-light rounded shadow'>
+                        <small class='text-center px-2'>${value?.name}</small>
+                    </div>
+                    <div class="{% if request.user.role == 'sales' %} d-none {% endif %} mt-2">
                         <div id="div_id_price" class="mb-1">
-                            <label for="id_price" class="form-label requiredField">Price</label>
-                            <input type="number" name="price" step="0.01" value="${productData.price || ''}" class="numberinput form-control price-input" required>
+                            <label for="id_price" class="form-label requiredField">
+                                <small>Price</small>
+                            </label>
+                            <input type="number" name="price" step="0.01" value="${productData.price || ''}" class="numberinput form-control price-input custom-input-size" required>
                             <p id="price_error" class="fs-6 text-danger"></p>
                         </div>
                         <div id="div_id_dealer_price" class="mb-1">
-                            <label for="id_dealer_price" class="form-label requiredField">Wholesale Price</label>
-                            <input type="number" name="dealer_price" step="0.01" value="${productData.dealer_price || ''}" class="numberinput form-control dealer-price-input" required>
+                            <label for="id_dealer_price" class="form-label requiredField">
+                                <small>Wholesale Price</small>
+                            </label>
+                            <input type="number" name="dealer_price" step="0.01" value="${productData.dealer_price || ''}" class="numberinput form-control dealer-price-input custom-input-size" required>
                             <p id="dealer_price_error" class="fs-6 text-danger"></p>
                         </div>
                     </div>
                     <div id="div_id_quantity" class="mb-1">
-                        <label for="id_quantity" class="form-label requiredField">Quantity</label>
-                        <input type="number" name="quantity" min="0" value="${productData.quantity || ''}" class="numberinput form-control quantity-input" required>
-                    </div>
-                    <div id="div_id_description" class="mb-3">
-                        <label for="id_description" class="form-label requiredField">Description<span class="asteriskField">*</span></label>
-                        <textarea name="description" cols="20" rows="2" class="textarea form-control description-input" required>${productData.description || ''}</textarea>
+                        <label for="id_quantity" class="form-label requiredField">
+                            <small>Quantity</small>
+                        </label>
+                        <input type="number" name="quantity" min="0" value="${productData.quantity || ''}" class="numberinput form-control quantity-input custom-input-size" required>
                     </div>
                 </div>
             `;
@@ -188,7 +217,7 @@
             const price = branch.querySelector('.price-input').value;
             const dealerPrice = branch.querySelector('.dealer-price-input').value;
             const quantity = branch.querySelector('.quantity-input').value;
-            const description = branch.querySelector('.description-input').value;
+            // const description = branch.querySelector('.description-input').value;
 
             const pElement = document.getElementById('id_product')
             const pSelectedOption = pElement.options[pElement.selectedIndex]
@@ -211,7 +240,7 @@
                 price: parseFloat(price),
                 dealer_price: parseFloat(dealerPrice),
                 quantity: parseInt(quantity, 10),
-                description: description,
+                description: '',
                 cost: prodCost
             };
 
@@ -221,6 +250,7 @@
 
         
         updateCartDisplay();
+        console.log(cart)
 
         
         Swal.fire({
@@ -312,8 +342,6 @@
       const cartItemsList = document.getElementById("cart-items");
       cartItemsList.innerHTML = "";
 
-      console.log('branches', branchesList)
-
       let total = 0;
       
       cart.reverse().forEach((item) => {
@@ -332,6 +360,7 @@
         `;
         cartItemsList.appendChild(row);
       });
+      document.getElementById('branchesTable').innerHTML=''
     }
 
   function clearFields() {
@@ -445,7 +474,7 @@
       const data = {
           'cart': cart,
           'salesPerson': salesPerson,
-          'branch_to': toBranchId
+          'branches_to': branches
       };
 
       console.log(data)

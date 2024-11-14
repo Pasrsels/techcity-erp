@@ -1,5 +1,6 @@
 from pickle import FALSE
 import uuid
+# from apps.inventory.models import Supplier
 from decimal import Decimal
 from django.db import models
 from django.utils import timezone
@@ -23,6 +24,13 @@ class Currency(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+# class Creditors(models.Model):
+#     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, null=True)
+#     amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+
+#     def __str__(self):
+#         return f'{self.supplier.name}: {self.amount}'
 
 class ChartOfAccounts(models.Model):
     class AccountType(models.TextChoices):

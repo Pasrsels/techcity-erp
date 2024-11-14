@@ -1,6 +1,5 @@
-.venv/
-env/
-# migrations/
+
+# /migrations/
 # */migrations/*
 .env
 *.pyc

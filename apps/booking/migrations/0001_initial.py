@@ -40,11 +40,11 @@ class Migration(migrations.Migration):
                 ("name", models.CharField(max_length=255)),
                 (
                     "price",
-                    models.DecimalField(decimal_places=2, default=0, max_digits=10),
+                    models.DecimalField(decimal_places=2, default=0.00, max_digits=10),
                 ),
                 (
                     "cost",
-                    models.DecimalField(decimal_places=2, default=0, max_digits=10),
+                    models.DecimalField(decimal_places=2, default=0.00, max_digits=10),
                 ),
                 ("measurement", models.CharField(max_length=255)),
                 ("recorded", models.DecimalField(decimal_places=4, max_digits=10)),

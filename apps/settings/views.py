@@ -4,18 +4,13 @@ import asyncio
 from pathlib import Path
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-
 from utils.identify_pc import get_mac_address, get_system_uuid, get_hostname
 from .forms import EmailSettingsForm
 from techcity.settings.base import INVENTORY_EMAIL_NOTIFICATIONS_STATUS
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-
-import logging
-
-from .models import NotificationsSettings, Printer
-
-logger = logging.getLogger(__name__)
+from loguru import logger
+from .models import NotificationsSettings, Printer, TaxSettings
 
 
 @login_required
@@ -36,10 +31,12 @@ def settings(request):
             printer_data = value[0]
 
     notifications_settings = NotificationsSettings.objects.filter(user=request.user).first()
+    tax_settings = TaxSettings.objects.all()
 
     return render(request, 'settings/settings.html', {
         'printer': printer_data,
         'email_form': email_form,
+        'tax_settings':tax_settings,
         'notifications': notifications_settings
     })
 
@@ -344,24 +341,36 @@ async def get_bluetooth_device(address):
     device = next((d.address for d in devices), None)
     return device
 
-# @login_required
-# def print_receipt(request, invoice_id):
-#     # ... Retrieve invoice data ...
-#     printer_settings = PrinterSettings.objects.first()  # Or get from session
+@login_required
+def update_tax_method(request):
+    selected_method_id = request.GET.get('method', None)
+    try:
+        if selected_method_id:
+            logger.info(f'selected method: {selected_method_id}')
 
-#     if not printer_settings:
-#         return JsonResponse({'success': False, 'error': 'No printer configured.'})
+            tax_setting = TaxSettings.objects.get(id=selected_method_id)
 
-#     try:
-#         async with BleakClient(printer_settings.address) as client:
-#             print_service = await client.get_service(printer_settings.service_uuid)
-#             tx_characteristic = print_service.get_characteristic(UUID_TX_CHAR)  # Get characteristic for sending data
+            logger.info(f'tax object: {tax_setting}')
 
-#             # ... Format receipt data ...
-#             receipt_data = format_receipt(invoice)  # Your formatting logic
+            logger.info(TaxSettings.objects.all().values())
+            
+            # remove the selected on any tax_setting method
+            selected_settings = TaxSettings.objects.filter(selected=True)
 
-#             await client.write_gatt_char(tx_characteristic, receipt_data)
+            for setting in selected_settings:
+                setting.selected = False
+                setting.save()
 
-#         return JsonResponse({'success': True})
-#     except Exception as e:
-#         return JsonResponse({'success': False, 'error': str(e)})
+            # assign the selected tax_method to be default
+            tax_setting.selected = True 
+            tax_setting.save()
+          
+            response_data = {
+                'name': tax_setting.name,
+                'selected': tax_setting.selected
+            }
+            return JsonResponse(response_data, safe=False)
+        else:
+            return JsonResponse({'error': 'Invalid method'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, }, status=400)
