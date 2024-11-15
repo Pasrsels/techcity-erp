@@ -42,6 +42,9 @@ class SupplierAccount(models.Model):
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE)  
     balance = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
+    class Meta:
+        unique_together = ('currency',) 
+
     def __str__(self):
         return f'{self.supplier.name} balance -> {self.balance}'
 
@@ -55,9 +58,10 @@ class SupplierAccountsPayments(models.Model):
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE) 
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.acccount.supplier.name} amount paid {self.amount}'
+        return f'{self.account.supplier.name} amount paid {self.amount}'
 
 
 class Product(models.Model):

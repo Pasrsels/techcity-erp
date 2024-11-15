@@ -1388,6 +1388,7 @@ def create_purchase_order(request):
             expenses = data.get('expenses', [])
             cost_allocations = data.get('cost_allocations', [])
             hold = data.get('hold', False)
+            supplier_payment_data = data.get('supplier_data')
 
             unique_expenses = []
 
@@ -2485,7 +2486,7 @@ def supplier_edit(request, supplier_id):
     return JsonResponse({"success":False, "message":"Invalid Request"})
 
 #payments
-def supplier_payments(po):
+def supplier_payments(po, payment_data):
     #add payment
     data = PurchaseOrderItem.objects.filter(purchase_order=po).values('id', 'quantity', 'unit_cost', 'purchase_order__id', 'product__name', 'supplier_id')
     list_entries= []
@@ -2506,36 +2507,58 @@ def supplier_payments(po):
                 amount = quantity * unit_cost
                 items.append({'id': item_id, 'amount': amount})
 
-    for ids in list_entries:
-        supplier_info = SupplierAccountsPayments.objects.filter(account_supplier_id = ids['id'])\
-        .values('account__supplier__id', 'account__supplier__name', 'account__balance', 'currency__exchange_rate', 'currency__name', 'amount')
+    
+        """
+            [list_entries we have supplier id and total amount of goods he/she provided]
+            [payment data supplier id, amount paid to the supplier, currency, payment method]   
+            1. we want to create a payment for each supplier
+            2. we want calculate the balance for each supplier and update the balance
+            3. if the account the supplier doesnt exist we need to create it
+        """
 
-        supplier_id = supplier_info['account__supplier__id']
-        supplier_name = supplier_info['account__supplier__name']
-        supplier_balance = supplier_info['account__balance']
-        current_rate = supplier_info['currency__exchange_rate']
-        currency_name = supplier_info['currency_name']
-        paid_amount = supplier_info['amount']
+        for payment_info in payment_data:
+            currency = Currency.objects.get(id=payment_info['currency'])
+            supplier = Supplier.objects.get(id=payment_info['id'])
 
-        if ids['id'] == supplier_id:
-            if currency_name == 'USD':
-                new_balance = supplier_balance - paid_amount
-                ids['Balance'] = new_balance
-            else:
-                converted_balance = current_rate * supplier_balance
-                bal = converted_balance - paid_amount
-                new_balance = bal/current_rate
-                ids['Balance'] = new_balance
-        return print('id does not exist')
-    return list_entries
+            account, _ = SupplierAccount.objects.get_or_create(
+                supplier = supplier,
+                defaults={
+                    'currency':currency,
+                    'balance':0
+                }
+            )
+
+            SupplierAccountsPayments.objets.create(
+                account=account,
+                currency=currency,
+                amount=payment_info['amount'],
+                payment_method=payment_info['payment_method']
+            ) 
+
+            calucalateSupplierBalance(account, currency, payment_info['amount'])
+
+
+        def calucalateSupplierBalance(account, currency, paid_amount):
+            for supplier in list_entries:
+                if account.supplier.id == supplier:
+                    use_account = SupplierAccount.objets.get(currency=currency, account=account)
+                    use_account.balance = supplier['amount'] - paid_amount
+                
 
 #Payment history
-def PaymentHistory(target,request_user):
-
-    supplier_history = SupplierAccountsPayments.objects.filter(account_supplier_id = target).values('timestamp', 'amount', 'account__balance')
-    for items in supplier_history:
-        items['user'] = request_user
-    return supplier_history
+@login_required
+def PaymentHistory(request, supplier_id):
+    if request.method == 'GET':
+        supplier_history = SupplierAccountsPayments.objects.filter(account__supplier_id = supplier_id).\
+            values(
+                'timestamp', 
+                'amount',
+                'account__balance',
+                'user__username',
+                'currency__name'
+            )
+        return JsonResponse({'success':True, 'data':list(supplier_history)}, status=200)
+    return JsonResponse({'success':False, 'message':'Invalid request'}, status=500)
 
 @login_required
 def supplier_view(request):

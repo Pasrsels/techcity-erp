@@ -180,7 +180,7 @@
                 <h5 class="fw-bold">Payment History</h5>
                 <hr class="rounded">
                 <div class="d-flex justify-content-between mb-3">
-                    <button type="button" class="btn btn-primary btn-sm" onclick="openPaymentModal()">Add Payment</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="p_history_btn">Add Payment</button>
                     <button type="button" class="btn btn-secondary btn-sm" id="toggleCurrencyButton">Switch to ZiG</button>
                     <button type="button" class="btn btn-danger btn-sm mx-2" data-bs-dismiss="modal">Close</button>
                 </div>
@@ -189,26 +189,12 @@
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>Amount</th>
+                                <th>Amount Paid</th>
                                 <th>Accounts Payable</th>
                                 <th>User</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {% for payment in usd_payments %}
-                            <tr>
-                                <td>{{ payment.date }}</td>
-                                <td>{{ payment.amount }}</td>
-                                <td>{{ payment.accounts_payable }}</td>
-                                <td>{{ payment.user }}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="editPayment({{ payment.id }})">Edit</button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="deletePayment({{ payment.id }})">Delete</button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
+                        <tbody id="usd_payment_history"></tbody>
                     </table>
                 </div>
                 <div id="zigTable" style="display: none;">
@@ -216,26 +202,12 @@
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>Amount</th>
+                                <th>Amount Paid</th>
                                 <th>Accounts Payable</th>
                                 <th>User</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {% for payment in zig_payments %}
-                            <tr>
-                                <td>{{ payment.date }}</td>
-                                <td>{{ payment.amount }}</td>
-                                <td>{{ payment.accounts_payable }}</td>
-                                <td>{{ payment.user }}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="editPayment({{ payment.id }})">Edit</button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="deletePayment({{ payment.id }})">Delete</button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
+                        <tbody id="zig_payment_table"></tbody>
                     </table>
                 </div>
             </div>
@@ -250,18 +222,24 @@
     let supId = '';
     let deleteSupId = null;
 
+    const historyBtn = document.getElementById('p_history_btn');
     const addButton = document.getElementById('addButton');
     const supplierModal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
+    const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+    const paymentHistoryModal = new bootstrap.Modal(document.getElementById('paymentHistoryModal'));
 
     addButton.addEventListener('click', () => {
         supplierModal.show();
     });
 
-    
+    historyBtn.addEventListener('click', ()=>{
+        paymentHistoryModal.hide()
+        paymentModal.show()
+    })
 
-  new DataTable('#supplier_list', {
-         paging: false,
- });
+    new DataTable('#supplier_list', {
+            paging: false,
+    });
 
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('supplierForm');
@@ -315,29 +293,80 @@
     });
     // Payment Modal
     function openPaymentModal(supplierId) {
-            const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
             paymentModal.show();
         }
 
         // Payment History Modal
         function openPaymentHistoryModal(supplierId) {
-            const paymentHistoryModal = new bootstrap.Modal(document.getElementById('paymentHistoryModal'));
             paymentHistoryModal.show();
+            fetch(`/inventory/suppliers/payment-history/${supplierId}/`,
+                {
+                    method:'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                }
+            )
+            .then(response=>response.json())
+            .then(data=>{
+                if (data.success){
+                    console.log('supplier data', data)
+                    displayData(data.data)
+                }else{
+                    Swal.fire({
+                        icon:'error',
+                        title:'Error',
+                        text:'Failed to fetch supplier payment data.'
+                    })
+                }
+                
+            })
+
         }
-// Toggle between USD and ZiG tables in the Payment History Modal
-document.getElementById('toggleCurrencyButton').addEventListener('click', function() {
-        const usdTable = document.getElementById('usdTable');
-        const zigTable = document.getElementById('zigTable');
-        if (usdTable.style.display === 'none') {
-            usdTable.style.display = 'block';
-            zigTable.style.display = 'none';
-            this.textContent = 'Switch to ZiG';
-        } else {
-            usdTable.style.display = 'none';
-            zigTable.style.display = 'block';
-            this.textContent = 'Switch to USD';
+
+        const displayData = (data) => {
+            const usdTable = document.getElementById('usd_payment_history')
+            const zigTable = document.getElementById('zig_payment_table')
+
+            usdTable.innerHTML = ''
+            zigTable.innerHTML = ''
+
+            data.forEach((supplier)=>{
+                if(supplier.currency__name == 'USD'){
+                    usdTable.innerHTML += `
+                        <tr>
+                            <td>${ new Date(supplier.timestamp).toLocaleDateString() }</td>
+                            <td>${ supplier.amount }</td>
+                            <td>${ supplier.account__balance }</td>
+                            <td>${ supplier.user__username }</td>
+                        </tr>
+                    `
+                }else{
+                    zigTable.innerHTML += `
+                        <tr>
+                            <td>${ new Date(supplier.timestamp).toLocaleDateString() }</td>
+                            <td>${ supplier.amount }</td>
+                            <td>${ supplier.account__balance }</td>
+                            <td>${ supplier.user__username }</td>
+                        </tr>
+                    `
+                }
+            })
         }
-    });
+        // Toggle between USD and ZiG tables in the Payment History Modal
+        document.getElementById('toggleCurrencyButton').addEventListener('click', function() {
+                const usdTable = document.getElementById('usdTable');
+                const zigTable = document.getElementById('zigTable');
+                if (usdTable.style.display === 'none') {
+                    usdTable.style.display = 'block';
+                    zigTable.style.display = 'none';
+                    this.textContent = 'Switch to ZiG';
+                } else {
+                    usdTable.style.display = 'none';
+                    zigTable.style.display = 'block';
+                    this.textContent = 'Switch to USD';
+                }
+            });
 
     // Function to open the edit modal and populate it with supplier data
     function openEditModal(supplierId) {
