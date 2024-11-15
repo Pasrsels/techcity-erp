@@ -20,7 +20,17 @@
             <tbody>
                 {% for transfer in transfers %}
                     <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %}">
-                        <td>{% if transfer.transfer_to == request.user.branch %}<span class="d-flex align-items-center"><i class='bx bx-right-arrow-alt text-success fs-2'></i>In</span>{% else %}<span class="d-flex align-items-center"><i class='bx bx-left-arrow-alt text-danger fs-2'></i>Out</span>{% endif %}</td>
+                        <td>
+                            {% if request.user.branch in transfer.transfer_to.all %}
+                                <span class="d-flex align-items-center">
+                                    <i class='bx bx-right-arrow-alt text-success fs-2'></i>In
+                                </span>
+                            {% else %}
+                                <span class="d-flex align-items-center">
+                                    <i class='bx bx-left-arrow-alt text-danger fs-2'></i>Out
+                                </span>
+                            {% endif %}
+                        </td>
                         <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.time }}</small></td>
                         <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_ref }}</small></td>
                         <td></td>
