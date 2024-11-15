@@ -136,8 +136,8 @@
         // green received
         const receive = () => {
             {% for order in orders %}
-                if (`${order.received}`) {
-                    document.getElementById(`id_${order.id}`).classList.add('bg-success');
+                if (${order.received}) {
+                    document.getElementById(id_${order.id}).classList.add('bg-success');
                 }
             {% endfor %}
         };
@@ -154,7 +154,7 @@
                 confirmButtonText: 'Yes, delete it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`/inventory/purchase_order/delete/${purchase_order_id}/`, {
+                    fetch(/inventory/purchase_order/delete/${purchase_order_id}/, {
                         method: 'DELETE',
                         headers: {
                             'X-CSRFToken': getCookie('csrftoken'),
@@ -199,7 +199,7 @@
             const data = {
                 'status': document.getElementById('id_status').value
             };
-            fetch(`/inventory/purchase_orders/status/${orderID}/`, {
+            fetch(/inventory/purchase_orders/status/${orderID}/, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -227,7 +227,7 @@
         }
 
         function showSupplierDetails(orderId) {
-            fetch(`/inventory/purchase_order/suppliers/${orderId}/`)
+            fetch(/inventory/purchase_order/suppliers/${orderId}/)
                 .then(response => response.json())
                 .then(data => {
                     suppliers = data.suppliers;

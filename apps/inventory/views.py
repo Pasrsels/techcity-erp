@@ -1335,6 +1335,7 @@ def purchase_orders(request):
     orders = PurchaseOrder.objects.filter(branch = request.user.branch)
 
     items = PurchaseOrderItem.objects.filter(purchase_order__id=5)
+    currencies = Currency.objects.all()
 
     # Update the 'received' field for each item
     for item in items:
@@ -1350,14 +1351,10 @@ def purchase_orders(request):
         {
             'form':form,
             'orders':orders,
+            'currencies':currencies,
             'status_form':status_form 
         }
     )
-
-from django.db import transaction
-from decimal import Decimal
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
 
 @login_required
 def create_purchase_order(request):
@@ -1388,6 +1385,7 @@ def create_purchase_order(request):
             expenses = data.get('expenses', [])
             cost_allocations = data.get('cost_allocations', [])
             hold = data.get('hold', False)
+            supplier_payment_data = data.get('supplier_data')
 
             unique_expenses = []
 
@@ -1517,19 +1515,90 @@ def create_purchase_order(request):
                 # Process finance updates
                 if not purchase_order.hold:
                     if purchase_order.status.lower() == 'received':
-                        if_purchase_order_is_received(
-                            request, 
-                            purchase_order, 
-                            tax_amount, 
-                            payment_method
-                        )       
+                        # if_purchase_order_is_received(
+                        #     request, 
+                        #     purchase_order, 
+                        #     tax_amount, 
+                        #     payment_method
+                        # ) 
+                        #
+                        supplier_payments(purchase_order, supplier_payment_data, request)
+                          
 
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
         return JsonResponse({'success': True, 'message': 'Purchase order created successfully'})
+    
+def supplier_payments(po, payment_data, request):
+
+    """add payments to a supplier payment accounts and process tax and deduct neccessary accounts 
+        in the finance.
+    """
+
+    logger.info(f'supplier payment data: {payment_data}')
+
+    data = PurchaseOrderItem.objects.filter(purchase_order=po).\
+        values('id', 'quantity', 'unit_cost', 'purchase_order__id', 'product__name', 'supplier_id')
+    
+    list_entries= []
+    for item in data:
+        item_id = item['id']
+        quantity = item['quantity']
+        unit_cost = item['unit_cost']
+ 
+        for items in list_entries:
+            t_amount = 0
+            if items['id'] == item_id:
+                amount = quantity * unit_cost
+                t_amount = items['amount'] + amount
+                items['amount'] =  t_amount
+            else:
+                amount = quantity * unit_cost
+                items.append({'id': item_id, 'amount': amount})
+
+    
+        """
+            [list_entries we have supplier id and total amount of goods he/she provided]
+            [payment data supplier id, amount paid to the supplier, currency, payment method]   
+            1. we want to create a payment for each supplier
+            2. we want calculate the balance for each supplier and update the balance
+            3. if the account the supplier doesnt exist we need to create it
+        """
+
+        for payment_info in payment_data:
+            currency = Currency.objects.get(id=payment_info['currency'])
+            supplier = Supplier.objects.get(id=payment_info['id'])
+
+            account, _ = SupplierAccount.objects.get_or_create(
+                supplier = supplier,
+                defaults={
+                    'currency':currency,
+                    'balance':0
+                }
+            )
+
+            SupplierAccountsPayments.objects.create(
+                account=account,
+                currency=currency,
+                amount=payment_info['amount'],
+                payment_method=payment_info['payment_method'],
+                user=request.user
+            ) 
+
+            calucalateSupplierBalance(list_entries, account, currency, payment_info['amount'])
+
+
+def calucalateSupplierBalance(list_entries, account, currency, paid_amount):
+    for supplier in list_entries:
+        if account.supplier.id == supplier:
+            use_account = SupplierAccount.objets.get(currency=currency, account=account)
+            use_account.balance = supplier['amount'] - paid_amount
+             
        
 @login_required    
 def if_purchase_order_is_received(request, purchase_order, tax_amount, payment_method):
+
+    """ to be obsolute very soon """
     try:
         currency = Currency.objects.get(default=True)
         rate = VATRate.objects.get(status=True)
@@ -2482,84 +2551,26 @@ def supplier_edit(request, supplier_id):
         except Exception as e:
             logger.info(e)
             return JsonResponse({"success":False, "message":f"{e}"})
-    return JsonResponse({"success":False, "message":"Invalid Request"})
+    return JsonResponse({"success":False, "message":"Invalid Request"})   
 
-#payments
+#Payment history
 @login_required
-def supplier_payments(request):
-    #add payment
-    if request.method == "POST":
-        data = json.loads(request.body)
-
-        supplier_details = data.get('Supplier',{})
-        supplier_acc_payment = data.get('Payments',{})
-        supplier_acc = data.get('Account',{})
-        currency = data.get('Currency',{})
-
-        supplier_name = supplier_details.get('name')
-        supplier_phone = supplier_details.get('phone')
-        supplier_person = supplier_details.get('contact_person')
-        supplier_address = supplier_details.get('address')
-        supplier_email = supplier_details.get('email')
-
-        supplier_amount = supplier_acc_payment.get('amount')
-        supplier_pay_method = supplier_acc_payment.get('payment_method')
-
-        currency_code = currency.get('code')
-        currency_name = currency.get('name')
-        currency_symbol = currency.get('symbol')
-        currency_exchange = currency.get('exchange_rate')
-        currency_default = currency.get('default')
-
-        supplier_acc_bal = supplier_acc.get('balance')
-        
-        if Supplier.objects.filter(phone = supplier_phone).exists():
-            if currency_name == "USD":
-                bal = supplier_acc_bal - supplier_amount
-            elif currency_name == "ZIG":
-                converted_bal = supplier_acc_bal * currency_exchange
-                bal = converted_bal - supplier_amount
-        elif not supplier_name or not supplier_phone or not supplier_person or not supplier_address \
-         or not supplier_email or not supplier_amount or not supplier_pay_method or not currency_code \
-          or not currency_name or not currency_symbol or not currency_exchange or not currency_default \
-          or not supplier_acc_bal:
-            return JsonResponse({'success':False, 'response': 'fill in the fields'}, status = 400)
-        
-        with transaction.Atomic():
-            supplier_info = Supplier(
-                name = supplier_name,
-                phone = supplier_phone,
-                contact_person = supplier_person,
-                address = supplier_address,
-                email = supplier_email
+def PaymentHistory(request, supplier_id):
+    if request.method == 'GET':
+        supplier_history = SupplierAccountsPayments.objects.filter(account__supplier_id = supplier_id).\
+            values(
+                'timestamp', 
+                'amount',
+                'account__balance',
+                'user__username',
+                'currency__name'
             )
+        return JsonResponse({'success':True, 'data':list(supplier_history)}, status=200)
+    return JsonResponse({'success':False, 'message':'Invalid request'}, status=500)
 
-            currency_info = Currency(
-                code = currency_code,
-                name = currency_name,
-                symbol = currency_symbol,
-                exchange_rate = currency_exchange,
-                default = currency_default
-            )
-
-            suppliers_acc = SupplierAccount.objects.create(
-                balance = bal,
-                supplier = supplier_info,
-                currency = currency_info
-            )
-
-            SupplierAccountsPayments.objects.create(
-                payment_method = supplier_pay_method,
-                currency = currency_info,
-                amount = supplier_amount,
-                account = suppliers_acc
-            )
-            
 @login_required
 def supplier_view(request):
-    # supplier_products = Product.objects.all().values('name','suppliers__name', 'category__name')
-    # supplier_balances = SupplierAccount.objects.all().values('balance')
-
+    
     supplier_products = Product.objects.all()
     supplier_balances = SupplierAccount.objects.all()
     purchase_orders = PurchaseOrderItem.objects.all()
@@ -2593,19 +2604,6 @@ def supplier_view(request):
                             
     logger.info(list_orders)
     logger.info(supplier_products)
-
-    
-    #purchase order link to supplier
-    # Account_pay =[]
-    # Account_rec = []
-    # Balance = [item['balance'] for item in supplier_balances]
-    # for bal in Balance:
-    #     count=+1
-    #     if bal < 0:
-    #         Account_pay.append(balance)
-    #     Account_rec = [count,bal]
-    #Data_front = [supplier_products,Account_pay,Account_rec]
-    #logger.info(Data_front)
 
     if request.method == 'GET':
         form = AddSupplierForm()
@@ -2802,6 +2800,10 @@ def stock_take(request):
             pyhsical_quantity:int
         }
        """
+       data = json.loads(request.body)
+       prod_id = data.get('product_id')
+       phy_quantity = data.get('physical_quantity')
+
        try:
            """
             1. get the product
@@ -2810,10 +2812,16 @@ def stock_take(request):
             4. json to the front {id:inventory.id, different:difference}
            """
            
+           inventory_details = Inventory.objects.filter(product_id = prod_id).values('product__name', 'quantity','id')
+
+           quantity = inventory_details['quantity']
+           inventory_id = inventory_details['id']
+
+           if quantity >= 0:
+               descripancy_value =  quantity - phy_quantity
+               details_inventory= {'inventory_id': inventory_id, 'difference': descripancy_value}
+               return JsonResponse({'success': True, 'data': details_inventory }, status = 200)
+           return JsonResponse({'success': False }, status = 400)
+           
        except Exception as e:
-           return 
-
-
-        
-                    
-        
+           return JsonResponse({'success': False, 'response': e}, status = 400)

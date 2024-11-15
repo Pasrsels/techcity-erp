@@ -18,12 +18,9 @@
                     {% endfor %}
                 </td>
                 <td>
-                    {% for supplier, details in life_time.items %}
-                        {% if lf == supplier %}
-                            {{ lf }}
-                            {{ lf.supplier.count }}
-                            {{ lf.supplier.amount }}
-                        {% endif %}
+                    {% for sup, details in life_time.items %}
+                        {{ sup }} <br> {{ supplier.supplier}}
+                       
                     {% endfor %}
                 </td>
                 <td>
