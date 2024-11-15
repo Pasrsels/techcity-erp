@@ -74,7 +74,7 @@ class EditSupplierForm(forms.ModelForm):
 class CreateOrderForm(forms.ModelForm):
     class Meta:
         model =  PurchaseOrder
-        exclude = ['order_number', 'branch']
+        exclude = ['order_number', 'branch', 'payment_method']
       
 
 class noteStatusForm(forms.ModelForm):

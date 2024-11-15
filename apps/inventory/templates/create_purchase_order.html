@@ -445,41 +445,6 @@
     </div>
 </div>
 
-    <div class="modal fade" id="noteStatusModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-      <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-              <div class="modal-body">
-                <h5 class="fw-bold">Proceed by filling the Purchase Order form below</h5>
-                <form class="mt-2">
-                  {{ note_form | crispy}}
-                  <p id="cartError" class="text-danger"></p>
-                  <div class="d-flex justify-content-end">
-                    <div class="">
-                      <button type="button" class="btn btn-primary btn-sm w-100">
-                        <i class='bx bx-data'></i>
-                        Generate Details
-                    </button>
-                  </div>
-                  <span class="px-1"></span>
-                    </button>
-                        <button type="reset" class="btn btn-outline-dark btn-sm w-10">
-                            <i class='bx bx-reset'></i>
-                            Reset
-                        </button>
-                    </div>
-                    <span class="px-1"></span>
-                    <div class="">
-                        <button type="button" onclick="processCart();" class="btn btn-dark btn-sm w-100">
-                            <i class='bx bx-save'></i>
-                            Save
-                        </button>
-                    </div>
-                </div>
-                </form>
-              </div>
-          </div>
-      </div>
-    </div>
 <!-- Main Modal -->
 <div class="modal fade" id="noteStatusModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-dialog-centered">
@@ -490,17 +455,13 @@
                   {{ note_form | crispy }}
                   <p id="cartError" class="text-danger"></p>
                   <div class="d-flex justify-content-end">
-                      <button type="button" class="btn btn-primary btn-sm w-100" onclick="generateDetails()">
-                          <i class='bx bx-data'></i> Generate Details
-                      </button>
-                      <span class="px-1"></span>
-                      <button type="reset" class="btn btn-outline-dark btn-sm w-10">
+                      <button type="reset" class="btn btn-danger btn-sm w-10">
                           <i class='bx bx-reset'></i> Reset
                       </button>
                       <span class="px-1"></span>
-                      <button type="button" onclick="processCart();" class="btn btn-dark btn-sm w-100">
-                          <i class='bx bx-save'></i> Save
-                      </button>
+                      <button type="button" class="btn btn-primary btn-sm w-100" onclick="nextBtn()">
+                        <i class='bx bx-data'></i> Proceed to payment
+                    </button>
                   </div>
               </form>
           </div>
@@ -509,28 +470,26 @@
 </div>
 
 <!-- Details Modal (for displaying generated details in a table) -->
-<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
           <div class="modal-header">
-              <h5 class="modal-title" id="detailsModalLabel">Supplier Details</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <h5 class="modal-title" id="detailsModalLabel">Supplier Payments</h5>
+              <button type="button" class="btn btn-outline-dark" id="formAddBtn">Add payment form</button>
           </div>
           <div class="modal-body">
-              <table class="table table-bordered">
-                  <thead>
-                      <tr>
-                          <th>Supplier Name</th>
-                          <th>Amount</th>
-                      </tr>
-                  </thead>
-                  <tbody id="detailsTableBody">
-                      <!-- Rows will be populated dynamically -->
-                  </tbody>
-              </table>
+              <div>
+                <form>
+                  <div id="otherForms">
+                    <!-- to rendered by JavaScript -->
+                  </div>
+                </form>
+              </div>
           </div>
           <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="button" onclick="processCart();" class="btn btn-dark btn-sm w-100">
+                <i class='bx bx-save'></i> Save
+            </button>
           </div>
       </div>
   </div>
@@ -572,6 +531,7 @@
 </div>   
 <script src="{% static 'js/calculater.js' %}"></script>
 <script>
+    let count = 1;
     let cart = [];
     let prodData = [];
     let searchValue = '';
@@ -615,8 +575,55 @@
     const savePurchasaeOrderButton = document.getElementById('save_purchase_order')
 
     const example = new UseBootstrapSelect(document.getElementById('id_search')); 
+    const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'))
+    const formAddBtn = document.getElementById('formAddBtn');
+    const otherFormsEl = document.getElementById('otherForms');
 
- 
+    const nextBtn = () =>{
+      noteModal.hide()
+      paymentModal.show()
+    }
+
+    formAddBtn.addEventListener('click', ()=>{
+    
+      otherFormsEl.innerHTML += `
+        <div id="other-form" class="d-flex flex-column rounded border p-2 mb-3">
+
+          <div class='mb-2'>
+            <select id="other_form_supplier_${count}" class="form-select">
+              <option value="">Select Supplier</option>
+              {% for supplier in suppliers %}
+                <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class='mb-2'>
+            <select id="other_form_currency_${count}" class="form-select">
+              <option value="">Select Currency</option>
+              {% for currency in currencies %}
+                <option value="{{ currency.id }}">{{ currency.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class='mb-2'>
+            <select id="other_form_pmethod_${count}" class="form-select">
+              <option value="">Select Payment Option</option>
+              <option value="cash">Cash</option>
+              <option value="bank">Bank</option>
+              <option value="ecocash">Ecocash</option>
+            </select>
+          </div>
+
+          <div class='mb-2'>
+            <input type="number" id="other_form_amount_${count}" class="form-control" placeholder="Enter amount" style='text-align:left;'>
+          </div>
+        </div>
+      `
+      //  count += 1;
+    })
+
     document.addEventListener('DOMContentLoaded', function() {
 
         $('#id_product').select2({
@@ -1176,9 +1183,24 @@
     }
     
     function processCart() {
+      suppliers_payment_data = []
+
+      for(let i=1; i<=count; i++){
+        suppliers_payment_data.push(
+          {
+            'id':document.getElementById(`other_form_supplier_${count}`).value,
+            'payment_method':document.getElementById(`other_form_pmethod_${count}`).value,
+            'amount':parseFloat(document.getElementById(`other_form_amount_${count}`).value),
+            'currency':document.getElementById(`other_form_currency_${count}`).value
+          }
+        )
+      }
+
+      console.log('supplier paymetnt data: ', suppliers_payment_data)
 
       const data= {
         'po_items':cart,
+        'supplier_data':suppliers_payment_data,
         'hold':holdPurchaseOrder,
         'expenses':expensesData,
         'cost_allocations':formData,
@@ -1669,7 +1691,7 @@
         });
     }
   // Assuming supplier data is rendered server-side in Django and passed to the JavaScript context
-  function generateDetails() {
+  function paymentNextBtn() {
       const tableBody = document.getElementById('detailsTableBody');
       tableBody.innerHTML = ''; 
 
