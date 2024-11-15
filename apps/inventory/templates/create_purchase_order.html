@@ -283,7 +283,11 @@
                 <p id="cartError" class="text-danger"></p>
                 <div class="d-flex justify-content-end">
                   <div class="">
-                      <button type="reset" class="btn btn-danger btn-sm w-100">
+                  </button>
+                </div>
+                <span class="px-1"></span>
+                  </button>
+                      <button type="reset" class="btn btn-danger btn-sm w-10">
                           <i class='bx bx-reset'></i>
                           Reset
                       </button>
@@ -451,7 +455,14 @@
                   <p id="cartError" class="text-danger"></p>
                   <div class="d-flex justify-content-end">
                     <div class="">
-                        <button type="reset" class="btn btn-outline-dark btn-sm w-100">
+                      <button type="button" class="btn btn-primary btn-sm w-100">
+                        <i class='bx bx-data'></i>
+                        Generate Details
+                    </button>
+                  </div>
+                  <span class="px-1"></span>
+                    </button>
+                        <button type="reset" class="btn btn-outline-dark btn-sm w-10">
                             <i class='bx bx-reset'></i>
                             Reset
                         </button>
@@ -469,6 +480,61 @@
           </div>
       </div>
     </div>
+<!-- Main Modal -->
+<div class="modal fade" id="noteStatusModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+          <div class="modal-body">
+              <h5 class="fw-bold">Proceed by filling the Purchase Order form below</h5>
+              <form class="mt-2">
+                  {{ note_form | crispy }}
+                  <p id="cartError" class="text-danger"></p>
+                  <div class="d-flex justify-content-end">
+                      <button type="button" class="btn btn-primary btn-sm w-100" onclick="generateDetails()">
+                          <i class='bx bx-data'></i> Generate Details
+                      </button>
+                      <span class="px-1"></span>
+                      <button type="reset" class="btn btn-outline-dark btn-sm w-10">
+                          <i class='bx bx-reset'></i> Reset
+                      </button>
+                      <span class="px-1"></span>
+                      <button type="button" onclick="processCart();" class="btn btn-dark btn-sm w-100">
+                          <i class='bx bx-save'></i> Save
+                      </button>
+                  </div>
+              </form>
+          </div>
+      </div>
+  </div>
+</div>
+
+<!-- Details Modal (for displaying generated details in a table) -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="detailsModalLabel">Supplier Details</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <table class="table table-bordered">
+                  <thead>
+                      <tr>
+                          <th>Supplier Name</th>
+                          <th>Amount</th>
+                      </tr>
+                  </thead>
+                  <tbody id="detailsTableBody">
+                      <!-- Rows will be populated dynamically -->
+                  </tbody>
+              </table>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+      </div>
+  </div>
+</div>
 
     <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
       <div class="modal-dialog modal-dialog-centered">
@@ -1602,6 +1668,23 @@
             }
         });
     }
+  // Assuming supplier data is rendered server-side in Django and passed to the JavaScript context
+  function generateDetails() {
+      const tableBody = document.getElementById('detailsTableBody');
+      tableBody.innerHTML = ''; 
+
+      suppliers.forEach(supplier => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+              <td>${supplier.name}</td>
+              <td>${supplier.amount}</td>
+          `;
+          tableBody.appendChild(row);
+      });
+
+
+      new bootstrap.Modal(document.getElementById('detailsModal')).show();
+  }
 
     function getCookie(name) {
       let cookieValue = null;
