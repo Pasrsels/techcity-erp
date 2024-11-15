@@ -1335,6 +1335,7 @@ def purchase_orders(request):
     orders = PurchaseOrder.objects.filter(branch = request.user.branch)
 
     items = PurchaseOrderItem.objects.filter(purchase_order__id=5)
+    currencies = Currency.objects.all()
 
     # Update the 'received' field for each item
     for item in items:
@@ -1350,14 +1351,10 @@ def purchase_orders(request):
         {
             'form':form,
             'orders':orders,
+            'currencies':currencies,
             'status_form':status_form 
         }
     )
-
-from django.db import transaction
-from decimal import Decimal
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
 
 @login_required
 def create_purchase_order(request):

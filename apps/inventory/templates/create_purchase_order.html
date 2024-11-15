@@ -444,6 +444,7 @@
         </div>
     </div>
 </div>
+
 <!-- Main Modal -->
 <div class="modal fade" id="noteStatusModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-dialog-centered">
@@ -478,30 +479,17 @@
           </div>
           <div class="modal-body">
               <div>
-                <form action="">
-                  <div id="first-form" class="d-flex flex-column rounded border d-none p-2">
-
-                    <select id="id_first_form_1" class="form-select-sm">
-                      <option value="">Select Supplier</option>
-                      {% for supplier in suppliers %}
-                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
-                      {% endfor %}
-                    </select>
-
-                    <select id="id_first_form_2" class="form-select-sm mt-2 mb-2">
-                      <option value="">Select Payment Option</option>
-                      <option value="cash">Cash</option>
-                      <option value="bank">Bank</option>
-                      <option value="ecocash">Ecocash</option>
-                    </select>
-
-                    <input type="number" id="id_first_form_3" class="form-control-sm" placeholder="Enter amount">
+                <form>
+                  <div id="otherForms">
+                    <!-- to rendered by JavaScript -->
                   </div>
                 </form>
               </div>
           </div>
           <div class="modal-footer">
-              
+              <button type="button" onclick="processCart();" class="btn btn-dark btn-sm w-100">
+                <i class='bx bx-save'></i> Save
+            </button>
           </div>
       </div>
   </div>
@@ -539,13 +527,7 @@
           </div>
       </div>
     </div>
-
-    <div id="otherForms">
-      <!-- to rendered by JavaScript -->
-    </div>
-    <button type="button" onclick="processCart();" class="btn btn-dark btn-sm w-100">
-      <i class='bx bx-save'></i> Save
-    </button>
+    
 </div>   
 <script src="{% static 'js/calculater.js' %}"></script>
 <script>
@@ -597,94 +579,51 @@
     const formAddBtn = document.getElementById('formAddBtn');
     const otherFormsEl = document.getElementById('otherForms');
 
-
-
     const nextBtn = () =>{
       noteModal.hide()
       paymentModal.show()
     }
 
-
     formAddBtn.addEventListener('click', ()=>{
-      
-     let select  =  document.createElement('select')
-     select.id=`other_form_supplier_${count}`
-     select.classList.add('form-select-sm')
-     select.innerHTML = `
-      {% for supplier in suppliers %}
-              <option value="{{ supplier.id }}">{{ supplier.name }}</option>
-      {% endfor %}
-     `
-     otherFormsEl.appendChild(select)
+    
+      otherFormsEl.innerHTML += `
+        <div id="other-form" class="d-flex flex-column rounded border p-2 mb-3">
 
-     
-      // otherFormsEl.innerHTML += `
-      //   <div id="other-form" class="d-flex flex-column rounded border p-2">
-         
+          <div class='mb-2'>
+            <select id="other_form_supplier_${count}" class="form-select">
+              <option value="">Select Supplier</option>
+              {% for supplier in suppliers %}
+                <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
 
-      //     <select id="other_form_pmethod_${count}" class="form-select-sm mt-2 mb-2" onchange='addToSupdata(this.value, ${count})>
-      //       <option value="">Select Payment Option</option>
-      //       <option value="cash">Cash</option>
-      //       <option value="bank">Bank</option>
-      //       <option value="ecocash">Ecocash</option>
-      //     </select>
+          <div class='mb-2'>
+            <select id="other_form_pmethod_${count}" class="form-select">
+              <option value="">Select Currency</option>
+              {% for currency in currencies %}
+                <option value="{{ currency.id }}">{{ currency.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
 
-      //     <input type="number" id="other_form_amount_${count}" class="form-control-sm" placeholder="Enter amount" onchange='addToSupdata(this.value, ${count})>
-      //   </div>
-      // `
-      count += 1;
+          <div class='mb-2'>
+            <select id="other_form_pmethod_${count}" class="form-select">
+              <option value="">Select Payment Option</option>
+              <option value="cash">Cash</option>
+              <option value="bank">Bank</option>
+              <option value="ecocash">Ecocash</option>
+            </select>
+          </div>
+
+          <div class='mb-2'>
+            <input type="number" id="other_form_amount_${count}" class="form-control" placeholder="Enter amount" style='text-align:left;'>
+          </div>
+        </div>
+      `
+      // count += 1;
     })
 
-    function hey(){
-      // console.log($('#hey').text())
-      
-    }
-
-    const addToSupdata = (value, count) =>{
-      console.log(value, count)
-      suppliers_payment_data = []
-
-      // for (sup in suppliers_payment_data){
-      //   if (suppliers_payment_data){
-      //     if(sup[value]){
-      //       if(sup[value].data['paymenth_method']){
-      //         data['payment_method'] =  value
-      //       }else{
-      //         sup[value].data['amount'] = value
-      //       }
-      //     }
-      //   }else{
-      //     suppliers_payment_data.push(
-      //       {
-      //         value:{
-      //           data:{
-      //           'id':value
-      //           }
-      //         }
-      //       }
-      //     )
-      //   }
-      // }
-      // console.log(suppliers_payment_data)
-
-
-
-
-
-      for(let i=1; i<=count; i++){
-        
-        suppliers_payment_data.push(
-          {
-            'id':document.getElementById(`other_form_supplier_${count}`).value,
-            // 'payment_method':document.getElementById(`other_form_pmethod_${count}`).value,
-            // 'amount':parseFloat(document.getElementById(`other_form_amount_${count}`).value)
-          }
-        )
-      }
-
-      console.log('supplier paymetnt data: ', suppliers_payment_data)
-    }
- 
     document.addEventListener('DOMContentLoaded', function() {
 
         $('#id_product').select2({
@@ -1244,15 +1183,16 @@
     }
     
     function processCart() {
-
+      console.log(`Outer Loop ${count}`)
       suppliers_payment_data = []
+
       for(let i=1; i<=count; i++){
-        console.log(`other_form_supplier_${count}`)
+        console.log('Count in the loop', count)
         suppliers_payment_data.push(
           {
             'id':document.getElementById(`other_form_supplier_${count}`).value,
-            // 'payment_method':document.getElementById(`other_form_pmethod_${count}`).value,
-            // 'amount':parseFloat(document.getElementById(`other_form_amount_${count}`).value)
+            'payment_method':document.getElementById(`other_form_pmethod_${count}`).value,
+            'amount':parseFloat(document.getElementById(`other_form_amount_${count}`).value)
           }
         )
       }
