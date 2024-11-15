@@ -599,7 +599,7 @@
           </div>
 
           <div class='mb-2'>
-            <select id="other_form_pmethod_${count}" class="form-select">
+            <select id="other_form_currency_${count}" class="form-select">
               <option value="">Select Currency</option>
               {% for currency in currencies %}
                 <option value="{{ currency.id }}">{{ currency.name }}</option>
@@ -621,7 +621,7 @@
           </div>
         </div>
       `
-      // count += 1;
+      //  count += 1;
     })
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -1183,26 +1183,24 @@
     }
     
     function processCart() {
-      console.log(`Outer Loop ${count}`)
       suppliers_payment_data = []
 
       for(let i=1; i<=count; i++){
-        console.log('Count in the loop', count)
         suppliers_payment_data.push(
           {
             'id':document.getElementById(`other_form_supplier_${count}`).value,
             'payment_method':document.getElementById(`other_form_pmethod_${count}`).value,
-            'amount':parseFloat(document.getElementById(`other_form_amount_${count}`).value)
+            'amount':parseFloat(document.getElementById(`other_form_amount_${count}`).value),
+            'currency':document.getElementById(`other_form_currency_${count}`).value
           }
         )
       }
 
       console.log('supplier paymetnt data: ', suppliers_payment_data)
 
-      return;
-
       const data= {
         'po_items':cart,
+        'supplier_data':suppliers_payment_data,
         'hold':holdPurchaseOrder,
         'expenses':expensesData,
         'cost_allocations':formData,
