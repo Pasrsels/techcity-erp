@@ -479,7 +479,7 @@
           <div class="modal-body">
               <div>
                 <form action="">
-                  <div id="first-form" class="d-flex flex-column rounded border p-2">
+                  <div id="first-form" class="d-flex flex-column rounded border d-none p-2">
 
                     <select id="id_first_form_1" class="form-select-sm">
                       <option value="">Select Supplier</option>
@@ -497,17 +497,11 @@
 
                     <input type="number" id="id_first_form_3" class="form-control-sm" placeholder="Enter amount">
                   </div>
-
-                  <div id="otherForms">
-                    <!-- to rendered by JavaScript -->
-                  </div>
                 </form>
               </div>
           </div>
           <div class="modal-footer">
-              <button type="button" onclick="processCart();" class="btn btn-dark btn-sm w-100">
-                <i class='bx bx-save'></i> Save
-            </button>
+              
           </div>
       </div>
   </div>
@@ -545,7 +539,13 @@
           </div>
       </div>
     </div>
-    
+
+    <div id="otherForms">
+      <!-- to rendered by JavaScript -->
+    </div>
+    <button type="button" onclick="processCart();" class="btn btn-dark btn-sm w-100">
+      <i class='bx bx-save'></i> Save
+    </button>
 </div>   
 <script src="{% static 'js/calculater.js' %}"></script>
 <script>
@@ -606,28 +606,84 @@
 
 
     formAddBtn.addEventListener('click', ()=>{
-    
-      otherFormsEl.innerHTML += `
-        <div id="other-form" class="d-flex flex-column rounded border p-2">
-          <select id="other_form_supplier_${count}" class="form-select-sm">
-            <option value="">Select Supplier</option>
-            {% for supplier in suppliers %}
+      
+     let select  =  document.createElement('select')
+     select.id=`other_form_supplier_${count}`
+     select.classList.add('form-select-sm')
+     select.innerHTML = `
+      {% for supplier in suppliers %}
               <option value="{{ supplier.id }}">{{ supplier.name }}</option>
-            {% endfor %}
-          </select>
+      {% endfor %}
+     `
+     otherFormsEl.appendChild(select)
 
-          <select id="other_form_pmethod_${count}" class="form-select-sm mt-2 mb-2">
-            <option value="">Select Payment Option</option>
-            <option value="cash">Cash</option>
-            <option value="bank">Bank</option>
-            <option value="ecocash">Ecocash</option>
-          </select>
+     
+      // otherFormsEl.innerHTML += `
+      //   <div id="other-form" class="d-flex flex-column rounded border p-2">
+         
 
-          <input type="number" id="other_form_amount_${count}" class="form-control-sm" placeholder="Enter amount">
-        </div>
-      `
+      //     <select id="other_form_pmethod_${count}" class="form-select-sm mt-2 mb-2" onchange='addToSupdata(this.value, ${count})>
+      //       <option value="">Select Payment Option</option>
+      //       <option value="cash">Cash</option>
+      //       <option value="bank">Bank</option>
+      //       <option value="ecocash">Ecocash</option>
+      //     </select>
+
+      //     <input type="number" id="other_form_amount_${count}" class="form-control-sm" placeholder="Enter amount" onchange='addToSupdata(this.value, ${count})>
+      //   </div>
+      // `
       count += 1;
     })
+
+    function hey(){
+      // console.log($('#hey').text())
+      
+    }
+
+    const addToSupdata = (value, count) =>{
+      console.log(value, count)
+      suppliers_payment_data = []
+
+      // for (sup in suppliers_payment_data){
+      //   if (suppliers_payment_data){
+      //     if(sup[value]){
+      //       if(sup[value].data['paymenth_method']){
+      //         data['payment_method'] =  value
+      //       }else{
+      //         sup[value].data['amount'] = value
+      //       }
+      //     }
+      //   }else{
+      //     suppliers_payment_data.push(
+      //       {
+      //         value:{
+      //           data:{
+      //           'id':value
+      //           }
+      //         }
+      //       }
+      //     )
+      //   }
+      // }
+      // console.log(suppliers_payment_data)
+
+
+
+
+
+      for(let i=1; i<=count; i++){
+        
+        suppliers_payment_data.push(
+          {
+            'id':document.getElementById(`other_form_supplier_${count}`).value,
+            // 'payment_method':document.getElementById(`other_form_pmethod_${count}`).value,
+            // 'amount':parseFloat(document.getElementById(`other_form_amount_${count}`).value)
+          }
+        )
+      }
+
+      console.log('supplier paymetnt data: ', suppliers_payment_data)
+    }
  
     document.addEventListener('DOMContentLoaded', function() {
 
@@ -1190,15 +1246,13 @@
     function processCart() {
 
       suppliers_payment_data = []
-
-      console.log($(`id_first_form_1`).val())
       for(let i=1; i<=count; i++){
-        
+        console.log(`other_form_supplier_${count}`)
         suppliers_payment_data.push(
           {
             'id':document.getElementById(`other_form_supplier_${count}`).value,
-            'payment_method':document.getElementById(`other_form_pmethod_${count}`).value,
-            'amount':parseFloat(document.getElementById(`other_form_amount_${count}`).value)
+            // 'payment_method':document.getElementById(`other_form_pmethod_${count}`).value,
+            // 'amount':parseFloat(document.getElementById(`other_form_amount_${count}`).value)
           }
         )
       }
