@@ -1,5 +1,5 @@
 from techcity.settings.development import LOW_STOCK_THRESHHOLD
-from apps.inventory.models import ProductCategory, Inventory, StockNotifications, TransferItems
+from apps.inventory.models import ProductCategory, Inventory, StockNotifications, TransferItems, Product
 
 def product_category_list(request):
     return {'categories': ProductCategory.objects.all()}
@@ -7,6 +7,11 @@ def product_category_list(request):
 def product_list(request):
     if request.user.id != None:
        return { 'inventory': Inventory.objects.filter(branch=request.user.branch, status=True)}
+    return {}
+
+def all_products_list(request):
+    if request.user.id != None:
+       return { 'products': Product.objects.all()}
     return {}
 
 def stock_notification_count(request):
