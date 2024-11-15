@@ -33,7 +33,7 @@ urlpatterns = [
     path('supplier/json/list/', supplier_list_json, name='supplier_list_json'),
     path("suppliers/delete/<int:supplier_id>/", supplier_delete, name="delete_supplier"),
     path("suppliers/edit/<int:supplier_id>/", supplier_edit, name="edit_supplier"),
-
+    
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),
     

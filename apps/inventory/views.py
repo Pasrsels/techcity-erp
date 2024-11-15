@@ -2529,6 +2529,14 @@ def supplier_payments(po):
         return print('id does not exist')
     return list_entries
 
+#Payment history
+def PaymentHistory(target,request_user):
+
+    supplier_history = SupplierAccountsPayments.objects.filter(account_supplier_id = target).values('timestamp', 'amount', 'account__balance')
+    for items in supplier_history:
+        items['user'] = request_user
+    return supplier_history
+
 @login_required
 def supplier_view(request):
     # supplier_products = Product.objects.all().values('name','suppliers__name', 'category__name')
