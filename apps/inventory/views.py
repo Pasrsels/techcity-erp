@@ -2485,7 +2485,6 @@ def supplier_edit(request, supplier_id):
     return JsonResponse({"success":False, "message":"Invalid Request"})
 
 #payments
-@login_required
 def supplier_payments(po):
     #add payment
     data = PurchaseOrderItem.objects.filter(purchase_order=po).values('id', 'quantity', 'unit_cost', 'purchase_order__id', 'product__name', 'supplier_id')
@@ -2494,9 +2493,9 @@ def supplier_payments(po):
         item_id = item['id']
         quantity = item['quantity']
         unit_cost = item['unit_cost']
-        purchase_order_id = item['purchase_order__id']
-        product_name = item['product__name']
-        supplier_id = item['supplier_id']
+        # purchase_order_id = item['purchase_order__id']
+        # product_name = item['product__name']
+        # supplier_id = item['supplier_id']
         for items in list_entries:
             t_amount = 0
             if items['id'] == item_id:
@@ -2506,7 +2505,29 @@ def supplier_payments(po):
             else:
                 amount = quantity * unit_cost
                 items.append({'id': item_id, 'amount': amount})
-    return list_entries    
+
+    for ids in list_entries:
+        supplier_info = SupplierAccountsPayments.objects.filter(account_supplier_id = ids['id'])\
+        .values('account__supplier__id', 'account__supplier__name', 'account__balance', 'currency__exchange_rate', 'currency__name', 'amount')
+
+        supplier_id = supplier_info['account__supplier__id']
+        supplier_name = supplier_info['account__supplier__name']
+        supplier_balance = supplier_info['account__balance']
+        current_rate = supplier_info['currency__exchange_rate']
+        currency_name = supplier_info['currency_name']
+        paid_amount = supplier_info['amount']
+
+        if ids['id'] == supplier_id:
+            if currency_name == 'USD':
+                new_balance = supplier_balance - paid_amount
+                ids['Balance'] = new_balance
+            else:
+                converted_balance = current_rate * supplier_balance
+                bal = converted_balance - paid_amount
+                new_balance = bal/current_rate
+                ids['Balance'] = new_balance
+        return print('id does not exist')
+    return list_entries
 
 @login_required
 def supplier_view(request):
@@ -2766,21 +2787,16 @@ def stock_take(request):
             4. json to the front {id:inventory.id, different:difference}
            """
            
-           invento = Inventory.objects.filter(product_id = prod_id).values('product__name', 'quantity','id')
+           inventory_details = Inventory.objects.filter(product_id = prod_id).values('product__name', 'quantity','id')
 
-           quantity = invento['quantity']
-           inventory_id = invento['id']
+           quantity = inventory_details['quantity']
+           inventory_id = inventory_details['id']
 
            if quantity >= 0:
                descripancy_value =  quantity - phy_quantity
-               inve= {'inventory_id': inventory_id, 'difference': descripancy_value}
-               return JsonResponse({'success': True, 'data': inve }, status = 200)
+               details_inventory= {'inventory_id': inventory_id, 'difference': descripancy_value}
+               return JsonResponse({'success': True, 'data': details_inventory }, status = 200)
            return JsonResponse({'success': False }, status = 400)
            
        except Exception as e:
            return JsonResponse({'success': False, 'response': e}, status = 400)
-
-
-        
-                    
-        
