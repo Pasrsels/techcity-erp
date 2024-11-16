@@ -2599,19 +2599,6 @@ def supplier_view(request):
     logger.info(list_orders)
     logger.info(supplier_products)
 
-    
-    #purchase order link to supplier
-    # Account_pay =[]
-    # Account_rec = []
-    # Balance = [item['balance'] for item in supplier_balances]
-    # for bal in Balance:
-    #     count=+1
-    #     if bal < 0:
-    #         Account_pay.append(balance)
-    #     Account_rec = [count,bal]
-    #Data_front = [supplier_products,Account_pay,Account_rec]
-    #logger.info(Data_front)
-
     if request.method == 'GET':
         form = AddSupplierForm()
         suppliers = Supplier.objects.all()
@@ -2675,7 +2662,6 @@ def supplier_list_json(request):
         'name'
     )
     return JsonResponse(list(suppliers), safe=False)
-
 
 @login_required
 def supplier_account(request, supplier_id):
