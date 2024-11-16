@@ -421,8 +421,3 @@ class Stocktake(models.Model):
 
     def __str__(self):
         return self.product.product.name
-
-
-
-    
-
