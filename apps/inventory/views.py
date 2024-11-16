@@ -1522,7 +1522,7 @@ def create_purchase_order(request):
                         #     payment_method
                         # ) 
                         #
-                        supplier_payments(purchase_order, supplier_payment_data, request)
+                        # supplier_payments(purchase_order, supplier_payment_data, request)
                           
 
         except Exception as e:
