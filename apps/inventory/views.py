@@ -1335,6 +1335,7 @@ def purchase_orders(request):
     orders = PurchaseOrder.objects.filter(branch = request.user.branch)
 
     items = PurchaseOrderItem.objects.filter(purchase_order__id=5)
+    currencies = Currency.objects.all()
 
     # Update the 'received' field for each item
     for item in items:
@@ -1350,14 +1351,10 @@ def purchase_orders(request):
         {
             'form':form,
             'orders':orders,
+            'currencies':currencies,
             'status_form':status_form 
         }
     )
-
-from django.db import transaction
-from decimal import Decimal
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
 
 @login_required
 def create_purchase_order(request):
@@ -1518,19 +1515,90 @@ def create_purchase_order(request):
                 # Process finance updates
                 if not purchase_order.hold:
                     if purchase_order.status.lower() == 'received':
-                        if_purchase_order_is_received(
-                            request, 
-                            purchase_order, 
-                            tax_amount, 
-                            payment_method
-                        )       
+                        # if_purchase_order_is_received(
+                        #     request, 
+                        #     purchase_order, 
+                        #     tax_amount, 
+                        #     payment_method
+                        # ) 
+                        #
+                        supplier_payments(purchase_order, supplier_payment_data, request)
+                          
 
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
         return JsonResponse({'success': True, 'message': 'Purchase order created successfully'})
+    
+def supplier_payments(po, payment_data, request):
+
+    """add payments to a supplier payment accounts and process tax and deduct neccessary accounts 
+        in the finance.
+    """
+
+    logger.info(f'supplier payment data: {payment_data}')
+
+    data = PurchaseOrderItem.objects.filter(purchase_order=po).\
+        values('id', 'quantity', 'unit_cost', 'purchase_order__id', 'product__name', 'supplier_id')
+    
+    list_entries= []
+    for item in data:
+        item_id = item['id']
+        quantity = item['quantity']
+        unit_cost = item['unit_cost']
+ 
+        for items in list_entries:
+            t_amount = 0
+            if items['id'] == item_id:
+                amount = quantity * unit_cost
+                t_amount = items['amount'] + amount
+                items['amount'] =  t_amount
+            else:
+                amount = quantity * unit_cost
+                items.append({'id': item_id, 'amount': amount})
+
+    
+        """
+            [list_entries we have supplier id and total amount of goods he/she provided]
+            [payment data supplier id, amount paid to the supplier, currency, payment method]   
+            1. we want to create a payment for each supplier
+            2. we want calculate the balance for each supplier and update the balance
+            3. if the account the supplier doesnt exist we need to create it
+        """
+
+        for payment_info in payment_data:
+            currency = Currency.objects.get(id=payment_info['currency'])
+            supplier = Supplier.objects.get(id=payment_info['id'])
+
+            account, _ = SupplierAccount.objects.get_or_create(
+                supplier = supplier,
+                defaults={
+                    'currency':currency,
+                    'balance':0
+                }
+            )
+
+            SupplierAccountsPayments.objects.create(
+                account=account,
+                currency=currency,
+                amount=payment_info['amount'],
+                payment_method=payment_info['payment_method'],
+                user=request.user
+            ) 
+
+            calucalateSupplierBalance(list_entries, account, currency, payment_info['amount'])
+
+
+def calucalateSupplierBalance(list_entries, account, currency, paid_amount):
+    for supplier in list_entries:
+        if account.supplier.id == supplier:
+            use_account = SupplierAccount.objets.get(currency=currency, account=account)
+            use_account.balance = supplier['amount'] - paid_amount
+             
        
 @login_required    
 def if_purchase_order_is_received(request, purchase_order, tax_amount, payment_method):
+
+    """ to be obsolute very soon """
     try:
         currency = Currency.objects.get(default=True)
         rate = VATRate.objects.get(status=True)
@@ -2483,67 +2551,7 @@ def supplier_edit(request, supplier_id):
         except Exception as e:
             logger.info(e)
             return JsonResponse({"success":False, "message":f"{e}"})
-    return JsonResponse({"success":False, "message":"Invalid Request"})
-
-#payments
-def supplier_payments(po, payment_data):
-    #add payment
-    data = PurchaseOrderItem.objects.filter(purchase_order=po).values('id', 'quantity', 'unit_cost', 'purchase_order__id', 'product__name', 'supplier_id')
-    list_entries= []
-    for item in data:
-        item_id = item['id']
-        quantity = item['quantity']
-        unit_cost = item['unit_cost']
-        # purchase_order_id = item['purchase_order__id']
-        # product_name = item['product__name']
-        # supplier_id = item['supplier_id']
-        for items in list_entries:
-            t_amount = 0
-            if items['id'] == item_id:
-                amount = quantity * unit_cost
-                t_amount = items['amount'] + amount
-                items['amount'] =  t_amount
-            else:
-                amount = quantity * unit_cost
-                items.append({'id': item_id, 'amount': amount})
-
-    
-        """
-            [list_entries we have supplier id and total amount of goods he/she provided]
-            [payment data supplier id, amount paid to the supplier, currency, payment method]   
-            1. we want to create a payment for each supplier
-            2. we want calculate the balance for each supplier and update the balance
-            3. if the account the supplier doesnt exist we need to create it
-        """
-
-        for payment_info in payment_data:
-            currency = Currency.objects.get(id=payment_info['currency'])
-            supplier = Supplier.objects.get(id=payment_info['id'])
-
-            account, _ = SupplierAccount.objects.get_or_create(
-                supplier = supplier,
-                defaults={
-                    'currency':currency,
-                    'balance':0
-                }
-            )
-
-            SupplierAccountsPayments.objets.create(
-                account=account,
-                currency=currency,
-                amount=payment_info['amount'],
-                payment_method=payment_info['payment_method']
-            ) 
-
-            calucalateSupplierBalance(account, currency, payment_info['amount'])
-
-
-        def calucalateSupplierBalance(account, currency, paid_amount):
-            for supplier in list_entries:
-                if account.supplier.id == supplier:
-                    use_account = SupplierAccount.objets.get(currency=currency, account=account)
-                    use_account.balance = supplier['amount'] - paid_amount
-                
+    return JsonResponse({"success":False, "message":"Invalid Request"})   
 
 #Payment history
 @login_required
@@ -2562,9 +2570,7 @@ def PaymentHistory(request, supplier_id):
 
 @login_required
 def supplier_view(request):
-    # supplier_products = Product.objects.all().values('name','suppliers__name', 'category__name')
-    # supplier_balances = SupplierAccount.objects.all().values('balance')
-
+    
     supplier_products = Product.objects.all()
     supplier_balances = SupplierAccount.objects.all()
     purchase_orders = PurchaseOrderItem.objects.all()
