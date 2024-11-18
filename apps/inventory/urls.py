@@ -35,7 +35,6 @@ urlpatterns = [
     path("suppliers/edit/<int:supplier_id>/", supplier_edit, name="edit_supplier"),
     path("suppliers/payment-history/<int:supplier_id>/", PaymentHistory, name="payment-history"),
     path('suppliers/supplier-information/<int:supplier_id>/', supplier_details_view, name = 'supplier_details'),
-
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),
     
