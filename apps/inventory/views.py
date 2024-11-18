@@ -2560,6 +2560,27 @@ def supplier_details_view(request,supplier_id):
         return JsonResponse({'success': True, 'supplier_details': supplier_details, 'supplier_proucts': supplier_products}, status = 200)
     return JsonResponse({'success': False, 'response': 'invalid request'}, status = 500)
 
+#life time details
+@login_required
+def view_LifeTimeOrders(request, supplier_id):
+    #count of orders
+    # total cost of all orders
+    if request.method == 'GET':
+        purchaseOrderDetails = PurchaseOrderItem.objects.filter(supplier__id = supplier_id).values(
+            'purchase_order__order_number', 'unit_cost', 'quantity'
+        )
+
+        list_entries = [{'id': supplier_id, 'number of orders': 0, 'total cost': 0}]
+        count = 0
+        for items in purchaseOrderDetails:
+            if items['id'] == list_entries['id']:
+                count += 1
+                amount = (items['unit cost'] * items['quantity']) + list_entries['total cost']
+                list_entries['total cost'] = amount
+                list_entries['number of orders'] = count        
+        return JsonResponse({'success': True, 'Data': list_entries}, status = 200)
+    return JsonResponse({'success': True,  'response': 'invalid request'}, status = 500)
+
 @login_required
 def supplier_view(request):
     # supplier_products = Product.objects.all().values('name','suppliers__name', 'category__name')
