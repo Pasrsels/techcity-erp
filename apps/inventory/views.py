@@ -1514,16 +1514,7 @@ def create_purchase_order(request):
                         )
                     )
                 costAllocationPurchaseOrder.objects.bulk_create(costs_list)
-
-                # Process finance updates
-                if not purchase_order.hold:
-                    if purchase_order.status.lower() == 'received':
-                        if_purchase_order_is_received(
-                            request, 
-                            purchase_order, 
-                            tax_amount, 
-                            payment_method
-                        )       
+                          
 
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
