@@ -2560,6 +2560,15 @@ def PaymentHistory(request, supplier_id):
         return JsonResponse({'success':True, 'data':list(supplier_history)}, status=200)
     return JsonResponse({'success':False, 'message':'Invalid request'}, status=500)
 
+#individual supplier details
+@login_required
+def supplier_details_view(request,supplier_id):
+    if request.method == 'GET':
+        supplier_details = Supplier.objects.all(id = supplier_id)
+        supplier_products = Product.objects.filter(suppliers__id = supplier_id).values('category__name', 'name', 'quantity', 'batch')
+        return JsonResponse({'success': True, 'supplier_details': supplier_details, 'supplier_proucts': supplier_products}, status = 200)
+    return JsonResponse({'success': False, 'response': 'invalid request'}, status = 500)
+
 @login_required
 def supplier_view(request):
     # supplier_products = Product.objects.all().values('name','suppliers__name', 'category__name')
