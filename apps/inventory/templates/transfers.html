@@ -16,13 +16,18 @@
                             Transfer
                         </a>
                     </div>
-                    <div class='px-2'>
+                    <div class="mx-2"> 
+                        <a href='{% url 'inventory:h_transfers' %}'' type="button" class="btn btn-outline-light">
+                            Held Transfers <span class="badge">{{ hold_transfers_count }}</span>
+                        </a>
+                    </div>
+                    <div>
                         <a href='{% url 'inventory:receive_inventory' %}'  class="btn btn-outline-light">
                             Receive Stock
                             <span class="badge badge-dark text-light circle-rounded lick">{{transfers_count}}</span>
                         </a>
                     </div>
-                    <div>
+                    <div class="mx-2">
                         <a href='{% url 'inventory:over_less_list_stock' %}'  class="btn btn-outline-light flick">
                             Over/Less Received Stocks
                         </a>

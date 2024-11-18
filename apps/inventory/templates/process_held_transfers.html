@@ -78,6 +78,12 @@
                                 <option value="{{ product.id }}">{{ product.product.name }} [{{ product.quantity }}]</option>
                             {% endfor %}
                         </select>
+                    </div>
+                    <div class="mt-2">
+                        <button class="btn btn-success btn-sm w-100" id="getValuesButton" type="button">Proceed
+                            <i class="bx bx-arrow-right"></i>
+                        </button>
+                    </div>
 
                     <div class="mt-3- d-flex" style="overflow-x: auto; background: #fff;" id="branchesTable">
                         <!-- data will be dynamically rendered by js -->
@@ -109,6 +115,7 @@
   let branchesList = [];
   let branches = [];
   let userRole = `{{ request.user.role }}`
+  const transferId = '{{ transfer.id }}'
 
   const errorEl = document.getElementById('error');
   const prodEl = document.querySelector('#id_price');
@@ -116,9 +123,40 @@
   const submitBtn = document.getElementById('id_submit');
   const quantityEl = document.getElementById('id_quantity')
 
-  if (userRole === 'sales'){
-      salesPerson = true
+    if (userRole === 'sales'){
+        salesPerson = true
     }
+
+    // get held data and populate the cart with the data
+    const fetchHeldTransfers = () =>{
+        fetch(`inventory/held_transfer_json/${transferId}`,{
+            method:"GET"
+        })
+        .then(data => response.json())
+        .then(data =>{
+            data.forEach((item)=>{
+                addHoldItem(item)
+            })
+        })
+    }
+
+    const addHoldItem = (item) =>{
+        const newItem = {
+            id: generateUniqueId(),  
+            product: item.product__name,
+            branch_name: item.branch__name,
+            price: parseFloat(item.price),
+            dealer_price: parseFloat(item.dealerPrice),
+            quantity: parseInt(item.quantity, 10),
+            description: item.description,
+            cost: item.cost
+        };
+
+        dataToSend.push(newItem);
+        cart.push(newItem);
+        cart.reverse();
+    }
+
 
     new SlimSelect({
         select: '#id_to',
@@ -139,13 +177,13 @@
         return selectedValues;
     }
 
-    // document.getElementById('getValuesButton').addEventListener('change', function() {
+    document.getElementById('getValuesButton').addEventListener('click', function() {
         const values = getSelectedValues();
-    //     const product = document.getElementById('id_product').value;
-    //     console.log('values', values)
-    //     pushBranches(values)
-    //     displayTables(values, product);
-    // });
+        const product = document.getElementById('id_product').value;
+        console.log('values', values)
+        pushBranches(values)
+        displayTables(values, product);
+    });
 
     const pushBranches = (values) => {
         values.forEach((b) => {
@@ -260,8 +298,6 @@
         });
     };
 
-
-
     document.addEventListener('DOMContentLoaded', function() {
     new SlimSelect({
         select: '#id_product',
@@ -269,69 +305,37 @@
     });
 
     document.getElementById('id_product').addEventListener('change', function() {
-    const selectElement = document.getElementById('id_product');
-    const selectedOptions = Array.from(selectElement.selectedOptions).map(option => {
-        return {
-            name: option.text,
-            value: option.value
-        };
-    });
+        const selectElement = document.getElementById('id_product');
+        const selectedOptions = Array.from(selectElement.selectedOptions).map(option => {
+            return {
+                name: option.text,
+                value: option.value
+            };
+        });
 
-    const product = selectedOptions[0]?.value;
+        const product = selectedOptions[0]?.value;
 
-    if (product) {
-        fetch(`/inventory/inventory/?name=${product}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.length > 0) {
-                    console.log(data);
-                  
-                    prodData = data;
-                    if (prodData){
-                        const values = getSelectedValues();
-                        pushBranches(values)
-                        displayTables(values, product, prodData);
-                    }
+        if (product) {
+            fetch(`/inventory/inventory/?name=${product}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        console.log(data);
                     
-                }
-            })
-            .catch(error => console.error('Error:', error));
-    }
-});})
+                        prodData = data;
 
+                        document.getElementById('getValuesButton').addEventListener('click', function() {
+                            const values = getSelectedValues();
+                            displayTables(values, product, prodData);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        });
+    })
 
-  const successModal = new bootstrap.Modal(document.querySelector('#successModal'))
-
-//   document.querySelector('#id_quantity').addEventListener(
-//     'input', ()=>{
-//       const quantity = $('#id_quantity').val()
-
-//       if (quantity > prodData[0][0].quantity){
-//           submitBtn.disabled = true;
-//           Swal.fire({
-//               icon: 'warning',
-//               title: 'Quantity Exceeded',
-//               text: 'The quantity you entered exceeds the available source quantity. Please adjust.',
-//               confirmButtonText: 'Okay'
-//           });
-
-//       }else{
-//           document.querySelector('#quantity_error').innerHTML = '';
-//           submitBtn.disabled = false;
-//       }
-//     }
-//   )
-
-//   document.querySelector('#id_price').addEventListener(
-//     'input', ()=>{
-//       const price = $('#id_price').val()
-//       if (price < prodCost) {
-//         document.querySelector('#quantity_error').innerHTML = `Selling price cannot be less than cost price ${prodCost} for product ${productName}`
-//       }else{
-//         document.querySelector('#quantity_error').innerHTML=''
-//       }
-//     }
-//   )
+  const successModal = new bootstrap.Modal(document.querySelector('#successModal'));
 
   function generateUniqueId() {
       return Math.floor(Math.random() * 1000000000).toString(36);
@@ -526,7 +530,6 @@
               });
           });
   }
-
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== "") {
