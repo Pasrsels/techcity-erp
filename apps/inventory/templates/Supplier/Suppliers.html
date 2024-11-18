@@ -39,6 +39,9 @@
                         {% endfor %}
                     </small>
                 </td>
+                <td><small>{{ supplier.nextdue}}</small></td>
+                <td><small>{{ supplier.returns}}</small></td>
+            
                 <td><small>{{ supplier.Lifetime}}</small></td>
                 <td>
                     <small>
@@ -54,7 +57,7 @@
                         {% endif %}
                     </small>
                 </td>
-
+                
                 <td>
                     <button class="btn bx bx-edit mx-1" style="color: rgb(18, 201, 233);" onclick="openEditModal({{ supplier.id }})"></button>
                     <button class="btn bx bx-trash mx-1" style="color: red;" onclick="confirmDelete({{ supplier.id }})"></button>
