@@ -79,12 +79,6 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="mt-2">
-                        <button class="btn btn-success btn-sm w-100" id="getValuesButton" type="button">Proceed
-                            <i class="bx bx-arrow-right"></i>
-                        </button>
-                    </div>
-
                     <div class="mt-3- d-flex" style="overflow-x: auto; background: #fff;" id="branchesTable">
                         <!-- data will be dynamically rendered by js -->
                     </div>
@@ -129,32 +123,49 @@
 
     // get held data and populate the cart with the data
     const fetchHeldTransfers = () =>{
-        fetch(`inventory/held_transfer_json/${transferId}`,{
+        fetch(`/inventory/held_transfer_json/${transferId}`,{
             method:"GET"
         })
-        .then(data => response.json())
+        .then(response => response.json())
         .then(data =>{
+            console.log(data)
             data.forEach((item)=>{
                 addHoldItem(item)
+                addHeldBranches(item.to_branch__name)
             })
         })
     }
 
+    fetchHeldTransfers()
+
+    const addHeldBranches = (branch) =>{
+        const branchExists = branches.some(branch => branch.name === branch);
+            if (!branchExists) {
+                branches.push({
+                    'name': branch,
+                });
+                branchesList.push(branch);
+            }
+        console.log('branch list, ', branchesList)
+    }
+
     const addHoldItem = (item) =>{
+        console.log(item)
         const newItem = {
             id: generateUniqueId(),  
             product: item.product__name,
-            branch_name: item.branch__name,
+            branch_name: item.to_branch__name,
             price: parseFloat(item.price),
-            dealer_price: parseFloat(item.dealerPrice),
+            dealer_price: parseFloat(item.dealer_price),
             quantity: parseInt(item.quantity, 10),
             description: item.description,
             cost: item.cost
         };
 
-        dataToSend.push(newItem);
+        // dataToSend.push(newItem);
         cart.push(newItem);
         cart.reverse();
+        updateCartDisplay();
     }
 
 
@@ -177,13 +188,13 @@
         return selectedValues;
     }
 
-    document.getElementById('getValuesButton').addEventListener('click', function() {
+    // document.getElementById('getValuesButton').addEventListener('click', function() {
         const values = getSelectedValues();
-        const product = document.getElementById('id_product').value;
-        console.log('values', values)
-        pushBranches(values)
-        displayTables(values, product);
-    });
+    //     const product = document.getElementById('id_product').value;
+    //     console.log('values', values)
+    //     pushBranches(values)
+    //     displayTables(values, product);
+    // });
 
     const pushBranches = (values) => {
         values.forEach((b) => {
@@ -299,40 +310,42 @@
     };
 
     document.addEventListener('DOMContentLoaded', function() {
-    new SlimSelect({
-        select: '#id_product',
-        placeholder: 'Select Product'
-    });
-
-    document.getElementById('id_product').addEventListener('change', function() {
-        const selectElement = document.getElementById('id_product');
-        const selectedOptions = Array.from(selectElement.selectedOptions).map(option => {
-            return {
-                name: option.text,
-                value: option.value
-            };
+        new SlimSelect({
+            select: '#id_product',
+            placeholder: 'Select Product'
         });
 
-        const product = selectedOptions[0]?.value;
+        document.getElementById('id_product').addEventListener('change', function() {
+            const selectElement = document.getElementById('id_product');
+            const selectedOptions = Array.from(selectElement.selectedOptions).map(option => {
+                return {
+                    name: option.text,
+                    value: option.value
+                };
+            });
 
-        if (product) {
-            fetch(`/inventory/inventory/?name=${product}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length > 0) {
-                        console.log(data);
-                    
-                        prodData = data;
+            const product = selectedOptions[0]?.value;
 
-                        document.getElementById('getValuesButton').addEventListener('click', function() {
-                            const values = getSelectedValues();
-                            displayTables(values, product, prodData);
-                        });
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        }
-        });
+            if (product) {
+                fetch(`/inventory/inventory/?name=${product}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            console.log(data);
+                        
+                            prodData = data;
+                            console.log(prodData, 'product data')
+                            if (prodData){
+                                const values = getSelectedValues();
+                                pushBranches(values)
+                                displayTables(values, product, prodData);
+                            }
+                            
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+            });
     })
 
   const successModal = new bootstrap.Modal(document.querySelector('#successModal'));
@@ -347,7 +360,7 @@
 
       let total = 0;
       
-      cart.reverse().forEach((item) => {
+      cart.forEach((item) => {
         const row = document.createElement("tr");
         row.innerHTML = `
           <td id='${item.product}'>${item.product}</td>
@@ -356,14 +369,14 @@
           <td class="${salesPerson ? 'd-none' : ''}" id="${item.product}-dealer-price">${item.dealer_price}</td>
           <td id='${item.product}'>${item.branch_name}</td>
           <td>
-              <button class="btn btn-sm btn-danger" data-id=${item.id} onclick="removeItem(this);">
+              <button class="btn btn-sm border" data-id=${item.id} onclick="removeItem(this);">
                 <i class='bx bx-trash-alt'></i>
               </button>
           </td>
         `;
         cartItemsList.appendChild(row);
       });
-      document.getElementById('branchesTable').innerHTML=''
+      document.getElementById('branchesTable').innerHTML='';
     }
 
   function clearFields() {
@@ -472,9 +485,9 @@
   function processCart(action) {
       const toElement = document.getElementById('id_to');
       const toSelectedOption = toElement.options[toElement.selectedIndex];
-      const toBranchId = toSelectedOption.textContent;
 
       const data = {
+          'transfer_id':transferId,
           'action':action,
           'cart': cart,
           'salesPerson': salesPerson,
