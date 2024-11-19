@@ -9,7 +9,7 @@
             </div>
             <div class="">
                 {% if request.user.role == 'admin' or request.user.role == 'accountant'%}
-                    <button class="btn" id='branchButton'>
+                    <button class="btn" id='branchBtn'>
                         <i class='bx bxs-grid'></i>
                     </button>
                 {% endif %}
@@ -123,9 +123,9 @@
     </div>
     <script>
         const branchModal = new bootstrap.Modal(document.querySelector('#branchModal'))
-        const branchButton = document.querySelector('#branchButton')
+        const branchBtn = document.querySelector('#branchBtn')
 
-        branchButton.addEventListener('click', ()=>{
+        branchBtn.addEventListener('click', ()=>{
             branchModal.show()
         })
     </script>

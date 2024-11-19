@@ -10,28 +10,7 @@
                     <h4>Transfers</h4>
                 </div>
                 <div class="search d-flex align-items-center">
-                    <div> 
-                        <a href={% url 'inventory:add_transfer' %} type="button" class="btn btn-outline-light">
-                            <i class='bx bx-plus'></i>
-                            Transfer
-                        </a>
-                    </div>
-                    <div class="mx-2"> 
-                        <a href='{% url 'inventory:h_transfers' %}'' type="button" class="btn btn-outline-light">
-                            Held Transfers <span class="badge">{{ hold_transfers_count }}</span>
-                        </a>
-                    </div>
-                    <div>
-                        <a href='{% url 'inventory:receive_inventory' %}'  class="btn btn-outline-light">
-                            Receive Stock
-                            <span class="badge badge-dark text-light circle-rounded lick">{{transfers_count}}</span>
-                        </a>
-                    </div>
-                    <div class="mx-2">
-                        <a href='{% url 'inventory:over_less_list_stock' %}'  class="btn btn-outline-light flick">
-                            Over/Less Received Stocks
-                        </a>
-                    </div>
+                    
                     <!--<form method='get' class='px-2'>
                         <input
                             id="search"
@@ -64,6 +43,28 @@
                     <div class='fw-bold'>Transfer(s) List</div>
                     <div class="px-2"></div>
                     <div class="btn btn-primary btn-sm" type='button' id='id_expand'>Expand</div>
+                    <div class="mx-2"> 
+                        <a href={% url 'inventory:add_transfer' %} type="button" class="btn btn-primary btn-sm">
+                            <i class='bx bx-plus'></i>
+                            Transfer
+                        </a>
+                    </div>
+                    <div> 
+                        <a href='{% url 'inventory:h_transfers' %}'' type="button" class="btn btn-primary btn-sm">
+                            Held Transfers <span class="badge">{{ hold_transfers_count }}</span>
+                        </a>
+                    </div>
+                    <div class="mx-2">
+                        <a href='{% url 'inventory:receive_inventory' %}'  class="btn btn-primary btn-sm">
+                            Receive Stock
+                            <span class="badge badge-dark text-light circle-rounded lick">{{transfers_count}}</span>
+                        </a>
+                    </div>
+                    <div>
+                        <a href='{% url 'inventory:over_less_list_stock' %}'  class="btn btn-primary btn-sm flick">
+                            Over/Less Received Stocks
+                        </a>
+                    </div>
                 </div>
                 <div class="mx-2">
                     <button type="button" class='pdf-gen btn btn-secondary btn-sm'>

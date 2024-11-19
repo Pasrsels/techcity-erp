@@ -229,35 +229,45 @@ class AddProductView(LoginRequiredMixin, View):
 
 class ProcessTransferCartView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
+        """it have two main functions to create a held transfer and to create a new transfer"""
         try:
             with transaction.atomic():
                 data = json.loads(request.body)
                 action = data['action']
                 branches = data['branches_to']
+                transfer_id = data.get('transfer_id', '')
 
-                logger.info(branches)
+                logger.info(f'branches: {branches}')
                 
                 # create list of branch objects
                 branch_obj_list = []
                 branch_names = ''
                 for branch in branches:
                     branch_names += f'{branch['name']} '
-                    branch_obj_list.append(Branch.objects.get(id=branch['value']))
+                    if branch.get('value'):
+                        branch_obj_list.append(Branch.objects.get(id=branch['value']))
+                    else:
+                        branch_obj_list.append(Branch.objects.get(name=branch['name']))
+                        
                 
-                transfer = Transfer.objects.create(
-                    branch = request.user.branch,
-                    user = request.user,
-                    transfer_ref = Transfer.generate_transfer_ref(request.user.branch.name, branch_names),
-                    description = 'transfer' #to be actioned
-                )
+                # check for hold or new transfer
+                if not transfer_id:
+                    transfer = Transfer.objects.create(
+                        branch = request.user.branch,
+                        user = request.user,
+                        transfer_ref = Transfer.generate_transfer_ref(request.user.branch.name, branch_names),
+                        description = 'transfer' #to be actioned
+                    )
+                else:
+                    logger.info('here')
+                    transfer = Transfer.objects.get(id=transfer_id)
                 
                 #assign many2many objects to transfer branch
                 transfer.transfer_to.set(branch_obj_list),
 
-                logger.info(f'Transfer saved {transfer}')
-                logger.info(f'action: {action}')
+
                 if action == 'process':
-                    logger.info('loggin ____________----')
+                    logger.info(f'branches: {branch_obj_list}')
                     for branch_obj in branch_obj_list:
                         for item in data['cart']:
                             logger.info(f'Cart Item: {item}')
@@ -279,8 +289,8 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                                     from_branch= request.user.branch,
                                     to_branch= branch_obj,
                                     description=f'from {request.user.branch} to {branch_obj} '
-                                )   
-                                transfer.save()         
+                                ) 
+                                         
                                 transfer_item.save()
 
                                 logger.info(f'Transfered product: product saved')
@@ -288,8 +298,17 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                                 self.deduct_inventory(transfer_item)
                                 self.transfer_update_quantity(transfer_item, transfer) 
               
-                                # send email for transfer alert
-                                # transaction.on_commit(lambda: send_transfer_email(request.user.email, transfer.id, transfer.transfer_to.id))
+                    # send email for transfer alert
+                    # transaction.on_commit(lambda: send_transfer_email(request.user.email, transfer.id, transfer.transfer_to.id))
+
+                    # held transfer items 
+                    transfer_items = Holdtransfer.objects.filter(transfer__id=transfer.id)
+                    transfer_items.delete()
+
+                    # save the transfer
+                    transfer.hold = False
+                    transfer.date = datetime.datetime.now()
+                    transfer.save()  
                                 
                 else:
                     self.hold_transfer(branch_obj_list, data, transfer, request)
@@ -312,6 +331,8 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                     branch_name = item['branch_name']
 
                     logger.info(f'branch name: {branch_name}')
+                    logger.info(f'cost: {item['cost']}')
+
                     try:
                         if branch_name == branch_obj.name:
                             transfer_item = Holdtransfer(
@@ -323,7 +344,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                                 quantity=item['quantity'],
                                 from_branch= request.user.branch,
                                 to_branch= branch_obj,
-                                description=f'from {request.user.branch} to {branch_obj} '
+                                description=f'from {request.user.branch} to {branch_obj}'
                             ) 
                             transfer.hold = True
                             transfer.save()         
@@ -561,7 +582,6 @@ def edit_inventory(request, product_id):
             
         product.save()
         
-      
         selling_price = Decimal(request.POST['price'])
         dealer_price = Decimal(request.POST['dealer_price'])
         
@@ -649,9 +669,10 @@ def inventory_transfers(request):
 
     transfers = Transfer.objects.filter(
         Q(branch=request.user.branch) |
-        Q(transfer_to__in=[request.user.branch]),
-        delete=False, 
-        hold=False
+        Q(transfer_to=request.user.branch),
+        delete=False
+    ).annotate(
+        total_quantity=Sum('transferitems__quantity')  
     ).order_by('-time').distinct()
     
     if q:
@@ -682,7 +703,8 @@ def held_transfer_json(request, transfer_id):
         'to_branch__name',
         'quantity',
         'price',
-        'cost'
+        'cost',
+        'dealer_price'
     )
     return JsonResponse(list(transfer_items), safe=False)
 
@@ -702,6 +724,7 @@ def held_transfers(request):
 def process_held_transfer(request, transfer_id):
     try:
         transfer = Transfer.objects.get(
+            id=transfer_id,
             branch=request.user.branch,
             delete=False, 
             hold=True
@@ -711,7 +734,7 @@ def process_held_transfer(request, transfer_id):
         })
     except:
         messages.warning(request, f'Transfer with id {transfer_id} not found.')
-        return redirect('invenory:inventory_transfers')
+        return redirect('inventory:transfers')
 
 @login_required
 def print_transfer(request, transfer_id):
@@ -727,7 +750,6 @@ def print_transfer(request, transfer_id):
     except:
         messages.warning(request, 'Transfer doesnt exists')
         return redirect('inventory:transfers')
-
     
 @login_required
 @transaction.atomic
