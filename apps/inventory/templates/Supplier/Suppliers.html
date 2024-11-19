@@ -512,7 +512,15 @@
         }
     });
 function fetchSupplierDetails(supplierId) {
-    fetch(`/inventory/suppliers/supplier-information/${supplierId}/`)
+    fetch(`/inventory/suppliers/supplier-information/${supplierId}/`,
+    {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+            }
+    )
         .then(response => response.json())
         .then(data => {
             if (data.success) {
