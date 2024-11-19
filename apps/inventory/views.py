@@ -2614,21 +2614,29 @@ def supplier_view(request):
 
                     supplier['amount'] += item.unit_cost * item.received_quantity
                 else:
+                    account_info = SupplierAccount.objects.get(id = item.supplier.id)
                     list_orders[item.supplier] = {
                     'supplier_id': item.supplier.id,
                     'amount': item.unit_cost * item.received_quantity,
                     'purchase_order': po,
+                    'category': item.product.category.name,
                     'quantity': item.quantity,
                     'quantity_received': item.received_quantity,
+                    'date': account_info.date,
+                    'balance': account_info.balance,
                     'count': 1
                 }
             else:
+                account_info = SupplierAccount.objects.get(id = item.supplier.id)
                 list_orders[item.supplier] = {
                     'supplier_id': item.supplier.id,
                     'amount': item.unit_cost * item.received_quantity,
                     'purchase_order': po,
+                    'category': item.product.category.name,
                     'quantity': item.quantity,
                     'quantity_received': item.received_quantity,
+                    'date': account_info.date,
+                    'balance': account_info.balance,
                     'count': 1
                 }                       
     logger.info([list_orders])
