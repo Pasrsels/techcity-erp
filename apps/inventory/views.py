@@ -1,4 +1,4 @@
-
+from django.utils import timezone
 import json, datetime, openpyxl
 from os import system 
 import csv
@@ -2622,6 +2622,7 @@ def supplier_view(request):
                     'category': item.product.category.name,
                     'quantity': item.quantity,
                     'quantity_received': item.received_quantity,
+                    'returned': item.quantity - item.received_quantity,
                     'date': account_info.date,
                     'balance': account_info.balance,
                     'count': 1
@@ -2635,6 +2636,7 @@ def supplier_view(request):
                     'category': item.product.category.name,
                     'quantity': item.quantity,
                     'quantity_received': item.received_quantity,
+                    'returned': item.quantity - item.received_quantity,
                     'date': account_info.date,
                     'balance': account_info.balance,
                     'count': 1
@@ -2684,14 +2686,27 @@ def supplier_view(request):
             if Supplier.objects.filter(email=email).exists():
                 return JsonResponse({'success': False, 'message':f'Supplier{name} already exists'}, status=400)
             
-            supplier = Supplier(
-                name = name,
-                contact_person = contact_person,
-                email = email,
-                phone = phone,
-                address = address
-            )
-            supplier.save()
+            with transaction.Atomic():
+                supplier = Supplier.objects.create(
+                    name = name,
+                    contact_person = contact_person,
+                    email = email,
+                    phone = phone,
+                    address = address
+                )
+                currenc = Currency.objects.create(
+                    code = '001',  
+                    name = 'USD' ,
+                    symbol = '$',
+                    exchange_rate = 1,
+                    default = False
+                )
+                SupplierAccount.objects.create(
+                    supplier = supplier,
+                    currency = currenc,
+                    balance = 0,
+                    date = '2024-11-24',
+                )
             return JsonResponse({'success': True}, status=200)
         except Exception as e:
             logger.info(e)

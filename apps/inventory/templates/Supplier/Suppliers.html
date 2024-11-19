@@ -44,7 +44,7 @@
                     <small>
                         {% for product in products %}
                             {%if supplier in product.suppliers.all%}
-                                {{product.category.name}}
+                                {{product.category.name}},
                             {%endif%}
                         {% endfor %}
                     </small>
@@ -63,33 +63,43 @@
                 </td>
                 <td>
                     <small>
-                        {{ supplier.returns}}
+                        {%for dat in balances%}
+                            {%if supplier.name == dat.supplier__name%}
+                                {{dat.date}}
+                            {%endif%}
+                        {%endfor%}
                     </small>
                 </td>
                 <td>
                     <small>
-                        {%for returns in life_time%}
-                            {% for supplier, return in returns.items%}
-                                {{return.quantity}}
+                        {%for lt in life_time%}
+                            {%for l, t in lt.items%}
+                                {%if supplier == l%}
+                                    {{t.returned}}/{{t.quantity}}
+                                {%endif%}
                             {%endfor%}
                         {%endfor%}
                     </small>
                 </td>
                 <td>
-                    <small>0
+                    <small>
                         {% for bal in balances %}
-                            {% if bal.balance > 0 %}
-                                {{ bal.balance }}
-                            {% endif %}
+                            {% if supplier.name == bal.supplier__name%}
+                                {% if bal.balance > 0 %}
+                                    {{ bal.balance }}
+                                {% endif %}
+                            {%endif%}
                         {% endfor %}
                     </small>
                 </td>
                 <td>
-                    <small>0
+                    <small>
                         {% for bal in balances %}
-                            {% if bal.balance < 0 %}
-                                {{ bal.balance }}
-                            {% endif %}
+                            {% if supplier.name == bal.supplier__name%}
+                                {% if bal.balance < 0 %}
+                                    {{ bal.balance }}
+                                {% endif %}
+                            {%endif%}
                         {% endfor %}
                     </small>
                 </td>
