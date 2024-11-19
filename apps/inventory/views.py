@@ -2598,6 +2598,10 @@ def supplier_view(request):
     supplier_balances = SupplierAccount.objects.all().values('supplier__name', 'balance')
     purchase_orders = PurchaseOrderItem.objects.all()
     
+    list_details = []
+    for items in purchase_orders:
+        items
+
     list_orders = {}
     for item in purchase_orders:
         po = PurchaseOrder.objects.get(id=item.purchase_order.id)
@@ -2616,6 +2620,8 @@ def supplier_view(request):
                     list_orders[item.supplier] = {
                     'amount': item.unit_cost * item.received_quantity,
                     'purchase_order': po,
+                    'quantity': item.quantity,
+                    'quantity': item.received_quantity,
                     'count': 1
                 }
             else:
