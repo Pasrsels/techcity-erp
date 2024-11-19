@@ -30,14 +30,6 @@
             
             <tr>
                 <td>
-<<<<<<< HEAD
-                    <button class="btn btn-link p-0 m-0 text-primary" onclick="fetchSupplierDetails({{ supplier.id }})">
-                        {{ supplier.name }}
-                    </button>
-                </td>
-                
-                
-=======
                     <small>
                         {% for supplier in life_time %}
                             {%for sup, details in supplier.items%}
@@ -48,7 +40,6 @@
                         {%endfor%}
                     </small>
                 </td>
->>>>>>> bfcca413a4fd7c854e80973581c7bc4d197c2892
                 <td>
                     <small>
                         {% for product in products %}
@@ -89,13 +80,6 @@
                         {% endfor %}
                     </small>
                 </td>
-<<<<<<< HEAD
-                <td><small>{{ supplier.nextdue}}</small></td>
-                <td><small>{{ supplier.returns}}</small></td>
-            
-                <td><small>{{ supplier.Lifetime}}</small></td>
-=======
->>>>>>> bfcca413a4fd7c854e80973581c7bc4d197c2892
                 <td>
                     <small>0
                         {% for bal in balances %}
@@ -105,16 +89,6 @@
                         {% endfor %}
                     </small>
                 </td>
-<<<<<<< HEAD
-                <td>
-                    <small>
-                        {% if supplier.balance < 0 %}
-                            {{ supplier.balance }}
-                        {% endif %}
-                    </small>
-                </td>
-=======
->>>>>>> bfcca413a4fd7c854e80973581c7bc4d197c2892
                 
                 <td>
                     <button class="btn bx bx-edit mx-1" style="color: rgb(18, 201, 233);" onclick="openEditModal({{ supplier.id }})"></button>
@@ -564,34 +538,13 @@
         }
     });
 function fetchSupplierDetails(supplierId) {
-<<<<<<< HEAD
-    fetch(`/inventory/suppliers/supplier-information/${supplierId}/`,
-    {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCSRFToken(),
-                },
-            }
-    )
-=======
     fetch(`/inventory/suppliers/supplier-information/${supplierId}/`)
->>>>>>> bfcca413a4fd7c854e80973581c7bc4d197c2892
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 // Populate modal with supplier details
                 const modalTitle = document.getElementById('supplierDetailsName');
                 const detailsList = document.getElementById('supplierDetailsList');
-<<<<<<< HEAD
-
-                modalTitle.textContent = data.supplier.name; // Set the supplier name
-                detailsList.innerHTML = `
-                    <li class="list-group-item"><strong>Contact Person:</strong> ${data.supplier.contact_person}</li>
-                    <li class="list-group-item"><strong>Phone:</strong> ${data.supplier.phone}</li>
-                    <li class="list-group-item"><strong>Email:</strong> ${data.supplier.email}</li>
-                    <li class="list-group-item"><strong>Address:</strong> ${data.supplier.address}</li>
-=======
                 
                 modalTitle.textContent = data.data.name; // Set the supplier name
                 detailsList.innerHTML = `
@@ -599,7 +552,6 @@ function fetchSupplierDetails(supplierId) {
                     <li class="list-group-item"><strong>Phone:</strong> ${data.data.phone}</li>
                     <li class="list-group-item"><strong>Email:</strong> ${data.data.email}</li>
                     <li class="list-group-item"><strong>Address:</strong> ${data.data.address}</li>
->>>>>>> bfcca413a4fd7c854e80973581c7bc4d197c2892
                 `;
 
                 // Show modal
