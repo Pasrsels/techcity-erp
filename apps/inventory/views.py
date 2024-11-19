@@ -2598,9 +2598,18 @@ def supplier_view(request):
     supplier_balances = SupplierAccount.objects.all().values('supplier__name', 'balance')
     purchase_orders = PurchaseOrderItem.objects.all()
     
-    list_details = []
+    list_details = {}
+    count = 0
     for items in purchase_orders:
-        items
+        list_details['supplier_id'] = items.supplier.id
+        list_details['supplier_name'] = items.supplier.name
+        list_details['product'] = items.product.category.name
+        list_details['quantity'] = items.quantity
+        list_details['received_quantity'] = items.received_quantity
+        list_details['unit_cost'] = items.unit_cost
+        list_details['purchase_id'] = items.purchase_order.id
+        list_details['count'] = count
+        list_details['amount'] = list_details['quantity'] * list_details['unit_cost']
 
     list_orders = {}
     for item in purchase_orders:
@@ -2621,7 +2630,7 @@ def supplier_view(request):
                     'amount': item.unit_cost * item.received_quantity,
                     'purchase_order': po,
                     'quantity': item.quantity,
-                    'quantity': item.received_quantity,
+                    'quantity_received': item.received_quantity,
                     'count': 1
                 }
             else:
@@ -2629,7 +2638,8 @@ def supplier_view(request):
                     'amount': item.unit_cost * item.received_quantity,
                     'purchase_order': po,
                     'count': 1
-                }                       
+                }          
+    logger.info(list_details)             
     logger.info([list_orders])
     logger.info(supplier_products)
     logger.info(supplier_balances)
@@ -2643,6 +2653,7 @@ def supplier_view(request):
             'products':supplier_products,
             'balances':supplier_balances,
             'life_time': [list_orders],
+            'lifetime': list_details,
             'suppliers':suppliers
         })
     if request.method == 'POST':
