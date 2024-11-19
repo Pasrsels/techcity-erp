@@ -43,8 +43,8 @@ class SupplierAccount(models.Model):
     balance = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     date = models.DateField(null= True)
 
-    # class Meta:
-    #     unique_together = ('currency',) 
+    class Meta:
+        unique_together = ('currency', 'supplier') 
 
     def __str__(self):
         return f'{self.supplier.name} balance -> {self.balance}'

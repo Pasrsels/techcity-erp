@@ -2595,7 +2595,7 @@ def view_LifeTimeOrders(request, supplier_id):
 @login_required
 def supplier_view(request):
     supplier_products = Product.objects.all()
-    supplier_balances = SupplierAccount.objects.all().values('supplier__name', 'balance')
+    supplier_balances = SupplierAccount.objects.all().values('supplier__name', 'balance', 'date')
     purchase_orders = PurchaseOrderItem.objects.all()
     
     list_orders = {}

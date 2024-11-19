@@ -39,7 +39,9 @@
                 <td>
                     <small>
                         {% for product in products %}
+                            {%if supplier in product.suppliers.all%}
                                 {{product.category.name}}
+                            {%endif%}
                         {% endfor %}
                     </small>
                 </td>
@@ -47,8 +49,10 @@
                     <small>
                         {% for life in life_time %}
                             {% for l, details in life.items %}
-                                {{details.count}} *
-                                {{details.amount}}
+                                {%if supplier == l%}
+                                    {{details.count}} *
+                                    {{details.amount}}
+                                {%endif%}
                             {%endfor%}
                         {% endfor %}
                     </small>
