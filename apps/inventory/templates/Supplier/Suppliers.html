@@ -27,35 +27,85 @@
             </tr>
         </thead>
         <tbody>
-            {% for supplier in suppliers %}
+            
             <tr>
                 <td>
+<<<<<<< HEAD
                     <button class="btn btn-link p-0 m-0 text-primary" onclick="fetchSupplierDetails({{ supplier.id }})">
                         {{ supplier.name }}
                     </button>
                 </td>
                 
                 
+=======
+                    <small>
+                        {% for supplier in life_time %}
+                            {%for sup, details in supplier.items%}
+                                <button class="btn btn-link p-0 m-0 text-primary" onclick="fetchSupplierDetails({{ supplier.id }})">
+                                    {{ sup }}
+                                </button>
+                            {%endfor%}
+                        {%endfor%}
+                    </small>
+                </td>
+>>>>>>> bfcca413a4fd7c854e80973581c7bc4d197c2892
                 <td>
                     <small>
                         {% for product in products %}
-                            {% if supplier.supplier in product.suppliers.all %}
-                                {{ product.name }}
+                                {{ product.category.name }}
+                        {% endfor %}
+                    </small>
+                </td>
+                <td>
+                    <small>
+                        {% for life in life_time %}
+                            {% for l, details in life.items %}
+                                {{details.count}} *
+                                {{details.amount}}
+                            {%endfor%}
+                        {% endfor %}
+                    </small>
+                </td>
+                <td>
+                    <small>
+                        {{ supplier.returns}}
+                    </small>
+                </td>
+                <td>
+                    <small>
+                        {%for returns in life_time%}
+                            {% for supplier, return in returns.items%}
+                                {{return.quantity}}
+                            {%endfor%}
+                        {%endfor%}
+                    </small>
+                </td>
+                <td>
+                    <small>0
+                        {% for bal in balances %}
+                            {% if bal.balance > 0 %}
+                                {{ bal.balance }}
                             {% endif %}
                         {% endfor %}
                     </small>
                 </td>
+<<<<<<< HEAD
                 <td><small>{{ supplier.nextdue}}</small></td>
                 <td><small>{{ supplier.returns}}</small></td>
             
                 <td><small>{{ supplier.Lifetime}}</small></td>
+=======
+>>>>>>> bfcca413a4fd7c854e80973581c7bc4d197c2892
                 <td>
-                    <small>
-                        {% if supplier.balance > 0 %}
-                            {{ supplier.balance }}
-                        {% endif %}
+                    <small>0
+                        {% for bal in balances %}
+                            {% if bal.balance < 0 %}
+                                {{ bal.balance }}
+                            {% endif %}
+                        {% endfor %}
                     </small>
                 </td>
+<<<<<<< HEAD
                 <td>
                     <small>
                         {% if supplier.balance < 0 %}
@@ -63,6 +113,8 @@
                         {% endif %}
                     </small>
                 </td>
+=======
+>>>>>>> bfcca413a4fd7c854e80973581c7bc4d197c2892
                 
                 <td>
                     <button class="btn bx bx-edit mx-1" style="color: rgb(18, 201, 233);" onclick="openEditModal({{ supplier.id }})"></button>
@@ -72,7 +124,7 @@
                 </td>
                 
             </tr>
-            {% endfor %}
+            
         </tbody>
     </table>
 
@@ -402,7 +454,7 @@
         fetch(`/inventory/suppliers/supplier-information/${supplierId}/`)  // Adjust this URL to match your actual endpoint
             .then(response => response.json())
             .then(data => {
-                console.log(data.data[0]);
+                console.log(data.data[0], 'suppluer');
                 // Populate form fields with supplier data
                 document.getElementById("id_name").value = data.data[0].name;
                 document.getElementById("id_contact_person").value = data.data[0].contact_person;
@@ -512,6 +564,7 @@
         }
     });
 function fetchSupplierDetails(supplierId) {
+<<<<<<< HEAD
     fetch(`/inventory/suppliers/supplier-information/${supplierId}/`,
     {
                 method: 'GET',
@@ -521,12 +574,16 @@ function fetchSupplierDetails(supplierId) {
                 },
             }
     )
+=======
+    fetch(`/inventory/suppliers/supplier-information/${supplierId}/`)
+>>>>>>> bfcca413a4fd7c854e80973581c7bc4d197c2892
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 // Populate modal with supplier details
                 const modalTitle = document.getElementById('supplierDetailsName');
                 const detailsList = document.getElementById('supplierDetailsList');
+<<<<<<< HEAD
 
                 modalTitle.textContent = data.supplier.name; // Set the supplier name
                 detailsList.innerHTML = `
@@ -534,6 +591,15 @@ function fetchSupplierDetails(supplierId) {
                     <li class="list-group-item"><strong>Phone:</strong> ${data.supplier.phone}</li>
                     <li class="list-group-item"><strong>Email:</strong> ${data.supplier.email}</li>
                     <li class="list-group-item"><strong>Address:</strong> ${data.supplier.address}</li>
+=======
+                
+                modalTitle.textContent = data.data.name; // Set the supplier name
+                detailsList.innerHTML = `
+                    <li class="list-group-item"><strong>Contact Person:</strong> ${data.data.contact_person}</li>
+                    <li class="list-group-item"><strong>Phone:</strong> ${data.data.phone}</li>
+                    <li class="list-group-item"><strong>Email:</strong> ${data.data.email}</li>
+                    <li class="list-group-item"><strong>Address:</strong> ${data.data.address}</li>
+>>>>>>> bfcca413a4fd7c854e80973581c7bc4d197c2892
                 `;
 
                 // Show modal
