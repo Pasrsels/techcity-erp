@@ -50,9 +50,10 @@
                         </a>
                     </div>
                     <div> 
-                        <a href='{% url 'inventory:h_transfers' %}'' type="button" class="btn btn-primary btn-sm">
-                            Held Transfers <span class="badge">{{ hold_transfers_count }}</span>
-                        </a>
+                        <button type="button" class="btn btn-primary btn-sm">
+                            Held Transfers <span class="badge">{{ hold_transfers_
+                                count }}</span>
+                        </button>
                     </div>
                     <div class="mx-2">
                         <a href='{% url 'inventory:receive_inventory' %}'  class="btn btn-primary btn-sm">

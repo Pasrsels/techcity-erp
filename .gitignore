@@ -1,6 +1,6 @@
 
-# /migrations/
-# */migrations/*
+/migrations/
+*/migrations/*
 .env
 *.pyc
 *~zz 
