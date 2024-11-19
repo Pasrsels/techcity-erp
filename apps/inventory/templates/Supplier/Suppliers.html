@@ -27,19 +27,23 @@
             </tr>
         </thead>
         <tbody>
-            {% for supplier in suppliers %}
+            
             <tr>
                 <td>
                     <small>
-                        <button class="btn btn-link p-0 m-0 text-primary" onclick="fetchSupplierDetails({{ supplier.id }})">
-                            {{ supplier.name }}
-                        </button>
+                        {% for supplier in life_time %}
+                            {%for sup, details in supplier.items%}
+                                <button class="btn btn-link p-0 m-0 text-primary" onclick="fetchSupplierDetails({{ supplier.id }})">
+                                    {{ sup }}
+                                </button>
+                            {%endfor%}
+                        {%endfor%}
                     </small>
                 </td>
                 <td>
                     <small>
                         {% for product in products %}
-                                {{product.category.name}}
+                                {{ product.category.name }}
                         {% endfor %}
                     </small>
                 </td>
@@ -60,11 +64,15 @@
                 </td>
                 <td>
                     <small>
-                        
+                        {%for returns in life_time%}
+                            {% for supplier, return in returns.items%}
+                                {{return.quantity}}
+                            {%endfor%}
+                        {%endfor%}
                     </small>
                 </td>
                 <td>
-                    <small> 0
+                    <small>0
                         {% for bal in balances %}
                             {% if bal.balance > 0 %}
                                 {{ bal.balance }}
@@ -73,7 +81,7 @@
                     </small>
                 </td>
                 <td>
-                    <small> 0
+                    <small>0
                         {% for bal in balances %}
                             {% if bal.balance < 0 %}
                                 {{ bal.balance }}
@@ -90,7 +98,7 @@
                 </td>
                 
             </tr>
-            {% endfor %}
+            
         </tbody>
     </table>
 
