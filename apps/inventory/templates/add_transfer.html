@@ -114,7 +114,7 @@
   let branches = [];
   let userRole = `{{ request.user.role }}`
   let count = 1;
-  let branchesCount = -1;
+  let branchesCount = 0;
 
   const errorEl = document.getElementById('error');
   const prodEl = document.querySelector('#id_price');
@@ -171,12 +171,20 @@
 
         tableEl.innerHTML = ''
 
+        const defaultAverage = (quantity) =>{
+            let branches = branchesList.length;
+            average_quantity = Math.round(quantity / branches);
+            
+            return average_quantity.toFixed(1)
+        }
+
+       
+
         values.forEach((value) => {
-            console.log('branches', branches)
-            // If branch exists, don't include it again
             if (!branchesList.includes(value)) {
                 const productData = prodData[0]; 
 
+                console.log(defaultAverage(productData.quantity), 'branches average quantitty')
                 tableEl.innerHTML += `
                     <div class='m-1 branch-data border p-2 rounded' data-branch-name="${value?.name}">
                         <div class='d-flex justify-content-center align-items-center branch text-light rounded shadow'>
@@ -207,9 +215,9 @@
                         </div>
                         <div id="div_id_quantity" class="mb-1">
                             <label for="id_quantity" class="form-label requiredField">
-                                <small>Quantity</small>
+                                <small>Quantity [<span id='id_${value.name}'>${productData.quantity}</span>]</small>
                             </label>
-                            <input type="number" name="quantity" min="0" value="${productData.quantity || ''}" class="numberinput form-control quantity-input custom-input-size" required>
+                            <input type="number" name="quantity" min="0" onchange='calculateQuantityDifference(this.value, ${productData.quantity}, "${(value.name)}")' class="numberinput form-control quantity-input custom-input-size" required>
                         </div>
                     </div>
                 `;
@@ -217,23 +225,55 @@
         });
     };
 
+    let remainingQuantity = 0;
+    const calculateQuantityDifference = (quantity, productQuantity, name) =>{
+        console.log('initial', remainingQuantity)
+        if (remainingQuantity > 0){
+            remainingQuantity = remainingQuantity - quantity;
+        }else{
+            if(quantity == 0){
+                remainingQuantity = productQuantity - quantity;
+            }else{
+                remainingQuantity = productQuantity - quantity;
+            }
+            console.log('<0', remainingQuantity)
+        }   
+
+        branchesList.forEach((b)=>{
+            console.log(b)
+            document.querySelector(`#id_${b}`).textContent = remainingQuantity
+        })
+        console.log(remainingQuantity)
+    }
+
     const saveDataToServer = (action) => {
         const branchElements = document.querySelectorAll('.branch-data');
         const dataToSend = [];
 
-        branchElements.forEach(branch => {
-            
+        // if (cart.length == 0){
+        //     Swal.fire({
+        //         text:'Please select products first.',
+        //         title:'Info',
+        //         icon:'info'
+        //     })
+        //     return;
+        // }
+        let hasError = false; 
+        let productAdded = false; 
+        let prodName = ''
+
+        for (let i = 0; i < branchElements.length; i++) {
+            const branch = branchElements[i]; // Ensure to get the current branch element
             const branchName = branch.dataset.branchName;
             const price = branch.querySelector('.price-input').value;
             const dealerPrice = branch.querySelector('.dealer-price-input').value;
             const quantity = branch.querySelector('.quantity-input').value;
             const cost = parseFloat(branch.querySelector('.cost-input').value);
-            // const description = branch.querySelector('.description-input').value;
 
-            const pElement = document.getElementById('id_product')
-            const pSelectedOption = pElement.options[pElement.selectedIndex]
+            const pElement = document.getElementById('id_product');
+            const pSelectedOption = pElement.options[pElement.selectedIndex];
             let product = pSelectedOption.textContent;
-            product = product.split(' [')[0]
+            product = product.split(' [')[0];
 
             if (!price || !quantity || quantity <= 0) {
                 Swal.fire({
@@ -241,12 +281,32 @@
                     title: 'Error',
                     text: 'Please ensure all fields are filled correctly.'
                 });
-                return;
+                hasError = true; 
+                break; 
+            }
+
+            const existingItem = cart.find((item) => item.product === product && item.branch_name === branchName);
+            console.log(existingItem, 'existing item');
+
+            if (existingItem) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'This product and branch combination already exists in the cart.'
+                });
+                const prodTd = document.querySelectorAll(`.${product}`)
+                prodTd.forEach((td)=>{
+                    console.log(td)
+                    td.classList.add('bg-warning')
+                })
+                hasError = true; 
+                prodName = product
+                break; 
             }
 
             const newItem = {
-                count:count,
-                id: generateUniqueId(),  
+                count: count,
+                id: generateUniqueId(),
                 product: product,
                 branch_name: branchName,
                 price: parseFloat(price),
@@ -256,33 +316,35 @@
                 cost: cost
             };
 
-            branchesCount += 1;
-
             dataToSend.push(newItem);
             cart.push(newItem);
-            // cart.reverse();
-            console.log(cart, 'cart')
-        });
+            productAdded = true; 
+            console.log(cart, 'cart');
+        }
 
-        
         updateCartDisplay();
 
-        // update count 
-        count += 1;
-        console.log(cart)
+        if (!hasError) { 
+            count += 1;
 
+            if (productAdded) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Items have been added to the cart.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No items were added to the cart because the product does not exist.'
+                });
+            }
+        }
+    }
         
-        Swal.fire({
-            icon: 'success',
-            title: 'Success',
-            text: 'Items have been added to the cart.',
-            showConfirmButton: false,
-            timer: 1500
-        });
-    };
-
-
-
     document.addEventListener('DOMContentLoaded', function() {
     new SlimSelect({
         select: '#id_product',
@@ -371,16 +433,14 @@
         let isEditing = false;
 
         
-        console.log(branchesCount);
+        console.log(branchesList.length);
 
         function toggleEdit() {
             isEditing = !isEditing;
             updateRowContent();
         }
 
-        // Toggle the editing state
         cart.forEach((item, index) => {
-            console.log("branch index, ", index);
 
             if (currentProduct !== item.product) {
                 currentProduct = item.product; 
@@ -393,49 +453,56 @@
             function updateRowContent() {
 
                 row.innerHTML = `
-                    <td style='background:${currentColor}'>${item.count}</td>
-                    <td style='background:${currentColor}'>${item.product}</td>
+                    <td style='background:${currentColor}'><small class='${item.product}'>${item.count}</small></td>
+                    <td style='background:${currentColor}'><small class='${item.product}'>${item.product}</small></td>
                     <td style='background:${currentColor}'>
+                        <small class='${item.product}'>
                         ${isEditing
                             ? `<input type="number" class="form-control form-control-sm" 
                                 value="${item.quantity}" min="1" 
                                 onchange="updateCartItem('${String(item.id)}', 'quantity', this.value);" />`
                             : `${item.quantity}`}
+                        </small>
                     </td>
                     <td style='background:${currentColor}' class="${salesPerson ? 'd-none' : ''}">
+                        <smallclass='${item.product}' >
                         ${isEditing
                             ? `<input type="number" class="form-control form-control-sm" 
                                 value="${item.price}" step="0.01" min="0" 
                                 onchange="updateCartItem('${String(item.id)}', 'price', this.value);" />`
                             : `${item.price}`}
+                        </small>
                     </td>
                     <td style='background:${currentColor}' class="${salesPerson ? 'd-none' : ''}">
+                        <small class='${item.product}'>
                         ${isEditing
                             ? `<input type="number" class="form-control form-control-sm" 
                                 value="${item.dealer_price}" step="0.01" min="0" 
                                 onchange="updateCartItem('${String(item.id)}', 'dealer_price', this.value);" />`
                             : `${item.dealer_price}`}
+                        </small>
                     </td>
-                    <td style='background:${currentColor}'>${item.branch_name}</td>
+                    <td style='background:${currentColor}'><small class='${item.product}'>${item.branch_name}</td>
                     <td style='background:${currentColor}'>
-                        <button class="btn btn-sm btn-primary mx-1 edit" onclick="toggleEdit();">
+                        <small class='${item.product}'>
+                        <button class="btn btn-sm btn-outline-dark mx-1 edit" onclick="toggleEdit();">
                             ${isEditing ? "Save" : "Edit"}
                         </button>
                         <button class="btn btn-sm btn-danger" data-id="${String(item.id)}" onclick="removeItem(this);">
                             <i class='bx bx-trash-alt'></i>
                         </button>
+                        </small>
                     </td>
                 `;
                 function toggleEdit() {
                 isEditing = !isEditing;
                 updateRowContent();
             }
-            }
+        }
 
 
-            updateRowContent();
-        // Add event listener to the Edit button
-        row.querySelector("button.btn-primary").addEventListener("click", () => {
+        updateRowContent();
+        row.querySelector("button.btn-outline-dark").addEventListener("click", () => {
             isEditing = !isEditing;
             updateRowContent();
         });
