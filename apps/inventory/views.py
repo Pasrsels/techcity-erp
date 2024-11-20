@@ -2630,19 +2630,22 @@ def supplier_view(request):
                     'count': 1
                 }
             else:
-                account_info = SupplierAccount.objects.get(id = item.supplier.id)
-                list_orders[item.supplier] = {
-                    'supplier_id': item.supplier.id,
-                    'amount': item.unit_cost * item.received_quantity,
-                    'purchase_order': po,
-                    'category': item.product.category.name,
-                    'quantity': item.quantity,
-                    'quantity_received': item.received_quantity,
-                    'returned': item.quantity - item.received_quantity,
-                    'date': account_info.date,
-                    'balance': account_info.balance,
-                    'count': 1
-                }                       
+                if SupplierAccount.objects.filter(id = item.supplier.id).exists():
+
+                    account_info = SupplierAccount.objects.get(id = item.supplier.id)
+                    list_orders[item.supplier] = {
+                        'supplier_id': item.supplier.id,
+                        'amount': item.unit_cost * item.received_quantity,
+                        'purchase_order': po,
+                        'category': item.product.category.name,
+                        'quantity': item.quantity,
+                        'quantity_received': item.received_quantity,
+                        'returned': item.quantity - item.received_quantity,
+                        'date': account_info.date,
+                        'balance': account_info.balance,
+                        'count': 1
+                    }    
+                                       
     logger.info([list_orders])
     logger.info(supplier_products)
     logger.info(supplier_balances)
@@ -2693,7 +2696,7 @@ def supplier_view(request):
                 return JsonResponse({'success': True, 'response':f'Supplier{name} brought back'}, status=200)
             elif Supplier.objects.filter(email=email).exists():
                 return JsonResponse({'success': False, 'response':f'Supplier{name} already exists'}, status=400)
-            
+           
             with transaction.atomic():
                 if not Currency.objects.filter(default = True).exists():
                     Currency.objects.create(
