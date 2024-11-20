@@ -151,6 +151,7 @@ def branch_list(request):
 
 
 def branch_switch(request, branch_id):
+    logger.info('here')
     user = request.user
     if user.role == 'Admin' or user.role == 'admin':
         user.branch = Branch.objects.get(id=branch_id)

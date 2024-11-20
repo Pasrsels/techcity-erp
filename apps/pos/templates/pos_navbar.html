@@ -113,7 +113,7 @@
                     <div class="mt-4">
                         <ul class='list-unstyled'>
                             {% for branch in branches %}
-                                <li><a href="{% url 'company:switch_branch' branch.id %}" class="pxlight shadow">{{ branch.name }}</a></li>
+                                <li><a href="{% url 'company:switch_branch' branch.id %}" class="text-dark shadow">{{ branch.name }}</a></li>
                             {% endfor %}
                         </ul>
                     </div>

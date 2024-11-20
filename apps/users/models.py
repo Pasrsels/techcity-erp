@@ -41,6 +41,7 @@ class CustomUserManager(BaseUserManager):
 
         if self.model.objects.count() == 1:
             user.is_superuser = True
+            user.groups.add(Group.objects.get_or_create(name='Admin')[0])
         user.save(using=self._db)
         return user
 
@@ -64,7 +65,6 @@ class User(AbstractUser):
     USER_ROLES = (
         ('owner', 'Owner'),
         ('admin', 'Admin'),
-        ('manager', 'manager'),
         ('sales', 'Salesperson'),
         ('accountant', 'Accountant')
     )
@@ -72,11 +72,27 @@ class User(AbstractUser):
     profile_image = models.ImageField(upload_to='Profile_images', blank=True, null=True)
     company = models.ForeignKey('company.Company', on_delete=models.CASCADE, null=True, blank=True)
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE, null=True, blank=True)
+    # todo remove user code and groups
+    code = models.CharField(max_length=50, null=True, blank=True)
+    groups = models.ManyToManyField(Group)
+
     phonenumber = models.CharField(max_length=13)
     role = models.CharField(choices=USER_ROLES, max_length=50)
-    # session_key = models.CharField(max_length=40, blank=True, null=True)
+
+    def code_generator(self) -> str:
+        length = 5
+        chars = string.ascii_uppercase + string.digits
+        while True:
+            code = ''.join(random.choice(chars) for _ in range(length))
+            if not User.objects.filter(code=code).exists():
+                return code
 
     def save(self, *args, **kwargs):
+        # todo remove self.code and signals
+        if not self.code:
+            self.code = self.code_generator()
+        super().save(*args, **kwargs)
+
         # validate that the user's branch is associated with the same company
         if self.branch and self.company and self.branch.company != self.company:
             raise ValueError('The branch does not belong to the specified company')
