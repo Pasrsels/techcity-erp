@@ -2693,14 +2693,15 @@ def supplier_view(request):
                 return JsonResponse({'success': True, 'response':f'Supplier{name} brought back'}, status=200)
             elif Supplier.objects.filter(email=email).exists():
                 return JsonResponse({'success': False, 'response':f'Supplier{name} already exists'}, status=400)
-            currenc = Currency(
-                    code = '001',  
+            
+            with transaction.atomic():
+                currenc = Currency(  
                     name = 'USD' ,
                     symbol = '$',
                     exchange_rate = 1,
                     default = False
                 )
-            with transaction.atomic():
+                currenc.save()
                 supplier = Supplier.objects.create(
                     name = name,
                     contact_person = contact_person,
