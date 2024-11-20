@@ -28,10 +28,10 @@
         </thead>
         <tbody>
             {% for supplier in suppliers %}
-            <tr>
+            <tr style="text-align: center;">
                 <td>
                     <small>
-                        <button class="btn btn-link p-0 m-0 text-primary" onclick="fetchSupplierDetails({{ supplier.id }})">
+                        <button style="font-size: small;" class="btn btn-link p-0 m-0 text-primary" onclick="fetchSupplierDetails({{ supplier.id }})">
                             {%if supplier.delete == False%}
                                 {{ supplier.name }}
                             {%endif%}
