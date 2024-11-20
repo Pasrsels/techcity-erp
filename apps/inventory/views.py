@@ -2695,13 +2695,14 @@ def supplier_view(request):
                 return JsonResponse({'success': False, 'response':f'Supplier{name} already exists'}, status=400)
             
             with transaction.atomic():
-                currenc = Currency(  
-                    name = 'USD' ,
-                    symbol = '$',
-                    exchange_rate = 1,
-                    default = False
-                )
-                currenc.save()
+                if not Currency.objects.filter(default = True).exists():
+                    Currency.objects.create(
+                        code = '001',
+                        name = 'USD',
+                        symbol = '$',
+                        exchange_rate = 1,
+                        default = True
+                    )
                 supplier = Supplier.objects.create(
                     name = name,
                     contact_person = contact_person,
@@ -2712,9 +2713,8 @@ def supplier_view(request):
                 )
                 SupplierAccount.objects.create(
                     supplier = supplier,
-                    currency = currenc,
+                    currency = Currency.objects.get(default = True),
                     balance = 0,
-                    date = '2024-11-24',
                 )
             return JsonResponse({'success': True}, status=200)
         except Exception as e:
