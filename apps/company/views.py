@@ -123,6 +123,7 @@ def register_company_view(request):
                 status=200
             )
         except Exception as e:
+            logger.info(e)
             return JsonResponse(
                 {
                     "success": False,

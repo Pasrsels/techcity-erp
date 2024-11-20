@@ -41,9 +41,10 @@ class SupplierAccount(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE)  
     balance = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    date = models.DateField(null= True)
 
     class Meta:
-        unique_together = ('currency',) 
+        unique_together = ('currency', 'supplier') 
 
     def __str__(self):
         return f'{self.supplier.name} balance -> {self.balance}'
