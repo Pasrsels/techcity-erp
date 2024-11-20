@@ -1596,7 +1596,7 @@ def if_purchase_order_is_received(request, purchase_order, tax_amount, payment_m
             purchase_order = purchase_order,
             vat_type='Input',
             vat_rate = rate.rate,
-            #tax_amount = tax_amount
+            tax_amount = tax_amount
         )
 
     except Exception as e:
@@ -2693,14 +2693,16 @@ def supplier_view(request):
                 return JsonResponse({'success': True, 'response':f'Supplier{name} brought back'}, status=200)
             elif Supplier.objects.filter(email=email).exists():
                 return JsonResponse({'success': False, 'response':f'Supplier{name} already exists'}, status=400)
-            currenc = Currency(
-                    code = '001',  
-                    name = 'USD' ,
-                    symbol = '$',
-                    exchange_rate = 1,
-                    default = False
-                )
+            
             with transaction.atomic():
+                if not Currency.objects.filter(default = True).exists():
+                    Currency.objects.create(
+                        code = '001',
+                        name = 'USD',
+                        symbol = '$',
+                        exchange_rate = 1,
+                        default = True
+                    )
                 supplier = Supplier.objects.create(
                     name = name,
                     contact_person = contact_person,
@@ -2711,9 +2713,8 @@ def supplier_view(request):
                 )
                 SupplierAccount.objects.create(
                     supplier = supplier,
-                    currency = currenc,
+                    currency = Currency.objects.get(default = True),
                     balance = 0,
-                    date = '2024-11-24',
                 )
             return JsonResponse({'success': True}, status=200)
         except Exception as e:

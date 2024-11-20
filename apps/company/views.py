@@ -112,7 +112,7 @@ def register_company_view(request):
                 user.save()
 
                 # create tax methods
-                create_tax_methods()
+                #create_tax_methods()
 
             # return message
             return JsonResponse(
