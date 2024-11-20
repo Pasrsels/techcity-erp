@@ -2902,14 +2902,19 @@ def payments(request):
             .values('user', 'timestamp', 'amount', 'account__balance', 'payment_method')
 
             supplier_balance = supplier_payment['account__balance']
-            supplier_timestamp = supplier_payment['timestamp']
-            supplier_user = supplier_payment['amount']
+            # supplier_timestamp = supplier_payment['timestamp']
+            # supplier_user = supplier_payment['amount']
             #supplier_pay_method = supplier_payment['payment_method']
 
-            if supplier_method == 'USD':
-                new_balance = supplier_balance - supplier_amount
+            if supplier_balance <= 0:
+                return JsonResponse({'success': True, 'response': 'We donot owe this supplier'})
             else:
-                new_balance = supplier_balance - supplier_amount
+                if supplier_method == 'USD':
+                    new_balance = supplier_balance - supplier_amount
+                else:
+                    exchange_rate = Currency.objects.filter(name = supplier_method)
+                    new_balance_zig = (supplier_balance * exchange_rate['exchange_rate'] ) - supplier_amount
+                    new_balance = new_balance_zig/exchange_rate['exchange_rate']
             
             with transaction.Atomic():
                 supplier_acc = SupplierAccount.objects.update(
