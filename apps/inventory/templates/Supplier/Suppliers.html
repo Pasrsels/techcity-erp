@@ -32,7 +32,9 @@
                 <td>
                     <small>
                         <button class="btn btn-link p-0 m-0 text-primary" onclick="fetchSupplierDetails({{ supplier.id }})">
-                            {{ supplier.name }}
+                            {%if supplier.delete == False%}
+                                {{ supplier.name }}
+                            {%endif%}
                         </button>
                     </small>
                 </td>
@@ -83,6 +85,8 @@
                             {% if supplier.name == bal.supplier__name%}
                                 {% if bal.balance > 0 %}
                                     {{ bal.balance }}
+                                {%else%}
+                                    0
                                 {% endif %}
                             {%endif%}
                         {% endfor %}
@@ -94,6 +98,8 @@
                             {% if supplier.name == bal.supplier__name%}
                                 {% if bal.balance < 0 %}
                                     {{ bal.balance }}
+                                {%else%}
+                                    0
                                 {% endif %}
                             {%endif%}
                         {% endfor %}
