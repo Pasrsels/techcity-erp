@@ -2535,7 +2535,7 @@ def PaymentHistory(request, supplier_id):
         supplier_purchase_order_details = PurchaseOrderItem.objects.filter(supplier__id = supplier_id)
         list_details = {}
         for items in supplier_purchase_order_details:
-            if items.purchase_order.order_number == list_details['order_number']:
+            if items.purchase_order.order_number == list_details.get('order_number'):
                 list_details['amount'] = items.quantity * items.unit_cost
             else:
                 list_details['order_number'] = items.purchase_order.order_number
@@ -2716,7 +2716,7 @@ def supplier_view(request):
                 )
                 SupplierAccount.objects.create(
                     supplier = supplier,
-                    currency = Currency.objects.get(default = True)
+                    currency = Currency.objects.get(default = True),
                     balance = 0,
                 )
 
