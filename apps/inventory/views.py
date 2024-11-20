@@ -2430,7 +2430,8 @@ def supplier_delete(request, supplier_id):
             # logger.info(f'{supplier} delete')
 
             supplier = Supplier.objects.get(id=supplier_id)
-            supplier.delete()
+            supplier.delete = True
+            supplier.save()
 
             return JsonResponse({'success':True}, status = 200)
         except Exception as e:
@@ -2548,6 +2549,7 @@ def PaymentHistory(request, supplier_id):
                 'user__username',
                 'currency__name'
             )
+        logger.info(list(supplier_history))
         return JsonResponse({'success':True, 'data':list(supplier_history)}, status=200)
     return JsonResponse({'success':False, 'message':'Invalid request'}, status=500)
 
@@ -2647,7 +2649,7 @@ def supplier_view(request):
     
     if request.method == 'GET':
         form = AddSupplierForm()
-        suppliers = Supplier.objects.all()
+        suppliers = Supplier.objects.filter(delete = False)
         logger.info(suppliers)
         return render(request, 'Supplier/Suppliers.html', {
             'form':form,
@@ -2683,23 +2685,29 @@ def supplier_view(request):
                 return JsonResponse({'success': False, 'message':'Fill in all the form data'}, status=400)
 
             # check is supplier exists
-            if Supplier.objects.filter(email=email).exists():
-                return JsonResponse({'success': False, 'message':f'Supplier{name} already exists'}, status=400)
-            
-            with transaction.Atomic():
-                supplier = Supplier.objects.create(
-                    name = name,
-                    contact_person = contact_person,
-                    email = email,
-                    phone = phone,
-                    address = address
-                )
-                currenc = Currency.objects.create(
+            if Supplier.objects.filter(email=email).exists() and Supplier.objects.filter(delete = True).exists():
+                bring_back =  Supplier.objects.filter(email = email)
+                bring_back.delete = False
+                bring_back.update()
+                logger.info(bring_back.delete)
+                return JsonResponse({'success': True, 'response':f'Supplier{name} brought back'}, status=200)
+            elif Supplier.objects.filter(email=email).exists():
+                return JsonResponse({'success': False, 'response':f'Supplier{name} already exists'}, status=400)
+            currenc = Currency(
                     code = '001',  
                     name = 'USD' ,
                     symbol = '$',
                     exchange_rate = 1,
                     default = False
+                )
+            with transaction.atomic():
+                supplier = Supplier.objects.create(
+                    name = name,
+                    contact_person = contact_person,
+                    email = email,
+                    phone = phone,
+                    address = address,
+                    delete = False
                 )
                 SupplierAccount.objects.create(
                     supplier = supplier,
@@ -2730,7 +2738,8 @@ def supplier_account(request, supplier_id):
     except Exception as e:
         messages.warning(request, 'Supplier account doesnt exists')
         return redirect('inventory:suppliers')
-    
+
+#product   
 @login_required
 def product(request):
 
@@ -2796,6 +2805,7 @@ def product(request):
     
     return JsonResponse({'success':False, 'message':'Invalid request'})
 
+#reorder settings
 @login_required
 def reorder_settings(request):
     """ method to set reorder settings"""
@@ -2837,6 +2847,8 @@ def reorder_settings(request):
             return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
         return JsonResponse({'success':False, 'message':'Invalid request'}, status=500)
 
+
+#stocktake
 @login_required
 def stock_take(request):
     if request.method == 'GET':
@@ -2878,6 +2890,7 @@ def stock_take(request):
        except Exception as e:
            return JsonResponse({'success': False, 'response': e}, status = 400)
 
+#supplier payments
 @login_required
 def payments(request):
     if request.method == 'POST':
