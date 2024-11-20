@@ -622,6 +622,17 @@ function fetchSupplierDetails(supplierId) {
         <a href="tel:${data.data.phone}">${data.data.phone}</a>
     </li>
     <li class="list-group-item">
+    <i class="fab fa-whatsapp" style="color: green; margin-right: 10px;"></i> 
+    <a 
+        href="https://wa.me/${data.data.phone}" 
+        target="_blank" 
+        style="text-decoration: none; color: inherit;">
+        Chat on WhatsApp
+    </a>
+</li>
+
+
+    <li class="list-group-item">
         <i class="fas fa-envelope" style="color: red; margin-right: 10px;"></i> 
         <a href="mailto:${data.data.email}">${data.data.email}</a>
     </li>
