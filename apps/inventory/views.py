@@ -2689,7 +2689,7 @@ def supplier_view(request):
                 return JsonResponse({'success': True, 'response':f'Supplier{name} brought back'}, status=200)
             elif Supplier.objects.filter(email=email).exists():
                 return JsonResponse({'success': False, 'response':f'Supplier{name} already exists'}, status=400)
-            
+           
             with transaction.atomic():
                 if not Currency.objects.filter(default = True).exists() and not Currency.objects.filter(default = False).exists():
                     Currency.objects.create(
@@ -2725,7 +2725,7 @@ def supplier_view(request):
                     currency = Currency.objects.get(default = False),
                     balance = 0,
                 )
-                
+
             return JsonResponse({'success': True}, status=200)
         except Exception as e:
             logger.info(e)
