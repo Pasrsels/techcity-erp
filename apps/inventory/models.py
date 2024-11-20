@@ -33,6 +33,7 @@ class Supplier(models.Model):
     phone = models.CharField(max_length=255)
     email = models.EmailField(max_length=255)
     address = models.CharField(max_length=255, null= True)
+    delete = models.BooleanField(default= False)
 
     def __str__(self):
         return self.name
