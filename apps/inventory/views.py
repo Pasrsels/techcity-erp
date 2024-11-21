@@ -2661,7 +2661,7 @@ def supplier_view(request):
                 }
                 
 
-        logger.info(f'list_orders{list_orders}')
+        logger.info([list_orders])
         logger.info(supplier_balances)
         form = AddSupplierForm()
         suppliers = Supplier.objects.filter(delete = False)
