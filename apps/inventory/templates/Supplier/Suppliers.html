@@ -471,7 +471,7 @@
         fetch(`/inventory/suppliers/edit/${supplierId}/`)  // Adjust this URL to match your actual endpoint
             .then(response => response.json())
             .then(data => {
-                console.log(data.data[0], 'suppluer');
+                console.log(data.data[0], 'supplier');
                 // Populate form fields with supplier data
                 document.getElementById("id_name").value = data.data[0].name;
                 document.getElementById("id_contact_person").value = data.data[0].contact_person;
