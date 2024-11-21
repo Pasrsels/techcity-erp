@@ -38,12 +38,12 @@
                     <table class="table border rounded p-2" id="cart-table">
                         <thead>
                             <tr>
-                                <th>items / batches</th>
+                                <th>#</th>
                                 <th>Product</th>
-                                <th>Quantity</th>
+                                <th>Qnty</th>
                                 {% if request.user.role != 'sales' %}
                                 <th>Price</th>
-                                <th>Wholesale Price</th>
+                                <th>W Price</th>
                                 {% endif %}
                                 <th>Destination</th>
                                 <th>Actions</th>
