@@ -65,14 +65,26 @@
                     {% csrf_token %}
                     <div id="div_id_transfer_to" class="mb-2"> 
                         <label for="id_transfer_to" class="form-label requiredField">Destination Branch(s)</label>
-                        <select name="transfer_to" class="select form-select" required id="id_to" multiple>
+                        <!-- <select name="transfer_to" class="select form-select" required id="id_to" multiple>
                             <option value=""></option>
                             {% for branch in branches %}
                                 {% if branch.name != request.user.branch.name %}
                                     <option value="{{ branch.id }}">{{ branch.name }}</option>
                                 {% endif %}
                             {% endfor %}
-                        </select>
+                        </select> -->
+                        <div>
+                            {% for branch in branches %}
+                            {% if branch.name != request.user.branch.name %}
+                                <div class="form-check mx-2 ">
+                                    <input id="id_to" data-name="{{ branch.name }}" onchange="pushBranches(this)" type="checkbox" class="form-check-input" value="{{ branch.id }}">
+                                    <label class="form-check-label" for="id_to">
+                                        {{ branch.name }}
+                                    </label>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        </div>
                     </div>
                     <div class="mb-1">
                         <label for="id_product" class="form-label requiredField">Product</label>
@@ -131,40 +143,41 @@
         placeholder: 'Select Product'
     });
 
-    function getSelectedValues() {
-        const selectElement = document.getElementById('id_to');
+    // function getSelectedValues() {
+    //     const selectElement = document.getElementById('id_to');
         
-        const selectedValues = Array.from(selectElement.selectedOptions).map(option => {
-        return {
-                name: option.text, 
-                value: option.value 
-            };
-        });
+    //     const selectedValues = Array.from(selectElement.selectedOptions).map(option => {
+    //     return {
+    //             name: option.text, 
+    //             value: option.value 
+    //         };
+    //     });
 
-        console.log(selectedValues);
-        return selectedValues;
-    }
+    //     console.log(selectedValues);
+    //     return selectedValues;
+    // }
 
-    // document.getElementById('getValuesButton').addEventListener('change', function() {
-        const values = getSelectedValues();
-    //     const product = document.getElementById('id_product').value;
-    //     console.log('values', values)
-    //     pushBranches(values)
-    //     displayTables(values, product);
-    // });
+    const pushBranches = (data) => {
 
-    const pushBranches = (values) => {
-        values.forEach((b) => {
-            const branchExists = branches.some(branch => branch.name === b.name);
+        if (data.checked) {
+
+            const branchExists = branches.some(branch => branch.name === data.dataset.name);
             if (!branchExists) {
                 branches.push({
-                    'name': b.name,
-                    'value': b.value
+                    'name': data.dataset.name,
+                    'value': data.value
                 });
-                branchesList.push(b.name);
+                branchesList.push(data.dataset.name);
             }
-        });
-    }
+        } else {
+            branches = branches.filter(branch => branch.name !== data.dataset.name);
+            branchesList = branchesList.filter(name => name !== data.dataset.name);
+        }
+
+        console.log('branchList', branchesList);
+        console.log('branches', branches);
+    };
+
 
     const displayTables = (values, product, prodData) => {
         let tableEl = document.getElementById('branchesTable');
@@ -177,8 +190,6 @@
             
             return average_quantity.toFixed(1)
         }
-
-       
 
         values.forEach((value) => {
             if (!branchesList.includes(value)) {
@@ -372,8 +383,7 @@
                     prodData = data;
                     console.log(prodData, 'product data')
                     if (prodData){
-                        const values = getSelectedValues();
-                        pushBranches(values)
+                        let values = branches
                         displayTables(values, product, prodData);
                     }
                     
