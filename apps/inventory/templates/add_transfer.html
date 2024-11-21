@@ -297,7 +297,7 @@
                 const prodTd = document.querySelectorAll(`.${product}`)
                 prodTd.forEach((td)=>{
                     console.log(td)
-                    td.classList.add('bg-warning')
+                    td.classList.add('text-danger')
                 })
                 hasError = true; 
                 prodName = product
@@ -482,9 +482,9 @@
                             : `${item.dealer_price}`}
                         </small>
                     </td>
-                    <td style='background:${currentColor}'><small class='${item.product}'>${item.branch_name}</td>
-                    <td style='background:${currentColor}'>
-                        <small class='${item.product}'>
+                    <td style='background:${currentColor}' class='${item.product}'><small>${item.branch_name}</small></td>
+                    <td style='background:${currentColor}' class='${item.product}'>
+                        <small>
                         <button class="btn btn-sm btn-outline-dark mx-1 edit" onclick="toggleEdit();">
                             ${isEditing ? "Save" : "Edit"}
                         </button>
