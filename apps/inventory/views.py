@@ -2608,27 +2608,10 @@ def supplier_view(request):
 
                         supplier['amount'] += item.unit_cost * item.received_quantity
                     else:
-<<<<<<< HEAD
-                        if SupplierAccount.objects.filter(id = item.supplier.id).exists():
-                            account_info = SupplierAccount.objects.get(id = item.supplier.id)
-                            list_orders[item.supplier] = {
-                                'supplier_id': item.supplier.id,
-                                'amount': item.unit_cost * item.received_quantity,
-                                'purchase_order': po,
-                                'category': item.product.category.name,
-                                'quantity': item.quantity,
-                                'quantity_received': item.received_quantity,
-                                'returned': item.quantity - item.received_quantity,
-                                'date': account_info.date,
-                                'balance': account_info.balance,
-                                'count': 1
-                            }
-=======
                         supplier['count'] += 1
                     supplier['amount'] += item.unit_cost * item.received_quantity
                     supplier['returned'] = supplier['returned'] + (item.quantity - item.received_quantity)
                     
->>>>>>> 1091ce79946a4c89540f880d07e8cd00ad850911
                 else:
                     if SupplierAccount.objects.filter(id = item.supplier.id).exists():
                         account_info = SupplierAccount.objects.get(id = item.supplier.id)
@@ -2698,11 +2681,7 @@ def supplier_view(request):
                 return JsonResponse({'success': False, 'response':f'Supplier{name} already exists'}, status=400)
            
             with transaction.atomic():
-<<<<<<< HEAD
-                if not Currency.objects.filter(default = True).exists() and not Currency.objects.filter(default = False).exists():
-=======
                 if not Currency.objects.filter(name = 'USD').exists() and not Currency.objects.filter(name = 'ZIG').exists():
->>>>>>> 1091ce79946a4c89540f880d07e8cd00ad850911
                     Currency.objects.create(
                         code = '001',
                         name = 'USD',
@@ -2714,16 +2693,10 @@ def supplier_view(request):
                         code = '002',
                         name = 'ZIG',
                         symbol = 'Z',
-<<<<<<< HEAD
-                        exchange_rate = 26.87,
-                        default = False
-                    )
-=======
                         exchange_rate = 26.78,
                         default =  False
                     )
 
->>>>>>> 1091ce79946a4c89540f880d07e8cd00ad850911
                 supplier = Supplier.objects.create(
                     name = name,
                     contact_person = contact_person,
@@ -2737,19 +2710,11 @@ def supplier_view(request):
                     currency = Currency.objects.get(default = True),
                     balance = 0,
                 )
-<<<<<<< HEAD
-
-=======
->>>>>>> 1091ce79946a4c89540f880d07e8cd00ad850911
                 SupplierAccount.objects.create(
                     supplier = supplier,
                     currency = Currency.objects.get(default = False),
                     balance = 0,
                 )
-<<<<<<< HEAD
-
-=======
->>>>>>> 1091ce79946a4c89540f880d07e8cd00ad850911
             return JsonResponse({'success': True}, status=200)
         except Exception as e:
             logger.info(e)
