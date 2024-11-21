@@ -65,14 +65,6 @@
                     {% csrf_token %}
                     <div id="div_id_transfer_to" class="mb-2"> 
                         <label for="id_transfer_to" class="form-label requiredField">Destination Branch(s)</label>
-                        <!-- <select name="transfer_to" class="select form-select" required id="id_to" multiple>
-                            <option value=""></option>
-                            {% for branch in branches %}
-                                {% if branch.name != request.user.branch.name %}
-                                    <option value="{{ branch.id }}">{{ branch.name }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select> -->
                         <div>
                             {% for branch in branches %}
                             {% if branch.name != request.user.branch.name %}
@@ -236,45 +228,46 @@
         });
     };
 
-    let remainingQuantity = 0;
-    const calculateQuantityDifference = (quantity, productQuantity, name) =>{
-        console.log('initial', remainingQuantity)
-        if (remainingQuantity > 0){
-            remainingQuantity = remainingQuantity - quantity;
-        }else{
-            if(quantity == 0){
-                remainingQuantity = productQuantity - quantity;
-            }else{
-                remainingQuantity = productQuantity - quantity;
-            }
-            console.log('<0', remainingQuantity)
-        }   
+    let remainingQuantities = {}; 
+    let previousQuantities = {}; 
+
+    const calculateQuantityDifference = (quantity, productQuantity, branchName) => {
+        quantity = parseInt(quantity) || 0; 
+        console.log('Initial:', remainingQuantities[branchName] || productQuantity);
+
+        if (!(branchName in remainingQuantities)) {
+            remainingQuantities[branchName] = productQuantity;
+        }
+        if (!(branchName in previousQuantities)) {
+            previousQuantities[branchName] = 0;
+        }
+
+        const difference = quantity - previousQuantities[branchName];
+        remainingQuantities[branchName] -= difference;
+
+        previousQuantities[branchName] = quantity;
+
+        // document.querySelector(`#id_${branchName}`).textContent = remainingQuantities[branchName];
 
         branchesList.forEach((b)=>{
             console.log(b)
-            document.querySelector(`#id_${b}`).textContent = remainingQuantity
+            document.querySelector(`#id_${b}`).textContent = remainingQuantities[branchName];
         })
-        console.log(remainingQuantity)
-    }
+        console.log(`Remaining quantity for ${branchName}:`, remainingQuantities[branchName]);
+    };
+
 
     const saveDataToServer = (action) => {
         const branchElements = document.querySelectorAll('.branch-data');
         const dataToSend = [];
 
-        // if (cart.length == 0){
-        //     Swal.fire({
-        //         text:'Please select products first.',
-        //         title:'Info',
-        //         icon:'info'
-        //     })
-        //     return;
-        // }
+   
         let hasError = false; 
         let productAdded = false; 
         let prodName = ''
 
         for (let i = 0; i < branchElements.length; i++) {
-            const branch = branchElements[i]; // Ensure to get the current branch element
+            const branch = branchElements[i]; 
             const branchName = branch.dataset.branchName;
             const price = branch.querySelector('.price-input').value;
             const dealerPrice = branch.querySelector('.dealer-price-input').value;
@@ -363,69 +356,39 @@
     });
 
     document.getElementById('id_product').addEventListener('change', function() {
-    const selectElement = document.getElementById('id_product');
-    const selectedOptions = Array.from(selectElement.selectedOptions).map(option => {
-        return {
-            name: option.text,
-            value: option.value
-        };
-    });
+        const selectElement = document.getElementById('id_product');
+        const selectedOptions = Array.from(selectElement.selectedOptions).map(option => {
+            return {
+                name: option.text,
+                value: option.value
+            };
+        });
 
-    const product = selectedOptions[0]?.value;
+        const product = selectedOptions[0]?.value;
 
-    if (product) {
-        fetch(`/inventory/inventory/?name=${product}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.length > 0) {
-                    console.log(data);
-                  
-                    prodData = data;
-                    console.log(prodData, 'product data')
-                    if (prodData){
-                        let values = branches
-                        displayTables(values, product, prodData);
-                    }
+        if (product) {
+            fetch(`/inventory/inventory/?name=${product}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        console.log(data);
                     
-                }
-            })
-            .catch(error => console.error('Error:', error));
-    }
-});})
+                        prodData = data;
+                        console.log(prodData, 'product data')
+                        if (prodData){
+                            let values = branches
+                            displayTables(values, product, prodData);
+                        }
+                        
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    })
+    })
 
 
   const successModal = new bootstrap.Modal(document.querySelector('#successModal'))
-
-//   document.querySelector('#id_quantity').addEventListener(
-//     'input', ()=>{
-//       const quantity = $('#id_quantity').val()
-
-//       if (quantity > prodData[0][0].quantity){
-//           submitBtn.disabled = true;
-//           Swal.fire({
-//               icon: 'warning',
-//               title: 'Quantity Exceeded',
-//               text: 'The quantity you entered exceeds the available source quantity. Please adjust.',
-//               confirmButtonText: 'Okay'
-//           });
-
-//       }else{
-//           document.querySelector('#quantity_error').innerHTML = '';
-//           submitBtn.disabled = false;
-//       }
-//     }
-//   )
-
-//   document.querySelector('#id_price').addEventListener(
-//     'input', ()=>{
-//       const price = $('#id_price').val()
-//       if (price < prodCost) {
-//         document.querySelector('#quantity_error').innerHTML = `Selling price cannot be less than cost price ${prodCost} for product ${productName}`
-//       }else{
-//         document.querySelector('#quantity_error').innerHTML=''
-//       }
-//     }
-//   )
 
   function generateUniqueId() {
       return Math.floor(Math.random() * 1000000000).toString(36);
@@ -510,7 +473,6 @@
             }
         }
 
-
         updateRowContent();
         row.querySelector("button.btn-outline-dark").addEventListener("click", () => {
             isEditing = !isEditing;
@@ -521,91 +483,6 @@
 
         document.getElementById("branchesTable").innerHTML = "";
     }
-//     function updateCartDisplay() {
-//     const cartItemsList = document.getElementById("cart-items");
-//     cartItemsList.innerHTML = "";
-
-//     let total = 0;
-//     let currentColor = "gray"; // Start with gray
-//     let currentProduct = null; // Track the current product
-
-//     console.log(branchesCount);
-
-//     function toggleEdit() {
-//         isEditing = !isEditing;
-//         updateRowContent();
-//     }
-
-//     cart.forEach((item, index) => {
-//         console.log("branch index, ", index);
-
-//         if (currentProduct !== item.product) {
-//             currentProduct = item.product; // Update current product
-//             currentColor = currentColor === "gray" ? "white" : "gray"; // Toggle color
-//         }
-
-//         // Create a new table row
-//         const row = document.createElement("tr");
-//         row.style.backgroundColor = currentColor; // Set the background color
-
-//         // Default state: show figures without input fields
-//         let isEditing = false;
-
-//         // Update the row content dynamically based on the `isEditing` state
-//         function updateRowContent() {
-//             row.innerHTML = `
-//                 <td>${item.count}</td>
-//                 <td>${item.product}</td>
-//                 <td>
-//                     ${isEditing
-//                         ? `<input type="number" class="form-control form-control-sm" 
-//                              value="${item.quantity}" min="1" 
-//                              onchange="updateCartItem('${String(item.id)}', 'quantity', this.value);" />`
-//                         : `${item.quantity}`}
-//                 </td>
-//                 <td class="${salesPerson ? 'd-none' : ''}">
-//                     ${isEditing
-//                         ? `<input type="number" class="form-control form-control-sm" 
-//                              value="${item.price}" step="0.01" min="0" 
-//                              onchange="updateCartItem('${String(item.id)}', 'price', this.value);" />`
-//                         : `${item.price}`}
-//                 </td>
-//                 <td class="${salesPerson ? 'd-none' : ''}">
-//                     ${isEditing
-//                         ? `<input type="number" class="form-control form-control-sm" 
-//                              value="${item.dealer_price}" step="0.01" min="0" 
-//                              onchange="updateCartItem('${String(item.id)}', 'dealer_price', this.value);" />`
-//                         : `${item.dealer_price}`}
-//                 </td>
-//                 <td>${item.branch_name}</td>
-//                 <td>
-//                     <button class="btn btn-sm btn-primary" onclick="toggleEdit(this);">
-//                         ${isEditing ? "Save" : "Edit"}
-//                     </button>
-//                     <button class="btn btn-sm btn-danger" data-id="${String(item.id)}" onclick="removeItem(this);">
-//                         <i class='bx bx-trash-alt'></i>
-//                     </button>
-//                 </td>
-//             `;
-//         }
-
-//         // Initialize row content
-//         updateRowContent();
-
-//         // Append the row to the table
-//         cartItemsList.appendChild(row);
-
-//         // Add event listener to the Edit button
-//         row.querySelector("button.btn-primary").addEventListener("click", () => {
-//             isEditing = !isEditing;
-//             updateRowContent();
-//         });
-//     });
-
-//     document.getElementById("branchesTable").innerHTML = "";
-// }
-
-
 
     function updateCartItem(id, field, value) {
         const item = cart.find((item) => item.id === id);
@@ -623,95 +500,6 @@
       document.getElementById('id_description').value = '';
   }
 
-  function addItem() {
-      const pElement = document.getElementById('id_product')
-      const pSelectedOption = pElement.options[pElement.selectedIndex]
-      let product = pSelectedOption.textContent;
-      product = product.split(' [')[0]
-
-      const price = Number(document.getElementById('id_price').value)
-      const quantity = Number(document.getElementById('id_quantity').value)
-
-      const toElement = document.getElementById('id_to')
-      const toSelectedOption = toElement.options[toElement.selectedIndex]
-      const toBranchId = toSelectedOption.textContent
-
-      const description = document.getElementById('id_description').value
-      const dealer_price = document.getElementById('id_dealer_price').value
-
-      const existingItem = cart.find((item) => item.product === product)
-
-      if (!product) {
-          Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: 'Please fill in the Product field',
-          })
-          document.getElementById('id_product').focus()
-          return;
-      }
-
-      if (!quantity) {
-          document.getElementById('id_quantity').focus();
-          return;
-      }
-
-      if (!price) {
-          Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: 'Please fill in the Price field',
-          })
-          document.getElementById('id_price').focus()
-          return;
-      }
-
-
-      if (existingItem) {
-          existingItem.quantity
-          Swal.fire({
-              title: `Product ${productName} exists.`,
-              icon: 'error'
-          })
-      }
-
-      else {
-          if (quantity <= 0) {
-              Swal.fire({
-                  icon: 'error',
-                  title: 'Error',
-                  text: 'Quantity cannot be less than zero or below zero.',
-              })
-              return;
-          }
-
-          
-          if (!document.getElementById('id_to').value) {
-              Swal.fire({
-                  icon: 'error',
-                  title: 'Error',
-                  text: 'Please fill in the Branch field',
-              }).then(() => {
-                  document.getElementById('id_to').focus()
-              })
-              return;
-          }
-
-          const newTransfer = {
-              id: generateUniqueId(),
-              product: productName,
-              cost: prodCost,
-              to_branch: toBranchId,
-              quantity: quantity,
-              price: price,
-              dealer_price: dealer_price,
-              description: description
-          };
-          cart.push(newTransfer);
-          updateCartDisplay();
-          clearFields()
-      }
- }
 
   const removeItem = (el) => {
       const id = el.dataset.id;
@@ -720,10 +508,6 @@
   };
 
   function processCart(action) {
-      const toElement = document.getElementById('id_to');
-      const toSelectedOption = toElement.options[toElement.selectedIndex];
-      const toBranchId = toSelectedOption.textContent;
-
       const data = {
           'action':action,
           'cart': cart,

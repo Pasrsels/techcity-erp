@@ -5,23 +5,21 @@
 {% block content %}
    <div class="inventory">
         <div class="inventory-navbar">
-            <nav class="d-flex justify-content-between align-items-center text-light rounded shadow p-2" style="background:#242140;">
+            <nav class="d-flex justify-content-between align-items-center text rounded shadow p-2" style="background:;">
                 <div>
                     <h4>Transfers</h4>
                 </div>
                 <div class="search d-flex align-items-center">
-                    
-                    <!--<form method='get' class='px-2'>
-                        <input
-                            id="search"
-                            name="q"
-                            value='{{search_query}}'
-                            type="search"
-                            class="form-control"
-                            placeholder="Transfer....."
-                        />
-                    </form>-->
-                    <span class="px-1"></span>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="shadow  p-2 rounded">
+                            Transfered value: 
+                            {{ transferred_value }}
+                        </div>
+                        <div class="shadow  p-2 rounded mx-2">
+                            Received value: 
+                            {{ received_value }}
+                        </div>
+                    </div>
                     <form method="get" class="d-flex">
                         <select name="branch" class="form-control">
                             <option value="">All Branches</option>
@@ -41,19 +39,12 @@
             <div class='mt-3 mb-3 d-flex justify-content-between align-items-center mb-2 mt-2 border'>
                 <div class=' mt-2 d-flex align-items-center p-2'>
                     <div class='fw-bold'>Transfer(s) List</div>
-                    <div class="px-2"></div>
-                    <div class="btn btn-primary btn-sm" type='button' id='id_expand'>Expand</div>
-                    <div class="mx-2"> 
+                    <div class="btn btn-primary btn-sm mx-2" type='button' id='id_expand'>Expand</div>
+                    <div> 
                         <a href={% url 'inventory:add_transfer' %} type="button" class="btn btn-primary btn-sm">
                             <i class='bx bx-plus'></i>
                             Transfer
                         </a>
-                    </div>
-                    <div> 
-                        <button type="button" class="btn btn-primary btn-sm">
-                            Held Transfers <span class="badge">{{ hold_transfers_
-                                count }}</span>
-                        </button>
                     </div>
                     <div class="mx-2">
                         <a href='{% url 'inventory:receive_inventory' %}'  class="btn btn-primary btn-sm">
