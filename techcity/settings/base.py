@@ -132,39 +132,22 @@ SESSION_AUTH = True
 
 DATABASES = {
 
-   'default': {
-     'ENGINE': 'django.db.backends.postgresql',
-<<<<<<< HEAD
-       'NAME':  'techcoty',
-       'USER': 'postgres',
-       'PASSWORD': 'neverfail',
-       'HOST': 'localhost',
-       'PORT': '5432'
- }
-    # 'default': {
-    #     'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-    #      'NAME': os.getenv('DB_NAME', 'railway'),
-    #      'USER': os.getenv('DB_USERNAME', 'postgres'),
-    #      'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvDuHLnxhw'),  
-    #      'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
-    #      'PORT': os.getenv('DB_PORT', '26269'),
-    #  }
-=======
-       'NAME':  'Techcity',
-       'USER': 'postgres',
-       'PASSWORD': '5052',
-       'HOST': 'localhost',
-       'PORT': '5432'
- }
-#     'default': {
-#         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-#          'NAME': os.getenv('DB_NAME', 'railway'),
-#          'USER': os.getenv('DB_USERNAME', 'postgres'),
-#          'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvDuHLnxhw'),  
-#          'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
-#          'PORT': os.getenv('DB_PORT', '26269'),
-#      }
->>>>>>> 34f0bf3b1f15b3101f60f88bd60820bd8c297b95
+#    'default': {
+#      'ENGINE': 'django.db.backends.postgresql',
+#        'NAME':  'techcoty',
+#        'USER': 'postgres',
+#        'PASSWORD': 'neverfail',
+#        'HOST': 'localhost',
+#        'PORT': '5432'
+#  }
+    'default': {
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+         'NAME': os.getenv('DB_NAME', 'railway'),
+         'USER': os.getenv('DB_USERNAME', 'postgres'),
+         'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvDuHLnxhw'),  
+         'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
+         'PORT': os.getenv('DB_PORT', '26269'),
+     }
 }
 
 if 'test' in sys.argv:
