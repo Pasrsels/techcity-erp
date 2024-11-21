@@ -10,18 +10,10 @@
     <div class="row">
         <aside class="col-2 bg-dark text-white p-4">
             <ul class="list-unstyled">
-<<<<<<< HEAD
-                <li><a href="#" class="text-white">Services</a></li>
-                <li><a href="#" class="text-white">Offices</a></li>
-                <li><a href="#" class="text-white">Members</a></li>
-                <li><a href="#" class="text-white">Logs</a></li>
-                <li><a href="#" class="text-white">Settings</a></li>
-=======
                 <li><a href="{% url 'booking:service' %}" class="text-white">Services</a></li>
                 <li><a href="{% url 'booking:members' %}" class="text-white">Members</a></li>
                 <li><a href="{% url 'booking:payments' %}" class="text-white">Payments</a></li>
                 <li><a href="{% url 'booking:office' %}" class="text-white">Office Spaces</a></li>
->>>>>>> c7865e3fc1bc94a61044bbd8a9d2c5b378cefb8c
             </ul>
         </aside>
 
@@ -48,10 +40,7 @@
                 {% endfor %}
             </div>
 
-<<<<<<< HEAD
-=======
             <!-- Office Modal -->
->>>>>>> c7865e3fc1bc94a61044bbd8a9d2c5b378cefb8c
             <div class="modal fade" id="officeModal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
@@ -76,10 +65,7 @@
                 </div>
             </div>
 
-<<<<<<< HEAD
-=======
             <!-- Occupant Modal -->
->>>>>>> c7865e3fc1bc94a61044bbd8a9d2c5b378cefb8c
             <div class="modal fade" id="occupantModal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -101,24 +87,7 @@
 </div>
 
 <script>
-<<<<<<< HEAD
-    document.getElementById("searchInput").addEventListener("keyup", function() {
-        const searchTerm = this.value.toLowerCase();
-        const officeCards = document.querySelectorAll(".view-office");
-
-        officeCards.forEach(card => {
-            const officeLetter = card.getAttribute("data-office").toLowerCase();
-            if (officeLetter.includes(searchTerm)) {
-                card.closest(".col-md-4").style.display = "";
-            } else {
-                card.closest(".col-md-4").style.display = "none";
-            }
-        });
-    });
-
-=======
     // Show Office Modal with data from the server
->>>>>>> c7865e3fc1bc94a61044bbd8a9d2c5b378cefb8c
     document.querySelectorAll('.view-office').forEach(button => {
         button.addEventListener('click', function () {
             const officeLetter = this.getAttribute('data-office');
@@ -127,11 +96,7 @@
                 .then(response => response.json())
                 .then(data => {
                     const tableBody = document.getElementById('officeTableBody');
-<<<<<<< HEAD
-                    tableBody.innerHTML = ''; 
-=======
                     tableBody.innerHTML = '';
->>>>>>> c7865e3fc1bc94a61044bbd8a9d2c5b378cefb8c
                     data.offices.forEach(office => {
                         const statusIcon = office.occupied ? 'text-success' : 'text-danger';
                         const row = document.createElement('tr');
@@ -144,10 +109,7 @@
                         tableBody.appendChild(row);
                     });
 
-<<<<<<< HEAD
-=======
                     // Add event listener for occupant details
->>>>>>> c7865e3fc1bc94a61044bbd8a9d2c5b378cefb8c
                     document.querySelectorAll('.view-occupant').forEach(icon => {
                         icon.addEventListener('click', function () {
                             const officeNumber = this.getAttribute('data-office-number');
@@ -163,12 +125,7 @@
                     });
 
                     new bootstrap.Modal(document.getElementById('officeModal')).show();
-<<<<<<< HEAD
-                })
-                .catch(error => console.error('Error fetching office details:', error));
-=======
                 });
->>>>>>> c7865e3fc1bc94a61044bbd8a9d2c5b378cefb8c
         });
     });
 </script>
