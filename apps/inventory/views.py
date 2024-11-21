@@ -2612,9 +2612,9 @@ def supplier_view(request):
                         supplier['count'] = supplier['count']
                     else:
                         supplier['count'] += 1
-
-
                     supplier['amount'] += item.unit_cost * item.received_quantity
+                    supplier['returned'] = supplier['returned'] + (item.quantity - item.received_quantity)
+                    
                 else:
                     account_info = SupplierAccount.objects.get(id = item.supplier.id)
                     list_orders[item.supplier] = {
@@ -2698,14 +2698,22 @@ def supplier_view(request):
                 return JsonResponse({'success': False, 'response':f'Supplier{name} already exists'}, status=400)
            
             with transaction.atomic():
-                if not Currency.objects.filter(default = True).exists():
+                if not Currency.objects.filter(default = True).exists() and Currency.objects.filter(default = False).exists():
                     Currency.objects.create(
-                        code = '001',
+                        #code = '001',
                         name = 'USD',
                         symbol = '$',
                         exchange_rate = 1,
                         default = True
                     )
+                    Currency.objects.create(
+                        #code = '002',
+                        name = 'ZIG',
+                        symbol = 'Z',
+                        exchange_rate = 26.78,
+                        default =  False
+                    )
+
                 supplier = Supplier.objects.create(
                     name = name,
                     contact_person = contact_person,
@@ -2717,6 +2725,11 @@ def supplier_view(request):
                 SupplierAccount.objects.create(
                     supplier = supplier,
                     currency = Currency.objects.get(default = True),
+                    balance = 0,
+                )
+                SupplierAccount.objects.create(
+                    supplier = supplier,
+                    currency = Currency.objects.get(default = False),
                     balance = 0,
                 )
             return JsonResponse({'success': True}, status=200)
