@@ -543,16 +543,7 @@
     function openEditModal(supplierId) {
         supId = supplierId;
         console.log('supplier', supplierId);
-        fetch(`/inventory/suppliers/edit/${editSupId}/`, {
-            method: 'POST',  
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken(),
-            },
-            body: JSON.stringify(data),
-            
-            
-        }) // Adjust this URL to match your actual endpoint
+        fetch(`/inventory/suppliers/edit/${editSupId}/`)  // Adjust this URL to match your actual endpoint
             .then(response => response.json())
             .then(data => {
                 console.log(data.data[0], 'supplier');
