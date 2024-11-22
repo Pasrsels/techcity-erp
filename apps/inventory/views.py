@@ -2529,20 +2529,20 @@ def PaymentHistory(request, supplier_id):
 
         list_details = {}
         for items in supplier_purchase_order_details:
-            if list_details.get(items.purchase_order.order_number):
-                purchase_order = list_details.get(items.purchase_order.order_number)
-                purchase_order['order_date'] = items.purchase_order.order_date
-                purchase_order['order_number'] = items.purchase_order.order_number
-                purchase_order['amount'] = items.received_quantity * items.unit_cost
-            else:
-                list_details[items.purchase_order.order_number] = {
-                    'order_date': items.purchase_order.order_date,
-                    'order_number': items.purchase_order.order_number,
-                    'amount': items.received_quantity * items.unit_cost
-                }
-                
+            if items:
+                if list_details.get(items.purchase_order.order_number):
+                    purchase_order = list_details.get(items.purchase_order.order_number)
+                    purchase_order['order_date'] = items.purchase_order.order_date
+                    purchase_order['order_number'] = items.purchase_order.order_number
+                    purchase_order['amount'] = items.received_quantity * items.unit_cost
+                else:
+                    list_details[items.purchase_order.order_number] = {
+                        'order_date': items.purchase_order.order_date,
+                        'order_number': items.purchase_order.order_number,
+                        'amount': items.received_quantity * items.unit_cost
+                    }      
         logger.info(list_details)
-        logger.info(list(supplier_history))
+        logger.info(list(list_history))
         return JsonResponse({'success':True, 'history':list_history, 'pOrder': list_details}, status=200)
     return JsonResponse({'success':False, 'message':'Invalid request'}, status=500)
 

@@ -14,6 +14,19 @@
     </div>
     <table class="table table-striped table-bordered table-hover rounded p-2 mt-3 mt-2" id="supplier_list" style="width: 100%;">
         <thead>
+            <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier List</title>
+    <style>
+        #supplier_list th {
+            transition: transform 0.3s ease;
+        }
+
+        #supplier_list th:hover {
+            transform: scale(1.1); /* Enlarges only the hovered th */
+            cursor: pointer; /* Adds a pointer cursor for better UX */
+        }
+    </style>
             <tr>
                 <th>Name</th>
                 <th>Products</th>
@@ -288,10 +301,22 @@
                 <hr class="rounded">
                 <form method="post" id="paymentForm">
                     {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="amount" class="form-label">Amount</label>
-                        <input type="number" class="form-control" id="amount" name="amount" required>
+                    <!-- Currency and Next Due -->
+                    <div class="mb-3 d-flex align-items-center">
+                        <div class="me-3" style="flex: 1;">
+                            <label for="currency" class="form-label">Currency</label>
+                            <select class="form-control" id="currency" name="currency">
+                                <option value="USD">USD Dollar</option>
+                                <option value="ZiG">ZiG</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="next_due" class="form-label">Next Due</label>
+                            <input type="text" class="form-control" id="next_due" name="next_due" readonly value="--">
+                        </div>
                     </div>
+                
+                    <!-- Payment Method -->
                     <div class="mb-3">
                         <label for="payment_method" class="form-label">Payment Method</label>
                         <select class="form-control" id="payment_method" name="payment_method" required>
@@ -303,13 +328,20 @@
                             <option value="Visa">Visa</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label for="currency" class="form-label">Currency</label>
-                        <select class="form-control" id="currency" name="currency">
-                            <option value="USD">USD Dollar</option>
-                            <option value="ZiG">ZiG</option>
-                        </select>
+                
+                    <!-- Amount and USD Value -->
+                    <div class="mb-3 d-flex align-items-center">
+                        <div class="me-3" style="flex: 1;">
+                            <label for="amount" class="form-label">Amount</label>
+                            <input type="number" class="form-control" id="amount" name="amount" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="usd_value" class="form-label">USD Value</label>
+                            <input type="text" class="form-control" id="usd_value" name="usd_value" readonly value="--">
+                        </div>
                     </div>
+                
+                    <!-- Buttons -->
                     <div class="d-flex justify-content-end">
                         <button type="button" class="btn btn-secondary btn-sm mx-2" data-bs-dismiss="modal">Close</button>
                         <button type="reset" class="btn btn-danger btn-sm mx-2">Reset</button>
@@ -386,7 +418,7 @@
     const supplierModal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
     const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
     const paymentHistoryModal = new bootstrap.Modal(document.getElementById('paymentHistoryModal'));
-
+  
     addButton.addEventListener('click', () => {
         supplierModal.show();
     });
@@ -400,6 +432,28 @@
     })
     new DataTable('#supplier_list', {
             paging: false,
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const amountInput = document.getElementById('amount');
+        const currencySelect = document.getElementById('currency');
+        const usdValueInput = document.getElementById('usd_value');
+                
+     function updateUsdValue() {
+         const amount = parseFloat(amountInput.value) || 0;
+          const currency = currencySelect.value;
+                
+         if (currency === 'ZiG') {
+             usdValueInput.value = (amount / 30).toFixed(2); // Convert to USD equivalent
+        } else if (currency === 'USD') {
+                                usdValueInput.value = amount.toFixed(2); // Display the same amount
+            } 
+                 else {
+                                usdValueInput.value = '--'; // Default value if no valid currency selected
+                        }
+          }                // Listen for changes to amount and currency
+          amountInput.addEventListener('input', updateUsdValue);
+         currencySelect.addEventListener('change', updateUsdValue);
     });
 
     document.addEventListener('DOMContentLoaded', function () {
