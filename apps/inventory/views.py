@@ -2932,6 +2932,7 @@ def payments(request):
             supplier_amount = data.get('amount')
             supplier_currency_used = data.get('currency')
             supplier_method = data.get('payment_method')
+            supplier_date = data.get('next_due')
 
             supplier_details = Supplier.objects.get(id = supplier_id)
             supplier_currency = Currency.objects.get(name = supplier_currency_used)
@@ -2953,6 +2954,7 @@ def payments(request):
                     suppliers = supplier_details,
                     currency = supplier_currency,
                     balance = new_balance,
+                    date = supplier_date
                 )
 
                 SupplierAccountsPayments.objects.create(
