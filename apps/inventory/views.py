@@ -2593,45 +2593,46 @@ def supplier_view(request):
         supplier_products = Product.objects.all()
         supplier_balances = SupplierAccount.objects.all().values('supplier__id', 'balance', 'date', 'currency__name')
         purchase_orders = PurchaseOrderItem.objects.all()
-        
-        list_orders = {}
-        for items in purchase_orders:
-            if list_orders.get(items.supplier.id):
-                
-                supplier = list_orders.get(items.supplier.id)
-                logger.info(f'quantity: {supplier}')
-                supplier['quantity'] += items.quantity
-                supplier['received_quantity'] += items.received_quantity
-                supplier['returned'] += (items.quantity - items.received_quantity)
-                supplier['amount'] += (items.unit_cost * items.received_quantity)
+        try:
+            list_orders = {}
+            for items in purchase_orders:
+                if list_orders.get(items.supplier.id):
+                    supplier = list_orders.get(items.supplier.id)
+                    logger.info(f'quantity: {supplier}')
+                    supplier['quantity'] += items.quantity
+                    supplier['received_quantity'] += items.received_quantity
+                    supplier['returned'] += (items.quantity - items.received_quantity)
+                    supplier['amount'] += (items.unit_cost * items.received_quantity)
 
-                if items.purchase_order.id == supplier['order_id']:
-                    supplier['count'] = supplier['count']
+                    if items.purchase_order.id == supplier['order_id']:
+                        supplier['count'] = supplier['count']
+                    else:
+                        supplier['count'] += 1
+                        supplier['order_id'] = items.purchase_order.id
                 else:
-                    supplier['count'] += 1
-                    supplier['order_id'] = items.purchase_order.id
-            else:
-                list_orders[items.supplier.id] = {
-                    'order_id': items.purchase_order.id,
-                    'quantity' : items.quantity,
-                    'received_quantity' : items.received_quantity,
-                    'returned' : (items.quantity - items.received_quantity),
-                    'amount' : (items.unit_cost * items.received_quantity),
-                    'count' : 1
-                }         
-        logger.info([list_orders])
-        logger.info(supplier_balances)
-        form = AddSupplierForm()
-        suppliers = Supplier.objects.filter(delete = False)
-        logger.info(suppliers)
-        return render(request, 'Supplier/Suppliers.html', {
-            'form':form,
-            'products':supplier_products,
-            'balances':supplier_balances,
-            'life_time': [list_orders],
-            'suppliers':suppliers
-        })
-            
+                    list_orders[items.supplier.id] = {
+                        'order_id': items.purchase_order.id,
+                        'quantity' : items.quantity,
+                        'received_quantity' : items.received_quantity,
+                        'returned' : (items.quantity - items.received_quantity),
+                        'amount' : (items.unit_cost * items.received_quantity),
+                        'count' : 1
+                    }         
+            logger.info([list_orders])
+            logger.info(supplier_balances)
+            form = AddSupplierForm()
+            suppliers = Supplier.objects.filter(delete = False)
+            logger.info(suppliers)
+            return render(request, 'Supplier/Suppliers.html', {
+                'form':form,
+                'products':supplier_products,
+                'balances':supplier_balances,
+                'life_time': [list_orders],
+                'suppliers':suppliers
+            })
+        except Exception as e:
+            logger.info(e)
+            return JsonResponse({'success': False , 'response': f'{e}'}, status = 400) 
     if request.method == 'POST':
         """
         payload = {
