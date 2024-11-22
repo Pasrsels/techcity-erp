@@ -12,8 +12,7 @@
             </button>
         </div>
     </div>
-
-    <table id="supplier_list" class="table table-striped table-bordered" style="width: 100%;">
+    <table class="table table-striped table-bordered table-hover rounded p-2 mt-3 mt-2" id="supplier_list" style="width: 100%;">
         <thead>
             <tr>
                 <th>Name</th>
@@ -132,17 +131,16 @@
                         <div class='px-2 py-2 bg-dark d-flex justify-content-between text-light align-items-center rounded'>
                             <div class='h5'>Supplier Details</div>
                             <div>
-                                <button type="button" class="btn btn-primary btn-sm" id="p_history_btn">Proceed to Payment</button>
+                                <button type="button" class="btn btn-primary btn-sm" id="p_history_btn" >Proceed to Payment</button>
                             </div>
                         </div>
 
                         <!-- Add Margin for Separation -->
                         <div class="my-3"></div>
 
-                        <!-- Supplier Details and Account Info (Upper Quarter of Upper Section) -->
-                        <div class="row mb-3">
-                            <!-- Left Column: Supplier Details (Fit within upper quarter) -->
-                            <div class="col-md-6 border-end">
+                        <!-- Supplier Details Only (Centered in Upper Section) -->
+                        <div class="d-flex justify-content-center">
+                            <div class="col-md-6">
                                 <div class="text-center mb-2">
                                     <!-- Adjust Icon Size to 30px (smaller) -->
                                     <i class="fas fa-user-circle" style="font-size: 30px; color: rgb(18, 201, 233);"></i>
@@ -159,20 +157,6 @@
                                         <button class="btn btn-danger btn-sm mx-1" style="background-color: red;" onclick="confirmDelete()">
                                             <span class="text-white">Delete</span>
                                         </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Right Column: Account Info (Upper Quarter of Upper Section) -->
-                            <div class="col-md-6" style="flex: 1;">
-                                <div class="card shadow mb-3">
-                                    <div class="card-body">
-                                        <h6>Account</h6>
-                                        {% for balance in account %}
-                                            <h6 class="text-center fw-bold {% if balance.balance < 0 %}text-danger{% endif %}">
-                                                {{ balance.currency.symbol }} {{ balance.balance }}
-                                            </h6>
-                                        {% endfor %}
                                     </div>
                                 </div>
                             </div>
@@ -228,6 +212,7 @@
         </div>
     </div>
 </div>
+
 <!--------------------------------------------------------------------------------------------------------->>    
     <!-- Edit Supplier Modal -->
     <div class="modal fade" id="editSupplierModal" tabindex="-1" aria-labelledby="editSupplierModalLabel" aria-hidden="true">
@@ -395,7 +380,7 @@
     let deleteSupId = null;
     let editSupId = null;
 
-    const historyBtn = document.getElementById('p_history_btn');
+    const historyBtn = document.querySelectorAll('#p_history_btn');
     const addButton = document.getElementById('addButton');
     const supplierModal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
     const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
@@ -405,11 +390,13 @@
         supplierModal.show();
     });
 
-    historyBtn.addEventListener('click', ()=>{
-        paymentHistoryModal.hide()
-        paymentModal.show()
+    historyBtn.forEach((b)=>{
+        console.log(b, 'Button')
+        b.addEventListener('click', () => {
+            paymentHistoryModal.hide()
+            paymentModal.show()
+        });
     })
-
     new DataTable('#supplier_list', {
             paging: false,
     });
@@ -465,84 +452,82 @@
         });
     });
 
-        // Payment History Modal
-        function openPaymentHistoryModal(supplierId) {
-            paymentHistoryModal.show();
-            fetch(`/inventory/suppliers/payment-history/${supplierId}/`,
-                {
-                    method:'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                }
-            )
-            .then(response=>response.json())
-            .then(data=>{
-                if (data.success){
-                    console.log('supplier data', data)
-                    displayData(data.data)
-                }else{
-                    Swal.fire({
-                        icon:'error',
-                        title:'Error',
-                        text:'Failed to fetch supplier payment data.'
-                    })
-                }
-                
-            })
+    // Payment History Modal
+    function openPaymentHistoryModal(supplierId) {
+        paymentHistoryModal.show();
+        fetch(`/inventory/suppliers/payment-history/${supplierId}/`,
             {
-                // Payment Modal
-    function openPaymentModal(supplierId) {
-            paymentModal.show();
-            supplierDetailsModal.hide();
-        }
+                method:'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
             }
+        )
+        .then(response=>response.json())
+        .then(data=>{
+            if (data.success){
+                console.log('supplier data', data)
+                displayData(data.history)
+            }else{
+                Swal.fire({
+                    icon:'error',
+                    title:'Error',
+                    text:'Failed to fetch supplier payment data.'
+                })
+            }
+            
+        })
+    }
 
-        }
+    // Payment Modal
+    function openPaymentModal() {
+        paymentModal.show();
+        supplierDetailsModal.hide();
+    }
 
-        const displayData = (data) => {
-            const usdTable = document.getElementById('usd_payment_history')
-            const zigTable = document.getElementById('zig_payment_table')
+    const displayData = (data) => {
+        const usdTable = document.getElementById('usd_payment_history')
+        const zigTable = document.getElementById('zig_payment_table')
 
-            usdTable.innerHTML = ''
-            zigTable.innerHTML = ''
+        usdTable.innerHTML = ''
+        zigTable.innerHTML = ''
 
-            data.forEach((supplier)=>{
-                if(supplier.currency__name == 'USD'){
-                    usdTable.innerHTML += `
-                        <tr>
-                            <td>${ new Date(supplier.timestamp).toLocaleDateString() }</td>
-                            <td>${ supplier.amount }</td>
-                            <td>${ supplier.account__balance }</td>
-                            <td>${ supplier.user__username }</td>
-                        </tr>
-                    `
-                }else{
-                    zigTable.innerHTML += `
-                        <tr>
-                            <td>${ new Date(supplier.timestamp).toLocaleDateString() }</td>
-                            <td>${ supplier.amount }</td>
-                            <td>${ supplier.account__balance }</td>
-                            <td>${ supplier.user__username }</td>
-                        </tr>
-                    `
-                }
-            })
-        }
-        // Toggle between USD and ZiG tables in the Payment History Modal
-        document.getElementById('toggleCurrencyButton').addEventListener('click', function() {
-                const usdTable = document.getElementById('usdTable');
-                const zigTable = document.getElementById('zigTable');
-                if (usdTable.style.display === 'none') {
-                    usdTable.style.display = 'block';
-                    zigTable.style.display = 'none';
-                    this.textContent = 'Switch to ZiG';
-                } else {
-                    usdTable.style.display = 'none';
-                    zigTable.style.display = 'block';
-                    this.textContent = 'Switch to USD';
-                }
-            });
+        data.forEach((supplier)=>{
+            if(supplier.currency__name == 'USD'){
+                usdTable.innerHTML += `
+                    <tr>
+                        <td>${ new Date(supplier.timestamp).toLocaleDateString() }</td>
+                        <td>${ supplier.amount }</td>
+                        <td>${ supplier.account__balance }</td>
+                        <td>${ supplier.user__username }</td>
+                    </tr>
+                `
+            }else{
+                zigTable.innerHTML += `
+                    <tr>
+                        <td>${ new Date(supplier.timestamp).toLocaleDateString() }</td>
+                        <td>${ supplier.amount }</td>
+                        <td>${ supplier.account__balance }</td>
+                        <td>${ supplier.user__username }</td>
+                    </tr>
+                `
+            }
+        })
+    }
+    // Toggle between USD and ZiG tables in the Payment History Modal
+    document.getElementById('toggleCurrencyButton').addEventListener('click', function() {
+            const usdTable = document.getElementById('usdTable');
+            const zigTable = document.getElementById('zigTable');
+            if (usdTable.style.display === 'none') {
+                usdTable.style.display = 'block';
+                zigTable.style.display = 'none';
+                this.textContent = 'Switch to ZiG';
+            } else {
+                usdTable.style.display = 'none';
+                zigTable.style.display = 'block';
+                this.textContent = 'Switch to USD';
+            }
+        });
 
     // Function to open the edit modal and populate it with supplier data
     function openEditModal(supplierId) {
@@ -663,87 +648,83 @@
                 });
             });
         }
-        // Payment Modal
-    function openPaymentModal(supplierId) {
-            paymentModal.show();
-        }
-    });
+    })
     
     // supplier details in a modal when we click name in the supplier listt
-function fetchSupplierDetails(supplierId) {
-    deleteSupId = supplierId;
-    fetch(`/inventory/suppliers/supplier-information/${supplierId}/`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Populate modal with supplier details
-                const modalTitle = document.getElementById('supplierDetailsName');
-                const detailsList = document.getElementById('supplierDetailsList');
-                
-                modalTitle.textContent = data.data.name; // Set the supplier name
-                detailsList.innerHTML = `
-                    <style>
-    .list-group-item a {
-        text-decoration: none; /* Remove underline by default */
-        color: inherit; /* Inherit text color */
-    }
+    function fetchSupplierDetails(supplierId) {
+        deleteSupId = supplierId;
+        fetch(`/inventory/suppliers/supplier-information/${supplierId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Populate modal with supplier details
+                    const modalTitle = document.getElementById('supplierDetailsName');
+                    const detailsList = document.getElementById('supplierDetailsList');
+                    
+                    modalTitle.textContent = data.data.name; // Set the supplier name
+                    detailsList.innerHTML = `
+                        <style>
+                            .list-group-item a {
+                                text-decoration: none; /* Remove underline by default */
+                                color: inherit; /* Inherit text color */
+                            }
 
-    .list-group-item a:hover {
-        text-decoration: underline; /* Add underline on hover */
-        color: blue; /* Change color on hover (optional) */
-        cursor: pointer; /* Show pointer cursor on hover */
-    }
-</style>
+                            .list-group-item a:hover {
+                                text-decoration: underline; /* Add underline on hover */
+                                color: blue; /* Change color on hover (optional) */
+                                cursor: pointer; /* Show pointer cursor on hover */
+                            }
+                        </style>
 
-<ul class="list-group">
-    <li class="list-group-item">
-        <i class="fas fa-user" style="color: blue; margin-right: 10px;"></i> ${data.data.contact_person}
-    </li>
-    <li class="list-group-item">
-        <i class="fas fa-phone" style="color: green; margin-right: 10px;"></i> 
-        <a href="tel:${data.data.phone}">${data.data.phone}</a>
-    </li>
-    <li class="list-group-item">
-    <i class="fab fa-whatsapp" style="color: green; margin-right: 10px;"></i> 
-    <a 
-        href="https://wa.me/${data.data.phone}" 
-        target="_blank" 
-        style="text-decoration: none; color: inherit;">
-        Chat on WhatsApp
-    </a>
-</li>
+                            <ul class="list-group">
+                                <li class="list-group-item">
+                                    <i class="fas fa-user" style="color: blue; margin-right: 10px;"></i> ${data.data.contact_person}
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="fas fa-phone" style="color: green; margin-right: 10px;"></i> 
+                                    <a href="tel:${data.data.phone}">${data.data.phone}</a>
+                                </li>
+                                <li class="list-group-item">
+                                <i class="fab fa-whatsapp" style="color: green; margin-right: 10px;"></i> 
+                                <a 
+                                    href="https://wa.me/${data.data.phone}" 
+                                    target="_blank" 
+                                    style="text-decoration: none; color: inherit;">
+                                    Chat on WhatsApp
+                                </a>
+                            </li>
 
 
-    <li class="list-group-item">
-        <i class="fas fa-envelope" style="color: red; margin-right: 10px;"></i> 
-        <a href="mailto:${data.data.email}">${data.data.email}</a>
-    </li>
-    <li class="list-group-item">
-        <i class="fas fa-map-marker-alt" style="color: orange; margin-right: 10px;"></i> ${data.data.address}
-    </li>
-</ul>
+                                <li class="list-group-item">
+                                    <i class="fas fa-envelope" style="color: red; margin-right: 10px;"></i> 
+                                    <a href="mailto:${data.data.email}">${data.data.email}</a>
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="fas fa-map-marker-alt" style="color: orange; margin-right: 10px;"></i> ${data.data.address}
+                                </li>
+                            </ul>
 
- `;
-// Show modal
-                const supplierDetailsModal = new bootstrap.Modal(document.getElementById('supplierDetailsModal'));
-                supplierDetailsModal.show();
-            } else {
+                        `;
+                    // Show modal
+                    const supplierDetailsModal = new bootstrap.Modal(document.getElementById('supplierDetailsModal'));
+                    supplierDetailsModal.show();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to fetch supplier details.',
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching supplier details:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Failed to fetch supplier details.',
+                    text: 'There was an issue fetching the supplier details. Please try again.',
                 });
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching supplier details:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'There was an issue fetching the supplier details. Please try again.',
             });
-        });
-}
+    }
 
 
     // Utility function to get the CSRF token from cookies
