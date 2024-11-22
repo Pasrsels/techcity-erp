@@ -51,8 +51,9 @@
                         {% for life in life_time %}
                             {% for l, details in life.items %}
                                 {%if supplier.id == l%}
-                                    {{details.count}} *
-                                    {{details.amount}}
+                                    $
+                                    {{details.amount}} [
+                                    {{details.count}}x ]
                                 {%endif%}
                             {%endfor%}
                         {% endfor %}
