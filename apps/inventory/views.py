@@ -2576,8 +2576,7 @@ def view_LifeTimeOrders(request, supplier_id):
 
 @login_required
 def supplier_view(request):
-<<<<<<< HEAD
-=======
+
     supplier_products = Product.objects.all()
     supplier_balances = SupplierAccount.objects.all().values('supplier__name', 'balance', 'date')
     purchase_orders = PurchaseOrderItem.objects.all()
@@ -2623,7 +2622,6 @@ def supplier_view(request):
     except Exception as e:
         logger.info(e)
         return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
->>>>>>> c4da9441888b04da3b6c0cf68ce289182d591f0d
     if request.method == 'GET':
         supplier_products = Product.objects.all()
         supplier_balances = SupplierAccount.objects.all().values('supplier__id', 'balance', 'date')
