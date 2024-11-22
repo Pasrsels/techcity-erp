@@ -43,8 +43,6 @@
                         {% for product in products %}
                             {%if supplier in product.suppliers.all%}
                                 {{product.category.name}},
-                            {%else%}
-                                None
                             {%endif%}
                         {% endfor %}
                     </small>
@@ -56,8 +54,6 @@
                                 {%if supplier.id == l%}
                                     {{details.count}} *
                                     {{details.amount}}
-                                {%else%}
-                                    0 * 0
                                 {%endif%}
                             {%endfor%}
                         {% endfor %}
@@ -78,8 +74,6 @@
                             {%for l, t in lt.items%}
                                 {%if supplier.id == l%}
                                     {{t.returned}}/{{t.quantity}}
-                                {%else%}
-                                    0/0
                                 {%endif%}
                             {%endfor%}
                         {%endfor%}
@@ -90,9 +84,10 @@
                         {% for bal in balances %}
                             {% if supplier.id == bal.supplier__id%}
                                 {% if bal.balance > 0 %}
-                                    {{ bal.balance }}
+                                    {{bal.currency__name}}
+                                    {{ bal.balance }} |
                                 {%else%}
-                                    0
+                                    {{bal.currency__name}}0 |
                                 {% endif %}
                             {%endif%}
                         {% endfor %}
@@ -103,9 +98,10 @@
                         {% for bal in balances %}
                             {% if supplier.id == bal.supplier__id%}
                                 {% if bal.balance < 0 %}
-                                    {{ bal.balance }}
+                                    {{bal.currency__name}}
+                                    {{ bal.balance }} |
                                 {%else%}
-                                    0
+                                    {{bal.currency__name}}0 |
                                 {% endif %}
                             {%endif%}
                         {% endfor %}
@@ -365,7 +361,9 @@
                                 <th>User</th>
                             </tr>
                         </thead>
-                        <tbody id="usd_payment_history"></tbody>
+                        <tbody id="usd_payment_history">
+                
+                        </tbody>
                     </table>
                 </div>
                 <div id="zigTable" style="display: none;">

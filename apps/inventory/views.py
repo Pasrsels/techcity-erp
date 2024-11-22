@@ -2512,25 +2512,38 @@ def PaymentHistory(request, supplier_id):
         purchase order amount
     """
     if request.method == 'GET':
-        supplier_history = SupplierAccountsPayments.objects.filter(account__supplier_id = supplier_id).\
-        values(
-            'timestamp', 
-            'amount',
-            'account__balance',
-            'user__username',
-            'currency__name'
-        )
+        supplier_history = SupplierAccountsPayments.objects.filter(account__supplier_id = supplier_id)
+        list_history = []
+        for items in supplier_history:
+            list_history.append({
+                'payment_id': items.id,
+                'paid_currency': items.currency.name,
+                'amount_paid ': items.amount,
+                'date': items.timestamp,
+                'account_balance': items.account.balance,
+                'account_currency': items.account.currency.name,
+                'user': items.user       
+            })
+
         supplier_purchase_order_details = PurchaseOrderItem.objects.filter(supplier__id = supplier_id)
+
         list_details = {}
         for items in supplier_purchase_order_details:
-            if items.purchase_order.order_number == list_details.get('order_number'):
-                list_details['amount'] = items.quantity * items.unit_cost
+            if list_details.get(items.purchase_order.order_number):
+                purchase_order = list_details.get(items.purchase_order.order_number)
+                purchase_order['order_date'] = items.purchase_order.order_date
+                purchase_order['order_number'] = items.purchase_order.order_number
+                purchase_order['amount'] = items.received_quantity * items.unit_cost
             else:
-                list_details['order_number'] = items.purchase_order.order_number
-                list_details['amount']= items.quantity * items.unit_cost
+                list_details[items.purchase_order.order_number] = {
+                    'order_date': items.purchase_order.order_date,
+                    'order_number': items.purchase_order.order_number,
+                    'amount': items.received_quantity * items.unit_cost
+                }
+                
         logger.info(list_details)
         logger.info(list(supplier_history))
-        return JsonResponse({'success':True, 'history':list(supplier_history), 'pOrder': list_details}, status=200)
+        return JsonResponse({'success':True, 'history':list_history, 'pOrder': list_details}, status=200)
     return JsonResponse({'success':False, 'message':'Invalid request'}, status=500)
 
 
@@ -2578,7 +2591,7 @@ def view_LifeTimeOrders(request, supplier_id):
 def supplier_view(request):
     if request.method == 'GET':
         supplier_products = Product.objects.all()
-        supplier_balances = SupplierAccount.objects.all().values('supplier__id', 'balance', 'date')
+        supplier_balances = SupplierAccount.objects.all().values('supplier__id', 'balance', 'date', 'currency__name')
         purchase_orders = PurchaseOrderItem.objects.all()
         # try:
         # list_orders = {}
@@ -2658,9 +2671,7 @@ def supplier_view(request):
                     'returned' : (items.quantity - items.received_quantity),
                     'amount' : (items.unit_cost * items.received_quantity),
                     'count' : 1
-                }
-                
-
+                }         
         logger.info([list_orders])
         logger.info(supplier_balances)
         form = AddSupplierForm()
