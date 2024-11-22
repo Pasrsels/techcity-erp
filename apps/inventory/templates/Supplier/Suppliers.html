@@ -345,7 +345,7 @@
                     <div class="d-flex justify-content-end">
                         <button type="button" class="btn btn-secondary btn-sm mx-2" data-bs-dismiss="modal">Close</button>
                         <button type="reset" class="btn btn-danger btn-sm mx-2">Reset</button>
-                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                        <button type="button" class="btn btn-primary btn-sm">Save</button>
                     </div>
                 </form>
             </div>
@@ -353,25 +353,39 @@
     </div>
 </div>
 
+
+
 <!-- Payment History Modal -->
 <div class="modal fade" id="paymentHistoryModal" tabindex="-1" aria-labelledby="paymentHistoryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-body">
-                <h5 class="fw-bold">Payment History</h5>
-                <hr class="rounded">
-                <div class="d-flex justify-content-between mb-3">
-                    <button type="button" class="btn btn-primary btn-sm" id="p_history_btn">Proceed to Payment</button>
-                    <button type="button" class="btn btn-secondary btn-sm" id="toggleCurrencyButton">Switch to ZiG</button>
-                    <button type="button" class="btn btn-danger btn-sm mx-2" data-bs-dismiss="modal">Close</button>
+                <!-- Heading -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold">Payment History</h5>
+                    <div class="d-flex" >
+                        <p class="mx-2">
+                            <span id="id_balance"></span>
+                        </p>
+                        <p>
+                            <span id="id_deposit"></span>
+                        </p>
+                    </div>
                 </div>
+                <hr class="rounded">
+                <!-- Proceed to Payment and Balance Owed -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <!-- Proceed to Payment Button -->
+                    <button type="button" class="btn btn-primary btn-sm" id="p_history_btn">Proceed to Payment</button>
+                </div>
+                <!-- Tables -->
                 <div id="usdTable">
                     <table class="table table-bordered">
                         <thead>
                             <tr>
                                 <th>Date</th>
                                 <th>Order name</th>
-                                <th>Amount </th>
+                                <th>Amount</th>
                                 <th>Paid</th>
                                 <th>Account balance</th>
                                 <th>Accounts Payable</th>
@@ -379,9 +393,7 @@
                                 <th>User</th>
                             </tr>
                         </thead>
-                        <tbody id="usd_payment_history">
-                
-                        </tbody>
+                        <tbody id="usd_payment_history"></tbody>
                     </table>
                 </div>
                 <div id="zigTable" style="display: none;">
@@ -390,7 +402,7 @@
                             <tr>
                                 <th>Date</th>
                                 <th>Order name</th>
-                                <th>Amount </th>
+                                <th>Amount</th>
                                 <th>Paid</th>
                                 <th>Account balance</th>
                                 <th>Accounts Payable</th>
@@ -401,10 +413,16 @@
                         <tbody id="zig_payment_table"></tbody>
                     </table>
                 </div>
+
+                <!-- Close Button -->
+                <div class="d-flex justify-content-end mt-3">
+                    <button type="button" class="btn btn-danger btn-sm mx-2" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
 
 
 <script>
@@ -412,10 +430,12 @@
     let supId = '';
     let deleteSupId = null;
     let editSupId = null;
+    let historyData = []
 
     const historyBtn = document.querySelectorAll('#p_history_btn');
     const addButton = document.getElementById('addButton');
     const supplierModal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
+    // const supPaymentModal = new bootstrap.Modal(document.getElementById('supPaymentModal'));
     const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
     const paymentHistoryModal = new bootstrap.Modal(document.getElementById('paymentHistoryModal'));
   
@@ -434,27 +454,36 @@
             paging: false,
     });
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const amountInput = document.getElementById('amount');
-        const currencySelect = document.getElementById('currency');
-        const usdValueInput = document.getElementById('usd_value');
-                
-     function updateUsdValue() {
-         const amount = parseFloat(amountInput.value) || 0;
-          const currency = currencySelect.value;
-                
-         if (currency === 'ZiG') {
-             usdValueInput.value = (amount / 30).toFixed(2); // Convert to USD equivalent
-        } else if (currency === 'USD') {
-                                usdValueInput.value = amount.toFixed(2); // Display the same amount
-            } 
-                 else {
-                                usdValueInput.value = '--'; // Default value if no valid currency selected
-                        }
-          }                // Listen for changes to amount and currency
-          amountInput.addEventListener('input', updateUsdValue);
-         currencySelect.addEventListener('change', updateUsdValue);
+        
+    const amountInput = document.getElementById('amount');
+    const currencySelect = document.getElementById('currency');
+
+    // Listen for changes to amount and currency  
+    amountInput.addEventListener('input', ()=>{
+        updateUsdValue()
+    }
+    
+    );
+    currencySelect.addEventListener('change', ()=>{
+        updateUsdValue()
     });
+
+    function updateUsdValue() {
+        
+        const usdValueInput = document.getElementById('usd_value');
+        const amount = parseFloat(amountInput.value) || 0;
+        const currency = currencySelect.value;
+                
+        if (currency === 'ZiG') {
+            usdValueInput.value = (amount / 30).toFixed(2); // Convert to USD equivalent
+        } else if (currency === 'USD') {
+                usdValueInput.value = amount.toFixed(2); // Display the same amount
+            } 
+        else {
+            usdValueInput.value = '--'; // Default value if no valid currency selected
+            }
+        }                
+
 
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('supplierForm');
@@ -522,7 +551,13 @@
         .then(data=>{
             if (data.success){
                 console.log('supplier data', data)
-                displayData(data.history)
+
+                // assign to global
+                historyData = data.history
+
+                // assign to respective elements
+                document.getElementById('id_balance').textContent = `${data.history[0].account_currency} Balance ${data.history[0].account_balance}`
+                
             }else{
                 Swal.fire({
                     icon:'error',
@@ -570,28 +605,26 @@
         })
     }
     // Toggle between USD and ZiG tables in the Payment History Modal
-    document.getElementById('toggleCurrencyButton').addEventListener('click', function() {
-            const usdTable = document.getElementById('usdTable');
-            const zigTable = document.getElementById('zigTable');
-            if (usdTable.style.display === 'none') {
-                usdTable.style.display = 'block';
-                zigTable.style.display = 'none';
-                this.textContent = 'Switch to ZiG';
-            } else {
-                usdTable.style.display = 'none';
-                zigTable.style.display = 'block';
-                this.textContent = 'Switch to USD';
-            }
-        });
+    // document.getElementById('toggleCurrencyButton').addEventListener('click', function() {
+    //         const usdTable = document.getElementById('usdTable');
+    //         const zigTable = document.getElementById('zigTable');
+    //         if (usdTable.style.display === 'none') {
+    //             usdTable.style.display = 'block';
+    //             zigTable.style.display = 'none';
+    //             this.textContent = 'Switch to ZiG';
+    //         } else {
+    //             usdTable.style.display = 'none';
+    //             zigTable.style.display = 'block';
+    //             this.textContent = 'Switch to USD';
+    //         }
+    //     });
 
     // Function to open the edit modal and populate it with supplier data
-    function openEditModal(supplierId) {
-        supId = supplierId;
-        console.log('supplier', supplierId);
+    function openEditModal() {
         fetch(`/inventory/suppliers/edit/${editSupId}/`)  // Adjust this URL to match your actual endpoint
             .then(response => response.json())
             .then(data => {
-                console.log(data.data[0], 'supplier');
+                console.log(data, 'supplier');
                 // Populate form fields with supplier data
                 document.getElementById("id_name").value = data.data[0].name;
                 document.getElementById("id_contact_person").value = data.data[0].contact_person;
@@ -708,6 +741,7 @@
     // supplier details in a modal when we click name in the supplier listt
     function fetchSupplierDetails(supplierId) {
         deleteSupId = supplierId;
+        editSupId = supplierId;
         fetch(`/inventory/suppliers/supplier-information/${supplierId}/`)
             .then(response => response.json())
             .then(data => {

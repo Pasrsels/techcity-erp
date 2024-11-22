@@ -2429,7 +2429,7 @@ def supplier_edit(request, supplier_id):
             address = data.get('address')
             phone = data.get('phone')
 
-            supplier = Supplier.objects.get(phone=phone)
+            supplier = Supplier.objects.get(id=supplier_id)
 
             supplier.name=name
             supplier.contact_person=contact_person
@@ -2522,7 +2522,7 @@ def PaymentHistory(request, supplier_id):
                 'date': items.timestamp,
                 'account_balance': items.account.balance,
                 'account_currency': items.account.currency.name,
-                'user': items.user       
+                'user': items.user.username  
             })
 
         supplier_purchase_order_details = PurchaseOrderItem.objects.filter(supplier__id = supplier_id)
@@ -2590,51 +2590,6 @@ def view_LifeTimeOrders(request, supplier_id):
 @login_required
 def supplier_view(request):
 
-    supplier_products = Product.objects.all()
-    supplier_balances = SupplierAccount.objects.all().values('supplier__name', 'balance', 'date')
-    purchase_orders = PurchaseOrderItem.objects.all()
-    try:
-        list_orders = {}
-        for item in purchase_orders:
-            po = PurchaseOrder.objects.get(id=item.purchase_order.id)
-            if item.supplier:
-                if list_orders:
-                    if list_orders.get(item.supplier):
-                        supplier = list_orders.get(item.supplier)
-
-                        if supplier['purchase_order'] == po:
-                            supplier['count'] = supplier['count']
-                        else:
-                            supplier['count'] += 1
-
-
-                        supplier['amount'] += item.unit_cost * item.received_quantity
-                    else:
-                        supplier['count'] += 1
-                    supplier['amount'] += item.unit_cost * item.received_quantity
-                    supplier['returned'] = supplier['returned'] + (item.quantity - item.received_quantity)
-                    
-                else:
-                    if SupplierAccount.objects.filter(id = item.supplier.id).exists():
-                        account_info = SupplierAccount.objects.get(id = item.supplier.id)
-                        list_orders[item.supplier] = {
-                            'supplier_id': item.supplier.id,
-                            'amount': item.unit_cost * item.received_quantity,
-                            'purchase_order': po,
-                            'category': item.product.category.name,
-                            'quantity': item.quantity,
-                            'quantity_received': item.received_quantity,
-                            'returned': item.quantity - item.received_quantity,
-                            'date': account_info.date,
-                            'balance': account_info.balance,
-                            'count': 1
-                        }                       
-        logger.info([list_orders])
-        logger.info(supplier_products)
-        logger.info(supplier_balances)
-    except Exception as e:
-        logger.info(e)
-        return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
     if request.method == 'GET':
         supplier_products = Product.objects.all()
         supplier_balances = SupplierAccount.objects.all().values('supplier__id', 'balance', 'date', 'currency__name')
@@ -2667,7 +2622,7 @@ def supplier_view(request):
                     }         
         logger.info([list_orders])
         logger.info(supplier_balances)
-        form = AddSupplierForm()
+        form = EditSupplierForm()
         suppliers = Supplier.objects.filter(delete = False)
         logger.info(suppliers)
         return render(request, 'Supplier/Suppliers.html', {
@@ -2965,4 +2920,6 @@ def payments(request):
                 )
                 return JsonResponse({'success': True, 'response': 'Data saved'})
         except Exception as e:
+            logger.info(e)
+            # return redirect('inventory/Suppliers.html')
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
