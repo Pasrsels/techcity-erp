@@ -34,6 +34,7 @@ class ProductCategory(models.Model):
 
     name = models.CharField(max_length=255)
     supplier = models.ForeignKey(Supplier, on_delete= models.PROTECT, null=True)
+    
     class Meta:
         unique_together = ('name', 'supplier')
 
