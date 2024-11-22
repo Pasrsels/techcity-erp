@@ -51,7 +51,7 @@
                     <small>
                         {% for life in life_time %}
                             {% for l, details in life.items %}
-                                {%if supplier == l%}
+                                {%if supplier.id == l%}
                                     {{details.count}} *
                                     {{details.amount}}
                                 {%endif%}
@@ -62,7 +62,7 @@
                 <td >
                     <small>
                         {%for dat in balances%}
-                            {%if supplier.name == dat.supplier__name%}
+                            {%if supplier.id == dat.supplier__id%}
                                 {{dat.date}}
                             {%endif%}
                         {%endfor%}
@@ -72,7 +72,7 @@
                     <small>
                         {%for lt in life_time%}
                             {%for l, t in lt.items%}
-                                {%if supplier == l%}
+                                {%if supplier.id == l%}
                                     {{t.returned}}/{{t.quantity}}
                                 {%endif%}
                             {%endfor%}
@@ -82,11 +82,12 @@
                 <td >
                     <small>
                         {% for bal in balances %}
-                            {% if supplier.name == bal.supplier__name%}
+                            {% if supplier.id == bal.supplier__id%}
                                 {% if bal.balance > 0 %}
-                                    {{ bal.balance }}
+                                    {{bal.currency__name}}
+                                    {{ bal.balance }} |
                                 {%else%}
-                                    0
+                                    {{bal.currency__name}}0 |
                                 {% endif %}
                             {%endif%}
                         {% endfor %}
@@ -95,11 +96,12 @@
                 <td >
                     <small>
                         {% for bal in balances %}
-                            {% if supplier.name == bal.supplier__name%}
+                            {% if supplier.id == bal.supplier__id%}
                                 {% if bal.balance < 0 %}
-                                    {{ bal.balance }}
+                                    {{bal.currency__name}}
+                                    {{ bal.balance }} |
                                 {%else%}
-                                    0
+                                    {{bal.currency__name}}0 |
                                 {% endif %}
                             {%endif%}
                         {% endfor %}
@@ -359,7 +361,9 @@
                                 <th>User</th>
                             </tr>
                         </thead>
-                        <tbody id="usd_payment_history"></tbody>
+                        <tbody id="usd_payment_history">
+                
+                        </tbody>
                     </table>
                 </div>
                 <div id="zigTable" style="display: none;">
