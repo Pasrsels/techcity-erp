@@ -2576,6 +2576,54 @@ def view_LifeTimeOrders(request, supplier_id):
 
 @login_required
 def supplier_view(request):
+<<<<<<< HEAD
+=======
+    supplier_products = Product.objects.all()
+    supplier_balances = SupplierAccount.objects.all().values('supplier__name', 'balance', 'date')
+    purchase_orders = PurchaseOrderItem.objects.all()
+    try:
+        list_orders = {}
+        for item in purchase_orders:
+            po = PurchaseOrder.objects.get(id=item.purchase_order.id)
+            if item.supplier:
+                if list_orders:
+                    if list_orders.get(item.supplier):
+                        supplier = list_orders.get(item.supplier)
+
+                        if supplier['purchase_order'] == po:
+                            supplier['count'] = supplier['count']
+                        else:
+                            supplier['count'] += 1
+
+
+                        supplier['amount'] += item.unit_cost * item.received_quantity
+                    else:
+                        supplier['count'] += 1
+                    supplier['amount'] += item.unit_cost * item.received_quantity
+                    supplier['returned'] = supplier['returned'] + (item.quantity - item.received_quantity)
+                    
+                else:
+                    if SupplierAccount.objects.filter(id = item.supplier.id).exists():
+                        account_info = SupplierAccount.objects.get(id = item.supplier.id)
+                        list_orders[item.supplier] = {
+                            'supplier_id': item.supplier.id,
+                            'amount': item.unit_cost * item.received_quantity,
+                            'purchase_order': po,
+                            'category': item.product.category.name,
+                            'quantity': item.quantity,
+                            'quantity_received': item.received_quantity,
+                            'returned': item.quantity - item.received_quantity,
+                            'date': account_info.date,
+                            'balance': account_info.balance,
+                            'count': 1
+                        }                       
+        logger.info([list_orders])
+        logger.info(supplier_products)
+        logger.info(supplier_balances)
+    except Exception as e:
+        logger.info(e)
+        return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
+>>>>>>> c4da9441888b04da3b6c0cf68ce289182d591f0d
     if request.method == 'GET':
         supplier_products = Product.objects.all()
         supplier_balances = SupplierAccount.objects.all().values('supplier__id', 'balance', 'date')
