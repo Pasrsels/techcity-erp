@@ -256,6 +256,7 @@ class Transfer(models.Model):
     defective_status = models.BooleanField(default=False)
     delete = models.BooleanField(default=False, null=True)
     receive_status = models.BooleanField(default=False, null=True)
+    hold = models.BooleanField(default=False)
 
     @classmethod
     def generate_transfer_ref(self, branch, branches):
@@ -294,6 +295,21 @@ class TransferItems(models.Model):
     description = models.TextField(null=True)
     receieved_quantity = models.IntegerField(default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f'{self.product.name} to {self.to_branch}'
+    
+class Holdtransfer(models.Model):
+    transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True)
+    from_branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='hold_destination')
+    to_branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='hold_source')
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
+    quantity = models.IntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    description = models.TextField(null=True)
+    dealer_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):
         return f'{self.product.name} to {self.to_branch}'
