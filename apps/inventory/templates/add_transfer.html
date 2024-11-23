@@ -139,11 +139,11 @@
                         <div class="checkbox-container">
                             {% for branch in branches %}
                                 {% if branch.name != request.user.branch.name %}
-                                    <div class="form-check mx-2">
-                                        <input id="id_to_{{ branch.id }}" data-name="{{ branch.name }}" onchange="pushBranches(this)" type="checkbox" class="form-check-input" value="{{ branch.id }}">
-                                        <label class="form-check-label" for="id_to_{{ branch.id }}">
-                                            {{ branch.name }}
+                                    <div class=" d-flex justify-content-between align-items-center rounded hint--bottom" aria-label="{{ branch.name }}" style="background:#5897fb ; width: 100px;">
+                                        <label class="form-check-label text-light btn btn-sm" for="id_to_{{ branch.id }}" >
+                                            {{ branch.name | slice:":6" }}
                                         </label>
+                                        <input id="id_to_{{ branch.id }}" data-name="{{ branch.name}}" onchange="pushBranches(this)" type="checkbox" class="form-check-input mx-2 mb-1" value="{{ branch.id }}">
                                     </div>
                                 {% endif %}
                             {% endfor %}
@@ -273,6 +273,7 @@
 
         values.forEach((value) => {
             if (!branchesList.includes(value)) {
+
                 const productData = prodData[0]; 
 
                 console.log(defaultAverage(productData.quantity), 'branches average quantitty')
@@ -368,15 +369,15 @@
             let product = pSelectedOption.textContent;
             product = product.split(' [')[0];
 
-            if (!price || !quantity || quantity <= 0) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Please ensure all fields are filled correctly.'
-                });
-                hasError = true; 
-                break; 
-            }
+            // if (!price || !quantity || quantity <= 0) {
+            //     Swal.fire({
+            //         icon: 'error',
+            //         title: 'Error',
+            //         text: 'Please ensure all fields are filled correctly.'
+            //     });
+            //     hasError = true; 
+            //     break; 
+            // }
 
             const existingItem = cart.find((item) => item.product === product && item.branch_name === branchName);
             console.log(existingItem, 'existing item');
@@ -397,22 +398,28 @@
                 break; 
             }
 
-            const newItem = {
-                count: count,
-                id: generateUniqueId(),
-                product: product,
-                branch_name: branchName,
-                price: parseFloat(price),
-                dealer_price: parseFloat(dealerPrice),
-                quantity: parseInt(quantity, 10),
-                description: '',
-                cost: cost
-            };
+            console.log(quantity)
+            if (quantity){
+                const newItem = {
+                    count: count,
+                    id: generateUniqueId(),
+                    product: product,
+                    branch_name: branchName,
+                    price: parseFloat(price),
+                    dealer_price: parseFloat(dealerPrice),
+                    quantity: parseInt(quantity, 10),
+                    description: '',
+                    cost: cost
+                };
+                cart.push(newItem);
+                productAdded = true; 
+            }
 
-            dataToSend.push(newItem);
-            cart.push(newItem);
-            productAdded = true; 
+            // dataToSend.push(newItem);
+            
             console.log(cart, 'cart');
+
+            
         }
 
         updateCartDisplay();
@@ -502,7 +509,7 @@
             updateRowContent();
         }
 
-        cart.forEach((item, index) => {
+        cart.reverse().forEach((item, index) => {
 
             if (currentProduct !== item.product) {
                 currentProduct = item.product; 
