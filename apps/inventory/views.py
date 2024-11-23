@@ -2429,7 +2429,7 @@ def supplier_edit(request, supplier_id):
             address = data.get('address')
             phone = data.get('phone')
 
-            supplier = Supplier.objects.get(phone=phone)
+            supplier = Supplier.objects.get(id=supplier_id)
 
             supplier.name=name
             supplier.contact_person=contact_person
@@ -2522,7 +2522,7 @@ def PaymentHistory(request, supplier_id):
                 'date': items.timestamp,
                 'account_balance': items.account.balance,
                 'account_currency': items.account.currency.name,
-                'user': request.user.username  
+                'user': items.user.username  
             })
 
         supplier_purchase_order_details = PurchaseOrderItem.objects.filter(supplier__id = supplier_id)
@@ -2622,7 +2622,7 @@ def supplier_view(request):
                     }         
         logger.info([list_orders])
         logger.info(supplier_balances)
-        form = AddSupplierForm()
+        form = EditSupplierForm()
         suppliers = Supplier.objects.filter(delete = False)
         logger.info(suppliers)
         return render(request, 'Supplier/Suppliers.html', {
@@ -2920,4 +2920,6 @@ def payments(request):
                 )
                 return JsonResponse({'success': True, 'response': 'Data saved'})
         except Exception as e:
+            logger.info(e)
+            # return redirect('inventory/Suppliers.html')
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
