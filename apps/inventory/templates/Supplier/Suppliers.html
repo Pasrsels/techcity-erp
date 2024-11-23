@@ -134,69 +134,90 @@
 <div class="modal fade" id="supplierDetailsModal" tabindex="-1" aria-labelledby="supplierDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-fullscreen">
         <div class="modal-content">
-            <div class="modal-body" style="padding: 0;">
+            <div class="modal-body" style="padding: 5;">
                 <div class="finance d-flex flex-column" style="height: 100%;">
-
-                    <!-- Upper Section (70%) -->
-                    <div class="top-section" style="flex: 7; overflow-y: auto;">
-                        <!-- Heading for Supplier Details -->
-                        <div class='px-2 py-2 bg-dark d-flex justify-content-between text-light align-items-center rounded'>
-                            <div class='h5'>Supplier Details</div>
-                            <div>
-                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <!-- Heading for Supplier Details -->
+                    <div class='px-2 py-2 bg-dark d-flex justify-content-between text-light align-items-center rounded'>
+                        <div class='h5'>Supplier Details</div>
+                        <div>
+                            <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">
+                                <i class="fas fa-times red-icon"></i>
+                              </button>
+                              
+                        </div>
+                    </div>
+                    <!-- Upper Section (60%) split into two quarters: Supplier Details and Account Info + Purchase Order Count -->
+                    <div class="top-section" style="flex: 6; display: flex; overflow-y: auto;">
+                        <!-- Left Quarter: Supplier Details (40% of the whole height) -->
+                        <div class="col-md-6 px-3" style="flex: 1; height: 80%; margin-top: 5px;">
+                            <div class="text-center mb-2">
+                                <i class="fas fa-user-circle" style="font-size: 30px; color: rgb(18, 201, 233);"></i>
+                            </div>
+                            <h5 class="fw-bold text-center mb-2" id="supplierDetailsName" style="font-size: 18px;"></h5>
+                            <ul class="list-group" id="supplierDetailsList" style="text-align: left; font-size: 14px;"></ul>
+                            <div class="d-flex justify-content-between mt-2">
+                                <button class="btn btn-primary btn-sm mx-1" style="background-color: rgb(18, 201, 233);" onclick="openEditModal()">Edit</button>
+                                <button class="btn btn-danger btn-sm mx-1" style="background-color: red;" onclick="confirmDelete()">
+                                    <i class="fas fa-trash"></i>
+                                  </button>
+                                  
                             </div>
                         </div>
 
-                        <!-- Content for Upper Section -->
-                        <div class="d-flex mt-3" style="gap: 1rem;">
-                            <!-- Supplier Details (Left - Half Width) -->
-                            <div class="col-md-6 px-3">
-                                <div class="text-center mb-2">
-                                    <i class="fas fa-user-circle" style="font-size: 30px; color: rgb(18, 201, 233);"></i>
-                                </div>
-                                <h5 class="fw-bold text-center mb-2" id="supplierDetailsName" style="font-size: 18px;"></h5>
-                                <ul class="list-group" id="supplierDetailsList" style="text-align: left; font-size: 14px;"></ul>
-                                <div class="d-flex justify-content-between mt-2">
-                                    <div class="d-flex">
-                                        <button class="btn btn-primary btn-sm mx-1" style="background-color: rgb(18, 201, 233);" onclick="openEditModal()">
-                                            <span class="text-white">Edit</span>
-                                        </button>
-                                        <button class="btn btn-danger btn-sm mx-1" style="background-color: red;" onclick="confirmDelete()">
-                                            <span class="text-white">Delete</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                        <!-- Right Quarter: Account Info + Purchase Order Count (20% of the whole height) -->
+                        <div class="col-md-6 px-3" style="flex: 1; height: 100%;">
+                            <div class="row" style="height: 100%;">
 
-                            <!-- Account Info (Right - Half Width) -->
-                            <div class="col-md-6">
-                                <div class='card shadow'>
-                                    <div class='card-body'>
-                                        <h6>Account</h6>
-                                        {% for balance in account %}
-                                            <h6 class='text-center fw-bold {% if balance.balance < 0 %}text-danger{% endif %}'>
-                                                {{ balance.currency.symbol }} {{ balance.balance }}
-                                            </h6>
-                                        {% endfor %}
+                                <!-- Account Info Section (reduced size) -->
+                                <div class="col-md-12 mb-3" style="height: 75px; margin-top: 80px;">
+                                    <div class="card shadow" style="height: 100%;">
+                                        <div class="card-body">
+                                            <h6>Account</h6>
+                                            {% for balance in account %}
+                                                <h6 class='text-center fw-bold {% if balance.balance < 0 %}text-danger{% endif %}'>
+                                                    {{ balance.currency.symbol }} {{ balance.balance }}
+                                                </h6>
+                                            {% endfor %}
+                                        </div>
                                     </div>
                                 </div>
-                                <div class='card mt-2 shadow'>
-                                    <div class='card-body rounded'>
-                                        <h6>Invoice Count</h6>
-                                        <h6 class='text-center text-light fw-bold text-muted'>{{ invoice_count }}</h6>
+
+                                <!-- Purchase Order Count Section (reduced size) -->
+                                <div class="col-md-12" style="height: 50%;">
+                                    <div class="card shadow" style="height: 50%;">
+                                        <div class="card-body">
+                                            <h6>Purchase Order Count</h6>
+                                            <h6 class='text-center text-muted fw-bold'>
+                                                {% for life in life_time %}
+                                                    {% for l, details in life.items %}
+                                                        {% if suppliers.id == l %}
+                                                            {{ details.count }}
+                                                        {% else %}
+                                                            0
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% endfor %}
+                                            </h6>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Lower Section (30%) -->
-                    <div class="bottom-section" style="flex: 3; overflow-y: auto;">
-                        <div class='px-2 py-2 bg-dark d-flex justify-content-between text-light align-items-center rounded'>
-                            <div class='h5'>Supplier Payment History</div>
-                            <div>
-                                <button type="button" class="btn btn-primary btn-sm" id="p_history_btn">Proceed to Payment</button>
-                            </div>
+                    <!-- Bottom Section (40%) -->
+                    <div class="bottom-section" style="flex: 4; overflow-y: auto;">
+                        <!-- Navigation Section -->
+                        <div class="mt-3 mb-3">
+                            <nav class="recent-nav navbar navbar-expand-lg navbar-light bg-dark text-light px-2">
+                                <ul class="navbar-nav items mr-auto">
+                                    <li class="nav-item active" data-name="supplier_payment_history">Supplier Payment History</li>
+                                    <li class="nav-item px-2" data-name="purchase_orders">Purchase Order</li>
+                                </ul>
+                                <div class="ms-auto">
+                                    <button type="button" class="btn btn-primary btn-sm" id="p_history_btn">Proceed to Payment</button>
+                                </div>
+                            </nav>
                         </div>
 
                         <!-- Payment History Tables -->
@@ -216,33 +237,82 @@
                                 </thead>
                                 <tbody id="usd_payment_history">
                                     <tr>
-                                        <td>
-                                            0
-                                        </td>
-                                        <td>
-                                            0
-                                        </td>
-                                        <td>
-                                            0
-                                        </td>
-                                        <td>
-                                            0
-                                        </td>
-                                        <td>
-                                            0
-                                        </td>
-                                        <td>
-                                            0
-                                        </td>
-                                        <td>
-                                            0
-                                        </td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
                                     </tr>
                                 </tbody>
                             </table>
+                        
                         </div>
-
-                        <div id="zigTable" style="display: none;">
+                        <div class='purchase_orders hidden' id="order_table">
+                            <div class="d-flex mb-3">
+                                <input
+                                    type="search"
+                                    id="usd_payment_history"
+                                    name="payment-history"
+                                    placeholder="search "
+                                    class="form-control"
+                                />
+                                <span>
+                                    <button type="button" id="viewBtn" class="btn btn-dark btn-sm"><small>view statement</small></button>
+                                </span>
+                            </div>
+                        <div>
+                            <div class="mt-2 w-100">
+                                <table class='table border table-rounded p-2' id='order_table' style="width: 100%;">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Delivery Date</th>
+                                            <th>Batch</th>
+                                            <th>Supplier</th>
+                                            <th>Total Cost</th>
+                                            <th>Notes</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for order in orders %}
+                                            <tr>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.order_date }}</small></td>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.delivery_date }}</small></td>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.batch|lower }}</small></td>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.supplier.name }}</small></td>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.total_cost }}</small></td>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.notes }}</small></td>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.status }}</small></td>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}">
+                                                    <a href="{% url 'inventory:purchase_order_detail' order.id %}" class="btn bx bx-show"></a>
+                                                    <a href="{% url 'inventory:print_purchase_order' order.id %}" class="btn bx bx-printer mx-1"></a>
+                                                    {% if order.status != 'received' %}
+                                                    <button class="btn btn-sm btn-light" data-id={{ order.id }} onclick="status(this)">Change Status</button>
+                                                    {% else %}
+                                                    {% if order.received %}
+                                                    <small class="bg-success fw-bold text-light p-2 rounded text-center w-100">Received</small>
+                                                    {% else %}
+                                                    <a href="{% url 'inventory:receive_order' order.id %}" class="btn btn-sm btn-outline-dark">
+                                                        <small>Receive Order Items</small>
+                                                    </a>
+                                                    {% endif %}
+                                                    {% endif %}
+                                                    <a href="{% url 'inventory:edit_po' order.id %}" class="btn btn-outline-dark btn-sm bx bx-edit"></a>
+                                                    <button class="btn bx bx-trash btn-outline-dark btn-sm" onclick="confirmDeletePurchaseOrder({{ order.id }})"></button>
+                                                    <button class="btn btn-outline-primary btn-sm bx bx-user" onclick="showSupplierDetails({{ order.id }})"></button> <!-- New button -->
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                
+                        <!-- <div id="zigTable" style="display: none;">
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
@@ -258,14 +328,13 @@
                                 </thead>
                                 <tbody id="zig_payment_table"></tbody>
                             </table>
-                        </div>
-                    </div>
-
+                        </div> -->
+                    <!-- </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</div> -->
 
 <!--------------------------------------------------------------------------------------------------------->>    
     <!-- Edit Supplier Modal -->
@@ -478,6 +547,7 @@
     // const supPaymentModal = new bootstrap.Modal(document.getElementById('supPaymentModal'));
     const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
     const paymentHistoryModal = new bootstrap.Modal(document.getElementById('paymentHistoryModal'));
+    const navButtons = document.querySelectorAll('.nav-item');
   
     addButton.addEventListener('click', () => {
         supplierModal.show();
@@ -717,9 +787,9 @@
                 });
             } else {
                 Swal.fire({
-                    text: "Error updating supplier: " + responseData.message,
-                    icon: "error",
-                    title: 'Error'
+                    text: "User: " + responseData.message,
+                    icon: "warning",
+                    title: 'Access denied'
                 });
             }
         })
@@ -758,9 +828,9 @@
                     });
                 } else {
                     Swal.fire({
-                        text: "Error deleting supplier: " + responseData.message,
-                        icon: "error",
-                        title: 'Error'
+                        text: "User: " + responseData.message,
+                        icon: "warning",
+                        title: 'Failed to delete'
                     });
                 }
             })
@@ -787,7 +857,7 @@
                     const modalTitle = document.getElementById('supplierDetailsName');
                     const detailsList = document.getElementById('supplierDetailsList');
                     
-                    modalTitle.textContent = data.data.name; // Set the supplier name
+                    modalTitle.textContent = data.supplier_data.name; // Set the supplier name
                     detailsList.innerHTML = `
                         <style>
                             .list-group-item a {
@@ -804,16 +874,16 @@
 
                             <ul class="list-group">
                                 <li class="list-group-item">
-                                    <i class="fas fa-user" style="color: blue; margin-right: 10px;"></i> ${data.data.contact_person}
+                                    <i class="fas fa-user" style="color: blue; margin-right: 10px;"></i> ${data.supplier_data.contact_person}
                                 </li>
                                 <li class="list-group-item">
                                     <i class="fas fa-phone" style="color: green; margin-right: 10px;"></i> 
-                                    <a href="tel:${data.data.phone}">${data.data.phone}</a>
+                                    <a href="tel:${data.supplier_data.phone}">${data.supplier_data.phone}</a>
                                 </li>
                                 <li class="list-group-item">
                                 <i class="fab fa-whatsapp" style="color: green; margin-right: 10px;"></i> 
                                 <a 
-                                    href="https://wa.me/${data.data.phone}" 
+                                    href="https://wa.me/${data.supplier_data.phone}" 
                                     target="_blank" 
                                     style="text-decoration: none; color: inherit;">
                                     Chat on WhatsApp
@@ -823,10 +893,10 @@
 
                                 <li class="list-group-item">
                                     <i class="fas fa-envelope" style="color: red; margin-right: 10px;"></i> 
-                                    <a href="mailto:${data.data.email}">${data.data.email}</a>
+                                    <a href="mailto:${data.supplier_data.email}">${data.supplier_data.email}</a>
                                 </li>
                                 <li class="list-group-item">
-                                    <i class="fas fa-map-marker-alt" style="color: orange; margin-right: 10px;"></i> ${data.data.address}
+                                    <i class="fas fa-map-marker-alt" style="color: orange; margin-right: 10px;"></i> ${data.supplier_data.address}
                                 </li>
                             </ul>
 
@@ -851,6 +921,193 @@
                 });
             });
     }
+
+     navButtons.forEach((btn)=>{
+        btn.addEventListener(
+            'click', ()=>{
+                navButtons.forEach(b => b.classList.remove('active')); 
+                event.target.classList.add('active'); 
+                show(btn.dataset.name)
+            }
+        )
+    })
+
+     function show(name) {
+        // Hide both transactions and payments sections initially
+        const tableEls = document.querySelectorAll('#dTables');
+        tableEls.forEach((t)=>{
+            t.classList.add('hidden');
+        })
+        try {
+            $(`.${name}`).removeClass('hidden');
+            tableName = name;
+        } catch (error) {
+            tableError.textContent = 'Failed to load the table: ' + error.message;
+            return;
+        }
+        
+        displayDepositTable(depositData);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+    // Get references to the tables
+    const paymentHistoryTable = document.getElementById("paymentHistoryTable"); // Payment History Table
+    const purchaseOrderTable = document.getElementById("purchaseOrderTable"); // Purchase Order Table
+    const proceedToPaymentBtn = document.getElementById("p_history_btn"); // Proceed to Payment Button
+
+    // Check if the necessary elements exist
+    if (!paymentHistoryTable || !purchaseOrderTable || !proceedToPaymentBtn) {
+        console.error("Missing required elements.");
+        return;
+    }
+
+    // Fetch Payment History data (AJAX)
+    fetch('/path/to/payment-history/')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = paymentHistoryTable.querySelector('tbody');
+            tableBody.innerHTML = ''; // Clear existing rows
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.date}</td>
+                    <td>${item.order_name}</td>
+                    <td>${item.amount}</td>
+                    <td>${item.paid}</td>
+                    <td>${item.account_balance}</td>
+                    <td>${item.accounts_payable}</td>
+                    <td>${item.accounts_receivable}</td>
+                    <td>${item.user}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => console.error("Error fetching payment history:", error));
+
+    // Fetch Purchase Orders data (AJAX)
+    fetch('/path/to/purchase-orders/')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = purchaseOrderTable.querySelector('tbody');
+            tableBody.innerHTML = ''; // Clear existing rows
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.order_date}</td>
+                    <td>${item.delivery_date}</td>
+                    <td>${item.batch.toLowerCase()}</td>
+                    <td>${item.supplier.name}</td>
+                    <td>${item.total_cost}</td>
+                    <td>${item.notes}</td>
+                    <td>${item.status}</td>
+                    <td>
+                        <a href="${item.detail_url}" class="btn bx bx-show"></a>
+                        <a href="${item.print_url}" class="btn bx bx-printer mx-1"></a>
+                        ${item.status !== 'received' ? `<button class="btn btn-sm btn-light" onclick="changeStatus(${item.id})">Change Status</button>` : ''}
+                        <a href="${item.edit_url}" class="btn btn-outline-dark btn-sm bx bx-edit"></a>
+                        <button class="btn bx bx-trash btn-outline-dark btn-sm" onclick="confirmDeletePurchaseOrder(${item.id})"></button>
+                        <button class="btn btn-outline-primary btn-sm bx bx-user" onclick="showSupplierDetails(${item.id})"></button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => console.error("Error fetching purchase orders:", error));
+
+    // Event listener for "Proceed to Payment" button
+    proceedToPaymentBtn.addEventListener("click", () => {
+        alert("Proceeding to Payment...");
+        // Add AJAX or backend interaction logic here to proceed with the payment
+        fetch("/path/to/proceed-to-payment/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"), // Assumes CSRF token handling
+            },
+            body: JSON.stringify({ action: "proceed_to_payment" }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Payment successfully processed!");
+            } else {
+                alert("Payment processing failed.");
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    });
+
+    // Handle changing status (AJAX)
+    window.changeStatus = (orderId) => {
+        fetch(`/path/to/change-status/${orderId}/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify({ action: "change_status" }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Order status updated.");
+                location.reload(); // Optionally reload page to reflect changes
+            } else {
+                alert("Failed to update status.");
+            }
+        })
+        .catch(error => console.error("Error changing status:", error));
+    };
+
+    // Handle deleting purchase order (AJAX)
+    window.confirmDeletePurchaseOrder = (orderId) => {
+        if (confirm("Are you sure you want to delete this purchase order?")) {
+            fetch(`/path/to/delete-purchase-order/${orderId}/`, {
+                method: "DELETE",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Purchase order deleted.");
+                    location.reload(); // Reload page to reflect changes
+                } else {
+                    alert("Failed to delete purchase order.");
+                }
+            })
+            .catch(error => console.error("Error deleting purchase order:", error));
+        }
+    };
+
+    // Show supplier details in modal or on a new page (AJAX)
+    window.showSupplierDetails = (orderId) => {
+        fetch(`/path/to/supplier-details/${orderId}/`)
+            .then(response => response.json())
+            .then(data => {
+                // Show supplier details in a modal or another part of the page
+                alert("Supplier Details: " + JSON.stringify(data));
+            })
+            .catch(error => console.error("Error fetching supplier details:", error));
+    };
+});
+
+// Utility function to get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 
 
     // Utility function to get the CSRF token from cookies
