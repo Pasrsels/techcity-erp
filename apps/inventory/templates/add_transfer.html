@@ -18,10 +18,62 @@
     .custom-input-width{
         width: 30px;
     }
+    .col-4 {
+        position: fixed; 
+        /* top: 20px;  */
+        right: 20px; 
+        width: 400px; 
+        z-index: 1000; 
+        background: #fff; 
+        max-height: 80vh; 
+        overflow-y: auto; 
+        /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);  */
+    }
+
+     .col-4::-webkit-scrollbar {
+        width: 12px; 
+    }
+
+    .col-4::-webkit-scrollbar-track {
+        background: #f1f1f1; 
+        border-radius: 10px; 
+    }
+
+    .col-4::-webkit-scrollbar-thumb {
+        background: #888; 
+        border-radius: 10px; 
+    }
+
+    .col-4::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    .col-4 {
+        scrollbar-width: thin; 
+        scrollbar-color: #888 #f1f1f1; 
+    }
+
+    /* .add-transfer-nav{
+        position: fixed;
+        z-index: 1000; 
+    } */
+
+    .branches-container {
+        overflow: hidden; 
+        transition: max-height 0.3s ease; 
+    }
+
+    @media (max-width: 768px) {
+        .col-4 {
+            width: 90%; 
+            right: 5%; 
+            top: 10px; 
+        }
+    }
 </style>
 <div class="inventory">
     <div class="add-transfer">
-        <div class="add-transfer-nav shadow p-2 text-light d-flex justify-content-between align-items-center rounded" style="background: #373f4c;">
+        <div class="add-transfer-nav shadow p-2 d-flex justify-content-between align-items-center rounded">
             <div>
                 <h5 class="fw-bold px-1 mt-2">Add Transfer</h5>
             </div>
@@ -42,8 +94,8 @@
                                 <th>Product</th>
                                 <th>Qnty</th>
                                 {% if request.user.role != 'sales' %}
-                                <th>Price</th>
-                                <th>W Price</th>
+                                    <th>Price</th>
+                                    <th>W Price</th>
                                 {% endif %}
                                 <th>Destination</th>
                                 <th>Actions</th>
@@ -63,12 +115,15 @@
             <div class="col col-4">
                 <form class="d-flex flex-column mt-2 w-100 rounded p-2" method="post" style="background: #fff;">
                     {% csrf_token %}
-                    <div id="div_id_transfer_to" class="mb-2"> 
+                    <button id="toggleButton" class="btn btn-light mb-2" type="button">
+                        <i class="bx bx-chevron-down" id="toggleIcon"></i>
+                        <span id="id_text">Hide Branches</span>
+                    </button>
+                    <div id="div_id_transfer_to" class="mb-2 branches-container"> 
                         <label for="id_transfer_to" class="form-label requiredField">Destination Branch(s)</label>
-                        <div>
-                            {% for branch in branches %}
+                        {% for branch in branches %}
                             {% if branch.name != request.user.branch.name %}
-                                <div class="form-check mx-2 ">
+                                <div class="form-check mx-2">
                                     <input id="id_to" data-name="{{ branch.name }}" onchange="pushBranches(this)" type="checkbox" class="form-check-input" value="{{ branch.id }}">
                                     <label class="form-check-label" for="id_to">
                                         {{ branch.name }}
@@ -76,7 +131,6 @@
                                 </div>
                             {% endif %}
                         {% endfor %}
-                        </div>
                     </div>
                     <div class="mb-1">
                         <label for="id_product" class="form-label requiredField">Product</label>
@@ -101,7 +155,6 @@
             </div>
         </div>
     </div>
-
     <div id="successModal"></div>
 </div>
 <script>
@@ -170,6 +223,25 @@
         console.log('branches', branches);
     };
 
+    document.getElementById('toggleButton').addEventListener('click', function() {
+        let branchesDiv = document.getElementById('div_id_transfer_to');
+        let toggleIcon = document.getElementById('toggleIcon');
+        let text = document.getElementById('id_text')
+
+        // Toggle visibility
+        if (branchesDiv.style.display === "none") {
+            branchesDiv.style.display = "block"; 
+            toggleIcon.classList.remove('bx-chevron-up');
+            toggleIcon.classList.add('bx-chevron-down');
+            text.innerText='Hide branches'
+        } else {
+            branchesDiv.style.display = "none"; 
+            toggleIcon.classList.remove('bx-chevron-down');
+            toggleIcon.classList.add('bx-chevron-up');
+            text.innerText='Show branches'
+        }
+    });
+
 
     const displayTables = (values, product, prodData) => {
         let tableEl = document.getElementById('branchesTable');
@@ -233,26 +305,27 @@
 
     const calculateQuantityDifference = (quantity, productQuantity, branchName) => {
         quantity = parseInt(quantity) || 0; 
-        console.log('Initial:', remainingQuantities[branchName] || productQuantity);
 
+        // Initialize if not already done
         if (!(branchName in remainingQuantities)) {
-            remainingQuantities[branchName] = productQuantity;
+            remainingQuantities[branchName] = productQuantity; 
         }
         if (!(branchName in previousQuantities)) {
-            previousQuantities[branchName] = 0;
+            previousQuantities[branchName] = 0; 
         }
 
         const difference = quantity - previousQuantities[branchName];
-        remainingQuantities[branchName] -= difference;
+        remainingQuantities[branchName] -= difference; 
 
         previousQuantities[branchName] = quantity;
+        document.querySelector(`#id_${branchName}`).textContent = remainingQuantities[branchName];
 
-        // document.querySelector(`#id_${branchName}`).textContent = remainingQuantities[branchName];
+        branchesList.forEach((b) => {
+            if (remainingQuantities[b]) {
+                document.querySelector(`#id_${b}`).textContent = remainingQuantities[b];
+            }
+        });
 
-        branchesList.forEach((b)=>{
-            console.log(b)
-            document.querySelector(`#id_${b}`).textContent = remainingQuantities[branchName];
-        })
         console.log(`Remaining quantity for ${branchName}:`, remainingQuantities[branchName]);
     };
 
