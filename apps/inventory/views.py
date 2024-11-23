@@ -2398,11 +2398,15 @@ def supplier_delete(request, supplier_id):
 
     if request.method == "DELETE":
         try:
-            supplier = Supplier.objects.get(id=supplier_id)
-            supplier.delete = True
-            supplier.save()
-
-            return JsonResponse({'success':True}, status = 200)
+            if request.user.is_authenticated:
+                username = request.user.username
+                logger.info(username)
+                if username == 'admin':
+                    supplier = Supplier.objects.get(id=supplier_id)
+                    supplier.delete = True
+                    supplier.save()
+                    return JsonResponse({'success':True}, status = 200)
+            return JsonResponse({'success':False, 'message': 'you are not authorized'}, status = 200)
         except Exception as e:
             logger.info(e)
             return JsonResponse({"success":False, "message":f"{e}"})
@@ -2420,31 +2424,33 @@ def supplier_edit(request, supplier_id):
     if request.method == "POST":
          
         try:
-            data = json.loads(request.body)
-            logger.info(data)
+            username = request.user.username
+            if request.user.username == 'admin': 
+                data = json.loads(request.body)
+                logger.info(data)
 
-            name = data.get('name')
-            contact_person = data.get('contact_person')
-            email = data.get('email')
-            address = data.get('address')
-            phone = data.get('phone')
+                name = data.get('name')
+                contact_person = data.get('contact_person')
+                email = data.get('email')
+                address = data.get('address')
+                phone = data.get('phone')
 
-            supplier = Supplier.objects.get(id=supplier_id)
+                supplier = Supplier.objects.get(id=supplier_id)
 
-            supplier.name=name
-            supplier.contact_person=contact_person
-            supplier.email=email
-            supplier.phone=phone
-            supplier.address=address
-            
-            supplier.save()
-            logger.info(f'{supplier} saved')
-
-            return JsonResponse({'success':True}, status = 200)
+                supplier.name=name
+                supplier.contact_person=contact_person
+                supplier.email=email
+                supplier.phone=phone
+                supplier.address=address
+                
+                supplier.save()
+                logger.info(f'{supplier} saved')
+                return JsonResponse({'success':True}, status = 200)
+            return JsonResponse({"success":False, "message":"you are not authorized"}, status = 400)
         except Exception as e:
             logger.info(e)
             return JsonResponse({"success":False, "message":f"{e}"})
-    return JsonResponse({"success":False, "message":"Invalid Request"})
+    return JsonResponse({"success":False, "message":"Invalid Request"}, status = 500)
 
 #payments
 def supplier_payments(po, payment_data):
