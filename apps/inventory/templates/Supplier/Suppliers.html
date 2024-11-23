@@ -133,37 +133,30 @@
 <!--supplier details----------------------------------------------------------------------------------------------------------->
 <div class="modal fade" id="supplierDetailsModal" tabindex="-1" aria-labelledby="supplierDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-fullscreen">
-        <!-- Removed dark border from modal-content -->
         <div class="modal-content">
             <div class="modal-body" style="padding: 0;">
                 <div class="finance d-flex flex-column" style="height: 100%;">
 
                     <!-- Upper Section (70%) -->
                     <div class="top-section" style="flex: 7; overflow-y: auto;">
-
-                        <!-- Heading for Supplier Details with Dark Background and Light Text -->
+                        <!-- Heading for Supplier Details -->
                         <div class='px-2 py-2 bg-dark d-flex justify-content-between text-light align-items-center rounded'>
                             <div class='h5'>Supplier Details</div>
                             <div>
-                                <button type="button" class="btn btn-primary btn-sm" id="p_history_btn" >Proceed to Payment</button>
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
                             </div>
                         </div>
 
-                        <!-- Add Margin for Separation -->
-                        <div class="my-3"></div>
-
-                        <!-- Supplier Details Only (Centered in Upper Section) -->
-                        <div class="d-flex justify-content-center">
-                            <div class="col-md-6">
+                        <!-- Content for Upper Section -->
+                        <div class="d-flex mt-3" style="gap: 1rem;">
+                            <!-- Supplier Details (Left - Half Width) -->
+                            <div class="col-md-6 px-3">
                                 <div class="text-center mb-2">
-                                    <!-- Adjust Icon Size to 30px (smaller) -->
                                     <i class="fas fa-user-circle" style="font-size: 30px; color: rgb(18, 201, 233);"></i>
                                 </div>
                                 <h5 class="fw-bold text-center mb-2" id="supplierDetailsName" style="font-size: 18px;"></h5>
                                 <ul class="list-group" id="supplierDetailsList" style="text-align: left; font-size: 14px;"></ul>
-                                <!-- Action Buttons -->
                                 <div class="d-flex justify-content-between mt-2">
-                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
                                     <div class="d-flex">
                                         <button class="btn btn-primary btn-sm mx-1" style="background-color: rgb(18, 201, 233);" onclick="openEditModal()">
                                             <span class="text-white">Edit</span>
@@ -174,6 +167,26 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Account Info (Right - Half Width) -->
+                            <div class="col-md-6">
+                                <div class='card shadow'>
+                                    <div class='card-body'>
+                                        <h6>Account</h6>
+                                        {% for balance in account %}
+                                            <h6 class='text-center fw-bold {% if balance.balance < 0 %}text-danger{% endif %}'>
+                                                {{ balance.currency.symbol }} {{ balance.balance }}
+                                            </h6>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class='card mt-2 shadow'>
+                                    <div class='card-body rounded'>
+                                        <h6>Invoice Count</h6>
+                                        <h6 class='text-center text-light fw-bold text-muted'>{{ invoice_count }}</h6>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -181,6 +194,9 @@
                     <div class="bottom-section" style="flex: 3; overflow-y: auto;">
                         <div class='px-2 py-2 bg-dark d-flex justify-content-between text-light align-items-center rounded'>
                             <div class='h5'>Supplier Payment History</div>
+                            <div>
+                                <button type="button" class="btn btn-primary btn-sm" id="p_history_btn">Proceed to Payment</button>
+                            </div>
                         </div>
 
                         <!-- Payment History Tables -->
@@ -660,10 +676,7 @@
                 'X-CSRFToken': getCSRFToken(),
             },
             body: JSON.stringify(data),
-            
-            
         })
-        
         .then(response => response.json())
         .then(responseData => {
             console.log(responseData);
