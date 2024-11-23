@@ -2542,7 +2542,7 @@ def PaymentHistory(request, supplier_id):
                         'amount': items.received_quantity * items.unit_cost
                     }      
         logger.info(list_details)
-        logger.info(list(list_history))
+        logger.info(list_history)
         return JsonResponse({'success':True, 'history':list_history, 'pOrder': list_details}, status=200)
     return JsonResponse({'success':False, 'message':'Invalid request'}, status=500)
 
