@@ -2406,7 +2406,7 @@ def supplier_delete(request, supplier_id):
                     supplier.delete = True
                     supplier.save()
                     return JsonResponse({'success':True}, status = 200)
-            return JsonResponse({'success':False, 'message': 'you are not authorized'}, status = 200)
+            return JsonResponse({'success':False, 'message': ' not authorized'}, status = 300)
         except Exception as e:
             logger.info(e)
             return JsonResponse({"success":False, "message":f"{e}"})
@@ -2446,7 +2446,7 @@ def supplier_edit(request, supplier_id):
                 supplier.save()
                 logger.info(f'{supplier} saved')
                 return JsonResponse({'success':True}, status = 200)
-            return JsonResponse({"success":False, "message":"you are not authorized"}, status = 400)
+            return JsonResponse({"success":False, "message":" not authorized"}, status = 300)
         except Exception as e:
             logger.info(e)
             return JsonResponse({"success":False, "message":f"{e}"})

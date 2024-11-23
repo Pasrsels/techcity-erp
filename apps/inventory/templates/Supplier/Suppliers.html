@@ -134,81 +134,84 @@
 <div class="modal fade" id="supplierDetailsModal" tabindex="-1" aria-labelledby="supplierDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-fullscreen">
         <div class="modal-content">
-            <div class="modal-body" style="padding: 0;">
+            <div class="modal-body" style="padding: 5;">
                 <div class="finance d-flex flex-column" style="height: 100%;">
-
-                    <!-- Upper Section (70%) -->
-                    <div class="top-section" style="flex: 7; overflow-y: auto;">
-                        <!-- Heading for Supplier Details -->
-                        <div class='px-2 py-2 bg-dark d-flex justify-content-between text-light align-items-center rounded'>
-                            <div class='h5'>Supplier Details</div>
-                            <div>
-                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <!-- Heading for Supplier Details -->
+                    <div class='px-2 py-2 bg-dark d-flex justify-content-between text-light align-items-center rounded'>
+                        <div class='h5'>Supplier Details</div>
+                        <div>
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                    <!-- Upper Section (60%) split into two quarters: Supplier Details and Account Info + Purchase Order Count -->
+                    <div class="top-section" style="flex: 6; display: flex; overflow-y: auto;">
+                        <!-- Left Quarter: Supplier Details (40% of the whole height) -->
+                        <div class="col-md-6 px-3" style="flex: 1; height: 80%; margin-top: 5px;">
+                            <div class="text-center mb-2">
+                                <i class="fas fa-user-circle" style="font-size: 30px; color: rgb(18, 201, 233);"></i>
+                            </div>
+                            <h5 class="fw-bold text-center mb-2" id="supplierDetailsName" style="font-size: 18px;"></h5>
+                            <ul class="list-group" id="supplierDetailsList" style="text-align: left; font-size: 14px;"></ul>
+                            <div class="d-flex justify-content-between mt-2">
+                                <button class="btn btn-primary btn-sm mx-1" style="background-color: rgb(18, 201, 233);" onclick="openEditModal()">Edit</button>
+                                <button class="btn btn-danger btn-sm mx-1" style="background-color: red;" onclick="confirmDelete()">Delete</button>
                             </div>
                         </div>
 
-                        <!-- Content for Upper Section -->
-                        <div class="d-flex mt-3" style="gap: 1rem;">
-                            <!-- Supplier Details (Left - Half Width) -->
-                            <div class="col-md-6 px-3">
-                                <div class="text-center mb-2">
-                                    <i class="fas fa-user-circle" style="font-size: 30px; color: rgb(18, 201, 233);"></i>
-                                </div>
-                                <h5 class="fw-bold text-center mb-2" id="supplierDetailsName" style="font-size: 18px;"></h5>
-                                <ul class="list-group" id="supplierDetailsList" style="text-align: left; font-size: 14px;"></ul>
-                                <div class="d-flex justify-content-between mt-2">
-                                    <div class="d-flex">
-                                        <button class="btn btn-primary btn-sm mx-1" style="background-color: rgb(18, 201, 233);" onclick="openEditModal()">
-                                            <span class="text-white">Edit</span>
-                                        </button>
-                                        <button class="btn btn-danger btn-sm mx-1" style="background-color: red;" onclick="confirmDelete()">
-                                            <span class="text-white">Delete</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                        <!-- Right Quarter: Account Info + Purchase Order Count (20% of the whole height) -->
+                        <div class="col-md-6 px-3" style="flex: 1; height: 100%;">
+                            <div class="row" style="height: 100%;">
 
-                            <!-- Account Info (Right - Half Width) -->
-                            <div class="col-md-6">
-                                <div class='card shadow'>
-                                    <div class='card-body'>
-                                        <h6>Account</h6>
-                                        {% for balance in account %}
-                                            <h6 class='text-center fw-bold {% if balance.balance < 0 %}text-danger{% endif %}'>
-                                                {{ balance.currency.symbol }} {{ balance.balance }}
-                                            </h6>
-                                        {% endfor %}
+                                <!-- Account Info Section (reduced size) -->
+                                <div class="col-md-12 mb-3" style="height: 75px; margin-top: 80px;">
+                                    <div class="card shadow" style="height: 100%;">
+                                        <div class="card-body">
+                                            <h6>Account</h6>
+                                            {% for balance in account %}
+                                                <h6 class='text-center fw-bold {% if balance.balance < 0 %}text-danger{% endif %}'>
+                                                    {{ balance.currency.symbol }} {{ balance.balance }}
+                                                </h6>
+                                            {% endfor %}
+                                        </div>
                                     </div>
                                 </div>
-                                <div class='card mt-2 shadow'>
-                                    <div class='card-body rounded'>
-                                        <h6>Purchase Order Count</h6>
-                                        <h6 class='text-center text-light fw-bold text-muted'>
-                                            {% for life in life_time %}
-                                            {% for l, details in life.items %}
-                                                {%if supplier.id == l%}
-                                                    $
-                                                    {{details.amount}} [
-                                                    {{details.count}}x ]
-                                                 (% else %)  
-                                                        0
-                                                {%endif%}
-                                            {%endfor%}
-                                        {% endfor %}
-                                    </h6>
+
+                                <!-- Purchase Order Count Section (reduced size) -->
+                                <div class="col-md-12" style="height: 50%;">
+                                    <div class="card shadow" style="height: 50%;">
+                                        <div class="card-body">
+                                            <h6>Purchase Order Count</h6>
+                                            <h6 class='text-center text-muted fw-bold'>
+                                                {% for life in life_time %}
+                                                    {% for l, details in life.items %}
+                                                        {% if suppliers.id == l %}
+                                                            {{ details.count }}
+                                                        {% else %}
+                                                            0
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% endfor %}
+                                            </h6>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Lower Section (30%) -->
-                    <div class="bottom-section" style="flex: 3; overflow-y: auto;">
-                        <div class='px-2 py-2 bg-dark d-flex justify-content-between text-light align-items-center rounded'>
-                            <div class='h5'>Supplier Payment History</div>
-                            <div>
-                                <button type="button" class="btn btn-primary btn-sm" id="p_history_btn">Proceed to Payment</button>
-                            </div>
+                    <!-- Bottom Section (40%) -->
+                    <div class="bottom-section" style="flex: 4; overflow-y: auto;">
+                        <!-- Navigation Section -->
+                        <div class="mt-3 mb-3">
+                            <nav class="recent-nav navbar navbar-expand-lg navbar-light bg-dark text-light px-2">
+                                <ul class="navbar-nav items mr-auto">
+                                    <li class="nav-item active" data-name="supplier_payment_history">Supplier Payment History</li>
+                                    <li class="nav-item px-2" data-name="purchase_order">Purchase Order</li>
+                                </ul>
+                                <div class="ms-auto">
+                                    <button type="button" class="btn btn-primary btn-sm" id="p_history_btn">Proceed to Payment</button>
+                                </div>
+                            </nav>
                         </div>
 
                         <!-- Payment History Tables -->
@@ -228,27 +231,13 @@
                                 </thead>
                                 <tbody id="usd_payment_history">
                                     <tr>
-                                        <td>
-                                            0
-                                        </td>
-                                        <td>
-                                            0
-                                        </td>
-                                        <td>
-                                            0
-                                        </td>
-                                        <td>
-                                            0
-                                        </td>
-                                        <td>
-                                            0
-                                        </td>
-                                        <td>
-                                            0
-                                        </td>
-                                        <td>
-                                            0
-                                        </td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -272,7 +261,6 @@
                             </table>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -729,9 +717,9 @@
                 });
             } else {
                 Swal.fire({
-                    text: "Error updating supplier: " + responseData.message,
-                    icon: "error",
-                    title: 'Error'
+                    text: "User: " + responseData.message,
+                    icon: "warning",
+                    title: 'Access denied'
                 });
             }
         })
@@ -770,9 +758,9 @@
                     });
                 } else {
                     Swal.fire({
-                        text: "Error deleting supplier: " + responseData.message,
-                        icon: "error",
-                        title: 'Error'
+                        text: "User: " + responseData.message,
+                        icon: "warning",
+                        title: 'Failed to delete'
                     });
                 }
             })
