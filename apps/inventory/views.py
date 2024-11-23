@@ -2559,6 +2559,10 @@ def supplier_details_view(request,supplierId):
     if request.method == 'GET':
         try:
             supplier_details = Supplier.objects.get(id = supplierId)
+            account_details = SupplierAccount.objects.filter(supplier__id = supplierId)
+            account_history_details = SupplierAccountsPayments.objects.filter(account__supplier_id = supplierId)
+            purchase_order_details = PurchaseOrderItem.objects.filter(supplier__id = supplierId)
+
             supplier_data = {
                 'name': supplier_details.name,
                 'contact_person': supplier_details.contact_person,
@@ -2567,8 +2571,53 @@ def supplier_details_view(request,supplierId):
                 'address': supplier_details.address 
             }
 
+            list_account_details = []
+            for items in account_details:
+                list_account_details.append(
+                    {   
+                        'account_id': items.id,
+                        'supplier_id': items.supplier.id,
+                        'currency': items.currency.name,
+                        'balance': items.balance,
+                        'date': items.date
+                    }
+                )
+            
+            list_account_history = []
+            for items in account_history_details:
+                list_account_history.append(
+                    {
+                        'account_id': items.account.id,
+                        'payment_method': items.payment_method,
+                        'currency': items.currency.name,
+                        'amount': items.amount,
+                        'timestamp': items.timestamp,
+                        'user': items.user.username
+                    }
+                )
+            
+            list_purchase_order_details = []
+            for items in purchase_order_details:
+                list_purchase_order_details.append(
+                    {
+                        'purchase_order_number': items.purchase_order.order_number,
+                        'purchase_order_date': items.purchase_order.order_date,
+                        'product': items.product.name,
+                        'received_quantity': items.received_quantity,
+                        'unit_cost': items.unit_cost
+                    }
+                )
+            logger.info(list_purchase_order_details)
+            logger.info(list_account_history)
+            logger.info(list_account_details)
             logger.info(supplier_data)
-            return JsonResponse({'success': True, 'data': supplier_data}, status = 200)
+            return JsonResponse({
+                'success': True, 
+                'supplier_data': supplier_data,
+                'purchase_data': list_purchase_order_details,
+                'account_history_data': list_account_history,
+                'account_data': list_account_details
+            }, status = 200)
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
     return JsonResponse({'success': False, 'response': 'invalid request'}, status = 500)
