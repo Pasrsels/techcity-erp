@@ -271,7 +271,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                     for branch_obj in branch_obj_list:
                         for item in data['cart']:
                             logger.info(f'Cart Item: {item}')
-                            product = Product.objects.get(name=item['product'])
+                            product = Product.objects.get(id=item['product_id'])
                             logger.info(f'Transfered product: {product.name}')
 
                             branch_name = item['branch_name']
