@@ -1139,7 +1139,7 @@
             console.log(data.purchase_order_count,'purchse_order_count')
             if(data.success){
                 const accountEl = document.getElementById('account_balance')
-                const purchaseordercount = document.getElementById('purchase_countO') 
+                const purchaseordercount = document.getElementById('purchase_countO')
                 accountEl.innerHTML = `${data.account_data[0].currency} ${data.account_data[0].balance} <br> ${data.account_data[1].currency} ${data.account_data[1].balance} `
                 purchaseordercount.innerHTML = `${data.purchase_order_count}`
             }
