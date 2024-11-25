@@ -220,7 +220,7 @@
                             </nav>
                         </div>
 
-                        <!-- Payment History Tables -->
+                        <!-- Payment History Table -->
                         <div id="usdTable">
                             <table class="table table-bordered">
                                 <thead>
@@ -249,19 +249,6 @@
                             </table>
                         
                         </div>
-                        <div class='purchase_orders hidden' id="order_table">
-                            <div class="d-flex mb-3">
-                                <input
-                                    type="search"
-                                    id="usd_payment_history"
-                                    name="payment-history"
-                                    placeholder="search "
-                                    class="form-control"
-                                />
-                                <span>
-                                    <button type="button" id="viewBtn" class="btn btn-dark btn-sm"><small>view statement</small></button>
-                                </span>
-                            </div>
                         <div>
                             <div class="mt-2 w-100">
                                 <table class='table border table-rounded p-2' id='order_table' style="width: 100%;">
@@ -277,41 +264,9 @@
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        {% for order in orders %}
-                                            <tr>
-                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.order_date }}</small></td>
-                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.delivery_date }}</small></td>
-                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.batch|lower }}</small></td>
-                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.supplier.name }}</small></td>
-                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.total_cost }}</small></td>
-                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.notes }}</small></td>
-                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.status }}</small></td>
-                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}">
-                                                    <a href="{% url 'inventory:purchase_order_detail' order.id %}" class="btn bx bx-show"></a>
-                                                    <a href="{% url 'inventory:print_purchase_order' order.id %}" class="btn bx bx-printer mx-1"></a>
-                                                    {% if order.status != 'received' %}
-                                                    <button class="btn btn-sm btn-light" data-id={{ order.id }} onclick="status(this)">Change Status</button>
-                                                    {% else %}
-                                                    {% if order.received %}
-                                                    <small class="bg-success fw-bold text-light p-2 rounded text-center w-100">Received</small>
-                                                    {% else %}
-                                                    <a href="{% url 'inventory:receive_order' order.id %}" class="btn btn-sm btn-outline-dark">
-                                                        <small>Receive Order Items</small>
-                                                    </a>
-                                                    {% endif %}
-                                                    {% endif %}
-                                                    <a href="{% url 'inventory:edit_po' order.id %}" class="btn btn-outline-dark btn-sm bx bx-edit"></a>
-                                                    <button class="btn bx bx-trash btn-outline-dark btn-sm" onclick="confirmDeletePurchaseOrder({{ order.id }})"></button>
-                                                    <button class="btn btn-outline-primary btn-sm bx bx-user" onclick="showSupplierDetails({{ order.id }})"></button> <!-- New button -->
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                                    </table>
                             </div>
-                        </div>
-                
+                                    
                         <!-- <div id="zigTable" style="display: none;">
                             <table class="table table-bordered">
                                 <thead>
@@ -521,11 +476,6 @@
                         </thead>
                         <tbody id="zig_payment_table"></tbody>
                     </table>
-                </div>
-
-                <!-- Close Button -->
-                <div class="d-flex justify-content-end mt-3">
-                    <button type="button" class="btn btn-danger btn-sm mx-2" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -932,22 +882,7 @@
         )
     })
 
-     function show(name) {
-        // Hide both transactions and payments sections initially
-        const tableEls = document.querySelectorAll('#dTables');
-        tableEls.forEach((t)=>{
-            t.classList.add('hidden');
-        })
-        try {
-            $(`.${name}`).removeClass('hidden');
-            tableName = name;
-        } catch (error) {
-            tableError.textContent = 'Failed to load the table: ' + error.message;
-            return;
-        }
-        
-        displayDepositTable(depositData);
-    }
+     
 
     document.addEventListener("DOMContentLoaded", () => {
     // Get references to the tables
@@ -983,6 +918,14 @@
             });
         })
         .catch(error => console.error("Error fetching payment history:", error));
+        document.querySelector().addEventListener('input', ()=>{
+        const search_q = document.querySelector().value
+        let filteredData = transactionsData[0].filter((data)=>{
+            return(data.invoice_number.includes(search_q))
+        })
+        transactionsTable.innerHTML=''
+        displayTransactionTable(filteredData)
+    })
 
     // Fetch Purchase Orders data (AJAX)
     fetch('/path/to/purchase-orders/')
