@@ -2555,7 +2555,7 @@ def PaymentHistory(request, supplier_id):
 
 #individual supplier details
 @login_required
-def supplier_details_view(request,supplierId):
+def supplier_details_view(request, supplierId):
     if request.method == 'GET':
         try:
             supplier_details = Supplier.objects.get(id = supplierId)
@@ -2685,7 +2685,7 @@ def supplier_view(request):
             'products':supplier_products,
             'balances':supplier_balances,
             'life_time': [list_orders],
-            'suppliers':suppliers
+            'suppliers':suppliers,
         })
     if request.method == 'POST':
         """

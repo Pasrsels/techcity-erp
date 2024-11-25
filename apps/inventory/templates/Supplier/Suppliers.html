@@ -169,39 +169,42 @@
                             <div class="row" style="height: 100%;">
 
                                 <!-- Account Info Section (reduced size) -->
-                                <div class="col-md-12 mb-3" style="height: 75px; margin-top: 80px;">
+                                <div class="col-md-12 mb-3" style="height: 100px; margin-top: 80px; margin-bottom: 50px ;">
                                     <div class="card shadow" style="height: 100%;">
                                         <div class="card-body">
                                             <h6>Account</h6>
-                                            {% for balance in account %}
-                                                <h6 class='text-center fw-bold {% if balance.balance < 0 %}text-danger{% endif %}'>
-                                                    {{ balance.currency.symbol }} {{ balance.balance }}
-                                                </h6>
-                                            {% endfor %}
+                                            <h6 class="text-center fw-bold">
+                                                <span id="account_balance">
+                                                    
+                                                </span>
+                                            </h6>
                                         </div>
                                     </div>
                                 </div>
+                                
 
                                 <!-- Purchase Order Count Section (reduced size) -->
                                 <div class="col-md-12" style="height: 50%;">
                                     <div class="card shadow" style="height: 50%;">
                                         <div class="card-body">
                                             <h6>Purchase Order Count</h6>
-                                            <h6 class='text-center text-muted fw-bold'>
-                                                {% for life in life_time %}
-                                                    {% for l, details in life.items %}
-                                                        {% if suppliers.id == l %}
-                                                            {{ details.count }}
-                                                        {% else %}
-                                                            0
-                                                        {% endif %}
+                                            <h6 class="text-center text-muted fw-bold">
+                                                {% with 0 as purchase_order_count %}
+                                                    {% for life in life_time %}
+                                                        {% for l, details in life.items %}
+                                                            {% if supplier.id == l %}
+                                                                {% with details.count as purchase_order_count %}
+                                                                {% endwith %}
+                                                            {% endif %}
+                                                        {% endfor %}
                                                     {% endfor %}
-                                                {% endfor %}
+                                                    {{ purchase_order_count }}
+                                                {% endwith %}
                                             </h6>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                                </div>
                         </div>
                     </div>
 
@@ -211,25 +214,31 @@
                         <div class="mt-3 mb-3">
                             <nav class="recent-nav navbar navbar-expand-lg navbar-light bg-dark text-light px-2">
                                 <ul class="navbar-nav items mr-auto">
-                                    <li class="nav-item active" data-name="supplier_payment_history">Supplier Payment History</li>
-                                    <li class="nav-item px-2" data-name="purchase_orders">Purchase Order</li>
+                                    <li class="nav-item" data-name="supplier_payment_history" id="supplier_tab">
+                                        <a href="#" class="nav-link text-light">Supplier Payment History</a>
+                                    </li>
+                                    <li class="nav-item px-2" data-name="purchase_orders" id="purchase_tab">
+                                        <a href="#" class="nav-link text-light">Purchase Order</a>
+                                    </li>
                                 </ul>
                                 <div class="ms-auto">
                                     <button type="button" class="btn btn-primary btn-sm" id="p_history_btn">Proceed to Payment</button>
                                 </div>
                             </nav>
+                            <!-- Underline for active tab -->
+                            <div class="underline bg-primary" id="active-underline"></div>
                         </div>
-
+                        
                         <!-- Payment History Table -->
-                        <div id="usdTable">
+                        <div id="supplier_payment_section">
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
                                         <th>Date</th>
-                                        <th>Order name</th>
+                                        <th>Order Name</th>
                                         <th>Amount</th>
                                         <th>Paid</th>
-                                        <th>Account balance</th>
+                                        <th>Account Balance</th>
                                         <th>Accounts Payable</th>
                                         <th>Accounts Receivable</th>
                                         <th>User</th>
@@ -244,14 +253,16 @@
                                         <td>0</td>
                                         <td>0</td>
                                         <td>0</td>
+                                        <td>0</td>
                                     </tr>
                                 </tbody>
                             </table>
-                        
                         </div>
-                        <div>
+                        
+                        <!-- Purchase Order Table -->
+                        <div id="purchase_order_section" style="display: none;">
                             <div class="mt-2 w-100">
-                                <table class='table border table-rounded p-2' id='order_table' style="width: 100%;">
+                                <table class='table table-bordered' id='order_table' style="width: 100%;">
                                     <thead>
                                         <tr>
                                             <th>Date</th>
@@ -264,9 +275,38 @@
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
-                                    </table>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="8">No data available</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                                    
+                        </div>
+                        
+                        <style>
+                            /* Style for the active underline */
+                            .underline {
+                                height: 4px;
+                                width: 0;
+                                transition: 0.3s ease-in-out;
+                                position: relative;
+                                margin-top: -2px;
+                            }
+                        
+                            .nav-item.active {
+                                font-weight: bold;
+                            }
+                        
+                            /* Adjusting borders in Purchase Order Table */
+                            #order_table th, #order_table td {
+                                border: 1px solid #dee2e6 !important; /* Add visible divisions */
+                            }
+                        </style>
+                        
+                       
+                        
+                                   
                         <!-- <div id="zigTable" style="display: none;">
                             <table class="table table-bordered">
                                 <thead>
@@ -679,6 +719,46 @@
     //         }
     //     });
 
+
+                            // JavaScript for toggling between sections
+                            const supplierTab = document.getElementById("supplier_tab");
+                            const purchaseTab = document.getElementById("purchase_tab");
+                            const supplierSection = document.getElementById("supplier_payment_section");
+                            const purchaseSection = document.getElementById("purchase_order_section");
+                            const underline = document.getElementById("active-underline");
+                        
+                            function moveUnderline(tab) {
+                                const rect = tab.getBoundingClientRect();
+                                underline.style.width = `${rect.width}px`;
+                                underline.style.left = `${tab.offsetLeft}px`;
+                            }
+                        
+                            function setActiveTab(activeTab) {
+                                document.querySelectorAll(".nav-item").forEach(tab => tab.classList.remove("active"));
+                                activeTab.classList.add("active");
+                                moveUnderline(activeTab);
+                            }
+                        
+                            supplierTab.addEventListener("click", function (e) {
+                                e.preventDefault();
+                                supplierSection.style.display = "block";
+                                purchaseSection.style.display = "none";
+                                setActiveTab(this);
+                            });
+                        
+                            purchaseTab.addEventListener("click", function (e) {
+                                e.preventDefault();
+                                supplierSection.style.display = "none";
+                                purchaseSection.style.display = "block";
+                                setActiveTab(this);
+                            });
+                        
+                            // Initialize with default active tab
+                            window.onload = function () {
+                                setActiveTab(supplierTab);
+                            };
+                       
+
     // Function to open the edit modal and populate it with supplier data
     function openEditModal() {
         fetch(`/inventory/suppliers/edit/${editSupId}/`)  // Adjust this URL to match your actual endpoint
@@ -854,6 +934,8 @@
                     // Show modal
                     const supplierDetailsModal = new bootstrap.Modal(document.getElementById('supplierDetailsModal'));
                     supplierDetailsModal.show();
+
+                    accountBalances(supplierId)
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -1036,21 +1118,39 @@
     };
 });
 
-// Utility function to get CSRF token from cookies
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    const accountBalances = (supplierId) => {
+        console.log(supplierId)
+        // {% for bal in balances %}
+        //     {% if supplier.id == bal.supplier__id %}
+        //         document.getElementById('account_balance').innerText = {{ bal.currency__name }} + {{ bal.balance }}
+        //         if({{ bal.balance }} < 0){
+        //             document.getElementById('account_balance').classList.add('text-danger') 
+        //         }else{
+        //             document.getElementById('account_balance').classList.remove('text-danger') 
+        //         }
+        //     {% endif %}
+        // {% endfor %}
+        fetch(`/inventory/suppliers/supplier-information/${supplierId}/`, {
+            method:'GET'
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.account_data, 'account data')
+            if(data.success){
+                const accountEl = document.getElementById('account_balance')
+                accountEl.innerHTML = `${data.account_data[0].currency} ${data.account_data[0].balance} <br> ${data.account_data[1].currency} ${data.account_data[1].balance} `
+            }else{
+                Swal.fire({
+                    icon:'error',
+                    text: data.messsage,
+                    title: 'Error'
+                })
             }
-        }
+    })
+        .catch((error)=>{
+            console.log(error)
+        })
     }
-    return cookieValue;
-}
 
 
     // Utility function to get the CSRF token from cookies
