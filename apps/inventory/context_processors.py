@@ -11,7 +11,7 @@ def product_list(request):
 
 def all_products_list(request):
     if request.user.id != None:
-       return { 'products': Product.objects.all()}
+       return { 'products': Inventory.objects.filter(branch=request.user.branch, status=True)}
     return {}
 
 def stock_notification_count(request):

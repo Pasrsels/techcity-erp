@@ -20,8 +20,8 @@
                 <tbody id='inventory_table' >
                     {% for product in inventory %}
                     <tr>
-                        <td><small><span class='hint--bottom' aria-label='{{ product.product.description }}'>{{ product.product.name }}</span></small></td>
-                        <td><small>{{ product.product.description }}</small></td>
+                        <td><small><span class='hint--bottom' aria-label='{{ product.description }}'>{{ product.name }}</span></small></td>
+                        <td><small>{{ product.description }}</small></td>
                         <td></td>
                         <td><small>{{ product.quantity }}</small></td>
                         <td><small>{{ product.cost }}</small></td>
@@ -93,7 +93,7 @@
                                         </span>
                                     </span> {% endcomment %}
                                 </small>
-                                </td>
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>

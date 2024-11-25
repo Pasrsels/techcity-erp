@@ -130,74 +130,74 @@
         
         document.querySelector('.col-12')?.classList.add('w-100') 
 
-        function fetchNotifications() {
-            fetch('{% url "inventory:reorder_from_notifications" %}')
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data)
-                    const tableBody = document.querySelector('#notificationTable tbody');
-                    tableBody.innerHTML = ''; 
-                    data.forEach(notification => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${notification.inventory__product__name}</td>
-                            <td>${notification.inventory__quantity}</td>
-                            <td>${notification.quantity}</td>
-                            <td>
-                                <button class="btn bx bx-list-plus" data-id="${notification.inventory__id}" onclick="addToOrderList(this);"></button>
-                                <button class="btn bx bx-x text-danger" data-id="${notification.inventory__id}" onclick="dontAddToOrderList(this);"></button>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                })
-                .catch(error => console.error('Error fetching notifications:', error));
-        }
+        // function fetchNotifications() {
+        //     fetch('{% url "inventory:reorder_from_notifications" %}')
+        //         .then(response => response.json())
+        //         .then(data => {
+        //             console.log(data)
+        //             const tableBody = document.querySelector('#notificationTable tbody');
+        //             tableBody.innerHTML = ''; 
+        //             data.forEach(notification => {
+        //                 const row = document.createElement('tr');
+        //                 row.innerHTML = `
+        //                     <td>${notification.inventory__product__name}</td>
+        //                     <td>${notification.inventory__quantity}</td>
+        //                     <td>${notification.quantity}</td>
+        //                     <td>
+        //                         <button class="btn bx bx-list-plus" data-id="${notification.inventory__id}" onclick="addToOrderList(this);"></button>
+        //                         <button class="btn bx bx-x text-danger" data-id="${notification.inventory__id}" onclick="dontAddToOrderList(this);"></button>
+        //                     </td>
+        //                 `;
+        //                 tableBody.appendChild(row);
+        //             });
+        //         })
+        //         .catch(error => console.error('Error fetching notifications:', error));
+        // }
 
-        function addToOrderList(button) {
-            const inventoryId = button.getAttribute('data-id');
-            fetch('{% url "inventory:reorder_from_notifications" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ inventory_id: inventoryId, action_type:'add' })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Added to order list successfully!');
-                    fetchNotifications(); 
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => console.error('Error adding to order list:', error));
-        }
+        // function addToOrderList(button) {
+        //     const inventoryId = button.getAttribute('data-id');
+        //     fetch('{% url "inventory:reorder_from_notifications" %}', {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/json',
+        //             'X-CSRFToken': getCookie('csrftoken')
+        //         },
+        //         body: JSON.stringify({ inventory_id: inventoryId, action_type:'add' })
+        //     })
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         if (data.success) {
+        //             alert('Added to order list successfully!');
+        //             fetchNotifications(); 
+        //         } else {
+        //             alert('Error: ' + data.message);
+        //         }
+        //     })
+        //     .catch(error => console.error('Error adding to order list:', error));
+        // }
 
-        function dontAddToOrderList(button) {
-            const inventoryId = button.getAttribute('data-id');
-            fetch('{% url "inventory:reorder_from_notifications" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ inventory_id: inventoryId, action_type:'remove' })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Added to order list successfully!');
-                    fetchNotifications(); 
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => console.error('Error adding to order list:', error));
+        // function dontAddToOrderList(button) {
+        //     const inventoryId = button.getAttribute('data-id');
+        //     fetch('{% url "inventory:reorder_from_notifications" %}', {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/json',
+        //             'X-CSRFToken': getCookie('csrftoken')
+        //         },
+        //         body: JSON.stringify({ inventory_id: inventoryId, action_type:'remove' })
+        //     })
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         if (data.success) {
+        //             alert('Added to order list successfully!');
+        //             fetchNotifications(); 
+        //         } else {
+        //             alert('Error: ' + data.message);
+        //         }
+        //     })
+        //     .catch(error => console.error('Error adding to order list:', error));
             
-        }
+        // }
 
         branchButton.addEventListener('click', ()=>{
             branchModal.show()

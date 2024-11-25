@@ -312,7 +312,7 @@ class InvoiceItem(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.quantity} x {self.item.product.description} for Invoice #{self.invoice.invoice_number}"
+        return f"{self.quantity} x {self.item.description} for Invoice #{self.invoice.invoice_number}"
     
 
 class layby(models.Model):

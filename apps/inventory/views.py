@@ -1494,11 +1494,6 @@ def purchase_orders(request):
         }
     )
 
-from django.db import transaction
-from decimal import Decimal
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-
 @login_required
 def create_purchase_order(request):
     if request.method == 'GET':
