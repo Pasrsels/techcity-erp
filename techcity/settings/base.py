@@ -132,7 +132,6 @@ SESSION_AUTH = True
 
 DATABASES = {
 
-<<<<<<< HEAD
    'default': {
      'ENGINE': 'django.db.backends.postgresql',
        'NAME':  'TECHCITYDB',
@@ -150,25 +149,6 @@ DATABASES = {
 #          'PORT': os.getenv('DB_PORT', '26269'),
 #      }
  }
-=======
-#    'default': {
-#      'ENGINE': 'django.db.backends.postgresql',
-#        'NAME':  'techcoty',
-#        'USER': 'postgres',
-#        'PASSWORD': 'neverfail',
-#        'HOST': 'localhost',
-#        'PORT': '5432'
-#  }
-    'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-         'NAME': os.getenv('DB_NAME', 'railway'),
-         'USER': os.getenv('DB_USERNAME', 'postgres'),
-         'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvDuHLnxhw'),  
-         'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
-         'PORT': os.getenv('DB_PORT', '26269'),
-     }
-}
->>>>>>> 56be42f5bdfa73811ce43dbebb4a951746a35e43
 
 if 'test' in sys.argv:
     DATABASES = {
