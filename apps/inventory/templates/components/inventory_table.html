@@ -39,11 +39,17 @@
                                         <i class='bx bx-edit-alt'></i>
                                     </a>
                                 </span> -->
+                                <span class='px-2'>
+                                    <a href="{% url 'inventory:edit_inventory' product.id %}" class="text-dark">
+                                        <i class='bx bx-edit-alt'></i>
+                                    </a>
+                                </span>
                                 <span>
                                     <span id='delete' data-id="{{ product.id }}" onclick="productId(this)" class="text-dark">
                                         <i class='bx bx-trash-alt'></i>
                                     </span>
                                 </span>
+                                
                                 <span>
                                     {%if product.status == False %}
                                     <a href='{% url "inventory:activate_inventory" product.id %}' class="btn btn-sm text-primary">

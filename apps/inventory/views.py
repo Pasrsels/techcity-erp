@@ -443,7 +443,6 @@ def inventory(request):
             filter(id=product_id, branch=request.user.branch).values()), safe=False)
     return JsonResponse({'error':'product doesnt exists'})
 
-
 @login_required
 def inventory_index(request):
     form = ServiceForm()
@@ -569,34 +568,29 @@ def activate_inventory(request, product_id):
     messages.success(request, 'Product succefully activated')
     return redirect('inventory:inventory')
 
-@admin_required
 @login_required
 def edit_inventory(request, product_id):
-    inv_product = Inventory.objects.get(product__id=product_id, branch=request.user.branch)
+    inv_product = Inventory.objects.get(id=product_id, branch=request.user.branch)
 
     if request.method == 'POST':
-        
         product = Product.objects.get(id=product_id)
-        product.name=request.POST['name']
-        # product.batch_code=request.POST['batch_code']
-        product.description=request.POST['description']
-        
         end_of_day = request.POST.get('end_of_day')
 
         if end_of_day:
-            product.end_of_day = True
-            
-        product.save()
+            inv_product.end_of_day = True
         
         selling_price = Decimal(request.POST['price'])
         dealer_price = Decimal(request.POST['dealer_price'])
         
         # think through
         quantity = inv_product.quantity
-             
+        inv_product.name=request.POST['name']
+        inv_product.batch=request.POST['batch_code']
+        inv_product.description=request.POST['description']
+        
         inv_product.price = Decimal(request.POST['price'])
         inv_product.cost = Decimal(request.POST['cost'])
-        # inv_product.dealer_price = Decimal(request.POST['dealer_price'])
+        inv_product.dealer_price = Decimal(request.POST['dealer_price'])
         inv_product.stock_level_threshold = request.POST['min_stock_level']
         inv_product.dealer_price = dealer_price
         inv_product.quantity = request.POST['quantity']
@@ -616,7 +610,7 @@ def edit_inventory(request, product_id):
         
         messages.success(request, f'{product.name} update succesfully')
         return redirect('inventory:inventory')
-    return render(request, 'inventory_form.html', {'product':inv_product, 'title':f'Edit >>> {inv_product.product.name}'})
+    return render(request, 'inventory_form.html', {'product':inv_product, 'title':f'Edit >>> {inv_product.name}'})
 
 @login_required
 def inventory_detail(request, id):
@@ -1588,6 +1582,7 @@ def create_purchase_order(request):
 
                     try:
                         product = Inventory.objects.get(name=product_name, branch=request.user.branch)
+                        logger.info(f'Product id: {product.quantity}')
                     except Product.DoesNotExist:
                         transaction.set_rollback(True)
                         return JsonResponse({'success': False, 'message': f'Product with Name {product_name} not found'}, status=404)

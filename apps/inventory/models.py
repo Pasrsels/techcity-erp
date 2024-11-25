@@ -207,8 +207,8 @@ class PurchaseOrderItem(models.Model):
         purchase_order.received = all_received
         purchase_order.save()
 
-    def __str__(self):
-        return f"{self.product.name} x {self.quantity}"
+    # def __str__(self):
+    #     return f"{self.product.name} x {self.quantity}"
     
 
 class costAllocationPurchaseOrder(models.Model):
