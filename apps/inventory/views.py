@@ -585,7 +585,7 @@ def edit_inventory(request, product_id):
         # think through
         quantity = inv_product.quantity
         inv_product.name=request.POST['name']
-        inv_product.batch=request.POST['batch_code']
+        # inv_product.batch=request.POST['batch_code']
         inv_product.description=request.POST['description']
         
         inv_product.price = Decimal(request.POST['price'])
