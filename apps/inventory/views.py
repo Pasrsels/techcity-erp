@@ -354,7 +354,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
     def deduct_inventory(self, transfer_item):
         logger.info(f'from branch -> {transfer_item.from_branch}')
-        branch_inventory = Inventory.objects.get(product__id=transfer_item.product, branch__name=transfer_item.from_branch)
+        branch_inventory = Inventory.objects.get(product=transfer_item.product, branch__name=transfer_item.from_branch)
         
         branch_inventory.quantity -= int(transfer_item.quantity)
         branch_inventory.save()
