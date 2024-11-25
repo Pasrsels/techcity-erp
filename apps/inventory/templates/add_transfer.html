@@ -367,7 +367,11 @@
             const pElement = document.getElementById('id_product');
             const pSelectedOption = pElement.options[pElement.selectedIndex];
             let product = pSelectedOption.textContent;
+            let product_id = pElement.value
+
             product = product.split(' [')[0];
+
+            
 
             // if (!price || !quantity || quantity <= 0) {
             //     Swal.fire({
@@ -401,6 +405,7 @@
             console.log(quantity)
             if (quantity){
                 const newItem = {
+                    product_id:product_id,
                     count: count,
                     id: generateUniqueId(),
                     product: product,
