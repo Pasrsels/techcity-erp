@@ -265,7 +265,6 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                 #assign many2many objects to transfer branch
                 transfer.transfer_to.set(branch_obj_list),
 
-
                 if action == 'process':
                     logger.info(f'branches: {branch_obj_list}')
                     for branch_obj in branch_obj_list:
@@ -355,7 +354,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
     def deduct_inventory(self, transfer_item):
         logger.info(f'from branch -> {transfer_item.from_branch}')
-        branch_inventory = Inventory.objects.get(product__name=transfer_item.product, branch__name=transfer_item.from_branch)
+        branch_inventory = Inventory.objects.get(product__id=transfer_item.product, branch__name=transfer_item.from_branch)
         
         branch_inventory.quantity -= int(transfer_item.quantity)
         branch_inventory.save()
@@ -669,7 +668,7 @@ def inventory_transfers(request):
     transfer_items = TransferItems.objects.all()
 
     transfers = Transfer.objects.filter(
-        Q(branch=request.user.branch) |
+        Q(branch=request.user.branch) and
         Q(transfer_to=request.user.branch),
         delete=False
     ).annotate(
