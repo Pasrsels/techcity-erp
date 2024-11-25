@@ -188,8 +188,8 @@
                                     <div class="card shadow" style="height: 50%;">
                                         <div class="card-body">
                                             <h6>Purchase Order Count</h6>
-                                            <h6 class="text-center text-muted fw-bold">
-                                                {% with 0 as purchase_order_count %}
+                                            <h6 class="text-center text-muted fw-bold" id="purchase_countO">
+                                                <!-- {% with 0 as purchase_order_count %}
                                                     {% for life in life_time %}
                                                         {% for l, details in life.items %}
                                                             {% if supplier.id == l %}
@@ -199,7 +199,7 @@
                                                         {% endfor %}
                                                     {% endfor %}
                                                     {{ purchase_order_count }}
-                                                {% endwith %}
+                                                {% endwith %} -->
                                             </h6>
                                         </div>
                                     </div>
@@ -1136,10 +1136,14 @@
         .then(response => response.json())
         .then(data => {
             console.log(data.account_data, 'account data')
+            console.log(data.purchase_order_count,'purchse_order_count')
             if(data.success){
                 const accountEl = document.getElementById('account_balance')
+                const purchaseordercount = document.getElementById('purchase_countO') 
                 accountEl.innerHTML = `${data.account_data[0].currency} ${data.account_data[0].balance} <br> ${data.account_data[1].currency} ${data.account_data[1].balance} `
-            }else{
+                purchaseordercount.innerHTML = `${data.purchase_order_count}`
+            }
+            else{
                 Swal.fire({
                     icon:'error',
                     text: data.messsage,

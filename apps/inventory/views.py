@@ -2762,7 +2762,8 @@ def supplier_details_view(request, supplierId):
                 'supplier_data': supplier_data,
                 'purchase_data': list_purchase_order_details,
                 'account_history_data': list_account_history,
-                'account_data': list_account_details
+                'account_data': list_account_details,
+                'purchase_order_count': purchase_order_count,
             }, status = 200)
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
