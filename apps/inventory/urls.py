@@ -34,8 +34,7 @@ urlpatterns = [
     path("suppliers/delete/<int:supplier_id>/", supplier_delete, name="delete_supplier"),
     path("suppliers/edit/<int:supplier_id>/", supplier_edit, name="edit_supplier"),
     path("suppliers/payment-history/<int:supplier_id>/", PaymentHistory, name="payment-history"),
-    path('suppliers/supplier-information/<int:supplier_id>/', supplier_details_view, name = 'supplier_details'),
-
+    path('suppliers/supplier-information/<int:supplierId>/', supplier_details_view, name = 'supplier_details'),
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),
     
@@ -78,6 +77,9 @@ urlpatterns = [
     path('detail/<int:id>/', inventory_detail, name='inventory_detail' ),
     path('transfer/detail/<int:transfer_id>/', transfer_details, name='transfer_details'),
     path('process-transfer-cart/', ProcessTransferCartView.as_view(), name='process_transfer_cart'),
+    path('held_transfer_json/<int:transfer_id>/', held_transfer_json, name='held_transfer'),
+    path('held/transfers/', held_transfers, name='h_transfers'),
+    path('process/held/transfer/<int:transfer_id>/', process_held_transfer, name='process_held'),
     
     #reporting
     path('inventory-pdf', inventory_pdf, name='inventory_pdf'),

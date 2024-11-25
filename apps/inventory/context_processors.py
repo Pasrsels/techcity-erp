@@ -6,7 +6,7 @@ def product_category_list(request):
 
 def product_list(request):
     if request.user.id != None:
-       return { 'inventory': Inventory.objects.filter(branch=request.user.branch, status=True)}
+       return { 'inventory': Inventory.objects.filter(branch=request.user.branch, status=True).order_by('quantity')}
     return {}
 
 def all_products_list(request):

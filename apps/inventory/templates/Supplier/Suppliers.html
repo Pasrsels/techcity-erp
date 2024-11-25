@@ -12,9 +12,21 @@
             </button>
         </div>
     </div>
-
-    <table id="supplier_list" class="table table-striped table-bordered" style="width: 100%;">
+    <table class="table table-striped table-bordered table-hover rounded p-2 mt-3 mt-2" id="supplier_list" style="width: 100%;">
         <thead>
+            <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier List</title>
+    <style>
+        #supplier_list th {
+            transition: transform 0.3s ease;
+        }
+
+        #supplier_list th:hover {
+            transform: scale(1.1); /* Enlarges only the hovered th */
+            cursor: pointer; /* Adds a pointer cursor for better UX */
+        }
+    </style>
             <tr>
                 <th>Name</th>
                 <th>Products</th>
@@ -27,6 +39,7 @@
             </tr>
         </thead>
         <tbody>
+<<<<<<< HEAD
             {% for supplier in suppliers %}
             <tr>
                 <td>
@@ -37,46 +50,323 @@
                 
                 
                 <td>
+=======
+            {%for supplier in suppliers%}
+            <tr style="font-size:small; text-align: center;">
+                <td >
+                    <small>
+                        <button style = "font-size: small;" class="btn btn-link p-0 m-0 text-primary" onclick="fetchSupplierDetails({{ supplier.id }})">
+                            {%if supplier.delete == False%}
+                                {{ supplier.name }}
+                            {%endif%}
+                        </button>
+                    </small>
+                </td>
+                <td >
+>>>>>>> 56be42f5bdfa73811ce43dbebb4a951746a35e43
                     <small>
                         {% for product in products %}
-                            {% if supplier.supplier in product.suppliers.all %}
-                                {{ product.name }}
-                            {% endif %}
+                            {%if supplier in product.suppliers.all%}
+                                {{product.category.name}},
+                            {%endif%}
                         {% endfor %}
                     </small>
                 </td>
+<<<<<<< HEAD
                 <td><small>{{ supplier.nextdue}}</small></td>
                 <td><small>{{ supplier.returns}}</small></td>
             
                 <td><small>{{ supplier.Lifetime}}</small></td>
                 <td>
+=======
+                <td >
+>>>>>>> 56be42f5bdfa73811ce43dbebb4a951746a35e43
                     <small>
-                        {% if supplier.balance > 0 %}
-                            {{ supplier.balance }}
-                        {% endif %}
+                        {% for life in life_time %}
+                            {% for l, details in life.items %}
+                                {%if supplier.id == l%}
+                                    $
+                                    {{details.amount}} [
+                                    {{details.count}}x ]
+                                {%endif%}
+                            {%endfor%}
+                        {% endfor %}
                     </small>
                 </td>
-                <td>
+                <td >
                     <small>
-                        {% if supplier.balance < 0 %}
-                            {{ supplier.balance }}
-                        {% endif %}
+                        {%for dat in balances%}
+                            {%if supplier.id == dat.supplier__id%}
+                                {{dat.date}}
+                            {%endif%}
+                        {%endfor%}
                     </small>
                 </td>
+<<<<<<< HEAD
                 
                 <td>
                     <button class="btn bx bx-edit mx-1" style="color: rgb(18, 201, 233);" onclick="openEditModal({{ supplier.id }})"></button>
                     <button class="btn bx bx-trash mx-1" style="color: red;" onclick="confirmDelete({{ supplier.id }})"></button>
                     <button class="btn bx bx-money mx-1" style="color: green;" onclick="openPaymentModal({{ supplier.id }})"></button>
                     <button class="btn bx bx-history mx-1" style="color: purple;" onclick="openPaymentHistoryModal({{ supplier.id }})"></button>
+=======
+                <td >
+                    <small>
+                        {%for lt in life_time%}
+                            {%for l, t in lt.items%}
+                                {%if supplier.id == l%}
+                                    {{t.returned}}/{{t.quantity}}
+                                {%endif%}
+                            {%endfor%}
+                        {%endfor%}
+                    </small>
+                </td>
+                <td >
+                    <small>
+                        {% for bal in balances %}
+                            {% if supplier.id == bal.supplier__id%}
+                                {% if bal.balance > 0 %}
+                                    {{bal.currency__name}}
+                                    {{ bal.balance }} |
+                                {%else%}
+                                    {{bal.currency__name}}0 |
+                                {% endif %}
+                            {%endif%}
+                        {% endfor %}
+                    </small>
+                </td>
+                <td >
+                    <small>
+                        {% for bal in balances %}
+                            {% if supplier.id == bal.supplier__id%}
+                                {% if bal.balance < 0 %}
+                                    {{bal.currency__name}}
+                                    {{ bal.balance }} |
+                                {%else%}
+                                    {{bal.currency__name}}0 |
+                                {% endif %}
+                            {%endif%}
+                        {% endfor %}
+                    </small>
+>>>>>>> 56be42f5bdfa73811ce43dbebb4a951746a35e43
                 </td>
                 
+                <td >
+                    
+                    <button class="btn bx bx-play mx-1" style="color: green; font-size:medium;" onclick="openPaymentHistoryModal({{ supplier.id }})"></button>
+                </td>
             </tr>
-            {% endfor %}
+            {%endfor%}
         </tbody>
     </table>
 
+<!--supplier details----------------------------------------------------------------------------------------------------------->
+<div class="modal fade" id="supplierDetailsModal" tabindex="-1" aria-labelledby="supplierDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-body" style="padding: 5;">
+                <div class="finance d-flex flex-column" style="height: 100%;">
+                    <!-- Heading for Supplier Details -->
+                    <div class='px-2 py-2 bg-dark d-flex justify-content-between text-light align-items-center rounded'>
+                        <div class='h5'>Supplier Details</div>
+                        <div>
+                            <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">
+                                <i class="fas fa-times red-icon"></i>
+                              </button>
+                              
+                        </div>
+                    </div>
+                    <!-- Upper Section (60%) split into two quarters: Supplier Details and Account Info + Purchase Order Count -->
+                    <div class="top-section" style="flex: 6; display: flex; overflow-y: auto;">
+                        <!-- Left Quarter: Supplier Details (40% of the whole height) -->
+                        <div class="col-md-6 px-3" style="flex: 1; height: 80%; margin-top: 5px;">
+                            <div class="text-center mb-2">
+                                <i class="fas fa-user-circle" style="font-size: 30px; color: rgb(18, 201, 233);"></i>
+                            </div>
+                            <h5 class="fw-bold text-center mb-2" id="supplierDetailsName" style="font-size: 18px;"></h5>
+                            <ul class="list-group" id="supplierDetailsList" style="text-align: left; font-size: 14px;"></ul>
+                            <div class="d-flex justify-content-between mt-2">
+                                <button class="btn btn-primary btn-sm mx-1" style="background-color: rgb(18, 201, 233);" onclick="openEditModal()">Edit</button>
+                                <button class="btn btn-danger btn-sm mx-1" style="background-color: red;" onclick="confirmDelete()">
+                                    <i class="fas fa-trash"></i>
+                                  </button>
+                                  
+                            </div>
+                        </div>
 
+                        <!-- Right Quarter: Account Info + Purchase Order Count (20% of the whole height) -->
+                        <div class="col-md-6 px-3" style="flex: 1; height: 100%;">
+                            <div class="row" style="height: 100%;">
+
+                                <!-- Account Info Section (reduced size) -->
+                                <div class="col-md-12 mb-3" style="height: 75px; margin-top: 80px;">
+                                    <div class="card shadow" style="height: 100%;">
+                                        <div class="card-body">
+                                            <h6>Account</h6>
+                                            {% for balance in account %}
+                                                <h6 class='text-center fw-bold {% if balance.balance < 0 %}text-danger{% endif %}'>
+                                                    {{ balance.currency.symbol }} {{ balance.balance }}
+                                                </h6>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Purchase Order Count Section (reduced size) -->
+                                <div class="col-md-12" style="height: 50%;">
+                                    <div class="card shadow" style="height: 50%;">
+                                        <div class="card-body">
+                                            <h6>Purchase Order Count</h6>
+                                            <h6 class='text-center text-muted fw-bold'>
+                                                {% for life in life_time %}
+                                                    {% for l, details in life.items %}
+                                                        {% if suppliers.id == l %}
+                                                            {{ details.count }}
+                                                        {% else %}
+                                                            0
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% endfor %}
+                                            </h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Section (40%) -->
+                    <div class="bottom-section" style="flex: 4; overflow-y: auto;">
+                        <!-- Navigation Section -->
+                        <div class="mt-3 mb-3">
+                            <nav class="recent-nav navbar navbar-expand-lg navbar-light bg-dark text-light px-2">
+                                <ul class="navbar-nav items mr-auto">
+                                    <li class="nav-item active" data-name="supplier_payment_history">Supplier Payment History</li>
+                                    <li class="nav-item px-2" data-name="purchase_orders">Purchase Order</li>
+                                </ul>
+                                <div class="ms-auto">
+                                    <button type="button" class="btn btn-primary btn-sm" id="p_history_btn">Proceed to Payment</button>
+                                </div>
+                            </nav>
+                        </div>
+
+                        <!-- Payment History Tables -->
+                        <div id="usdTable">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Order name</th>
+                                        <th>Amount</th>
+                                        <th>Paid</th>
+                                        <th>Account balance</th>
+                                        <th>Accounts Payable</th>
+                                        <th>Accounts Receivable</th>
+                                        <th>User</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usd_payment_history">
+                                    <tr>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        
+                        </div>
+                        <div class='purchase_orders hidden' id="order_table">
+                            <div class="d-flex mb-3">
+                                <input
+                                    type="search"
+                                    id="usd_payment_history"
+                                    name="payment-history"
+                                    placeholder="search "
+                                    class="form-control"
+                                />
+                                <span>
+                                    <button type="button" id="viewBtn" class="btn btn-dark btn-sm"><small>view statement</small></button>
+                                </span>
+                            </div>
+                        <div>
+                            <div class="mt-2 w-100">
+                                <table class='table border table-rounded p-2' id='order_table' style="width: 100%;">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Delivery Date</th>
+                                            <th>Batch</th>
+                                            <th>Supplier</th>
+                                            <th>Total Cost</th>
+                                            <th>Notes</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for order in orders %}
+                                            <tr>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.order_date }}</small></td>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.delivery_date }}</small></td>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.batch|lower }}</small></td>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.supplier.name }}</small></td>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.total_cost }}</small></td>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.notes }}</small></td>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}" data-id={{ order.id }}><small>{{ order.status }}</small></td>
+                                                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}">
+                                                    <a href="{% url 'inventory:purchase_order_detail' order.id %}" class="btn bx bx-show"></a>
+                                                    <a href="{% url 'inventory:print_purchase_order' order.id %}" class="btn bx bx-printer mx-1"></a>
+                                                    {% if order.status != 'received' %}
+                                                    <button class="btn btn-sm btn-light" data-id={{ order.id }} onclick="status(this)">Change Status</button>
+                                                    {% else %}
+                                                    {% if order.received %}
+                                                    <small class="bg-success fw-bold text-light p-2 rounded text-center w-100">Received</small>
+                                                    {% else %}
+                                                    <a href="{% url 'inventory:receive_order' order.id %}" class="btn btn-sm btn-outline-dark">
+                                                        <small>Receive Order Items</small>
+                                                    </a>
+                                                    {% endif %}
+                                                    {% endif %}
+                                                    <a href="{% url 'inventory:edit_po' order.id %}" class="btn btn-outline-dark btn-sm bx bx-edit"></a>
+                                                    <button class="btn bx bx-trash btn-outline-dark btn-sm" onclick="confirmDeletePurchaseOrder({{ order.id }})"></button>
+                                                    <button class="btn btn-outline-primary btn-sm bx bx-user" onclick="showSupplierDetails({{ order.id }})"></button> <!-- New button -->
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                
+                        <!-- <div id="zigTable" style="display: none;">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Order name</th>
+                                        <th>Amount</th>
+                                        <th>Paid</th>
+                                        <th>Account balance</th>
+                                        <th>Accounts Payable</th>
+                                        <th>Accounts Receivable</th>
+                                        <th>User</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="zig_payment_table"></tbody>
+                            </table>
+                        </div> -->
+                    <!-- </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> -->
+
+<!--------------------------------------------------------------------------------------------------------->>    
     <!-- Edit Supplier Modal -->
     <div class="modal fade" id="editSupplierModal" tabindex="-1" aria-labelledby="editSupplierModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -150,10 +440,22 @@
                 <hr class="rounded">
                 <form method="post" id="paymentForm">
                     {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="amount" class="form-label">Amount</label>
-                        <input type="number" class="form-control" id="amount" name="amount" required>
+                    <!-- Currency and Next Due -->
+                    <div class="mb-3 d-flex align-items-center">
+                        <div class="me-3" style="flex: 1;">
+                            <label for="currency" class="form-label">Currency</label>
+                            <select class="form-control" id="currency" name="currency">
+                                <option value="USD">USD Dollar</option>
+                                <option value="ZiG">ZiG</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="next_due" class="form-label">Next Due</label>
+                            <input type="text" class="form-control" id="next_due" name="next_due" readonly value="--">
+                        </div>
                     </div>
+                
+                    <!-- Payment Method -->
                     <div class="mb-3">
                         <label for="payment_method" class="form-label">Payment Method</label>
                         <select class="form-control" id="payment_method" name="payment_method" required>
@@ -165,17 +467,24 @@
                             <option value="Visa">Visa</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label for="currency" class="form-label">Currency</label>
-                        <select class="form-control" id="currency" name="currency">
-                            <option value="USD">USD Dollar</option>
-                            <option value="ZiG">ZiG</option>
-                        </select>
+                
+                    <!-- Amount and USD Value -->
+                    <div class="mb-3 d-flex align-items-center">
+                        <div class="me-3" style="flex: 1;">
+                            <label for="amount" class="form-label">Amount</label>
+                            <input type="number" class="form-control" id="amount" name="amount" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="usd_value" class="form-label">USD Value</label>
+                            <input type="text" class="form-control" id="usd_value" name="usd_value" readonly value="--">
+                        </div>
                     </div>
+                
+                    <!-- Buttons -->
                     <div class="d-flex justify-content-end">
                         <button type="button" class="btn btn-secondary btn-sm mx-2" data-bs-dismiss="modal">Close</button>
                         <button type="reset" class="btn btn-danger btn-sm mx-2">Reset</button>
-                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                        <button type="button" class="btn btn-primary btn-sm">Save</button>
                     </div>
                 </form>
             </div>
@@ -183,25 +492,43 @@
     </div>
 </div>
 
+
+
 <!-- Payment History Modal -->
 <div class="modal fade" id="paymentHistoryModal" tabindex="-1" aria-labelledby="paymentHistoryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-body">
-                <h5 class="fw-bold">Payment History</h5>
-                <hr class="rounded">
-                <div class="d-flex justify-content-between mb-3">
-                    <button type="button" class="btn btn-primary btn-sm" id="p_history_btn">Add Payment</button>
-                    <button type="button" class="btn btn-secondary btn-sm" id="toggleCurrencyButton">Switch to ZiG</button>
-                    <button type="button" class="btn btn-danger btn-sm mx-2" data-bs-dismiss="modal">Close</button>
+                <!-- Heading -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold">Payment History</h5>
+                    <div class="d-flex" >
+                        <p class="mx-2">
+                            <span id="id_balance"></span>
+                        </p>
+                        <p>
+                            <span id="id_deposit"></span>
+                        </p>
+                    </div>
                 </div>
+                <hr class="rounded">
+                <!-- Proceed to Payment and Balance Owed -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <!-- Proceed to Payment Button -->
+                    <button type="button" class="btn btn-primary btn-sm" id="p_history_btn">Proceed to Payment</button>
+                </div>
+                <!-- Tables -->
                 <div id="usdTable">
                     <table class="table table-bordered">
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>Amount Paid</th>
+                                <th>Order name</th>
+                                <th>Amount</th>
+                                <th>Paid</th>
+                                <th>Account balance</th>
                                 <th>Accounts Payable</th>
+                                <th>Accounts Receivable</th>
                                 <th>User</th>
                             </tr>
                         </thead>
@@ -213,13 +540,22 @@
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>Amount Paid</th>
+                                <th>Order name</th>
+                                <th>Amount</th>
+                                <th>Paid</th>
+                                <th>Account balance</th>
                                 <th>Accounts Payable</th>
+                                <th>Accounts Receivable</th>
                                 <th>User</th>
                             </tr>
                         </thead>
                         <tbody id="zig_payment_table"></tbody>
                     </table>
+                </div>
+
+                <!-- Close Button -->
+                <div class="d-flex justify-content-end mt-3">
+                    <button type="button" class="btn btn-danger btn-sm mx-2" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -242,31 +578,68 @@
 </div>
 
 
-</div>
+
 
 <script>
     
     let supId = '';
     let deleteSupId = null;
+    let editSupId = null;
+    let historyData = []
 
-    const historyBtn = document.getElementById('p_history_btn');
+    const historyBtn = document.querySelectorAll('#p_history_btn');
     const addButton = document.getElementById('addButton');
     const supplierModal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
+    // const supPaymentModal = new bootstrap.Modal(document.getElementById('supPaymentModal'));
     const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
     const paymentHistoryModal = new bootstrap.Modal(document.getElementById('paymentHistoryModal'));
-
+    const navButtons = document.querySelectorAll('.nav-item');
+  
     addButton.addEventListener('click', () => {
         supplierModal.show();
     });
 
-    historyBtn.addEventListener('click', ()=>{
-        paymentHistoryModal.hide()
-        paymentModal.show()
+    historyBtn.forEach((b)=>{
+        console.log(b, 'Button')
+        b.addEventListener('click', () => {
+            paymentHistoryModal.hide()
+            paymentModal.show()
+        });
     })
-
     new DataTable('#supplier_list', {
             paging: false,
     });
+
+        
+    const amountInput = document.getElementById('amount');
+    const currencySelect = document.getElementById('currency');
+
+    // Listen for changes to amount and currency  
+    amountInput.addEventListener('input', ()=>{
+        updateUsdValue()
+    }
+    
+    );
+    currencySelect.addEventListener('change', ()=>{
+        updateUsdValue()
+    });
+
+    function updateUsdValue() {
+        
+        const usdValueInput = document.getElementById('usd_value');
+        const amount = parseFloat(amountInput.value) || 0;
+        const currency = currencySelect.value;
+                
+        if (currency === 'ZiG') {
+            usdValueInput.value = (amount / 30).toFixed(2); // Convert to USD equivalent
+        } else if (currency === 'USD') {
+                usdValueInput.value = amount.toFixed(2); // Display the same amount
+            } 
+        else {
+            usdValueInput.value = '--'; // Default value if no valid currency selected
+            }
+        }                
+
 
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('supplierForm');
@@ -318,91 +691,103 @@
             });
         });
     });
-    // Payment Modal
-    function openPaymentModal(supplierId) {
-            paymentModal.show();
-        }
 
-        // Payment History Modal
-        function openPaymentHistoryModal(supplierId) {
-            paymentHistoryModal.show();
-            fetch(`/inventory/suppliers/payment-history/${supplierId}/`,
-                {
-                    method:'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
+    // Payment History Modal
+    function openPaymentHistoryModal(supplierId) {
+        paymentHistoryModal.show();
+        fetch(`/inventory/suppliers/payment-history/${supplierId}/`,
+            {
+                method:'GET',
+                headers: {
+                    'Content-Type': 'application/json',
                 }
-            )
-            .then(response=>response.json())
-            .then(data=>{
-                if (data.success){
-                    console.log('supplier data', data)
-                    displayData(data.data)
-                }else{
-                    Swal.fire({
-                        icon:'error',
-                        title:'Error',
-                        text:'Failed to fetch supplier payment data.'
-                    })
-                }
+            }
+        )
+        .then(response=>response.json())
+        .then(data=>{
+            if (data.success){
+                console.log('supplier data', data)
+
+                // assign to global
+                historyData = data.history
+
+                // assign to respective elements
+                document.getElementById('id_balance').textContent = `${data.history[0].account_currency} Balance ${data.history[0].account_balance}`
                 
-            })
+            }else{
+                Swal.fire({
+                    icon:'error',
+                    title:'Error',
+                    text:'Failed to fetch supplier payment data.'
+                })
+            }
+            
+        })
+    }
 
-        }
+    // Payment Modal
+    function openPaymentModal() {
+        paymentModal.show();
+        supplierDetailsModal.hide();
+    }
 
-        const displayData = (data) => {
-            const usdTable = document.getElementById('usd_payment_history')
-            const zigTable = document.getElementById('zig_payment_table')
+    const displayData = (data) => {
+        const usdTable = document.getElementById('usd_payment_history')
+        const zigTable = document.getElementById('zig_payment_table')
 
-            usdTable.innerHTML = ''
-            zigTable.innerHTML = ''
+        usdTable.innerHTML = ''
+        zigTable.innerHTML = ''
 
-            data.forEach((supplier)=>{
-                if(supplier.currency__name == 'USD'){
-                    usdTable.innerHTML += `
-                        <tr>
-                            <td>${ new Date(supplier.timestamp).toLocaleDateString() }</td>
-                            <td>${ supplier.amount }</td>
-                            <td>${ supplier.account__balance }</td>
-                            <td>${ supplier.user__username }</td>
-                        </tr>
-                    `
-                }else{
-                    zigTable.innerHTML += `
-                        <tr>
-                            <td>${ new Date(supplier.timestamp).toLocaleDateString() }</td>
-                            <td>${ supplier.amount }</td>
-                            <td>${ supplier.account__balance }</td>
-                            <td>${ supplier.user__username }</td>
-                        </tr>
-                    `
-                }
-            })
-        }
-        // Toggle between USD and ZiG tables in the Payment History Modal
-        document.getElementById('toggleCurrencyButton').addEventListener('click', function() {
-                const usdTable = document.getElementById('usdTable');
-                const zigTable = document.getElementById('zigTable');
-                if (usdTable.style.display === 'none') {
-                    usdTable.style.display = 'block';
-                    zigTable.style.display = 'none';
-                    this.textContent = 'Switch to ZiG';
-                } else {
-                    usdTable.style.display = 'none';
-                    zigTable.style.display = 'block';
-                    this.textContent = 'Switch to USD';
-                }
-            });
+        data.forEach((supplier)=>{
+            if(supplier.currency__name == 'USD'){
+                usdTable.innerHTML += `
+                    <tr>
+                        <td>${ new Date(supplier.timestamp).toLocaleDateString() }</td>
+                        <td>${ supplier.amount }</td>
+                        <td>${ supplier.account__balance }</td>
+                        <td>${ supplier.user__username }</td>
+                    </tr>
+                `
+            }else{
+                zigTable.innerHTML += `
+                    <tr>
+                        <td>${ new Date(supplier.timestamp).toLocaleDateString() }</td>
+                        <td>${ supplier.amount }</td>
+                        <td>${ supplier.account__balance }</td>
+                        <td>${ supplier.user__username }</td>
+                    </tr>
+                `
+            }
+        })
+    }
+    // Toggle between USD and ZiG tables in the Payment History Modal
+    // document.getElementById('toggleCurrencyButton').addEventListener('click', function() {
+    //         const usdTable = document.getElementById('usdTable');
+    //         const zigTable = document.getElementById('zigTable');
+    //         if (usdTable.style.display === 'none') {
+    //             usdTable.style.display = 'block';
+    //             zigTable.style.display = 'none';
+    //             this.textContent = 'Switch to ZiG';
+    //         } else {
+    //             usdTable.style.display = 'none';
+    //             zigTable.style.display = 'block';
+    //             this.textContent = 'Switch to USD';
+    //         }
+    //     });
 
     // Function to open the edit modal and populate it with supplier data
+<<<<<<< HEAD
     function openEditModal(supplierId) {
         supId = supplierId;
         console.log('supplier', supplierId);
         fetch(`/inventory/suppliers/supplier-information/${supplierId}/`)  // Adjust this URL to match your actual endpoint
+=======
+    function openEditModal() {
+        fetch(`/inventory/suppliers/edit/${editSupId}/`)  // Adjust this URL to match your actual endpoint
+>>>>>>> 56be42f5bdfa73811ce43dbebb4a951746a35e43
             .then(response => response.json())
             .then(data => {
-                console.log(data.data[0]);
+                console.log(data, 'supplier');
                 // Populate form fields with supplier data
                 document.getElementById("id_name").value = data.data[0].name;
                 document.getElementById("id_contact_person").value = data.data[0].contact_person;
@@ -427,11 +812,11 @@
     // Handling form submission for editing supplier data
     document.getElementById('editSupplierForm').addEventListener('submit', function (event) {
         event.preventDefault();  // Prevent default form submission
-
+        console.log('here',editSupId)
         const formData = new FormData(this);
         const data = Object.fromEntries(formData.entries());
 
-        fetch(`/inventory/suppliers/edit/${supId}/`, {
+        fetch(`/inventory/suppliers/edit/${editSupId}/`, {
             method: 'POST',  
             headers: {
                 'Content-Type': 'application/json',
@@ -455,9 +840,9 @@
                 });
             } else {
                 Swal.fire({
-                    text: "Error updating supplier: " + responseData.message,
-                    icon: "error",
-                    title: 'Error'
+                    text: "User: " + responseData.message,
+                    icon: "warning",
+                    title: 'Access denied'
                 });
             }
         })
@@ -465,14 +850,15 @@
     });
 
     // Function to trigger the confirmation modal for deletion
-    function confirmDelete(supplierId) {
-        deleteSupId = supplierId;
+    function confirmDelete() {
         const deleteModal = new bootstrap.Modal(document.getElementById('deleteSupplierModal'));
         deleteModal.show();
     }
 
     // Handle the confirmation of deletion
     document.getElementById('confirmDeleteButton').addEventListener('click', function () {
+        console.log('here',deleteSupId)
+
         if (deleteSupId) {
             fetch(`/inventory/suppliers/delete/${deleteSupId}/`, {
                 method: 'DELETE',
@@ -495,9 +881,9 @@
                     });
                 } else {
                     Swal.fire({
-                        text: "Error deleting supplier: " + responseData.message,
-                        icon: "error",
-                        title: 'Error'
+                        text: "User: " + responseData.message,
+                        icon: "warning",
+                        title: 'Failed to delete'
                     });
                 }
             })
@@ -510,6 +896,198 @@
                 });
             });
         }
+    })
+    
+    // supplier details in a modal when we click name in the supplier listt
+    function fetchSupplierDetails(supplierId) {
+        deleteSupId = supplierId;
+        editSupId = supplierId;
+        fetch(`/inventory/suppliers/supplier-information/${supplierId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Populate modal with supplier details
+                    const modalTitle = document.getElementById('supplierDetailsName');
+                    const detailsList = document.getElementById('supplierDetailsList');
+                    
+                    modalTitle.textContent = data.supplier_data.name; // Set the supplier name
+                    detailsList.innerHTML = `
+                        <style>
+                            .list-group-item a {
+                                text-decoration: none; /* Remove underline by default */
+                                color: inherit; /* Inherit text color */
+                            }
+
+                            .list-group-item a:hover {
+                                text-decoration: underline; /* Add underline on hover */
+                                color: blue; /* Change color on hover (optional) */
+                                cursor: pointer; /* Show pointer cursor on hover */
+                            }
+                        </style>
+
+                            <ul class="list-group">
+                                <li class="list-group-item">
+                                    <i class="fas fa-user" style="color: blue; margin-right: 10px;"></i> ${data.supplier_data.contact_person}
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="fas fa-phone" style="color: green; margin-right: 10px;"></i> 
+                                    <a href="tel:${data.supplier_data.phone}">${data.supplier_data.phone}</a>
+                                </li>
+                                <li class="list-group-item">
+                                <i class="fab fa-whatsapp" style="color: green; margin-right: 10px;"></i> 
+                                <a 
+                                    href="https://wa.me/${data.supplier_data.phone}" 
+                                    target="_blank" 
+                                    style="text-decoration: none; color: inherit;">
+                                    Chat on WhatsApp
+                                </a>
+                            </li>
+
+
+                                <li class="list-group-item">
+                                    <i class="fas fa-envelope" style="color: red; margin-right: 10px;"></i> 
+                                    <a href="mailto:${data.supplier_data.email}">${data.supplier_data.email}</a>
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="fas fa-map-marker-alt" style="color: orange; margin-right: 10px;"></i> ${data.supplier_data.address}
+                                </li>
+                            </ul>
+
+                        `;
+                    // Show modal
+                    const supplierDetailsModal = new bootstrap.Modal(document.getElementById('supplierDetailsModal'));
+                    supplierDetailsModal.show();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to fetch supplier details.',
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching supplier details:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'There was an issue fetching the supplier details. Please try again.',
+                });
+            });
+    }
+
+     navButtons.forEach((btn)=>{
+        btn.addEventListener(
+            'click', ()=>{
+                navButtons.forEach(b => b.classList.remove('active')); 
+                event.target.classList.add('active'); 
+                show(btn.dataset.name)
+            }
+        )
+    })
+
+     function show(name) {
+        // Hide both transactions and payments sections initially
+        const tableEls = document.querySelectorAll('#dTables');
+        tableEls.forEach((t)=>{
+            t.classList.add('hidden');
+        })
+        try {
+            $(`.${name}`).removeClass('hidden');
+            tableName = name;
+        } catch (error) {
+            tableError.textContent = 'Failed to load the table: ' + error.message;
+            return;
+        }
+        
+        displayDepositTable(depositData);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+    // Get references to the tables
+    const paymentHistoryTable = document.getElementById("paymentHistoryTable"); // Payment History Table
+    const purchaseOrderTable = document.getElementById("purchaseOrderTable"); // Purchase Order Table
+    const proceedToPaymentBtn = document.getElementById("p_history_btn"); // Proceed to Payment Button
+
+    // Check if the necessary elements exist
+    if (!paymentHistoryTable || !purchaseOrderTable || !proceedToPaymentBtn) {
+        console.error("Missing required elements.");
+        return;
+    }
+
+    // Fetch Payment History data (AJAX)
+    fetch('/path/to/payment-history/')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = paymentHistoryTable.querySelector('tbody');
+            tableBody.innerHTML = ''; // Clear existing rows
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.date}</td>
+                    <td>${item.order_name}</td>
+                    <td>${item.amount}</td>
+                    <td>${item.paid}</td>
+                    <td>${item.account_balance}</td>
+                    <td>${item.accounts_payable}</td>
+                    <td>${item.accounts_receivable}</td>
+                    <td>${item.user}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => console.error("Error fetching payment history:", error));
+
+    // Fetch Purchase Orders data (AJAX)
+    fetch('/path/to/purchase-orders/')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = purchaseOrderTable.querySelector('tbody');
+            tableBody.innerHTML = ''; // Clear existing rows
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.order_date}</td>
+                    <td>${item.delivery_date}</td>
+                    <td>${item.batch.toLowerCase()}</td>
+                    <td>${item.supplier.name}</td>
+                    <td>${item.total_cost}</td>
+                    <td>${item.notes}</td>
+                    <td>${item.status}</td>
+                    <td>
+                        <a href="${item.detail_url}" class="btn bx bx-show"></a>
+                        <a href="${item.print_url}" class="btn bx bx-printer mx-1"></a>
+                        ${item.status !== 'received' ? `<button class="btn btn-sm btn-light" onclick="changeStatus(${item.id})">Change Status</button>` : ''}
+                        <a href="${item.edit_url}" class="btn btn-outline-dark btn-sm bx bx-edit"></a>
+                        <button class="btn bx bx-trash btn-outline-dark btn-sm" onclick="confirmDeletePurchaseOrder(${item.id})"></button>
+                        <button class="btn btn-outline-primary btn-sm bx bx-user" onclick="showSupplierDetails(${item.id})"></button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => console.error("Error fetching purchase orders:", error));
+
+    // Event listener for "Proceed to Payment" button
+    proceedToPaymentBtn.addEventListener("click", () => {
+        alert("Proceeding to Payment...");
+        // Add AJAX or backend interaction logic here to proceed with the payment
+        fetch("/path/to/proceed-to-payment/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"), // Assumes CSRF token handling
+            },
+            body: JSON.stringify({ action: "proceed_to_payment" }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Payment successfully processed!");
+            } else {
+                alert("Payment processing failed.");
+            }
+        })
+        .catch(error => console.error("Error:", error));
     });
 function fetchSupplierDetails(supplierId) {
     fetch(`/inventory/suppliers/supplier-information/${supplierId}/`, 
@@ -554,6 +1132,79 @@ function fetchSupplierDetails(supplierId) {
                 text: 'There was an issue fetching the supplier details. Please try again.',
             });
         });
+}
+
+
+    // Handle changing status (AJAX)
+    window.changeStatus = (orderId) => {
+        fetch(`/path/to/change-status/${orderId}/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify({ action: "change_status" }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Order status updated.");
+                location.reload(); // Optionally reload page to reflect changes
+            } else {
+                alert("Failed to update status.");
+            }
+        })
+        .catch(error => console.error("Error changing status:", error));
+    };
+
+    // Handle deleting purchase order (AJAX)
+    window.confirmDeletePurchaseOrder = (orderId) => {
+        if (confirm("Are you sure you want to delete this purchase order?")) {
+            fetch(`/path/to/delete-purchase-order/${orderId}/`, {
+                method: "DELETE",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Purchase order deleted.");
+                    location.reload(); // Reload page to reflect changes
+                } else {
+                    alert("Failed to delete purchase order.");
+                }
+            })
+            .catch(error => console.error("Error deleting purchase order:", error));
+        }
+    };
+
+    // Show supplier details in modal or on a new page (AJAX)
+    window.showSupplierDetails = (orderId) => {
+        fetch(`/path/to/supplier-details/${orderId}/`)
+            .then(response => response.json())
+            .then(data => {
+                // Show supplier details in a modal or another part of the page
+                alert("Supplier Details: " + JSON.stringify(data));
+            })
+            .catch(error => console.error("Error fetching supplier details:", error));
+    };
+});
+
+// Utility function to get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }
 
 

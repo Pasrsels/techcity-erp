@@ -17,15 +17,6 @@ class BatchCode(models.Model):
     def __str__(self) -> str:
         return self.code
     
-
-class ProductCategory(models.Model):
-    """Model for product categories."""
-
-    name = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.name
-
 class Supplier(models.Model):
     """Model for suppliers."""
     name = models.CharField(max_length=100)
@@ -33,17 +24,32 @@ class Supplier(models.Model):
     phone = models.CharField(max_length=255)
     email = models.EmailField(max_length=255)
     address = models.CharField(max_length=255, null= True)
+    delete = models.BooleanField(default= False)
 
     def __str__(self):
         return self.name
+
+class ProductCategory(models.Model):
+    """Model for product categories."""
+
+    name = models.CharField(max_length=255)
+    supplier = models.ForeignKey(Supplier, on_delete= models.PROTECT, null=True)
+    
+    class Meta:
+        unique_together = ('name', 'supplier')
+
+    def __str__(self):
+        return self.name
+
 
 class SupplierAccount(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE)  
     balance = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    date = models.DateField(null= True)
 
     class Meta:
-        unique_together = ('currency',) 
+        unique_together = ('currency', 'supplier') 
 
     def __str__(self):
         return f'{self.supplier.name} balance -> {self.balance}'
@@ -250,6 +256,7 @@ class Transfer(models.Model):
     defective_status = models.BooleanField(default=False)
     delete = models.BooleanField(default=False, null=True)
     receive_status = models.BooleanField(default=False, null=True)
+    hold = models.BooleanField(default=False)
 
     @classmethod
     def generate_transfer_ref(self, branch, branches):
@@ -288,6 +295,21 @@ class TransferItems(models.Model):
     description = models.TextField(null=True)
     receieved_quantity = models.IntegerField(default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f'{self.product.name} to {self.to_branch}'
+    
+class Holdtransfer(models.Model):
+    transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True)
+    from_branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='hold_destination')
+    to_branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='hold_source')
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
+    quantity = models.IntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    description = models.TextField(null=True)
+    dealer_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):
         return f'{self.product.name} to {self.to_branch}'

@@ -9,7 +9,7 @@
             </div>
             <div class="">
                 {% if request.user.role == 'admin' or request.user.role == 'accountant'%}
-                    <button class="btn" id='branchButton'>
+                    <button class="btn" id='branchBtn'>
                         <i class='bx bxs-grid'></i>
                     </button>
                 {% endif %}
@@ -113,7 +113,7 @@
                     <div class="mt-4">
                         <ul class='list-unstyled'>
                             {% for branch in branches %}
-                                <li><a href="{% url 'company:switch_branch' branch.id %}" class="pxlight shadow">{{ branch.name }}</a></li>
+                                <li><a href="{% url 'company:switch_branch' branch.id %}" class="text-dark shadow">{{ branch.name }}</a></li>
                             {% endfor %}
                         </ul>
                     </div>
@@ -123,9 +123,9 @@
     </div>
     <script>
         const branchModal = new bootstrap.Modal(document.querySelector('#branchModal'))
-        const branchButton = document.querySelector('#branchButton')
+        const branchBtn = document.querySelector('#branchBtn')
 
-        branchButton.addEventListener('click', ()=>{
+        branchBtn.addEventListener('click', ()=>{
             branchModal.show()
         })
     </script>
