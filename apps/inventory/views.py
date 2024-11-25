@@ -2736,7 +2736,12 @@ def supplier_details_view(request,supplierId):
                 )
             
             list_purchase_order_details = []
+            purchase_order_count = 0
+            pOrder = ''
             for items in purchase_order_details:
+                if pOrder != items.purchase_order.id:
+                    purchase_order_count += 1
+
                 list_purchase_order_details.append(
                     {
                         'purchase_order_number': items.purchase_order.order_number,
@@ -2746,6 +2751,8 @@ def supplier_details_view(request,supplierId):
                         'unit_cost': items.unit_cost
                     }
                 )
+                pOrder = items.purchase_order.id
+            logger.info(purchase_order_count)
             logger.info(list_purchase_order_details)
             logger.info(list_account_history)
             logger.info(list_account_details)
