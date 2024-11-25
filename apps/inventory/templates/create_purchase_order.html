@@ -108,7 +108,7 @@
                             <div class="d-flex form-group">
                                 <select class="select form-select" id='id_product'>
                                     <option value="">Select Product</option>
-                                    {% for product in inventory %}
+                                    {% for product in products %}
                                         <option value={{product.id}}>{{product.name}} [{{ product.quantity }}]</option>
                                     {% endfor %}
                                 </select>

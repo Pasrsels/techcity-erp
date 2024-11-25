@@ -437,6 +437,8 @@ def transfer_details(request, transfer_id):
 def inventory(request):
     product_id = request.GET.get('name', '')
     if product_id:
+        logger.info(list(Inventory.objects.\
+            filter(id=product_id, branch=request.user.branch).values()))
         return JsonResponse(list(Inventory.objects.\
             filter(id=product_id, branch=request.user.branch).values()), safe=False)
     return JsonResponse({'error':'product doesnt exists'})
@@ -1502,6 +1504,7 @@ def create_purchase_order(request):
         suppliers = Supplier.objects.all()
         note_form = noteStatusForm()
         batch_form = BatchForm()
+        products = Inventory.objects.filter(branch=request.user.branch, status=True).order_by('quantity')
 
         batch_codes = BatchCode.objects.all()
         return render(request, 'create_purchase_order.html',
@@ -1511,7 +1514,8 @@ def create_purchase_order(request):
                 'suppliers':suppliers,
                 'note_form':note_form,
                 'batch_form':batch_form,
-                'batch_codes':batch_codes
+                'batch_codes':batch_codes,
+                'products':products
             }
         )
      
@@ -1583,7 +1587,7 @@ def create_purchase_order(request):
                         return JsonResponse({'success': False, 'message': 'Missing fields in item data'}, status=400)
 
                     try:
-                        product = Product.objects.get(name=product_name)
+                        product = Inventory.objects.get(name=product_name, branch=request.user.branch)
                     except Product.DoesNotExist:
                         transaction.set_rollback(True)
                         return JsonResponse({'success': False, 'message': f'Product with Name {product_name} not found'}, status=404)
@@ -2977,7 +2981,7 @@ def product(request):
         return JsonResponse({'success':True})
             
     if request.method == 'GET':
-        products = Product.objects.all().values(
+        products = Inventory.objects.filter(branch = request.user.branch).values(
             'id',
             'name',
         )
