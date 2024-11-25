@@ -17,7 +17,6 @@ class CustomUserChangeForm(forms.ModelForm):
             'last_name',
             'email',
             'branch',
-            'code',
             'groups',
             'phonenumber',
             'role',
