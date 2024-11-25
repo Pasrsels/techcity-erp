@@ -28,7 +28,7 @@ def low_stock_notification(sender, instance, **kwargs):
         logger.warning(f"No ActivityLog entry found for Inventory ID {instance.id}")
         recent_quantity = 0
 
-    logger.info(f'{instance.product.name}: Most recent quantity -> {recent_quantity}')
+    logger.info(f'{instance.name}: Most recent quantity -> {recent_quantity}')
     
     if int(instance.quantity) < int(instance.stock_level_threshold):
        
@@ -38,7 +38,7 @@ def low_stock_notification(sender, instance, **kwargs):
         else:
             StockNotifications.objects.create(
                 inventory=instance,
-                notification=f'{instance.product.name} stock level is now below stock threshold',
+                notification=f'{instance.name} stock level is now below stock threshold',
                 status=True,
                 type='stock level',
                 quantity=recent_quantity,
