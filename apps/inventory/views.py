@@ -273,8 +273,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                         for item in data['cart']:
                             logger.info(f'Cart Item: {item}')
                             
-                            product_name  = item['product']
-                            product = Product.objects.get(name=product_name.strip())
+                            product = Inventory.objects.get(id=item['product_id'], branch=request.user.branch)
 
                             logger.info(f'Transfered product: {product.name}')
 
@@ -359,7 +358,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
     def deduct_inventory(self, transfer_item):
         logger.info(f'from branch -> {transfer_item.from_branch}')
-        branch_inventory = Inventory.objects.get(product__id=transfer_item.product.id, branch__name=transfer_item.from_branch)
+        branch_inventory = Inventory.objects.get(id=transfer_item.product.id, branch__name=transfer_item.from_branch)
         
         branch_inventory.quantity -= int(transfer_item.quantity)
         branch_inventory.save()
@@ -450,13 +449,13 @@ def inventory_index(request):
     category = request.GET.get('category', '')    
     
     services = Service.objects.all().order_by('-name')
-    inventory = Inventory.objects.filter(branch=request.user.branch, status=True).order_by('product__name')
+    inventory = Inventory.objects.filter(branch=request.user.branch, status=True).order_by('name')
     
     if category:
         if category == 'inactive':
             inventory = Inventory.objects.filter(branch=request.user.branch, status=False)
         else:
-            inventory = inventory.filter(product__category__name=category)
+            inventory = inventory.filter(category__name=category)
                 
     if 'download' and 'excel' in request.GET:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -794,55 +793,64 @@ def receive_inventory(request):
                     branch_transfer.over_less_quantity =  branch_transfer.quantity - int(request.POST['quantity']) 
                     branch_transfer.over_less = True
                     branch_transfer.save()
-                    
-                if Inventory.objects.filter(product=branch_transfer.product, branch=request.user.branch).exists():
-                    existing_inventory = Inventory.objects.get(product=branch_transfer.product, branch=request.user.branch)
-                    existing_inventory.quantity += int(request.POST['quantity'])
-                    existing_inventory.price = branch_transfer.price
-                    existing_inventory.cost = branch_transfer.cost
-                    existing_inventory.dealer_price = Product.objects.get(id=branch_transfer.product.id).dealer_price
-                    existing_inventory.save()
-                    
+
+                product, _ = Inventory.objects.get_or_create(
+                    name=branch_transfer.product.name,
+                    branch=request.user.branch,
+
+                    defaults={
+                        'cost':branch_transfer.cost,
+                        'price':branch_transfer.price,
+                        'quantity': branch_transfer.quantity,
+                        'branch':request.user.branch,
+                        'dealer_price':branch_transfer.dealer_price,
+                        'description':branch_transfer.product.description or '',
+                        'category':branch_transfer.product.category,
+                        'tax_type':branch_transfer.product.tax_type,
+                        'stock_level_threshold':branch_transfer.product.stock_level_threshold,
+                    }
+                )
+
+                if not _:
+                    product.quantity += int(request.POST['quantity'])
+                    product.price = branch_transfer.price
+                    product.cost = branch_transfer.cost
+                    product.dealer_price = branch_transfer.dealer_price
+                    product.save()
+
                     ActivityLog.objects.create(
                         branch = request.user.branch,
                         user=request.user,
                         action= 'stock in',
-                        inventory=existing_inventory,
-                        dealer_price = existing_inventory.price,
-                        selling_price = existing_inventory.dealer_price or 0,
-                        system_quantity = existing_inventory.quantity, 
+                        inventory=product,
+                        dealer_price = product.dealer_price,
+                        selling_price = product.price or 0,
+                        system_quantity = product.quantity, 
                         quantity=int(request.POST['quantity']),
-                        total_quantity= existing_inventory.quantity,
+                        total_quantity= product.quantity,
                         product_transfer=branch_transfer,
                         description = f'received f{request.POST['quantity']} out of {branch_transfer.quantity}' 
                     )
                     messages.success(request, 'Product received')
-                    
                 else:
-
-                    inventory = Inventory.objects.create(
-                        branch=request.user.branch,
-                        product=branch_transfer.product,
-                        cost=branch_transfer.cost,  
-                        price=branch_transfer.price,
-                        dealer_price = branch_transfer.dealer_price or 0,
-                        quantity=request.POST['quantity'],
-                    )
                     ActivityLog.objects.create(
                         branch = request.user.branch,
                         user=request.user,
                         action= 'stock in',
-                        inventory=inventory,
-                        quantity=inventory.quantity,
-                        selling_price = inventory.price,
-                        dealer_price = inventory.dealer_price or 0,
-                        system_quantity = inventory.quantity, 
-                        total_quantity=inventory.quantity,
+                        inventory=product,
+                        quantity=product.quantity,
+                        selling_price = product.price,
+                        dealer_price = product.dealer_price or 0,
+                        system_quantity = product.quantity, 
+                        total_quantity=product.quantity,
                         product_transfer=branch_transfer,
                         description = f'received {request.POST['quantity']} out of {branch_transfer.quantity}'
                     )
                     messages.success(request, 'Product received')
 
+                product.batch += f'{branch_transfer.product.batch}, '
+                product.save()
+                    
             transfer = Transfer.objects.get(id = branch_transfer.transfer.id)
             if not transfer.receive_status:
                 transfer.receive_status = True

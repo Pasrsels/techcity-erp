@@ -153,7 +153,7 @@
                         <select class="select form-select" id="id_product">
                             <option value=""></option>
                             {% for product in inventory %}
-                                <option value="{{ product.id }}">{{ product.product.name }} [{{ product.quantity }}]</option>
+                                <option value="{{ product.id }}">{{ product.name }} [{{ product.quantity }}]</option>
                             {% endfor %}
                         </select>
 
