@@ -236,7 +236,7 @@ class Inventory(models.Model):
         self.save()
     
     def __str__(self):
-        return f'{self.branch.name} : ({self.product.name}) quantity ({self.quantity})'
+        return f'{self.branch.name} : ({self.product}) quantity ({self.quantity})'
     
     
 class Transfer(models.Model):

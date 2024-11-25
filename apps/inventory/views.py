@@ -138,7 +138,8 @@ def product_list(request):
         'product__category__name',  
         'product__end_of_day',
         'price', 
-        'quantity'
+        'quantity',
+        'dealer_price'
     ))
     
     merged_data = [{
@@ -151,6 +152,7 @@ def product_list(request):
         'end_of_day':item['product__end_of_day'],
         'price': item['price'],
         'quantity': item['quantity'],
+        'dealer_price':item['dealer_price']
     } for item in inventory_data]
     return JsonResponse(merged_data, safe=False)
 
@@ -354,7 +356,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
     def deduct_inventory(self, transfer_item):
         logger.info(f'from branch -> {transfer_item.from_branch}')
-        branch_inventory = Inventory.objects.get(product=transfer_item.product, branch__name=transfer_item.from_branch)
+        branch_inventory = Inventory.objects.get(product__id=transfer_item.product.id, branch__name=transfer_item.from_branch)
         
         branch_inventory.quantity -= int(transfer_item.quantity)
         branch_inventory.save()

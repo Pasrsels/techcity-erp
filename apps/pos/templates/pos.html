@@ -789,6 +789,7 @@ function cartButton(){
 cartButton()
 
 function displayProducts(products) {
+    console.log('Products', products)
     productListContainer.innerHTML = '';
     products.forEach(product => {
         if (menuName === 'tiles' || menuName === '') {
@@ -804,7 +805,11 @@ function displayProducts(products) {
                             <p><small class="fw-bold">${product.product_name}</small></p>
                             <p><small class="text-muted">${product.description}</small></p>
                             <p><small class="text-muted">[${product.quantity}]</small></p>
-                            <p><small class="text-muted">USD${product.price}</small></p>
+                            <p>
+                                <small class="text-muted d-flex flex-column">
+                                    <span class='btn btn-outline-dark w-100'>Retail PriceUSD${product.price}</span>
+                                    <span class='btn btn-outline-dark w-100'>Wholesale PriceUSD${product.dealer_price}</span>
+                                </small></p>
                         </div>
                     </div>
                 `;
