@@ -828,7 +828,10 @@ function displayProducts(products) {
                             <p><small class="fw-bold">${product.product_name}</small></p>
                             <p><small class="text-muted">${product.description}</small></p>
                             <p><small class="text-muted">[${product.quantity}]</small></p>
-                            <p><small class="text-muted">USD${product.price}</small></p>
+                            <p>
+                                <small class="text-muted mx-1">USD${product.price}</small>
+                                <small class='text-muted'>Wholesale PriceUSD${product.dealer_price}</small>
+                            </p>
                         </div>
                     </div>
                 `;

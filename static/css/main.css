@@ -7,6 +7,10 @@
   font-family: Lato-Regular;
   src: url("../fonts/Lato/Lato-Regular.ttf");
 }
+.bg-w {
+  background: #fff;
+}
+
 .techcity {
   overflow: hidden;
   font-family: graphik;
@@ -335,7 +339,7 @@
   overflow-y: auto;
 }
 .techcity .pos .products .col-3 {
-  height: 150px !important;
+  height: 250px !important;
 }
 .techcity .pos .products .card {
   height: 150px !important;
