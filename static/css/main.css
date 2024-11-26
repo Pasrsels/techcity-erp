@@ -341,16 +341,16 @@
 .techcity .pos .products .col-3 {
   height: 250px !important;
   width: 250px !important;
-  margin-bottom: 20px;
+  margin-bottom: 40px;
   margin-right: 20px;
 }
 .techcity .pos .products .card {
-  height: 250px !important;
+  height: 350px !important;
   width: 250px !important;
 }
 .techcity .pos .products .card img {
-  width: 150px;
-  height: 150px;
+  width: 100px;
+  height: 100px;
 }
 .techcity .pos .products li {
   cursor: pointer;

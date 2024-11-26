@@ -1940,7 +1940,7 @@ def end_of_day(request):
     
     if request.method == 'GET':
         all_inventory = Inventory.objects.filter(branch=request.user.branch, status=True).values(
-            'id', 'product__name', 'quantity'
+            'id', 'name', 'quantity'
         )
 
         inventory_data = []

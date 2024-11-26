@@ -7,7 +7,8 @@
             <table class='table border table-bordered table-striped table-hover table-responsive table-sm rounded p-2 w-100 ' style="width:100%" id='inventory'>
                 <thead>
                     <tr>
-                        <th>Name</th>
+                        <th>#</th>
+                        <th>Image</th>
                         <th>Description</th>
                         <th>Average Sales Per</th>
                         <th>Quantity</th>
@@ -20,7 +21,14 @@
                 <tbody id='inventory_table' >
                     {% for product in inventory %}
                     <tr>
-                        <td><small><span class='hint--bottom' aria-label='{{ product.description }}'>{{ product.name }}</span></small></td>
+                        <td>{{ forloop.counter }}</td>
+                        <td><small><span class='hint--bottom' aria-label='{{ product.description }}'>
+                            {% if product.image %}
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" width="20px">
+                                {% else %}
+                                    <img src="{% static 'placeholder.png'%}" alt="{{ product.name }}" width="20px">
+                            {% endif %}
+                            {{ product.name }}</span></small></td>
                         <td><small>{{ product.description }}</small></td>
                         <td></td>
                         <td><small>{{ product.quantity }}</small></td>
@@ -40,12 +48,12 @@
                                         <i class='bx bx-show'></i>
                                     </a>
                                 </span>
-                                
-                                <!-- <span class='px-2'>
-                                    <a href="" class="text-dark">
+                       
+                                <span class='px-2'>
+                                    <a href="{% url 'inventory:edit_inventory' product.id %}" class="text-dark">
                                         <i class='bx bx-edit-alt'></i>
                                     </a>
-                                </span> --><!-- Add Accessories Button -->
+                                </span>
                                 
                                 <span>
                                     <span id='delete' data-id="{{ product.id }}" onclick="productId(this)" class="text-dark">

@@ -510,6 +510,7 @@ def inventory_index(request):
     all_branches_inventory = Inventory.objects.filter(branch=request.user.branch)
     
     totals = calculate_inventory_totals(all_branches_inventory.filter(status=True))
+    logger.info(inventory.values('image'))
   
     return render(request, 'inventory.html', {
         'form': form,
