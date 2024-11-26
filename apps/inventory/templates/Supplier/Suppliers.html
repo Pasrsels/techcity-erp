@@ -39,6 +39,18 @@
             </tr>
         </thead>
         <tbody>
+<<<<<<< HEAD
+            {% for supplier in suppliers %}
+            <tr>
+                <td>
+                    <button class="btn btn-link p-0 m-0 text-primary" onclick="fetchSupplierDetails({{ supplier.id }})">
+                        {{ supplier.name }}
+                    </button>
+                </td>
+                
+                
+                <td>
+=======
             {%for supplier in suppliers%}
             <tr style="font-size:small; text-align: center;">
                 <td >
@@ -51,6 +63,7 @@
                     </small>
                 </td>
                 <td >
+>>>>>>> 56be42f5bdfa73811ce43dbebb4a951746a35e43
                     <small>
                         {% for product in products %}
                             {%if supplier in product.suppliers.all%}
@@ -59,7 +72,15 @@
                         {% endfor %}
                     </small>
                 </td>
+<<<<<<< HEAD
+                <td><small>{{ supplier.nextdue}}</small></td>
+                <td><small>{{ supplier.returns}}</small></td>
+            
+                <td><small>{{ supplier.Lifetime}}</small></td>
+                <td>
+=======
                 <td >
+>>>>>>> 56be42f5bdfa73811ce43dbebb4a951746a35e43
                     <small>
                         {% for life in life_time %}
                             {% for l, details in life.items %}
@@ -81,6 +102,14 @@
                         {%endfor%}
                     </small>
                 </td>
+<<<<<<< HEAD
+                
+                <td>
+                    <button class="btn bx bx-edit mx-1" style="color: rgb(18, 201, 233);" onclick="openEditModal({{ supplier.id }})"></button>
+                    <button class="btn bx bx-trash mx-1" style="color: red;" onclick="confirmDelete({{ supplier.id }})"></button>
+                    <button class="btn bx bx-money mx-1" style="color: green;" onclick="openPaymentModal({{ supplier.id }})"></button>
+                    <button class="btn bx bx-history mx-1" style="color: purple;" onclick="openPaymentHistoryModal({{ supplier.id }})"></button>
+=======
                 <td >
                     <small>
                         {%for lt in life_time%}
@@ -119,6 +148,7 @@
                             {%endif%}
                         {% endfor %}
                     </small>
+>>>>>>> 56be42f5bdfa73811ce43dbebb4a951746a35e43
                 </td>
                 
                 <td >
@@ -521,6 +551,22 @@
         </div>
     </div>
 </div>
+<!-- Supplier Details Modal -->
+<div class="modal fade" id="supplierDetailsModal" tabindex="-1" aria-labelledby="supplierDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h5 class="fw-bold" id="supplierDetailsName"></h5>
+                <hr class="rounded">
+                <ul class="list-group" id="supplierDetailsList"></ul>
+                <div class="d-flex justify-content-end mt-3">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 
 
@@ -760,8 +806,15 @@
                        
 
     // Function to open the edit modal and populate it with supplier data
+<<<<<<< HEAD
+    function openEditModal(supplierId) {
+        supId = supplierId;
+        console.log('supplier', supplierId);
+        fetch(`/inventory/suppliers/supplier-information/${supplierId}/`)  // Adjust this URL to match your actual endpoint
+=======
     function openEditModal() {
         fetch(`/inventory/suppliers/edit/${editSupId}/`)  // Adjust this URL to match your actual endpoint
+>>>>>>> 56be42f5bdfa73811ce43dbebb4a951746a35e43
             .then(response => response.json())
             .then(data => {
                 console.log(data, 'supplier');
@@ -1061,6 +1114,51 @@
         })
         .catch(error => console.error("Error:", error));
     });
+function fetchSupplierDetails(supplierId) {
+    fetch(`/inventory/suppliers/supplier-information/${supplierId}/`, 
+    {
+                    method:'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                }
+     )
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Populate modal with supplier details
+                const modalTitle = document.getElementById('supplierDetailsName');
+                const detailsList = document.getElementById('supplierDetailsList');
+
+                modalTitle.textContent = data.supplier.name; // Set the supplier name
+                detailsList.innerHTML = `
+                    <li class="list-group-item"><strong>Contact Person:</strong> ${data.supplier.contact_person}</li>
+                    <li class="list-group-item"><strong>Phone:</strong> ${data.supplier.phone}</li>
+                    <li class="list-group-item"><strong>Email:</strong> ${data.supplier.email}</li>
+                    <li class="list-group-item"><strong>Address:</strong> ${data.supplier.address}</li>
+                `;
+
+                // Show modal
+                const supplierDetailsModal = new bootstrap.Modal(document.getElementById('supplierDetailsModal'));
+                supplierDetailsModal.show();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to fetch supplier details.',
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching supplier details:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'There was an issue fetching the supplier details. Please try again.',
+            });
+        });
+}
+
 
     // Handle changing status (AJAX)
     window.changeStatus = (orderId) => {

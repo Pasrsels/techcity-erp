@@ -110,39 +110,60 @@
 </div>
 
 <script>
+    document.addEventListener("DOMContentLoaded", function () {
+    const tableBody = document.getElementById("typesTableBody");
+
     // Event listener for Monthly Service Card
-    document.getElementById("monthlyServiceCard").addEventListener("click", function() {
-        fetch("/service_crud/?service_type=monthly")  // Fetch from the API endpoint for monthly services
-            .then(response => response.json())
-            .then(data => {
+    const monthlyCard = document.getElementById("monthlyServiceCard");
+    const hourlyCard = document.getElementById("hourlyServiceCard");
+
+    if (monthlyCard) {
+        monthlyCard.addEventListener("click", function () {
+            fetchServices("monthly");
+        });
+    }
+
+    if (hourlyCard) {
+        hourlyCard.addEventListener("click", function () {
+            fetchServices("hourly");
+        });
+    }
+
+    // Fetch services based on type
+    function fetchServices(serviceType) {
+        fetch(`/service_crud/?service_type=${serviceType}`)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch ${serviceType} services`);
+                }
+                return response.json();
+            })
+            .then((data) => {
                 populateTable(data);
             })
-            .catch(error => console.error("Error fetching monthly services:", error));
-    });
+            .catch((error) => {
+                console.error(`Error fetching ${serviceType} services:`, error);
+                alert("Failed to load services. Please try again later.");
+            });
+    }
 
-    // Event listener for Hourly Service Card
-    document.getElementById("hourlyServiceCard").addEventListener("click", function() {
-        fetch("/service_crud/?service_type=hourly")  // Fetch from the API endpoint for hourly services
-            .then(response => response.json())
-            .then(data => {
-                populateTable(data);
-            })
-            .catch(error => console.error("Error fetching hourly services:", error));
-    });
-
-    // Function to populate the table with service data
+    // Populate the table with service data
     function populateTable(data) {
-        const tableBody = document.getElementById("typesTableBody");
         tableBody.innerHTML = ""; // Clear existing rows
 
-        data.forEach(service => {
-            const row = document.createElement("tr");
+        if (data.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center">No services found.</td></tr>`;
+            return;
+        }
 
+        data.forEach((service) => {
+            const row = document.createElement("tr");
+            row.id = `row-${service.id}`;
             row.innerHTML = `
                 <td>${service.name}</td>
                 <td>${service.price}</td>
                 <td>${service.duration}</td>
-                <td>${service.promotion ? 'Yes' : 'No'}</td>
+                <td>${service.promotion ? "Yes" : "No"}</td>
                 <td>
                     <button class="btn btn-danger btn-sm" onclick="deleteService(${service.id})">
                         <i class="fas fa-trash"></i> Delete
@@ -153,12 +174,13 @@
         });
     }
 
-    // Event listener for saving a new service
-    document.getElementById("saveServiceBtn").addEventListener("click", function() {
+    // Add new service
+    const saveServiceBtn = document.getElementById("saveServiceBtn");
+    saveServiceBtn.addEventListener("click", function () {
         const serviceName = document.getElementById("serviceName").value;
         const servicePrice = document.getElementById("servicePrice").value;
         const serviceDuration = document.getElementById("serviceDuration").value;
-        const servicePromotion = document.getElementById("servicePromotion").value;
+        const servicePromotion = document.getElementById("servicePromotion").value || null;
         const serviceType = document.getElementById("serviceType").value;
 
         const newService = {
@@ -166,52 +188,57 @@
             price: servicePrice,
             duration: serviceDuration,
             promotion: servicePromotion,
-            service_type: serviceType
+            service_type: serviceType,
         };
 
         fetch("/service_crud/", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             },
-            body: JSON.stringify(newService)
+            body: JSON.stringify(newService),
         })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Service saved:", data);
-            $('#addServiceModal').modal('hide');  // Close the modal
-            // Optionally, refresh the table or show a success message
-        })
-        .catch(error => console.error("Error saving new service:", error));
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Failed to save service");
+                }
+                return response.json();
+            })
+            .then((data) => {
+                console.log("Service added:", data);
+                $('#addServiceModal').modal('hide'); // Close modal
+                // Add new service to the table
+                fetchServices(serviceType); // Reload services for the same type
+            })
+            .catch((error) => {
+                console.error("Error saving new service:", error);
+                alert("Failed to save service. Please try again.");
+            });
     });
 
-    // Function to delete a service
-    function deleteService(serviceId) {
+    // Delete a service
+    window.deleteService = function (serviceId) {
         const confirmation = confirm("Are you sure you want to delete this service?");
         if (confirmation) {
             fetch(`/service_crud/`, {
                 method: "DELETE",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ service_id: serviceId })
+                body: JSON.stringify({ service_id: serviceId }),
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert("Service deleted successfully.");
-                    // Remove the service row from the table
-                    const row = document.querySelector(`#row-${serviceId}`);
-                    row && row.remove();
-                } else {
-                    alert("Failed to delete the service.");
-                }
-            })
-            .catch(error => console.error("Error deleting service:", error));
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        alert("Service deleted successfully.");
+                        document.getElementById(`row-${serviceId}`)?.remove(); // Remove row from table
+                    } else {
+                        alert("Failed to delete the service.");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error deleting service:", error);
+                });
         }
-    }
-</script>
-
-{% endblock content %}
-
-
+    };
+});
