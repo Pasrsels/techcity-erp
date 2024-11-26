@@ -2746,9 +2746,12 @@ def supplier_details_view(request, supplierId):
                     {
                         'purchase_order_number': items.purchase_order.order_number,
                         'purchase_order_date': items.purchase_order.order_date,
+                        'delivery_date': items.purchase_order.delivery_date,
                         'product': items.product.name,
                         'received_quantity': items.received_quantity,
-                        'unit_cost': items.unit_cost
+                        'unit_cost': items.unit_cost,
+                        'supplier': items.supplier.name,
+
                     }
                 )
                 pOrder = items.purchase_order.id
@@ -3093,10 +3096,10 @@ def payments(request):
 
             supplier_details = Supplier.objects.get(id = supplier_id)
             supplier_currency = Currency.objects.get(name = supplier_currency_used)
-            supplier_payment = SupplierAccountsPayments.objects.filter(account__supplier__id = supplier_id)\
-            .values('user', 'timestamp', 'amount', 'account__balance', 'payment_method')
 
-            supplier_balance = supplier_payment['account__balance']
+            supplier_payment = SupplierAccountsPayments.objects.get(account__supplier__id = supplier_id)
+
+            supplier_balance = supplier_payment.account.balance
 
             if supplier_balance <= 0:
                 return JsonResponse({'success': True, 'message': 'We donot owe this supplier'})
@@ -3106,7 +3109,7 @@ def payments(request):
                 else:
                     new_balance = supplier_balance - supplier_amount
             
-            with transaction.Atomic():
+            with transaction.atomic():
                 supplier_acc = SupplierAccount.objects.update(
                     suppliers = supplier_details,
                     currency = supplier_currency,
