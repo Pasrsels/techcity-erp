@@ -20,7 +20,7 @@ class BatchForm(forms.ModelForm):
 
 class AddProductForm(forms.ModelForm):
     class Meta:
-        model = Product
+        model = Inventory
         exclude = ['supplier']
 
 class InventoryForm(forms.ModelForm):

@@ -108,6 +108,8 @@ class Inventory(models.Model):
     batch = models.CharField(max_length=255, blank=True, default='')
     suppliers = models.ManyToManyField('Supplier', related_name="products_suppliers")
     description = models.TextField(max_length=255, default='')
+    end_of_day = models.BooleanField(default=False, null=True)
+    service = models.BooleanField(default=False, null=True)
 
     class Meta:
         unique_together = ('id', 'branch') 

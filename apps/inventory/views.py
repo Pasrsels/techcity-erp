@@ -182,10 +182,10 @@ class AddProductView(LoginRequiredMixin, View):
             product_name = request.POST['name']
             
             try:
-                product = Product.objects.get(name=product_name)                
-                messages.warning(request, 'Product exists ')
+                product = Inventory.objects.get(name=product_name, branch=request.user.branch)                
+                messages.warning(request, f'Product with name {product_name} exists.')
                 return redirect('inventory:add_product')
-            except Product.DoesNotExist:
+            except Inventory.DoesNotExist:
                 if form.is_valid():
                     product = form.save()
                     message = 'Product successfully created'
@@ -2935,6 +2935,7 @@ def product(request):
         """
         try:
             data = json.loads(request.body)
+            logger.info(data)
             
         except Exception as e:
             return JsonResponse({'success':False, 'message':'Invalid data'})
@@ -2947,10 +2948,9 @@ def product(request):
             category = ProductCategory.objects.get(id=data['category'])
         except ProductCategory.DoesNotExist:
             return JsonResponse({'success':False, 'message':f'Category Doesnt Exists'})
+    
         
-        logger.info(category)
-        
-        product = Product.objects.create(
+        product = Inventory.objects.create(
             batch = '',
             name = data['name'],
             price = 0,
@@ -2958,21 +2958,14 @@ def product(request):
             quantity = 0,
             category = category,
             tax_type = data['tax_type'],
-            min_stock_level = data['min_stock_level'],
+            stock_level_threshold = data['min_stock_level'],
             description = data['description'], 
             end_of_day = True if data['end_of_day'] else False,
             service = True if data['service'] else False,
+            branch = request.user.branch
         )
         product.save()
         
-        Inventory.objects.create(
-            product = product,
-            branch = request.user.branch, # To be specific
-            cost = product.cost,
-            price = product.price,
-            dealer_price = 0,
-            quantity = product.quantity
-        )
         return JsonResponse({'success':True})
             
     if request.method == 'GET':
