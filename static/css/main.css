@@ -1,3 +1,30 @@
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+*::-webkit-scrollbar-horizontal {
+  height: 8px;
+}
+
+*::-webkit-scrollbar-vertical {
+  width: 8px;
+}
+
 .overflow {
   height: 99vh;
   overflow-y: auto;
@@ -341,12 +368,13 @@
 .techcity .pos .products .col-3 {
   height: 250px !important;
   width: 250px !important;
-  margin-bottom: 40px;
+  margin-bottom: 120px;
   margin-right: 20px;
 }
 .techcity .pos .products .card {
   height: 350px !important;
   width: 250px !important;
+  margin-bottom: 40px !important;
 }
 .techcity .pos .products .card img {
   width: 100px;

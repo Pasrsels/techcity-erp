@@ -776,7 +776,7 @@ function displayProducts(products) {
                 const productDiv = document.createElement('div');
                 productDiv.className = 'col-3';
                 productDiv.innerHTML = `
-                    <div class="card" id='id_product_card' data-product='${JSON.stringify(product)}'>
+                    <div class="card mb-4" id='id_product_card' data-product='${JSON.stringify(product)}'>
                         <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart" data-product='${product.inventory_id}'>
                             <div>
                                 <img src="${product.image ? product.image : '{% static "placeholder.png" %}'}" alt="${product.product_name}">
