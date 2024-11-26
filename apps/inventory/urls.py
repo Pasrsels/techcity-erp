@@ -77,6 +77,9 @@ urlpatterns = [
     path('detail/<int:id>/', inventory_detail, name='inventory_detail' ),
     path('transfer/detail/<int:transfer_id>/', transfer_details, name='transfer_details'),
     path('process-transfer-cart/', ProcessTransferCartView.as_view(), name='process_transfer_cart'),
+    path('held_transfer_json/<int:transfer_id>/', held_transfer_json, name='held_transfer'),
+    path('held/transfers/', held_transfers, name='h_transfers'),
+    path('process/held/transfer/<int:transfer_id>/', process_held_transfer, name='process_held'),
     
     #reporting
     path('inventory-pdf', inventory_pdf, name='inventory_pdf'),
