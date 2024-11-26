@@ -3116,3 +3116,54 @@ def payments(request):
                 return JsonResponse({'success': True, 'response': 'Data saved'})
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
+
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+# @login_required
+def accessory_view(request, product_id):
+    if request.method == 'GET':
+        accessories = Accessory.objects.filter(product__id=product_id).values('id', 'product__name')
+        return JsonResponse({'success': True, 'data': list(accessories)}, status=200)
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            accessory_ids = data.get('accessories', [])
+
+            logger.info(accessory_ids)
+
+            product = Inventory.objects.get(id=product_id)
+            current_accessories = Accessory.objects.filter(product=product)
+            current_ids = set(current_accessories.values_list('id', flat=True))
+
+            logger.info(f'current ids: {current_ids}')
+
+            input_ids = {acc['id'] for acc in accessory_ids}
+            
+            accessories_to_add = input_ids - current_ids
+            accessories_to_remove = current_ids - input_ids
+
+            if accessories_to_add:
+                accessories_to_add_objs = Accessory.objects.filter(id__in=accessories_to_add)
+                for accessory in accessories_to_add_objs:
+                    accessory.product.add(product)  
+
+            if accessories_to_remove:
+                accessories_to_remove_objs = Accessory.objects.filter(id__in=accessories_to_remove)
+                for accessory in accessories_to_remove_objs:
+                    accessory.product.remove(product)
+
+            updated_accessories = Accessory.objects.filter(product=product).values('id', 'product__name')
+            return JsonResponse({'success': True, 'data': list(updated_accessories)}, status=200)
+        
+        except Inventory.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Product not found.'}, status=404)
+        except Exception as e:
+            logger.info(e)
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+
+
+    
+        

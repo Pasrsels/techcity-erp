@@ -119,6 +119,12 @@ class Inventory(models.Model):
     def __str__(self):
         return f'{self.branch.name} : ({self.name}) quantity ({self.quantity})'
 
+class Accessory(models.Model):
+    product = models.ManyToManyField(Inventory)
+
+    def __str__(self):
+        return self.product.name
+
 class PurchaseOrder(models.Model):
     """Model for purchase orders."""
 
