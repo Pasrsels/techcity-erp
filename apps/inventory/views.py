@@ -611,7 +611,7 @@ def edit_inventory(request, product_id):
             selling_price = selling_price
         )
         
-        messages.success(request, f'{product.name} update succesfully')
+        messages.success(request, f'{inv_product.name} update succesfully')
         return redirect('inventory:inventory')
     return render(request, 'inventory_form.html', {'product':inv_product, 'title':f'Edit >>> {inv_product.name}'})
 
