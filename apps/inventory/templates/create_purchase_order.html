@@ -341,21 +341,36 @@
                         {% endfor %}
                     </select>
                 </div>
-                  <div id="div_id_name" class="mb-3 form-group">
-                        <label for="id_name" class="form-label requiredField">
-                          Name
-                          <span class="asteriskField">*</span> 
-                      </label> 
-                        <div class="d-flex align-items-center">
-                            <input type="text"
-                                   name="name"
-                                   maxlength="255"
-                                   class="textinput form-control"
-                                   required id="id_name">
-                            <button class="btn btn-light border btn-sm" type="button">s</button>
-                            <button class="btn btn-light bx bx-edit border mx-1" type="button"></button>
-                            <button class="btn btn-light bx bx-trash border" type="button"></button>
-                        </div>
+                <div id="div_id_name" class="mb-3 form-group">
+                  <label for="id_name" class="form-label requiredField">
+                    Product Image
+                    <span class="asteriskField">*</span> 
+                 </label> 
+                  <div class="d-flex align-items-center">
+                      <input type="file"
+                        name="image"
+                        maxlength="255"
+                        class="textinput form-control"
+                        required
+                        id="id_image"
+                      >
+                  </div>
+                </div> 
+                <div id="div_id_name" class="mb-3 form-group">
+                    <label for="id_name" class="form-label requiredField">
+                      Name
+                      <span class="asteriskField">*</span> 
+                    </label> 
+                    <div class="d-flex align-items-center">
+                        <input type="text"
+                              name="name"
+                              maxlength="255"
+                              class="textinput form-control"
+                              required id="id_name">
+                        <button class="btn btn-light border btn-sm" type="button">s</button>
+                        <button class="btn btn-light bx bx-edit border mx-1" type="button"></button>
+                        <button class="btn btn-light bx bx-trash border" type="button"></button>
+                  </div>
                   </div> 
                   <div id="div_id_category form-group" class="mb-3"> 
                       <label for="id_category" class="form-label requiredField">
@@ -883,56 +898,85 @@
               catElement.innerHTML += `<option value=${category.id}>${category.name}</option>`
           })
       }
-    
-        function addProduct() {
+
+      const processProdData = async (file) => {
+        
+        const readFile = (file) =>
+            new Promise((resolve, reject) => {
+                if (!file) {
+                    resolve(null); 
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result); 
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file); 
+            });
+
+        try {
+            const image = await readFile(file); 
             const data = {
-              name: document.getElementById('id_name').value,
-              category: document.getElementById('id_category').value,
-              tax_type: document.getElementById('id_tax_type').value,
-              min_stock_level: parseInt(document.getElementById('id_min_stock_level').value),
-              description: document.getElementById('id_description').value,
-              end_of_day: document.getElementById('id_end_of_day').checked,
-              service: document.getElementById('id_service').checked,
+                name: document.getElementById('id_name').value.trim(),
+                category: document.getElementById('id_category').value.trim(),
+                tax_type: document.getElementById('id_tax_type').value.trim(),
+                min_stock_level: parseInt(document.getElementById('id_min_stock_level').value, 10) || 0,
+                description: document.getElementById('id_description').value.trim(),
+                end_of_day: document.getElementById('id_end_of_day').checked,
+                service: document.getElementById('id_service').checked,
+                image: image, 
             };
 
-            console.log(data)
-          
-            fetch("{% url 'inventory:product' %}", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie("csrftoken"),
-              },
-              body: JSON.stringify(data),
-            })
-            .then(response => response.json())
-            .then(data => {
-              if (data.success) {
-                supplierFormModal.hide();
-                fetchProducts();
-                Swal.fire({
-                  icon: 'success',
-                  title: 'Product Added',
-                  text: 'The product has been successfully added!',
-                  timer: 2000,
-                  showConfirmButton: false
-                });
-              } else {
-                Swal.fire({
-                  icon: 'error',
-                  title: 'Error',
-                  text: data.message,
-                });
-              }
-            })
-            .catch((error) => {
-              Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Something went wrong while adding the product.',
-              });
+            console.log(data); 
+            return data;
+        } catch (error) {
+            console.error('Error reading file:', error);
+            alert('Failed to process the image. Please try again.');
+            return null; 
+        }
+      }
+    
+      const addProduct = async () => {
+        const fileInput = document.getElementById('id_image');
+        const file = fileInput.files[0];
+
+        data = await processProdData(file)
+
+        fetch("{% url 'inventory:product' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            supplierFormModal.hide();
+            fetchProducts();
+            Swal.fire({
+              icon: 'success',
+              title: 'Product Added',
+              text: 'The product has been successfully added!',
+              timer: 2000,
+              showConfirmButton: false
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: data.message,
             });
           }
+        })
+        .catch((error) => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Something went wrong while adding the product.',
+          });
+        });
+      }
           
     async function fetchProducts(){
         try {

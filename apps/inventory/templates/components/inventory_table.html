@@ -29,27 +29,29 @@
                         <td><small>{{ product.dealer_price }}</small></td>
                         <td>
                             <small>
+                                <span class="px-2">
+                                    <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#accessoriesModal" onclick="setProductForAccessories({{ product.id }})">
+                                        <i class="bx bx-cart-add"></i> Accessories
+                                    </button>
+                                </span>
+                                  
                                 <span>
                                     <a href="{% url 'inventory:inventory_detail' product.id %}" class='text-dark'>
                                         <i class='bx bx-show'></i>
                                     </a>
                                 </span>
+                                
                                 <!-- <span class='px-2'>
                                     <a href="" class="text-dark">
                                         <i class='bx bx-edit-alt'></i>
                                     </a>
-                                </span> -->
-                                <span class='px-2'>
-                                    <a href="{% url 'inventory:edit_inventory' product.id %}" class="text-dark">
-                                        <i class='bx bx-edit-alt'></i>
-                                    </a>
-                                </span>
+                                </span> --><!-- Add Accessories Button -->
+                                
                                 <span>
                                     <span id='delete' data-id="{{ product.id }}" onclick="productId(this)" class="text-dark">
                                         <i class='bx bx-trash-alt'></i>
                                     </span>
                                 </span>
-                                
                                 <span>
                                     {%if product.status == False %}
                                     <a href='{% url "inventory:activate_inventory" product.id %}' class="btn btn-sm text-primary">
@@ -57,6 +59,7 @@
                                     </a>
                                     {% endif %}
                                 </span>
+                                
                             </small>
                         </td>
                     </tr>
@@ -99,7 +102,7 @@
                                         </span>
                                     </span> {% endcomment %}
                                 </small>
-                            </td>
+                                </td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -123,17 +126,111 @@
             </div>
         </div>
 
-        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal fade" id="accessoriesModal" tabindex="-1" aria-labelledby="accessoriesModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header d-flex align-items-left">
+                        <h5 class="modal-title" id="accessoriesModalLabel">Add Accessories</h5>
+                        <span id="product-name" 
+                              style="border: 1px solid black; 
+                                     padding: 10px 20px; 
+                                     margin-left: 10px; 
+                                     border-radius: 8px; 
+                                     background-color: #f8f9fa; 
+                                     font-size: 1 rem; 
+                                     font-weight: bold;
+                                     display: inline-block; 
+                                     min-width: 220px;"> 
+                            PRODUCT
+                        </span>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                                style="background-color: red; border: none; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; padding: 0;">
+                            <i class="bi bi-x" style="color: white; font-size: 1.5rem;"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Add Accessory -->
+                        <div class="mb-3">
+                            <label for="accessoryDropdown" class="form-label" style="font-size: 1.1rem;">Select Accessory</label>
+                            <div class="d-flex align-items-center">
+                                <select class="form-select me-2" id="accessoryDropdown" style="width: 90%;">
+                                    <!-- Options dynamically populated via GET API -->
+                                     {% for product in inventory %}
+                                        <option value="{{ product.id }}">{{ product.name }}</option>
+                                     {% endfor %}
+                                </select>
+                                <div class="d-flex flex-column ms-2">
+                                    <div style= "margin-right: 16px;">
+                                    <button class="btn btn-primary" onclick="addAccessory()" 
+                                            style="width: 100px; height: 40px; display: flex; justify-content: center; align-items: center;">
+                                        Add
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <div id="accessoriesList">
+                            <!-- Wrapper for Remove Dropdown and Accessories Container -->
+                            <div class="border rounded p-3 mb-3" style="display: flex; flex-direction: column; gap: 15px;">
+                                <!-- First Row: Remove Button with Dropdown -->
+                                <div class="d-flex align-items-center">
+                                    <select class="form-select me-2" id="removeAccessoryDropdown" style="flex: 1;">
+                                        <!-- Options dynamically populated from added accessories -->
+                                    </select>
+                                    <div class="d-flex flex-column ms-auto">
+                                        <button class="btn btn-danger" onclick="removeAccessory()" 
+                                                style="width: 100px; height: 40px; display: flex; justify-content: center; align-items: center;">
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                        
+                                <!-- Rows for displaying added accessories -->
+                                <div id="addedAccessoriesContainer" class="border p-2" 
+                                     style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: start;">
+                                    <!-- Accessories will be dynamically displayed here -->
+                                </div>
+                            </div>
+                            <div class="modal-footer d-flex">
+                                <div style= "margin-right: 8px;">
+                                    <button type="button" class="btn btn-success" onclick="saveAccessories()" 
+                                            style="width: 100px; height: 40px; display: flex; justify-content: center; align-items: center;">
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+                         </div>   
+                        
+        
+                    </div>                        
+                        
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error Modal -->
+        <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-body texr-center" id='payment_content'>
-                        <p class="h5 fw-bold">Success</p>
+                    <div class="modal-body text-center">
+                        <p class="h5 fw-bold text-danger" id="error-message">Error: Something went wrong.</p>
                     </div>
                 </div>
             </div>
         </div>
-
-   </div> 
+        
+        <!-- Success Modal -->
+        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center">
+                        <p class="h5 fw-bold text-success">Accessories saved successfully!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+           
     
    <script src="{% static 'js/jquery.js'%}"></script>
    <script>
@@ -216,5 +313,124 @@
                 inventoryData.push(data)
             }
         )
+
+    let accessories = []; // List of added accessories
+    let availableAccessories = []; // List of available accessories fetched from the API
+
+    function setProductForAccessories(id, productName) {
+    productId = id;
+    document.getElementById('product-name').textContent = productName || "PRODUCT";
+    fetchAccessories();}
+
+                // Fetch available accessories via GET API
+                async function fetchAccessories() {
+                    try {
+                        const response = await fetch(`/api/accessories?product_id=${productId}`, {
+                            method: "GET",
+                        });
+                        const data = await response.json();
+
+                        if (data.success) {
+                            availableAccessories = data.accessories;
+                            populateDropdown("accessoryDropdown", availableAccessories);
+                        } else {
+                            showError("Failed to fetch accessories.");
+                        }
+                    } catch (error) {
+                        showError("Error fetching accessories.");
+                    }
+                }
+
+                // Populate dropdown with options
+                function populateDropdown(dropdownId, options) {
+                    const dropdown = document.getElementById(dropdownId);
+                    dropdown.innerHTML = `<option value="" disabled selected>Select an accessory</option>`;
+                    options.forEach(option => {
+                        const opt = document.createElement("option");
+                        opt.value = option.id;
+                        opt.textContent = option.name;
+                        dropdown.appendChild(opt);
+                    });
+                }
+
+                // Add accessory to the list
+                function addAccessory() {
+                    const dropdown = document.getElementById("accessoryDropdown");
+                    const selectedAccessoryId = dropdown.value;
+                    const selectedAccessory = availableAccessories.find(acc => acc.id == selectedAccessoryId);
+                    console.log(selectedAccessory, 'selected')
+                    if (selectedAccessory && !accessories.some(acc => acc.id == selectedAccessoryId)) {
+                        // Add the accessory to the list
+                        accessories.push(selectedAccessory);
+                        displayAccessories();
+                    } else {
+                        showError("Please select a valid accessory or avoid duplicates.");
+                    }
+                }
+
+                // Display accessories in rows
+                function displayAccessories() {
+                    const container = document.getElementById("addedAccessoriesContainer");
+                    container.innerHTML = ""; // Clear the container before updating
+
+                    accessories.forEach(accessory => {
+                        const row = document.createElement("div");
+                        row.className = "d-flex justify-content-between align-items-center mb-2";
+                        row.innerHTML = `<span>${accessory.name}</span>`;
+                        container.appendChild(row);
+                    });
+
+                    // Populate remove dropdown
+                    populateDropdown("removeAccessoryDropdown", accessories);
+                }
+
+                // Remove selected accessory
+                function removeAccessory() {
+                    const dropdown = document.getElementById("removeAccessoryDropdown");
+                    const selectedAccessoryId = dropdown.value;
+
+                    // Filter out the selected accessory from the list
+                    accessories = accessories.filter(acc => acc.id != selectedAccessoryId);
+                    displayAccessories();
+                }
+
+                // Save accessories via POST API
+                async function saveAccessories() {
+                    if (accessories.length === 0) {
+                        showError("No accessories selected.");
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch("/api/save-accessories", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ product_id: productId, accessories }),
+                        });
+
+                        const data = await response.json();
+                        if (data.success) {
+                            showSuccess("Accessories saved successfully!");
+                        } else {
+                            showError("Failed to save accessories.");
+                        }
+                    } catch (error) {
+                        showError("Error saving accessories.");
+                    }
+                }
+
+                // Show error modal
+                function showError(message) {
+                    const errorModal = new bootstrap.Modal(document.querySelector("#errorModal"));
+                    document.querySelector("#error-message").textContent = message;
+                    errorModal.show();
+                }
+
+                // Show success modal
+                function showSuccess(message) {
+                    const successModal = new bootstrap.Modal(document.querySelector("#successModal"));
+                    document.querySelector("#successModal .modal-body").textContent = message;
+                    successModal.show();
+                }
    </script>
 {% endblock content %}

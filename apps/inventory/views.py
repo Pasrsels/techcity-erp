@@ -1,7 +1,8 @@
 from django.utils import timezone
 import json, datetime, openpyxl
 from os import system 
-import csv
+import csv, base64
+from django.core.files.base import ContentFile
 from django.http import HttpResponse
 from datetime import timedelta
 from openpyxl.styles import Alignment, Font, PatternFill
@@ -63,6 +64,7 @@ from utils.account_name_identifier import account_identifier
 from loguru import logger
 from xhtml2pdf import pisa
 from django.template.loader import get_template
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
 @login_required
@@ -131,28 +133,29 @@ def product_list(request):
 
     inventory_data = list(queryset.values(
         'id', 
-        'product__id', 
-        'product__name', 
-        'product__description', 
-        'product__category__id', 
-        'product__category__name',  
-        'product__end_of_day',
+        'name', 
+        'description', 
+        'category__id', 
+        'category__name',  
+        'end_of_day',
         'price', 
         'quantity',
-        'dealer_price'
+        'dealer_price',
+        'image'
     ))
     
     merged_data = [{
         'inventory_id': item['id'],
-        'product_id': item['product__id'],
-        'product_name':item['product__name'],
-        'description': item['product__description'],
-        'category': item['product__category__id'],
-        'category_name': item['product__category__name'],
-        'end_of_day':item['product__end_of_day'],
+        'product_id': item['id'],
+        'product_name':item['name'],
+        'description': item['description'],
+        'category': item['category__id'],
+        'category_name': item['category__name'],
+        'end_of_day':item['end_of_day'],
         'price': item['price'],
         'quantity': item['quantity'],
-        'dealer_price':item['dealer_price']
+        'dealer_price':item['dealer_price'],
+        'image':item['image']
     } for item in inventory_data]
     return JsonResponse(merged_data, safe=False)
 
@@ -2921,7 +2924,6 @@ def supplier_account(request, supplier_id):
 #product   
 @login_required
 def product(request):
-
     if request.method == 'POST':
         # payload
         """
@@ -2940,8 +2942,18 @@ def product(request):
         except Exception as e:
             return JsonResponse({'success':False, 'message':'Invalid data'})
 
+        image_data = data.get('image')
+        if image_data:
+            try:
+                format, imgstr = image_data.split(';base64,') 
+                ext = format.split('/')[-1]
+                image = ContentFile(base64.b64decode(imgstr), name=f'{data['name']}.{ext}')
+            except Exception as e:
+                logger.error(f'Error decoding image: {e}')
+                return JsonResponse({'success': False, 'message': 'Invalid image data'})
+
         # validation for existance
-        if Product.objects.filter(name=data['name']).exists():
+        if Inventory.objects.filter(name=data['name']).exists():
             return JsonResponse({'success':False, 'message':f'Product {data['name']} exists'})
 
         try:
@@ -2962,7 +2974,8 @@ def product(request):
             description = data['description'], 
             end_of_day = True if data['end_of_day'] else False,
             service = True if data['service'] else False,
-            branch = request.user.branch
+            branch = request.user.branch,
+            image = image
         )
         product.save()
         
