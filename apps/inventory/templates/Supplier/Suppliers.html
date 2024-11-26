@@ -129,7 +129,7 @@
             {%endfor%}
         </tbody>
     </table>
-
+</div>
 <!--supplier details----------------------------------------------------------------------------------------------------------->
 <div class="modal fade" id="supplierDetailsModal" tabindex="-1" aria-labelledby="supplierDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-fullscreen">
@@ -307,12 +307,12 @@
                                 <tbody id="zig_payment_table"></tbody>
                             </table>
                         </div> -->
-                    <!-- </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div> -->
+</div>
 
 <!--------------------------------------------------------------------------------------------------------->>    
     <!-- Edit Supplier Modal -->
@@ -360,7 +360,6 @@
             </div>
         </div>
     </div>
-
     <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteSupplierModal" tabindex="-1" aria-labelledby="deleteSupplierModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -549,40 +548,10 @@
             paymentModal.show()
         });
     })
+    
     new DataTable('#supplier_list', {
             paging: false,
     });
-
-        
-    const amountInput = document.getElementById('amount');
-    const currencySelect = document.getElementById('currency');
-
-    // Listen for changes to amount and currency  
-    amountInput.addEventListener('input', ()=>{
-        updateUsdValue()
-    }
-    
-    );
-    currencySelect.addEventListener('change', ()=>{
-        updateUsdValue()
-    });
-
-    function updateUsdValue() {
-        
-        const usdValueInput = document.getElementById('usd_value');
-        const amount = parseFloat(amountInput.value) || 0;
-        const currency = currencySelect.value;
-                
-        if (currency === 'ZiG') {
-            usdValueInput.value = (amount / 30).toFixed(2); // Convert to USD equivalent
-        } else if (currency === 'USD') {
-                usdValueInput.value = amount.toFixed(2); // Display the same amount
-            } 
-        else {
-            usdValueInput.value = '--'; // Default value if no valid currency selected
-            }
-        }                
-
 
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('supplierForm');
@@ -634,6 +603,38 @@
             });
         });
     });
+     
+    const amountInput = document.getElementById('amount');
+    const currencySelect = document.getElementById('currency');
+
+    // Listen for changes to amount and currency  
+    amountInput.addEventListener('input', ()=>{
+        updateUsdValue()
+    }
+    
+    );
+    currencySelect.addEventListener('change', ()=>{
+        updateUsdValue()
+    });
+
+    function updateUsdValue() {
+        
+        const usdValueInput = document.getElementById('usd_value');
+        const amount = parseFloat(amountInput.value) || 0;
+        const currency = currencySelect.value;
+                
+        if (currency === 'ZiG') {
+            usdValueInput.value = (amount / 30).toFixed(2); // Convert to USD equivalent
+        } else if (currency === 'USD') {
+                usdValueInput.value = amount.toFixed(2); // Display the same amount
+            } 
+        else {
+            usdValueInput.value = '--'; // Default value if no valid currency selected
+            }
+        }                
+
+
+    
 
     // Payment History Modal
     function openPaymentHistoryModal(supplierId) {
@@ -1205,6 +1206,8 @@ function fetchSupplierDetails(supplierId) {
                     const amount_paid = document.createElement('td');
                     amount_paid.textContent = item.amount;
                     payHistory.appendChild(amount_paid);
+
+                    data.account_
                 })
             }
             else{

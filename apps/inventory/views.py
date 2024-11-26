@@ -3099,7 +3099,7 @@ def payments(request):
             supplier_balance = supplier_payment['account__balance']
 
             if supplier_balance <= 0:
-                return JsonResponse({'success': True, 'response': 'We donot owe this supplier'})
+                return JsonResponse({'success': True, 'message': 'We donot owe this supplier'})
             else:
                 if supplier_currency_used == 'USD':
                     new_balance = supplier_balance - supplier_amount
