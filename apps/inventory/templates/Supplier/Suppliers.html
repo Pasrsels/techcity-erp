@@ -235,9 +235,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="usd_payment_history">
-                                    <tr id="usd_da">
-                                        
-                                    </tr>
+                                    
                                 </tbody>
                             </table>
                         </div>
@@ -250,18 +248,15 @@
                                         <tr>
                                             <th>Date</th>
                                             <th>Delivery Date</th>
-                                            <th>Batch</th>
+                                            <th>Order number</th>
                                             <th>Supplier</th>
-                                            <th>Total Cost</th>
-                                            <th>Notes</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
+                                            <th>Received quantity</th>
+                                            <th>Unit cost</th>
+                                            <th>Total cost</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td colspan="8">No data available</td>
-                                        </tr>
+                                    <tbody id="p_order">
+                                    
                                     </tbody>
                                 </table>
                             </div>
@@ -1185,12 +1180,15 @@ function fetchSupplierDetails(supplierId) {
             if(data.success){
                 const accountEl = document.getElementById('account_balance') //account balance
                 const purchaseordercount = document.getElementById('purchase_countO') // purchase count integer
-                const payHistory = document.getElementById('usd_da') // payment history details
+                const payHistory_body = document.getElementById('usd_payment_history') // payment history details
+                const tablepurchase = document.getElementById('p_order')
                 
                 accountEl.innerHTML = `${data.account_data[0].currency} ${data.account_data[0].balance} <br> ${data.account_data[1].currency} ${data.account_data[1].balance} `
                 purchaseordercount.innerHTML = `${data.purchase_order_count}`
 
                 data.account_history_data.forEach(item =>{
+                    const payHistory = document.createElement('tr')
+
                     const date = document.createElement('td');
                     date.textContent = item.timestamp;
                     payHistory.appendChild(date);
@@ -1207,8 +1205,70 @@ function fetchSupplierDetails(supplierId) {
                     amount_paid.textContent = item.amount;
                     payHistory.appendChild(amount_paid);
 
-                    data.account_
-                })
+                    const balance_o = document.createElement('td');
+                    balance_o.textContent = data.account_data[0].balance;
+                    payHistory.appendChild(balance_o);
+
+                    if(data.account_data[0].balance >= 0){
+                        const balance = document.createElement('td');
+                        balance.textContent = data.account_data[0].balance;
+                        payHistory.appendChild(balance);
+                    }else{
+                        const bal = document.createElement('td');
+                        bal.textContent = 0;
+                        payHistory.appendChild(bal);
+                    }
+
+                    if(data.account_data[0].balance < 0){
+                        const balance = document.createElement('td');
+                        balance.textContent = data.account_data[0].balance;
+                        payHistory.appendChild(balance);
+                    }else{
+                        const bal = document.createElement('td');
+                        bal.textContent = 0;
+                        payHistory.appendChild(bal);
+                    }
+
+                    const user = document.createElement('td');
+                    user.textContent = item.user;
+                    payHistory.appendChild(user);
+
+                    payHistory_body.appendChild(payHistory)
+                });
+
+                data.purchase_data.forEach(item =>{
+                    const purchaseOrders = document.createElement('tr')
+
+                    const date = document.createElement('td');
+                    date.textContent = item.purchase_order_date;
+                    purchaseOrders.appendChild(date);
+
+                    const delivery_date = document.createElement('td');
+                    delivery_date.textContent = item.delivery_date;
+                    purchaseOrders.appendChild(delivery_date);
+
+                    const order_number = document.createElement('td');
+                    order_number.textContent = item.purchase_order_number;
+                    purchaseOrders.appendChild(order_number);
+
+                    const supplier = document.createElement('td');
+                    supplier.textContent = item.supplier;
+                    purchaseOrders.appendChild(supplier);
+
+                    const receiv = document.createElement('td');
+                    receiv.textContent = item.received_quantity;
+                    purchaseOrders.appendChild(receiv);
+
+                    const cost = document.createElement('td');
+                    cost.textContent = item.unit_cost;
+                    purchaseOrders.appendChild(cost);
+
+                    const total = document.createElement('td');
+                    total.textContent = (item.received_quantity * item.unit_cost);
+                    purchaseOrders.appendChild(total);
+
+                    tablepurchase.appendChild(purchaseOrders);
+                });
             }
             else{
                 Swal.fire({
