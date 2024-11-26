@@ -39,18 +39,6 @@
             </tr>
         </thead>
         <tbody>
-<<<<<<< HEAD
-            {% for supplier in suppliers %}
-            <tr>
-                <td>
-                    <button class="btn btn-link p-0 m-0 text-primary" onclick="fetchSupplierDetails({{ supplier.id }})">
-                        {{ supplier.name }}
-                    </button>
-                </td>
-                
-                
-                <td>
-=======
             {%for supplier in suppliers%}
             <tr style="font-size:small; text-align: center;">
                 <td >
@@ -63,7 +51,6 @@
                     </small>
                 </td>
                 <td >
->>>>>>> 56be42f5bdfa73811ce43dbebb4a951746a35e43
                     <small>
                         {% for product in products %}
                             {%if supplier in product.suppliers.all%}
@@ -72,15 +59,7 @@
                         {% endfor %}
                     </small>
                 </td>
-<<<<<<< HEAD
-                <td><small>{{ supplier.nextdue}}</small></td>
-                <td><small>{{ supplier.returns}}</small></td>
-            
-                <td><small>{{ supplier.Lifetime}}</small></td>
-                <td>
-=======
                 <td >
->>>>>>> 56be42f5bdfa73811ce43dbebb4a951746a35e43
                     <small>
                         {% for life in life_time %}
                             {% for l, details in life.items %}
@@ -102,14 +81,6 @@
                         {%endfor%}
                     </small>
                 </td>
-<<<<<<< HEAD
-                
-                <td>
-                    <button class="btn bx bx-edit mx-1" style="color: rgb(18, 201, 233);" onclick="openEditModal({{ supplier.id }})"></button>
-                    <button class="btn bx bx-trash mx-1" style="color: red;" onclick="confirmDelete({{ supplier.id }})"></button>
-                    <button class="btn bx bx-money mx-1" style="color: green;" onclick="openPaymentModal({{ supplier.id }})"></button>
-                    <button class="btn bx bx-history mx-1" style="color: purple;" onclick="openPaymentHistoryModal({{ supplier.id }})"></button>
-=======
                 <td >
                     <small>
                         {%for lt in life_time%}
@@ -148,7 +119,6 @@
                             {%endif%}
                         {% endfor %}
                     </small>
->>>>>>> 56be42f5bdfa73811ce43dbebb4a951746a35e43
                 </td>
                 
                 <td >
@@ -219,17 +189,7 @@
                                         <div class="card-body">
                                             <h6>Purchase Order Count</h6>
                                             <h6 class="text-center text-muted fw-bold" id="purchase_countO">
-                                                <!-- {% with 0 as purchase_order_count %}
-                                                    {% for life in life_time %}
-                                                        {% for l, details in life.items %}
-                                                            {% if supplier.id == l %}
-                                                                {% with details.count as purchase_order_count %}
-                                                                {% endwith %}
-                                                            {% endif %}
-                                                        {% endfor %}
-                                                    {% endfor %}
-                                                    {{ purchase_order_count }}
-                                                {% endwith %} -->
+                                               
                                             </h6>
                                         </div>
                                     </div>
@@ -265,9 +225,9 @@
                                 <thead>
                                     <tr>
                                         <th>Date</th>
-                                        <th>Order Name</th>
-                                        <th>Amount</th>
-                                        <th>Paid</th>
+                                        <th>Currency</th>
+                                        <th>Payment method</th>
+                                        <th>Amount paid</th>
                                         <th>Account Balance</th>
                                         <th>Accounts Payable</th>
                                         <th>Accounts Receivable</th>
@@ -275,15 +235,8 @@
                                     </tr>
                                 </thead>
                                 <tbody id="usd_payment_history">
-                                    <tr>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
+                                    <tr id="usd_da">
+                                        
                                     </tr>
                                 </tbody>
                             </table>
@@ -806,15 +759,8 @@
                        
 
     // Function to open the edit modal and populate it with supplier data
-<<<<<<< HEAD
-    function openEditModal(supplierId) {
-        supId = supplierId;
-        console.log('supplier', supplierId);
-        fetch(`/inventory/suppliers/supplier-information/${supplierId}/`)  // Adjust this URL to match your actual endpoint
-=======
     function openEditModal() {
         fetch(`/inventory/suppliers/edit/${editSupId}/`)  // Adjust this URL to match your actual endpoint
->>>>>>> 56be42f5bdfa73811ce43dbebb4a951746a35e43
             .then(response => response.json())
             .then(data => {
                 console.log(data, 'supplier');
@@ -1236,10 +1182,30 @@ function fetchSupplierDetails(supplierId) {
             console.log(data.account_data, 'account data')
             console.log(data.purchase_order_count,'purchse_order_count')
             if(data.success){
-                const accountEl = document.getElementById('account_balance')
-                const purchaseordercount = document.getElementById('purchase_countO')
+                const accountEl = document.getElementById('account_balance') //account balance
+                const purchaseordercount = document.getElementById('purchase_countO') // purchase count integer
+                const payHistory = document.getElementById('usd_da') // payment history details
+                
                 accountEl.innerHTML = `${data.account_data[0].currency} ${data.account_data[0].balance} <br> ${data.account_data[1].currency} ${data.account_data[1].balance} `
                 purchaseordercount.innerHTML = `${data.purchase_order_count}`
+
+                data.account_history_data.forEach(item =>{
+                    const date = document.createElement('td');
+                    date.textContent = item.timestamp;
+                    payHistory.appendChild(date);
+
+                    const currency = document.createElement('td');
+                    currency.textContent = item.currency;
+                    payHistory.appendChild(currency);
+
+                    const payment = document.createElement('td');
+                    payment.textContent = item.payment_method;
+                    payHistory.appendChild(payment);
+
+                    const amount_paid = document.createElement('td');
+                    amount_paid.textContent = item.amount;
+                    payHistory.appendChild(amount_paid);
+                })
             }
             else{
                 Swal.fire({

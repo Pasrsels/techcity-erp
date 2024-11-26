@@ -134,10 +134,9 @@ DATABASES = {
 
    'default': {
      'ENGINE': 'django.db.backends.postgresql',
-<<<<<<< HEAD
-       'NAME':  'TECHCITY',
+       'NAME':  'Techcity',
        'USER': 'postgres',
-       'PASSWORD': '2003',
+       'PASSWORD': '5052',
        'HOST': 'localhost',
        'PORT': '5432'
  }
@@ -150,23 +149,6 @@ DATABASES = {
     #      'PORT': os.getenv('DB_PORT', '26269'),
     #  }
 }
-=======
-       'NAME':  'TECHCITYDB',
-       'USER': 'postgres',
-       'PASSWORD': 'NNNNN#02',
-       'HOST': 'localhost',
-       'PORT': '5433'
- }
-#     'default': {
-#         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-#          'NAME': os.getenv('DB_NAME', 'railway'),
-#          'USER': os.getenv('DB_USERNAME', 'postgres'),
-#          'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvDuHLnxhw'),  
-#          'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
-#          'PORT': os.getenv('DB_PORT', '26269'),
-#      }
- }
->>>>>>> 8a4fd7f2125afba08235d917fa80a0a27e0dc08b
 
 if 'test' in sys.argv:
     DATABASES = {
