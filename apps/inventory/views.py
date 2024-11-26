@@ -576,7 +576,6 @@ def edit_inventory(request, product_id):
     inv_product = Inventory.objects.get(id=product_id, branch=request.user.branch)
 
     if request.method == 'POST':
-        product = Product.objects.get(id=product_id)
         end_of_day = request.POST.get('end_of_day')
 
         if end_of_day:
