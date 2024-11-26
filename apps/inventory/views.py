@@ -2694,7 +2694,7 @@ def PaymentHistory(request, supplier_id):
 
 #individual supplier details
 @login_required
-def supplier_details_view(request,supplierId):
+def supplier_details_view(request, supplierId):
     if request.method == 'GET':
         try:
             supplier_details = Supplier.objects.get(id = supplierId)
@@ -2762,7 +2762,8 @@ def supplier_details_view(request,supplierId):
                 'supplier_data': supplier_data,
                 'purchase_data': list_purchase_order_details,
                 'account_history_data': list_account_history,
-                'account_data': list_account_details
+                'account_data': list_account_details,
+                'purchase_order_count': purchase_order_count,
             }, status = 200)
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
@@ -2831,7 +2832,7 @@ def supplier_view(request):
             'products':supplier_products,
             'balances':supplier_balances,
             'life_time': [list_orders],
-            'suppliers':suppliers
+            'suppliers':suppliers,
         })
     if request.method == 'POST':
         """
