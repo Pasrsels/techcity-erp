@@ -1199,6 +1199,7 @@
           const newTransfer = { 
             count:itemCount,
             id: generateUniqueId(),
+            product_id:pElement.value,
             product: product,
             quantity: quantity,
             price: price,
@@ -1207,6 +1208,8 @@
             cart.push(newTransfer);
             cart.reverse()
         }
+
+        console.log(cart)
         
         updateCartDisplay();
         calculateTotals();
