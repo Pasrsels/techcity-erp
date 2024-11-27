@@ -38,11 +38,12 @@
                     <p id="cart-title" class="fw-bold fs-6 pt-1 mx-1">Purchase order Items</p>
                     <table class="table border rounder p-2" id="cart-table">
                         <thead>
-                        <th>Action</th>
-                        <th>Product</th>
-                        <th>Quantity</th>
-                        <th>Unit Price</th>
-                        <th class="text-center">Total</th>
+                          <th>#</th>
+                          <th>Action</th>
+                          <th>Product</th>
+                          <th>Quantity</th>
+                          <th>Unit Price</th>
+                          <th class="text-center">Total</th>
                         </thead>
                         <tbody id="cart-items"></tbody>
                         <tfoot>
@@ -546,6 +547,7 @@
 </div>   
 <script src="{% static 'js/calculater.js' %}"></script>
 <script>
+    let itemCount = 1;
     let count = 1;
     let cart = [];
     let prodData = [];
@@ -1113,10 +1115,11 @@
         const cartItemsList = document.getElementById("cart-items");
         cartItemsList.innerHTML = "";
 
-        cart.forEach((item, index) => {
+        cart.reverse().forEach((item, index) => {
             const row = document.createElement("tr");
 
             row.innerHTML = `
+            <td><small>${item.itemCount}</small></td>
             <td>
                 <button class="btn" data-id=${item.id} onclick="removeItem(this);">
                     <i class='bx bx-trash-alt'></i>
@@ -1175,8 +1178,6 @@
         const price = parseFloat(document.getElementById('id_p_price').value);
         const quantity = Number(document.getElementById('id_p_quantity').value);
 
-        
-      
         if (!product || !quantity || !price || !supplier) {
           Swal.fire({
             icon: 'error',
@@ -1196,6 +1197,7 @@
           return;
         } else {
           const newTransfer = { 
+            count:itemCount,
             id: generateUniqueId(),
             product: product,
             quantity: quantity,
@@ -1209,7 +1211,8 @@
         updateCartDisplay();
         calculateTotals();
         isCartEmpty();
-      
+        itemCount += 1;
+
         Swal.fire({
           icon: 'success',
           title: 'Item Added',

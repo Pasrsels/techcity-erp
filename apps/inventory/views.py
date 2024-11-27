@@ -2041,15 +2041,17 @@ def receive_order(request, order_id):
     except PurchaseOrderItem.DoesNotExist:
         messages.warning(request, f'Purchase order with ID: {order_id} does not exists')
         return redirect('inventory:purchase_orders')
+    
+    logger.info(purchase_order_items.all().values('product'))
 
     products = Inventory.objects.filter(branch=request.user.branch).values(
         'dealer_price', 
         'price', 
-        'product__name'
+        'name'
     )
     logger.info(f'branch: {request.user.branch}')
     # Convert products queryset to a dictionary for easy lookup by product ID
-    product_prices = {product['product__name']: product for product in products}
+    product_prices = {product['name']: product for product in products}
 
     new_po_items =  []
     for item in purchase_order_items:

@@ -19,7 +19,7 @@ from . utils import update_latest_due
 from django.http import JsonResponse
 from utils.utils import generate_pdf
 from asgiref.sync import async_to_sync, sync_to_async
-from apps.inventory.models import Inventory
+from apps.inventory.models import Inventory, Accessory
 from channels.layers import get_channel_layer
 import json, datetime, os, boto3, openpyxl 
 from utils.account_name_identifier import account_identifier
@@ -644,7 +644,6 @@ def create_invoice(request):
                         status = False
                     )
 
-                
                 # #create transaction
                 transaction_obj = Transaction.objects.create(
                     date=timezone.now(),
@@ -663,7 +662,7 @@ def create_invoice(request):
                 # Create InvoiceItem objects
                 for item_data in items_data:
                     item = Inventory.objects.get(pk=item_data['inventory_id'])
-                    product = Product.objects.get(pk=item.product.id)
+                    # product = Product.objects.get(pk=item.product.id)
                     
                     item.quantity -= item_data['quantity']
                     item.save()
@@ -677,22 +676,22 @@ def create_invoice(request):
                     )
                     
                     # Create StockTransaction for each sold item
-                    stock_transaction = StockTransaction.objects.create(
-                        item=product,
-                        transaction_type=StockTransaction.TransactionType.SALE,
-                        quantity=item_data['quantity'],
-                        unit_price=item.price,
-                        invoice=invoice,
-                        date=timezone.now()
-                    )
-                    stock_transaction.save()
+                    # stock_transaction = StockTransaction.objects.create(
+                    #     item=product,
+                    #     transaction_type=StockTransaction.TransactionType.SALE,
+                    #     quantity=item_data['quantity'],
+                    #     unit_price=item.price,
+                    #     invoice=invoice,
+                    #     date=timezone.now()
+                    # )
+                    # stock_transaction.save()
                     
                     # cost of sales item
                     COGSItems.objects.get_or_create(
                         invoice=invoice,
-                        defaults={'cogs': cogs, 'product': Inventory.objects.get(product=product, branch=request.user.branch)}
+                        defaults={'cogs': cogs, 'product': Inventory.objects.get(id=item.id, branch=request.user.branch)}
                     )
-                    
+                
                     # stock log  
                     ActivityLog.objects.create(
                         branch=request.user.branch,
@@ -703,7 +702,30 @@ def create_invoice(request):
                         action='Sale',
                         invoice=invoice
                     )
-                    
+
+                    accessories = Accessory.objects.filter(main_product=item).values('accessory_product', 'accessory_product__quantity')
+
+                    for acc in accessories:
+                        COGSItems.objects.get_or_create(
+                            invoice=invoice,
+                            defaults={'cogs': cogs, 'product': Inventory.objects.get(id=acc['accessory_product'], branch=request.user.branch)}
+                        )
+                        prod_acc = Inventory.objects.get(id = acc['accessory_product'] )
+                        prod_acc.quantity -= 1
+
+                        logger.info(f'accessory quantity: {acc['accessory_product__quantity']}')
+
+                        ActivityLog.objects.create(
+                            branch=request.user.branch,
+                            inventory=prod_acc,
+                            user=request.user,
+                            quantity=1,
+                            total_quantity = acc['accessory_product__quantity'],
+                            action='Sale',
+                            invoice=invoice
+                        )
+                        prod_acc.save()
+                        
                 # # Create VATTransaction
                 VATTransaction.objects.create(
                     invoice=invoice,
@@ -759,7 +781,7 @@ def create_invoice(request):
 def held_invoice(items_data, invoice, request, vat_rate):
     for item_data in items_data:
         item = Inventory.objects.get(pk=item_data['inventory_id'])
-        product = Product.objects.get(pk=item.product.id)
+        # product = Product.objects.get(pk=item.product.id)
                     
         item.quantity -= item_data['quantity']
         item.save()
@@ -772,15 +794,15 @@ def held_invoice(items_data, invoice, request, vat_rate):
             vat_rate = vat_rate
         )
                     
-        # Create StockTransaction for each sold item
-        stock_transaction = StockTransaction.objects.create(
-            item=product,
-            transaction_type=StockTransaction.TransactionType.SALE,
-            quantity=item_data['quantity'],
-            unit_price=item.price,
-            invoice=invoice,
-            date=timezone.now()
-        )
+        # # Create StockTransaction for each sold item
+        # stock_transaction = StockTransaction.objects.create(
+        #     item=item,
+        #     transaction_type=StockTransaction.TransactionType.SALE,
+        #     quantity=item_data['quantity'],
+        #     unit_price=item.price,
+        #     invoice=invoice,
+        #     date=timezone.now()
+        # )
               
         # stock log  
         ActivityLog.objects.create(
@@ -1745,9 +1767,9 @@ def invoice_preview_json(request, invoice_id):
         dates = laybyDates.objects.filter(layby__invoice=invoice).values('due_date')
      
     invoice_items = InvoiceItem.objects.filter(invoice=invoice).values(
-        'item__product__name', 
+        'item__name', 
         'quantity',
-        'item__product__description',
+        'item__description',
         'total_amount',
         'unit_price'
     )
