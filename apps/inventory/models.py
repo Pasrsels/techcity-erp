@@ -123,7 +123,8 @@ class Inventory(models.Model):
         return f'{self.branch.name} : ({self.name}) quantity ({self.quantity})'
 
 class Accessory(models.Model):
-    product = models.ManyToManyField(Inventory)
+    main_product = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='main_product')
+    accessory_product = models.ManyToManyField(Inventory)
 
     def __str__(self):
         return self.product.name

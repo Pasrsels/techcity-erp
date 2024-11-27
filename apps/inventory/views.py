@@ -453,6 +453,7 @@ def inventory_index(request):
     category = request.GET.get('category', '')    
     
     services = Service.objects.all().order_by('-name')
+    accessories = Accessory.objects.all()
     inventory = Inventory.objects.filter(branch=request.user.branch, status=True).order_by('name')
     
     if category:
@@ -520,6 +521,7 @@ def inventory_index(request):
         'category':category,
         'total_price': totals[1],
         'total_cost':totals[0],
+        'accessories':accessories
     })
 
 @login_required
@@ -3135,12 +3137,13 @@ def accessory_view(request, product_id):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            logger.info(f'Accessories: {data}')
             accessory_ids = data.get('accessories', [])
 
             logger.info(accessory_ids)
 
             product = Inventory.objects.get(id=product_id)
-            current_accessories = Accessory.objects.filter(product=product)
+            current_accessories = Accessory.objects.filter(main_product=product).values('accessory_product')
             current_ids = set(current_accessories.values_list('id', flat=True))
 
             logger.info(f'current ids: {current_ids}')
@@ -3150,17 +3153,32 @@ def accessory_view(request, product_id):
             accessories_to_add = input_ids - current_ids
             accessories_to_remove = current_ids - input_ids
 
+            logger.info(f'accessories to remove: {accessories_to_remove}')
+
+            if Accessory.objects.filter(main_product=product).exists():
+                acc = Accessory.objects.get(main_product=product)
+            else:
+                acc = Accessory.objects.create(main_product = product)
+
             if accessories_to_add:
-                accessories_to_add_objs = Accessory.objects.filter(id__in=accessories_to_add)
+                accessories_to_add_objs = Inventory.objects.filter(id__in=accessories_to_add)
+
+                logger.info(f'Accessories to add: {accessories_to_add_objs}')
+
                 for accessory in accessories_to_add_objs:
-                    accessory.product.add(product)  
+                    acc.accessory_product.add(accessory)
+                    acc.save()
 
             if accessories_to_remove:
-                accessories_to_remove_objs = Accessory.objects.filter(id__in=accessories_to_remove)
-                for accessory in accessories_to_remove_objs:
-                    accessory.product.remove(product)
+                accessories_to_remove_objs = Inventory.objects.filter(id__in=accessories_to_remove)
 
-            updated_accessories = Accessory.objects.filter(product=product).values('id', 'product__name')
+                logger.info(f'Accessories to add: {accessories_to_remove_objs}')
+
+                for accessory in accessories_to_remove_objs:
+                    acc.accessory_product.remove(accessory)
+                    acc.save()
+
+            updated_accessories = Accessory.objects.filter(main_product=product).values('id', 'main_product__name', 'accessory_product__name')
             return JsonResponse({'success': True, 'data': list(updated_accessories)}, status=200)
         
         except Inventory.DoesNotExist:
