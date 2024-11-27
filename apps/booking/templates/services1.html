@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Services{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Services</h2>
+
+    <div class="text-center mt-4">
+        <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+            + Service
+        </button>
+    </div>
+</div>
+
+    <div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel"  data-backdrop="static" data-keyboard="false" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-dialog-centered">>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addServiceModalLabel">Add Service</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background-color: red; color: white; border-radius: 50%; padding: 0.5rem;"></button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="addServiceForm" method="POST" action="{% url 'booking:services' %}"> <!--to be adjusted-->
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="d-flex justify-content-between mt-3">
+                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="successModalLabel">Success</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                                <p>Service added successfully!</p>
+                    </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" id="redirectButton">OK</button>
+                        </div>
+                </div>
+            </div>
+        </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const form = document.querySelector("#addServiceForm");
+            const successModal = new bootstrap.Modal(document.getElementById("successModal"));
+            const redirectButton = document.getElementById("redirectButton");
+
+            
+            form.addEventListener("submit", (event) => {
+                event.preventDefault(); 
+                const addServiceModal = bootstrap.Modal.getInstance(document.getElementById("addServiceModal"));
+                addServiceModal.hide(); 
+                successModal.show(); 
+            });
+
+            redirectButton.addEventListener("click", () => {
+                window.location.href = "/new-page/"; // to be adjusted
+            });
+        });
+    </script>
+
+{% endblock %}
+

@@ -11,7 +11,7 @@ from utils import *
 @login_required
 def services_view(request):
     services = Services.objects.filter(delete=False)
-    return render(request, 'services.html',{'data': services})
+    return render(request, 'services1.html',{'data': services})
 
 @login_required
 def members_view(request):
@@ -21,7 +21,7 @@ def members_view(request):
 @login_required
 def offices_view(request):
     office = Services.objects.all()
-    return render(request, 'offices.html',office)
+    return render(request, 'service_products.html',office)
 
 #services
 @login_required
