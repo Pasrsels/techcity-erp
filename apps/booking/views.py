@@ -138,6 +138,7 @@ def service_crud(request):
             return JsonResponse({'success':True}, status=200)
         return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
     return JsonResponse({'success':False, 'response': 'invalid request'}, status =  400)
+
 #types
 @login_required
 def type_crud(request):
