@@ -166,34 +166,34 @@ def add_branch(request):
     if request.method == 'POST':
         form = BranchForm(request.POST)
         if form.is_valid():
-            branch_obj = form.save()
-
-            branch =  Branch.objects.get(name='ADMIN')
-            product_list = []
-            for product in Inventory.objects.filter(branch__name='ADMIN'):
-                product_list.append(
-                    Inventory(
-                        branch=branch,
-                        name=product.name,
-                        cost = product.cost,
-                        price = product.price,
-                        dealer = product.dealer_price,
-                        quantity = product.quantity,
-                        status = product.status,
-                        stock_level_threshold = product.stock_level_threshold,
-                        reorder = product.reorder,
-                        alert_notifications = product.alert_notification,
-                        batch = product.batch,
-                        category = product.category,
-                        tax_type = product.tax_type,
-                        suppliers = product.suppliers,
-                        description = product.description,
-                        end_of_day = product.end_of_day,
-                        service = product.service,
-                        image = product.image,
-                    )
-                )
-            Inventory.objects.bulk_create(product_list)
+            form.save()
+            # logger.info(branch_obj)
+            # branch =  Branch.objects.get(id=branch_obj.id)
+            # product_list = []
+            # for product in Inventory.objects.filter(branch__name='ADMIN'):
+            #     product_list.append(
+            #         Inventory(
+            #             branch=branch,
+            #             name=product.name,
+            #             cost = product.cost,
+            #             price = product.price,
+            #             dealer_price = product.dealer_price,
+            #             quantity = 0,
+            #             status = product.status,
+            #             stock_level_threshold = product.stock_level_threshold,
+            #             reorder = product.reorder,
+            #             alert_notification = product.alert_notification,
+            #             batch = product.batch,
+            #             category = product.category,
+            #             tax_type = product.tax_type,
+            #             description = product.description,
+            #             end_of_day = product.end_of_day,
+            #             service = product.service,
+            #             image = product.image,
+            #         )
+            #     )
+            #     logger.info(f'Product {product.name} saved')
+            # Inventory.objects.bulk_create(product_list)
             
             messages.success(request, 'Branch added successfully!')
             return redirect('company:branch_list')

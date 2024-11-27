@@ -5,10 +5,7 @@ import environ, os
 import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
-<<<<<<< HEAD
 #from decouple import config
-=======
->>>>>>> 9f52b8f758821ac319d5c6d65c9d9f95a21edfe3
 from django.apps import apps
 
 env = environ.Env()   
