@@ -458,6 +458,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <!-- Proceed to Payment Button -->
                     <button type="button" class="btn btn-primary btn-sm" id="p_history_btn">Proceed to Payment</button>
+                    <input type="search" class="form-control d-inline w-50" placeholder="Search services..." id="search_payment_history">
                 </div>
                 <!-- Tables -->
                 <div id="usdTable">
@@ -465,8 +466,8 @@
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>Order name</th>
-                                <th>Amount</th>
+                                <!-- <th>Order name</th>-->
+                                <th>Currency</th> 
                                 <th>Paid</th>
                                 <th>Account balance</th>
                                 <th>Accounts Payable</th>
@@ -474,7 +475,7 @@
                                 <th>User</th>
                             </tr>
                         </thead>
-                        <tbody id="usd_payment_history"></tbody>
+                        <tbody id="usd_payment_history_t"></tbody>
                     </table>
                 </div>
                 <div id="zigTable" style="display: none;">
@@ -633,6 +634,8 @@
 
     // Payment History Modal
     function openPaymentHistoryModal(supplierId) {
+        const HistoryTable = document.getElementById('usd_payment_history_t');
+        HistoryTable.innerHTML = ''
         paymentHistoryModal.show();
         fetch(`/inventory/suppliers/payment-history/${supplierId}/`,
             {
@@ -648,11 +651,55 @@
                 console.log('supplier data', data)
 
                 // assign to global
-                historyData = data.history
-
+                historyData = data.history;
                 // assign to respective elements
-                document.getElementById('id_balance').textContent = `${data.history[0].account_currency} Balance ${data.history[0].account_balance}`
+                document.getElementById('id_balance').textContent = `${data.history[0].account_currency} Balance ${data.history[0].account_balance}`;
                 
+                s_history = data.history.forEach(item =>{
+                    const tabRow = document.createElement('tr');
+
+                    date_time = document.createElement('td');
+                    date_time.textContent = item.date;
+                    tabRow.appendChild(date_time);
+
+                    currency = document.createElement('td');
+                    currency.textContent = item.paid_currency;
+                    tabRow.appendChild(currency);
+
+                    paid = document.createElement('td');
+                    paid.textContent = item.amount_paid;
+                    tabRow.appendChild(paid);
+
+                    Balance = document.createElement('td');
+                    Balance.textContent = item.account_balance;
+                    tabRow.appendChild(Balance);
+
+                    if(item.account_balance > 0){
+                        Balance = document.createElement('td');
+                        Balance.textContent = item.account_balance;
+                        tabRow.appendChild(Balance);
+                    }else{
+                        Balance = document.createElement('td');
+                        Balance.textContent = '0.00';
+                        tabRow.appendChild(Balance);
+                    }
+
+                    if(item.account_balance < 0){
+                        Balance = document.createElement('td');
+                        Balance.textContent = item.account_balance;
+                        tabRow.appendChild(Balance);
+                    }else{
+                        Balance = document.createElement('td');
+                        Balance.textContent = '0.00';
+                        tabRow.appendChild(Balance);
+                    }
+
+                    user_name = document.createElement('td');
+                    user_name.textContent = item.user;
+                    tabRow.appendChild(user_name);
+
+                    HistoryTable.appendChild(tabRow);
+                });
             }else{
                 Swal.fire({
                     icon:'error',
@@ -677,8 +724,8 @@
         usdTable.innerHTML = ''
         zigTable.innerHTML = ''
 
-        data.forEach((supplier)=>{
-            if(supplier.currency__name == 'USD'){
+        data.history.forEach(supplier=>{
+            if(supplier.paid_currency == 'USD'){
                 usdTable.innerHTML += `
                     <tr>
                         <td>${ new Date(supplier.timestamp).toLocaleDateString() }</td>
@@ -1186,6 +1233,8 @@ function fetchSupplierDetails(supplierId) {
                 accountEl.innerHTML = `${data.account_data[0].currency} ${data.account_data[0].balance} <br> ${data.account_data[1].currency} ${data.account_data[1].balance} `
                 purchaseordercount.innerHTML = `${data.purchase_order_count}`
 
+                payHistory_body.innerHTML = '';
+                tablepurchase.innerHTML = '';
                 data.account_history_data.forEach(item =>{
                     const payHistory = document.createElement('tr')
 

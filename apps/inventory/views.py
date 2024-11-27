@@ -2663,7 +2663,7 @@ def PaymentHistory(request, supplier_id):
             list_history.append({
                 'payment_id': items.id,
                 'paid_currency': items.currency.name,
-                'amount_paid ': items.amount,
+                'amount_paid': items.amount,
                 'date': items.timestamp,
                 'account_balance': items.account.balance,
                 'account_currency': items.account.currency.name,
@@ -3096,7 +3096,6 @@ def payments(request):
 
             supplier_details = Supplier.objects.get(id = supplier_id)
             supplier_currency = Currency.objects.get(name = supplier_currency_used)
-
             supplier_payment = SupplierAccountsPayments.objects.get(account__supplier__id = supplier_id)
 
             supplier_balance = supplier_payment.account.balance
@@ -3109,20 +3108,20 @@ def payments(request):
                 else:
                     new_balance = supplier_balance - supplier_amount
             
-            with transaction.atomic():
-                supplier_acc = SupplierAccount.objects.update(
-                    suppliers = supplier_details,
-                    currency = supplier_currency,
-                    balance = new_balance,
-                    date = supplier_date
-                )
+                with transaction.atomic():
+                    supplier_acc = SupplierAccount.objects.update(
+                        suppliers = supplier_details,
+                        currency = supplier_currency,
+                        balance = new_balance,
+                        date = supplier_date
+                    )
 
-                SupplierAccountsPayments.objects.create(
-                    account = supplier_acc,
-                    payment_method = supplier_method,
-                    currency = supplier_currency,
-                    amount = supplier_amount,
-                )
+                    SupplierAccountsPayments.objects.create(
+                        account = supplier_acc,
+                        payment_method = supplier_method,
+                        currency = supplier_currency,
+                        amount = supplier_amount,
+                    )
                 return JsonResponse({'success': True, 'response': 'Data saved'})
         except Exception as e:
             logger.info(e)
