@@ -37,14 +37,13 @@ class Payments(models.Model):
 
 class Services(models.Model):
     name = models.CharField(max_length= 255)
-    service_product = models.ForeignKey('Service_product', on_delete=models.CASCADE, null=True)
     delete = models.BooleanField(default= False)
     def __str__(self):
         return f'{self.name}, {self.service_product.name}'
 
 class Service_product(models.Model):
     name = models.CharField(max_length= 255)
-    service_details = models.ForeignKey('Service_product_details', on_delete= models.CASCADE, null=True)
+    service = models.ForeignKey('Services', on_delete= models.CASCADE, null=True)
 
     def __str__(self):
         return f"{self.name}"
@@ -54,6 +53,7 @@ class Service_product_details(models.Model):
     measurement = models.CharField(max_length=50, default='None')
     service_range = models.CharField(max_length=40,default= 'None')
     promotion = models.BooleanField(default= False)
+    service_product = models.ForeignKey('Service_product', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return f"{self.Name}"
