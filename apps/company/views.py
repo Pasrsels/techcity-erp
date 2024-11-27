@@ -14,7 +14,7 @@ from apps.users.models import User
 from utils.validate_json import validate_company_registration_payload
 
 from .models import Branch, Company
-
+from apps.inventory.models import Inventory
 from django.contrib import messages
 
 from .forms import BranchForm
@@ -144,7 +144,35 @@ def add_branch(request):
     if request.method == 'POST':
         form = BranchForm(request.POST)
         if form.is_valid():
-            form.save()
+            branch_obj = form.save()
+
+            branch =  Branch.objects.get(name='ADMIN')
+            product_list = []
+            for product in Inventory.objects.filter(branch__name='ADMIN'):
+                product_list.append(
+                    Inventory(
+                        branch=branch,
+                        name=product.name,
+                        cost = product.cost,
+                        price = product.price,
+                        dealer = product.dealer_price,
+                        quantity = product.quantity,
+                        status = product.status,
+                        stock_level_threshold = product.stock_level_threshold,
+                        reorder = product.reorder,
+                        alert_notifications = product.alert_notification,
+                        batch = product.batch,
+                        category = product.category,
+                        tax_type = product.tax_type,
+                        suppliers = product.suppliers,
+                        description = product.description,
+                        end_of_day = product.end_of_day,
+                        service = product.service,
+                        image = product.image,
+                    )
+                )
+            Inventory.objects.bulk_create(product_list)
+            
             messages.success(request, 'Branch added successfully!')
             return redirect('company:branch_list')
     else:
