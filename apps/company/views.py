@@ -20,6 +20,8 @@ from django.contrib import messages
 from .forms import BranchForm
 
 from django.contrib.auth import get_user_model
+from apps.settings.models import TaxSettings
+from django.db import transaction
 
 
 def registration(request):
@@ -59,7 +61,7 @@ def register_company_view(request):
                 status=400
             )
         try:
-            with (atomic()):
+            with transaction.atomic():
                 # create company
                 logger.info("creating company")
                 company_data = payload['company_data']
@@ -109,6 +111,9 @@ def register_company_view(request):
                 logger.info(user.password)
                 user.save()
 
+                # create tax methods
+                #create_tax_methods()
+
             # return message
             return JsonResponse(
                 {
@@ -118,6 +123,7 @@ def register_company_view(request):
                 status=200
             )
         except Exception as e:
+            logger.info(e)
             return JsonResponse(
                 {
                     "success": False,
@@ -127,6 +133,18 @@ def register_company_view(request):
             )
     return render(request, 'registration.html')
 
+def create_tax_methods():
+    tax_methods = ['No tax', 'Inclusice', 'Exclusive']
+
+    tax_obj_list = []
+    for method in tax_methods:
+        tax_obj_list.append(TaxSettings(
+            name=method,
+            selected=False
+        ))
+    
+    TaxSettings.objects.bulk_create(tax_obj_list)
+
 
 def branch_list(request):
     branches = Branch.objects.all()
@@ -134,6 +152,7 @@ def branch_list(request):
 
 
 def branch_switch(request, branch_id):
+    logger.info('here')
     user = request.user
     if user.role == 'Admin' or user.role == 'admin':
         user.branch = Branch.objects.get(id=branch_id)

@@ -11,7 +11,7 @@ from utils import *
 @login_required
 def services_view(request):
     services = Services.objects.filter(delete=False)
-    return render(request, 'services.html')
+    return render(request, 'services.html',{'data': services})
 
 @login_required
 def members_view(request):
@@ -27,43 +27,59 @@ def offices_view(request):
 @login_required
 def service_crud(request):
     if request.method == "GET":#View
-        service = Services.objects.all()
+        service = Services.objects.filter(delete = False)
         return JsonResponse({'success':True, 'data':list(service), 'status': 200})
     elif request.method == "POST":#ADD
         data = json.loads(request.body)
-
         try:
-            service_name = data[0]['service_name']
+            service_name = data['service_name']
 
-            type_name = data[1]['type_name']
-            type_price = data[1]['type_price']
-            type_service_duration = data[1]['type_service_duration']
-            type_promotion = data[1]['type_promotion']
+            s_p_name = data['name']
 
-            if Services.objects.filter(Name = service_name).exists() or Services.objects.filter(Name = type_name).exists():
-                return JsonResponse({'success': False, 'response': 'added item already exists'}, status=  400)
-            elif not service_name or not type_name or \
-                not type_price or not type_service_duration or not type_promotion:
-                return JsonResponse({'success': True, 'response': 'please fill in missing fields'}, status = 400)
-            
-            with transaction.atomic():
-                type_add = Types(
-                    Name = type_name, 
-                    Price = type_price, 
-                    Duration = type_service_duration, 
-                    Promotion = type_promotion
+            s_p_d_price = data['price']
+            unit_measurement = data['type_service_duration']
+            range = data['range']
+            promo = data['promotion']
+
+            if not Services.objects.filter(name = service_name).exists():
+                with transaction.atomic():
+                    service_product_details_info = Service_product_details.objects.create(
+                        price = s_p_d_price,
+                        unit_of_measurement = unit_measurement,
+                        service_range = range,
+                        promotion = promo
                     )
-                type_add.save()
-                service_add = Services(
-                    Name = service_name,
-                    Types = type_add
+
+                    service_product_info = Service_product.objects.create(
+                        name = s_p_name,
+                        service_product_details = service_product_details_info
                     )
-                service_add.save()
-                type_add.save()
-                Logs.objects.create(
-                    action = 'create'
-                )
-                return JsonResponse({'succes':True}, status = 200)
+
+                    Services.objects.create(
+                        name = service_name,
+                        service_product = service_product_info
+                    )
+            elif not Service_product_details.objects.filter(name = s_p_name).exists():
+                with transaction.atomic():
+                    service_product_details_info = Service_product_details.objects.create(
+                        price = s_p_d_price,
+                        unit_of_measurement = unit_measurement,
+                        service_range = range,
+                        promotion = promo
+                    )
+
+                    service_product_info = Service_product.objects.create(
+                        name = s_p_name,
+                        service_product_details = service_product_details_info
+                    )
+            else:
+                with transaction.atomic():
+                    service_product_details_info = Service_product_details.objects.create(
+                        price = s_p_d_price,
+                        unit_of_measurement = unit_measurement,
+                        service_range = range,
+                        promotion = promo
+                    )
         except Exception as e:
             return JsonResponse({'succes':False, 'response': f'{e}'}, status = 400)
     #update
@@ -73,39 +89,52 @@ def service_crud(request):
             service_id = data[0]['service_id']
             service = Services.objects.get(id=service_id)
 
-            service_name = data[0]['service_name']
-
-            type_id = data[1]['type_id']
-            type_name = data[1]['type_name']
-            type_price = data[1]['type_price']
-            type_service_duration = data[1]['type_service_duration']
-            type_promotion = data[1]['type_promotion']
+            s_p_id = data['type_id']
             
-            with transaction.Atomic():
-                service=Services(
-                    Name = service_name,
-                    id = service_id
-                    )
-                type_add = Types(
-                    id = type_id,
-                    Name = type_name, 
-                    Price = type_price, 
-                    Duration = type_service_duration, 
-                    Promotion = type_promotion
-                    )
-                service.save()
-                type_add.save()
-            return JsonResponse({'success':True},status = 200)
+            service_name = data['service_name']
+
+            s_p_name = data['name']
+
+            s_p_d_price = data['price']
+            unit_measurement = data['type_service_duration']
+            range = data['range']
+            promo = data['promotion']
+
+            if not Services.objects.filter(id = service_id).exists():
+                return JsonResponse({'success': False, 'message': f'user with {service_id} does not exist'}, status = 400)
+            else:
+                with transaction.atomic():
+                    service_product_details_info = Service_product_details.objects.get(id = id)
+                    service_product_details_info.price = s_p_d_price,
+                    service_product_details_info.unit_of_measurement = unit_measurement,
+                    service_product_details_info.service_range = range,
+                    service_product_details_info.promotion = promo
+                    
+                    service_product_details_info.save()
+
+                    service_product_info = Service_product.objects.get(id = id)
+                    service_product_info.name = s_p_name,
+                    service_product_info.service_product_details = service_product_details_info
+
+                    service_product_info.save()
+
+                    service_info = Services.objects.get(id = id)
+                    service_info.name = service_name,
+                    service_info.service_product = service_product_info
+
+                    service_info.save()
+                    return JsonResponse({'success':True},status = 200)
         except Exception as e:
             return JsonResponse({'success':False, 'response':f'{e}'})
     
     elif request.method == "DELETE":
 
         data = json.loads(request.body)
-        service_id = data[0]['service_id']
+        service_id = data['service_id']
         if Services.objects.filter(id = service_id).exists():
             service_del = Services.objects.get(id= service_id)
-            service_del.delete()
+            service_del.delete = True
+            service_del.save()
             return JsonResponse({'success':True}, status=200)
         return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
     return JsonResponse({'success':False, 'response': 'invalid request'}, status =  400)

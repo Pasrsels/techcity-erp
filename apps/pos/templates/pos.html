@@ -31,20 +31,20 @@
     table {
         width: 100%;
         border-collapse: collapse;
-        text-align: left;
+        /* text-align: left; */
     }
 
-    thead th {
+    /* thead th {
         background-color: #f9f9f9;
         padding: 12px 15px;
         border-bottom: 1px solid #ddd;
         cursor: pointer;
-    }
+    } */
 
-    tbody td {
+    /* tbody td {
         padding: 12px 15px;
         border-bottom: 1px solid #eee;
-    }
+    } */
 
     tbody tr:hover {
         background-color: #f1f1f1;
@@ -138,7 +138,7 @@
             </div>
 
             <div class='col-4 d-flex'>
-                <div class='add-items-area w-100'>
+                <div class='add-items-area w-100 rounded bg-w'>
                     <div class='top d-flex w-100 align-items-center justify-content-between'>
                         <div class="search-bar">
                             <select type="text" id="search-input">
@@ -161,19 +161,15 @@
                             </button>
                         </div>
                     </div>
-
                     <small class=" text-danger id_client_error"></small>
-
-                    <table class="table table-responsive table-sm">
-                        <tr class="border">
-                            <th>Quanity</th>
-                            <th>Product</th>
-                            <th>Price</th>
-                            <th>Subtotal</th>
-                        </tr>
-                    </table>
-                    <div class="table-items border bg-light table-scroll">
+                    <div class="table-items border bg-light table-scroll mt-2 rounded">
                         <table class="table table-responsive table-sm">
+                            <thead>
+                                <th>Quanity</th>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Subtotal</th>
+                            </thead>
                             <tbody id="cart_items"></tbody>
                         </table>
                     </div>
@@ -332,8 +328,7 @@
 </body>
 
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>
-<script>
-    
+<script>   
 let cart = [];
 let data = [];
 let respData = [];
@@ -360,10 +355,12 @@ let sub = 0
 let vatAmount
 
 const layby_dates = []
+const taxMethod = "{{ tax_method }}"
 
 let error = document.querySelector('#error_message');
 
-//let customerAccountTableModal = new bootstrap.Modal(document.getElementById('customerAccountTableModal'))
+// import { calculateInclusiveTax, calculateExclusiveTax } from "{% static 'js/app_modules/taxes.js' %}";
+// console.log(calculateExclusiveTax)
 
 const currencySelect = document.querySelector('#currency')
 const endOfDayModal = new bootstrap.Modal(document.getElementById('endOfDayModal'));
@@ -547,7 +544,6 @@ const receipt = () =>{
     let amountDue = previousDue.textContent.split('')[0];
     // default if they is previous due
     
-
     period.addEventListener('input', ()=>{
         if(period.value < 0){
             Swal.fire({
@@ -921,6 +917,8 @@ function totals(){
     let vatAmount = calculateVAT(totalAmount);
     let discount = $('#id_discount').val()
     let delivery = parseFloat($('#id_dc_input').val())
+
+    console.log('vat amout: ', vatAmount)
     
     let payable = totalAmount - vatAmount + delivery;
     
@@ -967,8 +965,13 @@ function calculateTotalAmount(cart) {
 }
 
 function calculateVAT(totalAmount) {
-    const vatRate = 0.15; 
-    return totalAmount * vatRate;
+    if( taxMethod === 'Exclusive'){
+        return calculateExclusiveTax(totalAmount, 0.15)
+    }else if( taxMethod === 'Inclusive'){
+        return calculateExclusiveTax(totalAmount, 0.15)
+    }else{
+        return 0;
+    }
 }
 
 // events for discount and delivery charge
@@ -994,15 +997,19 @@ function updateCartDisplay() {
       row.innerHTML = `
         <td>
             <small class='d-flex align-items-center'>
-                <small class='bx bx-trash-alt text-danger' data-id=${item.id} onclick="removeItem(this);"></small>
-                <small><input class='form-control mx-2' type='number' data-id=${item.inventory_id} value='${item.quantity}' oninput='addOrDecreaseQuantity(this);' style='width:4rem;'/></small>
+                <small><input class='form-control form-control-sm' type='number' data-id=${item.inventory_id} value='${item.quantity}' oninput='addOrDreceaseQuantity(this);' style='width:4rem;'/></small>
             </small>
         </td>
-        <td><small>${item.product_name}</small></td>
-        <td><small>
-            <input class='form-control' type='number' step='0.01' data-id=${item.id} value='${parseFloat(item.price).toFixed(2)}' oninput='updatePrice(this);' style='width:7rem;'/>
-        </small></td>
-        <td><small id="total-${item.id}">${currencyData[0][0].symbol + ' ' + (parseInt(item.quantity) * parseFloat(item.price)).toFixed(2)}</small></td>
+        <td style='text-align:left !important;'><small>${item.product_name}</small></td>
+        <td>
+            <small>
+                <input class='form-control form-control-sm' type='number' step='0.01' data-id=${item.id} value='${parseFloat(item.price).toFixed(2)}' oninput='updatePrice(this);' style='width:7rem;'/>
+            </small>
+        </td>
+        <td>
+            <small id="total-${item.id}">${currencyData[0][0].symbol + ' ' + (parseInt(item.quantity) * parseFloat(item.price)).toFixed(2)}</small>
+            <small class='bx bx-trash-alt text-danger' data-id=${item.id} onclick="removeItem(this);"></small>
+        </td>
       `;
       cartItemsList.appendChild(row);
 
@@ -1048,6 +1055,7 @@ function updateCartTotal() {
         cartButton();
         totals();
     }
+    console.log('updated value', cart)
 }
 
 // update tfoot

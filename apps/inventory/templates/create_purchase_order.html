@@ -29,13 +29,13 @@
     <div class='add-purchase-order'>
         <div class='purchase-order-nav shadow p-2 text-light d-flex justify-content-between align-items-center rounded' style="background:#373f4c !important;">
             <div>
-                <h5 class='fw-bold px-2 mt-2'>Create Purchase order</h5>
+                <h5 class='fw-bold mt-2'>Create Purchase order</h5>
             </div>
         </div>
         <div class="row mt-2 main" id="main-section">
             <div class="col-9">
-                <div class="d-flex flex-column">
-                    <p id="cart-title" class="fw-bold fs-6 pt-1">Purchase order Items</p>
+                <div class="d-flex flex-column rounded" style="background: #fff;">
+                    <p id="cart-title" class="fw-bold fs-6 pt-1 mx-1">Purchase order Items</p>
                     <table class="table border rounder p-2" id="cart-table">
                         <thead>
                         <th>Action</th>
@@ -102,7 +102,7 @@
                     <form class='d-flex flex-column mt-2 w-100 mt-2 w-100 px-2' method='post'>
                         {% csrf_token %}
                         <div class="mb-1">
-                            <label for="id_product" class="form-label requiredField">
+                            <label for="id_id_product" class="form-label requiredField">
                                 Product
                             </label> 
                             <div class="d-flex form-group">
@@ -116,7 +116,7 @@
                             </div>
                         </div>
                         <div class="mb-1">
-                            <label for="id_product" class="form-label requiredField">
+                            <label for="id_s" class="form-label requiredField">
                                 Supplier
                             </label>
                             <div class="d-flex form-group">
@@ -283,7 +283,11 @@
                 <p id="cartError" class="text-danger"></p>
                 <div class="d-flex justify-content-end">
                   <div class="">
-                      <button type="reset" class="btn btn-danger btn-sm w-100">
+                  </button>
+                </div>
+                <span class="px-1"></span>
+                  </button>
+                      <button type="reset" class="btn btn-danger btn-sm w-10">
                           <i class='bx bx-reset'></i>
                           Reset
                       </button>
@@ -441,34 +445,55 @@
     </div>
 </div>
 
-    <div class="modal fade" id="noteStatusModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-      <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-              <div class="modal-body">
-                <h5 class="fw-bold">Proceed by filling the Purchase Order form below</h5>
-                <form class="mt-2">
-                  {{ note_form | crispy}}
+<!-- Main Modal -->
+<div class="modal fade" id="noteStatusModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+          <div class="modal-body">
+              <h5 class="fw-bold">Proceed by filling the Purchase Order form below</h5>
+              <form class="mt-2">
+                  {{ note_form | crispy }}
                   <p id="cartError" class="text-danger"></p>
                   <div class="d-flex justify-content-end">
-                    <div class="">
-                        <button type="reset" class="btn btn-outline-dark btn-sm w-100">
-                            <i class='bx bx-reset'></i>
-                            Reset
-                        </button>
-                    </div>
-                    <span class="px-1"></span>
-                    <div class="">
-                        <button type="button" onclick="processCart();" class="btn btn-dark btn-sm w-100">
-                            <i class='bx bx-save'></i>
-                            Save
-                        </button>
-                    </div>
-                </div>
+                      <button type="reset" class="btn btn-danger btn-sm w-10">
+                          <i class='bx bx-reset'></i> Reset
+                      </button>
+                      <span class="px-1"></span>
+                      <button type="button" class="btn btn-primary btn-sm w-100" onclick="nextBtn()">
+                        <i class='bx bx-data'></i> Proceed to payment
+                    </button>
+                  </div>
+              </form>
+          </div>
+      </div>
+  </div>
+</div>
+
+<!-- Details Modal (for displaying generated details in a table) -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="detailsModalLabel">Supplier Payments</h5>
+              <button type="button" class="btn btn-outline-dark" id="formAddBtn">Add payment form</button>
+          </div>
+          <div class="modal-body">
+              <div>
+                <form>
+                  <div id="otherForms">
+                    <!-- to rendered by JavaScript -->
+                  </div>
                 </form>
               </div>
           </div>
+          <div class="modal-footer">
+              <button type="button" onclick="processCart();" class="btn btn-dark btn-sm w-100">
+                <i class='bx bx-save'></i> Save
+            </button>
+          </div>
       </div>
-    </div>
+  </div>
+</div>
 
     <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
       <div class="modal-dialog modal-dialog-centered">
@@ -506,6 +531,7 @@
 </div>   
 <script src="{% static 'js/calculater.js' %}"></script>
 <script>
+    let count = 1;
     let cart = [];
     let prodData = [];
     let searchValue = '';
@@ -549,28 +575,75 @@
     const savePurchasaeOrderButton = document.getElementById('save_purchase_order')
 
     const example = new UseBootstrapSelect(document.getElementById('id_search')); 
+    const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'))
+    const formAddBtn = document.getElementById('formAddBtn');
+    const otherFormsEl = document.getElementById('otherForms');
 
- 
+    const nextBtn = () =>{
+      noteModal.hide()
+      paymentModal.show()
+    }
+
+    formAddBtn.addEventListener('click', ()=>{
+    
+      otherFormsEl.innerHTML += `
+        <div id="other-form" class="d-flex flex-column rounded border p-2 mb-3">
+
+          <div class='mb-2'>
+            <select id="other_form_supplier_${count}" class="form-select">
+              <option value="">Select Supplier</option>
+              {% for supplier in suppliers %}
+                <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class='mb-2'>
+            <select id="other_form_currency_${count}" class="form-select">
+              <option value="">Select Currency</option>
+              {% for currency in currencies %}
+                <option value="{{ currency.id }}">{{ currency.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class='mb-2'>
+            <select id="other_form_pmethod_${count}" class="form-select">
+              <option value="">Select Payment Option</option>
+              <option value="cash">Cash</option>
+              <option value="bank">Bank</option>
+              <option value="ecocash">Ecocash</option>
+            </select>
+          </div>
+
+          <div class='mb-2'>
+            <input type="number" id="other_form_amount_${count}" class="form-control" placeholder="Enter amount" style='text-align:left;'>
+          </div>
+        </div>
+      `
+      //  count += 1;
+    })
+
     document.addEventListener('DOMContentLoaded', function() {
-      new SlimSelect({
-        select: '#id_product',
-        placeholder: 'Select Product'
-      });
 
-      document.getElementById('id_product').addEventListener('change', function() {
-        const pElement = document.getElementById('id_product');
-        const pSelectedOption = pElement.options[pElement.selectedIndex];
-        let product = pSelectedOption.textContent;
-        product = product.split(' [')[0];
+        $('#id_product').select2({
+            placeholder: 'Select Product',
+            width: 'resolve'  
+        });
 
-        fetch(`/inventory/inventory/?id=${pElement.value}`)
-          .then(response => response.json())
-          .then(data => {
-            prodData.push(data);
-          })
-          .catch(error => console.error('Error:', error));
-      });
+        $('#id_product').on('change', function() {
+            const productId = $(this).val();
+            const productName = $(this).find('option:selected').text().split(' [')[0];
+
+            fetch(`/inventory/inventory/?id=${productId}`)
+                .then(response => response.json())
+                .then(data => {
+                    prodData.push(data);
+                })
+                .catch(error => console.error('Error:', error));
+        });
     });
+
     
     calculateExpression('id_p_price', errorId = null)
 
@@ -869,23 +942,28 @@
                 throw new Error('Network response was not ok.');
             }
             const data = await response.json();
-            
+            console.log(data)
             updateProduct(data);
         } catch (error) {
             console.error('Error fetching categories:', error);
         } 
     }
 
-    function updateProduct(data){
-        const prodElement = document.querySelector('#id_product')
+    function updateProduct(data, newProductId) {
+        const prodElement = document.querySelector('#id_product');
         prodElement.innerHTML = '<option value="">Select Product</option>';
-        
-        while(prodElement.options.length > 1){
-          prodElement.remove(1)
+
+        data.forEach((product) => {
+            const option = document.createElement('option');
+            option.value = product.id;
+            option.textContent = product.name;
+            prodElement.appendChild(option);
+        });
+
+        // Automatically select the newly added product
+        if (newProductId) {
+            prodElement.value = newProductId;
         }
-        data.forEach((data)=>{
-            prodElement.innerHTML += `<option value=${data.id}>${data.name}</option>`
-        })
 
     }
 
@@ -897,10 +975,10 @@
 
     document.addEventListener('DOMContentLoaded', function() {
 
-      new SlimSelect({
-        select: '#id_supplier',
-        placeholder: 'Select Supplier'
-      });
+      $('#id_supplier').select2({
+            placeholder: 'Select Product',
+            width: 'resolve'  
+        });
 
       document.getElementById('id_supplier').addEventListener('change', function() {
         const pElement = document.getElementById('id_supplier');
@@ -1105,9 +1183,24 @@
     }
     
     function processCart() {
+      suppliers_payment_data = []
+
+      for(let i=1; i<=count; i++){
+        suppliers_payment_data.push(
+          {
+            'id':document.getElementById(`other_form_supplier_${count}`).value,
+            'payment_method':document.getElementById(`other_form_pmethod_${count}`).value,
+            'amount':parseFloat(document.getElementById(`other_form_amount_${count}`).value),
+            'currency':document.getElementById(`other_form_currency_${count}`).value
+          }
+        )
+      }
+
+      console.log('supplier paymetnt data: ', suppliers_payment_data)
 
       const data= {
         'po_items':cart,
+        'supplier_data':suppliers_payment_data,
         'hold':holdPurchaseOrder,
         'expenses':expensesData,
         'cost_allocations':formData,
@@ -1597,6 +1690,23 @@
             }
         });
     }
+  // Assuming supplier data is rendered server-side in Django and passed to the JavaScript context
+  function paymentNextBtn() {
+      const tableBody = document.getElementById('detailsTableBody');
+      tableBody.innerHTML = ''; 
+
+      suppliers.forEach(supplier => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+              <td>${supplier.name}</td>
+              <td>${supplier.amount}</td>
+          `;
+          tableBody.appendChild(row);
+      });
+
+
+      new bootstrap.Modal(document.getElementById('detailsModal')).show();
+  }
 
     function getCookie(name) {
       let cookieValue = null;

@@ -97,18 +97,22 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 
-                # custom 
+                # inventory
                 "company.context_processors.branch_list",
                 "inventory.context_processors.product_list",
                 "inventory.context_processors.product_category_list",     
                 "inventory.context_processors.stock_notification_count",
                 "inventory.context_processors.transfers",
                 "inventory.context_processors.stock_notifications",
+                "inventory.context_processors.all_products_list",
                 
                 #finance
                 "finance.context_processors.client_list",
                 "finance.context_processors.currency_list",
                 "finance.context_processors.expense_category_list",
+                
+                #finance
+                # "settings.context_processors.tax_method",
             ],
         },
     },
@@ -127,6 +131,7 @@ SESSION_AUTH = True
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
+
    'default': {
      'ENGINE': 'django.db.backends.postgresql',
        'NAME':  'TECHCITYDB',
@@ -135,15 +140,15 @@ DATABASES = {
        'HOST': 'localhost',
        'PORT': '5433'
  }
-#     'default': {
-#         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-#          'NAME': os.getenv('DB_NAME', 'railway'),
-#          'USER': os.getenv('DB_USERNAME', 'postgres'),
-#          'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvDuHLnxhw'),  
-#          'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
-#          'PORT': os.getenv('DB_PORT', '26269'),
-#      }
- }
+    # 'default': {
+    #     'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+    #      'NAME': os.getenv('DB_NAME', 'railway'),
+    #      'USER': os.getenv('DB_USERNAME', 'postgres'),
+    #      'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvDuHLnxhw'),  
+    #      'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
+    #      'PORT': os.getenv('DB_PORT', '26269'),
+    #  }
+}
 
 if 'test' in sys.argv:
     DATABASES = {

@@ -3,8 +3,8 @@
 <div class="table transfers-table mt-2">
     {% include 'components/loader.html' %}
     <div class='table-scroll'>
-    <table class='table table-bordered border table-hover rounded hidden p-2' id='transfers'>
-        <thead class='bg-primary'>
+    <table class='table table-bordered border table-hover rounded hidden p-2' id='transfers' style="width: 100%;">
+        <thead>
             <tr>
                 <th>Transfer</th>
                 <th>Date</th>
@@ -21,22 +21,31 @@
                 {% for transfer in transfers %}
                     <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %}">
                         <td>
-                            {% if request.user.branch in transfer.transfer_to.all %}
+                            {% if transfer.hold %}
                                 <span class="d-flex align-items-center">
-                                    <i class='bx bx-right-arrow-alt text-success fs-2'></i>In
+                                    <i class='bx bx-pause fs-2' style='color:#00c0ef' ></i>
+                                    
                                 </span>
                             {% else %}
-                                <span class="d-flex align-items-center">
-                                    <i class='bx bx-left-arrow-alt text-danger fs-2'></i>Out
-                                </span>
+                                {% if request.user.branch in transfer.transfer_to.all %}
+                                    <span class="d-flex align-items-center">
+                                        <i class='bx bxs-right-arrow-alt text-success' style="font-size: 35px;"></i>
+                                    </span>
+                                {% else %}
+                                    <span class="d-flex align-items-center">
+                                        <i class='bx bxs-left-arrow-alt' style="color: #dc3545eb; font-size: 35px;"></i>
+                                    </span>
+                                {% endif %}
                             {% endif %}
                         </td>
                         <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.time }}</small></td>
                         <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_ref }}</small></td>
-                        <td></td>
-                        <td></td>
+                        <td class='transfer-btn' data-id="{{ transfer.id }}"><small class="d-flex align-items-center justify-content-center"><i class='bx bx-box'></i></small></td>
+                        <td>
+                            <small >{{ transfer.total_quantity }}</small>
+                        </td>
                         <td class='transfer-btn text-center' data-id="{{ transfer.id }}">
-                            <small>
+                            <small  class='hint--bottom' aria-label='Defective'>
                                 {% if transfer.defective_status %}
                                     <span class='hint--bottom' aria-label='Defective'>
                                         <i class='bx bxs-circle fs-3 text-defective'></i>
@@ -65,6 +74,15 @@
                             <a href="{% url 'inventory:print_transfer' transfer.id %}" class="btn border btn-sm">
                                 <i class='bx bx-printer '></i>
                             </a>
+                            {% if transfer.hold %}
+                                <a href="{% url 'inventory:process_held' transfer.id %}" class="btn border btn-sm hint-bottom" aria-label="process transfer">
+                                    <i class='bx bx-play' style='color:#0b0b0b' ></i>
+                                </a>
+                            {% else %}
+                                <a href="#" class="btn border btn-sm">
+                                    <i class='bx bx-stop' style='color:#0b0b0b' ></i>
+                                </a>
+                            {% endif %}
                             <button onclick="cancel({{ transfer.id }})" class="btn border bx bx-trash"></button>
                         </td>
                     </tr>
@@ -72,11 +90,11 @@
                         {% for item in transfer_items %}
                             {% if transfer.id == item.transfer.id %}
                                 <tr id="id_items" class="hidden" data-transfer-id="{{ transfer.id }}">
-                                    <td colspan="2"></td>
-                                    <td><small>{{ item.transfer.transfer_ref }}</small></td>
-                                    <td><small>{{ item.product.name }}</small></td>
-                                    <td><small>{{ item.quantity }}</small></td>
-                                    <td class="text-center">
+                                    <td colspan="2" style="background: #f8f9fa;"></td>
+                                    <td style="background: #f8f9fa;"><small>{{ item.transfer.transfer_ref }}</small></td>
+                                    <td style="background: #f8f9fa;"><small>{{ item.product.name }}</small></td>
+                                    <td style="background: #f8f9fa;"><small>{{ item.quantity }}</small></td>
+                                    <td style="background: #f8f9fa;" class="text-center">
                                         <small>
                                             <span>
                                                 {% if item.declined %}
@@ -95,7 +113,7 @@
                                             </span>
                                         </small>
                                     </td>
-                                    <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
+                                    <td class='transfer-btn' style="background: #f8f9fa;" data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
                                 </tr>
                             {% endif %}
                         {% endfor %}
@@ -159,6 +177,7 @@
     const tableEl = document.querySelector('#transfers');
 
     const transferRows = document.querySelectorAll('.transfer-btn');
+    const hooverProduct = document.querySelectorAll('#id_hover_product');
 
     setTimeout(()=>{
         loader.classList.add('hidden');
@@ -176,6 +195,25 @@
             });
         });
     });
+
+    // hover to show products
+    // hooverProduct.forEach((el) => {
+    //     el.addEventListener('mouseover', () => {
+    //         if (el.classList.contains('hidden')){
+    //             el.classList.remove('hidden')
+    //         }else{
+    //             el.classList.add('hidden')
+    //         }
+    //     });
+
+    //     el.addEventListener('mouseout', () => {
+    //         if (el.classList.contains('hidden')){
+    //             el.classList.remove('hidden')
+    //         }else{
+    //             el.classList.add('hidden')
+    //         }
+    //     });
+    // });
     
     expandBtn.addEventListener('click', ()=>{
         itemsEl.forEach((el)=>{
@@ -230,7 +268,5 @@
             }
         });
     }
-
-
 </script>
 {% endblock content %}

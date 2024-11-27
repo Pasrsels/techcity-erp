@@ -1,0 +1,39 @@
+<table>
+    <thead>
+        <th>name</th>
+        <th>Products</th>
+        <th>Life time</th>
+        <th>Acc P</th>
+        <th>Acc R</th>
+    </thead>
+    <tbody>
+        {% for supplier in suppliers %}
+            <tr>
+                <td>{{ supplier.supplier.name }}</td>
+                <td>
+                    {% for product in products %}
+                        {% if supplier.supplier in product.suppliers.all %}
+                            {{ product.name }}
+                        {% endif %}
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for sup, details in life_time.items %}
+                        {{ sup }} <br> {{ supplier.supplier}}
+                       
+                    {% endfor %}
+                </td>
+                <td>
+                    {% if supplier.balance > 0 %}
+                        {{ supplier.balance }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if supplier.balance < 0 %}
+                        {{ supplier.balance }}
+                    {% endif %}
+                </td>
+            </tr>
+        {%endfor%}
+    </tbody>
+</table>
