@@ -111,13 +111,6 @@
 </div>
 
 <script>
-<<<<<<< HEAD
-  // Event listener for Monthly Service Card
-  document.getElementById("monthlyServiceCard").addEventListener("click", function() {
-        fetch("/service_crud/?service_type=monthly")  // Fetch from the API endpoint for monthly services
-            .then(response => response.json())
-            .then(data => {
-=======
     document.addEventListener("DOMContentLoaded", function () {
     const tableBody = document.getElementById("typesTableBody");
 
@@ -147,7 +140,6 @@
                 return response.json();
             })
             .then((data) => {
->>>>>>> 56743dedff3e63a63fffbd9ee95d2e9ddf582b61
                 populateTable(data);
             })
             .catch((error) => {
@@ -236,7 +228,6 @@
                 },
                 body: JSON.stringify({ service_id: serviceId }),
             })
-<<<<<<< HEAD
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -254,20 +245,3 @@
 </script>
 
 {% endblock content %}
-=======
-                .then((response) => response.json())
-                .then((data) => {
-                    if (data.success) {
-                        alert("Service deleted successfully.");
-                        document.getElementById(`row-${serviceId}`)?.remove(); // Remove row from table
-                    } else {
-                        alert("Failed to delete the service.");
-                    }
-                })
-                .catch((error) => {
-                    console.error("Error deleting service:", error);
-                });
-        }
-    };
-});
->>>>>>> 56743dedff3e63a63fffbd9ee95d2e9ddf582b61
