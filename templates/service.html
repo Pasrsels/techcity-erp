@@ -10,8 +10,9 @@
         <aside class="col-2 bg-dark text-white p-4">
             <h4 class="mb-4">Linkspot</h4>
             <ul class="list-unstyled">
-                <li><a href="#" class="text-white">Services</a></li>
-                <li><a href="#" class="text-white">Members</a></li>
+                <li><a href="{% url 'booking:service'%}" class="text-white">Services</a></li>
+                <li><a href="{% url 'booking:office' %}" class="text-white">Offices</a></li>
+                <li><a href="{% url 'booking:member'%}" class="text-white">Members</a></li>
                 <li><a href="#" class="text-white">Logs</a></li>
                 <li><a href="#" class="text-white">Settings</a></li>
             </ul>
@@ -110,6 +111,13 @@
 </div>
 
 <script>
+<<<<<<< HEAD
+  // Event listener for Monthly Service Card
+  document.getElementById("monthlyServiceCard").addEventListener("click", function() {
+        fetch("/service_crud/?service_type=monthly")  // Fetch from the API endpoint for monthly services
+            .then(response => response.json())
+            .then(data => {
+=======
     document.addEventListener("DOMContentLoaded", function () {
     const tableBody = document.getElementById("typesTableBody");
 
@@ -139,6 +147,7 @@
                 return response.json();
             })
             .then((data) => {
+>>>>>>> 56743dedff3e63a63fffbd9ee95d2e9ddf582b61
                 populateTable(data);
             })
             .catch((error) => {
@@ -220,13 +229,32 @@
     window.deleteService = function (serviceId) {
         const confirmation = confirm("Are you sure you want to delete this service?");
         if (confirmation) {
-            fetch(`/service_crud/`, {
+            fetch(/service_crud/, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({ service_id: serviceId }),
             })
+<<<<<<< HEAD
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Service deleted successfully.");
+                    // Remove the service row from the table
+                    const row = document.querySelector(#row-${serviceId});
+                    row && row.remove();
+                } else {
+                    alert("Failed to delete the service.");
+                }
+            })
+            .catch(error => console.error("Error deleting service:", error));
+        }
+    }
+</script>
+
+{% endblock content %}
+=======
                 .then((response) => response.json())
                 .then((data) => {
                     if (data.success) {
@@ -242,3 +270,4 @@
         }
     };
 });
+>>>>>>> 56743dedff3e63a63fffbd9ee95d2e9ddf582b61

@@ -322,7 +322,7 @@
                         {{ form | crispy }}
                         <div class="d-flex justify-content-end">
                             <button type="reset" class="btn btn-danger btn-sm bx bx-reset mx-2"></button>
-                            <button type="submit" class="btn btn-secondary btn-sm">
+                            <button type="button" class="btn btn-primary btn-sm">Save</button>
                                 <i class="bx bx-save"></i>
                                 Save
                             </button>
@@ -393,8 +393,9 @@
                         </div>
                         <div style="flex: 1;">
                             <label for="next_due" class="form-label">Next Due</label>
-                            <input type="text" class="form-control" id="next_due" name="next_due" readonly value="--">
+                            <input type="date" class="form-control" id="next_due" name="next_due">
                         </div>
+                        
                     </div>
                 
                     <!-- Payment Method -->
@@ -426,7 +427,7 @@
                     <div class="d-flex justify-content-end">
                         <button type="button" class="btn btn-secondary btn-sm mx-2" data-bs-dismiss="modal">Close</button>
                         <button type="reset" class="btn btn-danger btn-sm mx-2">Reset</button>
-                        <button type="button" class="btn btn-primary btn-sm">Save</button>
+                        <button type="button" class="btn btn-primary btn-sm" data-supplier-id="123" id="saveButton">Save</button>
                     </div>
                 </form>
             </div>
@@ -650,10 +651,9 @@
             if (data.success){
                 console.log('supplier data', data)
 
-                // assign to global
-                historyData = data.history;
-                // assign to respective elements
-                document.getElementById('id_balance').textContent = `${data.history[0].account_currency} Balance ${data.history[0].account_balance}`;
+                historyData = data.history
+
+                document.getElementById('id_balance').textContent = `${data.history[0].account_currency} Balance ${data.history[0].account_balance}`
                 
                 s_history = data.history.forEach(item =>{
                     const tabRow = document.createElement('tr');
@@ -746,6 +746,55 @@
             }
         })
     }
+
+    const saveButton = document.getElementById('saveButton');
+if (saveButton) {
+    console.log('Save button found');
+    saveButton.addEventListener('click', function () {
+        const supplierId = saveButton.getAttribute('data-supplier-id');
+        const amount = document.getElementById('amount').value;
+        const currency = document.getElementById('currency').value;
+        const paymentMethod = document.getElementById('payment_method').value;
+        const nextDue = document.getElementById('next_due').value;
+
+        if (!amount || !currency || !paymentMethod || !nextDue) {
+            alert('Please fill out all required fields.');
+            return;
+        }
+
+        const data = {
+            id: supplierId,
+            amount: parseFloat(amount),
+            currency: currency,
+            payment_method: paymentMethod,
+            next_due: nextDue
+        };
+
+        fetch(`/inventory/suppliers/supplier-payment/${supplierId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()  
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message || 'Payment saved successfully');
+                $('#paymentModal').modal('hide');
+                document.getElementById('paymentForm').reset(); // Assuming form has an id "paymentForm"
+            } else {
+                alert(data.response || 'Something went wrong!');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(data.message ||'An error occurred. Please try again later.');
+        });
+    });
+}
+
     // Toggle between USD and ZiG tables in the Payment History Modal
     // document.getElementById('toggleCurrencyButton').addEventListener('click', function() {
     //         const usdTable = document.getElementById('usdTable');
@@ -917,7 +966,7 @@
         }
     })
     
-    // supplier details in a modal when we click name in the supplier listt
+    // supplier details in a modal when we click name in the supplier list
     function fetchSupplierDetails(supplierId) {
         deleteSupId = supplierId;
         editSupId = supplierId;
