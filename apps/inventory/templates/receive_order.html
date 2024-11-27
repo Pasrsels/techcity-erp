@@ -80,8 +80,8 @@
             {% for item in orders %}
             <tr id="tr_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
                 <span class="d-none" id="rq_{{ item.id }}">{{ item.received_quantity }}</span>
-                <td id="name_{{ item.id }}" style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.name }}</td>
-                <td style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.description }}</td>
+                <td id="name_{{ item.id }}" style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.product.name }}</td>
+                <td style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.product.description }}</td>
                 <td id="purchased_quantity_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.quantity }}</td>
                 <td id="q_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild" d>
                     {% if item.received %}
@@ -121,7 +121,7 @@
                         )">
                     {% endif %}
                     {% else %}
-                    <span id="d_{{ item.id }}">{{ item.dealer_price }}</span>
+                    <span id="d_{{ item.id }}">{{ item.product.dealer_price }}</span>
                     {% endif %}
                 </td>
                 <td id="sP_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
@@ -141,7 +141,7 @@
                      )">
                     {% endif %}
                     {% else %}
-                    <span id="s_{{ item.id }}">{{ item.price }}</span>
+                    <span id="s_{{ item.id }}">{{ item.product.price }}</span>
                     {% endif %}
                 </td>
                 <td id="dealer_profit_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.dealer_expected_profit }}</td>
@@ -150,16 +150,16 @@
                     {% if not item.received %}
                     <span class="d-flex">
                         <button class="btn btn-outline-dark btn-sm" id="submit_{{ item.id }}" style="display:none;" onclick="submitItem('{{ item.id }}')">Submit</button>
-                        <button class="bx bx-edit border btn mx-1" id="editBtn_{{ item.id }}" style="display:none;" onclick="edit({{ item.id }}, {{ item.price }}, {{ item.dealer_price }}, {{ item.quantity }}, {{ item.actual_unit_cost }})"></button>
-                        <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}" onclick="cancel('{{ item.id }}', {{ item.price }}, {{ item.dealer_price }})" style="display:none;">cancel</button>
+                        <button class="bx bx-edit border btn mx-1" id="editBtn_{{ item.id }}" style="display:none;" onclick="edit({{ item.id }}, {{ item.product.price }}, {{ item.product.dealer_price }}, {{ item.quantity }}, {{ item.actual_unit_cost }})"></button>
+                        <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}" onclick="cancel('{{ item.id }}', {{ item.product.price }}, {{ item.product.dealer_price }})" style="display:none;">cancel</button>
                         <button class="btn btn-outline-dark btn-sm" onclick="submitItem('{{ item.id }}')">Submit</button>
                     </span>
                     {% else %}
                     <span class="d-flex">
                         <button class="btn btn-success text-light btn-sm" id="submitted_{{ item.id }}">Submitted</button>
                         <button class="btn btn-outline-dark btn-sm" id="submit_{{ item.id }}" style="display:none;" onclick="submitItem('{{ item.id }}')">Submit</button>
-                        <button class="bx bx-edit border btn mx-1" onclick="edit({{ item.id }}, {{ item.price }}, {{ item.dealer_price }}, {{ item.quantity }}, {{ item.actual_unit_cost }})"></button>
-                        <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}" onclick="cancel('{{ item.id }}', {{ item.price }}, {{ item.dealer_price }})" style="display:none;">cancel</button>
+                        <button class="bx bx-edit border btn mx-1" onclick="edit({{ item.id }}, {{ item.product.price }}, {{ item.product.dealer_price }}, {{ item.quantity }}, {{ item.actual_unit_cost }})"></button>
+                        <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}" onclick="cancel('{{ item.id }}', {{ item.product.price }}, {{ item.product.dealer_price }})" style="display:none;">cancel</button>
                     </span>
                     {% endif %}
                 </td>

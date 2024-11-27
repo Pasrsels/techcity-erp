@@ -1575,20 +1575,20 @@ def create_purchase_order(request):
 
                 purchase_order_items_bulk = []
                 for item_data in purchase_order_items_data:
+                    product_id = item_data['product_id']
                     product_name = item_data['product']
                     quantity = int(item_data['quantity'])
                     unit_cost = Decimal(item_data['price'])
                     actual_unit_cost = Decimal(item_data['actualPrice'])
                     supplier_ids = item_data.get('supplier', [])
 
-                    if not all([product_name, quantity, unit_cost]):
+                    if not all([product_name, quantity, unit_cost, product_id]):
                         transaction.set_rollback(True)
                         return JsonResponse({'success': False, 'message': 'Missing fields in item data'}, status=400)
 
                     try:
-                        product = Inventory.objects.get(name=product_name, branch=request.user.branch)
-                        logger.info(f'Product id: {product.quantity}')
-                    except Product.DoesNotExist:
+                        product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+                    except Inventory.DoesNotExist:
                         transaction.set_rollback(True)
                         return JsonResponse({'success': False, 'message': f'Product with Name {product_name} not found'}, status=404)
 
