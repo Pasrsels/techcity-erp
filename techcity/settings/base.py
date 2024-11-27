@@ -5,7 +5,10 @@ import environ, os
 import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
+<<<<<<< HEAD
 #from decouple import config
+=======
+>>>>>>> 9f52b8f758821ac319d5c6d65c9d9f95a21edfe3
 from django.apps import apps
 
 env = environ.Env()   
@@ -54,6 +57,7 @@ THIRD_PARTY_APPS = [
     'apps.pos',
     'apps.settings',
     'apps.Analytics',
+    'apps.booking'
 ]
 
 LOCAL_APPS = [
@@ -97,18 +101,22 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 
-                # custom 
+                # inventory
                 "company.context_processors.branch_list",
                 "inventory.context_processors.product_list",
                 "inventory.context_processors.product_category_list",     
                 "inventory.context_processors.stock_notification_count",
                 "inventory.context_processors.transfers",
                 "inventory.context_processors.stock_notifications",
+                "inventory.context_processors.all_products_list",
                 
                 #finance
                 "finance.context_processors.client_list",
                 "finance.context_processors.currency_list",
                 "finance.context_processors.expense_category_list",
+                
+                #finance
+                # "settings.context_processors.tax_method",
             ],
         },
     },
@@ -127,6 +135,7 @@ SESSION_AUTH = True
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
+
 #    'default': {
 #      'ENGINE': 'django.db.backends.postgresql',
 #        'NAME':  'techcoty',
@@ -134,7 +143,7 @@ DATABASES = {
 #        'PASSWORD': 'neverfail',
 #        'HOST': 'localhost',
 #        'PORT': '5432'
-#   }
+#  }
     'default': {
         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
          'NAME': os.getenv('DB_NAME', 'railway'),

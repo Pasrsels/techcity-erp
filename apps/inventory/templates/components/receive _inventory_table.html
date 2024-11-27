@@ -14,9 +14,8 @@
                     <th class='text-center'>Status</th>
                     <th>Trans Ref</th>
                     <th>Description</th>
-                    <th>Destination</th>
+                    <th>From</th>
                     <th>Done by</th>
-                    <th></th>
                 </tr>
                 </thead>
             <tbody>
@@ -48,7 +47,13 @@
                         </td>
                         <td class='transfer-btn' data-id={{ transfer.id }}><small>{{ transfer.transfer_ref }}</small></td>
                         <td class='transfer-btn' data-id={{ transfer.id }}><small>{{ transfer.description }}</small></td>
-                        <td class='transfer-btn' data-id={{ transfer.id }}><small>{{ transfer.transfer_to }}</small></td>
+                        <td class='transfer-btn' data-id={{ transfer.id }}><small>
+                            {% for transfer_r in r_transfers %}
+                                {% if transfer_r.transfer.id == transfer.id %}
+                                    {{transfer_r.from_branch.name}}
+                                {% endif %}
+                            {% endfor %}
+                        </small></td>
                         <td class='transfer-btn' data-id={{ transfer.id }}><small>{{ transfer.user.username }}</small></td>
                         <td class='transfer-btn' data-id={{ transfer.id }}><small></small></td>
                 </tr>

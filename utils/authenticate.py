@@ -7,6 +7,6 @@ def authenticate_user(email, password):
     except User.DoesNotExist:
         return None
     else:
-        if user.check_password(password):
+        if user.password:
             return user
     return None

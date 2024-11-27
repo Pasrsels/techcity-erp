@@ -1,6 +1,6 @@
 {% load static %}
 {% block content %}
-<aside class="d-flex flex-column">
+<aside class="d-flex flex-column" style="background: #242140 !important;">
     <div class="menu mt-5 px-4 d-flex justify-content-center align-items-center">
         <ul class="menu list-unstyled">
 
@@ -108,6 +108,12 @@
                 </a>
             </li>
             <li class="menu-link mb-4">
+                <a href="{% url 'booking:service' %}">
+                    <i class='bx bx-cog'></i>
+                    <span class='px-2'>Services</span>
+                </a>
+            </li>
+            <li class="menu-link mb-4">
                 <a href="{% url 'company:branch_list' %}">
                     <i class='bx bx-building'></i>
                     <span class='px-2'>Branches</span>
@@ -125,6 +131,7 @@
                     <span class='px-2'>Settings</span>
                 </a>
             </li>
+           
             {% endif %}
 
         </ul>

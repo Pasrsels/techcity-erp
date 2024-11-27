@@ -31,19 +31,7 @@
     table {
         width: 100%;
         border-collapse: collapse;
-        text-align: left;
-    }
-
-    thead th {
-        background-color: #f9f9f9;
-        padding: 12px 15px;
-        border-bottom: 1px solid #ddd;
-        cursor: pointer;
-    }
-
-    tbody td {
-        padding: 12px 15px;
-        border-bottom: 1px solid #eee;
+        /* text-align: left; */
     }
 
     tbody tr:hover {
@@ -108,7 +96,7 @@
         {% endif %}
         <div class='row'>
             <div class="aside-bar col-2 text-light"> {% include "base/aside.html" %} </div>
-            <div class='col-6'>
+            <div class='col-7'>
                 <div class='mt-2 main-pos-area  px-2'>
                     <div class="d-flex align-content-center justify-content-between w-100">
                         <div class="d-flex align-items-center product-search">
@@ -132,13 +120,13 @@
                     </div>
                     <div class="products mt-2">
                         {% include 'components/loader.html' %}
-                        <div class="row" id="product-list"></div>
+                        <div class="row justify-content-center" id="product-list"></div>
                     </div>
                 </div>
             </div>
 
-            <div class='col-4 d-flex'>
-                <div class='add-items-area w-100'>
+            <div class='col-3 d-flex'>
+                <div class='add-items-area w-100 rounded bg-w'>
                     <div class='top d-flex w-100 align-items-center justify-content-between'>
                         <div class="search-bar">
                             <select type="text" id="search-input">
@@ -161,19 +149,15 @@
                             </button>
                         </div>
                     </div>
-
                     <small class=" text-danger id_client_error"></small>
-
-                    <table class="table table-responsive table-sm">
-                        <tr class="border">
-                            <th>Quanity</th>
-                            <th>Product</th>
-                            <th>Price</th>
-                            <th>Subtotal</th>
-                        </tr>
-                    </table>
-                    <div class="table-items border bg-light table-scroll">
+                    <div class="table-items border bg-light table-scroll mt-2 rounded">
                         <table class="table table-responsive table-sm">
+                            <thead>
+                                <th>Quanity</th>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Subtotal</th>
+                            </thead>
                             <tbody id="cart_items"></tbody>
                         </table>
                     </div>
@@ -265,16 +249,6 @@
         </div>
     </div>
 
-    <!--<div class="modal fade" id="customerAccountTableModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    {% include 'customers/account_statement.html' %}
-                </div>
-            </div>
-        </div>
-    </div>-->
-
     <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -332,8 +306,7 @@
 </body>
 
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>
-<script>
-    
+<script>   
 let cart = [];
 let data = [];
 let respData = [];
@@ -358,12 +331,15 @@ let addedToCartProduct = [];
 let paymentTerms = 'cash';
 let sub = 0
 let vatAmount
+let price = 0
 
 const layby_dates = []
+const taxMethod = "{{ tax_method }}"
 
 let error = document.querySelector('#error_message');
 
-//let customerAccountTableModal = new bootstrap.Modal(document.getElementById('customerAccountTableModal'))
+// import { calculateInclusiveTax, calculateExclusiveTax } from "{% static 'js/app_modules/taxes.js' %}";
+// console.log(calculateExclusiveTax)
 
 const currencySelect = document.querySelector('#currency')
 const endOfDayModal = new bootstrap.Modal(document.getElementById('endOfDayModal'));
@@ -547,7 +523,6 @@ const receipt = () =>{
     let amountDue = previousDue.textContent.split('')[0];
     // default if they is previous due
     
-
     period.addEventListener('input', ()=>{
         if(period.value < 0){
             Swal.fire({
@@ -793,6 +768,7 @@ function cartButton(){
 cartButton()
 
 function displayProducts(products) {
+
     productListContainer.innerHTML = '';
     products.forEach(product => {
         if (menuName === 'tiles' || menuName === '') {
@@ -800,15 +776,16 @@ function displayProducts(products) {
                 const productDiv = document.createElement('div');
                 productDiv.className = 'col-3';
                 productDiv.innerHTML = `
-                    <div class="card" id='id_product_card' data-product='${JSON.stringify(product)}'>
-                        <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart" data-product='${product.inventory_id}' onclick='fetchProductData(this)'>
-                            <div class="d-flex align-items-center mb-3">
-                                <i style="font-size:30px" class='bx bx-barcode'></i>
+                    <div class="card mb-4" id='id_product_card' data-product='${JSON.stringify(product)}'>
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart" data-product='${product.inventory_id}'>
+                            <div>
+                                <img src="${product.image ? product.image : '{% static "placeholder.png" %}'}" alt="${product.product_name}">
                             </div>
-                            <p><small class="fw-bold">${product.product_name}</small></p>
-                            <p><small class="text-muted">${product.description}</small></p>
-                            <p><small class="text-muted">[${product.quantity}]</small></p>
-                            <p><small class="text-muted">USD${product.price}</small></p>
+                            <p class='text-center mt-2'><small class="fw-bold">${product.product_name}</small></p>
+                            <p class='text-center'><small class="text-muted">${product.description}</small></p>
+                            <p class='text-center'><small class="text-muted">[${product.quantity}]</small></p>
+                            <span class='btn btn-outline-secondary btn-sm w-100' data-product='${product.inventory_id}' data-price='rp' onclick='fetchProductData(this)'>RP ${product.price}</span>
+                            <span class='btn btn-outline-secondary btn-sm mt-2 w-100' data-product='${product.inventory_id}' data-price='wp' onclick='fetchProductData(this)'>WP${product.dealer_price}</span> 
                         </div>
                     </div>
                 `;
@@ -827,7 +804,10 @@ function displayProducts(products) {
                             <p><small class="fw-bold">${product.product_name}</small></p>
                             <p><small class="text-muted">${product.description}</small></p>
                             <p><small class="text-muted">[${product.quantity}]</small></p>
-                            <p><small class="text-muted">USD${product.price}</small></p>
+                            <p>
+                                <small class="text-muted mx-1">USD${product.price}</small>
+                                <small class='text-muted'>Wholesale PriceUSD${product.dealer_price}</small>
+                            </p>
                         </div>
                     </div>
                 `;
@@ -863,6 +843,7 @@ function displayProducts(products) {
 async function fetchProductData (product){
     if(initialCurrencyValue){
         const id = product.dataset.product
+        const value = product.dataset.price
 
         let url = `/inventory/product/list/?product=${id}`;
 
@@ -873,7 +854,7 @@ async function fetchProductData (product){
                 throw new Error('Network response was not ok.');
             }
             const product = await response.json();
-            addItem(product);
+            addItem(product, value);
             addedToCartProduct = [];
             addedToCartProduct.push(product);
             
@@ -894,8 +875,17 @@ function generateUniqueId() {
     return Math.floor(Math.random() * 1000000000).toString(36);
   }
 
-function addItem(product) {
+function addItem(product, value) {
     const existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
+    console.log(value, 'value')
+    let priceType = ''
+    if(value === 'wp'){
+        price = product[0].dealer_price
+        priceType = `${product[0].dealer_price * parseFloat(currencyData[0][0]?.exchange_rate)}`
+    }else{
+        price = product[0].price
+        priceType = `${product[0].price * parseFloat(currencyData[0][0]?.exchange_rate)}`
+    }
 
     if (existingItem) {
         existingItem.quantity += 1;
@@ -906,7 +896,7 @@ function addItem(product) {
         product_name: product[0].product_name,
         product_description: product[0].description,
         quantity:1,
-        price:`${product[0].price * parseFloat(currencyData[0][0]?.exchange_rate)}`
+        price:priceType
         };
         cart.push(newTransfer);
     }
@@ -921,6 +911,8 @@ function totals(){
     let vatAmount = calculateVAT(totalAmount);
     let discount = $('#id_discount').val()
     let delivery = parseFloat($('#id_dc_input').val())
+
+    console.log('vat amout: ', vatAmount)
     
     let payable = totalAmount - vatAmount + delivery;
     
@@ -967,8 +959,13 @@ function calculateTotalAmount(cart) {
 }
 
 function calculateVAT(totalAmount) {
-    const vatRate = 0.15; 
-    return totalAmount * vatRate;
+    if( taxMethod === 'Exclusive'){
+        return calculateExclusiveTax(totalAmount, 0.15)
+    }else if( taxMethod === 'Inclusive'){
+        return calculateExclusiveTax(totalAmount, 0.15)
+    }else{
+        return 0;
+    }
 }
 
 // events for discount and delivery charge
@@ -994,15 +991,19 @@ function updateCartDisplay() {
       row.innerHTML = `
         <td>
             <small class='d-flex align-items-center'>
-                <small class='bx bx-trash-alt text-danger' data-id=${item.id} onclick="removeItem(this);"></small>
-                <small><input class='form-control mx-2' type='number' data-id=${item.inventory_id} value='${item.quantity}' oninput='addOrDecreaseQuantity(this);' style='width:4rem;'/></small>
+                <small><input class='form-control form-control-sm' type='number' data-id=${item.inventory_id} value='${item.quantity}' oninput='addOrDreceaseQuantity(this);' style='width:4rem;'/></small>
             </small>
         </td>
-        <td><small>${item.product_name}</small></td>
-        <td><small>
-            <input class='form-control' type='number' step='0.01' data-id=${item.id} value='${parseFloat(item.price).toFixed(2)}' oninput='updatePrice(this);' style='width:7rem;'/>
-        </small></td>
-        <td><small id="total-${item.id}">${currencyData[0][0].symbol + ' ' + (parseInt(item.quantity) * parseFloat(item.price)).toFixed(2)}</small></td>
+        <td style='text-align:left !important;'><small>${item.product_name}</small></td>
+        <td>
+            <small>
+                <input class='form-control form-control-sm' type='number' step='0.01' data-id=${item.id} value='${parseFloat(item.price).toFixed(2)}' oninput='updatePrice(this);' style='width:7rem;'/>
+            </small>
+        </td>
+        <td>
+            <small id="total-${item.id}">${currencyData[0][0].symbol + ' ' + (parseInt(item.quantity) * parseFloat(item.price)).toFixed(2)}</small>
+            <small class='bx bx-trash-alt text-danger' data-id=${item.id} onclick="removeItem(this);"></small>
+        </td>
       `;
       cartItemsList.appendChild(row);
 
@@ -1048,6 +1049,7 @@ function updateCartTotal() {
         cartButton();
         totals();
     }
+    console.log('updated value', cart)
 }
 
 // update tfoot

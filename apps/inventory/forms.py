@@ -20,7 +20,7 @@ class BatchForm(forms.ModelForm):
 
 class AddProductForm(forms.ModelForm):
     class Meta:
-        model = Product
+        model = Inventory
         exclude = ['supplier']
 
 class InventoryForm(forms.ModelForm):
@@ -65,10 +65,16 @@ class AddSupplierForm(forms.ModelForm):
         model = Supplier
         fields = '__all__'
 
+#testing supplier edit form
+class EditSupplierForm(forms.ModelForm):
+    class Meta:
+        model = Supplier
+        fields = '__all__'
+
 class CreateOrderForm(forms.ModelForm):
     class Meta:
         model =  PurchaseOrder
-        exclude = ['order_number', 'branch']
+        exclude = ['order_number', 'branch', 'payment_method']
       
 
 class noteStatusForm(forms.ModelForm):

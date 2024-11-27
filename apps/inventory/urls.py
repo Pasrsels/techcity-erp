@@ -19,6 +19,9 @@ urlpatterns = [
     path('defective_product_list/', defective_product_list, name='defective_product_list'),
     path('inventory/branches/json', branches_inventory_json, name='branches_inventory_json'),
 
+    #Stocktake
+    path('stocktake/', stock_take, name= 'stocktake'),
+
     #batch_code 
     path('batch_code/', batch_code, name='batch_code'),
     
@@ -27,10 +30,11 @@ urlpatterns = [
     
     # suppliers
     path("suppliers/", supplier_view, name="suppliers"),
-    path("suppliers/", supplier_add, name="add_supplier"),
-    path('create_supplier', create_supplier, name='create_supplier'),
     path('supplier/json/list/', supplier_list_json, name='supplier_list_json'),
-
+    path("suppliers/delete/<int:supplier_id>/", supplier_delete, name="delete_supplier"),
+    path("suppliers/edit/<int:supplier_id>/", supplier_edit, name="edit_supplier"),
+    path("suppliers/payment-history/<int:supplier_id>/", PaymentHistory, name="payment-history"),
+    path('suppliers/supplier-information/<int:supplierId>/', supplier_details_view, name = 'supplier_details'),
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),
     
@@ -73,6 +77,9 @@ urlpatterns = [
     path('detail/<int:id>/', inventory_detail, name='inventory_detail' ),
     path('transfer/detail/<int:transfer_id>/', transfer_details, name='transfer_details'),
     path('process-transfer-cart/', ProcessTransferCartView.as_view(), name='process_transfer_cart'),
+    path('held_transfer_json/<int:transfer_id>/', held_transfer_json, name='held_transfer'),
+    path('held/transfers/', held_transfers, name='h_transfers'),
+    path('process/held/transfer/<int:transfer_id>/', process_held_transfer, name='process_held'),
     
     #reporting
     path('inventory-pdf', inventory_pdf, name='inventory_pdf'),
@@ -80,4 +87,11 @@ urlpatterns = [
     
     #websocket
     path('ws/inventory/<int:branchId>/',InventoryConsumer.as_asgi()),
+
+
+    #stocktake
+    path('stocktake', stock_take, name='stock_take'),
+
+    #accessories
+    path('accessory_view/<int:product_id>/', accessory_view, name='accessory_view')
 ]

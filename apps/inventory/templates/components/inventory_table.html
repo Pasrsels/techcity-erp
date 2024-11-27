@@ -7,8 +7,10 @@
             <table class='table border table-bordered table-striped table-hover table-responsive table-sm rounded p-2 w-100 ' style="width:100%" id='inventory'>
                 <thead>
                     <tr>
-                        <th>Name</th>
+                        <th>#</th>
+                        <th>Image</th>
                         <th>Description</th>
+                        <th>Accessories</th>
                         <th>Average Sales Per</th>
                         <th>Quantity</th>
                         <th>Cost</th>
@@ -20,36 +22,65 @@
                 <tbody id='inventory_table' >
                     {% for product in inventory %}
                     <tr>
-                        <td><small><span class='hint--bottom' aria-label='{{ product.product.description }}'>{{ product.product.name }}</span></small></td>
-                        <td><small>{{ product.product.description }}</small></td>
+                        <td>{{ forloop.counter }}</td>
+                        <td><small><span class='hint--bottom' aria-label='{{ product.description }}'>
+                            {% if product.image %}
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" width="20px">
+                                {% else %}
+                                    <img src="{% static 'placeholder.png'%}" alt="{{ product.name }}" width="20px">
+                            {% endif %}
+                            {{ product.name }}</span></small></td>
+                        <td><small>{{ product.description }}</small></td>
+                        <td>
+                            <small>
+                                {% for accessory in accessories %}
+                                    {% if accessory.main_product ==  product %}
+                                        <ul class="list-unstyled">
+                                            {% for acc in accessory.accessory_product.all %}
+                                                <li>{{ acc.name }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% endfor %}
+                            </small>
+                        </td>
                         <td></td>
                         <td><small>{{ product.quantity }}</small></td>
                         <td><small>{{ product.cost }}</small></td>
                         <td><small>{{ product.price }}</small></td>
                         <td><small>{{ product.dealer_price }}</small></td>
                         <td>
-                            <small>
+                            <small>  
                                 <span>
                                     <a href="{% url 'inventory:inventory_detail' product.id %}" class='text-dark'>
                                         <i class='bx bx-show'></i>
                                     </a>
                                 </span>
+                       
                                 <span class='px-2'>
-                                    <a href="{% url 'inventory:edit_inventory' product.product.id %}" class="text-dark">
+                                    <a href="{% url 'inventory:edit_inventory' product.id %}" class="text-dark">
                                         <i class='bx bx-edit-alt'></i>
                                     </a>
                                 </span>
+                                
                                 <span>
                                     <span id='delete' data-id="{{ product.id }}" onclick="productId(this)" class="text-dark">
                                         <i class='bx bx-trash-alt'></i>
                                     </span>
                                 </span>
+
                                 <span>
                                     {%if product.status == False %}
                                     <a href='{% url "inventory:activate_inventory" product.id %}' class="btn btn-sm text-primary">
                                         activate product
                                     </a>
                                     {% endif %}
+                                </span>
+
+                                <span class="px-2">
+                                    <button class="btn btn-sm btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#accessoriesModal" onclick="setProductForAccessories({{ product.id }},'{{ product.name }}')">
+                                        <i class="bx bx-cart-add"></i> Accessories
+                                    </button>
                                 </span>
                             </small>
                         </td>
@@ -117,98 +148,306 @@
             </div>
         </div>
 
-        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal fade" id="accessoriesModal" tabindex="-1" aria-labelledby="accessoriesModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header d-flex align-items-left">
+                        <h5 class="modal-title" id="accessoriesModalLabel">
+                            Add Accessories
+                            <span id="product-name"></span>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Add Accessory -->
+                        <div class="mb-3">
+                            <div class="form-group d-flex">
+                                <select class="form-select form-select-sm me-2" id="accessorries" data-clearable="true" data-searchable="true">
+                                    <option value="">Select Accessory</option>
+                                    {% for product in inventory %}
+                                        <option value="{{ product.id }}">{{ product.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="addAccessory()">
+                                    Add
+                                </button>
+                            </div>
+                        </div>
+        
+                        <div id="accessoriesList" class="mb-3 mt-3 px-2">
+                            <!-- Wrapper for Remove Dropdown and Accessories Container -->
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <div>
+                                <button type="button" class="btn btn-secondary btn-sm bx bx-save" onclick="saveAccessories()"></button>
+                            </div>
+                        </div> 
+                    </div>                        
+                        
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error Modal -->
+        <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-body texr-center" id='payment_content'>
-                        <p class="h5 fw-bold">Success</p>
+                    <div class="modal-body text-center">
+                        <p class="h5 fw-bold text-danger" id="error-message">Error: Something went wrong.</p>
                     </div>
                 </div>
             </div>
         </div>
-
-   </div> 
-    
-   <script src="{% static 'js/jquery.js'%}"></script>
-   <script>
-        let product_id = '';
-        const inventoryData = [];
-        const modal = new bootstrap.Modal(document.querySelector('#deleteModal'));
-        const successModal = new bootstrap.Modal(document.querySelector('#successModal'));
-        const deleteButtons = document.querySelectorAll('#delete');
-        const loader = document.querySelector('#loader');
-        const tableEl = document.querySelector('#inventory');
-        const serviceTable = document.querySelector('#serviceTable');
-
-        const inventoryTable = document.querySelector('#inventory_table'); 
-
-        const products = $('.products')
-        const services = $('.services')
-        const navButtons = document.querySelectorAll('.nav-item');
-
-        loader.classList.add('hidden');
-        loader.classList.remove('d-flex')
-        tableEl.classList.remove('hidden')
-
-        navButtons.forEach((btn)=>{
-            btn.addEventListener(
-                'click', ()=>{
-                    let name = event.target.getAttribute('data-name')
-
-                    navButtons.forEach(b => b.classList.remove('active')); 
-                    event.target.classList.add('active'); 
-
-                    show(name)
-                }
-            )
-        })
-
-        function show(name) {
-            products.addClass('hidden');
-            services.addClass('hidden'); 
-
-            $(`.${name}`).removeClass('hidden'); 
-        }
-
-   
-        const productId=(element)=>{
-            product_id = element.dataset.id
-            modal.show()
-        }
-
-        deleteButtons.forEach((button)=>{
-            button.addEventListener(
-                'click', ()=>{
-                    modal.show()
-                }
-            )
-        })
         
-        document.querySelector('.yes').addEventListener(
-            'click', ()=>{
-                console.log(product_id)
-                $.ajax({
-                    url: "{% url 'inventory:delete_inventory' %}?product_id=" + product_id,
-                    type: 'GET',
-                    }).done(function(response) {
-                        modal.hide()
-                        successModal.show()
-                        setTimeout(()=>{
-                            window.location.reload()
-                        }, 2000)
-                    }
-                )
-            }
-        )
+        <!-- Success Modal -->
+        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center">
+                        <p class="h5 fw-bold text-success">Accessories saved successfully!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+           
+    
+<script src="{% static 'js/jquery.js'%}"></script>
+<script>
+    let product_id = '';
+    const inventoryData = [];
+    const modal = new bootstrap.Modal(document.querySelector('#deleteModal'));
+    const successModal = new bootstrap.Modal(document.querySelector('#successModal'));
+    const deleteButtons = document.querySelectorAll('#delete');
+    const loader = document.querySelector('#loader');
+    const tableEl = document.querySelector('#inventory');
+    const serviceTable = document.querySelector('#serviceTable');
 
-        $.ajax({
-            url: '{% url "inventory:inventory_index_json" %}',
-            type: 'GET',
-            }).done(function(response) {
-                const data = response
-                console.log(data)
-                inventoryData.push(data)
+    const inventoryTable = document.querySelector('#inventory_table'); 
+
+    const products = $('.products')
+    const services = $('.services')
+    const navButtons = document.querySelectorAll('.nav-item');
+    // const example = new UseBootstrapSelect(document.getElementById('id_accessories')); 
+
+    loader.classList.add('hidden');
+    loader.classList.remove('d-flex')
+    tableEl.classList.remove('hidden')
+
+    navButtons.forEach((btn)=>{
+        btn.addEventListener(
+            'click', ()=>{
+                let name = event.target.getAttribute('data-name')
+
+                navButtons.forEach(b => b.classList.remove('active')); 
+                event.target.classList.add('active'); 
+
+                show(name)
             }
         )
-   </script>
+    })
+
+    function show(name) {
+        products.addClass('hidden');
+        services.addClass('hidden'); 
+
+        $(`.${name}`).removeClass('hidden'); 
+    }
+
+
+    const productId=(element)=>{
+        product_id = element.dataset.id
+        modal.show()
+    }
+
+    deleteButtons.forEach((button)=>{
+        button.addEventListener(
+            'click', ()=>{
+                modal.show()
+            }
+        )
+    })
+    
+    document.querySelector('.yes').addEventListener(
+        'click', ()=>{
+            console.log(product_id)
+            $.ajax({
+                url: "{% url 'inventory:delete_inventory' %}?product_id=" + product_id,
+                type: 'GET',
+                }).done(function(response) {
+                    modal.hide()
+                    successModal.show()
+                    setTimeout(()=>{
+                        window.location.reload()
+                    }, 2000)
+                }
+            )
+        }
+    )
+
+    // $.ajax({
+    //     url: '{% url "inventory:inventory_index_json" %}',
+    //     type: 'GET',
+    //     }).done(function(response) {
+    //         const data = response
+    //         console.log(data)
+    //         inventoryData.push(data)
+    //     }
+    // )
+
+    let accessories = []; // List of added accessories
+    let availableAccessories = []; // List of available accessories fetched from the API
+    let prodId = ''
+    function setProductForAccessories(id, productName) {
+        prodId = id
+        console.log(id, 'id')
+        document.getElementById('product-name').textContent = `for product ${productName}` || "PRODUCT";
+        fetchAccessories(id);
+    }
+        // Fetch available accessories via GET API
+    async function fetchAccessories(id) {
+        try {
+            const response = await fetch(`/inventory/accessory_view/${id}/`, {
+                method: "GET",
+            });
+            const data = await response.json();
+            console.log(data, 'data')
+            if (data.success) {
+                
+                availableAccessories = data.accessories;
+                populateDropdown("accessoryDropdown", availableAccessories);
+            } else {
+                showError("Failed to fetch accessories.");
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    // Populate dropdown with options
+    function populateDropdown(dropdownId, options) {
+        const dropdown = document.getElementById(dropdownId);
+        dropdown.innerHTML = `<option value="" disabled selected>Select an accessory</option>`;
+        options.forEach(option => {
+            const opt = document.createElement("option");
+            opt.value = option.id;
+            opt.textContent = option.name;
+            dropdown.appendChild(opt);
+        });
+    }
+
+    // Add accessory to the list
+    function addAccessory() {
+        const dropdown = document.getElementById("accessorries");
+        const selectedOption = dropdown.options[dropdown.selectedIndex];
+        const selectedAccessoryId = selectedOption.value;
+        const selectedAccessoryName = selectedOption.text;
+
+        const isDuplicate = accessories.some(acc => acc.id === selectedAccessoryId);
+
+        if (isDuplicate) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Duplicate Accessory',
+                text: 'This accessory has already been added.',
+                confirmButtonText: 'OK'
+            });
+        } else {
+            accessories.push({
+                id: selectedAccessoryId,
+                name: selectedAccessoryName
+            });
+            
+            displayAccessories();
+}
+    }
+
+    // Display accessories in rows
+    function displayAccessories() {
+        const container = document.getElementById("accessoriesList");
+        container.innerHTML = "";
+        
+        console.log(accessories, 'acc')
+
+        accessories.forEach(accessory => {
+            console.log(accessory.name)
+            const row = document.createElement("div");
+            row.innerHTML = `
+                                <div class='d-flex justify-content-between align-items-center mb-2'>
+                                    <span>${accessory.name}</span>
+                                    <button class='btn btn-sm border bx bx-minus' onclick="removeAccessory(${accessory.id})"></button>
+                                </div>
+                            `
+            container.appendChild(row);
+        });
+    }
+
+    // Remove selected accessory
+    function removeAccessory(accessoryId) {
+        accessories = accessories.filter(acc => acc.id != accessoryId);
+        displayAccessories();
+    }
+
+    async function saveAccessories() {
+        
+        if (accessories.length === 0) {
+            showError("No accessories selected.");
+            return;
+        }
+
+        try {
+    
+    Swal.fire({
+        title: 'Processing...',
+        text: 'Please wait while your data is being processed.',
+        icon: 'info',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    const response = await fetch(`/inventory/accessory_view/${prodId}/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            'accessories': accessories
+        }),
+    });
+
+    const data = await response.json();
+
+        if (data.success) {
+            
+            Swal.fire({
+                title: 'Success!',
+                text: 'The data has been processed successfully.',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.reload(); 
+                }
+            });
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                text: 'Failed to process the data. Please try again.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    } catch (error) {
+        Swal.fire({
+            title: 'Error!',
+            text: 'An unexpected error occurred. Please check your connection and try again.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+        console.error(error);
+    }
+
+    }
+</script>
 {% endblock content %}

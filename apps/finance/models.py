@@ -1,5 +1,6 @@
 from pickle import FALSE
 import uuid
+# from apps.inventory.models import Supplier
 from decimal import Decimal
 from django.db import models
 from django.utils import timezone
@@ -20,9 +21,16 @@ class Currency(models.Model):
     symbol = models.CharField(max_length=5)  
     exchange_rate = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     default = models.BooleanField(default=False)
-
+   
     def __str__(self):
         return f"{self.name}"
+
+# class Creditors(models.Model):
+#     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, null=True)
+#     amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+
+#     def __str__(self):
+#         return f'{self.supplier.name}: {self.amount}'
 
 class ChartOfAccounts(models.Model):
     class AccountType(models.TextChoices):
@@ -304,7 +312,7 @@ class InvoiceItem(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.quantity} x {self.item.product.description} for Invoice #{self.invoice.invoice_number}"
+        return f"{self.quantity} x {self.item.description} for Invoice #{self.invoice.invoice_number}"
     
 
 class layby(models.Model):
