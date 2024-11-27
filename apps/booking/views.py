@@ -7,11 +7,13 @@ import json
 from django.http.response import HttpResponse, JsonResponse
 from django.db import transaction
 from utils import *
+from forms import *
 
 @login_required
 def services_view(request):
     services = Services.objects.filter(delete=False)
-    return render(request, 'services.html',{'data': services})
+    form = ServiceForm
+    return render(request, 'services.html',{'form': form,'data': services})
 
 @login_required
 def members_view(request):
