@@ -3,6 +3,8 @@ function calculateExpression(inputId, errorId = null) {
     const inputField = document.getElementById(inputId);
     const errorField = errorId ? document.getElementById(errorId) : null;
 
+    console.log(inputField)
+
     inputField.addEventListener('change', function () {
         const expression = inputField.value;
         try {
