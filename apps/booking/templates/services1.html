@@ -5,13 +5,25 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center">Services</h2>
-
+    <div class="Services">
+    <div class="d-flex align-items-center justify-content-between rounded text-light shadow header py-2 mb-4" style="background: #373f4c;">
+        <h5 class="text-light px-1">Services</h5>
+    
+    </div>
+    <style>
+        .btn-custom {
+            font-size: 1.25rem; 
+            padding: 15px 30px; 
+        }
+    </style>
+    
     <div class="text-center mt-4">
-        <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+        <button type="button" class="btn btn-outline-dark btn-custom" data-bs-toggle="modal" data-bs-target="#addServiceModal">
             + Service
         </button>
     </div>
+    
+
 </div>
 
     <div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel"  data-backdrop="static" data-keyboard="false" aria-hidden="true" style="display: none;">
@@ -23,9 +35,9 @@
                 </div>
 
                 <div class="modal-body">
-                    <form id="addServiceForm" method="POST" action="{% url 'booking:services' %}"> <!--to be adjusted-->
+                    <form id="addServiceForm"> <!--to be adjusted-->
                         {% csrf_token %}
-                        {{ form.as_p }}
+                        {{form}}
                         <div class="d-flex justify-content-between mt-3">
                             <button type="reset" class="btn btn-secondary">Reset</button>
                             <button type="submit" class="btn btn-primary">Save</button>

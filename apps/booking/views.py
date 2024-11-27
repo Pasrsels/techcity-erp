@@ -7,17 +7,11 @@ import json
 from django.http.response import HttpResponse, JsonResponse
 from django.db import transaction
 from utils import *
-from forms import *
 
 @login_required
 def services_view(request):
     services = Services.objects.filter(delete=False)
-<<<<<<< HEAD
     return render(request, 'services1.html',{'data': services})
-=======
-    form = ServiceForm
-    return render(request, 'services.html',{'form': form,'data': services})
->>>>>>> e7ca702487f61bada100bb8c59e2cfe1c1489302
 
 @login_required
 def members_view(request):
@@ -49,47 +43,42 @@ def service_crud(request):
 
             if not Services.objects.filter(name = service_name).exists():
                 with transaction.atomic():
-                    service_info = Services.objects.create(
+                    service_product_details_info = Service_product_details.objects.create(
+                        price = s_p_d_price,
+                        unit_of_measurement = unit_measurement,
+                        service_range = range,
+                        promotion = promo
+                    )
+
+                    service_product_info = Service_product.objects.create(
+                        name = s_p_name,
+                        service_product_details = service_product_details_info
+                    )
+
+                    Services.objects.create(
                         name = service_name,
                         service_product = service_product_info
                     )
-
-                    service_product_info = Service_product.objects.create(
-                        name = s_p_name,
-                        service = service_info
-                    )
-
-                    Service_product_details.objects.create(
-                        price = s_p_d_price,
-                        unit_of_measurement = unit_measurement,
-                        service_range = range,
-                        promotion = promo,
-                        service_product = service_product_info
-                    )
             elif not Service_product_details.objects.filter(name = s_p_name).exists():
-                service_info = Services.objects.get(name = service_name)
-                with transaction.atomic():
-                    service_product_info = Service_product.objects.create(
-                        name = s_p_name,
-                        service = service_info
-                    )
-
-                    Service_product_details.objects.create(
-                        price = s_p_d_price,
-                        unit_of_measurement = unit_measurement,
-                        service_range = range,
-                        promotion = promo,
-                        service_product = service_product_info
-                    )
-            else:
-                service_product_info = Service_product.objects.get(service__name = s_p_name)
                 with transaction.atomic():
                     service_product_details_info = Service_product_details.objects.create(
                         price = s_p_d_price,
                         unit_of_measurement = unit_measurement,
                         service_range = range,
-                        promotion = promo,
-                        service_product = service_product_info
+                        promotion = promo
+                    )
+
+                    service_product_info = Service_product.objects.create(
+                        name = s_p_name,
+                        service_product_details = service_product_details_info
+                    )
+            else:
+                with transaction.atomic():
+                    service_product_details_info = Service_product_details.objects.create(
+                        price = s_p_d_price,
+                        unit_of_measurement = unit_measurement,
+                        service_range = range,
+                        promotion = promo
                     )
         except Exception as e:
             return JsonResponse({'succes':False, 'response': f'{e}'}, status = 400)
@@ -149,19 +138,18 @@ def service_crud(request):
             return JsonResponse({'success':True}, status=200)
         return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
     return JsonResponse({'success':False, 'response': 'invalid request'}, status =  400)
-
 #types
 @login_required
 def type_crud(request):
     if request.method == "GET":#View
-        view = Service_product.objects.all()
-        return JsonResponse({'success':True, 'data':list(view), 'status': 200})
+        type_view = Types.objects.all()
+        return JsonResponse({'success':True, 'data':list(type_view), 'status': 200})
     elif request.method == "DELETE":
         try:
             data = json.loads(request.body)
             type_id = data.get('service_id')
             if Services.objects.filter(id = type_id).exists():
-                service_del = Service_product.objects.get(id= type_id)
+                service_del = Services.objects.get(id= type_id)
                 service_del.delete()
                 return JsonResponse({'success':True}, status=200)
             return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
