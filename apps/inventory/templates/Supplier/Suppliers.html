@@ -699,16 +699,9 @@
         })
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-    const saveButton = document.querySelector('#saveButton#');
-
-    if (!saveButton) {
-        console.error('Save button not found');
-        return;
-    }
-
+    const saveButton = document.getElementById('saveButton');
+if (saveButton) {
     console.log('Save button found');
-
     saveButton.addEventListener('click', function () {
         const supplierId = saveButton.getAttribute('data-supplier-id');
         const amount = document.getElementById('amount').value;
@@ -716,7 +709,7 @@
         const paymentMethod = document.getElementById('payment_method').value;
         const nextDue = document.getElementById('next_due').value;
 
-         if (!amount || !currency || !paymentMethod) {
+        if (!amount || !currency || !paymentMethod || !nextDue) {
             alert('Please fill out all required fields.');
             return;
         }
@@ -742,17 +735,18 @@
             if (data.success) {
                 alert(data.message || 'Payment saved successfully');
                 $('#paymentModal').modal('hide');
-                form.reset();
+                document.getElementById('paymentForm').reset(); // Assuming form has an id "paymentForm"
             } else {
                 alert(data.response || 'Something went wrong!');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred. Please try again later.');
+            alert(data.message ||'An error occurred. Please try again later.');
         });
     });
-});
+}
+
     // Toggle between USD and ZiG tables in the Payment History Modal
     // document.getElementById('toggleCurrencyButton').addEventListener('click', function() {
     //         const usdTable = document.getElementById('usdTable');
