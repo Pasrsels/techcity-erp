@@ -93,5 +93,7 @@ urlpatterns = [
     path('stocktake', stock_take, name='stock_take'),
 
     #accessories
-    path('accessory_view/<int:product_id>/', accessory_view, name='accessory_view')
+    path('accessory_view/<int:product_id>/', accessory_view, name='accessory_view'),
+
+    path('vue_view/', vue_view, name='vue')
 ]

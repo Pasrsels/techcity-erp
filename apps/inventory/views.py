@@ -3189,6 +3189,9 @@ def accessory_view(request, product_id):
             logger.info(e)
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
+def vue_view(request):
+    return render(request, 'vue.html')
+
 
 
     
