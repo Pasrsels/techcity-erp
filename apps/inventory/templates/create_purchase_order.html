@@ -27,7 +27,7 @@
 </style>
 <div class="inventory">
     <div class='add-purchase-order'>
-        <div class='purchase-order-nav shadow p-2 text-light d-flex justify-content-between align-items-center rounded' style="background:#373f4c !important;">
+        <div class='purchase-order-nav shadow p-2 d-flex justify-content-between align-items-center rounded'>
             <div>
                 <h5 class='fw-bold mt-2'>Create Purchase order</h5>
             </div>
@@ -41,6 +41,7 @@
                           <th>#</th>
                           <th>Action</th>
                           <th>Product</th>
+                          <th>Supplier</th>
                           <th>Quantity</th>
                           <th>Unit Price</th>
                           <th class="text-center">Total</th>
@@ -48,29 +49,29 @@
                         <tbody id="cart-items"></tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="3"></td>
+                                <td colspan="5"></td>
                                 <td class="fw-bold">Subtotal</td>
                                 <td class="text-center fw-bold" id="subtotal"></td>
                             </tr>
                             <tr>
-                                <td colspan="3"></td>
+                                <td colspan="5"></td>
                                 <td class="fw-bold">Discount</td>
                                 <td>
                                     <input id="id_discount" class="form-control text-center fw-bold" oninput="calculateTotals()">
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="3"></td>
+                                <td colspan="5"></td>
                                 <td class="fw-bold">Tax Rate</td>
                                 <td id="tax_rate" class="fw-bold text-center">15%</td>
                             </tr>
                             <tr>
-                                <td colspan="3"></td>
+                                <td colspan="5"></td>
                                 <td class="fw-bold">Tax Total</td>
                                 <td id="tax" class="fw-bold text-center"></td>
                             </tr>
                             <tr>
-                                <td colspan="3"></td>
+                                <td colspan="5"></td>
                                 <td class="fw-bold">Expenses</td>
                                 <td>
                                     <input id="id_other" style="border:none;" value="0.00"  class="form-control text-center fw-bold" oninput="calculateTotals()" readonly>
@@ -78,13 +79,13 @@
                             </tr>
                             <!-- Add dynamic rows for other expenses here -->
                             <tr id="other-expense-row">
-                                <td colspan="4"></td>
+                                <td colspan="6"></td>
                                 <td>
                                     <button class="btn btn-outline-dark btn-sm w-100" id="add-expense-btn" onclick="addExpense()">Add Expense</button>
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="3"></td>
+                                <td colspan="5"></td>
                                 <td class="fw-bold">Total</td>
                                 <td class="fw-bold text-center" id="id_total"></td>
                             </tr>
@@ -671,7 +672,7 @@
       row.id = `expense-row-${expenseCount}`;
 
       const cell = document.createElement('td');
-      cell.colSpan='3';
+      cell.colSpan='5';
 
       const nameCell = document.createElement('td');
       const nameInput = document.createElement('input');
@@ -999,10 +1000,12 @@
         const prodElement = document.querySelector('#id_product');
         prodElement.innerHTML = '<option value="">Select Product</option>';
 
+        console.log('product data: ', data)
+
         data.forEach((product) => {
             const option = document.createElement('option');
             option.value = product.id;
-            option.textContent = product.name;
+            option.textContent = `${product.name} [${product.quantity}]`;
             prodElement.appendChild(option);
         });
 
@@ -1121,22 +1124,39 @@
             row.innerHTML = `
             <td><small>${item.count}</small></td>
             <td>
-                <button class="btn" data-id=${item.id} onclick="removeItem(this);">
-                    <i class='bx bx-trash-alt'></i>
-                </button>
+              <small>
+                  <button class="btn" data-id=${item.id} onclick="removeItem(this);">
+                      <i class='bx bx-trash-alt'></i>
+                  </button>
+              </small>
             </td>
             <td>
+              <small>
                 ${item.product}
+              </small>
             </td>
             <td>
-                <input type="number" class="form-control" id="quantity-${item.id}" value="${item.quantity}" min="1" 
+              <small>
+                ${item.supplierName}
+              </small>
+            </td>
+            <td>
+              <small>
+                <input type="number" class="form-control form-control-sm" id="quantity-${item.id}" value="${item.quantity}" min="1" 
                     onchange="updateItemQuantity('${item.id}', this.value)">
+              </small>
             </td>
             <td>
-                <input type="number" class="form-control" id="price-${item.id}" value="${item.price}" min="0" step="0.01" 
+              <small>
+                <input type="number" class="form-control form-control-sm" id="price-${item.id}" value="${item.price}" min="0" step="0.01" 
                     onchange="updateItemPrice('${item.id}', this.value)">
+              </small>
             </td>
-            <td class='text-center' id="total-${item.id}">${(item.quantity * item.price).toFixed(2)}</td>
+            <td class='text-center' id="total-${item.id}">
+              <small>
+                ${(item.quantity * item.price).toFixed(2)}
+                </small>
+            </td>
         `;
             cartItemsList.appendChild(row);
         });
@@ -1174,7 +1194,11 @@
         const pElement = document.getElementById('id_product');
         const pSelectedOption = pElement.options[pElement.selectedIndex];
         let product = pSelectedOption.textContent.split(' [')[0];
-        const supplier = document.getElementById('id_supplier').value;
+
+        const supplier = document.getElementById('id_supplier');
+        const sSelectedOption = supplier.options[supplier.selectedIndex];
+        const supplierName = sSelectedOption.textContent;
+
         const price = parseFloat(document.getElementById('id_p_price').value);
         const quantity = Number(document.getElementById('id_p_quantity').value);
 
@@ -1203,13 +1227,13 @@
             product: product,
             quantity: quantity,
             price: price,
-            supplier: supplier,
+            supplierName: supplierName,
+            supplier: supplier.value,
           };
             cart.push(newTransfer);
-            cart.reverse()
         }
 
-        console.log(cart)
+        console.log(cart, 'cart')
         
         updateCartDisplay();
         calculateTotals();
@@ -1350,7 +1374,7 @@
         apportionmentTable.innerHTML = '';
         
           // populate the table 
-        cart.reverse().forEach((item) => {
+        cart.forEach((item) => {
           const row = document.createElement("tr");
           let id = 1;
           let actualCostPrice = 0;

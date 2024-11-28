@@ -1593,7 +1593,6 @@ def create_purchase_order(request):
                         return JsonResponse({'success': False, 'message': f'Product with Name {product_name} not found'}, status=404)
 
                     supplier = Supplier.objects.get(id=supplier_ids)
-                    logger.info(f'supplier ids: {supplier_ids}')
 
                     po_item = PurchaseOrderItem.objects.create(
                         purchase_order=purchase_order,
@@ -2989,6 +2988,7 @@ def product(request):
         products = Inventory.objects.filter(branch = request.user.branch).values(
             'id',
             'name',
+            'quantity'
         )
         return JsonResponse(list(products), safe=False)
     
