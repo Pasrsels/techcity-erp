@@ -6,6 +6,7 @@ app_name = 'booking'
 urlpatterns = [
     path('', services_view, name='service_view'),
     path('service_add/', services_add, name='service_add'),
+    path('service_product_add/', add_service_product, name='service_product_add'),
     path('member/', members_view, name= 'member'),
     path('office/',offices_view, name= 'office'),
 
