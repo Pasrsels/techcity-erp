@@ -27,6 +27,7 @@ urlpatterns = [
     
     # product
     path('create/product/', product, name='product'),
+    path('delete_product', delete_product, name='delete'),
     
     # suppliers
     path("suppliers/", supplier_view, name="suppliers"),

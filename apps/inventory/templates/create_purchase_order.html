@@ -121,6 +121,8 @@
                                         <option value={{product.id}}>{{product.name}} [{{ product.quantity }}]</option>
                                     {% endfor %}
                                 </select>
+                                <button type="button" class="btn bx bx-edit border me-2" onclick="editModal()"></button>
+                                <button type="button" class="btn bx bx-trash border me-2 m" onclick="deleteProduct()"></button>
                                 <button type="button" class="btn bx bx-plus border" id="id_add_supplier"></button>
                             </div>
                         </div>
@@ -323,7 +325,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-body">
-                <h5 class="fw-bold">Add Product</h5>
+                <h5 class="fw-bold" id="title">Add Product</h5>
                 <form method="post" class='mt-2 p-2'>
                   {% csrf_token %} 
                   <div id="div_id_batch_code" class="mb-3 d-none"> 
@@ -341,11 +343,7 @@
                         </button>
                     </div>
                   </div>
-                  <div class="d-flex form-group">
-                    <label for="" class="form-label requiredField">
-                      Check Product for existance
-                    <span class="asteriskField">*</span> 
-                  </label> 
+                  <div class="d-flex form-group d-none">
                     <select class="select form-select form-select-sm" id='id_search' data-clearable="true" data-searchable="true">
                         <option value="">Search Product</option>
                         {% for product in inventory %}
@@ -496,6 +494,9 @@
   </div>
 </div>
 
+<!-- product edit modal -->
+
+
 <!-- Details Modal (for displaying generated details in a table) -->
 <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-dialog-centered">
@@ -574,7 +575,8 @@
     let purchaseData = [];
     let formData = [];
     let holdPurchaseOrder = false;
-    let isAscending = true; // for sort fucntion
+    let isAscending = true; // for sort function
+    let productID = '' // for product editing and deleting
    
     const errorEl = document.getElementById('error');
     const addToCartError = document.getElementById('cart_error');
@@ -604,7 +606,7 @@
     const savePurchasaeOrderButton = document.getElementById('save_purchase_order')
 
     const search = new UseBootstrapSelect(document.getElementById('id_search')); 
-    const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'))
+    const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
     const formAddBtn = document.getElementById('formAddBtn');
     const otherFormsEl = document.getElementById('otherForms');
 
@@ -680,13 +682,14 @@
 
     checkLocalCart()
 
+    // search functionality of the table -> js
     const searchTable = () => {
-        const input = document.getElementById('search-input');
-        const filter = input.value.toLowerCase();
-        const table = document.getElementById('cart-table');
-        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+      const input = document.getElementById('search-input');
+      const filter = input.value.toLowerCase();
+      const table = document.getElementById('cart-table');
+      const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
 
-        for (let i = 0; i < rows.length; i++) {
+      for (let i = 0; i < rows.length; i++) {
             const cells = rows[i].getElementsByTagName('td');
             let found = false;
 
@@ -708,7 +711,75 @@
                 rows[i].style.display = "none";
             }
         }
-    }
+      }
+
+    // edit product modal call
+    const editModal = () => {
+      document.getElementById('title').textContent = `Edit Product: ${prodData[0][0].name.toUpperCase()}`;
+      document.getElementById('id_name').value = prodData[0][0].name;
+      document.getElementById('id_min_stock_level').value = prodData[0][0].min_stock_level;
+      document.getElementById('id_description').value = prodData[0][0].description;
+      document.getElementById('id_tax_type').value = prodData[0][0].tax_type;
+      document.getElementById('id_category').value = prodData[0][0].category_id; 
+      document.getElementById('id_image').value = ''; 
+
+      supplierFormModal.show()
+    };
+
+    // delete product 
+    const deleteProduct = async () => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "Once deleted, you will not be able to recover this product!",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        }).then(async (willDelete) => {
+            if (willDelete) {
+                try {
+                    const response = await fetch("{% url 'inventory:delete' %}", {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken'), 
+                        },
+                        body: JSON.stringify({ id: productID }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const result = await response.json();
+                    if (result.success) {
+                      Swal.fire({
+                          title: "Are success",
+                          text: "Product successfully deleted",
+                          icon: "success",
+                      })
+                        fetchProducts()
+                    } else {
+                      Swal.fire({
+                          title: "Failed to delete",
+                          text: data.message,
+                          icon: "error",
+                          dangerMode: true,
+                      })
+                    }
+                } catch (error) {
+                    console.error('There was a problem with the delete operation:', error);
+                    Swal.fire({
+                          title: "An error occurred while trying to delete the product.",
+                          text: error,
+                          icon: "error",
+                          dangerMode: true,
+                      })
+                }
+            } else {
+              return;  
+            }
+        });
+    };
 
     formAddBtn.addEventListener('click', ()=>{
     
@@ -761,19 +832,25 @@
             const productId = $(this).val();
             const productName = $(this).find('option:selected').text().split(' [')[0];
 
-            // fetch prodcut data
-            fetch(`/inventory/inventory/?id=${productId}`)
-                .then(response => response.json())
-                .then(data => {
-                    prodData.push(data);
-                })
-                .catch(error => console.error('Error:', error));
+            getProductData(productId)
+            getBestSupplierPrices(productId)
 
-                // fetch supplier prices 
-                getBestSupplierPrices(productId)
         });
     });
 
+    // fetch prodcut data
+    const getProductData = (productId) => {
+       fetch(`/inventory/inventory/?id=${productId}`)
+        .then(response => response.json())
+        .then(data => {
+          productID = data[0].id;
+          console.log(productID, 'product id');
+          prodData.push(data);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // get best supplies
     const getBestSupplierPrices = (id) =>{
       fetch(`/inventory/supplier_prices/${id}/`, {
             method: "POST",
@@ -1076,6 +1153,7 @@
         try {
             const image = await readFile(file); 
             const data = {
+                id:productID,
                 name: document.getElementById('id_name').value.trim(),
                 category: document.getElementById('id_category').value.trim(),
                 tax_type: document.getElementById('id_tax_type').value.trim(),
@@ -1085,8 +1163,6 @@
                 service: document.getElementById('id_service').checked,
                 image: image, 
             };
-
-            console.log(data); 
             return data;
         } catch (error) {
             console.error('Error reading file:', error);
@@ -1114,13 +1190,23 @@
           if (data.success) {
             supplierFormModal.hide();
             fetchProducts();
-            Swal.fire({
-              icon: 'success',
-              title: 'Product Added',
-              text: 'The product has been successfully added!',
-              timer: 2000,
-              showConfirmButton: false
-            });
+            if(productID){
+              Swal.fire({
+                icon: 'success',
+                title: 'Product successfully edited or deleted',
+                text: 'Success!',
+                timer: 2000,
+                showConfirmButton: false
+              });
+            }else{
+              Swal.fire({
+                icon: 'success',
+                title: 'Product Added',
+                text: 'The product has been successfully added!',
+                timer: 2000,
+                showConfirmButton: false
+              });
+            }
           } else {
             Swal.fire({
               icon: 'error',

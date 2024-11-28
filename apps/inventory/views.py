@@ -439,10 +439,11 @@ def transfer_details(request, transfer_id):
 
 @login_required
 def inventory(request):
-    product_id = request.GET.get('name', '')
+    product_id = request.GET.get('id', '')
+    logger.info(f'product id: {product_id}')
     if product_id:
         logger.info(list(Inventory.objects.\
-            filter(id=product_id, branch=request.user.branch).values()))
+            filter(id=product_id, branch=request.user.branch, status=False).values()))
         return JsonResponse(list(Inventory.objects.\
             filter(id=product_id, branch=request.user.branch).values()), safe=False)
     return JsonResponse({'error':'product doesnt exists'})
@@ -2949,6 +2950,7 @@ def product(request):
     if request.method == 'POST':
         # payload
         """
+            id,
             name,
             cost: float,
             quantity: int,
@@ -2959,7 +2961,8 @@ def product(request):
         """
         try:
             data = json.loads(request.body)
-            logger.info(data)
+            product_id = data.get('id', '')
+            logger.info(product_id)
             
         except Exception as e:
             return JsonResponse({'success':False, 'message':'Invalid data'})
@@ -2974,34 +2977,53 @@ def product(request):
                 logger.error(f'Error decoding image: {e}')
                 return JsonResponse({'success': False, 'message': 'Invalid image data'})
 
-        # validation for existance
-        if Inventory.objects.filter(name=data['name']).exists():
-            return JsonResponse({'success':False, 'message':f'Product {data['name']} exists'})
-
         try:
             category = ProductCategory.objects.get(id=data['category'])
         except ProductCategory.DoesNotExist:
             return JsonResponse({'success':False, 'message':f'Category Doesnt Exists'})
-    
         
-        product = Inventory.objects.create(
-            batch = '',
-            name = data['name'],
-            price = 0,
-            cost = 0,
-            quantity = 0,
-            category = category,
-            tax_type = data['tax_type'],
-            stock_level_threshold = data['min_stock_level'],
-            description = data['description'], 
-            end_of_day = True if data['end_of_day'] else False,
-            service = True if data['service'] else False,
-            branch = request.user.branch,
-            image = image
-        )
+        if product_id:
+            """editing the product"""
+            logger.info(f'Editing product ')
+            product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+            product.name = data['name']
+            product.price = data.get('price', 0)
+            product.cost = data.get('cost', 0)    
+            product.quantity = data.get('quantity', 0)  
+            product.category = category  
+            product.tax_type = data['tax_type']
+            product.stock_level_threshold = data['min_stock_level']
+            product.description = data['description']
+            product.end_of_day = True if data.get('end_of_day') else False
+            product.service = True if data.get('service') else False
+            product.image=image
+            product.batch = product.batch
+        else:
+            """creating a new product"""
+            
+            # validation for existance
+            if Inventory.objects.filter(name=data['name']).exists():
+                return JsonResponse({'success':False, 'message':f'Product {data['name']} exists'})
+            logger.info(f'Creating ')
+            product = Inventory.objects.create(
+                batch = '',
+                name = data['name'],
+                price = 0,
+                cost = 0,
+                quantity = 0,
+                category = category,
+                tax_type = data['tax_type'],
+                stock_level_threshold = data['min_stock_level'],
+                description = data['description'], 
+                end_of_day = True if data['end_of_day'] else False,
+                service = True if data['service'] else False,
+                branch = request.user.branch,
+                image = image
+            )
         product.save()
         
-        return JsonResponse({'success':True})
+        return JsonResponse({'success':True}, status=200)
+
             
     if request.method == 'GET':
         products = Inventory.objects.filter(branch = request.user.branch).values(
@@ -3011,7 +3033,27 @@ def product(request):
         )
         return JsonResponse(list(products), safe=False)
     
-    return JsonResponse({'success':False, 'message':'Invalid request'})
+    return JsonResponse({'success':False, 'message':'Invalid request'}, status=400)
+
+@login_required
+def delete_product(request):
+    if request.method == 'DELETE':
+        try:
+            data = json.loads(request.body)
+            product_id = data.get('id', '')
+
+            product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+            product.status = True  
+            product.save()
+
+            return JsonResponse({'success': True, 'message': 'Product deleted successfully.'})
+
+        except Inventory.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Product not found.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
 #reorder settings
 @login_required
