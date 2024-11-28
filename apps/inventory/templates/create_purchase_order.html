@@ -34,8 +34,13 @@
         </div>
         <div class="row mt-2 main" id="main-section">
             <div class="col-9">
-                <div class="d-flex flex-column rounded" style="background: #fff;">
-                    <p id="cart-title" class="fw-bold fs-6 pt-1 mx-1">Purchase order Items</p>
+                <div class="d-flex flex-column rounded p-2" style="background: #fff;">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <p id="cart-title" class="fw-bold fs-6 rounded mx-1">Purchase order Items</p>
+                    <div>
+                      <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search products..." oninput="searchTable()">
+                  </div>
+                  </div>
                     <table class="table border rounder p-2" id="cart-table">
                         <thead>
                           <th>#</th>
@@ -548,7 +553,7 @@
 </div>   
 <script src="{% static 'js/calculater.js' %}"></script>
 <script>
-    let itemCount = 1;
+    let itemCount = 0;
     let count = 1;
     let cart = [];
     let prodData = [];
@@ -610,13 +615,24 @@
             allowOutsideClick: false, 
             didOpen: () => {
                 Swal.showLoading();
+                const cartData = localStorage.getItem('cart');
 
+                if (!cartData){
+                  Swal.close();
+                  return;
+                }else{
+                  if (cartData.length == 2) {
+                      Swal.close();
+                      return;
+                  }
+                }
+                
                 if (localStorage.getItem('cart')) {
                     cart = JSON.parse(localStorage.getItem('cart')); 
-                    // update count
-                    count = cart[cart.length - 1].count
 
-                    console.log('count', cart[cart.length - 1], 'count', count)
+                    // update count
+                    itemCount = cart[cart.length - 1].count;
+
                     updateCartDisplay().then(() => {
                         Swal.close(); 
                     }).catch(error => {
@@ -632,6 +648,36 @@
     };
 
     checkLocalCart()
+
+    const searchTable = () => {
+        const input = document.getElementById('search-input');
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('cart-table');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        for (let i = 0; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            let found = false;
+
+            // Check each cell in the row
+            for (let j = 2; j < cells.length; j++) {
+                const cell = cells[j];
+                if (cell) {
+                    const txtValue = cell.textContent || cell.innerText;
+                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (found) {
+                rows[i].style.display = "";
+            } else {
+                rows[i].style.display = "none";
+            }
+        }
+    }
 
     formAddBtn.addEventListener('click', ()=>{
     
@@ -1204,7 +1250,6 @@
     }
 
     function updateItemPrice(id, newPrice) {
-      const cart = JSON.parse(localStorage.getItem('cart'))
       const item = cart.find((item) => item.id === id);
       if (item) {
           item.price = parseFloat(newPrice); 
@@ -1252,6 +1297,7 @@
         }
       
         const existingItem = cart.find((item) => item.product === product);
+        
         if (existingItem) {
           Swal.fire({
             icon:'error',
@@ -1260,6 +1306,7 @@
           })
           return;
         } else {
+          itemCount += 1;
           const newTransfer = { 
             count:itemCount,
             id: generateUniqueId(),
@@ -1273,16 +1320,11 @@
             cart.push(newTransfer);
         }
 
-        console.log(cart, 'cart')
-
         localStorage.setItem('cart', JSON.stringify(cart));
-
-        console.log(localStorage.getItem('cart'), 'local host')
         
         updateCartDisplay();
         calculateTotals();
         isCartEmpty();
-        itemCount += 1;
 
         Swal.fire({
           icon: 'success',
@@ -1296,6 +1338,9 @@
     const removeItem = (el) => {
         const id = el.dataset.id
         cart = cart.filter((item) => item.id !== id);
+        localStorage.setItem('cart', JSON.stringify(cart))
+        console.log(localStorage.getItem(cart, 'delete'))
+        console.log(cart)
         updateCartDisplay();
     }
     
@@ -1351,7 +1396,6 @@
               title: 'success',
               text: 'Purchase Order Successfully Created',
             }).then(()=>{
-              localStorage.removeItem('cart')
               window.location.href = '{% url "inventory:purchase_orders" %}'
             })
           } else {
