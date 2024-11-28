@@ -92,7 +92,7 @@
                         </tfoot>
                     </table>
                     <div class="d-flex justify-content-end">
-                      <button class="btn btn-outline-dark btn-sm flex mx-2" onclick="reload();">Cancel</button>
+                      <button class="btn btn-outline-dark btn-sm flex mx-2" onclick="reload();">Clear</button>
                       <button class="btn btn-dark btn-sm flex" id="next_button">Next</button>
                     </div>                        
                 </div>
@@ -602,6 +602,37 @@
       paymentModal.show()
     }
 
+    //check if local storage have anything and populate at the page load
+    const checkLocalCart = () => {
+        Swal.fire({
+            title: 'Loading products...',
+            text: 'Please wait while we load your cart.',
+            allowOutsideClick: false, 
+            didOpen: () => {
+                Swal.showLoading();
+
+                if (localStorage.getItem('cart')) {
+                    cart = JSON.parse(localStorage.getItem('cart')); 
+                    // update count
+                    count = cart[cart.length - 1].count
+
+                    console.log('count', cart[cart.length - 1], 'count', count)
+                    updateCartDisplay().then(() => {
+                        Swal.close(); 
+                    }).catch(error => {
+                        console.error('Error updating cart:', error);
+                        Swal.fire('Error', 'Failed to load products. Please try again.', 'error');
+                    });
+                } else {
+                    Swal.close(); 
+                    Swal.fire('Info', 'No products found in your cart.', 'info');
+                }
+            },
+        });
+    };
+
+    checkLocalCart()
+
     formAddBtn.addEventListener('click', ()=>{
     
       otherFormsEl.innerHTML += `
@@ -749,15 +780,16 @@
 
     function isCartEmpty(){
         if (cart.length === 0){
-            confirmBtn.disabled=true;
-        }else{
             confirmBtn.disabled=false;
+        }else{
+            confirmBtn.disabled=true;
         }
     }
 
     isCartEmpty()
 
     function reload(){
+      localStorage.removeItem('cart')
       window.location.reload()
     }
 
@@ -1112,74 +1144,84 @@
 
     function generateUniqueId() {
         return Math.floor(Math.random() * 1000000000).toString(36);
-      }
+    }
     
     function updateCartDisplay() {
-        const cartItemsList = document.getElementById("cart-items");
-        cartItemsList.innerHTML = "";
+      return new Promise((resolve, reject) => {
+        try {
+          const cartItemsList = document.getElementById("cart-items");
+          cartItemsList.innerHTML = "";
+          let items = JSON.parse(localStorage.getItem('cart'))
 
-        cart.reverse().forEach((item, index) => {
-            const row = document.createElement("tr");
-
-            row.innerHTML = `
-            <td><small>${item.count}</small></td>
-            <td>
-              <small>
-                  <button class="btn" data-id=${item.id} onclick="removeItem(this);">
-                      <i class='bx bx-trash-alt'></i>
-                  </button>
-              </small>
-            </td>
-            <td>
-              <small>
-                ${item.product}
-              </small>
-            </td>
-            <td>
-              <small>
-                ${item.supplierName}
-              </small>
-            </td>
-            <td>
-              <small>
-                <input type="number" class="form-control form-control-sm" id="quantity-${item.id}" value="${item.quantity}" min="1" 
-                    onchange="updateItemQuantity('${item.id}', this.value)">
-              </small>
-            </td>
-            <td>
-              <small>
-                <input type="number" class="form-control form-control-sm" id="price-${item.id}" value="${item.price}" min="0" step="0.01" 
-                    onchange="updateItemPrice('${item.id}', this.value)">
-              </small>
-            </td>
-            <td class='text-center' id="total-${item.id}">
-              <small>
-                ${(item.quantity * item.price).toFixed(2)}
+          items.reverse().forEach((item, index) => {
+              const row = document.createElement("tr");
+              row.innerHTML = `
+              <td><small>${item.count}</small></td>
+              <td>
+                <small>
+                    <button class="btn" data-id=${item.id} onclick="removeItem(this);">
+                        <i class='bx bx-trash-alt'></i>
+                    </button>
                 </small>
-            </td>
-        `;
-            cartItemsList.appendChild(row);
-        });
+              </td>
+              <td>
+                <small>
+                  ${item.product}
+                </small>
+              </td>
+              <td>
+                <small>
+                  ${item.supplierName}
+                </small>
+              </td>
+              <td>
+                <small>
+                  <input type="number" class="form-control form-control-sm" id="quantity-${item.id}" value="${item.quantity}" min="1" 
+                      onchange="updateItemQuantity('${item.id}', this.value)">
+                </small>
+              </td>
+              <td>
+                <small>
+                  <input type="number" class="form-control form-control-sm" id="price-${item.id}" value="${item.price}" min="0" step="0.01" 
+                      onchange="updateItemPrice('${item.id}', this.value)">
+                </small>
+              </td>
+              <td class='text-center' id="total-${item.id}">
+                <small>
+                  ${(item.quantity * item.price).toFixed(2)}
+                  </small>
+              </td>
+          `;
+              cartItemsList.appendChild(row);
+          });
 
-        calculateTotals(); 
+          calculateTotals(); 
+          resolve();
+        } catch (error) {
+            reject(error); 
+        }
+      });
     }
 
     function updateItemPrice(id, newPrice) {
-        const item = cart.find((item) => item.id === id);
-        if (item) {
-            item.price = parseFloat(newPrice); 
-            updateItemTotal(item); 
-            calculateTotals(); 
-        }
+      const cart = JSON.parse(localStorage.getItem('cart'))
+      const item = cart.find((item) => item.id === id);
+      if (item) {
+          item.price = parseFloat(newPrice); 
+          updateItemTotal(item); 
+          calculateTotals(); 
+      }
     }
 
     function updateItemQuantity(id, newQuantity) {
-        const item = cart.find((item) => item.id === id);
-        if (item) {
-            item.quantity = Number(newQuantity); 
-            updateItemTotal(item); 
-            calculateTotals();
-        }
+      const item = cart.find((item) => item.id === id);
+      if (item) {
+          item.quantity = Number(newQuantity); 
+          updateItemTotal(item); 
+          calculateTotals();
+      }
+      console.log('updated cart', cart)
+      localStorage.setItem('cart', cart)
     }
 
     function updateItemTotal(item) {
@@ -1187,8 +1229,6 @@
         const totalPrice = (item.quantity * item.price).toFixed(2);
         totalElement.textContent = totalPrice; 
     }
-
-    
 
     function addItem() {
         const pElement = document.getElementById('id_product');
@@ -1234,6 +1274,10 @@
         }
 
         console.log(cart, 'cart')
+
+        localStorage.setItem('cart', JSON.stringify(cart));
+
+        console.log(localStorage.getItem('cart'), 'local host')
         
         updateCartDisplay();
         calculateTotals();
@@ -1249,7 +1293,6 @@
         });
       }
       
-    
     const removeItem = (el) => {
         const id = el.dataset.id
         cart = cart.filter((item) => item.id !== id);
@@ -1308,6 +1351,7 @@
               title: 'success',
               text: 'Purchase Order Successfully Created',
             }).then(()=>{
+              localStorage.removeItem('cart')
               window.location.href = '{% url "inventory:purchase_orders" %}'
             })
           } else {
@@ -1354,6 +1398,7 @@
 
     // cost apportionment
     document.getElementById('next_button').addEventListener('click', ()=>{
+      console.log(cart, 'cart')
       if (cart.length != 0){
 
         document.getElementById('main-section').style.display = 'none';
