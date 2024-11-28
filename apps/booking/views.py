@@ -9,24 +9,61 @@ from django.http.response import HttpResponse, JsonResponse
 from django.db import transaction
 from utils import *
 from .forms import ServiceForm
+from loguru import logger
 
+#service view
 @login_required
 def services_view(request):
-    services = Services.objects.filter()
     form = ServiceForm()
-    if not services:
-        if request.method == 'POST':
-            if form.is_valid():
-                form.save()
-                messages.success(request,'saved successfully')
-                return redirect(request, 'booking:service_crud')
+    service = Services.objects.all()
+    if service:
+        return render(request,'service_products.html',{'data': service})
     else:
-        if request.method == 'POST':
-            if form.is_valid():
-                form.save()
-                messages.success(request,'saved successfully')
-                return redirect(request, 'booking:service_crud')
+        return render(request,'services1.html',{'form':form})
+#service add
+@login_required
+def services_add(request):
+    form = ServiceForm(request.POST)
+    if request.method == 'POST':
+        if form.is_valid(): 
+            form.save()
+            messages.success(request,'saved successfully')
+            return redirect('booking:service_view')
+#service crud
+@login_required
+def service_crud(request):
+    #update
+    if request.method == "PUT":
+        try:
+            data = json.loads(request.body)
+            service_id = data['service_id']
+            service_name = data['service_name']
+            
+            if not Services.objects.filter(id = service_id).exists():
+                return JsonResponse({'success': False, 'message': f'user with {service_id} does not exist'}, status = 400)
+            else:
+                service_edit = Services.objects.get(id = service_id)
+                service_edit.name = service_name
+                service_edit.save()
+                return JsonResponse({'success':True},status = 200)
+        except Exception as e:
+            return JsonResponse({'success':False, 'response':f'{e}'}, status = 400)
+    
+    elif request.method == "DELETE":
+        data = json.loads(request.body)
+        service_id = data['service_id']
+        if Services.objects.filter(id = service_id).exists():
+            service_del = Services.objects.get(id= service_id)
+            service_del.delete = True
+            service_del.save()
+            return JsonResponse({'success':True}, status=200)
+        return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
+    return JsonResponse({'success':False, 'response': 'invalid request'}, status =  400)
 
+#service_product
+
+
+#member view
 @login_required
 def members_view(request):
     member = Services.objects.filter(delete=False)
@@ -37,68 +74,6 @@ def offices_view(request):
     office = Services.objects.all()
     return render(request, 'service_products.html',office)
 
-#services
-@login_required
-def service_crud(request):
-    if request.method == "GET":#View
-        service = Services.objects.filter(delete = False)
-        return JsonResponse({'success':True, 'data':list(service), 'status': 200})
-    #update
-    elif request.method == "PUT":
-        try:
-            data = json.loads(request.body)
-            service_id = data[0]['service_id']
-            service = Services.objects.get(id=service_id)
-
-            s_p_id = data['type_id']
-            
-            service_name = data['service_name']
-
-            s_p_name = data['name']
-
-            s_p_d_price = data['price']
-            unit_measurement = data['type_service_duration']
-            range = data['range']
-            promo = data['promotion']
-
-            if not Services.objects.filter(id = service_id).exists():
-                return JsonResponse({'success': False, 'message': f'user with {service_id} does not exist'}, status = 400)
-            else:
-                with transaction.atomic():
-                    service_product_details_info = Service_product_details.objects.get(id = id)
-                    service_product_details_info.price = s_p_d_price,
-                    service_product_details_info.unit_of_measurement = unit_measurement,
-                    service_product_details_info.service_range = range,
-                    service_product_details_info.promotion = promo
-                    
-                    service_product_details_info.save()
-
-                    service_product_info = Service_product.objects.get(id = id)
-                    service_product_info.name = s_p_name,
-                    service_product_info.service_product_details = service_product_details_info
-
-                    service_product_info.save()
-
-                    service_info = Services.objects.get(id = id)
-                    service_info.name = service_name,
-                    service_info.service_product = service_product_info
-
-                    service_info.save()
-                    return JsonResponse({'success':True},status = 200)
-        except Exception as e:
-            return JsonResponse({'success':False, 'response':f'{e}'})
-    
-    elif request.method == "DELETE":
-
-        data = json.loads(request.body)
-        service_id = data['service_id']
-        if Services.objects.filter(id = service_id).exists():
-            service_del = Services.objects.get(id= service_id)
-            service_del.delete = True
-            service_del.save()
-            return JsonResponse({'success':True}, status=200)
-        return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
-    return JsonResponse({'success':False, 'response': 'invalid request'}, status =  400)
 #types
 @login_required
 def type_crud(request):

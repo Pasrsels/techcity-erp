@@ -39,7 +39,7 @@
                 </div>
 
                 <div class="modal-body">
-                    <form id="addServiceForm"> <!--to be adjusted-->
+                    <form action="{% url 'booking:service_add' %}" method="POST"> <!--to be adjusted-->
                         {% csrf_token %}
                         {{form}}
                         <div class="d-flex justify-content-between mt-3">
