@@ -1580,7 +1580,9 @@ def create_purchase_order(request):
                     quantity = int(item_data['quantity'])
                     unit_cost = Decimal(item_data['price'])
                     actual_unit_cost = Decimal(item_data['actualPrice'])
-                    supplier_ids = item_data.get('supplier', [])
+                    supplier_id = item_data.get('supplier', [])
+
+                    logger.info(f'Supplier id {{ supplier_id }}')
 
                     if not all([product_name, quantity, unit_cost, product_id]):
                         transaction.set_rollback(True)
@@ -1592,7 +1594,7 @@ def create_purchase_order(request):
                         transaction.set_rollback(True)
                         return JsonResponse({'success': False, 'message': f'Product with Name {product_name} not found'}, status=404)
 
-                    supplier = Supplier.objects.get(id=supplier_ids)
+                    supplier = Supplier.objects.get(id=supplier_id)
 
                     po_item = PurchaseOrderItem.objects.create(
                         purchase_order=purchase_order,
@@ -2306,7 +2308,6 @@ def edit_purchase_order(request, po_id):
             return JsonResponse({'success': False, 'message': 'Invalid JSON payload'}, status=400)
 
         batch = purchase_order_data['batch']
-        supplier_id = purchase_order_data['supplier']
         delivery_date = purchase_order_data['delivery_date']
         status = purchase_order_data['status']
         notes = purchase_order_data['notes']
@@ -2320,16 +2321,10 @@ def edit_purchase_order(request, po_id):
             return JsonResponse({'success': False, 'message': 'Missing required fields'}, status=400)
 
         try:
-            supplier = Supplier.objects.get(id=1)
-        except Supplier.DoesNotExist:
-            return JsonResponse({'success': False, 'message': f'Supplier with ID {supplier_id} not found'}, status=404)
-
-        try:
             with transaction.atomic():
                 purchase_order = PurchaseOrder(
                     batch = batch,
                     order_number=PurchaseOrder.generate_order_number(),
-                    supplier=supplier,
                     delivery_date=delivery_date,
                     status=status,
                     notes=notes,
@@ -2351,10 +2346,12 @@ def edit_purchase_order(request, po_id):
                 logger.info(f'cist {cost_allocations}')
 
                 for item_data in purchase_order_items_data:
-                    product_name = (item_data['product'])
+                    product_id = item_data['product_id']
+                    product_name = item_data['product']
                     quantity = int(item_data['quantity'])
                     unit_cost = Decimal(item_data['price'])
                     actual_unit_cost = Decimal(item_data['actualPrice'])
+                    supplier_id = item_data.get('supplier', [])
 
                     logger.info(f'quantity: {quantity}')
 
@@ -2363,13 +2360,15 @@ def edit_purchase_order(request, po_id):
                         return JsonResponse({'success': False, 'message': 'Missing fields in item data'}, status=400)
 
                     try:
-                        product = Product.objects.get(name=product_name)
-                    except Product.DoesNotExist:
+                        product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+                    except Inventory.DoesNotExist:
                         transaction.set_rollback(True)
                         return JsonResponse({'success': False, 'message': f'Product with Name {product_name} not found'}, status=404)
 
+                    supplier = Supplier.objects.get(id=supplier_id)
+
                     # get the log with the quantity received for replacing po_item quantity 
-                    log_quantity = logs.filter(inventory__product = product).values('quantity')
+                    log_quantity = logs.filter(inventory = product).values('quantity')
                     logger.info(log_quantity)
                     purchase_order_items_bulk.append(
                         PurchaseOrderItem(
@@ -2379,7 +2378,8 @@ def edit_purchase_order(request, po_id):
                             unit_cost=unit_cost,
                             actual_unit_cost=actual_unit_cost,
                             received_quantity= 0 if not log_quantity else log_quantity[0]['quantity'],
-                            received=False
+                            received=False,
+                            supplier = supplier
                         )
                     )
 
@@ -2524,10 +2524,13 @@ def edit_purchase_order_data(request, po_id):
         purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order__id=po_id).values(
             'purchase_order__id',
             'product__name',
+            'product__id',
             'quantity',
             'unit_cost',
             'actual_unit_cost',
-            'expected_profit'
+            'expected_profit',
+            'supplier__name',
+            'supplier'
         )
 
         return JsonResponse({'success':True, 'po_items':list(purchase_order_items), 'expenses':list(expenses)})
