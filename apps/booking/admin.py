@@ -3,7 +3,6 @@ from . models import *
 
 admin.site.register(Services)
 admin.site.register(Service_product)
-admin.site.register(Service_product_details)
 admin.site.register(Unit_Measurement)
 admin.site.register(Service_range)
 admin.site.register(Members)
