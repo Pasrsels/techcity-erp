@@ -3,15 +3,29 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from .models import *
 from django.shortcuts import get_object_or_404
+from django.contrib import messages
 import json
 from django.http.response import HttpResponse, JsonResponse
 from django.db import transaction
 from utils import *
+from .forms import ServiceForm
 
 @login_required
 def services_view(request):
-    services = Services.objects.filter(delete=False)
-    return render(request, 'services1.html',{'data': services})
+    services = Services.objects.filter()
+    form = ServiceForm()
+    if not services:
+        if request.method == 'POST':
+            if form.is_valid():
+                form.save()
+                messages.success(request,'saved successfully')
+                return redirect(request, 'booking:service_crud')
+    else:
+        if request.method == 'POST':
+            if form.is_valid():
+                form.save()
+                messages.success(request,'saved successfully')
+                return redirect(request, 'booking:service_crud')
 
 @login_required
 def members_view(request):
@@ -29,59 +43,6 @@ def service_crud(request):
     if request.method == "GET":#View
         service = Services.objects.filter(delete = False)
         return JsonResponse({'success':True, 'data':list(service), 'status': 200})
-    elif request.method == "POST":#ADD
-        data = json.loads(request.body)
-        try:
-            service_name = data['service_name']
-
-            s_p_name = data['name']
-
-            s_p_d_price = data['price']
-            unit_measurement = data['type_service_duration']
-            range = data['range']
-            promo = data['promotion']
-
-            if not Services.objects.filter(name = service_name).exists():
-                with transaction.atomic():
-                    service_product_details_info = Service_product_details.objects.create(
-                        price = s_p_d_price,
-                        unit_of_measurement = unit_measurement,
-                        service_range = range,
-                        promotion = promo
-                    )
-
-                    service_product_info = Service_product.objects.create(
-                        name = s_p_name,
-                        service_product_details = service_product_details_info
-                    )
-
-                    Services.objects.create(
-                        name = service_name,
-                        service_product = service_product_info
-                    )
-            elif not Service_product_details.objects.filter(name = s_p_name).exists():
-                with transaction.atomic():
-                    service_product_details_info = Service_product_details.objects.create(
-                        price = s_p_d_price,
-                        unit_of_measurement = unit_measurement,
-                        service_range = range,
-                        promotion = promo
-                    )
-
-                    service_product_info = Service_product.objects.create(
-                        name = s_p_name,
-                        service_product_details = service_product_details_info
-                    )
-            else:
-                with transaction.atomic():
-                    service_product_details_info = Service_product_details.objects.create(
-                        price = s_p_d_price,
-                        unit_of_measurement = unit_measurement,
-                        service_range = range,
-                        promotion = promo
-                    )
-        except Exception as e:
-            return JsonResponse({'succes':False, 'response': f'{e}'}, status = 400)
     #update
     elif request.method == "PUT":
         try:
