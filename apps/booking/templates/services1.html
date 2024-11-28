@@ -4,25 +4,23 @@
 {% block title %}Services{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="Services">
-    <div class="d-flex align-items-center justify-content-between rounded text-light shadow header py-2 mb-4" style="background: #373f4c;">
-        <h5 class="text-light px-1">Services</h5>
+
     
-    </div>
-    <style>
-        .btn-custom {
-            font-size: 1.25rem; 
-            padding: 15px 30px; 
-        }
-    </style>
-    
-    <div class="text-center mt-4">
-        <button type="button" class="btn btn-outline-dark btn-custom" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-            + Service
-        </button>
-    </div>
-    
+<style>
+    .full-page-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh; 
+        background-color: #f8f9fa;
+    }
+</style>
+
+<div class="full-page-center">
+    <button type="button" class="btn btn-outline-dark btn-custom" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+        + Service
+    </button>
+</div>
 
 </div>
 
