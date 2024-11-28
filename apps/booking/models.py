@@ -44,20 +44,21 @@ class Services(models.Model):
 class Service_product(models.Model):
     name = models.CharField(max_length= 255)
     service = models.ForeignKey('Services', on_delete= models.CASCADE, null=True)
-    unit_measure = models.ForeignKey('Unit_measurement', on_delete= models.CASCADE, null=True)
-    service_range = models.ForeignKey('Service_range', on_delete= models.CASCADE, null= True)
+
     def __str__(self):
         return f"{self.name}"
 
 class Unit_Measurement(models.Model):
     measurement = models.CharField(max_length=60)
     promotion = models.BooleanField(default= False)
+    service_product = models.ForeignKey('Service_product', on_delete=models.CASCADE)
     def __str__(self):
         return f'{self.measurement}'
 
 class Service_range(models.Model):
     service_range = models.CharField(max_length=40)
     price = models.DecimalField(max_digits=10, decimal_places=2, default= 0.00)
+    service_product = models.ForeignKey('Service_product', on_delete=models.CASCADE)
     def __str__(self):
         return f'{self.service_range}'
     

@@ -21,7 +21,7 @@ def services_view(request):
     service_r = Service_range.objects.all()
     service_u = Unit_Measurement.objects.all()
     
-    logger.info(service)
+    logger.info(service_product.values('name'))
     if service:
         return render(request,'service_products.html',{
         'data': service,
@@ -79,7 +79,9 @@ def add_service_product(request):
     if request.method == 'POST':
         if form.is_valid():
             form.save()
-            return redirect('booking:service')
+            messages.info(request, 'success')
+            return redirect('booking:service_view')
+        return render(request, 'service_products.html')
 
 #service_product CRUD
 @login_required
