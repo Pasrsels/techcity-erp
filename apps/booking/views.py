@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from .models import *
 from django.shortcuts import get_object_or_404
+from django.contrib import messages
 import json
 from django.http.response import HttpResponse, JsonResponse
 from django.db import transaction
@@ -11,9 +12,15 @@ from forms import *
 
 @login_required
 def services_view(request):
-    services = Services.objects.filter(delete=False)
-    form = ServiceForm
-    return render(request, 'services.html',{'form': form,'data': services})
+    services = Services.objects.filter()
+    form = ServiceForm()
+    if not services:
+        if request.method == 'POST':
+            if form.is_valid():
+                form.save()
+                messages.success(request,'saved successfully')
+                return render(request, 'services.html',{'form': form,'data': services})
+    return render(request, 'service_product.html',{'data': services})
 
 @login_required
 def members_view(request):
@@ -35,9 +42,7 @@ def service_crud(request):
         data = json.loads(request.body)
         try:
             service_name = data['service_name']
-
             s_p_name = data['name']
-
             s_p_d_price = data['price']
             unit_measurement = data['type_service_duration']
             range = data['range']
@@ -47,7 +52,6 @@ def service_crud(request):
                 with transaction.atomic():
                     service_info = Services.objects.create(
                         name = service_name,
-                        service_product = service_product_info
                     )
 
                     service_product_info = Service_product.objects.create(
