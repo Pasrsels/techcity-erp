@@ -39,7 +39,7 @@ class Services(models.Model):
     name = models.CharField(max_length= 255)
     delete = models.BooleanField(default= False)
     def __str__(self):
-        return f'{self.name}, {self.service_product.name}'
+        return f'{self.name}'
 
 class Service_product(models.Model):
     name = models.CharField(max_length= 255)
