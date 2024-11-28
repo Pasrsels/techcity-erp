@@ -65,6 +65,7 @@ from loguru import logger
 from xhtml2pdf import pisa
 from django.template.loader import get_template
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from apps.inventory.utils import best_price
 
 
 @login_required
@@ -2926,6 +2927,21 @@ def supplier_account(request, supplier_id):
     except Exception as e:
         messages.warning(request, 'Supplier account doesnt exists')
         return redirect('inventory:suppliers')
+
+
+@login_required
+def supplier_prices(request, product_id):
+    """
+        {
+            product_id: id
+        }
+    """
+    try:
+        best_three_prices = best_price(product_id)
+        logger.info(best_three_prices)
+        return JsonResponse({'success': True, 'suppliers': best_three_prices})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
 
 #product   
 @login_required

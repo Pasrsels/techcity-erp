@@ -43,7 +43,9 @@
                   </div>
                     <table class="table border rounder p-2" id="cart-table">
                         <thead>
-                          <th>#</th>
+                          <th id="sort-number" style="cursor: pointer;">#
+                            <span id="sort-arrow" class="sort-arrow">↕</span>
+                          </th>
                           <th>Action</th>
                           <th>Product</th>
                           <th>Supplier</th>
@@ -149,6 +151,9 @@
                             >
                             <p id="price_error" class="fs-6 text-danger"></p>
                         </div> 
+                        <div id="supplier_prices" class="mb-1"> 
+                          <!-- to be rendered by js -->
+                        </div>
                         <div id="div_id_quantity" class="mb-1"> 
                             <label for="id_p_quantity" class="form-label requiredField">
                                 Quantity
@@ -568,7 +573,8 @@
     let products = [];
     let purchaseData = [];
     let formData = [];
-    let holdPurchaseOrder = false
+    let holdPurchaseOrder = false;
+    let isAscending = true; // for sort fucntion
    
     const errorEl = document.getElementById('error');
     const addToCartError = document.getElementById('cart_error');
@@ -605,6 +611,31 @@
     const nextBtn = () =>{
       noteModal.hide()
       paymentModal.show()
+    }
+
+    calculateExpression('id_p_price', errorId = null) // calculator for price field
+
+    // event listener to sort the table
+    document.getElementById('sort-number').addEventListener('click', () => {
+        sortTable();
+    });
+
+    const sortTable = () => {
+        const table = document.getElementById("cart-table");
+        const tbody = table.getElementsByTagName("tbody")[0];
+        const rows = Array.from(tbody.getElementsByTagName("tr"));
+
+        rows.sort((a, b) => {
+            const aIndex = parseInt(a.cells[0].textContent);
+            const bIndex = parseInt(b.cells[0].textContent);
+            return isAscending ? aIndex - bIndex : bIndex - aIndex;
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+
+        isAscending = !isAscending;
+
+        document.getElementById('sort-arrow').textContent = isAscending ? '↑' : '↓';
     }
 
     //check if local storage have anything and populate at the page load
@@ -730,17 +761,65 @@
             const productId = $(this).val();
             const productName = $(this).find('option:selected').text().split(' [')[0];
 
+            // fetch prodcut data
             fetch(`/inventory/inventory/?id=${productId}`)
                 .then(response => response.json())
                 .then(data => {
                     prodData.push(data);
                 })
                 .catch(error => console.error('Error:', error));
+
+                // fetch supplier prices 
+                getBestSupplierPrices(productId)
         });
     });
 
+    const getBestSupplierPrices = (id) =>{
+      fetch(`/inventory/supplier_prices/${id}/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": getCookie("csrftoken"), 
+            },
+            body: JSON.stringify(),
+          })
+          .then(response => response.json())
+          .then(data=>{
+              if (data.success) {
+                console.log(data)
+                if(data.suppliers){
+                  const supplierPrices = document.getElementById('supplier_prices')
+                  supplierPrices.innerHTML = ''
+                  supplierPrices.innerHTML = `<p class="text-danger">Last best prices for this product</p>`
+                  data.suppliers.forEach((sup)=>{
+                      console.log(sup)
+                      supplierPrices.innerHTML += `
+                        <button type='button' aria-label='Click to choose supplier.' class='btn btn-outline-dark hint--bottom mb-1' onclick="selectedSupplier(${sup?.id})">$${sup?.price}</button>
+                      `
+                  })
+                }
+              } else {
+                Swal.fire({
+                    title: "Error",
+                    text: data.message,
+                    icon: "error"
+                });
+              } 
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              addToCartError.textContent=data.message;
+            });
+    }
+
+    const selectedSupplier = (supplierId) => {
+        const supplierSelect = document.getElementById('id_supplier');
     
-    calculateExpression('id_p_price', errorId = null)
+        supplierSelect.value = supplierId;
+
+        const event = new Event('change');
+        supplierSelect.dispatchEvent(event);
+    }
 
     function addExpense() {
       expenseCount++;
