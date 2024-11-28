@@ -26,19 +26,20 @@
             </nav>
 
             <div class="row mt-5">
-                {% for letter, num_offices in [('A', 10), ('B', 10), ('C', 10), ('D', 10), ('E', 10), ('F', 12)] %}
-                <div class="col-md-4 mb-4">
-                    <div class="card shadow-lg">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Office {{ letter }}</h5>
-                            <div class="d-flex justify-content-center mt-3">
-                                <i class="fas fa-eye me-2 view-office" data-office="{{ letter }}" data-num-offices="{{ num_offices }}" style="cursor: pointer;"></i>
+                {% for letter, num_offices in offices.items() %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow-lg">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Office {{ letter }}</h5>
+                                <div class="d-flex justify-content-center mt-3">
+                                    <i class="fas fa-eye me-2 view-office" data-office="{{ letter }}" data-num-offices="{{ num_offices }}" style="cursor: pointer;"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 {% endfor %}
             </div>
+            
 
             <!-- Office Modal -->
             <div class="modal fade" id="officeModal" tabindex="-1" aria-hidden="true">

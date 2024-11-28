@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} Add Service Products{% endblock %}
+
+{% block content %}
+<div class="container me-5">
+    <div class="Service_Products">
+        <div class="d-flex align-items-center justify-content-between rounded text-light shadow header py-2 mb-4" style="background: #aeb6c2;">
+            <h3 class="text-light px-1">Service Products</h3>
+            <div>
+                <button class="btn btn-outline-dark ms-10">Analytics</button>
+                <button class="btn btn-outline-dark ms-10">Members</button>
+                <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#addProductModal">Add Service Product</button>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            
+            <h4 class="text-dark mb-0">Add Service Products</h4>
+        
+            <div class="d-flex">
+                <input 
+                    type="text" 
+                    class="form-control me-2" 
+                    id="searchBar" 
+                    placeholder="Search Service Product" 
+                    oninput="filterProducts()"
+                />
+            </div>
+        </div>
+        
+        <div id="productsContainer" class="row mt-4">
+            {% for product in service_products %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4 product-card" data-name="{{ product.name|lower }}" data-details="{{ product.details|lower }}">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <p class="card-text">{{ product.details }}</p>
+                            <div class="d-flex justify-content-end">
+                                <button class="btn btn-sm btn-outline-primary me-2" title="Edit" data-bs-toggle="modal" data-bs-target="#editProductModal" onclick="loadEditModal('{{ product.name }}', '{{ product.details }}')">
+                                    <i class="bx bx-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" title="View" data-bs-toggle="modal" data-bs-target="#viewProductModal" onclick="loadViewModal('{{ product.name }}', '{{ product.details }}')">
+                                    <i class="bx bx-show"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProductModalLabel">Add Service Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST"> <!-- To be handled by the backend -->
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="productName" class="form-label">Product Name</label>
+                        <input type="text" class="form-control" id="productName" name="productName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productDetails" class="form-label">Product Details</label>
+                        <textarea class="form-control" id="productDetails" name="productDetails" rows="3" required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between mt-3">
+                        <button type="reset" class="btn btn-secondary">Reset</button>
+                        <button type="submit" class="btn btn-primary" onclick="triggerFeedback(event)">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="successModalLabel">Success</h5>
+                <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Service product was added successfully!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="errorModalLabel">Error</h5>
+                <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>There was an error adding the service product. Please try again.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+function filterProducts() {
+    const query = document.getElementById('searchBar').value.toLowerCase();
+    const productCards = document.querySelectorAll('.product-card');
+
+    productCards.forEach(card => {
+        const name = card.getAttribute('data-name');
+        const details = card.getAttribute('data-details');
+
+        if (name.includes(query) || details.includes(query)) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function loadViewModal(productName, productDetails) {
+    document.getElementById('viewProductName').innerText = productName;
+    document.getElementById('viewProductDetails').innerText = productDetails;
+}
+
+function loadEditModal(productName, productDetails) {
+    document.getElementById('editProductName').value = productName;
+    document.getElementById('editProductDetails').value = productDetails;
+}
+
+// feedback to be connected with backend response
+function triggerFeedback(event) {
+    event.preventDefault(); 
+    const isSuccess = true; 
+    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+
+    if (isSuccess) {
+        successModal.show();
+    } else {
+        errorModal.show();
+    }
+}
+</script>
+{% endblock %}
