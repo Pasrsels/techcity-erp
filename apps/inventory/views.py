@@ -2211,10 +2211,12 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
                 quantity_adjustment = quantity - inventory.quantity 
                 inventory.quantity -= quantity_adjustment
                 action = 'purchase edit +'
-            else:
+            elif inventory.quantity > quantity:
                 quantity_adjustment = inventory.quantity - quantity 
                 inventory.quantity += quantity_adjustment
                 action = 'purchase edit -'
+            else:
+                inventory.quantity = quantity
 
             inventory.price = selling_price
             inventory.dealer_price = dealer_price
