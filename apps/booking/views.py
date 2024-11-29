@@ -21,7 +21,7 @@ def services_view(request):
     service_r = Service_range.objects.all() #to remove
     service_u = Unit_Measurement.objects.all() #to remove
     
-    logger.info(service)
+    logger.info(service_product.values('name'))
     if service:
         """ since we have relationship on of range and um on service_product they is no need to get the data seperately
             its a good practice to reference the data with its actual name than data
@@ -96,7 +96,9 @@ def add_service_product(request):
     if request.method == 'POST':
         if form.is_valid():
             form.save()
-            return redirect('booking:service')
+            messages.info(request, 'success')
+            return redirect('booking:service_view')
+        return render(request, 'service_products.html')
 
 #service_product CRUD
 @login_required

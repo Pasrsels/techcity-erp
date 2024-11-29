@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-
+{% load crispy_forms_tags %}
 {% block title %} Add Service Products{% endblock %}
 
 {% block content %}
@@ -16,9 +16,7 @@
         </div>
 
         <div class="d-flex align-items-center justify-content-between mb-4">
-            
             <h4 class="text-dark mb-0">Add Service</h4>
-        
             <div class="d-flex">
                 <input 
                     type="text" 
@@ -63,7 +61,7 @@
             <div class="modal-body">
                 <form action="{% url 'booking:service_product_add' %}" method="POST"> <!-- To be handled by the backend -->
                     {% csrf_token %}
-                    {{product_form}}
+                    {{product_form | crispy }}
                     <!-- <div class="mb-3">
                         <label for="productName" class="form-label">Product Name</label>
                         <input type="text" class="form-control" id="productName" name="productName" required>
@@ -74,7 +72,7 @@
                     </div> -->
                     <div class="d-flex justify-content-between mt-3">
                         <button type="reset" class="btn btn-secondary">Reset</button>
-                        <button type="submit" class="btn btn-primary" onclick="triggerFeedback(event)">Save</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
                     </div>
                 </form>
             </div>
