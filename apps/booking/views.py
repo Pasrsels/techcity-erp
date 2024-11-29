@@ -25,13 +25,23 @@ def services_view(request):
     service_product = Service_product.objects.all()
     service_r = Service_range.objects.all()
     service_u = Unit_Measurement.objects.all()
-    
+    range_list = []
+    for range in service_r:
+        range_list.append(
+            {
+                'price': range.price,
+                'range': range.service_range,
+                'service_product': range.service_product.name
+            }
+        )
+    logger.info(range_list)
+    logger.info(service_u)
     logger.info(service_product.values('name'))
     if service:
         return render(request,'service_products.html',{
         'data': service,
         'data_product': service_product,
-        'data_range':service_r,
+        'data_range':range_list,
         'data_unit': service_u,
         'product_form': form_products,
         'measure_form': form_measure,
@@ -40,21 +50,33 @@ def services_view(request):
     else:
         return render(request,'services1.html',{'form':form})
     
-
 #service add
 @login_required
 def services_add(request):
     form = ServiceForm(request.POST)
     form_measure = UnitForm(request.POST)
     form_service = RangeForm(request.POST)
-    if request.method == 'POST':
-        if form.is_valid():
-            form.save()
-            form_measure.save()
-            form_service.save()
-            messages.success(request,'saved successfully')
-    return redirect('booking:service_view')
 
+    if request.method == 'POST':
+        if form and form_service and form_measure:
+            if  form_measure.is_valid() and form_service.is_valid() and form.is_valid():
+                form.save()
+
+                form_measure = form_measure.save(commit=False)
+                form_measure.service_product = form
+                form_measure.save()
+
+                form_service = form_service.save(commit=False)
+                form_service.service_product = form
+                form_service.save()
+                return JsonResponse({'success': True,},status = 200)
+        elif form:
+            if form.is_valid():
+                form.save()
+                messages.success(request,'saved successfully')
+                return JsonResponse({'success': True}, status = 200)
+            return JsonResponse({'success': False, 'message': 'invalid form'}, status = 400)
+    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
 
 #service crud
 @login_required
