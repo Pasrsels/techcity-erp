@@ -13,9 +13,9 @@ class Service_productForm(forms.ModelForm):
 class UnitForm(forms.ModelForm):
     class Meta:
         model = Unit_Measurement
-        exclude = ['service_product']
+        fields = '__all__'
 
 class RangeForm(forms.ModelForm):
     class Meta:
         model = Service_range
-        exclude = ['service_product']
+        fields = '__all__'

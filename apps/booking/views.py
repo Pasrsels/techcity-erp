@@ -14,73 +14,22 @@ from loguru import logger
 #service view
 @login_required
 def services_view(request):
-    # Getting forms
-    form = ServiceForm()
-    form_products = Service_productForm()
-    form_measure = UnitForm()
-    form_service = RangeForm()
-
-    #querying models
     service = Services.objects.all()
-    service_product = Service_product.objects.all()
-    service_r = Service_range.objects.all()
-    service_u = Unit_Measurement.objects.all()
-    range_list = []
-    for range in service_r:
-        range_list.append(
-            {
-                'price': range.price,
-                'range': range.service_range,
-                'service_product': range.service_product.name
-            }
-        )
-    logger.info(range_list)
-    logger.info(service_u)
-    logger.info(service_product.values('name'))
+    form = ServiceForm()
     if service:
-        return render(request,'service_products.html',{
-        'data': service,
-        'data_product': service_product,
-        'data_range':range_list,
-        'data_unit': service_u,
-        'product_form': form_products,
-        'measure_form': form_measure,
-        'unit_form': form_service
-        })
-    else:
-        return render(request,'services1.html',{'form':form})
-    
-#service add
-@login_required
-def services_add(request):
-    form = ServiceForm(request.POST)
-    form_measure = UnitForm(request.POST)
-    form_service = RangeForm(request.POST)
-
-    if request.method == 'POST':
-        if form and form_service and form_measure:
-            if  form_measure.is_valid() and form_service.is_valid() and form.is_valid():
-                form.save()
-
-                form_measure = form_measure.save(commit=False)
-                form_measure.service_product = form
-                form_measure.save()
-
-                form_service = form_service.save(commit=False)
-                form_service.service_product = form
-                form_service.save()
-                return JsonResponse({'success': True,},status = 200)
-        elif form:
-            if form.is_valid():
-                form.save()
-                messages.success(request,'saved successfully')
-                return JsonResponse({'success': True}, status = 200)
-            return JsonResponse({'success': False, 'message': 'invalid form'}, status = 400)
-    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
+        return redirect('booking:service_product_crud')
+    return render(request,'services1.html',{'form':form})
 
 #service crud
 @login_required
 def service_crud(request):
+    if request.method == 'POST':
+        form = ServiceForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request,'saved successfully')
+            return render(request, 'service_products.html')
+        return JsonResponse({'success': False, 'message': 'invalid form'}, status = 400)
     #update
     if request.method == "PUT":
         try:
@@ -97,84 +46,38 @@ def service_crud(request):
                 return JsonResponse({'success':True},status = 200)
         except Exception as e:
             return JsonResponse({'success':False, 'response':f'{e}'}, status = 400)
-    
+    #delete
     elif request.method == "DELETE":
         data = json.loads(request.body)
-        service_id = data['service_id']
+        service_id = data('service_id')
         if Services.objects.filter(id = service_id).exists():
             service_del = Services.objects.get(id= service_id)
             service_del.delete = True
             service_del.save()
             return JsonResponse({'success':True}, status=200)
         return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
-    return JsonResponse({'success':False, 'response': 'invalid request'}, status =  400)
-
-
-#Adding service product
-@login_required
-def add_service_product(request):
-    form = Service_productForm(request.POST)
-    if request.method == 'POST':
-        if form.is_valid():
-            form.save()
-            messages.info(request, 'success')
-            return redirect('booking:service_view')
-        return render(request, 'service_products.html')
+    return JsonResponse({'success':False, 'response': 'invalid request'}, status =  500)
 
 
 #service_product CRUD
 @login_required
-def service_product_CRUD(request):
+def service_product_crud(request):
     if request.method == 'GET':
-        service_product = Service_product.objects.all()
-        logger.info(service_product)
-        return render(request, 'service_products.html', {'service_products': service_product})
-    elif request.method == 'POST': #adding
+        service_product_form = Service_productForm()
+        return render(request, 'service_products.html',{'service_product':service_product_form})
+    #add
+    if request.method == 'POST':
         data = json.load(request.body)
-        service_name = data.get('service_name')
         service_product_name = data.get('name')
-        price = data.get('price')
-        unit_measurement = data.get('u_measure')
-        service_range = data.get('range')
+        service_name = data.get('service name')
+        measurement = data.get('unit measurement')
         promotion = data.get('promotion')
-        if not service_name or not service_product_name or not price or not unit_measurement or not service_range or not promotion:
-            return JsonResponse({'success': False, 'message': 'empty json'}, status = 400)
-        else:
-            if Services.objects.filter(name = service_name).exists and Service_product.objects.filter(name = service_product_name).exists:
-                service = Services.objects.get(name = service_name)
-                services_product = Service_product.objects.get(name = service_product_name)
-                with transaction.atomic():
-                    Service_range.objects.create(
-                        service_range = service_range,
-                        price = price,
-                        service_product = services_product
-                    )
+        range = data.get('service range')
+        price = data.get('price')
 
-                    Unit_Measurement.objects.create(
-                        measurement = unit_measurement,
-                        promotion = promotion,
-                        service_product = services_product
-                    )
-                    return JsonResponse({'success': True, 'message': 'saved successfully'}, status = 200)
-            elif Services.objects.filter(name = service_name).exists and not Service_product.objects.filter(name = service_product_name).exists:
-                service = Services.objects.get(name = service_name)
-                services_product = Service_product.objects.create(
-                    name = service_product_name,
-                    service = service
-                )
-                with transaction.atomic():
-                    Service_range.objects.create(
-                        service_range = service_range,
-                        promotion = promotion,
-                        price = price,
-                        service_product = services_product
-                    )
-
-                    Unit_Measurement.objects.create(
-                        measurement = unit_measurement,
-                        service_product = services_product
-                    )
-                    return JsonResponse({'success': True, 'message': 'saved successfully'}, status = 200)
+        if not service_product_name or not service_name or not measurement or not promotion or not range or not price:
+            return JsonResponse({'success': False, 'message': 'There are empty fields'}, status = 400)
+        #elif Service_product.objects.filter()  
     elif request.method == 'PUT': #Update
         data = json.load(request.body)
         service_name = data.get('service_name')

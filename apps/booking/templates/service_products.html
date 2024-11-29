@@ -67,7 +67,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form action="{% url 'booking:service_product_add' %}" method="POST"> <!-- To be handled by the backend -->
+                <form action="{% url 'booking:service_product_crud' %}" method="POST"> <!-- To be handled by the backend -->
                     {% csrf_token %}
                     {{product_form | crispy }}
                     {{unit_form | crispy }}
