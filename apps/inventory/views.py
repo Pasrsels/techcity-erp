@@ -3019,7 +3019,7 @@ def product(request):
 
             
     if request.method == 'GET':
-        products = Inventory.objects.filter(branch = request.user.branch).values(
+        products = Inventory.objects.filter(branch = request.user.branch, status=False).values(
             'id',
             'name',
             'quantity'
