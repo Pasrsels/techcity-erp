@@ -76,15 +76,11 @@
                         <div class="d-flex align-content-center">
                             <select name="service" class="select form-select" required="" id="id_service"> 
                                 <option value="" selected="">---------</option> 
-                                {%for product in service%}
+                                {%for product in services%}
                                     <option value="{{product.id}}">{{product.name}}</option>
                                 {%endfor%}
                             </select> 
-<<<<<<< HEAD
                             <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addServiceModal"></button>
-=======
-                            <button id="buttonAddService" type="button" class="btn btn-outline-dark bx bx-plus"></button>
->>>>>>> da34404aa15695721a70df3b8b96df59aebaa271
                         </div>
                     </div>
                     <div id="div_id_unit_measure" class="mb-3">
@@ -108,11 +104,7 @@
                             <select name="service_range" class="select form-select" required="" id="id_service_range">
                                 <option value="" selected="">---------</option>
                             </select>
-<<<<<<< HEAD
                             <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addservice_rangeModal"></button>
-=======
-                            <button class="btn btn-outline-dark bx bx-plus"></button>
->>>>>>> da34404aa15695721a70df3b8b96df59aebaa271
                         </div>
                     </div>             
                     <div class="d-flex justify-content-between mt-3">
@@ -136,10 +128,6 @@
                 <form id="addServiceForm" action="{% url 'booking:service_crud' %}" method="POST">
                     {% csrf_token %}
                     {{service | crispy}}
-                    <!-- <div class="mb-3">
-                        <label for="new_service_name" class="form-label">Service Name</label>
-                        <input type="text" class="form-control" id="new_service_name" required>
-                    </div> -->
                      <div class="d-flex justify-content-between mt-3">
                     <button type="submit" class="btn btn-primary">Add Service</button>
                      </div>
@@ -149,6 +137,25 @@
     </div>
 </div>
 
+<div class="modal fade" id="addunitmeasureModal" tabindex="-1" aria-labelledby="addunitmeasureModal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addunitmeasureModal">Add Unit Measure</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="unit_measurementForm" action="{% url 'booking:service_crud' %}" method="POST">
+                    {% csrf_token %}
+                    {{unit_measurement | crispy}}
+                    <div class="d-flex justify-content-between mt-3">
+                        <button type="submit" class="btn btn-primary">Add unit_measure</button>
+                         </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -195,19 +202,23 @@ function loadEditModal(productName, productDetails) {
     document.getElementById('editProductDetails').value = productDetails;
 }
 
-document.getElementById('addServiceForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const newServiceName = document.getElementById('new_service_name').value.trim();
-
-   
-});
-
 document.addEventListener("DOMContentLoaded", () => {
             const form = document.querySelector("#addServiceForm");
             
             form.addEventListener("submit", (event) => {
                 event.preventDefault(); 
                 const addServiceModal = bootstrap.Modal.getInstance(document.getElementById("addServiceModal"));
+                addServiceModal.hide(); 
+                successModal.show(); 
+            });
+        })
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const form = document.querySelector("#unit_measurementForm");
+            
+            form.addEventListener("submit", (event) => {
+                event.preventDefault(); 
+                const addServiceModal = bootstrap.Modal.getInstance(document.getElementById("addunitmeasureModal"));
                 addServiceModal.hide(); 
                 successModal.show(); 
             });

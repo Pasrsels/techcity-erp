@@ -73,7 +73,7 @@ def service_product_crud(request):
         return render(request, 'service_products.html',{
         'service_product':service_product_form,
         'service_product_data': service_product,
-        'service': service,
+        'services': service,
         'service_range': range_form,
         'unit_measurement': unit_form,
         'service': form
