@@ -18,29 +18,43 @@ def services_view(request):
     form = ServiceForm()
     service = Services.objects.all()
     service_product = Service_product.objects.all()
-    service_r = Service_range.objects.all()
-    service_u = Unit_Measurement.objects.all()
+    service_r = Service_range.objects.all() #to remove
+    service_u = Unit_Measurement.objects.all() #to remove
     
     logger.info(service)
     if service:
+        """ since we have relationship on of range and um on service_product they is no need to get the data seperately
+            its a good practice to reference the data with its actual name than data
+        """
         return render(request,'service_products.html',{
-        'data': service,
-        'data_product': service_product,
-        'data_range':service_r,
-        'data_unit': service_u,
-        'product_form': form_products
+            'data': service,
+            'data_product': service_product,
+            'data_range':service_r, #to remove
+            'data_unit': service_u, #to remove
+            'product_form': form_products
         })
-    else:
-        return render(request,'services1.html',{'form':form})
+    """ we can do away with else since if the condition is true it will execute if false it will run to return"""
+    # else:
+    return render(request,'services1.html',{'form':form})
+
 #service add
 @login_required
 def services_add(request):
+    """
+        consider puting validation before saving to db, for instance checking for existance,
+        put a fail else in other sense a return. if the request is not post.
+        you can put it all in the service_crud view 
+    """
     form = ServiceForm(request.POST)
     if request.method == 'POST':
         if form.is_valid():
             form.save()
             messages.success(request,'saved successfully')
-    return redirect('booking:service')
+            return redirect('booking:service')
+        # return for form failure
+    # return for invalid request
+
+
 #service crud
 @login_required
 def service_crud(request):
@@ -75,6 +89,9 @@ def service_crud(request):
 #Adding service product
 @login_required
 def add_service_product(request):
+    """ here same applies to add service view, the difference will be returning json response 
+        they is repetition, hence you have service crud view which does the same, on the adding part
+    """
     form = Service_productForm(request.POST)
     if request.method == 'POST':
         if form.is_valid():
