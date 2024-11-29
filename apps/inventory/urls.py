@@ -27,14 +27,17 @@ urlpatterns = [
     
     # product
     path('create/product/', product, name='product'),
+    path('delete_product', delete_product, name='delete'),
     
     # suppliers
     path("suppliers/", supplier_view, name="suppliers"),
     path('supplier/json/list/', supplier_list_json, name='supplier_list_json'),
     path("suppliers/delete/<int:supplier_id>/", supplier_delete, name="delete_supplier"),
     path("suppliers/edit/<int:supplier_id>/", supplier_edit, name="edit_supplier"),
+    path('supplier_prices/<int:product_id>/', supplier_prices, name='supplier_prices'),
     path("suppliers/payment-history/<int:supplier_id>/", PaymentHistory, name="payment-history"),
     path('suppliers/supplier-information/<int:supplierId>/', supplier_details_view, name = 'supplier_details'),
+
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),
     
@@ -93,5 +96,7 @@ urlpatterns = [
     path('stocktake', stock_take, name='stock_take'),
 
     #accessories
-    path('accessory_view/<int:product_id>/', accessory_view, name='accessory_view')
+    path('accessory_view/<int:product_id>/', accessory_view, name='accessory_view'),
+
+    path('vue_view/', vue_view, name='vue')
 ]

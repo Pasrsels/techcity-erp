@@ -1,4 +1,4 @@
-from . models import Inventory, Product
+from . models import Inventory, Product, PurchaseOrderItem
 from django.db import models
 from loguru import logger
 
@@ -33,6 +33,24 @@ def average_inventory_cost(product_id, new_cost, new_units, branch_id):
     average_cost = ((old_cost * old_units) + (new_cost * new_units)) / (new_units + old_units)
     logger.info(f'Average stock: {average_cost}')
     return average_cost
+
+def best_price(id):
+    """ utility for calculating the best 3 suppliers per product"""
+    purchase_orders = PurchaseOrderItem.objects.filter(product_id=id)
+
+    supplier_prices = []
+    for item in purchase_orders:
+        supplier_prices.append(
+            {
+                'id':item.supplier.id,
+                'supplier': item.supplier.name, 
+                'price': item.unit_cost
+            }
+        )
+
+    supplier_prices_sorted = sorted(supplier_prices, key=lambda x: x['price'])
+
+    return supplier_prices_sorted[:3]
 
 
 

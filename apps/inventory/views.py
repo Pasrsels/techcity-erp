@@ -65,6 +65,7 @@ from loguru import logger
 from xhtml2pdf import pisa
 from django.template.loader import get_template
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from apps.inventory.utils import best_price
 
 
 @login_required
@@ -438,10 +439,11 @@ def transfer_details(request, transfer_id):
 
 @login_required
 def inventory(request):
-    product_id = request.GET.get('name', '')
+    product_id = request.GET.get('id', '')
+    logger.info(f'product id: {product_id}')
     if product_id:
         logger.info(list(Inventory.objects.\
-            filter(id=product_id, branch=request.user.branch).values()))
+            filter(id=product_id, branch=request.user.branch, status=False).values()))
         return JsonResponse(list(Inventory.objects.\
             filter(id=product_id, branch=request.user.branch).values()), safe=False)
     return JsonResponse({'error':'product doesnt exists'})
@@ -1575,25 +1577,26 @@ def create_purchase_order(request):
 
                 purchase_order_items_bulk = []
                 for item_data in purchase_order_items_data:
+                    product_id = item_data['product_id']
                     product_name = item_data['product']
                     quantity = int(item_data['quantity'])
                     unit_cost = Decimal(item_data['price'])
                     actual_unit_cost = Decimal(item_data['actualPrice'])
-                    supplier_ids = item_data.get('supplier', [])
+                    supplier_id = item_data.get('supplier', [])
 
-                    if not all([product_name, quantity, unit_cost]):
+                    logger.info(f'Supplier id {{ supplier_id }}')
+
+                    if not all([product_name, quantity, unit_cost, product_id]):
                         transaction.set_rollback(True)
                         return JsonResponse({'success': False, 'message': 'Missing fields in item data'}, status=400)
 
                     try:
-                        product = Inventory.objects.get(name=product_name, branch=request.user.branch)
-                        logger.info(f'Product id: {product.quantity}')
-                    except Product.DoesNotExist:
+                        product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+                    except Inventory.DoesNotExist:
                         transaction.set_rollback(True)
                         return JsonResponse({'success': False, 'message': f'Product with Name {product_name} not found'}, status=404)
 
-                    supplier = Supplier.objects.get(id=supplier_ids)
-                    logger.info(f'supplier ids: {supplier_ids}')
+                    supplier = Supplier.objects.get(id=supplier_id)
 
                     po_item = PurchaseOrderItem.objects.create(
                         purchase_order=purchase_order,
@@ -2041,15 +2044,17 @@ def receive_order(request, order_id):
     except PurchaseOrderItem.DoesNotExist:
         messages.warning(request, f'Purchase order with ID: {order_id} does not exists')
         return redirect('inventory:purchase_orders')
+    
+    logger.info(purchase_order_items.all().values('product'))
 
     products = Inventory.objects.filter(branch=request.user.branch).values(
         'dealer_price', 
         'price', 
-        'product__name'
+        'name'
     )
     logger.info(f'branch: {request.user.branch}')
     # Convert products queryset to a dictionary for easy lookup by product ID
-    product_prices = {product['product__name']: product for product in products}
+    product_prices = {product['name']: product for product in products}
 
     new_po_items =  []
     for item in purchase_order_items:
@@ -2116,23 +2121,17 @@ def process_received_order(request):
         order_item.dealer_expected_profit = dealer_expected_profit
         order_item.received = True
 
-        order_item.check_received()
+        # order_item.check_received()
 
         # Update or create inventory
         try:
-            product = Product.objects.get(id=order_item.product.id)
-            product.quantity = quantity
-            product.price = selling_price
-            product.dealer_price = dealer_price
-            product.save()
+            inventory = Inventory.objects.get(id=order_item.product.id, branch=request.user.branch)
         except Product.DoesNotExist:
             return JsonResponse({'success': False, 'message': f'Product with ID: {order_item.product.id} does not exist'}, status=404)
 
         system_quantity = 0 # if new product
         logger.info(f'')
-        try:
-            inventory = Inventory.objects.get(product=product, branch=request.user.branch)
-          
+        try:          
             system_quantity = inventory.quantity
             # Update existing inventory
             inventory.cost = cost
@@ -2149,7 +2148,7 @@ def process_received_order(request):
         except Inventory.DoesNotExist:
             # Create a new inventory object if it does not exist
             inventory = Inventory(
-                product=product,
+                product=inventory,
                 branch=request.user.branch,
                 cost=cost,
                 price=selling_price,
@@ -2168,6 +2167,8 @@ def process_received_order(request):
             branch=request.user.branch,
             user=request.user,
             action='stock in',
+            dealer_price = dealer_price,
+            selling_price = selling_price,
             inventory=inventory,
             quantity=quantity,
             system_quantity=system_quantity,
@@ -2196,14 +2197,11 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
         po_item.save()
 
         # Update the related product's price and dealer price
-        product = po_item.product
-        product.price = selling_price
-        product.dealer_price = dealer_price
-        product.save()
+        product = po_item.product.id
 
         # Update the inventory, assuming this item already exists in inventory
         try:
-            inventory = Inventory.objects.get(product=product, branch=po_item.purchase_order.branch)
+            inventory = Inventory.objects.get(id=product, branch=po_item.purchase_order.branch)
 
             system_quantity = inventory.quantity
             quantity_adjustment = 0
@@ -2305,7 +2303,6 @@ def edit_purchase_order(request, po_id):
             return JsonResponse({'success': False, 'message': 'Invalid JSON payload'}, status=400)
 
         batch = purchase_order_data['batch']
-        supplier_id = purchase_order_data['supplier']
         delivery_date = purchase_order_data['delivery_date']
         status = purchase_order_data['status']
         notes = purchase_order_data['notes']
@@ -2319,16 +2316,10 @@ def edit_purchase_order(request, po_id):
             return JsonResponse({'success': False, 'message': 'Missing required fields'}, status=400)
 
         try:
-            supplier = Supplier.objects.get(id=1)
-        except Supplier.DoesNotExist:
-            return JsonResponse({'success': False, 'message': f'Supplier with ID {supplier_id} not found'}, status=404)
-
-        try:
             with transaction.atomic():
                 purchase_order = PurchaseOrder(
                     batch = batch,
                     order_number=PurchaseOrder.generate_order_number(),
-                    supplier=supplier,
                     delivery_date=delivery_date,
                     status=status,
                     notes=notes,
@@ -2350,10 +2341,12 @@ def edit_purchase_order(request, po_id):
                 logger.info(f'cist {cost_allocations}')
 
                 for item_data in purchase_order_items_data:
-                    product_name = (item_data['product'])
+                    product_id = item_data['product_id']
+                    product_name = item_data['product']
                     quantity = int(item_data['quantity'])
                     unit_cost = Decimal(item_data['price'])
                     actual_unit_cost = Decimal(item_data['actualPrice'])
+                    supplier_id = item_data.get('supplier', [])
 
                     logger.info(f'quantity: {quantity}')
 
@@ -2362,13 +2355,15 @@ def edit_purchase_order(request, po_id):
                         return JsonResponse({'success': False, 'message': 'Missing fields in item data'}, status=400)
 
                     try:
-                        product = Product.objects.get(name=product_name)
-                    except Product.DoesNotExist:
+                        product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+                    except Inventory.DoesNotExist:
                         transaction.set_rollback(True)
                         return JsonResponse({'success': False, 'message': f'Product with Name {product_name} not found'}, status=404)
 
+                    supplier = Supplier.objects.get(id=supplier_id)
+
                     # get the log with the quantity received for replacing po_item quantity 
-                    log_quantity = logs.filter(inventory__product = product).values('quantity')
+                    log_quantity = logs.filter(inventory = product).values('quantity')
                     logger.info(log_quantity)
                     purchase_order_items_bulk.append(
                         PurchaseOrderItem(
@@ -2378,7 +2373,8 @@ def edit_purchase_order(request, po_id):
                             unit_cost=unit_cost,
                             actual_unit_cost=actual_unit_cost,
                             received_quantity= 0 if not log_quantity else log_quantity[0]['quantity'],
-                            received=False
+                            received=False,
+                            supplier = supplier
                         )
                     )
 
@@ -2523,10 +2519,13 @@ def edit_purchase_order_data(request, po_id):
         purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order__id=po_id).values(
             'purchase_order__id',
             'product__name',
+            'product__id',
             'quantity',
             'unit_cost',
             'actual_unit_cost',
-            'expected_profit'
+            'expected_profit',
+            'supplier__name',
+            'supplier'
         )
 
         return JsonResponse({'success':True, 'po_items':list(purchase_order_items), 'expenses':list(expenses)})
@@ -2923,12 +2922,28 @@ def supplier_account(request, supplier_id):
         messages.warning(request, 'Supplier account doesnt exists')
         return redirect('inventory:suppliers')
 
+
+@login_required
+def supplier_prices(request, product_id):
+    """
+        {
+            product_id: id
+        }
+    """
+    try:
+        best_three_prices = best_price(product_id)
+        logger.info(best_three_prices)
+        return JsonResponse({'success': True, 'suppliers': best_three_prices})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
 #product   
 @login_required
 def product(request):
     if request.method == 'POST':
         # payload
         """
+            id,
             name,
             cost: float,
             quantity: int,
@@ -2939,7 +2954,8 @@ def product(request):
         """
         try:
             data = json.loads(request.body)
-            logger.info(data)
+            product_id = data.get('id', '')
+            logger.info(product_id)
             
         except Exception as e:
             return JsonResponse({'success':False, 'message':'Invalid data'})
@@ -2954,43 +2970,83 @@ def product(request):
                 logger.error(f'Error decoding image: {e}')
                 return JsonResponse({'success': False, 'message': 'Invalid image data'})
 
-        # validation for existance
-        if Inventory.objects.filter(name=data['name']).exists():
-            return JsonResponse({'success':False, 'message':f'Product {data['name']} exists'})
-
         try:
             category = ProductCategory.objects.get(id=data['category'])
         except ProductCategory.DoesNotExist:
             return JsonResponse({'success':False, 'message':f'Category Doesnt Exists'})
-    
         
-        product = Inventory.objects.create(
-            batch = '',
-            name = data['name'],
-            price = 0,
-            cost = 0,
-            quantity = 0,
-            category = category,
-            tax_type = data['tax_type'],
-            stock_level_threshold = data['min_stock_level'],
-            description = data['description'], 
-            end_of_day = True if data['end_of_day'] else False,
-            service = True if data['service'] else False,
-            branch = request.user.branch,
-            image = image
-        )
+        if product_id:
+            """editing the product"""
+            logger.info(f'Editing product ')
+            product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+            product.name = data['name']
+            product.price = data.get('price', 0)
+            product.cost = data.get('cost', 0)    
+            product.quantity = data.get('quantity', 0)  
+            product.category = category  
+            product.tax_type = data['tax_type']
+            product.stock_level_threshold = data['min_stock_level']
+            product.description = data['description']
+            product.end_of_day = True if data.get('end_of_day') else False
+            product.service = True if data.get('service') else False
+            product.image=image
+            product.batch = product.batch
+        else:
+            """creating a new product"""
+            
+            # validation for existance
+            if Inventory.objects.filter(name=data['name']).exists():
+                return JsonResponse({'success':False, 'message':f'Product {data['name']} exists'})
+            logger.info(f'Creating ')
+            product = Inventory.objects.create(
+                batch = '',
+                name = data['name'],
+                price = 0,
+                cost = 0,
+                quantity = 0,
+                category = category,
+                tax_type = data['tax_type'],
+                stock_level_threshold = data['min_stock_level'],
+                description = data['description'], 
+                end_of_day = True if data['end_of_day'] else False,
+                service = True if data['service'] else False,
+                branch = request.user.branch,
+                image = image
+            )
         product.save()
         
-        return JsonResponse({'success':True})
+        return JsonResponse({'success':True}, status=200)
+
             
     if request.method == 'GET':
         products = Inventory.objects.filter(branch = request.user.branch).values(
             'id',
             'name',
+            'quantity'
         )
         return JsonResponse(list(products), safe=False)
     
-    return JsonResponse({'success':False, 'message':'Invalid request'})
+    return JsonResponse({'success':False, 'message':'Invalid request'}, status=400)
+
+@login_required
+def delete_product(request):
+    if request.method == 'DELETE':
+        try:
+            data = json.loads(request.body)
+            product_id = data.get('id', '')
+
+            product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+            product.status = True  
+            product.save()
+
+            return JsonResponse({'success': True, 'message': 'Product deleted successfully.'})
+
+        except Inventory.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Product not found.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
 #reorder settings
 @login_required
@@ -3186,6 +3242,9 @@ def accessory_view(request, product_id):
         except Exception as e:
             logger.info(e)
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+def vue_view(request):
+    return render(request, 'vue.html')
 
 
 
