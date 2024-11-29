@@ -145,6 +145,35 @@ def service_product_crud(request):
             return JsonResponse({'success': False, 'message': f'response: {e}'}, status = 400)
     return JsonResponse({'success': False, 'response': 'invalid request'}, status = 500)
 
+
+#Service range crud
+@login_required
+def service_range_crud(request):
+    if request.method == 'POST':
+        data = json.load(request.body)
+        range = data.get('range')
+        price = data.get('price')
+
+        Service_range.objects.create(
+            range = range,
+            price = price
+        )
+        return JsonResponse({'success': True}, status = 200)
+    
+@login_required
+def unit_measurement_crud(request):
+    if request.method == 'POST':
+        data = json.load(request.body)
+        measure = data.get('unit measurement')
+        promotion = data.get('promotion')
+
+        Unit_Measurement.objects.create(
+            measurement = measure,
+            promotion = promotion
+        )
+        return JsonResponse({'success': True}, status = 200)
+
+
 #member view
 @login_required
 def members_view(request):
