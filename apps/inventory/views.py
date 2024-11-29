@@ -2482,7 +2482,7 @@ def remove_purchase_order(purchase_order_id, request):
 
             for item in items:
                 for prod in products:
-                    if item.product == prod.product:
+                    if item.product == prod:
                         system_quantity = prod.quantity
                         prod.quantity -= item.received_quantity
                         
