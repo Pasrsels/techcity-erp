@@ -45,7 +45,7 @@ class Service_product(models.Model): # model titles should not have characters b
     name = models.CharField(max_length= 255)
     service = models.ForeignKey('Services', on_delete= models.CASCADE, null=True)
     unit_measure = models.ForeignKey('Unit_measurement', on_delete= models.CASCADE, null=True)
-    service_range = models.ForeignKey('Service_range', on_delete= models.CASCADE, null= True)
+    #service_range = models.ForeignKey('Service_range', on_delete= models.CASCADE, null= True)
 
     def __str__(self):
         return f"{self.name}"

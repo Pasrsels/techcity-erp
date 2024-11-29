@@ -69,9 +69,7 @@
             <div class="modal-body">
                 <form action="{% url 'booking:service_product_crud' %}" method="POST"> <!-- To be handled by the backend -->
                     {% csrf_token %}
-                    {{product_form | crispy }}
-                    {{unit_form | crispy }}
-                    {{measure_form | crispy }}
+                    {{service_product | crispy}}
                     <div class="d-flex justify-content-between mt-3">
                         <button type="reset" class="btn btn-secondary">Reset</button>
                         <button type="submit" class="btn btn-primary">Save</button>
