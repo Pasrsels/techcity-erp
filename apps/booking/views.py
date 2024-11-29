@@ -70,13 +70,29 @@ def service_product_crud(request):
         data = json.load(request.body)
         service_product_name = data.get('name')
         service_name = data.get('service name')
-        measurement = data.get('unit measurement')
+        measurement_id = data.get('unit measurement')
         promotion = data.get('promotion')
-        range = data.get('service range')
+        range_id = data.get('service range')
         price = data.get('price')
 
-        if not service_product_name or not service_name or not measurement or not promotion or not range or not price:
+        if not service_product_name or not service_name or not measurement_id or not promotion or not range_id or not price:
             return JsonResponse({'success': False, 'message': 'There are empty fields'}, status = 400)
+        elif Service_product.objects.filter(name = service_product_name).exists():
+            return JsonResponse({'Success': False, 'message': f'{service_product_name} alreay exists'}, status = 400)
+        try:
+            with transaction.atomic():
+                service = Services.objects.get(name = service_name)
+                service_range = Service_range.get(id = range_id)
+                unit_measure = Unit_Measurement.objects.get(id = measurement_id)
+                Service_product.objects.create(
+                    name = service_product_name,
+                    service = service,
+                    unit_measure = unit_measure,
+                    service_range = service_range
+                )
+                return JsonResponse({'success': True}, status = 200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'reason: {e}'}, status = 400)
         #elif Service_product.objects.filter()  
     elif request.method == 'PUT': #Update
         data = json.load(request.body)
