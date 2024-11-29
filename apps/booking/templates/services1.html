@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-
+{% load crispy_forms_tags %}
 {% block title %}Services{% endblock %}
 
 {% block content %}
@@ -41,7 +41,7 @@
                 <div class="modal-body">
                     <form action="{% url 'booking:service_add' %}" method="POST"> <!--to be adjusted-->
                         {% csrf_token %}
-                        {{form}}
+                        {{form | crispy}}
                         <div class="d-flex justify-content-between mt-3">
                             <button type="reset" class="btn btn-secondary">Reset</button>
                             <button type="submit" class="btn btn-primary">Save</button>

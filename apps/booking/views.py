@@ -14,8 +14,13 @@ from loguru import logger
 #service view
 @login_required
 def services_view(request):
-    form_products = Service_productForm
+    # Getting forms
     form = ServiceForm()
+    form_products = Service_productForm()
+    form_measure = UnitForm()
+    form_service = RangeForm()
+
+    #querying models
     service = Services.objects.all()
     service_product = Service_product.objects.all()
     service_r = Service_range.objects.all()
@@ -28,19 +33,29 @@ def services_view(request):
         'data_product': service_product,
         'data_range':service_r,
         'data_unit': service_u,
-        'product_form': form_products
+        'product_form': form_products,
+        'measure_form': form_measure,
+        'unit_form': form_service
         })
     else:
         return render(request,'services1.html',{'form':form})
+    
+
 #service add
 @login_required
 def services_add(request):
     form = ServiceForm(request.POST)
+    form_measure = UnitForm(request.POST)
+    form_service = RangeForm(request.POST)
     if request.method == 'POST':
         if form.is_valid():
             form.save()
+            form_measure.save()
+            form_service.save()
             messages.success(request,'saved successfully')
-    return redirect('booking:service')
+    return redirect('booking:service_view')
+
+
 #service crud
 @login_required
 def service_crud(request):
@@ -72,6 +87,7 @@ def service_crud(request):
         return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
     return JsonResponse({'success':False, 'response': 'invalid request'}, status =  400)
 
+
 #Adding service product
 @login_required
 def add_service_product(request):
@@ -82,6 +98,7 @@ def add_service_product(request):
             messages.info(request, 'success')
             return redirect('booking:service_view')
         return render(request, 'service_products.html')
+
 
 #service_product CRUD
 @login_required

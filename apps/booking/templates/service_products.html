@@ -62,14 +62,8 @@
                 <form action="{% url 'booking:service_product_add' %}" method="POST"> <!-- To be handled by the backend -->
                     {% csrf_token %}
                     {{product_form | crispy }}
-                    <!-- <div class="mb-3">
-                        <label for="productName" class="form-label">Product Name</label>
-                        <input type="text" class="form-control" id="productName" name="productName" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="productDetails" class="form-label">Product Details</label>
-                        <textarea class="form-control" id="productDetails" name="productDetails" rows="3" required></textarea>
-                    </div> -->
+                    {{unit_form | crispy }}
+                    {{measure_form | crispy }}
                     <div class="d-flex justify-content-between mt-3">
                         <button type="reset" class="btn btn-secondary">Reset</button>
                         <button type="submit" class="btn btn-primary">Save</button>
