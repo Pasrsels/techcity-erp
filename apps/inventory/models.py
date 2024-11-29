@@ -35,8 +35,8 @@ class ProductCategory(models.Model):
 
 class Supplier(models.Model):
     """Model for suppliers."""
-    name = models.CharField(max_length=100)
-    contact_person = models.CharField(max_length=255)
+    name = models.CharField(max_length=102)
+    contact_person = models.CharField(max_length=254)
     phone = models.CharField(max_length=255)
     email = models.EmailField(max_length=255)
     address = models.CharField(max_length=255, null= True)
@@ -46,7 +46,7 @@ class Supplier(models.Model):
         return self.name
 
 class SupplierAccount(models.Model):
-    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE)  
     balance = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     date = models.DateField(null= True)
@@ -58,11 +58,11 @@ class SupplierAccount(models.Model):
         return f'{self.supplier.name} balance -> {self.balance}'
 
 class SupplierAccountsPayments(models.Model):
-    account = models.ForeignKey(SupplierAccount, on_delete=models.PROTECT)
+    account = models.ForeignKey(SupplierAccount, on_delete=models.CASCADE)
     payment_method = models.CharField(max_length=15, choices=[
         ('cash', 'cash'),
         ('bank', 'bank'),
-        ('ecocash', 'ecocash')
+        ('Ecocash', 'ecocash')
     ])
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE) 
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)
@@ -305,8 +305,8 @@ class TransferItems(models.Model):
     receieved_quantity = models.IntegerField(default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
-    def __str__(self):
-        return f'{self.product.name} to {self.to_branch}'
+    # def __str__(self):
+    #     return f'{self.product.name} to {self.to_branch}'
     
 class Holdtransfer(models.Model):
     transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)

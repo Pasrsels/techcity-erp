@@ -612,7 +612,6 @@
     let productID = '' // for product editing and deleting
     let taxMethod = '' // for tax method
 
-
     const po_id = {{ purchase_order.id }}
 
     const errorEl = document.getElementById('error');
@@ -640,7 +639,12 @@
 
     const cartError = document.getElementById('cartError');
 
-    calculateExpression('id_p_price', errorId = null)
+    calculateExpression('id_p_price', errorId = null);
+
+    // event lister for tax method
+    document.getElementById('tax_method').addEventListener('click', ()=>{
+        taxMethod = document.getElementById('tax_method').value;
+    })
 
     const searchTable = () => {
         const input = document.getElementById('search-input');
@@ -1406,8 +1410,19 @@
         });
     }
 
-    function calculateTotals() {
+    const calculateInclusiveTax = (price, taxRate) => {
+        const taxAmount = price * (taxRate / (1 + taxRate));
+        return taxAmount;
+    }
+
+    const calculateExclusiveTax = (price, taxRate) => {
+        const taxAmount = price * taxRate;
+        return taxAmount;
+    }
+
+    const calculateTotals = () => {
       let subtotal = 0;
+
       cart.forEach(item => {
           subtotal += item.price * item.quantity;
       });
