@@ -171,7 +171,18 @@
                             <p id="quantity_error" class="fs-6 text-danger"></p>
                             <p id="cart_error" class="text-danger"></p>
                         </div> 
-                        <div class='d-flex justify-content-end mb-2'>
+                        <div id="div_id_tax_method" class="mb-2"> 
+                          <label for="id_tax_method" class="form-label requiredField">
+                            Tax Calculation Method
+                          </label> 
+                          <select class="select form-select" id='id_tax_method'>
+                            <option value="">-----</option>
+                            <option value='inclusive'>Inclusive</option>
+                            <option value="exclusive">Exclusive</option>
+                            <option value="no">No tax charge</option>
+                        </select>
+                      </div> 
+                        <div class='d-flex justify-content-end mt-2'>
                             <button type='button' class='btn btn-dark btn-sm w-100' id="id_add_to_cart" onclick="addItem();">
                               <i class='bx bx-save' ></i>
                                 save
