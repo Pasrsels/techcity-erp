@@ -76,9 +76,11 @@
                         <div class="d-flex align-content-center">
                             <select name="service" class="select form-select" required="" id="id_service"> 
                                 <option value="" selected="">---------</option> 
-                                <option value="14">Workstation</option>
+                                {%for product in service%}
+                                    <option value="{{product.id}}">{{product.name}}</option>
+                                {%endfor%}
                             </select> 
-                            <button type="button" class="btn btn-outline-dark bx bx-plus"></button>
+                            <button id="buttonAddService" type="button" class="btn btn-outline-dark bx bx-plus"></button>
                         </div>
                     </div>
                     <div id="div_id_unit_measure" class="mb-3">
@@ -98,10 +100,11 @@
                             Service range
                             <span class="asteriskField">*</span>
                         </label>
-                        <div class="d-flex align-content-center"></div>
+                        <div class="d-flex align-content-center">
                             <select name="service_range" class="select form-select" required="" id="id_service_range">
                                 <option value="" selected="">---------</option>
                             </select>
+                            <button class="btn btn-outline-dark bx bx-plus"></button>
                         </div>
                     </div>             
                     <div class="d-flex justify-content-between mt-3">

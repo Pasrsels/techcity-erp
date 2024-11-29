@@ -67,10 +67,12 @@ def service_product_crud(request):
         range_form = RangeForm()
         service_product_form = Service_productForm()
         service_product = Service_product.objects.all()
+        service = Services.objects.all()
         logger.info(service_product)
         return render(request, 'service_products.html',{
         'service_product':service_product_form,
         'service_product_data': service_product,
+        'service': service,
         'service_range': range_form,
         'unit_measurement': unit_form
         })
