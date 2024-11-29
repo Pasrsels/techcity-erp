@@ -61,9 +61,49 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form action="{% url 'booking:service_product_crud' %}" method="POST"> <!-- To be handled by the backend -->
-                    {% csrf_token %}
-                    {{service_product | crispy}}
+                <form action="{% url 'booking:service_product_crud' %}" method="POST">
+                    <div id="div_id_name" class="mb-3"> 
+                        <label for="id_name" class="form-label requiredField">
+                            Name
+                            <span class="asteriskField">*</span> 
+                        </label> 
+                        <input type="text" name="name" maxlength="255" class="textinput form-control" required="" id="id_name">
+                    </div>
+                    <div id="div_id_service" class="mb-3"> 
+                        <label for="id_service" class="form-label requiredField">
+                            Service<span class="asteriskField">*</span> 
+                        </label> 
+                        <div class="d-flex align-content-center">
+                            <select name="service" class="select form-select" required="" id="id_service"> 
+                                <option value="" selected="">---------</option> 
+                                <option value="14">Workstation</option>
+                            </select> 
+                            <button type="button" class="btn btn-outline-dark bx bx-plus"></button>
+                        </div>
+                    </div>
+                    <div id="div_id_unit_measure" class="mb-3">
+                        <label for="id_unit_measure" class="form-label requiredField">
+                            Unit measure
+                            <span class="asteriskField">*</span>
+                        </label>
+                        <div class="d-flex align-content-center">
+                            <select name="unit_measure" class="select form-select" required="" id="id_unit_measure">
+                                <option value="" selected="">---------</option>
+                            </select>
+                            <button class="btn btn-outline-dark bx bx-plus"></button>
+                        </div>
+                    </div>
+                    <div id="div_id_service_range" class="mb-3">
+                        <label for="id_service_range" class="form-label requiredField">
+                            Service range
+                            <span class="asteriskField">*</span>
+                        </label>
+                        <div class="d-flex align-content-center"></div>
+                            <select name="service_range" class="select form-select" required="" id="id_service_range">
+                                <option value="" selected="">---------</option>
+                            </select>
+                        </div>
+                    </div>             
                     <div class="d-flex justify-content-between mt-3">
                         <button type="reset" class="btn btn-secondary">Reset</button>
                         <button type="submit" class="btn btn-primary">Save</button>
