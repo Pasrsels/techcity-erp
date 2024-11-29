@@ -64,7 +64,11 @@ def service_crud(request):
 def service_product_crud(request):
     if request.method == 'GET':
         service_product_form = Service_productForm()
-        return render(request, 'service_products.html',{'service_product':service_product_form})
+        service_product = Service_product.objects.all()
+        return render(request, 'service_products.html',{
+        'service_product':service_product_form,
+        'service_product_data': service_product
+        })
     #add
     if request.method == 'POST':
         data = json.load(request.body)
@@ -131,6 +135,15 @@ def service_product_crud(request):
     elif request.method == 'DELETE':
         data = json.load(request.body)
         service_product_id = data.get('id')
+        if not Service_product.objects.filter(id = service_product_id).exists():
+            return JsonResponse({'success':False, 'message': 'service product does not exist'}, status = 400)
+        try:
+            service_prod_del = Service_product.objects.get(id = service_product_id)
+            service_prod_del.delete()
+            return JsonResponse({'success':True}, status = 200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'response: {e}'}, status = 400)
+    return JsonResponse({'success': False, 'response': 'invalid request'}, status = 500)
 
 #member view
 @login_required
