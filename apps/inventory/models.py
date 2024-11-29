@@ -320,8 +320,8 @@ class Holdtransfer(models.Model):
     description = models.TextField(null=True)
     dealer_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
-    def __str__(self):
-        return f'{self.product.name} to {self.to_branch}'
+    # def __str__(self):
+    #     return f'{self.product.name} to {self.to_branch}'
 
 class DefectiveProduct(models.Model):
     product = models.ForeignKey(Inventory, on_delete=models.SET_NULL, null=True)
