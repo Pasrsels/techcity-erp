@@ -29,19 +29,13 @@
         </div>
         
         <div id="productsContainer" class="row mt-4">
-            {% for product in data_product %}
+            {% for product in service_product_data %}
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4 product-card" data-name="{{ product.name|lower }}" data-details="{{ product.details|lower }}">
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">{{ product.name }}</h5>
                             <h6 class="card-text">
-                                {% for range in data_range%}
-                                    {%if product.name == range.service_product%}
-                                        price:${{range.price}}
-                                        <br>
-                                        duration:{{range.range}}
-                                    {%endif%}
-                                {%endfor%}
+                                {{product.service_range.price}}
                             </h6>
                             <div class="d-flex justify-content-end">
                                 <button class="btn btn-sm btn-outline-primary me-2" title="Edit" data-bs-toggle="modal" data-bs-target="#editProductModal" onclick="loadEditModal('{{ product.name }}', '{{ product.details }}')">

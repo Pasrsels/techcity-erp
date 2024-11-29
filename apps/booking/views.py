@@ -28,7 +28,7 @@ def service_crud(request):
         if form.is_valid():
             form.save()
             messages.success(request,'saved successfully')
-            return render(request, 'service_products.html')
+            return redirect('booking:service_product_crud')
         return JsonResponse({'success': False, 'message': 'invalid form'}, status = 400)
     #update
     if request.method == "PUT":
@@ -63,11 +63,16 @@ def service_crud(request):
 @login_required
 def service_product_crud(request):
     if request.method == 'GET':
+        unit_form = UnitForm()
+        range_form = RangeForm()
         service_product_form = Service_productForm()
         service_product = Service_product.objects.all()
+        logger.info(service_product)
         return render(request, 'service_products.html',{
         'service_product':service_product_form,
-        'service_product_data': service_product
+        'service_product_data': service_product,
+        'service_range': range_form,
+        'unit_measurement': unit_form
         })
     #add
     if request.method == 'POST':
@@ -149,6 +154,7 @@ def service_product_crud(request):
 #Service range crud
 @login_required
 def service_range_crud(request):
+    #ADD
     if request.method == 'POST':
         data = json.load(request.body)
         range = data.get('range')
@@ -159,6 +165,37 @@ def service_range_crud(request):
             price = price
         )
         return JsonResponse({'success': True}, status = 200)
+    #read
+    elif request.method == 'GET':
+        service_range = Service_range.objects.all()
+        return JsonResponse({'success': True, 'service_range': service_range})
+    #update
+    elif request.method == 'UPDATE':
+        data = json.load(request.body)
+        range = data.get('range')
+        price = data.get('price')
+        id = data.get('id')
+
+        if not Service_range.objects.filter(id = id).exists():
+            return JsonResponse({'success': False, 'message': f'id :{id} doesnot exist'})
+        try:
+            service_range_update = Service_range.objects.get(id = id)
+            service_range_update.service_range = range
+            service_range_update.price = price
+            service_range_update.save()
+            return JsonResponse({'success': True}, status = 200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'reason :{e}'}, status = 400)
+    #delete
+    elif request.method == 'DELETE':
+        data = json.load(request.body)
+        id = data.get('id')
+        try:
+            service_range = Service_range.objects.get(id = id)
+            service_range.delete()
+        except Exception as e:
+            return JsonResponse({'success': False, 'message':f'reason : {e}'}, status = 400)
+    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
     
 @login_required
 def unit_measurement_crud(request):
@@ -172,7 +209,37 @@ def unit_measurement_crud(request):
             promotion = promotion
         )
         return JsonResponse({'success': True}, status = 200)
+    #read
+    elif request.method == 'GET':
+        unit_measure = Unit_Measurement.objects.all()
+        return JsonResponse({'success': True, 'unit_measure': unit_measure})
+    #update
+    elif request.method == 'UPDATE':
+        data = json.load(request.body)
+        measure = data.get('unit_measure')
+        promotion = data.get('promotion')
+        id = data.get('id')
 
+        if not Unit_Measurement.objects.filter(id = id).exists():
+            return JsonResponse({'success': False, 'message': f'id :{id} doesnot exist'})
+        try:
+            unit_measure = Unit_Measurement.objects.get(id = id)
+            unit_measure.measurement = measure
+            unit_measure.promotion = promotion
+            unit_measure.save()
+            return JsonResponse({'success': True}, status = 200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'reason :{e}'}, status = 400)
+    #delete
+    elif request.method == 'DELETE':
+        data = json.load(request.body)
+        id = data.get('id')
+        try:
+            unit_measure_delete = Unit_Measurement.objects.get(id = id)
+            unit_measure_delete.delete()
+        except Exception as e:
+            return JsonResponse({'success': False, 'message':f'reason : {e}'}, status = 400)
+    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
 
 #member view
 @login_required
