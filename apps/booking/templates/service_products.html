@@ -76,9 +76,15 @@
                         <div class="d-flex align-content-center">
                             <select name="service" class="select form-select" required="" id="id_service"> 
                                 <option value="" selected="">---------</option> 
-                                <option value="14">Workstation</option>
+                                {%for product in service%}
+                                    <option value="{{product.id}}">{{product.name}}</option>
+                                {%endfor%}
                             </select> 
+<<<<<<< HEAD
                             <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addServiceModal"></button>
+=======
+                            <button id="buttonAddService" type="button" class="btn btn-outline-dark bx bx-plus"></button>
+>>>>>>> da34404aa15695721a70df3b8b96df59aebaa271
                         </div>
                     </div>
                     <div id="div_id_unit_measure" class="mb-3">
@@ -98,11 +104,15 @@
                             Service range
                             <span class="asteriskField">*</span>
                         </label>
-                        <div class="d-flex align-content-center"></div>
+                        <div class="d-flex align-content-center">
                             <select name="service_range" class="select form-select" required="" id="id_service_range">
                                 <option value="" selected="">---------</option>
                             </select>
+<<<<<<< HEAD
                             <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addservice_rangeModal"></button>
+=======
+                            <button class="btn btn-outline-dark bx bx-plus"></button>
+>>>>>>> da34404aa15695721a70df3b8b96df59aebaa271
                         </div>
                     </div>             
                     <div class="d-flex justify-content-between mt-3">
