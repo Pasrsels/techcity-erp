@@ -2125,19 +2125,13 @@ def process_received_order(request):
 
         # Update or create inventory
         try:
-            product = Product.objects.get(id=order_item.product.id)
-            product.quantity = quantity
-            product.price = selling_price
-            product.dealer_price = dealer_price
-            product.save()
+            inventory = Inventory.objects.get(id=order_item.product.id, branch=request.user.branch)
         except Product.DoesNotExist:
             return JsonResponse({'success': False, 'message': f'Product with ID: {order_item.product.id} does not exist'}, status=404)
 
         system_quantity = 0 # if new product
         logger.info(f'')
-        try:
-            inventory = Inventory.objects.get(product=product, branch=request.user.branch)
-          
+        try:          
             system_quantity = inventory.quantity
             # Update existing inventory
             inventory.cost = cost
@@ -2154,7 +2148,7 @@ def process_received_order(request):
         except Inventory.DoesNotExist:
             # Create a new inventory object if it does not exist
             inventory = Inventory(
-                product=product,
+                product=inventory,
                 branch=request.user.branch,
                 cost=cost,
                 price=selling_price,
@@ -2173,6 +2167,8 @@ def process_received_order(request):
             branch=request.user.branch,
             user=request.user,
             action='stock in',
+            dealer_price = dealer_price,
+            selling_price = selling_price,
             inventory=inventory,
             quantity=quantity,
             system_quantity=system_quantity,
@@ -2201,14 +2197,11 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
         po_item.save()
 
         # Update the related product's price and dealer price
-        product = po_item.product
-        product.price = selling_price
-        product.dealer_price = dealer_price
-        product.save()
+        product = po_item.product.id
 
         # Update the inventory, assuming this item already exists in inventory
         try:
-            inventory = Inventory.objects.get(product=product, branch=po_item.purchase_order.branch)
+            inventory = Inventory.objects.get(id=product, branch=po_item.purchase_order.branch)
 
             system_quantity = inventory.quantity
             quantity_adjustment = 0
