@@ -619,11 +619,20 @@ def edit_inventory(request, product_id):
         return redirect('inventory:inventory')
     return render(request, 'inventory_form.html', {'product':inv_product, 'title':f'Edit >>> {inv_product.name}'})
 
+from django.db.models.functions import Extract
+
 @login_required
 def inventory_detail(request, id):
 
     inventory = Inventory.objects.get(id=id, branch=request.user.branch)
-    logs = ActivityLog.objects.filter(inventory=inventory, branch=request.user.branch).order_by('-timestamp')
+    logs = ActivityLog.objects.filter(
+        inventory=inventory,
+        branch=request.user.branch
+    ).order_by('-timestamp__date', '-timestamp__time')
+
+    # logs = ActivityLog.objects.annotate(hour=Extract('timestamp', 'hour')).order_by('-hour')
+    print(logs.query)
+
     purchase_order_items = PurchaseOrderItem.objects.all()
 
     sales_data = {}
@@ -654,7 +663,22 @@ def inventory_detail(request, id):
 
         if month_year not in labels:
             labels.append(month_year)
-
+        
+        ACTIONS_MAPPING = {
+            'stock in': ('text-success', 'bx bx-chevron-up'),
+            'Update': ('text-success', 'bx bx-chevron-up'),
+            'sale cancelled': ('text-success', 'bx bx-chevron-up'),
+            'Stock in': ('text-success', 'bx bx-chevron-up'),
+            'purchase edit +': ('text-success', 'bx bx-chevron-up'),
+            'transfer cancel': ('text-success', 'bx bx-chevron-up'),
+            'sale return': ('text-success', 'bx bx-chevron-up'),
+            'defective': ('text-danger', 'bx bx-chevron-down'),
+            'Decline': ('text-danger', 'bx bxs-circle bx-rotate-90 bx-tada'),
+            'Edit': ('text-dark', ''),
+            'deactivated': ('text-dark', ''),
+            'activated': ('text-dark', ''),
+        }
+    
     return render(request, 'inventory_detail.html', {
         'inventory': inventory,
         'logs': logs,
@@ -662,7 +686,8 @@ def inventory_detail(request, id):
         'sales_data': list(sales_data.values()), 
         'stock_in_data': list(stock_in_data.values()),
         'transfer_data': list(transfer_data.values()),
-        'labels': labels
+        'labels': labels,
+        'actions_mapping': ACTIONS_MAPPING,
     })
 
 
@@ -3013,7 +3038,8 @@ def product(request):
                 end_of_day = True if data['end_of_day'] else False,
                 service = True if data['service'] else False,
                 branch = request.user.branch,
-                image = image
+                image = image,
+                status = False
             )
         product.save()
         
@@ -3021,7 +3047,7 @@ def product(request):
 
             
     if request.method == 'GET':
-        products = Inventory.objects.filter(branch = request.user.branch, status=False).values(
+        products = Inventory.objects.filter(branch = request.user.branch, status=True).values(
             'id',
             'name',
             'quantity'
