@@ -1512,7 +1512,7 @@ def create_purchase_order(request):
         suppliers = Supplier.objects.all()
         note_form = noteStatusForm()
         batch_form = BatchForm()
-        products = Inventory.objects.filter(branch=request.user.branch, status=True).order_by('quantity')
+        products = Inventory.objects.filter(branch=request.user.branch, status=True).order_by('name')
 
         batch_codes = BatchCode.objects.all()
         return render(request, 'create_purchase_order.html',
@@ -3033,7 +3033,8 @@ def product(request):
             'id',
             'name',
             'quantity'
-        )
+        ).order_by('name')  
+        logger.info(products)         
         return JsonResponse(list(products), safe=False)
     
     return JsonResponse({'success':False, 'message':'Invalid request'}, status=400)
