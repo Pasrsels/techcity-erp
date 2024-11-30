@@ -431,14 +431,14 @@
         });
 
         const product = selectedOptions[0]?.value;
+        console.log(product, 'product id')
 
         if (product) {
-            fetch(`/inventory/inventory/?name=${product}`)
+            fetch(`/inventory/inventory/?id=${product}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.length > 0) {
                         console.log(data);
-                    
                         prodData = data;
                         console.log(prodData, 'product data')
                         if (prodData){
