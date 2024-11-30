@@ -443,9 +443,9 @@ def inventory(request):
     logger.info(f'product id: {product_id}')
     if product_id:
         logger.info(list(Inventory.objects.\
-            filter(id=product_id, branch=request.user.branch, status=False).values()))
+            filter(id=product_id, branch=request.user.branch, status=True).values()))
         return JsonResponse(list(Inventory.objects.\
-            filter(id=product_id, branch=request.user.branch).values()), safe=False)
+            filter(id=product_id, branch=request.user.branch, status=True).values()), safe=False)
     return JsonResponse({'error':'product doesnt exists'})
 
 @login_required
@@ -1131,7 +1131,6 @@ def create_defective_product(request):
 def add_inventory_transfer(request):
     form = addTransferForm()
     inventory = Inventory.objects.filter(branch=request.user.branch).order_by('-quantity')
-    logger.info(f'Inventory: {inventory}')
     return render(request, 'add_transfer.html', {'fornm':form, 'inventory':inventory})
 
 @login_required
