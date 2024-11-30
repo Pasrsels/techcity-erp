@@ -448,6 +448,9 @@ def inventory(request):
             filter(id=product_id, branch=request.user.branch, status=True).values()), safe=False)
     return JsonResponse({'error':'product doesnt exists'})
 
+from django.db.models import Count
+
+
 @login_required
 def inventory_index(request):
     form = ServiceForm()
@@ -457,7 +460,34 @@ def inventory_index(request):
     services = Service.objects.all().order_by('-name')
     accessories = Accessory.objects.all()
     inventory = Inventory.objects.filter(branch=request.user.branch, status=True).order_by('name')
-    
+
+
+    # Step 1: Get the inventory products with quantity 0 and not logged in ActivityLog
+    products_with_zero_quantity = Inventory.objects.filter(
+        branch=request.user.branch, 
+        status=True, 
+        quantity=0
+    ).exclude(
+        id__in=ActivityLog.objects.values('inventory_id') 
+    )
+
+    print(products_with_zero_quantity)
+
+    # Step 2: Find duplicate products based on name
+    duplicates = products_with_zero_quantity.values('name').annotate(
+        count=Count('name')
+    ).filter(count__gt=1)  # Only consider products with more than 1 instance
+
+    # Step 3: For each group of duplicates, delete all but the first product
+    for product in duplicates:
+        # Get all products with the same name
+        product_group = products_with_zero_quantity.filter(name=product['name'])
+        
+        # Keep the first product and delete the rest
+        first_product = product_group.first()  # Get the first product
+        product_group.exclude(id=first_product.id).delete() 
+        logger.info(f'{first_product}, deleted') # 
+
     if category:
         if category == 'inactive':
             inventory = Inventory.objects.filter(branch=request.user.branch, status=False)
@@ -2213,21 +2243,28 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
             system_quantity = inventory.quantity
             quantity_adjustment = 0
 
+            description = ''
             # adjust quantity
             if inventory.quantity < quantity:
                 quantity_adjustment = quantity - inventory.quantity 
                 inventory.quantity -= quantity_adjustment
                 action = 'purchase edit +'
+                description = f'Stock adjustment ({po_item.purchase_order.batch})'
+                logger.info(f'{quantity_adjustment}: quantity adjusted')
             elif inventory.quantity > quantity:
                 quantity_adjustment = inventory.quantity - quantity 
                 inventory.quantity += quantity_adjustment
                 action = 'purchase edit -'
+                description = f'Stock adjustment ({po_item.purchase_order.batch})'
+                logger.info(f'{quantity_adjustment}: quantity adjusted')
             else:
+                action = 'price edit'
+                logger.info(f'{quantity_adjustment}: quantity adjusted')
                 inventory.quantity = quantity
+                description = f'Price adjustment ({po_item.purchase_order.batch})'
 
             inventory.price = selling_price
             inventory.dealer_price = dealer_price
-            inventory.quantity = quantity
             inventory.save()
 
             ActivityLog.objects.create(
@@ -2238,7 +2275,7 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
                 inventory=inventory,
                 quantity=quantity_adjustment,
                 system_quantity = system_quantity,
-                description=f'Stock adjustment ({po_item.purchase_order.batch})',
+                description=description,
                 total_quantity=inventory.quantity,
                 dealer_price = dealer_price,
                 selling_price = selling_price
@@ -3047,7 +3084,10 @@ def delete_product(request):
             product_id = data.get('id', '')
 
             product = Inventory.objects.get(id=product_id, branch=request.user.branch)
-            product.status = False
+            if product.quantity > 0:
+                return JsonResponse({'success': True, 'message': 'Product cannot be deleted.'})
+            else:
+                product.delete()
             product.save()
 
             return JsonResponse({'success': True, 'message': 'Product deleted successfully.'})
