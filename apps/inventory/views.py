@@ -631,7 +631,6 @@ def inventory_detail(request, id):
     ).order_by('-timestamp__date', '-timestamp__time')
 
     # logs = ActivityLog.objects.annotate(hour=Extract('timestamp', 'hour')).order_by('-hour')
-    print(logs.query)
 
     purchase_order_items = PurchaseOrderItem.objects.all()
 
@@ -663,21 +662,6 @@ def inventory_detail(request, id):
 
         if month_year not in labels:
             labels.append(month_year)
-        
-        ACTIONS_MAPPING = {
-            'stock in': ('text-success', 'bx bx-chevron-up'),
-            'Update': ('text-success', 'bx bx-chevron-up'),
-            'sale cancelled': ('text-success', 'bx bx-chevron-up'),
-            'Stock in': ('text-success', 'bx bx-chevron-up'),
-            'purchase edit +': ('text-success', 'bx bx-chevron-up'),
-            'transfer cancel': ('text-success', 'bx bx-chevron-up'),
-            'sale return': ('text-success', 'bx bx-chevron-up'),
-            'defective': ('text-danger', 'bx bx-chevron-down'),
-            'Decline': ('text-danger', 'bx bxs-circle bx-rotate-90 bx-tada'),
-            'Edit': ('text-dark', ''),
-            'deactivated': ('text-dark', ''),
-            'activated': ('text-dark', ''),
-        }
     
     return render(request, 'inventory_detail.html', {
         'inventory': inventory,
@@ -687,7 +671,6 @@ def inventory_detail(request, id):
         'stock_in_data': list(stock_in_data.values()),
         'transfer_data': list(transfer_data.values()),
         'labels': labels,
-        'actions_mapping': ACTIONS_MAPPING,
     })
 
 
@@ -3063,7 +3046,7 @@ def delete_product(request):
             product_id = data.get('id', '')
 
             product = Inventory.objects.get(id=product_id, branch=request.user.branch)
-            product.status = True  
+            product.status = False
             product.save()
 
             return JsonResponse({'success': True, 'message': 'Product deleted successfully.'})
