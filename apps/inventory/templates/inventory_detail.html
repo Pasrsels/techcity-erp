@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static%}
-{% block title%} Inventory {% endblock%}
+{% load custom_filters %}
+{% block title%} Inventory detail {% endblock%}
 {% block content %}
 <style>
     .table-responsive {
@@ -9,13 +10,13 @@
 </style>
    <div class="inventory">
         <div class="inventory-navbar">
-            <nav class="d-flex justify-content-between align-items-center bg-dark text-light rounded mb-2 p-2">
+            <nav class="d-flex justify-content-between align-items-center shadow rounded mb-2 p-2">
                 <div class="d-flex">
                     <div>
-                        <h4 class='mt-1 fw-bold'>{{ inventory.product.name | capfirst }} <small class='px-1 fw-bold fx-6'>Product Activity</small></h4>
+                        <h5 class='mt-1 fw-bold'>{{ inventory.name | capfirst }}: <small class='px-1 fw-bold fx-6'></small></h4>
                     </div>
                 </div>
-                <nav class='recent-nav navbar navbar-expand-lg navbar-light bg-dark text-light rounded px-2'>
+                <nav class='recent-nav navbar navbar-expand-lg navbar-light rounded px-2'>
                     <ul class='navbar-nav items  mr-auto'>
                         <li class='nav-item active' data-name="atable">Activity table</li>
                         <li class='nav-item px-2' data-name="charts">Activity chart</li>
@@ -23,71 +24,76 @@
                 </nav>
             </nav>
         </div>
-        <div>
-            <div class="inventory-chart hidden text-center charts" style='width: 100vh; height: 100vh;'>
-                <canvas id="inventoryChart"></canvas>
-            </div>
 
+        <div class="d-flex justify-content-between align-items-center mb-1 mt-3">
+            <div>Product Activity</div>
+            <div class="mx-1">
+                <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search logs..." oninput="searchTable()">
+            </div>
+        </div>
+
+        <div>
             <div class="table-detail mt-2 w-100 atable table-responsive">
-                <table class='table border rounded display p-2 table-bordered table-responsive' style="width:100%" id='detailTable'>
-                    <thead class='bg-primary'>
-                        <tr>
-                            <th>Date</th>
-                            <th>By (user)</th>
-                            <th>Refence</th>
-                            <th>Type</th>
-                            <th>Selling Price</th>
-                            <th>Dealer Price</th>
-                            <th>Trans Qnty</th>
-                            <th>System Qnty</th>
-                            <th>Qnty At Hand</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for log in logs %}
-                        <tr>
-                            <td><small>{{ log.timestamp }}</small></td>
-                            <td><small><span>{{ log.user }}</span></small></td>
-                            {% if log.invoice.invoice_number %}
-                            <td data-id="{{log.invoice.id}}" id="invoice" style="cursor:pointer;"><small>{{ log.invoice.invoice_number }}</small></td>
-                            {% elif log.product_transfer %}
-                            <td data-id="{{ log.product_transfer.id }}" id="transfer" style="cursor:pointer;"><small>{{ log.product_transfer.transfer.transfer_ref }}</small></td>
-                            {% else %}
-                            <td data-id="{{ log.purchase_order.id }}" id="purchase_order" style="cursor:pointer;"><small>{{ log.purchase_order.order_number }}</small></td>
-                            {% endif %}
-                            <td>
-                                <small style='width:20px !important;'>
-                                    {{ log.action }}
-                                    {% if log.description %}({{ log.description }}){% endif %}
-                                </small>
-                            </td>
-                            <td><small>{{ log.dealer_price }}</small></td>
-                            <td><small>{{ log.selling_price }}</small></td>
-                            <td>
-                                <small>
-                                    {% if log.action == 'stock in' or log.action == 'Update' or log.action == 'sale cancelled' or log.action == 'Stock in' or log.action == 'purchase edit +' or log.action == 'transfer cancel' or log.action == 'sale return' %}
-                                    <span class='text-success'>{{log.quantity}}</span>
-                                    <i class='text-success bx bx-chevron-up'></i>
-                                    {% elif log.action == 'defective'%}
-                                    <span class='text-danger'>{{log.quantity}}</span>
-                                    <i class='text-danger bx bx-chevron-down'></i>
-                                    {% elif log.action == 'Decline'%}
-                                    <span class='text-danger'>{{log.quantity}}</span>
-                                    <i class='text-danger bx bxs-circle bx-rotate-90 bx-tada'></i>
-                                    {% elif log.action == 'Edit' or log.action == 'deactivated' or log.action == 'activated'%}
-                                    <span class='text-dark'>{{log.quantity}}</span>
-                                    {% else %}
-                                    <span class='text-danger'>{{log.quantity}}</span>
-                                    <i class='text-danger bx bx-chevron-down'></i>
-                                    {% endif %}
-                                </small>
-                            </td>
-                            <td><small>{{log.total_quantity}}</small></td>
-                            <td><small>{{log.total_quantity}}</small></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>  
+                    <table class='table border rounded display p-2 table-bordered table-responsive' style="width:100%" id='detailTable'>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>By (user)</th>
+                                <th>Refence</th>
+                                <th>Type</th>
+                                <th>Selling Price</th>
+                                <th>Dealer Price</th>
+                                <th>Updated Qnty</th>
+                                <th>System Qnty</th>
+                                <th>Qnty At Hand</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td><small>{{ log.timestamp }}</small></td>
+                                <td><small><span>{{ log.user }}</span></small></td>
+                                <td data-id="{{log.invoice.id}}" id="invoice" style="cursor:pointer;">
+                                    <small>
+                                        {{ log.invoice.invoice_number }}
+                                        {{ log.product_transfer.transfer.transfer_ref }}
+                                        {{ log.purchase_order.order_number }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <small style='width:20px !important;'>
+                                        {{ log.action }}
+                                        {% if log.description %}({{ log.description }}){% endif %}
+                                    </small>
+                                </td>
+                                <td><small>{{ log.dealer_price }}</small></td>
+                                <td><small>{{ log.selling_price }}</small></td>
+                                <td>
+                                    <small>
+                                        <span class=''>{{log.quantity}}</span>
+                                        <!-- {% if log.action|in_list:'stock in,Update,sale cancelled,Stock in,purchase edit +,transfer cancel,sale return' %}
+                                        <span class='text-success'>{{log.quantity}}</span>
+                                        <i class='text-success bx bx-chevron-up'></i>
+                                        {% elif log.action == 'defective'%}
+                                        <span class='text-danger'>{{log.quantity}}</span>
+                                        <i class='text-danger bx bx-chevron-down'></i>
+                                        {% elif log.action == 'Decline'%}
+                                        <span class='text-danger'>{{log.quantity}}</span>
+                                        <i class='text-danger bx bxs-circle bx-rotate-90 bx-tada'></i>
+                                        {% elif log.action == 'Edit' or log.action == 'deactivated' or log.action == 'activated'%}
+                                        <span class='text-dark'>{{log.quantity}}</span>
+                                        {% else %}
+                                        <span class='text-danger'>{{log.quantity}}</span>
+                                        <i class='text-danger bx bx-chevron-down'></i>
+                                        {% endif %} -->
+                                    </small>
+                                </td>
+                                <td><small>{{log.total_quantity}}</small></td>
+                                <td><small>{{log.total_quantity}}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>  
                 <div class="modal fade" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
@@ -107,13 +113,19 @@
                 </div>
             </div>
         </div>
+
+        <!-- chart -->
+        <div class="inventory-chart hidden text-center charts" style='width: 100vh; height: 100vh;'>
+            <canvas id="inventoryChart"></canvas>
+        </div>
    </div>
 
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>  
 <script>
-    new DataTable('#detailTable', {
-        paging: false,
-    })
+    // new DataTable('#detailTable', {
+    //     paging: false,
+    //     // order: [[0, 'asce']]
+    // })
     
     const chart = $('.charts')
     const table = $('.atable')
@@ -123,6 +135,39 @@
     const invoiceDetails = document.getElementById('invoiceDetails');
     const transferModal = new bootstrap.Modal(document.getElementById('transferModal'));
     const transferDetails = document.getElementById('transferDetails');
+
+    // search functionality of the table -> js
+    const searchTable = () => {
+      const input = document.getElementById('search-input');
+      const filter = input.value.toLowerCase();
+      const table = document.getElementById('cart-table');
+      const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    
+
+    //   search table
+      for (let i = 0; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            let found = false;
+
+            // Check each cell in the row
+            for (let j = 2; j < cells.length; j++) {
+                const cell = cells[j];
+                if (cell) {
+                    const txtValue = cell.textContent || cell.innerText;
+                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (found) {
+                rows[i].style.display = "";
+            } else {
+                rows[i].style.display = "none";
+            }
+        }
+      }
 
     const salesData = {{ sales_data|safe }}; 
     const stockInData = {{ stock_in_data|safe }};
