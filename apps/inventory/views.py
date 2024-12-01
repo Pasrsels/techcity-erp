@@ -660,10 +660,25 @@ def inventory_detail(request, id):
         branch=request.user.branch
     ).order_by('-timestamp__date', '-timestamp__time')
 
+    """ get inventory value based on the currencies in the system """
+    inventory_value = []
+    inventory_total_cost = inventory.cost * inventory.quantity
+    for currency in Currency.objects.all():
+        inventory_value.append(
+            {
+                'name': f'{currency.name}',
+                'value': float(inventory_total_cost * currency.exchange_rate )if currency.exchange_rate == 1\
+                        else float(inventory_total_cost * currency.exchange_rate)
+            }
+        )
+    
+    logger.info(f'inventory value: {inventory_value}')
+
     # logs = ActivityLog.objects.annotate(hour=Extract('timestamp', 'hour')).order_by('-hour')
 
     purchase_order_items = PurchaseOrderItem.objects.all()
 
+    """ create log data structure for the activity log graph """
     sales_data = {}
     stock_in_data = {}
     transfer_data = {}
@@ -695,6 +710,7 @@ def inventory_detail(request, id):
     
     return render(request, 'inventory_detail.html', {
         'inventory': inventory,
+        'inventory_value':inventory_value,
         'logs': logs,
         'items':purchase_order_items,
         'sales_data': list(sales_data.values()), 
@@ -1512,7 +1528,7 @@ def add_reorder_quantity(request):
 def purchase_orders(request):
     form = CreateOrderForm()
     status_form = PurchaseOrderStatus()
-    orders = PurchaseOrder.objects.filter(branch = request.user.branch)
+    orders = PurchaseOrder.objects.filter(branch = request.user.branch).order_by('-order_date')
 
     items = PurchaseOrderItem.objects.filter(purchase_order__id=5)
 
@@ -1533,6 +1549,7 @@ def purchase_orders(request):
             'status_form':status_form 
         }
     )
+
 
 @login_required
 def create_purchase_order(request):
