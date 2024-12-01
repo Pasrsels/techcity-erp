@@ -3086,7 +3086,7 @@ def product(request):
                 service = True if data['service'] else False,
                 branch = request.user.branch,
                 image = image,
-                status = False
+                status = True
             )
         product.save()
         
