@@ -59,6 +59,14 @@ def service_crud(request):
     return JsonResponse({'success':False, 'response': 'invalid request'}, status =  500)
 
 
+#getting sercices data
+def ServiceData(request):
+    if request.method == 'GET':
+        service_info = Services.objects.all().values()
+        logger.info(service_info)
+        return JsonResponse({'success': True, 'product': list(service_info)}, status = 200)
+    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
+
 #service_product CRUD
 @login_required
 def service_product_crud(request):
@@ -204,10 +212,13 @@ def service_range_crud(request):
 @login_required
 def unit_measurement_crud(request):
     if request.method == 'POST':
-        data = json.load(request.body)
-        measure = data.get('unit measurement')
+        data = json.loads(request.body)
+        measure = data.get('measurement')
         promotion = data.get('promotion')
-
+        if promotion == 'on':
+            promotion = True
+        else:
+            promotion = False
         Unit_Measurement.objects.create(
             measurement = measure,
             promotion = promotion

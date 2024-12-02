@@ -44,14 +44,14 @@ class Services(models.Model):
 class Service_product(models.Model): # model titles should not have characters between them but only camelcasing
     name = models.CharField(max_length= 255)
     service = models.ForeignKey('Services', on_delete= models.CASCADE, null=True)
-    #unit_measure = models.ForeignKey('Unit_measurement', on_delete= models.CASCADE, null=True)
+    unit_measure = models.ForeignKey('Unit_measurement', on_delete= models.CASCADE, null=True)
     service_range = models.ForeignKey('Service_range', on_delete= models.CASCADE, null= True)
 
     def __str__(self):
         return f"{self.name}"
 
 class Unit_Measurement(models.Model):
-    measurement = models.CharField(max_length=60)
+    measurement = models.CharField(max_length=60, null = True)
     promotion = models.BooleanField(default= False)
     def __str__(self):
         return f'{self.measurement}'

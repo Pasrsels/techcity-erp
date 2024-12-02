@@ -9,10 +9,10 @@ urlpatterns = [
     path('service_crud/', service_crud, name='service_crud'),
     path('service_range_crud/', service_range_crud, name='service_range_crud'),
     path('unit_measurement_crud/', unit_measurement_crud, name='unit_measurement_crud'),
+    path('service_data/', ServiceData, name = 'service_data'),
     path('member/', members_view, name= 'member'),
     path('office/',offices_view, name= 'office'),
 
-    
     path('types_crud/', type_crud, name= 'types'),
     path('member_crud/', member_crud, name= 'members'),
     path('member_acc_crud/', member_acc_crud, name= 'members_acc'),
