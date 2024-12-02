@@ -77,8 +77,8 @@ def service_product_crud(request):
         unit_form = UnitForm()
         range_form = RangeForm()
         service_product_form = Service_productForm()
-        service_product = Service_product.objects.all()
-        unit_data = Unit_Measurement.objects.all()
+        service_product = ServiceProduct.objects.all()
+        unit_data = UnitMeasurement.objects.all()
         service = Services.objects.all()
         logger.info(service_product)
         return render(request, 'service_products.html',{
@@ -101,14 +101,14 @@ def service_product_crud(request):
 
         if not service_product_name or not service_name or not measurement_id or not promotion or not range_id or not price:
             return JsonResponse({'success': False, 'message': 'There are empty fields'}, status = 400)
-        elif Service_product.objects.filter(name = service_product_name).exists():
+        elif ServiceProduct.objects.filter(name = service_product_name).exists():
             return JsonResponse({'Success': False, 'message': f'{service_product_name} alreay exists'}, status = 400)
         try:
             with transaction.atomic():
                 service = Services.objects.get(name = service_name)
-                service_range = Service_range.get(id = range_id)
-                unit_measure = Unit_Measurement.objects.get(id = measurement_id)
-                Service_product.objects.create(
+                service_range = ServiceRange.get(id = range_id)
+                unit_measure = UnitMeasurement.objects.get(id = measurement_id)
+                ServiceProduct.objects.create(
                     name = service_product_name,
                     service = service,
                     unit_measure = unit_measure,
@@ -129,25 +129,25 @@ def service_product_crud(request):
 
         if not service_name or not service_product_name or not price or not unit_measurement or not service_range or not promotion:
             return JsonResponse({'success': False, 'message': 'empty json'}, status = 400)
-        elif not Services.objects.filter(name = service_name).exists or not Service_product.objects.filter(name = service_product_name).exists:
+        elif not Services.objects.filter(name = service_name).exists or not ServiceProduct.objects.filter(name = service_product_name).exists:
             return JsonResponse({'success': False, 'message': 'does not exist'}, status = 400)
         else:     
             service = Services.objects.update(
                 name = service_name
                 )
-            services_product = Service_product.objects.update(
+            services_product = ServiceProduct.objects.update(
                 name = service_product_name,
                 service = service
             )
             with transaction.atomic():
-                Service_range.objects.create(
+                ServiceRange.objects.create(
                     service_range = service_range,
                     promotion = promotion,
                     price = price,
                     service_product = services_product
                 )
 
-                Unit_Measurement.objects.create(
+                UnitMeasurement.objects.create(
                     measurement = unit_measurement,
                     service_product = services_product
                 )
@@ -155,10 +155,10 @@ def service_product_crud(request):
     elif request.method == 'DELETE':
         data = json.load(request.body)
         service_product_id = data.get('id')
-        if not Service_product.objects.filter(id = service_product_id).exists():
+        if not ServiceProduct.objects.filter(id = service_product_id).exists():
             return JsonResponse({'success':False, 'message': 'service product does not exist'}, status = 400)
         try:
-            service_prod_del = Service_product.objects.get(id = service_product_id)
+            service_prod_del = ServiceProduct.objects.get(id = service_product_id)
             service_prod_del.delete()
             return JsonResponse({'success':True}, status = 200)
         except Exception as e:
@@ -175,8 +175,9 @@ def service_range_crud(request):
             data = json.loads(request.body)
             range = data.get('service_range')
             price = data.get('price')
+
             logger.info(range,price)
-            Service_range.objects.create(
+            ServiceRange.objects.create(
                 service_range = range,
                 price = price
             )
@@ -186,7 +187,7 @@ def service_range_crud(request):
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
     #read
     elif request.method == 'GET':
-        service_range = Service_range.objects.all()
+        service_range = ServiceRange.objects.all()
         return JsonResponse({'success': True, 'service_range': service_range})
     #update
     elif request.method == 'UPDATE':
@@ -195,10 +196,10 @@ def service_range_crud(request):
         price = data.get('price')
         id = data.get('id')
 
-        if not Service_range.objects.filter(id = id).exists():
+        if not ServiceRange.objects.filter(id = id).exists():
             return JsonResponse({'success': False, 'message': f'id :{id} doesnot exist'})
         try:
-            service_range_update = Service_range.objects.get(id = id)
+            service_range_update = ServiceRange.objects.get(id = id)
             service_range_update.service_range = range
             service_range_update.price = price
             service_range_update.save()
@@ -210,7 +211,7 @@ def service_range_crud(request):
         data = json.load(request.body)
         id = data.get('id')
         try:
-            service_range = Service_range.objects.get(id = id)
+            service_range = ServiceRange.objects.get(id = id)
             service_range.delete()
         except Exception as e:
             return JsonResponse({'success': False, 'message':f'reason : {e}'}, status = 400)
@@ -226,14 +227,14 @@ def unit_measurement_crud(request):
             promotion = True
         else:
             promotion = False
-        Unit_Measurement.objects.create(
+        UnitMeasurement.objects.create(
             measurement = measure,
             promotion = promotion
         )
         return JsonResponse({'success': True}, status = 200)
     #read
     elif request.method == 'GET':
-        unit_measure = Unit_Measurement.objects.all()
+        unit_measure = UnitMeasurement.objects.all()
         return JsonResponse({'success': True, 'unit_measure': unit_measure})
     #update
     elif request.method == 'UPDATE':
@@ -242,10 +243,10 @@ def unit_measurement_crud(request):
         promotion = data.get('promotion')
         id = data.get('id')
 
-        if not Unit_Measurement.objects.filter(id = id).exists():
+        if not UnitMeasurement.objects.filter(id = id).exists():
             return JsonResponse({'success': False, 'message': f'id :{id} doesnot exist'})
         try:
-            unit_measure = Unit_Measurement.objects.get(id = id)
+            unit_measure = UnitMeasurement.objects.get(id = id)
             unit_measure.measurement = measure
             unit_measure.promotion = promotion
             unit_measure.save()
@@ -257,7 +258,7 @@ def unit_measurement_crud(request):
         data = json.load(request.body)
         id = data.get('id')
         try:
-            unit_measure_delete = Unit_Measurement.objects.get(id = id)
+            unit_measure_delete = UnitMeasurement.objects.get(id = id)
             unit_measure_delete.delete()
         except Exception as e:
             return JsonResponse({'success': False, 'message':f'reason : {e}'}, status = 400)
@@ -267,12 +268,8 @@ def unit_measurement_crud(request):
 @login_required
 def members_view(request):
     member = Services.objects.filter(delete=False)
-    return render(request, 'members.html')
-
-@login_required
-def offices_view(request):
-    office = Services.objects.all()
-    return render(request, 'service_products.html',office)
+    member  = MemberForm
+    return render(request, 'members.html',{'formMemberData': member})
 
 #types
 @login_required
@@ -399,16 +396,12 @@ def member_crud(request):
                 )
 
                 #member account add 4
-                member_acc_add = Member_accounts.objects.create(
+                member_acc_add = MemberAccounts.objects.create(
                     Balance  = bal,
                     Payments = payment_add,
                     delete = False
                 )
 
-                #office add 5
-                office_add = Office_spaces.objects.create(
-                    Name = office_name
-                )
                 
                 #member add 6
                 member_add = Members.objects.create(
@@ -424,7 +417,6 @@ def member_crud(request):
                     delete = False,
                     Services=service_add,
                     Member_accounts = member_acc_add,
-                    Office_spaces = office_add,
                     Payments = payment_add
                 )
                 Logs.objects.create(
@@ -502,17 +494,12 @@ def member_crud(request):
                 )
 
                 #member account add 4
-                member_acc_add = Member_accounts.objects.update(
+                member_acc_add = MemberAccounts.objects.update(
                     Balance  = bal,
                     Payments = payment_add,
                     delete = False
                 )
 
-                #office add 5
-                office_add = Office_spaces.objects.update(
-                    Name = office_name
-                )
-                
                 #member add 6
                 member_add = Members.objects.update(
                     National_ID = n_ID,
@@ -527,7 +514,6 @@ def member_crud(request):
                     delete = False,
                     Services=service_add,
                     Member_accounts = member_acc_add,
-                    Office_spaces = office_add,
                     Payments = payment_add
                 )
                 Logs.objects.update(
@@ -555,7 +541,7 @@ def member_crud(request):
 def member_acc_crud(request):
     #read
     if request.method == "GET":
-        member_acc = Member_accounts.objects.all()
+        member_acc = MemberAccounts.objects.all()
         return JsonResponse({'success': True, 'data': member_crud}, status = 200)
     #add
     elif request.method == "POST":
@@ -571,7 +557,7 @@ def member_acc_crud(request):
             return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
         
         with transaction():
-            member_acc = Member_accounts(
+            member_acc = MemberAccounts(
                 Balance = member_balance,
             )            
             payments = Payments(
@@ -592,13 +578,13 @@ def member_acc_crud(request):
         payments_amount = data[1]['Amount']
         
         try:
-            if Member_accounts.objects.get(id = member_id).DoesNotExist():
+            if MemberAccounts.objects.get(id = member_id).DoesNotExist():
                 return JsonResponse({'success': False, 'response': 'cannot update none existing field'}, status = 400)
             elif not member_id or not member_balance or not payments_id or not payments_date or not payments_amount:
                 return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
             
             with transaction():
-                member_acc = Member_accounts(
+                member_acc = MemberAccounts(
                     id = member_id,
                     Balance = member_balance,
                 )            
@@ -618,12 +604,12 @@ def member_acc_crud(request):
 
         member_id = data[0]['id']
 
-        if Member_accounts.objects.get(id = member_id).DoesNotExist():
+        if MemberAccounts.objects.get(id = member_id).DoesNotExist():
             return JsonResponse({'success': False, 'response':'cannot delete no existing field'}, status = 400)
         if not member_id:
             return JsonResponse({'success': False, 'response': 'empty field please fill'}, status = 400)
         
-        member_acc_del = Member_accounts.objects.filter(id = member_id)
+        member_acc_del = MemberAccounts.objects.filter(id = member_id)
         member_acc_del.delete = True
         member_acc_del.save()
 
@@ -632,7 +618,7 @@ def member_acc_crud(request):
 def payments_crud(request):
     #read
     if request.method == "GET":
-        payments_ = Member_accounts.objects.all()
+        payments_ = MemberAccounts.objects.all()
         return JsonResponse({'success': True, 'data':list(payments_)}, status = 200)
     #add
     elif request.method == "POST":
@@ -641,7 +627,7 @@ def payments_crud(request):
         payments_date = data.get('Date')
         payments_amount = data.get('Amount')
 
-        if Member_accounts.objects.filter().exists():
+        if MemberAccounts.objects.filter().exists():
             return JsonResponse({'success': False, 'response': 'cannot add existing field'}, status = 400)
         elif not payments_id or not payments_date or not payments_amount:
             return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
@@ -662,7 +648,7 @@ def payments_crud(request):
         payments_amount = data.get('Amount')
         
         try:
-            if Member_accounts.objects.get(id = payments_id).DoesNotExist():
+            if MemberAccounts.objects.get(id = payments_id).DoesNotExist():
                 return JsonResponse({'success': False, 'response': 'cannot update none existing field'}, status = 400)
             elif not payments_id or not payments_date or not payments_amount:
                 return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
@@ -682,74 +668,10 @@ def payments_crud(request):
 
         payments_id = data.get('id')
 
-        if Member_accounts.objects.get(id = payments_id).DoesNotExist():
+        if MemberAccounts.objects.get(id = payments_id).DoesNotExist():
             return JsonResponse({'success': False, 'response':'cannot delete no existing field'}, status = 400)
         if not payments_id:
             return JsonResponse({'success': False, 'response': 'empty field please fill'}, status = 400)
         
-        payments_del = Member_accounts.objects.filter(id = payments_id)
+        payments_del = MemberAccounts.objects.filter(id = payments_id)
         payments_del.delete()
-
-#office
-@login_required
-def office_crud(request):
-    #read
-    if request.method == "GET":
-        office_view = Office_spaces.objects.all()
-        return JsonResponse({'success': True, 'data': list(office_view)}, status = 200)
-    #add
-    elif request.method == "POST":
-        data = json.loads(request.body)
-
-        office_name = data[0]['Name']
-    
-        if Member_accounts.objects.filter(Name = office_name).exists():
-            return JsonResponse({'success': False, 'response': 'cannot add existing field'}, status = 400)
-        elif not office_name:
-            return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
-        
-        
-        office_space = Office_spaces(
-            Name = office_name,
-        )            
-        office_space.save() 
-    #update
-    elif request.method == "PUT":
-
-        data = json.loads(request.body)
-
-        office_id = data[0]['id']
-        office_name = data[0]['Balance']
-        
-        try:
-            if Member_accounts.objects.get(id = office_id).DoesNotExist():
-                return JsonResponse({'success': False, 'response': 'cannot update none existing field'}, status = 400)
-            elif not office_id or not office_name:
-                return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
-            
-            office_space = Office_spaces(
-                id = office_id,
-                Balance = office_name,
-            )            
-            
-            office_space.save() 
-            return JsonResponse({'success': True, 'response': 'items updated'}, status = 200)
-        except Exception as e:
-            return JsonResponse({'success': False, 'response':f'{e}'}, status = 200)
-    #delete
-    if request.method == "DELETE":
-        data = json.loads(request.body)
-
-        office_id = data[0]['id']
-
-        try:
-            if Member_accounts.objects.get(id = office_id).DoesNotExist():
-                return JsonResponse({'success': False, 'response':'cannot delete no existing field'}, status = 400)
-            if not office_id:
-                return JsonResponse({'success': False, 'response': 'empty field please fill'}, status = 400)
-            
-            office_del = Member_accounts.objects.filter(id = office_id)
-            office_del.delete()
-            return JsonResponse({'success': True, 'response': 'item deleted'})
-        except Exception as e:
-            return JsonResponse({'success':False, 'response': f'{e}'}, status = 400)

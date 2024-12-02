@@ -283,7 +283,7 @@
         input.forEach(input =>{
             formData[input.name] = input.value;
         });
-        console.log({'form data':formData});
+        console.log({'formd data':formData_range});
         try 
         {
             fetch('{% url "booking:service_range_crud" %}', {
@@ -293,7 +293,7 @@
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCSRFToken()
             },
-            body: JSON.stringify(formData),
+            body: JSON.stringify(formData_range),
             })
             .then(response => response.json())
             .then(respone => {
@@ -318,7 +318,7 @@
             console.error('Error:', error);
         }
         
-    })
+    });
 
     document.getElementById('AddServiceProduct').addEventListener('submit', function(e) {
         e.preventDefault(); 
@@ -340,7 +340,7 @@
             })
             return;
         }
-        
+
         const formData = {
 
         };

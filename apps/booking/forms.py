@@ -7,15 +7,15 @@ class ServiceForm(forms.ModelForm):
 
 class Service_productForm(forms.ModelForm):
     class Meta:
-        model = Service_product
+        model = ServiceProduct
         fields = '__all__'
 
 class UnitForm(forms.ModelForm):
     class Meta:
-        model = Unit_Measurement
+        model = UnitMeasurement
         fields = '__all__'
 
 class RangeForm(forms.ModelForm):
     class Meta:
-        model = Service_range
+        model = ServiceRange
         fields = '__all__'
