@@ -36,23 +36,24 @@
 <div class="container me-5">
     <div class="Service_Products">
         <div class="nav-service">
-            <div class="d-flex align-items-center justify-content-between rounded text-light shadow header py-2 mb-4" style="background: #aeb6c2;">
-                <h3 class="text-light px-1">Services Products</h3>
+            <div class="d-flex align-items-center justify-content-between rounded shadow header p-2 mb-4">
+                <h5>Services Products</h5>
                 <div>
-                    <button class="btn btn-outline-dark ms-10">Analytics</button>
-                    <button class="btn btn-outline-dark ms-10">Members</button>
-                    <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#addProductModal">Add Service Product</button>
+                    <button class="btn btn-outline-dark btn-sm ms-10">Analytics</button>
+                    <a class="btn btn-outline-dark ms-10 btn-sm" href="{%url 'booking:member'%}">Members</a> 
+                    <button class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">Add Service Product</button>
                 </div>
             </div>
         </div>
+        added form-control-sm
         <div class="row">
             <div class ="col-9" >
                 <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
-                    <h4 class="text-dark mb-0">Services</h4>
+                    <h5 class="text-dark mb-0">Services</h4>
                     <div class="d-flex">
                         <input 
                             type="text" 
-                            class="form-control me-2" 
+                            class="form-control me-2 form-control-sm"  
                             id="searchBar" 
                             placeholder="Search Service Product" 
                             oninput="filterProducts()"
@@ -219,12 +220,15 @@
             fixed.classList.remove('d-none')
             range.classList.add('d-none')
             service = value
-        }else{
+        }else if (value === 'range'){
             fixed.classList.add('d-none')
             range.classList.remove('d-none')
             service = value
+        }else{
+            fixed.classList.add('d-none')
+            range.classList.add('d-none')
+            service = null
         }
-
         console.log(service, 'value')
 
     })
