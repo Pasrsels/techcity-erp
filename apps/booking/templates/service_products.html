@@ -1,9 +1,10 @@
 .{% extends "base.html" %}
 {% load static %}
 {% load crispy_forms_tags %}
+{% block title %} Add Service Products{% endblock %}
 {% block content %}
 <style>
-    .product-card{
+    .card{
         height: 250px !important;
     }
 </style>
@@ -21,7 +22,18 @@
         </div>
         <div class="row">
             <div class ="col-9" >
-                Services
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h4 class="text-dark mb-0">Services</h4>
+                    <div class="d-flex">
+                        <input 
+                            type="text" 
+                            class="form-control me-2" 
+                            id="searchBar" 
+                            placeholder="Search Service Product" 
+                            oninput="filterProducts()"
+                        />
+                    </div>
+                </div>
                 <div class="row" id="displayCards">    
                   <!--javascript rendering ... displayProducts-->
                 </div>
@@ -71,19 +83,6 @@
             
         </div>
 
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <h4 class="text-dark mb-0">Add Service Product</h4>
-            <div class="d-flex">
-                <input 
-                    type="text" 
-                    class="form-control me-2" 
-                    id="searchBar" 
-                    placeholder="Search Service Product" 
-                    oninput="filterProducts()"
-                />
-            </div>
-        </div>
-        
         <div id="productsContainer" class="row mt-4">
             {% for product in service_product_data %}
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4 product-card" data-name="{{ product.name|lower }}" data-details="{{ product.details|lower }}">
