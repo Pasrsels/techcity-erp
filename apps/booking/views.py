@@ -94,7 +94,6 @@ def service_product_crud(request):
         service_product_name = data.get('name')
         service_name = data.get('service name')
         measurement_id = data.get('unit measurement')
-        promotion = data.get('promotion')
         range_id = data.get('service range')
         price = data.get('price')
 
@@ -170,15 +169,19 @@ def service_product_crud(request):
 def service_range_crud(request):
     #ADD
     if request.method == 'POST':
-        data = json.load(request.body)
-        range = data.get('range')
-        price = data.get('price')
-
-        Service_range.objects.create(
-            range = range,
-            price = price
-        )
-        return JsonResponse({'success': True}, status = 200)
+        try:
+            data = json.loads(request.body)
+            range = data.get('service_range')
+            price = data.get('price')
+            logger.info(range,price)
+            Service_range.objects.create(
+                service_range = range,
+                price = price
+            )
+            return JsonResponse({'success': True}, status = 200)
+        except Exception as e:
+            logger.info(e)
+            return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
     #read
     elif request.method == 'GET':
         service_range = Service_range.objects.all()
