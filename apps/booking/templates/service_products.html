@@ -15,6 +15,8 @@
             </div>
         </div>
 
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h4 class="text-dark mb-0">Add Service Product</h4>
             <div class="d-flex">
                 <input 
                     type="text" 
@@ -24,6 +26,7 @@
                     oninput="filterProducts()"
                 />
             </div>
+        </div>
         
         <div id="productsContainer" class="row mt-4">
             {% for product in service_product_data %}
