@@ -11,8 +11,6 @@ urlpatterns = [
     path('unit_measurement_crud/', unit_measurement_crud, name='unit_measurement_crud'),
     path('service_data/', ServiceData, name = 'service_data'),
     path('member/', members_view, name= 'member'),
-
-    path('types_crud/', type_crud, name= 'types'),
     path('member_crud/', member_crud, name= 'members'),
     path('member_acc_crud/', member_acc_crud, name= 'members_acc'),
     path('payments/', payments_crud, name= 'payments'),
