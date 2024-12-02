@@ -7,19 +7,57 @@
     .table-responsive {
         overflow-x: auto;
     }
+    [x-cloak]{
+        display: none;
+    }
+    /* style="background:rgb(0 123 255) ; */
 </style>
 <script src="https://unpkg.com/alpinejs" defer></script>
-<div class="inventory">
-    <div class="inventory-navbar">
-        <nav class="d-flex justify-content-between align-items-center shadow rounded mb-2 p-2">
+<div class="inventory"
+    x-data="{
+        open:false,
+        download(type) {
+            let printArea;
+
+            if (type === 'logs') {
+                printArea = document.querySelector('.atable');
+            } else if (type === 'account') {
+                printArea = document.querySelector('.stock-account'); 
+            }
+        
+            if (!printArea) {
+                console.error('Content to print not found.');
+                return;
+            }
+        
+            const heading = document.createElement('h2')
+            let headingText = type === 'logs' ? 'LOGS REPORT' : 'STOCK ACCOUNT REPORT'; 
+            heading.innerText = `{{ inventory.name }}: ${headingText}`
+            heading.classList.add('m-2')
+            printArea.prepend(heading)
+            printArea.classList.add('m-2')
+            let originalContent = document.body.innerHTML;
+
+            // Replace the body content with the selected print area
+            document.body.innerHTML = printArea.outerHTML;
+
+            // Trigger the print dialog
+            window.print();
+
+            // Restore the original content after printing
+            setTimeout(() => {
+                document.body.innerHTML = originalContent;
+            }, 1000);
+        
+        }
+        
+    }"
+    >
+    <div class="inventory-navbar mb-3">
+        <nav class="d-flex justify-content-between align-items-center shadow rounded p-2">
             <div class="d-flex">
                 <div class="d-flex align-items-center">
                     <h5>{{ inventory.name | capfirst }}</h5>
-                    <h5 class="mx-2 border rounded p-1 text-light" style="background:rgb(0 123 255) ;">
-                        {% for value in inventory_value %}
-                            <span class="me-1">{{ value.name }} {{ value.value|floatformat:2 }}</span>
-                        {% endfor %}
-                    </h5>
                 </div>
             </div>
             <nav class='recent-nav navbar navbar-expand-lg navbar-light rounded px-2'>
@@ -30,18 +68,46 @@
             </nav>
         </nav>
     </div>
-    <div class="d-flex justify-content-between align-items-center mb-1 mt-3">
-        <div>Product Activity</div>
-        <div class="mx-1">
-            <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search logs..." oninput="searchTable()">
+    <div class="d-flex justify-content-between align-items-center border p-2 rounded">
+        <div class="d-flex">
+            <div class="p-1">Cost value:  
+                {% for value in inventory_value %}
+                    <span class="mx-2">{{ value.name }} {{ value.value|floatformat:2 }}</span>
+                {% endfor %}
+            </div>
+            <div class="mx-2 p-1">Sold value: 
+                {% for value in inventory_sold_value %}
+                    <span class="mx-1">{{ value.name }} {{ value.value|floatformat:2 }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        <div>
+            <button 
+                class="btn btn-outline-dark" 
+                @click="open =!open"
+                x-text="open ? 'Logs' : 'Stock Account'">
+            >
+                Stock Account
+            </button>
+            <button 
+                class="btn btn-outline-dark bx bx-printer bx-sm" 
+                @click="download(!open ? 'logs' : 'account')">
+            </button>
         </div>
     </div>
+    <div class="d-flex justify-content-between align-items-center mb-1 mt-1">
+    </div>
+        <div x-show="!open">
+            <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search logs..." oninput="searchTable()">
+        </div>
+  
 
     <div>
-        <div class="table-detail mt-2 w-100 atable table-responsive">
+        <div class="table-detail mt-2 w-100 atable table-responsive" x-show="!open" x-transition>
                 <table class='table border rounded display p-2 table-bordered table-responsive' style="width:100%" id='detailTable'>
-                    <thead>
+                    <thead class="table-dark">
                         <tr>
+                            <th>#</th>
                             <th>Date</th>
                             <th>By (user)</th>
                             <th>Refence</th>
@@ -56,6 +122,7 @@
                     <tbody>
                         {% for log in logs %}
                         <tr>
+                            <td><small>{{ forloop.counter }}</small></td>
                             <td><small>{{ log.timestamp }}</small></td>
                             <td><small><span>{{ log.user }}</span></small></td>
                             <td data-id="{{log.invoice.id}}" id="invoice" style="cursor:pointer;">
@@ -103,6 +170,57 @@
         </div>
     </div>
 
+    <!-- stock account -->
+    <div x-show="open" x-transition class="mt-1">
+        <h5>Stock Account</h5>
+        <div class="table-responsive stock-account">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Timestamp</th>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Debits</th>
+                        <th>Credits</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if stock_account_data %}
+                        {% for entry in stock_account_data %}
+                            <tr>
+                                <td><small>{{ forloop.counter }}</small></td>
+                                <td><small>{{ entry.timestamp }}</small></td>
+                                <td><small>{{ entry.description }}</small></td>
+                                <td><small>{{ entry.quantity }}</small></td>
+                                {% if entry.type == 'debits' %}
+                                    <td><small>{{ entry.cost|floatformat:2 }}</small></td>
+                                    <td></td>
+                                {% else %}
+                                    <td></td>
+                                    <td><small>{{ entry.cost|floatformat:2 }}</small></td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                        
+                        <!-- Totals Row -->
+                        <tr class="fw-bold">
+                            <td class="text-start">Totals</td>
+                            <td colspan="2" ></td>
+                            <td><small>{{ remaining_stock_quantity }}</small></td>
+                            <td><small>{{ total_debits|floatformat:2 }}</small></td>
+                            <td><small>{{ total_credits|floatformat:2 }}</small></td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">No stock account data available.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- chart -->
     <div class="inventory-chart hidden text-center charts" style='width: 100vh; height: 100vh;'>
         <canvas id="inventoryChart"></canvas>
@@ -116,7 +234,43 @@
     const invoiceModal = new bootstrap.Modal(document.getElementById('invoiceModal'));
     const invoiceDetails = document.getElementById('invoiceDetails');
     const transferModal = new bootstrap.Modal(document.getElementById('transferModal'));
-    const transferDetails = document.getElementById('transferDetails');
+    const transferDetails = document.getElementById('transferDetails');\
+
+    // download function for the accounts and the logs 
+    const download = (type) =>{
+        let url = ''
+        if(type='logs'){
+            url = `?=logs${true}`
+        }else{
+            url = `?accounts=${true}`
+        }
+
+        Swal.fire({
+            title: 'Processing...',
+            text: 'Your download is being prepared.',
+            imageUrl: 'https://i.imgur.com/2ZduIl8.gif',  
+            imageWidth: 50,
+            imageHeight: 50,
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        setTimeout(() => {
+            // Hide processing Swal and show success Swal
+            Swal.fire({
+                title: 'Download Complete!',
+                text: `Your ${type} file has been downloaded successfully.`,
+                icon: 'success',
+                confirmButtonText: 'Close'
+            });
+
+            window.location.href = url;
+
+        }, 2000);  
+    }
 
     // search functionality of the table -> js
     const searchTable = () => {

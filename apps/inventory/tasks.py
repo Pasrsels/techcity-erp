@@ -1,9 +1,12 @@
-import threading
 from . models import *
 from utils.utils import send_mail_func
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from techcity.settings.development import SYSTEM_EMAIL
+from xhtml2pdf import pisa
+from io import BytesIO
+from django.http import HttpResponse
+from django.template.loader import render_to_string
 
 import logging
 logger = logging.getLogger(__name__)
@@ -85,5 +88,36 @@ def send_transfer_email(user_email, transfer_id, branch_id):
 
     except Exception as e:
         logger.error(f"Error sending account statement email: {e}", exc_info=True)
+
+
+def download_stock_logs_account(type, logs, inventory):
+    """
+        Generate a PDF for either stock logs or stock accounts based on the 'type'.
+    """
+
+    context = {
+        'inventory':inventory,
+        'logs': logs, 
+    }
+    
+    if type == 'logs':
+        html_content = render_to_string('pdf_templates/stock_logs.html', context)
+    elif type == 'account':
+        html_content = render_to_string('pdf_templates/stock_account.html', context)
+    else:
+        return HttpResponse('Invalid type', status=400)
+
+    buffer = BytesIO()
+    
+    pdf_status = pisa.pisaDocument(BytesIO(html_content.encode('utf-8')), buffer)
+    
+    if pdf_status.err:
+        return HttpResponse('Error generating PDF', status=500)
+    
+    response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename={type}_report.pdf'
+    return response
+
+
 
 

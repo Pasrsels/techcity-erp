@@ -7,7 +7,10 @@ from django.http import HttpResponse
 from datetime import timedelta
 from openpyxl.styles import Alignment, Font, PatternFill
 from . models import *
-from . tasks import send_transfer_email
+from . tasks import (
+    send_transfer_email,
+    download_stock_logs_account
+)
 from decimal import Decimal
 from django.views import View
 from django.db.models import Q
@@ -653,16 +656,30 @@ from django.db.models.functions import Extract
 
 @login_required
 def inventory_detail(request, id):
-
+    purchase_order_items = PurchaseOrderItem.objects.all()
     inventory = Inventory.objects.get(id=id, branch=request.user.branch)
     logs = ActivityLog.objects.filter(
         inventory=inventory,
         branch=request.user.branch
     ).order_by('-timestamp__date', '-timestamp__time')
 
+    # stock account data and totals (costs and quantities)
+    stock_account_data = get_stock_account_data(logs)
+    total_debits = sum(entry['cost'] for entry in stock_account_data if entry['type'] == 'debits')
+    total_credits = sum(entry['cost'] for entry in stock_account_data if entry['type'] == 'credits')
+
+    total_debits_quantity = sum(entry['quantity'] for entry in stock_account_data if entry['type'] == 'debits')
+    total_credits_quantity = sum(entry['quantity'] for entry in stock_account_data if entry['type'] == 'credits')
+
+    logger.info(f'debits {total_debits_quantity}')
+
+    remaining_stock_quantity = total_debits_quantity - total_credits_quantity
+
     """ get inventory value based on the currencies in the system """
     inventory_value = []
+    inventory_sold_value = []
     inventory_total_cost = inventory.cost * inventory.quantity
+
     for currency in Currency.objects.all():
         inventory_value.append(
             {
@@ -671,12 +688,17 @@ def inventory_detail(request, id):
                         else float(inventory_total_cost * currency.exchange_rate)
             }
         )
+        inventory_sold_value.append(
+            {
+                'name': f'{currency.name}',
+                'value': logs.filter(invoice__invoice_return = False, invoice__currency=currency).\
+                        aggregate(Sum('invoice__amount'))['invoice__amount__sum'] or 0
+            }
+        )
     
-    logger.info(f'inventory value: {inventory_value}')
+    logger.info(f'inventory value: {inventory_sold_value}')
 
     # logs = ActivityLog.objects.annotate(hour=Extract('timestamp', 'hour')).order_by('-hour')
-
-    purchase_order_items = PurchaseOrderItem.objects.all()
 
     """ create log data structure for the activity log graph """
     sales_data = {}
@@ -707,10 +729,23 @@ def inventory_detail(request, id):
 
         if month_year not in labels:
             labels.append(month_year)
+
+    """ download a log or stock account pdf """
+
+    if request.GET.get('logs'):
+        print(request.GET.get('logs'))
+        download_stock_logs_account('logs', logs, inventory)
+    elif request.GET.get('account'):
+        download_stock_logs_account('account', logs, inventory)
     
     return render(request, 'inventory_detail.html', {
         'inventory': inventory,
+        'remaining_stock_quantity':remaining_stock_quantity,
+        'stock_account_data':stock_account_data,
         'inventory_value':inventory_value,
+        'inventory_sold_value':inventory_sold_value,
+        'total_debits':total_debits,
+        'total_credits':total_credits,
         'logs': logs,
         'items':purchase_order_items,
         'sales_data': list(sales_data.values()), 
@@ -718,6 +753,39 @@ def inventory_detail(request, id):
         'transfer_data': list(transfer_data.values()),
         'labels': labels,
     })
+
+def get_stock_account_data(logs):
+    """ 
+    logs data structure with both debits and credits, using default currency 
+    debits => stock in,  transfer_in, sales_returns, positive_adjustments
+    credits => transfer_out, supplier_returns, negative_adjustments, sale
+"""
+    stock_account = []
+    for log in logs:
+        if log.action in ['stock in', 'transfer_in', 'sale return', 'purchase edit +', 'stock adjustment']:
+            entry_type = 'debits'
+        elif log.action in ['transfer', 'returns', 'Sale', 'purchase edit -', 'write off']:
+            entry_type = 'credits'
+        else:
+            continue  
+        
+        # Calculate cost (ensure inventory cost is handled correctly)
+        inventory_cost = getattr(log.inventory, 'cost', Decimal('0.00'))
+        cost = log.quantity * inventory_cost
+        
+        # Append entry to stock account
+        stock_account.append({
+            'type': entry_type,
+            'description': log.action,
+            'quantity': log.quantity,
+            'cost': cost,
+            # 'currency': 'USD',
+            'timestamp': log.timestamp,
+            'user': log.user.username if log.user else 'Unknown',
+            'branch': log.branch.name,
+        })
+    
+    return stock_account
 
 
 @login_required    
