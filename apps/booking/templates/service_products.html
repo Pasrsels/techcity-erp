@@ -1,33 +1,32 @@
-{% extends "base.html" %}
+.{% extends "base.html" %}
 {% load static %}
 {% load crispy_forms_tags %}
 {% block title %} Add Service Products{% endblock %}
-<<<<<<< HEAD
-
-{% block content %}
-=======
 {% block content %}
 <style>
     .card{
         height: 250px !important;
     }
+    .card-footer{
+        margin-top:auto;
+    }
+   
 </style>
->>>>>>> ce5b2901c343f42fd5d4ae82485403efdc9624ad
 <div class="container me-5">
     <div class="Service_Products">
-        <div class="d-flex align-items-center justify-content-between rounded text-light shadow header py-2 mb-4" style="background: #aeb6c2;">
-            <h3 class="text-light px-1">Services Products</h3>
-            <div>
-                <button class="btn btn-outline-dark ms-10">Analytics</button>
-                <button class="btn btn-outline-dark ms-10">Members</button>
-                <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#addProductModal">Add Service Product</button>
+        <div class="nav-service">
+            <div class="d-flex align-items-center justify-content-between rounded text-light shadow header py-2 mb-4" style="background: #aeb6c2;">
+                <h3 class="text-light px-1">Services Products</h3>
+                <div>
+                    <button class="btn btn-outline-dark ms-10">Analytics</button>
+                    <button class="btn btn-outline-dark ms-10">Members</button>
+                    <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#addProductModal">Add Service Product</button>
+                </div>
             </div>
         </div>
-<<<<<<< HEAD
-=======
         <div class="row">
             <div class ="col-9" >
-                <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
                     <h4 class="text-dark mb-0">Services</h4>
                     <div class="d-flex">
                         <input 
@@ -44,7 +43,7 @@
                 </div>
             </div>
             <div class="col-3">
-                Add Service
+                <h4 class="mb-4">Add Service</h4>
                 <form id="AddServiceProduct">
                     <div id="div_id_service" class="mb-3"> 
                         <label for="id_service" class="form-label requiredField">
@@ -87,94 +86,6 @@
             </div>
             
         </div>
->>>>>>> ce5b2901c343f42fd5d4ae82485403efdc9624ad
-
-        <div id="productsContainer" class="row mt-4">
-            {% for product in service_product_data %}
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4 product-card" data-name="{{ product.name|lower }}" data-details="{{ product.details|lower }}">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ product.name }}</h5>
-                            <h6 class="card-text">
-                                {{product.service_range.price}}
-                            </h6>
-                            <div class="d-flex justify-content-end">
-                                <button class="btn btn-sm btn-outline-primary me-2" title="Edit" data-bs-toggle="modal" data-bs-target="#editProductModal" onclick="loadEditModal('{{ product.name }}', '{{ product.details }}')">
-                                    <i class="bx bx-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary" title="View" data-bs-toggle="modal" data-bs-target="#viewProductModal" onclick="loadViewModal('{{ product.name }}', '{{ product.details }}')">
-                                    <i class="bx bx-show"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addProductModalLabel">Add Service Product</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{% url 'booking:service_product_crud' %}" method="POST">
-                    <div id="div_id_name" class="mb-3"> 
-                        <label for="id_name" class="form-label requiredField">
-                            Name
-                            <span class="asteriskField">*</span> 
-                        </label> 
-                        <input type="text" name="name" maxlength="255" class="textinput form-control" required="" id="id_name">
-                    </div>
-                    <div id="div_id_service" class="mb-3"> 
-                        <label for="id_service" class="form-label requiredField">
-                            Service<span class="asteriskField">*</span> 
-                        </label> 
-                        <div class="d-flex align-content-center">
-                            <select name="service" class="select form-select" required="" id="id_service"> 
-                                <option value="" selected="">---------</option> 
-                                {%for product in services%}
-                                    <option value="{{product.id}}">{{product.name}}</option>
-                                {%endfor%}
-                            </select> 
-                            <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addServiceModal"></button>
-                        </div>
-                    </div>
-                    <div id="div_id_unit_measure" class="mb-3">
-                        <label for="id_unit_measure" class="form-label requiredField">
-                            Unit measure
-                            <span class="asteriskField">*</span>
-                        </label>
-                        <div class="d-flex align-content-center">
-                            <select name="unit_measure" class="select form-select" required="" id="id_unit_measure">
-                                <option value="" selected="">---------</option>
-                            </select>
-                            <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addunitmeasureModal"></button>
-                        </div>
-                    </div>
-                    <div id="div_id_service_range" class="mb-3">
-                        <label for="id_service_range" class="form-label requiredField">
-                            Service range
-                            <span class="asteriskField">*</span>
-                        </label>
-                        <div class="d-flex align-content-center">
-                            <select name="service_range" class="select form-select" required="" id="id_service_range">
-                                <option value="" selected="">---------</option>
-                            </select>
-                            <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addservice_rangeModal"></button>
-                        </div>
-                    </div>             
-                    <div class="d-flex justify-content-between mt-3">
-                        <button type="reset" class="btn btn-secondary">Reset</button>
-                        <button type="submit" class="btn btn-primary">Save</button>
-                    </div>
-                </form>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -189,9 +100,12 @@
                 <form id="addServiceForm" action="{% url 'booking:service_crud' %}" method="POST">
                     {% csrf_token %}
                     {{service | crispy}}
-                     <div class="d-flex justify-content-between mt-3">
-                    <button type="submit" class="btn btn-primary">Add Service</button>
-                     </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            <i class="bx bx-save"></i>
+                            Service
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -206,116 +120,160 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="unit_measurementForm" action="{% url 'booking:service_crud' %}" method="POST">
+                <form id="unit_measurementForm"> 
                     {% csrf_token %}
                     {{unit_measurement | crispy}}
                     <div class="d-flex justify-content-between mt-3">
                         <button type="submit" class="btn btn-primary">Add unit_measure</button>
-                         </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="addunitmeasureModal" tabindex="-1" aria-labelledby="addunitmeasureModal" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addunitmeasureModal">Add Unit Measure</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="unit_measurementForm" action="{% url 'booking:service_crud' %}" method="POST">
-                        {% csrf_token %}
-                        {{unit_measurement | crispy}}
-                        <div class="d-flex justify-content-between mt-3">
-                            <button type="submit" class="btn btn-primary">Add unit_measure</button>
-                             </div>
-                        </form>
                     </div>
-                </div>
-            </div>
-        </div>
-
-<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="errorModalLabel">Error</h5>
-                <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>There was an error adding the service product. Please try again.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    document.getElementById('AddServiceProduct').addEventListener('click', function(e){
+        e.preventDefault();
+    })
 
-function filterProducts() {
-    const query = document.getElementById('searchBar').value.toLowerCase();
-    const productCards = document.querySelectorAll('.product-card');
+    document.getElementById('unit_measurementForm').addEventListener('submit', function(e){
+        e.preventDefault();
 
-    productCards.forEach(card => {
-        const name = card.getAttribute('data-name');
-        const details = card.getAttribute('data-details');
+        const formData = {};
+        const inputs = document.querySelectorAll('#unit_measurementForm input, #unit_measurementForm input');
 
-        if (name.includes(query) || details.includes(query)) {
-            card.style.display = '';
-        } else {
-            card.style.display = 'none';
+        inputs.forEach(input =>{
+            formData[input.name] = input.value;
+        });
+        console.log({'form data':formData});
+        try 
+        {
+            fetch('{% url "booking:unit_measurement_crud" %}', {
+            method: 'POST',
+            headers: 
+            {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify(formData),
+            })
+            .then(respone => respone.json())
+            .then(respone => {
+                if(respone.success){
+                    swal.fire({
+                        Text: 'success',
+                        icon: 'success',
+                        title : 'successfully added'
+                    })
+                }
+                else{
+                    swal.fire({
+                        Text: respone.message,
+                        icon: 'error',
+                        title : 'error',
+                    })
+                }
+            })
         }
-    });
-}
+        catch (error)
+        {
+            console.error('Error:', error);
+        }
+        
+    })
 
-function loadViewModal(productName, productDetails) {
-    document.getElementById('viewProductName').innerText = productName;
-    document.getElementById('viewProductDetails').innerText = productDetails;
-}
+    function getCSRFToken() {
+            let cookieValue = null;
+            const name = 'csrftoken';
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
 
-function loadEditModal(productName, productDetails) {
-    document.getElementById('editProductName').value = productName;
-    document.getElementById('editProductDetails').value = productDetails;
-}
+    function filterProducts() {
+        const query = document.getElementById('searchBar').value.toLowerCase();
+        const productCards = document.querySelectorAll('.product-card');
 
-document.addEventListener("DOMContentLoaded", () => {
-            const form = document.querySelector("#addServiceForm");
-            
-            form.addEventListener("submit", (event) => {
-                event.preventDefault(); 
-                const addServiceModal = bootstrap.Modal.getInstance(document.getElementById("addServiceModal"));
-                addServiceModal.hide(); 
-                successModal.show(); 
-            });
-        })
+        productCards.forEach(card => {
+            const name = card.getAttribute('data-name');
+            const details = card.getAttribute('data-details');
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const form = document.querySelector("#unit_measurementForm");
-            
-            form.addEventListener("submit", (event) => {
-                event.preventDefault(); 
-                const addServiceModal = bootstrap.Modal.getInstance(document.getElementById("addunitmeasureModal"));
-                addServiceModal.hide(); 
-                successModal.show(); 
-            });
-        })
-// feedback to be connected with backend response
-function triggerFeedback(event) {
-    event.preventDefault(); 
-    const isSuccess = true; 
-    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-    const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-
-    if (isSuccess) {
-        successModal.show();
-    } else {
-        errorModal.show();
+            if (name.includes(query) || details.includes(query)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
     }
-}
+    
+    const displayProducts = (data =>{
+        const productElement = document.getElementById('displayCards')
+        productElement.innerHTML = ''
+        data.forEach((product)=>{
+            productElement.innerHTML += `
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4 product-card" data-name="{{ product.name|lower }}" data-details="{{ product.details|lower }}">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Service:${product.name}</h5>
+                                <h6 class="card-text">
+                                    <p>Description:${product.description}</p>
+                                    <p>Price:${product.price}</p>
+                                    <p>Cost:${product.cost}</p>
+                                </h6>
+                                <div class="d-flex justify-content-end">
+                                    <button class="btn btn-sm btn-outline-primary me-2" title="Edit" data-bs-toggle="modal" data-bs-target="#editProductModal" onclick="loadEditModal('{{ product.name }}', '{{ product.details }}')">
+                                        <i class="bx bx-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" title="View" data-bs-toggle="modal" data-bs-target="#viewProductModal" onclick="loadViewModal('{{ product.name }}', '{{ product.details }}')">
+                                        <i class="bx bx-show"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            `
+        })
+    })
+
+    const getData = () => {
+        // "/booking/service_data/" -> manual
+        try{
+            fetch('{%url "booking:service_data" %}',{
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                } 
+            })
+            .then(response => response.json())
+            .then(data=> {
+                if (data.success){
+                    displayProducts(data.product)
+                }else {
+                    Swal.fire({
+                    icon:"error",
+                    title:"error",
+                    text:data.message || "Failed to get data."  
+                    })
+                }
+            })
+        }
+        catch (error) {
+            Swal.fire({
+            icon:"error",
+            title:"error",
+            text:error,    
+        })
+        }
+    }
+    getData()
 </script>
 {% endblock %}
