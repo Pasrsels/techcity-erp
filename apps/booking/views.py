@@ -26,6 +26,8 @@ def service_crud(request):
     if request.method == 'POST':
         form = ServiceForm(request.POST)
         if form.is_valid():
+            name = request.POST['name']
+            
             form.save()
             messages.success(request,'saved successfully')
             return redirect('booking:service_product_crud')
