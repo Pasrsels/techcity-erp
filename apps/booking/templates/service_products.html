@@ -4,17 +4,21 @@
 {% block title %} Add Service Products{% endblock %}
 {% block content %}
 <style>
-    .card{
-        height: 250px !important;
-    }
-    .card-footer {
-    position: absolute; 
-    bottom: 5px; 
-    left: 50%; 
-    transform: translateX(-50%); 
+    .card {
+    height: 250px !important; 
+    position: relative; 
 }
-.card .btn {
-    display: block;
+
+.card-footer {
+    position: absolute; 
+    top: 200px; 
+    left:72%; 
+    transform: translateX(-50%);
+}
+
+.card-footer .btn {
+    display: block; 
+    margin: 0 auto; 
 }
 
 #id_service_range {
@@ -102,6 +106,7 @@
                                 <option value="fixed">✔ Fixed</option>
                                 <option value="range">✔ Range</option>
                             </select>
+                            <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addservicerangeModal"></button>
                         </div>
                     </div>             
                     <div class="d-flex justify-content-between mt-3">
@@ -151,6 +156,26 @@
                     {{unit_measurement | crispy}}
                     <div class="d-flex justify-content-between mt-3">
                         <button type="submit" class="btn btn-primary">Add unit_measure</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addservicerangeModal" tabindex="-1" aria-labelledby="addservicerangeModal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addserviceraneeModal">Add Service Range</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="service_rangeForm"> 
+                    {% csrf_token %}
+                    {{service_range | crispy}}
+                    <div class="d-flex justify-content-between mt-3">
+                        <button type="submit" class="btn btn-primary">Add Service Range</button>
                     </div>
                 </form>
             </div>
@@ -209,6 +234,52 @@
         
     })
 
+    document.getElementById('service_rangeForm').addEventListener('submit', function(e){
+        e.preventDefault();
+
+        const formData_range = {};
+        const input_data = document.querySelectorAll('#service_rangeForm textinputs, #service_rangeForm numberinputs');
+
+        input_data.forEach(input =>{
+            formData_range[input.name] = input.value;
+        });
+        console.log({'formd data':formData_range});
+        try 
+        {
+            fetch('{% url "booking:service_range_crud" %}', {
+            method: 'POST',
+            headers: 
+            {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify(formData_range),
+            })
+            .then(response => response.json())
+            .then(respone => {
+                if(respone.success){
+                    swal.fire({
+                        Text: 'success',
+                        icon: 'success',
+                        title : 'successfully added'
+                    })
+                }
+                else{
+                    swal.fire({
+                        Text: respone.response,
+                        icon: 'error',
+                        title: 'error',
+                    })
+                }
+            })
+        }
+        catch (error)
+        {
+            console.error('Error:', error);
+        }
+        
+    });
+
     function getCSRFToken() {
             let cookieValue = null;
             const name = 'csrftoken';
@@ -256,7 +327,7 @@
                                     <p>Cost:${product.cost}</p>
                                 </h6>
                                 
-                                <div class= "d-flex justify-content-end">
+                                <div class= "card-footer d-flex justify-content-between">
                                     <button class="btn btn-sm btn-outline-primary me-2" title="Edit" data-bs-toggle="modal" data-bs-target="#editProductModal" onclick="loadEditModal('{{ product.name }}', '{{ product.details }}')">
                                         <i class="bx bx-edit"></i>
                                     </button>
