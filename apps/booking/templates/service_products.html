@@ -2,8 +2,17 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% block title %} Add Service Products{% endblock %}
+<<<<<<< HEAD
 
 {% block content %}
+=======
+{% block content %}
+<style>
+    .card{
+        height: 250px !important;
+    }
+</style>
+>>>>>>> ce5b2901c343f42fd5d4ae82485403efdc9624ad
 <div class="container me-5">
     <div class="Service_Products">
         <div class="d-flex align-items-center justify-content-between rounded text-light shadow header py-2 mb-4" style="background: #aeb6c2;">
@@ -14,20 +23,72 @@
                 <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#addProductModal">Add Service Product</button>
             </div>
         </div>
-
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <h4 class="text-dark mb-0">Add Service Product</h4>
-            <div class="d-flex">
-                <input 
-                    type="text" 
-                    class="form-control me-2" 
-                    id="searchBar" 
-                    placeholder="Search Service Product" 
-                    oninput="filterProducts()"
-                />
+<<<<<<< HEAD
+=======
+        <div class="row">
+            <div class ="col-9" >
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h4 class="text-dark mb-0">Services</h4>
+                    <div class="d-flex">
+                        <input 
+                            type="text" 
+                            class="form-control me-2" 
+                            id="searchBar" 
+                            placeholder="Search Service Product" 
+                            oninput="filterProducts()"
+                        />
+                    </div>
+                </div>
+                <div class="row" id="displayCards">    
+                  <!--javascript rendering ... displayProducts-->
+                </div>
             </div>
+            <div class="col-3">
+                Add Service
+                <form id="AddServiceProduct">
+                    <div id="div_id_service" class="mb-3"> 
+                        <label for="id_service" class="form-label requiredField">
+                            Service<span class="asteriskField">*</span> 
+                        </label> 
+                        <div class="d-flex align-content-center">
+                            <select name="service" class="select form-select" required="" id="id_service"> 
+                                <option value="" selected="">---------</option> 
+                                {%for product in services%}
+                                    <option value="{{product.id}}">{{product.name}}</option>
+                                {%endfor%}
+                            </select> 
+                            <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addServiceModal"></button>
+                        </div>
+                    </div>
+                    <div id="div_id_unit_measure" class="mb-3">
+                        <label for="id_unit_measure" class="form-label requiredField">
+                            Unit measure
+                            <span class="asteriskField">*</span>
+                        </label>
+                        <div class="d-flex align-content-center">
+                            <select name="unit_measure" class="select form-select" required="" id="id_unit_measure">
+                                <option value="" selected="">---------</option>
+                            </select>
+                            <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addunitmeasureModal"></button>
+                        </div>
+                    </div>
+                    <div id="div_id_service_range" class="mb-3">
+                        <label for="id_service_range" class="form-label requiredField">
+                            Service range
+                            <span class="asteriskField">*</span>
+                        </label>
+                        <div class="form-check"></div>
+                    </div>             
+                    <div class="d-flex justify-content-between mt-3">
+                        <button type="reset" class="btn btn-secondary">Reset</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+            
         </div>
-        
+>>>>>>> ce5b2901c343f42fd5d4ae82485403efdc9624ad
+
         <div id="productsContainer" class="row mt-4">
             {% for product in service_product_data %}
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4 product-card" data-name="{{ product.name|lower }}" data-details="{{ product.details|lower }}">
