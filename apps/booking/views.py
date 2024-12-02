@@ -27,17 +27,18 @@ def service_crud(request):
         form = ServiceForm(request.POST)
         if form.is_valid():
             name = request.POST['name']
-            
-            form.save()
-            messages.success(request,'saved successfully')
-            return redirect('booking:service_product_crud')
+            if not Services.objects.filter(name = name).exists():
+                form.save()
+                messages.success(request,'saved successfully')
+                return redirect('booking:service_product_crud')
+            return JsonResponse({'success': False, 'message': 'service already exists'})
         return JsonResponse({'success': False, 'message': 'invalid form'}, status = 400)
     #update
     if request.method == "PUT":
         try:
             data = json.loads(request.body)
-            service_id = data['service_id']
-            service_name = data['service_name']
+            service_id = data('service_id')
+            service_name = data('service_name')
             
             if not Services.objects.filter(id = service_id).exists():
                 return JsonResponse({'success': False, 'message': f'user with {service_id} does not exist'}, status = 400)
@@ -268,27 +269,8 @@ def unit_measurement_crud(request):
 @login_required
 def members_view(request):
     member = Services.objects.filter(delete=False)
-    member  = MemberForm
     return render(request, 'members.html',{'formMemberData': member})
 
-#types
-@login_required
-def type_crud(request):
-    if request.method == "GET":#View
-        type_view = Types.objects.all()
-        return JsonResponse({'success':True, 'data':list(type_view), 'status': 200})
-    elif request.method == "DELETE":
-        try:
-            data = json.loads(request.body)
-            type_id = data.get('service_id')
-            if Services.objects.filter(id = type_id).exists():
-                service_del = Services.objects.get(id= type_id)
-                service_del.delete()
-                return JsonResponse({'success':True}, status=200)
-            return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
-        except Exception as e:
-            return JsonResponse({'success':False, 'message':f'{e}'}, status = 400)
-    return JsonResponse({'success':False, 'response': 'invalid request'}, status = 400)
 #member
 @login_required
 def member_crud(request):
@@ -372,14 +354,6 @@ def member_crud(request):
                     else:
                         admin_amount = 20
                         bal = (service_amount - payments_amount) + admin_amount
-                
-                #types add 1
-                types_add = Types.objects.create(
-                    Name = s_type_name,
-                    Price = service_amount,
-                    Duration = service_duration,
-                    Promotion = promotion
-                )
 
                 # payment add 2
                 payment_add = Payments.objects.create(
@@ -391,7 +365,6 @@ def member_crud(request):
                 #service add 3
                 service_add = Services.objects.create(
                     Name = s_name,
-                    Types = types_add,
                     delete = s_del
                 )
 
@@ -471,13 +444,6 @@ def member_crud(request):
             Members.objects.get(Phone = m_phone)
             
             with transaction.Atomic():
-                #type add 1
-                types_add = Types.objects.update(
-                        Name = s_type_name,
-                        Price = service_amount,
-                        Duration = service_duration,
-                        Promotion = promotion
-                    )
 
                 # payment add 2
                 payment_add = Payments.objects.update(
@@ -489,7 +455,6 @@ def member_crud(request):
                 #service add 3
                 service_add = Services.objects.update(
                     Name = s_name,
-                    Types = types_add,
                     delete = s_del
                 )
 
