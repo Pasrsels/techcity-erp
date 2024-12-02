@@ -76,6 +76,7 @@ def service_product_crud(request):
         range_form = RangeForm()
         service_product_form = Service_productForm()
         service_product = Service_product.objects.all()
+        unit_data = Unit_Measurement.objects.all()
         service = Services.objects.all()
         logger.info(service_product)
         return render(request, 'service_products.html',{
@@ -84,7 +85,8 @@ def service_product_crud(request):
         'services': service,
         'service_range': range_form,
         'unit_measurement': unit_form,
-        'service': form
+        'service': form,
+        'unit_data': unit_data
         })
     #add
     if request.method == 'POST':

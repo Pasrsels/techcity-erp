@@ -7,10 +7,27 @@
     .card{
         height: 250px !important;
     }
-    .card-footer{
-        margin-top:auto;
-    }
-   
+    .card-footer {
+    position: absolute; 
+    bottom: 5px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+}
+.card .btn {
+    display: block;
+}
+
+#id_service_range {
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 1rem;
+    color: #333;
+}
+
+#id_service_range option {
+    padding: 5px 10px;
+}
+
+    
 </style>
 <div class="container me-5">
     <div class="Service_Products">
@@ -67,6 +84,9 @@
                         <div class="d-flex align-content-center">
                             <select name="unit_measure" class="select form-select" required="" id="id_unit_measure">
                                 <option value="" selected="">---------</option>
+                                {%for um in unit_data%}
+                                    <option value="{{um.id}}">{{um.measurement}}</option>
+                                {%endfor%}
                             </select>
                             <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addunitmeasureModal"></button>
                         </div>
@@ -76,7 +96,13 @@
                             Service range
                             <span class="asteriskField">*</span>
                         </label>
-                        <div class="form-check"></div>
+                        <div class="d-flex align-items-center">
+                            <select name="service_range" class="select form-select" required="" id="id_service_range">
+                                <option value="" selected="">---------</option>
+                                <option value="fixed">✔ Fixed</option>
+                                <option value="range">✔ Range</option>
+                            </select>
+                        </div>
                     </div>             
                     <div class="d-flex justify-content-between mt-3">
                         <button type="reset" class="btn btn-secondary">Reset</button>
@@ -229,7 +255,8 @@
                                     <p>Price:${product.price}</p>
                                     <p>Cost:${product.cost}</p>
                                 </h6>
-                                <div class="d-flex justify-content-end">
+                                
+                                <div class= "d-flex justify-content-end">
                                     <button class="btn btn-sm btn-outline-primary me-2" title="Edit" data-bs-toggle="modal" data-bs-target="#editProductModal" onclick="loadEditModal('{{ product.name }}', '{{ product.details }}')">
                                         <i class="bx bx-edit"></i>
                                     </button>
