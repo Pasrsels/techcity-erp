@@ -2180,17 +2180,17 @@ def receive_order(request, order_id):
 
     new_po_items =  []
     for item in purchase_order_items:
-        product_name = item.product.name  
-        product_data = product_prices.get(product_name)
-        logger.info(product_name)
-        if product_data:
-            item.dealer_price = product_data['dealer_price']
-            item.selling_price = product_data['price']
-        else:
-            item.dealer_price = 0  
-            item.selling_price = 0 
-        new_po_items.append(item)
-
+        if(item.product):
+            product_name = item.product.name  
+            product_data = product_prices.get(product_name)
+            logger.info(product_name)
+            if product_data:
+                item.dealer_price = product_data['dealer_price']
+                item.selling_price = product_data['price']
+            else:
+                item.dealer_price = 0  
+                item.selling_price = 0 
+            new_po_items.append(item)
 
     logger.info(f'Purchase order items: {new_po_items}')
     
