@@ -4,90 +4,125 @@
 {% block title %}Services{% endblock %}
 
 {% block content %}
-
+<div class="container mt-4">
     
-<style>
-    .full-page-center {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh; 
-        background-color: #f8f9fa;
-    }
+    <h1 class="text-center mb-4">Services</h1>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-primary" id="categoriesButton" onclick="window.location.href='{}'">
+            Categories
+        </button>
+        <div class="input-group w-50">
+            <span class="input-group-text" id="search-addon">Search</span>
+            <input type="text" class="form-control" id="searchBar" placeholder="Type to search...">
+        </div>
+        <a class="btn btn-outline-dark ms-10 btn-sm" href="{%url 'booking:service_view'%}">Add Services</a> 
+        </a>
+    </div>
 
-    .btn-custom {
-        font-size: 1.5rem;
-        padding: 1rem 2rem; 
-        border-radius: 10px;
-    }
-</style>
+    <div class="nav-container mt-5" style="background-color: black; padding: 10px; border-radius: 5px;">
+        <ul class="nav nav-pills justify-content-center" id="tableNav" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link text-white active" id="services-tab" data-bs-toggle="tab" data-bs-target="#services-content" type="button" role="tab" aria-controls="services-content" aria-selected="true">
+                    Services
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link text-white" id="items-tab" data-bs-toggle="tab" data-bs-target="#items-content" type="button" role="tab" aria-controls="items-content" aria-selected="false">
+                    Items of Use
+                </button>
+            </li>
+        </ul>
+    </div>
 
-<div class="full-page-center">
-    <button type="button" class="btn btn-outline-dark btn-custom" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-        + Service
-    </button>
-</div>
+    <div class="tab-content mt-3">
+        <!-- Services Table -->
+        <div class="tab-pane fade show active" id="services-content" role="tabpanel" aria-labelledby="services-tab">
+            <div class="table-responsive">
+                <table class="table border table-bordered table-striped table-hover table-sm rounded w-100" id="services">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Total Services</th>
+                            <th>Cost</th>
+                            <th>Price</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="services_table">
+                        {% for service in services %}
+                            <tr>
+                                <td><small><span class="hint--bottom" aria-label="{{ service.service.description }}">{{ service.service.name }}</span></small></td>
+                                <td><small>{{ service.description }}</small></td>
+                                <td></td>
+                                <td><small>{{ service.quantity }}</small></td>
+                                <td><small>{{ service.cost }}</small></td>
+                                <td><small>{{ service.price }}</small></td>
+                                <td>
+                                    <span>
+                                        <a href="{% url 'booking:service_crud' service.id %}" class="text-dark">
+                                            <i class="bx bx-show"></i>
+                                        </a>
+                                    </span>
+                                    <span>
+                                        <span id="delete" data-id="{{ service.id }}" onclick="serviceId(this)" class="text-dark">
+                                            <i class="bx bx-trash-alt"></i>
+                                        </span>
+                                    </span>
+                                    <span>
+                                        {% if not service.status %}
+                                            <a href="{% url 'booking:activate_service' service.id %}" class="btn btn-sm text-primary">
+                                                Activate Service
+                                            </a>
+                                        {% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-</div>
-
-    <div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel"  data-backdrop="static" data-keyboard="false" aria-hidden="true" style="display: none;">
-        <div class="modal-dialog modal-dialog-centered">>
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addServiceModalLabel">Add Service</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background-color: red; color: white; border-radius: 50%; padding: 0.5rem;"></button>
-                </div>
-
-                <div class="modal-body">
-                    <form action="{% url 'booking:service_crud' %}" method="POST"> <!--to be adjusted-->
-                        {% csrf_token %}
-                        {{form | crispy}}
-                        <div class="d-flex justify-content-between mt-3">
-                            <button type="reset" class="btn btn-secondary">Reset</button>
-                            <button type="submit" class="btn btn-primary">Save</button>
-                        </div>
-                    </form>
-                </div>
+        <!-- Items of Use Table -->
+        <div class="tab-pane fade" id="items-content" role="tabpanel" aria-labelledby="items-tab">
+            <div class="table-responsive">
+                <table class="table border table-bordered table-striped table-hover table-sm rounded w-100" id="itemTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Cost</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemTableBody"></tbody>
+                </table>
+                <button id="saveItemofUse" class="btn btn-primary mt-3">Add Item</button>
             </div>
         </div>
     </div>
+</div>
 
-        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="successModalLabel">Success</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                                <p>Service added successfully!</p>
-                    </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-primary" id="redirectButton">OK</button>
-                        </div>
-                </div>
-            </div>
-        </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const form = document.querySelector("#addServiceForm");
-            const successModal = new bootstrap.Modal(document.getElementById("successModal"));
-            const redirectButton = document.getElementById("redirectButton");
-
-            
-            form.addEventListener("submit", (event) => {
-                event.preventDefault(); 
-                const addServiceModal = bootstrap.Modal.getInstance(document.getElementById("addServiceModal"));
-                addServiceModal.hide(); 
-                successModal.show(); 
-            });
-
-            redirectButton.addEventListener("click", () => {
-                window.location.href = "/new-page/"; // to be adjusted
-            });
+<script>
+    document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(button => {
+        button.addEventListener('click', function () {
+            const tableId = this.getAttribute('data-bs-target').substring(1);
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('show', 'active'));
+            document.getElementById(tableId).classList.add('show', 'active');
         });
-    </script>
+    });
 
+    document.getElementById('searchBar').addEventListener('input', function () {
+        const query = this.value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    });
+</script>
 {% endblock %}
+
 

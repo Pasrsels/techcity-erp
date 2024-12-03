@@ -5,11 +5,6 @@ class ServiceForm(forms.ModelForm):
         model = Services
         exclude = ['delete']
 
-class Service_productForm(forms.ModelForm):
-    class Meta:
-        model = ServiceProduct
-        fields = '__all__'
-
 class UnitForm(forms.ModelForm):
     class Meta:
         model = UnitMeasurement

@@ -41,7 +41,6 @@
                 <div>
                     <button class="btn btn-outline-dark btn-sm ms-10">Analytics</button>
                     <a class="btn btn-outline-dark ms-10 btn-sm" href="{%url 'booking:member'%}">Members</a> 
-                    <button class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">Add Service Product</button>
                 </div>
             </div>
         </div>
@@ -60,26 +59,75 @@
                         />
                     </div>
                 </div>
-                <div class="row" id="displayCards">    
-                  <!--javascript rendering ... displayProducts-->
+                    <div class="container mt-4">
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Cost</th>
+                                <th>Action</th>
+                                <!-- <th>Total</th> -->
+                            </thead>
+                            <tbody id="service_productsTableBody"></tbody>
+                        </table> 
+                        <button id="saveItemofUse" class="'btn btn-primary mt-3">Add Item</button>
+                    </div>
                 </div>
-            </div>
             <div class="col-3">
                 <h4 class="mb-4">Add Service</h4>
                 <form id="AddServiceProduct">
-                    <div id="div_id_service" class="mb-3"> 
-                        <label for="id_service" class="form-label requiredField">
-                            Service<span class="asteriskField">*</span> 
-                        </label> 
+                    <div id="div_id_service_name" class="mb-3"> 
+                        <label for="id_service_name" class="form-label requiredField">
+                            Service Name<span class="asteriskField">*</span> 
+                        </label>
                         <div class="d-flex align-content-center">
-                            <select name="service" class="select form-select" required="" id="id_service"> 
+                            <select name="service_name" class="select form-select" required="" id="id_service"> 
                                 <option value="" selected="">---------</option> 
-                                {%for product in services%}
+                                {%for service in services%}
                                     <option value="{{product.id}}">{{product.name}}</option>
                                 {%endfor%}
-                            </select> 
                             <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addServiceModal"></button>
                         </div>
+                        <div id="div_id_service" class="mb-3"> 
+                            <label for="id_item_of_use" class="form-label requiredField">
+                            Items of Use 
+                            <span class="asteriskField">*</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                name="item_of_use" 
+                                class="form-control" 
+                                id="id_item_of_use" 
+                                required
+                            >
+                    </div>
+                    <div id="div_id_service_quantity" class="mb-3"> 
+                        <label for="id_service_quantity" class="form-label requiredField">
+                            Quantity<span class="asteriskField">*</span>
+                        </label> 
+                        <input 
+                            type="number" 
+                            name="Item_quantity" 
+                            class="form-control" 
+                            id="id_service_quantity" 
+                            placeholder="Enter Items of Use Quantity" 
+                            required=""
+                        >
+                    </div>
+                    <div id="div_id_cost" class="mb-3"> 
+                        <label for="id_cost" class="form-label requiredField">
+                            Cost<span class="asteriskField">*</span>
+                        </label> 
+                        <input 
+                            type="number" 
+                            name="cost" 
+                            class="form-control" 
+                            id="id_cost" 
+                            placeholder="Enter Cost"
+                            required=""
+                            step="0.01">
                     </div>
                     <div id="div_id_unit_measure" class="mb-3">
                         <label for="id_unit_measure" class="form-label requiredField">
@@ -131,16 +179,14 @@
                                     <input type="number" name="range_inp" id="range_inp_to" class="form-control">
                                 </div>
                             </div>
-                            
                         </div>
                     </div>             
                     <div class="d-flex justify-content-between mt-3">
                         <button type="reset" class="btn btn-secondary">Reset</button>
-                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-primary" onclick="saveToCart()">Save</button> <!-- linked from the script  2-->
                     </div>
                 </form>
             </div>
-            
         </div>
     </div>
 </div>
@@ -207,8 +253,110 @@
         </div>
     </div>
 </div>
-
 <script>
+    /*
+        Implementation of a list of objects (item of use) to be rendered to a table before saving:
+        1. define a global list variable to hold the item of use and its attributes 
+            {
+                'item_of_use_name':string,
+                'item_of_use_id:'integer
+                'unit of measure_name':string
+                'range':integer either to and from or just one,
+            }
+        2. add a function or an listener on the save button taking all the data inserted to pushing it to
+        our global list.
+        3. check for exitstig item of service in our global list if exists a message is rendered back.
+        4. create a display function which wil populate our table data with ptem saved in the object.
+        5. to have a delete function in the table.
+    */
+
+    // 1
+    let cart = []
+    let count = 0
+
+    //2
+    const saveToCart = () =>{
+        /* this is linked to the save button element 
+            make all the variables from the cart form for instance,
+            const serviceNameEl = document.getElementById('id_service')
+            const itemOfUseEl = document.getElementById('id_unit_measure')
+        */
+        const serviceNameEl = document.getElementById('id_service')
+        const itemOfUseEl = document.getElementById('id_unit_measure')
+        const unitOfMeasurement = document.getElementById('id_unit_measure')
+        const serviceRange = document.getElementById('id_service_range')
+        let fixed = ''
+        let range = ''
+
+        // to get the item of use name to be readable in the table we need to access the  options part of it
+        const unitOfMeasurementName = itemOfuseEl.options[unitOfMeasurement.selectedIndex].textContent
+
+        // make a condition to check the type of range to use
+        if(serviceRange === 'fixed'){
+            fixed = document.getElementById('id_')
+        }else{
+            const to = document.getElementById('id_to_inp').value
+            const from =  document.getElementById('id_from_inp').value
+            range = `${to}${unitOfMeasurementName} - ${from}${unitOfMeasurementName}`
+        }
+
+        let existingItemOfUse = cart.find((item) => item.item_of_use_id === itemOfUseEl.value);
+        if(existingItemOfUse){
+            Swal.fire({
+            icon:'error',
+            text:'Item of use exists',
+            title:'error'
+          })
+          return;
+        }else{
+            count +=1;
+            newItem = {
+                id:count,
+                item_of_use_name:  itemOfUseEl.value,
+                service_range: `${ fixed ? fixed : range}`,
+                unit_of_measurement_id: unitOfMeasurement.value,
+                unit_of_measurement_name: unitOfMeasurementName,
+                cost:cost || 0,
+                quantity:quantity 
+            }
+        }
+
+        cart.push(newItem)
+        isCartEmpty()
+        displayItems()
+    }
+
+    const  displayItems = (data) => {
+        const displayTable = document.getElementById('service_productsTableBody')
+        displayTable.innerHTML =''
+
+        data.forEach((item)=>{
+            displayTable.innerHTML +=`
+                <td><small>${ item.count }</small></td>
+                <td><small>${ item.item_of_use_name }</small></td>
+                <td><small>${ item.service_range}</small></td>
+                <td><small>${ item.cost }</small></td>
+                <td><small>${ item.quantity }</small></td>
+                <td><small><button class='btn btn-outlin-dark bx bx-trash onclick='removeItem(${item.count})'></button></small></td>
+            `
+        })
+
+    }
+
+    const removeItem = (id) =>{
+        cart = cart.filter((item) => item.id !== id);
+        updateCartDisplay();
+    }
+
+    const isCartEmpty = () => {
+        if (cart.length === 0){
+            confirmBtndisabled=true;
+        }else{
+            confirmBtndisabled=false;
+        }
+    }
+    isCartEmpty()
+
     let service = ''
     const serviceEl = document.getElementById('id_service_range')
     serviceEl.addEventListener('change', ()=>{
@@ -232,26 +380,29 @@
         console.log(service, 'value')
 
     })
-    document.getElementById('unit_measurementForm').addEventListener('submit', function(e){
+
+
+    document.getElementById('saveItems').addEventListener('submit', function(e){
         e.preventDefault();
 
-        const formData = {};
-        const inputs = document.querySelectorAll('#unit_measurementForm input, #unit_measurementForm input');
+        const serviceName = document.getElementById('id_service').value
+        const name = serviceName.options[serviceName.selectedIndex].textContent
 
-        inputs.forEach(input =>{
-            formData[input.name] = input.value;
-        });
-        console.log({'form data':formData});
+        const data = {
+            service_namae:data,
+            items:cart
+        }
+
         try 
         {
-            fetch('{% url "booking:unit_measurement_crud" %}', {
+            fetch('{% url "booking:service_product_crud" %}', {
             method: 'POST',
             headers: 
             {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCSRFToken()
             },
-            body: JSON.stringify(formData),
+            body: JSON.stringify(data),
             })
             .then(respone => respone.json())
             .then(respone => {
@@ -278,76 +429,8 @@
         
     })
 
-    document.getElementById('service_rangeForm').addEventListener('submit', function(e){
-        e.preventDefault();
-
-        const formData = {};
-        const inputs = document.querySelectorAll('#service_rangeForm input, #service_rangeForm input');
-
-        input.forEach(input =>{
-            formData[input.name] = input.value;
-        });
-        console.log({'formd data':formData_range});
-        try 
-        {
-            fetch('{% url "booking:service_range_crud" %}', {
-            method: 'POST',
-            headers: 
-            {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken()
-            },
-            body: JSON.stringify(formData_range),
-            })
-            .then(response => response.json())
-            .then(respone => {
-                if(respone.success){
-                    swal.fire({
-                        Text: 'success',
-                        icon: 'success',
-                        title : 'successfully added'
-                    })
-                }
-                else{
-                    swal.fire({
-                        Text: respone.response,
-                        icon: 'error',
-                        title: 'error',
-                    })
-                }
-            })
-        }
-        catch (error)
-        {
-            console.error('Error:', error);
-        }
-        
-    });
-
     document.getElementById('AddServiceProduct').addEventListener('submit', function(e) {
         e.preventDefault(); 
-
-        let fixed = ''
-        let range_to = ''
-        let range_from = ''
-
-        if (service === 'fixed'){
-            fixed = document.getElementById('fixed').value
-        }else if (service === 'range'){
-            range_to = document.getElementById('range_inp_to').value
-            range_from = document.getElementById('range_inp_from').value
-        }else{
-            Swal.fire({
-                icon:'error',
-                title:'error',
-                text:'Please fill in service range.'
-            })
-            return;
-        }
-
-        const formData = {
-
-        };
 
         try
         {
@@ -387,98 +470,26 @@
             console.error('Error:', error);
         }
     })
-    function getCSRFToken() {
-            let cookieValue = null;
-            const name = 'csrftoken';
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
+    
     function filterProducts() {
         const query = document.getElementById('searchBar').value.toLowerCase();
         const productCards = document.querySelectorAll('.product-card');
-
-        productCards.forEach(card => {
-            const name = card.getAttribute('data-name');
-            const details = card.getAttribute('data-details');
-
-            if (name.includes(query) || details.includes(query)) {
-                card.style.display = '';
-            } else {
-                card.style.display = 'none';
-            }
-        });
     }
     
-    const displayProducts = (data =>{
-        const productElement = document.getElementById('displayCards')
-        productElement.innerHTML = ''
-        data.forEach((product)=>{
-            productElement.innerHTML += `
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4 product-card" data-name="{{ product.name|lower }}" data-details="{{ product.details|lower }}">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Service:${product.name}</h5>
-                                <h6 class="card-text">
-                                    <p>Description:${product.description}</p>
-                                    <p>Price:${product.price}</p>
-                                    <p>Cost:${product.cost}</p>
-                                </h6>
-                                
-                                <div class= "card-footer d-flex justify-content-between">
-                                    <button class="btn btn-sm btn-outline-primary me-2" title="Edit" data-bs-toggle="modal" data-bs-target="#editProductModal" onclick="loadEditModal('{{ product.name }}', '{{ product.details }}')">
-                                        <i class="bx bx-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-secondary" title="View" data-bs-toggle="modal" data-bs-target="#viewProductModal" onclick="loadViewModal('{{ product.name }}', '{{ product.details }}')">
-                                        <i class="bx bx-show"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            `
-        })
-    })
-
-    const getData = () => {
-        // "/booking/service_data/" -> manual
-        try{
-            fetch('{%url "booking:service_data" %}',{
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                } 
-            })
-            .then(response => response.json())
-            .then(data=> {
-                if (data.success){
-                    displayProducts(data.product)
-                }else {
-                    Swal.fire({
-                    icon:"error",
-                    title:"error",
-                    text:data.message || "Failed to get data."  
-                    })
+    function getCSRFToken() {
+        let cookieValue = null;
+        const name = 'csrftoken';
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
-            })
+            }
         }
-        catch (error) {
-            Swal.fire({
-            icon:"error",
-            title:"error",
-            text:error,    
-        })
-        }
+        return cookieValue;
     }
-    getData()
 </script>
 {% endblock %}

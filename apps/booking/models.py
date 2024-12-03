@@ -34,19 +34,29 @@ class Payments(models.Model):
     def __str__(self) -> str:
         return f"{self.Amount}"
 
-class Services(models.Model):
+class Services(models.Model): # removed the foreign key to itemofuse 
     name = models.CharField(max_length= 255)
-    description = models.CharField(max_length=255)
-    delete = models.BooleanField(default= False)
+    description = models.CharField(max_length=255, default= 'none')
+
     def __str__(self):
         return f'{self.name}'
 
-class ServiceProduct(models.Model): # model titles should not have characters between them but only camelcasing
-    name = models.CharField(max_length= 255)
-    service = models.ForeignKey('Services', on_delete= models.CASCADE, null=True)
-    unit_measure = models.ForeignKey('UnitMeasurement', on_delete= models.CASCADE, null=True)
-    service_range = models.ForeignKey('ServiceRange', on_delete= models.CASCADE, null= True)
+class Category(models.Model):
+    name = models.CharField(max_length=255)
 
+    def __str__(self):
+        return f'{self.name}'
+    
+class ItemOfUse(models.Model):
+    service = models.ForeignKey(Services, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    quantity = models.IntegerField(max_length=20, default= 0)
+    cost = models.DecimalField(max_digits=4, decimal_places= 2, default= 0.00)
+    description = models.CharField(max_length=255, default= 'none')
+    category = models.ForeignKey('Category', on_delete= models.CASCADE)
+    unit_measure = models.ForeignKey('UnitMeasurement', on_delete= models.CASCADE, null=True)
+    service_range = models.CharField(max_length=255, default= 'none')
+    
     def __str__(self):
         return f"{self.name}"
 
@@ -55,11 +65,10 @@ class UnitMeasurement(models.Model):
     def __str__(self):
         return f'{self.measurement}'
 
-class ServiceRange(models.Model):
-    service_range = models.CharField(max_length=40)
-    service_from = models.CharField(max_length=12, null=True)
-    service_to = models.CharField(max_length=12, null=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2, default= 0.00)
+class ServiceRange(models.Model): # removed to and from
+    service_range = models.CharField(max_length=40, default= 'none')
+    price = models.DecimalField(max_digits=4, decimal_places= 2, default= 0.00)
+
     def __str__(self):
         return f'{self.service_range}'
 
