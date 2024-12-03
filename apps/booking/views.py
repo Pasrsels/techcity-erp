@@ -12,29 +12,79 @@ from .forms import *
 from loguru import logger
 
 #service view
+#1
 @login_required
 def services_view(request):
+    serviceform = ServiceForm()
     service = Services.objects.all().values()
     category = Category.objects.all().values()
     itemsofuse = ItemOfUse.objects.all().values()
     logger.info({
-        'service_data':service,
-        #'category':category,
+        'service_data':service
     })
     return render(request,'services1.html',{
         'services': service,
         'category_data': category,
         'itemofuse_data': itemsofuse,
+        'serviceform': serviceform
     })
 
+#2
 @login_required
 def services(request):
     serviceform = ServiceForm()
+    inventoryform = InventoryForm()
     service = Services.objects.all()
     return render(request, 'service_products.html',{
         'services': service,
-        'service': serviceform
+        'service': serviceform,
+        'inventory': inventoryform
     })
+
+#3
+#service crud
+@login_required
+def service_crud(request):
+    if request.method == 'POST':
+        form = ServiceForm(request.POST)
+        if form.is_valid():
+            name = request.POST['name']
+            if not Services.objects.filter(name = name).exists():
+                form.save()
+                messages.success(request,'saved successfully')
+                return redirect('booking:services')
+            return JsonResponse({'success': False, 'message': 'service already exists'})
+        return JsonResponse({'success': False, 'message': 'invalid form'}, status = 400)
+    #update
+    if request.method == "PUT":
+        try:
+            data = json.loads(request.body)
+            service_id = data('service_id')
+            service_name = data('service_name')
+            
+            if not Services.objects.filter(id = service_id).exists():
+                return JsonResponse({'success': False, 'message': f'user with {service_id} does not exist'}, status = 400)
+            else:
+                service_edit = Services.objects.get(id = service_id)
+                service_edit.name = service_name
+                service_edit.save()
+                return JsonResponse({'success':True},status = 200)
+        except Exception as e:
+            return JsonResponse({'success':False, 'response':f'{e}'}, status = 400)
+    #delete
+    elif request.method == "DELETE":
+        data = json.loads(request.body)
+        service_id = data('service_id')
+        if Services.objects.filter(id = service_id).exists():
+            service_del = Services.objects.get(id= service_id)
+            service_del.delete = True
+            service_del.save()
+            return JsonResponse({'success':True}, status=200)
+        return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
+    return JsonResponse({'success':False, 'response': 'invalid request'}, status =  500)
+
+
+
 #BIG item of use
 @login_required
 def ServiceCrud(request):
@@ -58,29 +108,27 @@ def ServiceCrud(request):
             description = data.get('description', '')
             items = data.get('items', [])
         
-
             if not service_name  or not items or not description :
                 return JsonResponse({'success': False, 'message': 'please fill in the missing fields'}, status = 400)
-            if not Services.objects.filter(name = service_name).exists():
-                with transaction.atomic():
-                    service = Services.objects.create(
-                        name = service_name,
-                        description = description or '',
+            elif not ServiceRange.objects.filter(name = items.get('service_range')).exists():
+                service_ranging = ServiceRange.objects.create(
+                    service_range = items.get('service_range')
+                )
+            
+            with transaction.atomic():
+                service = Services.objects.get(name  = service_name)
+                item_of_use_list = []
+                for item in items:
+                    item_of_use_list.append(
+                        {
+                            'service': service,
+                            'name': items.get('item_of_use_name'),
+                            'cost': items.get('cost'),
+                            'quantity': items.get('quantity'),
+                            'unit_measure': UnitMeasurement.objects.get(id=items.get('unit_of_measurement_id')),
+                            'service_range': ServiceRange.objects.get(service_range = items.get('service_range'))
+                        }
                     )
-
-                    
-                    item_of_use_list = []
-                    for item in items:
-                        item_of_use_list.append(
-                           {
-                                'service': service,
-                                'name': items.get('item_of_use_name'),
-                                'cost': items.get('cost'),
-                                'quantity': items.get('quantity'),
-                                'unit_measure': UnitMeasurement.objects.get(id=items.get('unit_of_measurement_id')),
-                                'service_range': items.get('service_range')
-                           }
-                        )
                     ItemOfUse.objects.bulk_create(item_of_use_list)
                     return JsonResponse({'success': True}, status = 200)
         except Exception as e:
@@ -121,103 +169,32 @@ def ServiceCrud(request):
             return JsonResponse({'success': False, 'message': f'{e}'}, status = 400)
     return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
 
-
-#service crud
-@login_required
-def service_crud(request):
-    if request.method == 'POST':
-        form = ServiceForm(request.POST)
-        if form.is_valid():
-            name = request.POST['name']
-            if not Services.objects.filter(name = name).exists():
-                form.save()
-                messages.success(request,'saved successfully')
-                return redirect('booking:service_product_crud')
-            return JsonResponse({'success': False, 'message': 'service already exists'})
-        return JsonResponse({'success': False, 'message': 'invalid form'}, status = 400)
-    #update
-    if request.method == "PUT":
-        try:
-            data = json.loads(request.body)
-            service_id = data('service_id')
-            service_name = data('service_name')
-            
-            if not Services.objects.filter(id = service_id).exists():
-                return JsonResponse({'success': False, 'message': f'user with {service_id} does not exist'}, status = 400)
-            else:
-                service_edit = Services.objects.get(id = service_id)
-                service_edit.name = service_name
-                service_edit.save()
-                return JsonResponse({'success':True},status = 200)
-        except Exception as e:
-            return JsonResponse({'success':False, 'response':f'{e}'}, status = 400)
-    #delete
-    elif request.method == "DELETE":
-        data = json.loads(request.body)
-        service_id = data('service_id')
-        if Services.objects.filter(id = service_id).exists():
-            service_del = Services.objects.get(id= service_id)
-            service_del.delete = True
-            service_del.save()
-            return JsonResponse({'success':True}, status=200)
-        return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
-    return JsonResponse({'success':False, 'response': 'invalid request'}, status =  500)
-
-
-#getting sercices data
-def ServiceData(request):
-    if request.method == 'GET':
-        service_info = Services.objects.all().values()
-        logger.info(service_info)
-        return JsonResponse({'success': True, 'product': list(service_info)}, status = 200)
-    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
-
 #service_product CRUD
 @login_required
 def itemofuseCrud(request):
-    if request.method == 'GET':
-       return JsonResponse({})
     #add
     if request.method == 'POST':
         data = json.load(request.body)
         itemofuse_name = data.get('name')
         cost = data.get('cost')
-       # category = data.get('category')
-        measurement = data.get('unit measurement')
-        range = data.get('range')
-        price = data.get('price')
-        description = data.get('description')
+        category = data.get('category')
+        quantity = data.get('quantity')
 
-        if not itemofuse_name or not service_name or not measurement or not promotion or not range_to or not price:
-            return JsonResponse({'success': False, 'message': 'There are empty fields'}, status = 400)
-        elif ItemOfUse.objects.filter(name = itemofuse_name).exists():
-            return JsonResponse({'Success': False, 'message': f'{service_product_name} alreay exists'}, status = 400)
-        try:
-            with transaction.atomic():
-                service_range = ServiceRange.objects.get_or_createt(
-                    service_range = range,
-                    price = price
-                )
-                unit_measure = UnitMeasurement.objects.get_or_create(
-                    measurement = measurement
-                )
-                ItemOfUse.objects.create(
-                    name = itemofuse_name,
-                    cost = cost,
-                    description = description,
-                    #category = category,
-                    unit_measure = unit_measure,
-                    service_range = service_range
-                )
-                return JsonResponse({'success': True}, status = 200)
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': f'reason: {e}'}, status = 400)
-        #elif Service_product.objects.filter()  
+        with transaction.atomic():
+            Inventory.objects.create(
+                name = itemofuse_name,
+                cost = cost,
+                category = category,
+                quantity = quantity,
+            )
+            return JsonResponse({'success': True}, status = 200)
+         
     elif request.method == 'PUT': #Update
         data = json.load(request.body)
         item_id = data.get('id')
         item_cost = data.get('cost')
         itemofuse_name = data.get('name')
+        quantity = data.get('quantity')
 
         if not item_id or not item_cost or not itemofuse_name:
             return JsonResponse({'success': False, 'message': 'empty json'}, status = 400)
@@ -227,6 +204,7 @@ def itemofuseCrud(request):
             item_update = ItemOfUse.objects.get(id = item_id)
             item_update.name = itemofuse_name
             item_update.cost = item_cost
+            item_update.quantity = quantity
             item_update.save()
             return JsonResponse({'success': True, 'message': 'saved successfully'}, status = 200)
     elif request.method == 'DELETE':

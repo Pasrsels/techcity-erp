@@ -14,3 +14,8 @@ class RangeForm(forms.ModelForm):
     class Meta:
         model = ServiceRange
         fields = '__all__'
+
+class InventoryForm(forms.ModelForm):
+    class Meta:
+        model = Inventory
+        fields = '__all__'

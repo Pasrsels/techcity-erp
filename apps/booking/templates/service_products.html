@@ -268,7 +268,7 @@ form .form-select {
             <div class="modal-body">
                 <form id="addServiceForm" action="{% url 'booking:service_crud' %}" method="POST">
                     {% csrf_token %}
-                    {{service | crispy}}
+                    {{inventory | crispy}}
                     <div class="d-flex justify-content-end">
                         <button type="submit" class="btn btn-secondary btn-sm">
                             <i class="bx bx-save"></i>
@@ -549,51 +549,7 @@ form .form-select {
         })
     })   
     
-    // Event delegation for dynamically added actions
-    document.addEventListener('click', function (event) {
-        const target = event.target;
-
-        // Handle Delete Action
-        if (target.closest('.delete-item')) {
-            const row = target.closest('div');
-            const itemId = row.querySelector('select').value;
-
-            if (itemId && confirm("Are you sure you want to delete this item?")) {
-                
-                fetch(`/service_crud/${itemId}/`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}', 
-                    },
-                })
-                    .then(response => {
-                        if (response.ok) {
-                            alert('Item deleted successfully.');
-                        } else {
-                            alert('Failed to delete the item.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('An error occurred.');
-                    });
-            }
-        }
-
-        // Handle Edit Action
-        if (target.closest('a.text-dark')) {
-            const selectElement = target.closest('div').querySelector('select');
-            const itemId = selectElement.value;
-
-            if (itemId) {
-               
-                window.location.href = `/service_crud/${itemId}/`;
-            } else {
-                alert("Please select an item to edit.");
-            }
-        }
-    });
-
+       
     function getCSRFToken() {
         let cookieValue = null;
         const name = 'csrftoken';
