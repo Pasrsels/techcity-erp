@@ -42,14 +42,20 @@ class Services(models.Model): # removed the foreign key to itemofuse
         return f'{self.name}'
 
 class Category(models.Model):
-    name = models.CharField(max_length=255)
+    category_name = models.CharField(max_length=255)
 
     def __str__(self):
-        return f'{self.name}'
-    
+        return f'{self.category_name}'
+
+class itemOfUseName(models.Model):
+     item_of_use_name = models.CharField(max_length=255)
+
+     def __str__(self):
+         return self.item_of_use_name
+     
 class ItemOfUse(models.Model):
     service = models.ForeignKey(Services, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
+    name = models.ForeignKey(itemOfUseName, on_delete=models.CASCADE)
     quantity = models.IntegerField( default= 0)
     cost = models.DecimalField(max_digits=4, decimal_places= 2, default= 0.00)
     description = models.CharField(max_length=255, default= 'none')
@@ -71,11 +77,13 @@ class ServiceRange(models.Model): # removed to and from
     def __str__(self):
         return f'{self.service_range}'
 
-class Inventory(models.Model):
+class inventory(models.Model):
     name = models.CharField(max_length= 255)
-    cost = models.DecimalField(max_digits=5, decimal_places=2 , default= 0.00),
-    category = models.ForeignKey('Category', on_delete= models.CASCADE),
-    quantity = models.IntegerField(default= 0),
+    cost = models.DecimalField(max_digits=5, decimal_places=2 , default= 0.00)
+    category = models.ForeignKey('Category', on_delete= models.CASCADE)
+    quantity = models.IntegerField(default= 0)
+
+    
 
 class Logs(models.Model):
     ACTION_CHOICES = [
