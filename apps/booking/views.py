@@ -22,7 +22,7 @@ def services_view(request):
         'category':category,
         'items of use':itemsofuse
     })
-    return render(request,'services1.html',{
+    return render(request,'service_products.html',{
         'service_data': service,
         'category_data': category,
         'itemofuse_data': itemsofuse,
@@ -54,15 +54,14 @@ def ServiceCrud(request):
 
             if not service_name  or not items or not description :
                 return JsonResponse({'success': False, 'message': 'please fill in the missing fields'}, status = 400)
-            
             if not Services.objects.filter(name = service_name).exists():
-
                 with transaction.atomic():
                     service = Services.objects.create(
                         name = service_name,
                         description = description or '',
                     )
 
+                    
                     item_of_use_list = []
                     for item in items:
                         item_of_use_list.append(
@@ -75,9 +74,7 @@ def ServiceCrud(request):
                                 'service_range': items.get('service_range')
                            }
                         )
-                    
                     ItemOfUse.objects.bulk_create(item_of_use_list)
-
                     return JsonResponse({'success': True}, status = 200)
         except Exception as e:
             return JsonResponse({'success': False, 'message': f'{e}'}, status = 400)

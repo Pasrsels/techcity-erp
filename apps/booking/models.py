@@ -50,7 +50,7 @@ class Category(models.Model):
 class ItemOfUse(models.Model):
     service = models.ForeignKey(Services, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
-    quantity = models.IntegerField(max_length=20, default= 0)
+    quantity = models.IntegerField(default= 0)
     cost = models.DecimalField(max_digits=4, decimal_places= 2, default= 0.00)
     description = models.CharField(max_length=255, default= 'none')
     category = models.ForeignKey('Category', on_delete= models.CASCADE)
