@@ -181,7 +181,7 @@ def itemofuseCrud(request):
         quantity = data.get('quantity')
 
         with transaction.atomic():
-            Inventory.objects.create(
+            inventory.objects.create(
                 name = itemofuse_name,
                 cost = cost,
                 category = category,

@@ -17,5 +17,6 @@ class RangeForm(forms.ModelForm):
 
 class InventoryForm(forms.ModelForm):
     class Meta:
-        model = Inventory
+        model = inventory
         fields = '__all__'
+        # fields = ['name', 'cost', 'category', 'quantity']
