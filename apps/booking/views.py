@@ -176,11 +176,15 @@ def service_range_crud(request):
             data = json.loads(request.body)
             range = data.get('service_range')
             price = data.get('price')
+            range_to =  data.get('to')
+            range_from =  data.get('from')
 
             logger.info(range,price)
             ServiceRange.objects.create(
                 service_range = range,
-                price = price
+                price = price,
+                service_from = range_from, 
+                service_to = range_to
             )
             return JsonResponse({'success': True}, status = 200)
         except Exception as e:
@@ -223,14 +227,9 @@ def unit_measurement_crud(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         measure = data.get('measurement')
-        promotion = data.get('promotion')
-        if promotion == 'on':
-            promotion = True
-        else:
-            promotion = False
+    
         UnitMeasurement.objects.create(
             measurement = measure,
-            promotion = promotion
         )
         return JsonResponse({'success': True}, status = 200)
     #read
