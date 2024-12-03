@@ -3148,7 +3148,7 @@ def product(request):
             product.description = data['description']
             product.end_of_day = True if data.get('end_of_day') else False
             product.service = True if data.get('service') else False
-            product.image=image
+            product.image=product.image
             product.batch = product.batch
         else:
             """creating a new product"""
@@ -3170,7 +3170,7 @@ def product(request):
                 end_of_day = True if data['end_of_day'] else False,
                 service = True if data['service'] else False,
                 branch = request.user.branch,
-                image = image,
+                # image = image,
                 status = True
             )
         product.save()
