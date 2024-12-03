@@ -462,34 +462,34 @@ def inventory_index(request):
     
     services = Service.objects.all().order_by('-name')
     accessories = Accessory.objects.all()
-    inventory = Inventory.objects.filter(branch=request.user.branch, status=True).order_by('name')
+    inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name')
 
 
-    # Step 1: Get the inventory products with quantity 0 and not logged in ActivityLog
-    products_with_zero_quantity = Inventory.objects.filter(
-        branch=request.user.branch, 
-        status=True, 
-        quantity=0
-    ).exclude(
-        id__in=ActivityLog.objects.values('inventory_id') 
-    )
+    # # Step 1: Get the inventory products with quantity 0 and not logged in ActivityLog
+    # products_with_zero_quantity = Inventory.objects.filter(
+    #     branch=request.user.branch, 
+    #     status=True, 
+    #     quantity=0
+    # ).exclude(
+    #     id__in=ActivityLog.objects.values('inventory_id') 
+    # )
 
-    print(products_with_zero_quantity)
+    # print(products_with_zero_quantity)
 
-    # Step 2: Find duplicate products based on name
-    duplicates = products_with_zero_quantity.values('name').annotate(
-        count=Count('name')
-    ).filter(count__gt=1)  # Only consider products with more than 1 instance
+    # # Step 2: Find duplicate products based on name
+    # duplicates = products_with_zero_quantity.values('name').annotate(
+    #     count=Count('name')
+    # ).filter(count__gt=1)  # Only consider products with more than 1 instance
 
-    # Step 3: For each group of duplicates, delete all but the first product
-    for product in duplicates:
-        # Get all products with the same name
-        product_group = products_with_zero_quantity.filter(name=product['name'])
+    # # Step 3: For each group of duplicates, delete all but the first product
+    # for product in duplicates:
+    #     # Get all products with the same name
+    #     product_group = products_with_zero_quantity.filter(name=product['name'])
         
-        # Keep the first product and delete the rest
-        first_product = product_group.first()  # Get the first product
-        product_group.exclude(id=first_product.id).delete() 
-        logger.info(f'{first_product}, deleted') # 
+    #     # Keep the first product and delete the rest
+    #     first_product = product_group.first()  # Get the first product
+    #     product_group.exclude(id=first_product.id).delete() 
+    #     logger.info(f'{first_product}, deleted') # 
 
     if category:
         if category == 'inactive':
@@ -1627,7 +1627,7 @@ def create_purchase_order(request):
         suppliers = Supplier.objects.all()
         note_form = noteStatusForm()
         batch_form = BatchForm()
-        products = Inventory.objects.filter(branch=request.user.branch, status=True).order_by('name')
+        products = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name')
 
         batch_codes = BatchCode.objects.all()
         return render(request, 'create_purchase_order.html',
@@ -3179,7 +3179,7 @@ def product(request):
 
             
     if request.method == 'GET':
-        products = Inventory.objects.filter(branch = request.user.branch, status=True).values(
+        products = Inventory.objects.filter(branch = request.user.branch, status=True, disable=False).values(
             'id',
             'name',
             'quantity'
@@ -3191,16 +3191,19 @@ def product(request):
 
 @login_required
 def delete_product(request):
-    if request.method == 'DELETE':
+    if request.method == 'POST':
         try:
             data = json.loads(request.body)
             product_id = data.get('id', '')
 
             product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+
+            logger.info(product)
             if product.quantity > 0:
-                return JsonResponse({'success': True, 'message': 'Product cannot be deleted.'})
+                product.disable = True
+                return JsonResponse({'False': True, 'message': 'Product cannot be deleted it have quantity more than zero.'})
             else:
-                product.delete()
+                product.disable = True
             product.save()
 
             return JsonResponse({'success': True, 'message': 'Product deleted successfully.'})
@@ -3208,6 +3211,7 @@ def delete_product(request):
         except Inventory.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Product not found.'}, status=404)
         except Exception as e:
+            logger.info(e)
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
