@@ -106,7 +106,7 @@
                             <select name="service_name" class="select form-select" required="" id="id_service"> 
                                 <option value="" selected="">---------</option> 
                                 {%for service in services%}
-                                    <option value="{{service.id}}">{{service.name}}</option>
+                                    <option value="{{service.id}}">{{service.service_name}}</option>
                                 {%endfor%}
                             </select>
                                 <a href="{% url 'booking:service_crud' %}" class="icon-action text-dark me-2" title="Edit Item">
@@ -115,13 +115,13 @@
                                 <a href="#" class="icon-action text-dark delete-item" title="Delete Item">
                                     <i class="bx bx-trash-alt"></i>
                                 </a>
-                                <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addServiceModal" title="Add Service"></button>
+                                <button type="button" class="btn btn-sm bx bx-plus" id="id_add_service"></button>
                         </div>
                         </div>
                         <!-- add item of form -->
                         <div id="div_id_name" class="mb-3"> 
                             <label for="id_name" class="form-label requiredField">
-                                Name<span class="asteriskField">*</span> 
+                                item of use name<span class="asteriskField">*</span> 
                             </label> 
                             <div class="d-flex">
                                 <select name="category" class="select form-select" required id="id_name"> 
@@ -167,11 +167,11 @@
                             <div class="d-flex align-content-center">
                                 <select name="unit_measure" class="select form-select" required="" id="id_unit_measure">
                                     <option value="" selected="">---------</option>
-                                    {%for um in unit_data%}
+                                    {%for um in unit_measurement%}
                                         <option value="{{um.id}}">{{um.measurement}}</option>
                                     {%endfor%}
                                 </select>
-                                <button type="button" class="btn btn-outline-dark bx bx-plus" id="unitBtn"></button>
+                                  <button type="button" class="btn btn-sm bx bx-plus" id="unitBtn"></button> 
                             </div>
                         </div>
                         <div id="div_id_service_range" class="mb-3">
@@ -232,7 +232,7 @@
                     {% csrf_token %}
                     {{service | crispy}}
                     <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-secondary btn-sm">
+                        <button type="button" class="btn btn-secondary btn-sm" id="add_service">
                             <i class="bx bx-save"></i>
                             Service
                         </button>
@@ -370,16 +370,18 @@
     const unitModal = new bootstrap.Modal(document.getElementById('addunitmeasureModal'))
     const iouModal = new bootstrap.Modal(document.getElementById('addIouName'));
     const categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+    const serviceModal = new bootstrap.Modal(document.getElementById('addServiceModal'))
 
     //buttons
     const iouBtn = document.getElementById('id_add_name');
     const catBtn = document.getElementById('id_add_category');
     const unitMeasurementBtn = document.getElementById('unit_measurement');
-    const unitBtn = document.getElementById('unitBtn');1
+    const unitBtn = document.getElementById('unitBtn');
+    const serviceBtn = document.getElementById('id_add_service');
 
     const submitIou = document.getElementById('add_iou_name')
     const submitCat = document.getElementById('id_submit_category')
-
+    const submitService = document.getElementById('add_service')
 
     // modal events
     unitBtn.addEventListener('click', ()=>{
@@ -393,6 +395,63 @@
     catBtn.addEventListener('click', ()=>{
         categoryModal.show()
     })
+
+    serviceBtn.addEventListener('click', ()=>{
+        serviceModal.show()
+    })
+    // service add event 
+    submitService.addEventListener('click', ()=>{
+
+        /* posting service name and description form field and on success populating the unit of measure select */
+
+        const name = document.getElementById('id_service_name').value;
+        const description = document.getElementById('id_description').value;
+        const data = {
+            'name':name,
+            'description': description
+        }
+
+        console.log('Service data: ', data) 
+
+        fetch("{% url 'booking:service_crud' %}",{
+            method:'POST',
+            headers:{
+                'content-Type':'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'  
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data =>{
+            console.log(data, 'data')
+            if (data.success){
+
+                serviceModal.hide()
+
+                Swal.fire({
+                    icon:'success',
+                    text:'Service Successfully saved.',
+                    title:'succcess'
+                }).then(()=>{
+                    const serviceEl = document.getElementById('id_service')
+                    serviceEl.innerHTML = ''
+                    serviceEl.innerHTML = `<option value = '' class='text-muted'>Select Service</option>`;
+                    data.data.forEach((item)=>{
+                        serviceEl.innerHTML += `
+                            <option value = '${item.id}'>${item.service_name}</option>
+                    `
+                })
+            })
+            }else{
+                Swal.fire({
+                    icon:'error',
+                    title:'error',
+                    text:data.message
+                })
+            }
+        })
+    })
+
 
     // category submit event
     submitCat.addEventListener('click', ()=>{
@@ -445,8 +504,7 @@
                 })
             }
         })
-        })
-
+    })
 
     // item of use submit event
     submitIou.addEventListener('click', ()=>{

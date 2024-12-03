@@ -17,16 +17,16 @@ from loguru import logger
 def services_view(request):
     serviceform = ServiceForm()
     service = Services.objects.all().values()
+    items = inventory.objects.all().values()
     category = Category.objects.all().values()
     itemsofuse = ItemOfUse.objects.all().values()
-    logger.info({
-        'service_data':service
-    })
+    logger.info(items)
     return render(request,'services1.html',{
         'services': service,
+        'items': items,
         'category_data': category,
-        'itemofuse_data': itemsofuse,
-        'serviceform': serviceform
+        'serviceform': serviceform,
+        'itemofuse_data': itemsofuse,   
     })
 
 #2
@@ -35,7 +35,7 @@ def services(request):
     serviceform = ServiceForm()
     inventoryform = InventoryForm()
     unit_measurement = UnitForm()
-    service = Services.objects.all()
+    service = Services.objects.all().values()
     iouForm = AddIouName()
     categoryForm = AddCategory()
     return render(request, 'service_products.html',{
@@ -52,15 +52,21 @@ def services(request):
 @login_required
 def service_crud(request):
     if request.method == 'POST':
-        form = ServiceForm(request.POST)
-        if form.is_valid():
-            name = request.POST['name']
-            if not Services.objects.filter(name = name).exists():
-                form.save()
-                messages.success(request,'saved successfully')
-                return redirect('booking:services')
-            return JsonResponse({'success': False, 'message': 'service already exists'})
-        return JsonResponse({'success': False, 'message': 'invalid form'}, status = 400)
+        try:
+            data = json.loads(request.body)
+            name = data.get('name')
+            description = data.get('description')
+            logger.info(name)
+            if Services.objects.filter(service_name = name).exists():
+                return JsonResponse({'success': False, 'message': f'{name} already exists'}, status = 400)
+            Services.objects.create(
+                service_name  = name,
+                description = description
+            )
+            service_data = Services.objects.all().values()
+            return JsonResponse({'success': True, 'data': list(service_data)}, status = 200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'{e}'}, status = 400)
     #update
     if request.method == "PUT":
         try:
