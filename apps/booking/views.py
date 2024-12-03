@@ -19,15 +19,22 @@ def services_view(request):
     itemsofuse = ItemOfUse.objects.all().values()
     logger.info({
         'service_data':service,
-        'category':category,
-        'items of use':itemsofuse
+        #'category':category,
     })
     return render(request,'services1.html',{
-        'service_data': service,
+        'services': service,
         'category_data': category,
         'itemofuse_data': itemsofuse,
     })
 
+@login_required
+def services(request):
+    serviceform = ServiceForm()
+    service = Services.objects.all()
+    return render(request, 'service_products.html',{
+        'services': service,
+        'service': serviceform
+    })
 #BIG item of use
 @login_required
 def ServiceCrud(request):
@@ -54,15 +61,14 @@ def ServiceCrud(request):
 
             if not service_name  or not items or not description :
                 return JsonResponse({'success': False, 'message': 'please fill in the missing fields'}, status = 400)
-            
             if not Services.objects.filter(name = service_name).exists():
-
                 with transaction.atomic():
                     service = Services.objects.create(
                         name = service_name,
                         description = description or '',
                     )
 
+                    
                     item_of_use_list = []
                     for item in items:
                         item_of_use_list.append(
@@ -75,9 +81,7 @@ def ServiceCrud(request):
                                 'service_range': items.get('service_range')
                            }
                         )
-                    
                     ItemOfUse.objects.bulk_create(item_of_use_list)
-
                     return JsonResponse({'success': True}, status = 200)
         except Exception as e:
             return JsonResponse({'success': False, 'message': f'{e}'}, status = 400)
@@ -118,55 +122,55 @@ def ServiceCrud(request):
     return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
 
 
-# #service crud
-# @login_required
-# def service_crud(request):
-#     if request.method == 'POST':
-#         form = ServiceForm(request.POST)
-#         if form.is_valid():
-#             name = request.POST['name']
-#             if not Services.objects.filter(name = name).exists():
-#                 form.save()
-#                 messages.success(request,'saved successfully')
-#                 return redirect('booking:service_product_crud')
-#             return JsonResponse({'success': False, 'message': 'service already exists'})
-#         return JsonResponse({'success': False, 'message': 'invalid form'}, status = 400)
-#     #update
-#     if request.method == "PUT":
-#         try:
-#             data = json.loads(request.body)
-#             service_id = data('service_id')
-#             service_name = data('service_name')
+#service crud
+@login_required
+def service_crud(request):
+    if request.method == 'POST':
+        form = ServiceForm(request.POST)
+        if form.is_valid():
+            name = request.POST['name']
+            if not Services.objects.filter(name = name).exists():
+                form.save()
+                messages.success(request,'saved successfully')
+                return redirect('booking:service_product_crud')
+            return JsonResponse({'success': False, 'message': 'service already exists'})
+        return JsonResponse({'success': False, 'message': 'invalid form'}, status = 400)
+    #update
+    if request.method == "PUT":
+        try:
+            data = json.loads(request.body)
+            service_id = data('service_id')
+            service_name = data('service_name')
             
-#             if not Services.objects.filter(id = service_id).exists():
-#                 return JsonResponse({'success': False, 'message': f'user with {service_id} does not exist'}, status = 400)
-#             else:
-#                 service_edit = Services.objects.get(id = service_id)
-#                 service_edit.name = service_name
-#                 service_edit.save()
-#                 return JsonResponse({'success':True},status = 200)
-#         except Exception as e:
-#             return JsonResponse({'success':False, 'response':f'{e}'}, status = 400)
-#     #delete
-#     elif request.method == "DELETE":
-#         data = json.loads(request.body)
-#         service_id = data('service_id')
-#         if Services.objects.filter(id = service_id).exists():
-#             service_del = Services.objects.get(id= service_id)
-#             service_del.delete = True
-#             service_del.save()
-#             return JsonResponse({'success':True}, status=200)
-#         return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
-#     return JsonResponse({'success':False, 'response': 'invalid request'}, status =  500)
+            if not Services.objects.filter(id = service_id).exists():
+                return JsonResponse({'success': False, 'message': f'user with {service_id} does not exist'}, status = 400)
+            else:
+                service_edit = Services.objects.get(id = service_id)
+                service_edit.name = service_name
+                service_edit.save()
+                return JsonResponse({'success':True},status = 200)
+        except Exception as e:
+            return JsonResponse({'success':False, 'response':f'{e}'}, status = 400)
+    #delete
+    elif request.method == "DELETE":
+        data = json.loads(request.body)
+        service_id = data('service_id')
+        if Services.objects.filter(id = service_id).exists():
+            service_del = Services.objects.get(id= service_id)
+            service_del.delete = True
+            service_del.save()
+            return JsonResponse({'success':True}, status=200)
+        return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
+    return JsonResponse({'success':False, 'response': 'invalid request'}, status =  500)
 
 
-# #getting sercices data
-# def ServiceData(request):
-#     if request.method == 'GET':
-#         service_info = Services.objects.all().values()
-#         logger.info(service_info)
-#         return JsonResponse({'success': True, 'product': list(service_info)}, status = 200)
-#     return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
+#getting sercices data
+def ServiceData(request):
+    if request.method == 'GET':
+        service_info = Services.objects.all().values()
+        logger.info(service_info)
+        return JsonResponse({'success': True, 'product': list(service_info)}, status = 200)
+    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
 
 #service_product CRUD
 @login_required
@@ -178,7 +182,7 @@ def itemofuseCrud(request):
         data = json.load(request.body)
         itemofuse_name = data.get('name')
         cost = data.get('cost')
-        category = data.get('category')
+       # category = data.get('category')
         measurement = data.get('unit measurement')
         range = data.get('range')
         price = data.get('price')
@@ -201,7 +205,7 @@ def itemofuseCrud(request):
                     name = itemofuse_name,
                     cost = cost,
                     description = description,
-                    category = category,
+                    #category = category,
                     unit_measure = unit_measure,
                     service_range = service_range
                 )
