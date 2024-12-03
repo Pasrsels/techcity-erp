@@ -14,6 +14,19 @@
 #id_service_range option {
     padding: 5px 10px;
 }
+.icon-action {
+    font-size: 1.2rem; 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; 
+    height: 36px;
+    
+}
+
+.icon-action i {
+    line-height: 1;
+}
 
     
 </style>
@@ -28,7 +41,7 @@
                 </div>
             </div>
         </div>
-        added form-control-sm
+        
         <div class="row">
             <div class ="col-9" >
                 <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
@@ -46,7 +59,6 @@
                     <div class="container mt-4">
                         <table class="table table-striped table-bordered table-hover">
                             <thead>
-                                <th>#</th>
                                 <th>Name</th>
                                 <th>Description</th>
                                 <th>Quantity</th>
@@ -55,6 +67,29 @@
                                 <!-- <th>Total</th> -->
                             </thead>
                             <tbody id="service_productsTableBody"></tbody>
+                            <tbody id="itemTableBody">
+                                <!-- Initial data rendered by Django -->
+                                {% for item in items %}
+                                <tr data-id="{{ item.id }}">
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.description }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ item.cost }}</td>
+                                    <td>
+                                        <a href="{% url 'booking:service_crud' %}" class="text-info me-2" title="View Item">
+                                            <i class="bx bx-show"></i>
+                                        </a>
+                                        <a href="{% url 'booking:service_crud' %}" class="text-dark me-2" title="Edit Item">
+                                            <i class="bx bx-edit"></i>
+                                        </a>
+                                        <a href="#" class="text-danger delete-item" title="Delete Item">
+                                            <i class="bx bx-trash-alt"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                <!-- Rows added dynamically will go here -->
+                            </tbody>    
                         </table> 
                         <button id="saveItemofUse" class="'btn btn-primary mt-3">Add Item</button>
                     </div>
@@ -73,20 +108,35 @@
                                     <option value="{{service.id}}">{{service.name}}</option>
                                 {%endfor%}
                             </select>
-                            <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addServiceModal"></button>
+                                <a href="{% url 'booking:service_crud' %}" class="icon-action text-dark me-2" title="Edit Item">
+                                    <i class="bx bx-edit"></i>
+                                </a>
+                                <a href="#" class="icon-action text-dark delete-item" title="Delete Item">
+                                    <i class="bx bx-trash-alt"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addServiceModal" title="Add Service"></button>
                         </div>
                         <div id="div_id_service" class="mb-3"> 
                             <label for="id_item_of_use" class="form-label requiredField">
                             Items of Use 
                             <span class="asteriskField">*</span>
                             </label>
-                            <select name="itemofuse_name" class="select form-select" required="" id="id_item"> 
-                                <option value="" selected="">---------</option> 
-                                {%for item in items%}
-                                    <option value="{{item.id}}">{{item.name}}</option>
-                                {%endfor%}
-                            </select>
-                                <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#additemModal"></button>
+                            <div class="d-flex align-items-center gap-2">
+                                <select name="itemofuse_name" class="form-select" required id="id_item" style="width: auto;">
+                                    <option value="" selected>---------</option>
+                                    {% for item in items %}
+                                    <option value="{{ item.id }}">{{ item.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <a href="{% url 'booking:service_crud' %}" class="icon-action text-dark" title="Edit Item">
+                                    <i class="bx bx-edit"></i>
+                                </a>
+                                <a href="#" class="icon-action text-dark delete-item" title="Delete Item">
+                                    <i class="bx bx-trash-alt"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-dark icon-action bx bx-plus" data-bs-toggle="modal" data-bs-target="#additemModal" title="Add Item"></button>
+                            </div>
+                            
                             
                         </div>
                     <div id="div_id_service_quantity" class="mb-3"> 
@@ -200,6 +250,29 @@
     </div>
 </div>
 
+<div class="modal fade" id="additemModal" tabindex="-1" aria-labelledby="additemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="additemModalLabel">Add Item of Use</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addServiceForm" action="{% url 'booking:service_crud' %}" method="POST">
+                    {% csrf_token %}
+                    {{service | crispy}}
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            <i class="bx bx-save"></i>
+                            Item of Use
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="addunitmeasureModal" tabindex="-1" aria-labelledby="addunitmeasureModal" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -239,6 +312,8 @@
         </div>
     </div>
 </div>
+
+
 <script>
     /*
         Implementation of a list of objects (item of use) to be rendered to a table before saving:
