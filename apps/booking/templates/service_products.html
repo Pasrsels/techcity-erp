@@ -85,8 +85,9 @@
                                 {%for item in items%}
                                     <option value="{{item.id}}">{{item.name}}</option>
                                 {%endfor%}
-                                <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#additemModal"></button>
                             </select>
+                                <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#additemModal"></button>
+                            
                         </div>
                     <div id="div_id_service_quantity" class="mb-3"> 
                         <label for="id_service_quantity" class="form-label requiredField">
@@ -131,7 +132,7 @@
                     </div>
                     <div id="div_id_service_range" class="mb-3">
                         <label for="id_service_range" class="form-label requiredField">
-                            Service range
+                            Unit / Service
                             <span class="asteriskField">*</span>
                         </label>
                         <div class="d-flex align-items-center">
@@ -223,7 +224,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addserviceraneeModal">Add Service Range</h5>
+                <h5 class="modal-title" id="addserviceraneeModal">Add Number of Units per service</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">

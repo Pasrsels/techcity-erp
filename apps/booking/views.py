@@ -20,8 +20,7 @@ def services_view(request):
     category = Category.objects.all().values()
     itemsofuse = ItemOfUse.objects.all().values()
     logger.info({
-        'service_data':service,
-        #'category':category,
+        'service_data':service
     })
     return render(request,'services1.html',{
         'services': service,
@@ -34,10 +33,12 @@ def services_view(request):
 @login_required
 def services(request):
     serviceform = ServiceForm()
+    inventoryform = InventoryForm()
     service = Services.objects.all()
     return render(request, 'service_products.html',{
         'services': service,
-        'service': serviceform
+        'service': serviceform,
+        'inventory': inventoryform
     })
 
 #3
