@@ -50,7 +50,7 @@ class Category(models.Model):
 class ItemOfUse(models.Model):
     service = models.ForeignKey(Services, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
-    quantity = models.IntegerField(default= 0)
+    quantity = models.IntegerField( default= 0)
     cost = models.DecimalField(max_digits=4, decimal_places= 2, default= 0.00)
     description = models.CharField(max_length=255, default= 'none')
     category = models.ForeignKey('Category', on_delete= models.CASCADE)
@@ -67,10 +67,15 @@ class UnitMeasurement(models.Model):
 
 class ServiceRange(models.Model): # removed to and from
     service_range = models.CharField(max_length=40, default= 'none')
-    price = models.DecimalField(max_digits=4, decimal_places= 2, default= 0.00)
 
     def __str__(self):
         return f'{self.service_range}'
+
+class Inventory(models.Model):
+    name = models.CharField(max_length= 255)
+    cost = models.DecimalField(max_digits=5, decimal_places=2 , default= 0.00),
+    category = models.ForeignKey('Category', on_delete= models.CASCADE),
+    quantity = models.IntegerField(default= 0),
 
 class Logs(models.Model):
     ACTION_CHOICES = [

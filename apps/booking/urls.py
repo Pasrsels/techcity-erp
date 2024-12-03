@@ -5,8 +5,10 @@ app_name = 'booking'
 
 urlpatterns = [
     path('', services_view, name='service_view'),
+     path('services/', services, name='services'),
     path('service_product_crud/', itemofuseCrud, name='service_product_crud'),
-    path('service_crud/', ServiceCrud, name='service_crud'),
+    path('serviceCrud/', ServiceCrud, name='serviceCrud'),
+    path('service_crud/', service_crud, name='service_crud'),
     #path('service_range_crud/', service_range_crud, name='service_range_crud'),
     path('unit_measurement_crud/', unit_measurement_crud, name='unit_measurement_crud'),
     #path('service_data/', ServiceData, name = 'service_data'),
