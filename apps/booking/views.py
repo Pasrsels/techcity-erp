@@ -22,7 +22,7 @@ def services_view(request):
         'category':category,
         'items of use':itemsofuse
     })
-    return render(request,'service_products.html',{
+    return render(request,'services1.html',{
         'service_data': service,
         'category_data': category,
         'itemofuse_data': itemsofuse,
