@@ -4,72 +4,119 @@
 {% block title %}Services{% endblock %}
 
 {% block content %}
-
-    
-<style>
-    .full-page-center {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh; 
-        background-color: #f8f9fa;
-    }
-
-    .btn-custom {
-        font-size: 1.5rem;
-        padding: 1rem 2rem; 
-        border-radius: 10px;
-    }
-</style>
-
-<div class="full-page-center">
-    <button type="button" class="btn btn-outline-dark btn-custom" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-        + Service
-    </button>
-</div>
-
-</div>
-
-    <div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel"  data-backdrop="static" data-keyboard="false" aria-hidden="true" style="display: none;">
-        <div class="modal-dialog modal-dialog-centered">>
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addServiceModalLabel">Add Service</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background-color: red; color: white; border-radius: 50%; padding: 0.5rem;"></button>
-                </div>
-
-                <div class="modal-body">
-                    <form action="{% url 'booking:service_crud' %}" method="POST"> <!--to be adjusted-->
-                        {% csrf_token %}
-                        {{form | crispy}}
-                        <div class="d-flex justify-content-between mt-3">
-                            <button type="reset" class="btn btn-secondary">Reset</button>
-                            <button type="submit" class="btn btn-primary">Save</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+<div class="table mt-2 w-100">
+    <!-- Services table -->
+    {% include 'components/loader.html' %}
+    <div class='services'>
+        <table class='table border table-bordered table-striped table-hover table-responsive table-sm rounded p-2 w-100 ' style="width:100%" id='services'>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                        <th>Description</th>
+                        <th>Total services</th>
+                        <th>Cost</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id='services_table' >
+                    {% for service in services %}
+                        <tr>
+                            <td><small><span class='hint--bottom' aria-label='{{ service.service.description }}'>{{ service.service.name }}</span></small></td>
+                            <td><small>{{ service.description }}</small></td>
+                            <td></td>
+                            <td><small>{{ service.quantity }}</small></td>
+                            <td><small>{{ service.cost }}</small></td>
+                            <td><small>{{ service.price }}</small></td>
+                       
+                            <td>
+                                <span>
+                                    <a href="{% url 'booking:service_crud' service.id %}" class='text-dark'>
+                                            <i class='bx bx-show'></i>
+                                        </a>
+                                    </span>
+                                        <span>
+                                            <span id='delete' data-id="{{ service.id }}" onclick="serviceId(this)" class="text-dark">
+                                                <i class='bx bx-trash-alt'></i>
+                                            </span>
+                                        </span>
+                                        <span>
+                                            {%if service.status == False %}
+                                            <a href='{% url "booking:activate_service" service.id %}' class="btn btn-sm text-primary">
+                                                activate service
+                                            </a>
+                                            {% endif %}
+                                        </span>
+                                    </span>
+                                    
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    </div>
+    
 
-        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="successModalLabel">Success</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                                <p>Service added successfully!</p>
-                    </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-primary" id="redirectButton">OK</button>
                         </div>
+
+            <div class='hidden item_of_use w-100'>
+                 <table class='table border table-bordered table-striped table-hover table-responsive table-sm rounded p-2  w-100' style="width:100%" id='itemTable'>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Cost</th>
+                                <th>Actions</th>
+                        </tr>
+                    </thead>
+                            <tbody id="itemTableBody"></tbody>
+                </table> 
+                        <button id="saveItemofUse" class="'btn btn-primary mt-3">Add Item</button>
+                
+            </div>
+
+             <!-- Error Modal -->
+        <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center">
+                        <p class="h5 fw-bold text-danger" id="error-message">Error: Something went wrong.</p>
+                    </div>
                 </div>
             </div>
         </div>
+        
+        <!-- Success Modal 
+        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center">
+                        <p class="h5 fw-bold text-success">Accessories saved successfully!</p>
+                    </div>
+                </div>
+            </div>
+        </div>-->
+<script src="{% static 'js/jquery.js'%}"></script>
+<script>
+    let product_id = '';
+        const serviceData = [];
+        const modal = new bootstrap.Modal(document.querySelector('#deleteModal'));
+        const successModal = new bootstrap.Modal(document.querySelector('#successModal'));
+        const deleteButtons = document.querySelectorAll('#delete');
+        const loader = document.querySelector('#loader');
+        const tableEl = document.querySelector('#inventory');
+        const serviceTable = document.querySelector('#serviceTable');
 
-    <script>
+        const inventoryTable = document.querySelector('#inventory_table'); 
+
+        const services = $('.services')
+        const items = $('.items')
+        const navButtons = document.querySelectorAll('.nav-item');
+
         document.addEventListener("DOMContentLoaded", () => {
             const form = document.querySelector("#addServiceForm");
             const successModal = new bootstrap.Modal(document.getElementById("successModal"));
