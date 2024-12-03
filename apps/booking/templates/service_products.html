@@ -14,21 +14,26 @@
 #id_service_range option {
     padding: 5px 10px;
 }
-.icon-action {
-    font-size: 1.2rem; 
+form .form-select {
+    padding: 10px;
+    font-size: 1rem;
+}
+
+.d-flex .bx {
+    font-size: 1.5rem;
+    margin: 0 4px;
+    cursor: pointer;
+}
+
+.d-flex a, .d-flex button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px; 
-    height: 36px;
-    
+    text-decoration: none;
+    border: none;
+    background: none;
 }
 
-.icon-action i {
-    line-height: 1;
-}
-
-    
 </style>
 <div class="container me-5">
     <div class="Service_Products">
@@ -94,51 +99,54 @@
                         <button id="saveItemofUse" class="'btn btn-primary mt-3">Add Item</button>
                     </div>
                 </div>
-            <div class="col-3">
-                <h4 class="mb-4">Add Service</h4>
-                <form id="AddServiceProduct">
-                    <div id="div_id_service_name" class="mb-3"> 
-                        <label for="id_service_name" class="form-label requiredField">
-                            Service Name<span class="asteriskField">*</span>
-                        </label>
-                        <div class="d-flex align-content-center">
-                            <select name="service_name" class="select form-select" required="" id="id_service"> 
-                                <option value="" selected="">---------</option> 
-                                {%for service in services%}
-                                    <option value="{{service.id}}">{{service.name}}</option>
-                                {%endfor%}
-                            </select>
-                                <a href="{% url 'booking:service_crud' %}" class="icon-action text-dark me-2" title="Edit Item">
+                <div class="col-3">
+                    <h4 class="mb-4">Add Service</h4>
+                    <form id="AddServiceProduct">
+                        <!-- Service Name Section -->
+                        <div id="div_id_service_name" class="mb-3">
+                            <label for="id_service_name" class="form-label requiredField">
+                                Service Name <span class="asteriskField">*</span>
+                            </label>
+                            <div class="d-flex align-items-center gap-1">
+                                <select name="service_name" class="form-select" required id="id_service" style="flex: 1; min-width: 200px;">
+                                    <option value="" selected>---------</option>
+                                    {% for service in services %}
+                                    <option value="{{ service.id }}">{{ service.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <a href="{% url 'booking:service_crud' %}" class="text-dark" title="Edit Service">
                                     <i class="bx bx-edit"></i>
                                 </a>
-                                <a href="#" class="icon-action text-dark delete-item" title="Delete Item">
+                                <a href="#" class="text-danger delete-item" title="Delete Service">
                                     <i class="bx bx-trash-alt"></i>
                                 </a>
                                 <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addServiceModal" title="Add Service"></button>
+                            </div>
                         </div>
-                        <div id="div_id_service" class="mb-3"> 
+                
+                        <!-- Items of Use Section -->
+                        <div id="div_id_service" class="mb-3">
                             <label for="id_item_of_use" class="form-label requiredField">
-                            Items of Use 
-                            <span class="asteriskField">*</span>
+                                Items of Use <span class="asteriskField">*</span>
                             </label>
-                            <div class="d-flex align-items-center gap-2">
-                                <select name="itemofuse_name" class="form-select" required id="id_item" style="width: auto;">
+                            <div class="d-flex align-items-center gap-1">
+                                <select name="itemofuse_name" class="form-select" required id="id_item" style="flex: 1; min-width: 200px;">
                                     <option value="" selected>---------</option>
                                     {% for item in items %}
                                     <option value="{{ item.id }}">{{ item.name }}</option>
                                     {% endfor %}
                                 </select>
-                                <a href="{% url 'booking:service_crud' %}" class="icon-action text-dark" title="Edit Item">
+                                <a href="{% url 'booking:service_crud' %}" class="text-dark" title="Edit Item">
                                     <i class="bx bx-edit"></i>
                                 </a>
-                                <a href="#" class="icon-action text-dark delete-item" title="Delete Item">
+                                <a href="#" class="text-danger delete-item" title="Delete Item">
                                     <i class="bx bx-trash-alt"></i>
                                 </a>
-                                <button type="button" class="btn btn-outline-dark icon-action bx bx-plus" data-bs-toggle="modal" data-bs-target="#additemModal" title="Add Item"></button>
+                                <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#additemModal" title="Add Item"></button>
                             </div>
-                            
-                            
                         </div>
+                    
+                
                     <div id="div_id_service_quantity" class="mb-3"> 
                         <label for="id_service_quantity" class="form-label requiredField">
                             Quantity<span class="asteriskField">*</span>
@@ -541,6 +549,51 @@
         })
     })   
     
+    // Event delegation for dynamically added actions
+    document.addEventListener('click', function (event) {
+        const target = event.target;
+
+        // Handle Delete Action
+        if (target.closest('.delete-item')) {
+            const row = target.closest('div');
+            const itemId = row.querySelector('select').value;
+
+            if (itemId && confirm("Are you sure you want to delete this item?")) {
+                
+                fetch(`/service_crud/${itemId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}', 
+                    },
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Item deleted successfully.');
+                        } else {
+                            alert('Failed to delete the item.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred.');
+                    });
+            }
+        }
+
+        // Handle Edit Action
+        if (target.closest('a.text-dark')) {
+            const selectElement = target.closest('div').querySelector('select');
+            const itemId = selectElement.value;
+
+            if (itemId) {
+               
+                window.location.href = `/service_crud/${itemId}/`;
+            } else {
+                alert("Please select an item to edit.");
+            }
+        }
+    });
+
     function getCSRFToken() {
         let cookieValue = null;
         const name = 'csrftoken';
