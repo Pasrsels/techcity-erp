@@ -14,6 +14,7 @@ from loguru import logger
 #service view
 @login_required
 def services_view(request):
+    serviceform = ServiceForm()
     service = Services.objects.all().values()
     category = Category.objects.all().values()
     itemsofuse = ItemOfUse.objects.all().values()
@@ -22,10 +23,11 @@ def services_view(request):
         'category':category,
         'items of use':itemsofuse
     })
-    return render(request,'service_products.html',{
+    return render(request,'offices.html',{
         'service_data': service,
         'category_data': category,
         'itemofuse_data': itemsofuse,
+        'serviceform': serviceform
     })
 
 #BIG item of use
