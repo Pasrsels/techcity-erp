@@ -105,7 +105,7 @@
                         <div class="d-flex align-content-center">
                             <select name="service_name" class="select form-select" required="" id="id_service"> 
                                 <option value="" selected="">---------</option> 
-                                {%for service in services%}
+                                {%for service in services %}
                                     <option value="{{service.id}}">{{service.service_name}}</option>
                                 {%endfor%}
                             </select>
@@ -126,38 +126,12 @@
                             <div class="d-flex">
                                 <select name="category" class="select form-select" required id="id_name"> 
                                     <option value="" selected>Select Item of use</option>
-                                    {% for name in item_of_use_names %}
-                                        <option value="{{ name.id }}">{{ name.name }}</option>
+                                    {% for name in names %}
+                                        <option value="{{ name.id }}">{{ name.item_of_use_name }}</option>
                                     {% endfor %}
                                 </select> 
                                 <button type="button" class="btn btn-sm bx bx-plus" id="id_add_name"></button>
                             </div>
-                        </div>
-                        <div id="div_id_cost" class="mb-3"> 
-                            <label for="id_cost" class="form-label requiredField">
-                                Cost<span class="asteriskField">*</span> 
-                            </label> 
-                            <input type="number" name="cost" value="0.0" step="0.01" class="numberinput form-control" required id="id_cost"> 
-                        </div> 
-                        <div id="div_id_category" class="mb-3"> 
-                            <label for="id_category" class="form-label requiredField">
-                            Category<span class="asteriskField">*</span> 
-                            </label> 
-                            <div class="d-flex">
-                                <select name="category" class="select form-select" required id="id_category"> 
-                                    <option value="" selected>Select Category</option>
-                                    {% for category in categories %}
-                                        <option value="{{ category.id }}">{{ category.name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <button type="button" class="btn btn-sm bx bx-plus" id="id_add_category"></button> 
-                            </div>
-                         </div> 
-                         <div id="div_id_quantity" class="mb-3"> 
-                            <label for="id_quantity" class="form-label requiredField">
-                                Quantity<span class="asteriskField">*</span> 
-                            </label> 
-                            <input type="number" name="quantity" value="0" class="numberinput form-control" required id="id_quantity"> 
                         </div>
                         <div id="div_id_unit_measure" class="mb-3">
                             <label for="id_unit_measure" class="form-label requiredField">
@@ -173,18 +147,42 @@
                                 </select>
                                   <button type="button" class="btn btn-sm bx bx-plus" id="unitBtn"></button> 
                             </div>
-                        </div>
-                        <div id="div_id_service_range" class="mb-3">
+                        </div>           
+                    <div class="d-flex justify-content-between mt-3">
+                        <button type="reset" class="btn btn-secondary">Reset</button>
+                        <button type="button" class="btn btn-primary" onclick="saveToCart()">Save</button> <!-- linked from the script  2-->
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addServiceModalLabel">Add New Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addServiceForm" action="{% url 'booking:service_crud' %}" method="POST">
+                    {% csrf_token %}
+                    {{service | crispy}}
+                    <div id="div_id_service_range" class="mb-3">
                         <label for="id_service_range" class="form-label requiredField">
-                            Unit / Service
+                            Munber Of Units Per Service
                             <span class="asteriskField">*</span>
                         </label>
                         <div class="d-flex align-items-center">
-                            <select name="service_range" class="select form-select" required="" id="id_service_range">
-                                <option value="" selected="">---------</option>
-                                <option value="fixed">✔ Fixed</option>
-                                <option value="range">✔ Range</option>
-                            </select>
+                            <div class="d-flex border p-2 align-items-center">
+                                <input type="checkbox" name="" id="fiexd_value">
+                                <label for="" class="mx-2">Fixed</label>
+                            </div>
+                            <div class="d-flex border p-2 align-items-center mx-2">
+                                <input type="checkbox" name="" id="range_value">
+                                <label for="" class="mx-2">Range</label>
+                            </div>
                         </div>
                         <div class="d-none mt-3" id="fixed">
                             <label for="id_fixed_inp" class="form-label requiredField">
@@ -209,28 +207,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>             
-                    <div class="d-flex justify-content-between mt-3">
-                        <button type="reset" class="btn btn-secondary">Reset</button>
-                        <button type="button" class="btn btn-primary" onclick="saveToCart()">Save</button> <!-- linked from the script  2-->
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addServiceModalLabel">Add New Service</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addServiceForm" action="{% url 'booking:service_crud' %}" method="POST">
-                    {% csrf_token %}
-                    {{service | crispy}}
+                    </div>  
                     <div class="d-flex justify-content-end">
                         <button type="button" class="btn btn-secondary btn-sm" id="add_service">
                             <i class="bx bx-save"></i>
@@ -255,8 +232,34 @@
                 <form method="POST">
                     {% csrf_token %}
                     {{ iouForm | crispy}}
+                    <div id="div_id_cost" class="mb-3"> 
+                        <label for="id_cost" class="form-label requiredField">
+                            Cost<span class="asteriskField">*</span> 
+                        </label> 
+                        <input type="number" name="cost" value="0.0" step="0.01" class="numberinput form-control" required id="id_cost"> 
+                    </div> 
+                    <div id="div_id_category" class="mb-3"> 
+                        <label for="id_category" class="form-label requiredField">
+                        Category<span class="asteriskField">*</span> 
+                        </label> 
+                        <div class="d-flex">
+                            <select name="category" class="select form-select" required id="id_category"> 
+                                <option value="" selected>Select Category</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="btn btn-sm bx bx-plus" id="id_add_category"></button> 
+                        </div>
+                     </div> 
+                     <div id="div_id_quantity" class="mb-3"> 
+                        <label for="id_quantity" class="form-label requiredField">
+                            Quantity<span class="asteriskField">*</span> 
+                        </label> 
+                        <input type="number" name="quantity" value="0" class="numberinput form-control" required id="id_quantity"> 
+                    </div>
                     <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-secondary btn-sm" id="add_iou_name">
+                        <button type="button" class="btn btn-secondary btn-sm" id="add_iou">
                             <i class="bx bx-save"></i>
                             Item of use name
                         </button>
@@ -360,12 +363,6 @@
 
 
 <script>
-    $(document).ready(function() {
-        $('#id_service').select2(
-            {placeholder: 'Select Service'}
-        )
-    })
-
     // modals
     const unitModal = new bootstrap.Modal(document.getElementById('addunitmeasureModal'))
     const iouModal = new bootstrap.Modal(document.getElementById('addIouName'));
@@ -378,10 +375,27 @@
     const unitMeasurementBtn = document.getElementById('unit_measurement');
     const unitBtn = document.getElementById('unitBtn');
     const serviceBtn = document.getElementById('id_add_service');
+    const addIouBtn = document.getElementById('add_iou');
 
     const submitIou = document.getElementById('add_iou_name')
     const submitCat = document.getElementById('id_submit_category')
     const submitService = document.getElementById('add_service')
+
+
+    // elements
+    const iouEl = document.getElementById('id_name')
+
+    $(document).ready(function() {
+        $('#id_service').select2(
+            {placeholder: 'Select Service'}
+        )
+    })
+
+    // $(document).ready(function() {
+    //     $('#id_name').select2(
+    //         {placeholder: 'Select Service'}
+    //     )
+    // })
 
     // modal events
     unitBtn.addEventListener('click', ()=>{
@@ -399,6 +413,44 @@
     serviceBtn.addEventListener('click', ()=>{
         serviceModal.show()
     })
+
+    addIouBtn .addEventListener('click', ()=>{
+        serviceModal.show()
+    })
+
+
+    
+    iouEl.addEventListener('change', ()=>{
+        console.log('iou')
+        const value = iouEl.value;
+        const service = document.getElementById('id_service').value
+
+        fetch(`{% url 'booking:item_of_use_crud' %}/?id=${value}&service_id=${service}/`, {
+            method: 'GET',
+            headers:{
+                'content-Type':'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('iou data: ', data)
+            if(data.success){
+                addItem(data.items)
+            }else{
+                Swal.fire({
+                    icon:'error',
+                    title:'error',
+                    text:data.message
+                })
+            }
+        })
+    })
+
+    // add item to cart
+    const addItem = (data) =>{
+
+    }
+
     // service add event 
     submitService.addEventListener('click', ()=>{
 
@@ -406,12 +458,33 @@
 
         const name = document.getElementById('id_service_name').value;
         const description = document.getElementById('id_description').value;
+        const unitOfMeasurement = document.getElementById('id_unit_measure');
+        const serviceRange = document.getElementById('id_service_range')
+
+        const uomName = unitOfMeasurement.options[unitOfMeasurement.selectedIndex].textContent;
+
+        // make a condition to check the type of range to use
+        if(serviceRange === 'fixed'){
+            fixed = document.getElementById('fixed_inp')
+            range = `${fixed}${uomName}`;
+        }else if (serviceRange === 'range'){
+            const to = document.getElementById('range_inp_to').value
+            const from =  document.getElementById('range_inp_from').value
+            range = `${to}${uomName} - ${from}${uomName}`
+        }else{
+            range = '';
+        }
+
         const data = {
             'name':name,
-            'description': description
+            'description': description,
+            'unit_measure': unitOfMeasurement.value,
+            'service_range': range
         }
 
         console.log('Service data: ', data) 
+
+        return;
 
         fetch("{% url 'booking:service_crud' %}",{
             method:'POST',
@@ -507,57 +580,64 @@
     })
 
     // item of use submit event
-    submitIou.addEventListener('click', ()=>{
+    // submitIou.addEventListener('click', ()=>{
 
-        /* posting unit of meaasurement form field and on success populating the unit of measure select */
+    //     /* posting unit of meaasurement form field and on success populating the unit of measure select */
 
-        const name = document.getElementById('id_item_of_use_name').value;
-        const data = {
-            'name':name
-        }
+    //     const name = document.getElementById('id_item_of_use_name').value;
+    //     const cost = document.getElementById('id_cost').value
+    //     const quantity = document.getElementById('id_quantity').value
+    //     const category = document.getElementById('id_category').value
 
-        console.log('Iou data: ', data) 
+    //     const data = {
+    //         'name':name,
+    //         'cost':cost,
+    //         'quantity':quantity,
+    //         'category':category
+    //     }
 
-        fetch("{% url 'booking:item_of_use_crud' %}",{
-            method:'POST',
-            headers:{
-                'content-Type':'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'  
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(data =>{
-            console.log(data, 'data')
-            if (data.success){
+    //     console.log('Iou data: ', data) 
 
-                iouModal.hide()
+    //     fetch("{% url 'booking:item_of_use_crud' %}",{
+    //         method:'POST',
+    //         headers:{
+    //             'content-Type':'application/json',
+    //             'X-CSRFToken': 
+    //         },
+    //         body: JSON.stringify(data)
+    //     })
+    //     .then(response => response.json())
+    //     .then(data =>{
+    //         console.log(data, 'data')
+    //         if (data.success){
 
-                Swal.fire({
-                    icon:'success',
-                    text:'Item of use Successfully saved.',
-                    title:'succcess'
-                }).then(()=>{
-                    const iouEl = document.getElementById('id_name')
-                    iouEl.innerHTML = ''
+    //             iouModal.hide()
+
+    //             Swal.fire({
+    //                 icon:'success',
+    //                 text:'Item of use Successfully saved.',
+    //                 title:'succcess'
+    //             }).then(()=>{
+    //                 const iouEl = document.getElementById('id_name')
+    //                 iouEl.innerHTML = ''
                     
-                    iouEl.innerHTML = `<option value = '' class='text-muted'>Select Item of Use</option>`;
+    //                 iouEl.innerHTML = `<option value = '' class='text-muted'>Select Item of Use</option>`;
 
-                    data.data.forEach((item)=>{
-                        iouEl.innerHTML += `
-                            <option value = '${item.id}'>${item.item_of_use_name}</option>
-                    `
-                })
-            })
-            }else{
-                Swal.fire({
-                    icon:'error',
-                    title:'error',
-                    text:data.message
-                })
-            }
-        })
-    })
+    //                 data.data.forEach((item)=>{
+    //                     iouEl.innerHTML += `
+    //                         <option value = '${item.id}'>${item.item_of_use_name}</option>
+    //                 `
+    //             })
+    //         })
+    //         }else{
+    //             Swal.fire({
+    //                 icon:'error',
+    //                 title:'error',
+    //                 text:data.message
+    //             })
+    //         }
+    //     })
+    // })
 
     // unit of measurement submit event
     unitMeasurementBtn.addEventListener('click', ()=>{
@@ -643,9 +723,6 @@
         const itemOfUseName = document.getElementById('id_name').value;
         const unitOfMeasurement = document.getElementById('id_unit_measure')
         const serviceRange = document.getElementById('id_service_range')
-        const cost = document.getElementById('id_cost').value
-        const quantity = document.getElementById('id_quantity').value
-        const category = document.getElementById('id_category').value
         let fixed = ''
         let range = ''
 
