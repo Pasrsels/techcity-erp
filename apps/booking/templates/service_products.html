@@ -250,6 +250,29 @@
     </div>
 </div>
 
+<div class="modal fade" id="additemModal" tabindex="-1" aria-labelledby="additemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="additemModalLabel">Add Item of Use</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addServiceForm" action="{% url 'booking:service_crud' %}" method="POST">
+                    {% csrf_token %}
+                    {{service | crispy}}
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            <i class="bx bx-save"></i>
+                            Item of Use
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="addunitmeasureModal" tabindex="-1" aria-labelledby="addunitmeasureModal" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -289,6 +312,8 @@
         </div>
     </div>
 </div>
+
+
 <script>
     /*
         Implementation of a list of objects (item of use) to be rendered to a table before saving:
