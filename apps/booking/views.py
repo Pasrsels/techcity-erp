@@ -34,11 +34,17 @@ def services_view(request):
 def services(request):
     serviceform = ServiceForm()
     inventoryform = InventoryForm()
+    unit_measurement = UnitForm()
     service = Services.objects.all()
+    iouForm = AddIouName()
+    categoryForm = AddCategory()
     return render(request, 'service_products.html',{
+        'iouForm':iouForm,
         'services': service,
         'service': serviceform,
-        'inventory': inventoryform
+        'inventory': inventoryform,
+        'categoryForm':categoryForm,
+        'unit_measurement':unit_measurement
     })
 
 #3
@@ -224,13 +230,34 @@ def itemofuseCrud(request):
 @login_required
 def unit_measurement_crud(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        measure = data.get('measurement')
-    
-        UnitMeasurement.objects.create(
-            measurement = measure,
-        )
-        return JsonResponse({'success': True}, status = 200)
+        try:
+            data = json.loads(request.body)
+            measure = data.get('measurement')
+
+            # to change to lower case
+            measure = measure
+
+            # validation for existance
+            if UnitMeasurement.objects.filter(measurement=measure).exists():
+                return JsonResponse({'success': False, 'message':f'{measure} measurement exists.' }, status = 400) 
+
+            logger.info('Creating measurement .....')
+
+            # creation 
+            unit = UnitMeasurement.objects.create(
+                measurement = measure,
+            )
+
+            logger.info(f'Measurement created: {unit}')
+
+            measurements = UnitMeasurement.objects.all().values()
+
+            logger.info(f'Measurements: {measurements}')
+
+            return JsonResponse({'success': True, 'data':list(measurements)}, status = 200)
+        except Exception as e:
+           return JsonResponse({'success': False, 'message':f'{e}' }, status = 400) 
+        
     
     #read
     elif request.method == 'GET':
@@ -641,3 +668,61 @@ def payments_crud(request):
         
         payments_del = MemberAccounts.objects.filter(id = payments_id)
         payments_del.delete()
+
+@login_required
+def category_crud(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            name = data.get('name')
+            name = name.lower()
+
+            # validation for existance
+            if Category.objects.filter(category_name=name).exists():
+                return JsonResponse({'success': False, 'message':f'{name} category exists.' }, status = 400) 
+
+            logger.info('Creating category .....')
+
+            # creation 
+            cat = Category.objects.create(
+                category_name = name
+            )
+
+            logger.info(f'Category created: {cat}')
+
+            categories = Category.objects.all().values()
+
+            logger.info(f'Categories: {categories}')
+            return JsonResponse({'success': True, 'data':list(categories)}, status = 200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
+        
+@login_required
+def item_of_use_crud(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            name = data.get('name')
+            name = name.lower()
+
+            logger.info(f'name: {name}')
+
+            # validation for existance
+            if itemOfUseName.objects.filter(item_of_use_name=name).exists():
+                return JsonResponse({'success': False, 'message':f'{name} Item of use exists.' }, status = 400) 
+
+            logger.info('Creating category .....')
+
+            # creation 
+            item = itemOfUseName.objects.create(
+                item_of_use_name = name
+            )
+
+            logger.info(f'Category created: {item}')
+
+            items = itemOfUseName.objects.all().values()
+
+            logger.info(f'items: {items}')
+            return JsonResponse({'success': True, 'data':list(items)}, status = 200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)

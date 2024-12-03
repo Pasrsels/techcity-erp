@@ -117,47 +117,64 @@
                                 </a>
                                 <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addServiceModal" title="Add Service"></button>
                         </div>
-                        <!-- <div id="div_id_service" class="mb-3"> 
-                            <label for="id_item_of_use" class="form-label requiredField">
-                            Items of Use 
-                            <span class="asteriskField">*</span>
-                            </label>
-                            <div class="d-flex align-items-center gap-2">
-                                <select name="itemofuse_name" class="form-select" required id="id_item" style="width: auto;">
-                                    <option value="" selected>---------</option>
-                                    {% for item in items %}
-                                    <option value="{{ item.id }}">{{ item.name }}</option>
+                        </div>
+                        <!-- add item of form -->
+                        <div id="div_id_name" class="mb-3"> 
+                            <label for="id_name" class="form-label requiredField">
+                                Name<span class="asteriskField">*</span> 
+                            </label> 
+                            <div class="d-flex">
+                                <select name="category" class="select form-select" required id="id_name"> 
+                                    <option value="" selected>Select Item of use</option>
+                                    {% for name in item_of_use_names %}
+                                        <option value="{{ name.id }}">{{ name.name }}</option>
+                                    {% endfor %}
+                                </select> 
+                                <button type="button" class="btn btn-sm bx bx-plus" id="id_add_name"></button>
+                            </div>
+                        </div>
+                        <div id="div_id_cost" class="mb-3"> 
+                            <label for="id_cost" class="form-label requiredField">
+                                Cost<span class="asteriskField">*</span> 
+                            </label> 
+                            <input type="number" name="cost" value="0.0" step="0.01" class="numberinput form-control" required id="id_cost"> 
+                        </div> 
+                        <div id="div_id_category" class="mb-3"> 
+                            <label for="id_category" class="form-label requiredField">
+                            Category<span class="asteriskField">*</span> 
+                            </label> 
+                            <div class="d-flex">
+                                <select name="category" class="select form-select" required id="id_category"> 
+                                    <option value="" selected>Select Category</option>
+                                    {% for category in categories %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
                                     {% endfor %}
                                 </select>
-                                <a href="{% url 'booking:service_crud' %}" class="icon-action text-dark" title="Edit Item">
-                                    <i class="bx bx-edit"></i>
-                                </a>
-                                <a href="#" class="icon-action text-dark delete-item" title="Delete Item">
-                                    <i class="bx bx-trash-alt"></i>
-                                </a>
-                                <button type="button" class="btn btn-outline-dark icon-action bx bx-plus" data-bs-toggle="modal" data-bs-target="#additemModal" title="Add Item"></button>
-                            </div>  
-                        </div> -->
-                        <!-- add item of form -->
-
-                        {{inventory | crispy}}
-
-                        <div id="div_id_unit_measure" class="mb-3">
-                        <label for="id_unit_measure" class="form-label requiredField">
-                            Unit measure
-                            <span class="asteriskField">*</span>
-                        </label>
-                        <div class="d-flex align-content-center">
-                            <select name="unit_measure" class="select form-select" required="" id="id_unit_measure">
-                                <option value="" selected="">---------</option>
-                                {%for um in unit_data%}
-                                    <option value="{{um.id}}">{{um.measurement}}</option>
-                                {%endfor%}
-                            </select>
-                            <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addunitmeasureModal"></button>
+                                <button type="button" class="btn btn-sm bx bx-plus" id="id_add_category"></button> 
+                            </div>
+                         </div> 
+                         <div id="div_id_quantity" class="mb-3"> 
+                            <label for="id_quantity" class="form-label requiredField">
+                                Quantity<span class="asteriskField">*</span> 
+                            </label> 
+                            <input type="number" name="quantity" value="0" class="numberinput form-control" required id="id_quantity"> 
                         </div>
-                    </div>
-                    <div id="div_id_service_range" class="mb-3">
+                        <div id="div_id_unit_measure" class="mb-3">
+                            <label for="id_unit_measure" class="form-label requiredField">
+                                Unit measure
+                                <span class="asteriskField">*</span>
+                            </label>
+                            <div class="d-flex align-content-center">
+                                <select name="unit_measure" class="select form-select" required="" id="id_unit_measure">
+                                    <option value="" selected="">---------</option>
+                                    {%for um in unit_data%}
+                                        <option value="{{um.id}}">{{um.measurement}}</option>
+                                    {%endfor%}
+                                </select>
+                                <button type="button" class="btn btn-outline-dark bx bx-plus" id="unitBtn"></button>
+                            </div>
+                        </div>
+                        <div id="div_id_service_range" class="mb-3">
                         <label for="id_service_range" class="form-label requiredField">
                             Unit / Service
                             <span class="asteriskField">*</span>
@@ -168,7 +185,6 @@
                                 <option value="fixed">✔ Fixed</option>
                                 <option value="range">✔ Range</option>
                             </select>
-                            <button type="button" class="btn btn-outline-dark bx bx-plus" data-bs-toggle="modal" data-bs-target="#addservicerangeModal"></button>
                         </div>
                         <div class="d-none mt-3" id="fixed">
                             <label for="id_fixed_inp" class="form-label requiredField">
@@ -227,6 +243,54 @@
     </div>
 </div>
 
+<!-- item of use name -->
+<div class="modal fade" id="addIouName" tabindex="-1" aria-labelledby="additemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="additemModalLabel">Add Item of Use</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ iouForm | crispy}}
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary btn-sm" id="add_iou_name">
+                            <i class="bx bx-save"></i>
+                            Item of use name
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- category -->
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="additemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="additemModalLabel">Add Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ categoryForm | crispy}}
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary btn-sm" id="id_submit_category">
+                            <i class="bx bx-save"></i>
+                            Category
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="additemModal" tabindex="-1" aria-labelledby="additemModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -250,8 +314,9 @@
     </div>
 </div>
 
+<!-- unit of measurement -->
 <div class="modal fade" id="addunitmeasureModal" tabindex="-1" aria-labelledby="addunitmeasureModal" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addunitmeasureModal">Add Unit Measure</h5>
@@ -260,9 +325,12 @@
             <div class="modal-body">
                 <form id="unit_measurementForm"> 
                     {% csrf_token %}
-                    {{unit_measurement | crispy}}
-                    <div class="d-flex justify-content-between mt-3">
-                        <button type="submit" class="btn btn-primary">Add unit_measure</button>
+                    {{ unit_measurement | crispy}}
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="button" class="btn btn-secondary btn-sm" id="unit_measurement">
+                             <i class="bx bx-save"></i>
+                             save
+                        </button>
                     </div>
                 </form>
             </div>
@@ -296,6 +364,194 @@
         $('#id_service').select2(
             {placeholder: 'Select Service'}
         )
+    })
+
+    // modals
+    const unitModal = new bootstrap.Modal(document.getElementById('addunitmeasureModal'))
+    const iouModal = new bootstrap.Modal(document.getElementById('addIouName'));
+    const categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+
+    //buttons
+    const iouBtn = document.getElementById('id_add_name');
+    const catBtn = document.getElementById('id_add_category');
+    const unitMeasurementBtn = document.getElementById('unit_measurement');
+    const unitBtn = document.getElementById('unitBtn');1
+
+    const submitIou = document.getElementById('add_iou_name')
+    const submitCat = document.getElementById('id_submit_category')
+
+
+    // modal events
+    unitBtn.addEventListener('click', ()=>{
+        unitModal.show()
+    })
+
+    iouBtn.addEventListener('click', ()=>{
+        iouModal.show()
+    })
+
+    catBtn.addEventListener('click', ()=>{
+        categoryModal.show()
+    })
+
+    // category submit event
+    submitCat.addEventListener('click', ()=>{
+
+        /* posting unit of meaasurement form field and on success populating the unit of measure select */
+
+        const name = document.getElementById('id_category_name').value;
+        const data = {
+            'name':name
+        }
+
+        console.log('Iou data: ', data) 
+
+        fetch("{% url 'booking:category_crud' %}",{
+            method:'POST',
+            headers:{
+                'content-Type':'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'  
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data =>{
+            console.log(data, 'data')
+            if (data.success){
+
+                categoryModal.hide()
+
+                Swal.fire({
+                    icon:'success',
+                    text:'Category Successfully saved.',
+                    title:'succcess'
+                }).then(()=>{
+                    const catEl = document.getElementById('id_category')
+                    catEl.innerHTML = ''
+                    
+                    catEl.innerHTML = `<option value = '' class='text-muted'>Select Category</option>`;
+
+                    data.data.forEach((item)=>{
+                        catEl.innerHTML += `
+                            <option value = '${item.id}'>${item.category_name}</option>
+                    `
+                })
+            })
+            }else{
+                Swal.fire({
+                    icon:'error',
+                    title:'error',
+                    text:data.message
+                })
+            }
+        })
+        })
+
+
+    // item of use submit event
+    submitIou.addEventListener('click', ()=>{
+
+        /* posting unit of meaasurement form field and on success populating the unit of measure select */
+
+        const name = document.getElementById('id_item_of_use_name').value;
+        const data = {
+            'name':name
+        }
+
+        console.log('Iou data: ', data) 
+
+        fetch("{% url 'booking:item_of_use_crud' %}",{
+            method:'POST',
+            headers:{
+                'content-Type':'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'  
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data =>{
+            console.log(data, 'data')
+            if (data.success){
+
+                iouModal.hide()
+
+                Swal.fire({
+                    icon:'success',
+                    text:'Item of use Successfully saved.',
+                    title:'succcess'
+                }).then(()=>{
+                    const iouEl = document.getElementById('id_name')
+                    iouEl.innerHTML = ''
+                    
+                    iouEl.innerHTML = `<option value = '' class='text-muted'>Select Item of Use</option>`;
+
+                    data.data.forEach((item)=>{
+                        iouEl.innerHTML += `
+                            <option value = '${item.id}'>${item.item_of_use_name}</option>
+                    `
+                })
+            })
+            }else{
+                Swal.fire({
+                    icon:'error',
+                    title:'error',
+                    text:data.message
+                })
+            }
+        })
+    })
+
+    // unit of measurement submit event
+    unitMeasurementBtn.addEventListener('click', ()=>{
+
+        /* posting unit of meaasurement form field and on success populating the unit of measure select */
+
+        const measurement = document.getElementById('id_measurement').value;
+        const data = {
+            'measurement':measurement
+        }
+
+        console.log('measurement data: ', data) 
+
+        fetch("{% url 'booking:unit_measurement_crud' %}",{
+            method:'POST',
+            headers:{
+                'content-Type':'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'  
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data =>{
+            console.log(data, 'data')
+            if (data.success){
+
+                unitModal.hide()
+
+                Swal.fire({
+                    icon:'success',
+                    text:'Unit of Measure Successfully saved.',
+                    title:'succcess'
+                }).then(()=>{
+                    const unitMeasurentEl = document.getElementById('id_unit_measure')
+                    unitMeasurentEl.innerHTML = ''
+                    
+                    unitMeasurentEl.innerHTML = `<option value = ''>Select Measurement</option>`;
+
+                    data.data.forEach((unit)=>{
+                        unitMeasurentEl.innerHTML += `
+                            <option value = '${unit.id}'>${unit.measurement}</option>
+                    `
+                })
+            })
+            }else{
+                Swal.fire({
+                    icon:'error',
+                    title:'error',
+                    text:data.message
+                })
+            }
+        })
     })
 
     /*

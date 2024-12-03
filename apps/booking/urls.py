@@ -16,4 +16,10 @@ urlpatterns = [
     path('member_crud/', member_crud, name= 'members'),
     path('member_acc_crud/', member_acc_crud, name= 'members_acc'),
     path('payments/', payments_crud, name= 'payments'),
+
+    #category
+    path('category_crud/', category_crud, name='category_crud'),
+
+    #item of use
+    path('item_of_use_crud', item_of_use_crud, name='item_of_use_crud'),
 ]
