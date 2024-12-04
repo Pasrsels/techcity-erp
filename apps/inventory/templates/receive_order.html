@@ -217,6 +217,9 @@
     }
 
     function edit(itemId, sPrice, dPrice, quantity, acp) {
+
+        editStatus = true;
+
         const parentEl = document.getElementById('itemId');
         const sellingPrice = document.getElementById(`selling_${itemId}`);
         const pQuantity = document.getElementById(`rq_${itemId}`).textContent;
@@ -230,7 +233,7 @@
         document.getElementById(`submit_${itemId}`).style.display = 'block';
 
         // add cancel button
-        document.getElementById(`cancel_${itemId}`).style.display = 'block'
+        document.getElementById(`cancel_${itemId}`).style.display = 'block';
 
         console.log(pQuantity)
 
@@ -280,7 +283,6 @@
             >
         `;
         expectedProfitOnLoad()
-        editStatus = true
     }
 
     function cancel(itemId, originalSellingPrice, originalDealerPrice) {
@@ -354,6 +356,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    editStatus = false;
                     const orderedQnty = parseInt(document.getElementById(`purchased_quantity_${itemId}`).textContent)
                     const tableRow = document.getElementById(`tr_${itemId}`)
 
