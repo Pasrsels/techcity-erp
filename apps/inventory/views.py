@@ -462,7 +462,12 @@ def inventory_index(request):
     
     services = Service.objects.all().order_by('-name')
     accessories = Accessory.objects.all()
-    inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name')
+    inventory = Inventory.objects.filter(
+        branch=request.user.branch, 
+        status=True,
+        disable=False,
+        quantity__gt = 0,
+    ).order_by('name')
 
 
     # # Step 1: Get the inventory products with quantity 0 and not logged in ActivityLog
