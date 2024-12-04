@@ -102,9 +102,9 @@ def service_crud(request):
     if request.method == "PUT":
         try:
             data = json.loads(request.body)
-            service_id = data('service_id')
-            service_name = data('service_name')
-            
+            service_id = data.get('service_id')
+            service_name = data.get('service_name')
+
             if not Services.objects.filter(id = service_id).exists():
                 return JsonResponse({'success': False, 'message': f'user with {service_id} does not exist'}, status = 400)
             else:
