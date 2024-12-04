@@ -20,7 +20,7 @@ def services_view(request):
     items = inventory.objects.all().values()
     category = Category.objects.all().values()
     itemsofuse = ItemOfUse.objects.all().values()
-    # logger.info(items)
+    logger.info(items)
     return render(request,'services1.html',{
         'services': service,
         'items': items,
