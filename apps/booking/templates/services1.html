@@ -50,7 +50,7 @@
                     <tbody id="services_table">
                         {% for service in services %}
                             <tr>
-                                <td><small><span class="hint--bottom" aria-label="{{ service.service.description }}">{{ service.name }}</span></small></td>
+                                <td><small><span class="hint--bottom" aria-label="{{ service.service.description }}">{{ service.service_name }}</span></small></td>
                                 <td><small>{{ service.description }}</small></td>
                                 <td><small>{{ service.quantity }}</small></td>
                                 <td><small>{{ service.cost }}</small></td>
@@ -93,23 +93,23 @@
                     <tbody id="itemTableBody">
                         <!-- Initial data rendered by Django -->
                         {% for item in items %}
-                        <tr data-id="{{ item.id }}">
-                            <td>{{ item.name }}</td>
-                            <td>{{ item.description }}</td>
-                            <td>{{ item.quantity }}</td>
-                            <td>{{ item.cost }}</td>
-                            <td>
-                                <a href="{% url 'booking:service_crud' %}" class="text-info me-2" title="View Item">
-                                    <i class="bx bx-show"></i>
-                                </a>
-                                <a href="{% url 'booking:service_crud' %}" class="text-dark me-2" title="Edit Item">
-                                    <i class="bx bx-edit"></i>
-                                </a>
-                                <a href="#" class="text-danger delete-item" title="Delete Item">
-                                    <i class="bx bx-trash-alt"></i>
-                                </a>
-                            </td>
-                        </tr>
+                            <tr data-id="{{ item.id }}">
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.category_name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.cost }}</td>
+                                <td>
+                                    <a href="{% url 'booking:service_crud' %}" class="text-info me-2" title="View Item">
+                                        <i class="bx bx-show"></i>
+                                    </a>
+                                    <a href="{% url 'booking:service_crud' %}" class="text-dark me-2" title="Edit Item">
+                                        <i class="bx bx-edit"></i>
+                                    </a>
+                                    <a href="#" class="text-danger delete-item" title="Delete Item">
+                                        <i class="bx bx-trash-alt"></i>
+                                    </a>
+                                </td>
+                            </tr>
                         {% endfor %}
                         <!-- Rows added dynamically will go here -->
                     </tbody>

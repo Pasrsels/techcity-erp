@@ -35,11 +35,13 @@ class Payments(models.Model):
         return f"{self.Amount}"
 
 class Services(models.Model): # removed the foreign key to itemofuse 
-    name = models.CharField(max_length= 255)
+    service_name = models.CharField(max_length= 255)
     description = models.CharField(max_length=255, default= 'none')
+    unit_measure = models.ForeignKey('UnitMeasurement', on_delete= models.CASCADE, null=True)
+    service_range = models.CharField(max_length=255, default= 'none')
 
     def __str__(self):
-        return f'{self.name}'
+        return f'{self.service_name}'
 
 class Category(models.Model):
     category_name = models.CharField(max_length=255)
@@ -60,8 +62,6 @@ class ItemOfUse(models.Model):
     cost = models.DecimalField(max_digits=4, decimal_places= 2, default= 0.00)
     description = models.CharField(max_length=255, default= 'none')
     category = models.ForeignKey('Category', on_delete= models.CASCADE)
-    unit_measure = models.ForeignKey('UnitMeasurement', on_delete= models.CASCADE, null=True)
-    service_range = models.CharField(max_length=255, default= 'none')
     
     def __str__(self):
         return f"{self.name}"

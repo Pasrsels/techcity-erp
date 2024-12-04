@@ -1,8 +1,8 @@
 from django.contrib import admin
 from . models import *
 
-admin.site.register(Services)
-admin.site.register(ItemOfUse)
+# admin.site.register(Services)
+# admin.site.register(ItemOfUse)
 admin.site.register(Category)
 admin.site.register(UnitMeasurement)
 admin.site.register(inventory)
