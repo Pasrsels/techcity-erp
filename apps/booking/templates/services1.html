@@ -180,10 +180,23 @@
         </div>
     </div>
 </div>
+<!-- Modal for View -->
+
+<div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <h5 class="modal-title fw-bold p-2">View service</h5>
+            <div class="modal-body">
+                <form action="{% url 'booking:service_crud' %}" method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
-
-
 const modal = new bootstrap.Modal(document.querySelector('#deleteModal'));
 const deleteButtons = document.querySelectorAll('#delete');
 
