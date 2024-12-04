@@ -82,9 +82,9 @@ class inventory(models.Model):
     cost = models.DecimalField(max_digits=5, decimal_places=2 , default= 0.00)
     category = models.ForeignKey('Category', on_delete= models.CASCADE)
     quantity = models.IntegerField(default= 0)
-
     
-
+    
+ 
 class Logs(models.Model):
     ACTION_CHOICES = [
         ('create','create'),

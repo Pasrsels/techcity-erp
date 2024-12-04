@@ -123,7 +123,7 @@ form .form-select {
                 <form id="AddServiceProduct">
                     <div id="div_id_service_name" class="mb-3"> 
                         <label for="id_service_name" class="form-label requiredField">
-                            Service Name<span class="asteriskField">*</span>
+                            Service Name<span class="asteriskField"></span>
                         </label>
                         <div class="d-flex align-content-center">
                             <select name="service_name" class="select form-select" required="" id="id_service"> 
@@ -132,25 +132,17 @@ form .form-select {
                                     <option value="{{service.id}}">{{service.service_name}}</option>
                                 {%endfor%}
                             </select>
-
-                                <a href="{% url 'booking:service_crud' %}" class="icon-action text-dark me-2" title="Edit Item">
-                                    <i class="bx bx-edit"></i>
-                                </a>
-                                <a href="#" class="text-danger delete-item" title="Delete Service">
-                                    <i class="bx bx-trash-alt"></i>
-                                </a>
-                                <button type="button" class="btn btn-sm bx bx-plus" id="id_add_service"></button>
-                        </div>
-=======
                             <button type="button" class="btn btn-sm bx bx-trash" id="id_delete_service"></button>
                             <button class="btn btn-sm bx bx-edit" id="id_edit_service"></button>
                             <button type="button" class="btn btn-sm bx bx-plus" id="id_add_service"></button>
+                            <button class="btn btn-sm bx bx-edit" id="id_edit_service"></button>
+                            <button type="button" class="btn btn-sm bx bx-trash" id="id_delete_service"></button>
                         </div>
                     </div>
                         <!-- add item of form -->
                         <div id="div_id_name" class="mb-3"> 
                             <label for="id_name" class="form-label requiredField">
-                                Item of Use Name<span class="asteriskField">*</span> 
+                                Item of Use<span class="asteriskField"></span> 
                             </label> 
                             <div class="d-flex">
                                 <select name="category" class="select form-select" required id="id_name"> 
@@ -159,15 +151,15 @@ form .form-select {
                                         <option value="{{ name.id }}">{{ name.item_of_use_name }}</option>
                                     {% endfor %}
                                 </select> 
-                                <button type="button" class="btn btn-sm bx bx-trash" id="id_delete_name"></button>
-                                <button type="button" class="btn btn-sm bx bx-edit" id="id_edit_name"></button>
                                 <button type="button" class="btn btn-sm bx bx-plus" id="id_add_name"></button>
+                                <button type="button" class="btn btn-sm bx bx-edit" id="id_edit_name"></button>
+                                <button type="button" class="btn btn-sm bx bx-trash" id="id_delete_name"></button>
                             </div>
                         </div>
                         <div id="div_id_unit_measure" class="mb-3">
                             <label for="id_unit_measure" class="form-label requiredField">
-                                Unit measure
-                                <span class="asteriskField">*</span>
+                                Unit measurement
+                                <span class="asteriskField"></span>
                             </label>
                             <div class="d-flex align-content-center">
                                 <select name="unit_measure" class="select form-select" required="" id="id_unit_measure">
@@ -176,9 +168,9 @@ form .form-select {
                                         <option value="{{um.id}}">{{um.measurement}}</option>
                                     {%endfor%}
                                 </select>
-                                <button type="button" class="btn btn-sm bx bx-trash" id="unitBtn_delete"></button>
+                                <button type="button" class="btn btn-sm bx bx-plus" id="unitBtn"></button>
                                 <button type="button" class="btn btn-sm bx bx-edit" id = "unitBtn_edit"></button>
-                                <button type="button" class="btn btn-sm bx bx-plus" id="unitBtn"></button> 
+                                <button type="button" class="btn btn-sm bx bx-trash" id="unitBtn_delete"></button>
                             </div>
 <<<<<<< HEAD
 >>>>>>> fac68e37a89a5e2e90bbf12fac508d9197692bf3
@@ -271,12 +263,6 @@ form .form-select {
                 <form method="POST">
                     {% csrf_token %}
                     {{ iouForm | crispy}}
-                    <div id="div_id_cost" class="mb-3"> 
-                        <label for="id_cost" class="form-label requiredField">
-                            Cost<span class="asteriskField">*</span> 
-                        </label> 
-                        <input type="number" name="cost" value="0.0" step="0.01" class="numberinput form-control" required id="id_cost"> 
-                    </div> 
                     <div id="div_id_category" class="mb-3"> 
                         <label for="id_category" class="form-label requiredField">
                         Category<span class="asteriskField">*</span> 
@@ -288,10 +274,18 @@ form .form-select {
                                     <option value="{{ category.id }}">{{ category.name }}</option>
                                 {% endfor %}
                             </select>
-                            <button type="button" class="btn btn-sm bx bx-plus" id="id_add_category"></button> 
+                            <button type="button" class="btn btn-sm bx bx-plus" id="id_add_category"></button>
+                            <button type="button" class="btn btn-sm bx bx-edit" id="id_edit_category"></button>
+                            <button type="button" class="btn btn-sm bx bx-trash" id="id_delete_category"></button>
                         </div>
-                     </div> 
-                     <div id="div_id_quantity" class="mb-3"> 
+                    </div>
+                    <div id="div_id_cost" class="mb-3"> 
+                        <label for="id_cost" class="form-label requiredField">
+                            Cost<span class="asteriskField">*</span> 
+                        </label> 
+                        <input type="number" name="cost" value="0.0" step="0.01" class="numberinput form-control" required id="id_cost"> 
+                    </div>
+                    <div id="div_id_quantity" class="mb-3"> 
                         <label for="id_quantity" class="form-label requiredField">
                             Quantity<span class="asteriskField">*</span> 
                         </label> 
@@ -441,7 +435,6 @@ form .form-select {
             {placeholder: 'Select Unit of measurement'}
         )
     })
-
 
     // $(document).ready(function() {
     //     $('#id_name').select2(
