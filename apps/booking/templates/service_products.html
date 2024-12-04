@@ -95,8 +95,9 @@
                         <button id="saveItemofUse" class="'btn btn-primary mt-3">Add Item</button>
                     </div>
                 </div>
-            <div class="col-3">
-                <h4 class="mb-4">Add Service</h4>
+            <div class="col-3 rounded" style="background: #fff;">
+                <h5 class="mt-2 mb-2 fw-bold">Add Service</h5>
+                <hr>
                 <form id="AddServiceProduct">
                     <div id="div_id_service_name" class="mb-3"> 
                         <label for="id_service_name" class="form-label requiredField">
@@ -130,27 +131,10 @@
                                 <button type="button" class="btn btn-sm bx bx-edit" id="id_edit_name"></button>
                                 <button type="button" class="btn btn-sm bx bx-trash" id="id_delete_name"></button>
                             </div>
-                        </div>
-                        <div id="div_id_unit_measure" class="mb-3">
-                            <label for="id_unit_measure" class="form-label requiredField">
-                                Unit measurement
-                                <span class="asteriskField"></span>
-                            </label>
-                            <div class="d-flex align-content-center">
-                                <select name="unit_measure" class="select form-select" required="" id="id_unit_measure">
-                                    <option value="" selected="">---------</option>
-                                    {%for um in unit_measure%}
-                                        <option value="{{um.id}}">{{um.measurement}}</option>
-                                    {%endfor%}
-                                </select>
-                                <button type="button" class="btn btn-sm bx bx-plus" id="unitBtn"></button>
-                                <button type="button" class="btn btn-sm bx bx-edit" id = "unitBtn_edit"></button>
-                                <button type="button" class="btn btn-sm bx bx-trash" id="unitBtn_delete"></button>
-                            </div>
-                        </div>           
-                    <div class="d-flex justify-content-between mt-3">
-                        <button type="reset" class="btn btn-secondary bx bx-reset">Reset</button>
-                        <button type="button" class="btn btn-primary bx bx-save" onclick="saveToCart()">Save</button> <!-- linked from the script  2-->
+                        </div>          
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="reset" class="btn btn-outline-dark bx bx-reset">Reset</button>
+                        <button type="button" class="btn btn-dark btn-sm" onclick="saveToCart()">Save</button> <!-- linked from the script  2-->
                     </div>
                 </form>
             </div>
@@ -418,17 +402,17 @@
         )
     })
 
-    $(document).ready(function() {
-        $('#id_unit_measure').select2(
-            {placeholder: 'Select Unit of measurement'}
-        )
-    })
-
     // $(document).ready(function() {
-    //     $('#id_name').select2(
-    //         {placeholder: 'Select Service'}
+    //     $('#id_unit_measure').select2(
+    //         {placeholder: 'Select Unit of measurement'}
     //     )
     // })
+
+    // // $(document).ready(function() {
+    // //     $('#id_name').select2(
+    // //         {placeholder: 'Select Service'}
+    // //     )
+    // // })
 
     // modal events
     unitBtn.addEventListener('click', ()=>{
