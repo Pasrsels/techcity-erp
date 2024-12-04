@@ -58,7 +58,7 @@
                                 <td><small><span class="hint--bottom" aria-label="{{ service.service.description }}">{{ service.service_name }}</span></small></td>
                                 <td><small>{{ service.description }}</small></td>
                                 <td><small>{{ service.quantity }}</small></td>
-                                <td><small>{{ service.cost }}</small></td>
+                                <td><small>{{ item.cost }}</small></td>
                                 <td><small>{{ service.price }}</small></td>
                                 <td>
                                     <span>
@@ -209,7 +209,50 @@
     </div>
 </div>
 
+<!-- Modal for Editing -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="serviceId">
+                    <div class="mb-3">
+                        <label for="serviceName" class="form-label">Service Name</label>
+                        <input type="text" class="form-control" id="serviceName">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cost" class="form-label">Cost</label>
+                        <input type="text" class="form-control" id="cost">
+                    </div>
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Price</label>
+                        <input type="text" class="form-control" id="price">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+
+
 const modal = new bootstrap.Modal(document.querySelector('#deleteModal'));
 const deleteButtons = document.querySelectorAll('#delete');
 
@@ -376,7 +419,145 @@ function saveChanges() {
             `;
             tableBody.appendChild(newRow);
         }
-        
+
+        document.addEventListener('DOMContentLoaded', () => {
+        // Inline editing functionality
+        document.getElementById('services_table').addEventListener('click', function (event) {
+            if (event.target.closest('.edit-service')) {
+                const row = event.target.closest('tr');
+                const cells = row.querySelectorAll('td');
+
+                // If already in edit mode, save changes
+                if (row.classList.contains('editing')) {
+                    const updatedData = {
+                        name: cells[0].querySelector('input').value,
+                        description: cells[1].querySelector('input').value,
+                        quantity: cells[2].querySelector('input').value,
+                        cost: cells[3].querySelector('input').value,
+                        price: cells[4].querySelector('input').value,
+                    };
+
+                    fetch(`/services/update/${row.dataset.id}/`, {
+                        method: 'PUT',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(updatedData),
+                    })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            if (data.success) {
+                                // Replace inputs with updated values
+                                cells[0].innerHTML = updatedData.name;
+                                cells[1].innerHTML = updatedData.description;
+                                cells[2].innerHTML = updatedData.quantity;
+                                cells[3].innerHTML = updatedData.cost;
+                                cells[4].innerHTML = updatedData.price;
+                                row.classList.remove('editing');
+
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: 'Service updated successfully!',
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Failed to save changes.',
+                                });
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An error occurred while saving changes.',
+                            });
+                        });
+                } else {
+                    // Enter edit mode
+                    row.classList.add('editing');
+                    cells.forEach((cell, index) => {
+                        if (index < 5) {
+                            const value = cell.textContent.trim();
+                            cell.innerHTML = `<input class="form-control form-control-sm" type="text" value="${value}">`;
+                        }
+                    });
+                }
+            }
+        });
+    })
+     
+    function populateModal(id, name, description, quantity, cost, price) {
+
+        document.getElementById("serviceId").value = id;
+        document.getElementById("serviceName").value = name;
+        document.getElementById("description").value = description;
+        document.getElementById("quantity").value = quantity;
+        document.getElementById("cost").value = cost;
+        document.getElementById("price").value = price;
+    }
+
+    function saveChanges() {
+        const id = document.getElementById("serviceId").value;
+        const name = document.getElementById("serviceName").value;
+        const description = document.getElementById("description").value;
+        const quantity = document.getElementById("quantity").value;
+        const cost = document.getElementById("cost").value;
+        const price = document.getElementById("price").value;
+
+        data = {
+            "service_id": id,
+            'service_name': name,
+            'description': description,
+        }
+
+        console.log(data)
+
+        fetch("{% url 'booking:service_crud' %}", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+            body: JSON.stringify(data),
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                
+                Swal.fire({
+                    icon: "success",
+                    title: "Changes Saved",
+                    text: "The service details have been successfully updated.",
+                    confirmButtonText: "OK",
+                });
+
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Save Failed",
+                    text: "Unable to save changes. Please try again.",
+                    confirmButtonText: "OK",
+                });
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "An unexpected error occurred. Please try again later.",
+                confirmButtonText: "OK",
+            });
+        });
+    }
+
 </script>
 {% endblock %}
 
