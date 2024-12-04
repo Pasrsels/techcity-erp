@@ -2324,56 +2324,34 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
             
 
             system_quantity = inventory.quantity
+
+
             quantity_adjustment = 0
-
+            action = ''
             description = ''
+            current_quantity = inventory.quantity
 
-            if po_item.quantity == quantity:
-                if inventory.quantity != quantity:
-                    # adjust quantity
-                    if inventory.quantity < quantity:
-                        quantity_adjustment = quantity - inventory.quantity 
-                        inventory.quantity += quantity_adjustment
-                        action = 'purchase edit +'
-                        description = f'Stock adjustment ({po_item.purchase_order.batch})'
-                        logger.info(f'{quantity_adjustment}: quantity adjusted')
-                    elif inventory.quantity > quantity:
-                        quantity_adjustment = inventory.quantity - quantity 
-                        inventory.quantity = quantity
-                        # quantity_adjustment = quantity
-                        action = 'purchase edit -'
-                        description = f'Stock adjustment ({po_item.purchase_order.batch})'
-                        logger.info(f'{quantity_adjustment}: quantity adjusted')
-                    else:
-                        action = 'price edit'
-                        logger.info(f'{quantity_adjustment}: quantity adjusted')
-                        inventory.quantity = quantity
-                        description = f'Price adjustment ({po_item.purchase_order.batch})'
-                else:
-                    action='price edit'
-                    description=f'Price adjustment ({po_item.purchase_order.batch})'
-            else:
-                # adjust quantity
-                if inventory.quantity < quantity:
-                    quantity_adjustment = quantity - inventory.quantity 
+            # Determine adjustment action
+            if current_quantity != quantity:
+                if current_quantity < quantity:
+                    # Increase inventory quantity
+                    quantity_adjustment = quantity - current_quantity
                     inventory.quantity += quantity_adjustment
                     action = 'purchase edit +'
-                    description = f'Stock adjustment ({po_item.purchase_order.batch})'
-                    logger.info(f'{quantity_adjustment}: quantity adjusted')
-                elif inventory.quantity > quantity:
-                    quantity_adjustment = inventory.quantity - quantity 
+                elif current_quantity > quantity:
+                    # Decrease inventory quantity
+                    quantity_adjustment =  quantity - current_quantity
                     inventory.quantity = quantity
-                    # quantity_adjustment = quantity
                     action = 'purchase edit -'
-                    description = f'Stock adjustment ({po_item.purchase_order.batch})'
-                    logger.info(f'{quantity_adjustment}: quantity adjusted')
-                else:
-                    action = 'price edit'
-                    logger.info(f'{quantity_adjustment}: quantity adjusted')
-                    inventory.quantity = quantity
-                    description = f'Price adjustment ({po_item.purchase_order.batch})'
-            
-            # Update fields in the PurchaseOrderItem
+                description = f"Stock adjustment (Batch: {po_item.purchase_order.batch})"
+                logger.info(f"{quantity_adjustment} units adjusted. New quantity: {inventory.quantity}")
+            else:
+                # No quantity change; handle price adjustment
+                action = 'edit'
+                description = f"Price adjustment (Batch: {po_item.purchase_order.batch})"
+                logger.info("No quantity adjustment needed. Performing price edit.")
+
+            # Update PurchaseOrderItem fields
             po_item.selling_price = selling_price
             po_item.dealer_price = dealer_price
             po_item.expected_profit = expected_profit
@@ -2381,10 +2359,12 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
             po_item.received_quantity = quantity
             po_item.save()
 
+            # Update Inventory fields
             inventory.price = selling_price
             inventory.dealer_price = dealer_price
             inventory.save()
 
+            # Log activity
             ActivityLog.objects.create(
                 purchase_order=po_item.purchase_order,
                 branch=request.user.branch,
@@ -2392,13 +2372,12 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
                 action=action,
                 inventory=inventory,
                 quantity=quantity_adjustment,
-                system_quantity = system_quantity,
+                system_quantity=system_quantity,
                 description=description,
                 total_quantity=inventory.quantity,
-                dealer_price = dealer_price,
-                selling_price = selling_price
+                dealer_price=dealer_price,
+                selling_price=selling_price
             )
-
         except Inventory.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Inventory not found for the product'}, status=404)
 
