@@ -39,12 +39,14 @@ def services(request):
     iouForm = AddIouName()
     categoryForm = AddCategory()
     names = itemOfUseName.objects.all()
+    measurements = UnitMeasurement.objects.all()
     return render(request, 'service_products.html',{
         'names':names,
         'iouForm':iouForm,
         'services': services,
         'service': serviceform,
         'inventory': inventoryform,
+        'measurements':measurements,
         'categoryForm':categoryForm,
         'unit_measurement':unit_measurement
     })
@@ -69,25 +71,28 @@ def service_crud(request):
             description = data.get('description')
             unit_measure = data.get('unit_measure')
             service_range = data.get('service_range')
-            logger.info(name)
 
-            if Services.objects.filter(service_name = name).exists():
+            if Services.objects.filter(service_name = name.lower()).exists():
                 return JsonResponse({'success': False, 'message': f'{name} already exists'}, status = 400)
             
-            um = UnitMeasurement.objects.get(id=unit_measure)
-            
-            Services.objects.create(
-                service_name  = name,
-                description = description,
-                service_range = service_range,
-                unit_measure = um
-            )
+            logger.info(f'service name: {name}')
+            with transaction.atomic():
 
-            service_data = Services.objects.all().values(
-                'id',
-                'service_name'
-            )
-            return JsonResponse({'success': True, 'data': list(service_data)}, status = 200)
+                um = UnitMeasurement.objects.get(id=unit_measure)
+                
+                Services.objects.create(
+                    service_name  = name,
+                    description = description,
+                    service_range = service_range,
+                    unit_measure = um
+                )
+
+                service_data = Services.objects.all().values(
+                    'id',
+                    'service_name'
+                )
+                
+                return JsonResponse({'success': True, 'data': list(service_data)}, status = 200)
         except Exception as e:
             return JsonResponse({'success': False, 'message': f'{e}'}, status = 400)
     #update
@@ -128,7 +133,7 @@ def ServiceCrud(request):
         [
             service_name:str,
             items = {
-                item_of_use_name: str,
+                name: str,
                 service_range: str,
                 unit_of_measurement_id: int,
                 cost:float,
@@ -143,9 +148,10 @@ def ServiceCrud(request):
             description = data.get('description', '')
             items = data.get('items', [])
         
-            if not service_name  or not items or not description :
+            if not service_name  or not items or not description:
                 return JsonResponse({'success': False, 'message': 'please fill in the missing fields'}, status = 400)
-            elif not ServiceRange.objects.filter(name = items.get('service_range')).exists():
+            
+            if not ServiceRange.objects.filter(name = items.get('service_range').lower()).exists():
                 service_ranging = ServiceRange.objects.create(
                     service_range = items.get('service_range')
                 )

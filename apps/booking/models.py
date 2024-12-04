@@ -35,7 +35,7 @@ class Payments(models.Model):
         return f"{self.Amount}"
 
 class Services(models.Model): # removed the foreign key to itemofuse 
-    service_name = models.CharField(max_length= 255)
+    service_name = models.CharField(max_length= 255, default='')
     description = models.CharField(max_length=255, default= 'none')
     unit_measure = models.ForeignKey('UnitMeasurement', on_delete= models.CASCADE, null=True)
     service_range = models.CharField(max_length=255, default= 'none')

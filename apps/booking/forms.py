@@ -4,7 +4,7 @@ from .models import *
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = Services
-        exclude = ['delete']
+        exclude = ['delete', 'service_range', 'unit_measure']
 
 class UnitForm(forms.ModelForm):
     class Meta:

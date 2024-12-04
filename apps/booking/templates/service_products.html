@@ -132,22 +132,7 @@
                                 </select> 
                                 <button type="button" class="btn btn-sm bx bx-plus" id="id_add_name"></button>
                             </div>
-                        </div>
-                        <div id="div_id_unit_measure" class="mb-3">
-                            <label for="id_unit_measure" class="form-label requiredField">
-                                Unit measure
-                                <span class="asteriskField">*</span>
-                            </label>
-                            <div class="d-flex align-content-center">
-                                <select name="unit_measure" class="select form-select" required="" id="id_unit_measure">
-                                    <option value="" selected="">---------</option>
-                                    {%for um in unit_measurement%}
-                                        <option value="{{um.id}}">{{um.measurement}}</option>
-                                    {%endfor%}
-                                </select>
-                                  <button type="button" class="btn btn-sm bx bx-plus" id="unitBtn"></button> 
-                            </div>
-                        </div>           
+                        </div>        
                     <div class="d-flex justify-content-between mt-3">
                         <button type="reset" class="btn btn-secondary">Reset</button>
                         <button type="button" class="btn btn-primary" onclick="saveToCart()">Save</button> <!-- linked from the script  2-->
@@ -169,14 +154,29 @@
                 <form id="addServiceForm" action="{% url 'booking:service_crud' %}" method="POST">
                     {% csrf_token %}
                     {{service | crispy}}
+                    <div id="div_id_unit_measure" class="mb-3">
+                        <label class="form-label">
+                            Unit measure
+                            <span class="asteriskField">*</span>
+                        </label>
+                        <div class="d-flex align-content-center">
+                            <select name="unit_measure" class="select form-select" required id="id_unit_measure">
+                                <option value="">---------</option>
+                                {% for um in measurements %}
+                                    <option value="{{um.id}}">{{um.measurement}}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="btn btn-sm bx bx-plus" id="unitBtn"></button> 
+                        </div>
+                    </div>   
                     <div id="div_id_service_range" class="mb-3">
                         <label for="id_service_range" class="form-label requiredField">
-                            Munber Of Units Per Service
+                            Number Of Units Per Service
                             <span class="asteriskField">*</span>
                         </label>
                         <div class="d-flex align-items-center">
                             <div class="d-flex border p-2 align-items-center">
-                                <input type="checkbox" name="" id="fiexd_value">
+                                <input type="checkbox" name="" id="fixed_value">
                                 <label for="" class="mx-2">Fixed</label>
                             </div>
                             <div class="d-flex border p-2 align-items-center mx-2">
@@ -198,11 +198,11 @@
                             </label>
                             <div class="d-flex align-items-center">
                                 <div class="d-flex align-items-center">
-                                    <label for="from" id="range_inp_from">From</label>
+                                    <label for="from">From</label>
                                     <input type="number" name="range_inp" id="range_inp_from" class="form-control">
                                 </div>
                                 <div class="d-flex align-items-center mx-1">
-                                    <label for="from" id="range_inp_to">To</label>
+                                    <label for="to">To</label>
                                     <input type="number" name="range_inp" id="range_inp_to" class="form-control">
                                 </div>
                             </div>
@@ -211,7 +211,7 @@
                     <div class="d-flex justify-content-end">
                         <button type="button" class="btn btn-secondary btn-sm" id="add_service">
                             <i class="bx bx-save"></i>
-                            Service
+                            save
                         </button>
                     </div>
                 </form>
@@ -363,6 +363,9 @@
 
 
 <script>
+    // global
+    let service = ''
+
     // modals
     const unitModal = new bootstrap.Modal(document.getElementById('addunitmeasureModal'))
     const iouModal = new bootstrap.Modal(document.getElementById('addIouName'));
@@ -383,7 +386,8 @@
 
 
     // elements
-    const iouEl = document.getElementById('id_name')
+    const iouEl = document.getElementById('id_name');
+    const unitOfMeasurement = document.getElementById('id_unit_measure');
 
     $(document).ready(function() {
         $('#id_service').select2(
@@ -418,7 +422,33 @@
         serviceModal.show()
     })
 
+    // console.log(unitOfMeasurement)
+    // unitOfMeasurement.addEventListener("change", function () {
+    //     const selectedIndex = unitOfMeasurement.selectedIndex;
+    //     const uomName = unitOfMeasurement.options[selectedIndex].textContent;
+    //     console.log(`Selected Unit of Measurement: ${uomName}`);
+    // });
 
+
+    const fixed = document.getElementById('fixed');
+    const range = document.getElementById('range');
+    const fixedEl = document.getElementById('fixed_value')
+    const rangeEl = document.getElementById('range_value')
+
+    fixedEl.addEventListener('change', ()=>{
+        fixed.classList.remove('d-none')
+        range.classList.add('d-none')
+        rangeEl.checked = false
+        service = 'fixed'
+    })
+
+    rangeEl.addEventListener('change', ()=>{
+        fixed.classList.add('d-none')
+        range.classList.remove('d-none')
+        fixedEl.checked=false
+        service = 'range'
+    })
+    
     
     iouEl.addEventListener('change', ()=>{
         console.log('iou')
@@ -454,23 +484,23 @@
     // service add event 
     submitService.addEventListener('click', ()=>{
 
-        /* posting service name and description form field and on success populating the unit of measure select */
-
+        let range = ''
         const name = document.getElementById('id_service_name').value;
         const description = document.getElementById('id_description').value;
         const unitOfMeasurement = document.getElementById('id_unit_measure');
-        const serviceRange = document.getElementById('id_service_range')
 
         const uomName = unitOfMeasurement.options[unitOfMeasurement.selectedIndex].textContent;
 
         // make a condition to check the type of range to use
-        if(serviceRange === 'fixed'){
-            fixed = document.getElementById('fixed_inp')
+        console.log('service', service, 'name', uomName, 'unitOfMeasurement', unitOfMeasurement)
+        if(service === 'fixed'){
+            const fixed = document.getElementById('fixed_inp').value
             range = `${fixed}${uomName}`;
-        }else if (serviceRange === 'range'){
+        }else if (service === 'range'){
             const to = document.getElementById('range_inp_to').value
             const from =  document.getElementById('range_inp_from').value
-            range = `${to}${uomName} - ${from}${uomName}`
+            console.log('to', to, 'from', from)
+            range = `${from}${uomName} - ${to}${uomName}`
         }else{
             range = '';
         }
@@ -483,8 +513,6 @@
         }
 
         console.log('Service data: ', data) 
-
-        return;
 
         fetch("{% url 'booking:service_crud' %}",{
             method:'POST',
@@ -721,18 +749,19 @@
         */
         const serviceNameEl = document.getElementById('id_service')
         const itemOfUseName = document.getElementById('id_name').value;
-        const unitOfMeasurement = document.getElementById('id_unit_measure')
-        const serviceRange = document.getElementById('id_service_range')
+        
+        const service = document.getElementById('id_service_range')
         let fixed = ''
         let range = ''
 
+        const unitOfMeasurement = document.getElementById('id_unit_measure')
         // to get the item of use name to be readable in the table we need to access the  options part of it
         const unitOfMeasurementName = unitOfMeasurement.options[unitOfMeasurement.selectedIndex].textContent
 
         // make a condition to check the type of range to use
-        if(serviceRange === 'fixed'){
+        if(service === 'fixed'){
             fixed = document.getElementById('fixed_inp')
-        }else if (serviceRange === 'range'){
+        }else if (service === 'range'){
             const to = document.getElementById('range_inp_to').value
             const from =  document.getElementById('range_inp_from').value
             range = `${to}${unitOfMeasurementName} - ${from}${unitOfMeasurementName}`
@@ -800,31 +829,6 @@
         }
     }
     isCartEmpty()
-
-    let service = ''
-    const serviceEl = document.getElementById('id_service_range')
-    serviceEl.addEventListener('change', ()=>{
-        const fixed = document.getElementById('fixed');
-        const range = document.getElementById('range');
-        let value = serviceEl.value;
-
-        if(value === 'fixed'){
-            fixed.classList.remove('d-none')
-            range.classList.add('d-none')
-            service = value
-        }else if (value === 'range'){
-            fixed.classList.add('d-none')
-            range.classList.remove('d-none')
-            service = value
-        }else{
-            fixed.classList.add('d-none')
-            range.classList.add('d-none')
-            service = null
-        }
-        console.log(service, 'value')
-
-    })
-
 
     // document.getElementById('saveItems').addEventListener('submit', function(e){
     //     e.preventDefault();
