@@ -35,7 +35,7 @@ class Payments(models.Model):
         return f"{self.Amount}"
 
 class Services(models.Model): # removed the foreign key to itemofuse 
-    service_name = models.CharField(max_length= 255)
+    service_name = models.CharField(max_length= 255, default='')
     description = models.CharField(max_length=255, default= 'none')
     unit_measure = models.ForeignKey('UnitMeasurement', on_delete= models.CASCADE, null=True)
     service_range = models.CharField(max_length=255, default= 'none')
@@ -56,7 +56,7 @@ class itemOfUseName(models.Model):
          return self.item_of_use_name
      
 class ItemOfUse(models.Model):
-    service = models.ForeignKey(Services, on_delete=models.CASCADE)
+    service = models.ManyToManyField(Services)
     name = models.ForeignKey(itemOfUseName, on_delete=models.CASCADE)
     quantity = models.IntegerField( default= 0)
     cost = models.DecimalField(max_digits=4, decimal_places= 2, default= 0.00)
