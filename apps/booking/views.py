@@ -119,14 +119,14 @@ def service_crud(request):
     #delete
     elif request.method == "DELETE":
         data = json.loads(request.body)
-        service_id = data.get('service_id')
-        logger.info(service_id)
+        service_id = data('service_id')
         if Services.objects.filter(id = service_id).exists():
             service_del = Services.objects.get(id= service_id)
-            service_del.delete()
+            service_del.delete = True
+            service_del.save()
             return JsonResponse({'success':True}, status=200)
-        return JsonResponse({'success': False, 'message': 'cannot delete none existing field'}, status = 400)
-    return JsonResponse({'success':False, 'message': 'invalid request'}, status =  500)
+        return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
+    return JsonResponse({'success':False, 'response': 'invalid request'}, status =  500)
 
 
 
