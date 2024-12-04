@@ -60,9 +60,9 @@ class ItemOfUse(models.Model):
     name = models.ForeignKey(itemOfUseName, on_delete=models.CASCADE)
     quantity = models.IntegerField( default= 0)
     cost = models.DecimalField(max_digits=4, decimal_places= 2, default= 0.00)
-    description = models.CharField(max_length=255, default= 'none')
+    description = models.CharField(max_length=255, default= 'none', null= True)
     category = models.ForeignKey('Category', on_delete= models.CASCADE)
-    
+    pass
     def __str__(self):
         return f"{self.name}"
 
@@ -82,9 +82,9 @@ class inventory(models.Model):
     cost = models.DecimalField(max_digits=5, decimal_places=2 , default= 0.00)
     category = models.ForeignKey('Category', on_delete= models.CASCADE)
     quantity = models.IntegerField(default= 0)
-
     
-
+    
+ 
 class Logs(models.Model):
     ACTION_CHOICES = [
         ('create','create'),

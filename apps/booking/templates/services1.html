@@ -4,22 +4,23 @@
 {% block title %}Services{% endblock %}
 
 {% block content %}
-<div class="nav-container mt-5" style="background-color: rgb(90, 88, 88); padding: 6px; border-radius: 2px; ">
-    <div class="d-flex justify-content-left me-3">
-    <h2 class="text-center mb-4">Services</h2>
+<div class="container me-5">
+    <div class="Services">
+        <div class="nav-services">
+            <div class="d-flex align-items-center justify-content-between rounded shadow header p-2 mb-4">
+                <h5>Services </h5>
+                <div>
+                    <a class="btn btn-outline-dark btn-sm ms-3 w-15 h-5" href="{% url 'booking:services' %}">Add Services</a>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
-<div class="d-flex justify-content-spacearound align-items-center mb-3">
-    <div class="input-group w-75 mr-10">
-        <input type="text" class="form-control" id="searchBar" placeholder="search...">
-    </div>
-    <a class="btn btn-outline-dark ms-10 btn-sm" href="{%url 'booking:services'%}">Add Services</a> 
-</div>
-    <div class="nav-container mt-5" style="background-color: black; padding: 5px; border-radius: 2px; ">
+    
+    <div class="nav-container" style="background-color: black; padding: 5px; border-radius: 2px; margin-top: 150px; ">
         <div class="d-flex justify-content-left me-3">
             <ul class="nav nav-pills justify-content-center" id="tableNav" role="tablist">
                 <li class="nav-item">
-                    <button class="nav-link text-white active" id="services-tab" data-bs-toggle="tab" data-bs-target="#services-content" type="button" role="tab" aria-controls="services-content" aria-selected="true">
+                    <button class="nav-link text-white active" id="service-tab" data-bs-toggle="tab" data-bs-target="#service-content" type="button" role="tab" aria-controls="service-content" aria-selected="true">
                         Services
                     </button>
                 </li>
@@ -31,11 +32,16 @@
             </ul>
         </div>
     </div>
+    <div class="d-flex justify-content-end ms-3">
+        <div class="input-group w-25">
+            <input type="text" class="form-control" id="searchBar" placeholder="search...">
+        </div>
+    </div>
     <div class="tab-content mt-3">
         <!-- Services Table -->
-        <div class="tab-pane fade show active" id="services-content" role="tabpanel" aria-labelledby="services-tab">
+        <div class="tab-pane fade show active" id="service-content" role="tabpanel" aria-labelledby="service-tab">
             <div class="table-responsive">
-                <table class="table border table-bordered table-striped table-hover table-sm rounded w-100" id="services">
+                <table class="table border table-bordered table-striped table-hover table-sm rounded w-100" id="service">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -52,11 +58,11 @@
                                 <td><small><span class="hint--bottom" aria-label="{{ service.service.description }}">{{ service.service_name }}</span></small></td>
                                 <td><small>{{ service.description }}</small></td>
                                 <td><small>{{ service.quantity }}</small></td>
-                                <td><small>{{ service.cost }}</small></td>
+                                <td><small>{{ item.cost }}</small></td>
                                 <td><small>{{ service.price }}</small></td>
                                 <td>
                                     <span>
-                                        <a href="{% url 'booking:service_crud'  %}" class="text-warning me-2" title="Edit Item">
+                                        <a href="#" class="text-dark" title="Edit Item" data-bs-toggle="modal" data-bs-target="#editModal" onclick="populateModal('{{ service.id }}', '{{ service.service_name }}', '{{ service.description }}', '{{ service.quantity }}', '{{ service.cost }}', '{{ service.price }}')">
                                             <i class="bx bx-edit"></i>
                                         </a>
                                     </span>
@@ -65,9 +71,10 @@
                                             <i class="bx bx-show"></i>
                                         </a>
                                     </span>
-                                    <span id="delete" data-id="{{ service.id }}" onclick="serviceId(this)" class="text-dark">
-                                            <i class="bx bx-trash-alt"></i>
-                                    </span>
+                            
+                                        <span id='delete' data-id="{{ service.id }}" onclick="serviceId(this)" class="text-dark">
+                                            <i class='bx bx-trash-alt'></i>
+                                        </span>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -92,8 +99,8 @@
                         <!-- Initial data rendered by Django -->
                         {% for item in items %}
                             <tr data-id="{{ item.id }}">
-                                <td>{{ item.name }}</td>
-                                <td>{{ item.category_name }}</td>
+                                <td>{{ item.name__item_of_use_name }}</td>
+                                <td>{{ item.description }}</td>
                                 <td>{{ item.quantity }}</td>
                                 <td>{{ item.cost }}</td>
                                 <td>
@@ -114,83 +121,442 @@
                 </table>
             </div>
         </div>
+
+        <tbody id="services_table">
+            {% for service in services %}
+            <tr>
+                <td><small><span class="hint--bottom" aria-label="{{ service.service.description }}">{{ service.service_name }}</span></small></td>
+                <td><small>{{ service.description }}</small></td>
+                <td><small>{{ service.quantity }}</small></td>
+                <td><small>{{ service.cost }}</small></td>
+                <td><small>{{ service.price }}</small></td>
+                <td>
+                    <span>
+                        <a href="#" class="text-dark" title="Edit Item" data-bs-toggle="modal" data-bs-target="#editModal" onclick="populateModal({{ service.id }}, '{{ service.service_name }}', '{{ service.description }}', '{{ service.quantity }}', '{{ service.cost }}', '{{ service.price }}')">
+                            <i class="bx bx-edit"></i>
+                        </a>
+                    </span>
+                    <span>
+                        <a href="{% url 'booking:service_crud' %}" class="text-dark">
+                            <i class="bx bx-show"></i>
+                        </a>
+                    </span>
+                    <span id="delete" data-id="{{ service.id }}" onclick="productId(this)" class="text-dark">
+                        <i class="bx bx-trash-alt"></i>
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
         
+        <!-- Modal for Editing -->
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">Edit Service</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editForm">
+                            <input type="hidden" id="serviceId">
+                            <div class="mb-3">
+                                <label for="serviceName" class="form-label">Service Name</label>
+                                <input type="text" class="form-control" id="serviceName">
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity</label>
+                                <input type="number" class="form-control" id="quantity">
+                            </div>
+                            <div class="mb-3">
+                                <label for="cost" class="form-label">Cost</label>
+                                <input type="text" class="form-control" id="cost">
+                            </div>
+                            <div class="mb-3">
+                                <label for="price" class="form-label">Price</label>
+                                <input type="text" class="form-control" id="price">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="saveChanges()">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+         <!-- delete modal -->
+         <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body" id='payment_content'>
+                        <p class="h5 fw-bold">Confirm Service deletion</p>
+                            <div>
+                                <button class="w-100 btn btn-secondary btn-sm yes">
+                                    yes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Editing -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="serviceId">
+                    <div class="mb-3">
+                        <label for="serviceName" class="form-label">Service Name</label>
+                        <input type="text" class="form-control" id="serviceName">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cost" class="form-label">Cost</label>
+                        <input type="text" class="form-control" id="cost">
+                    </div>
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Price</label>
+                        <input type="text" class="form-control" id="price">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
-    document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(button => {
-        button.addEventListener('click', function () {
-            const tableId = this.getAttribute('data-bs-target').substring(1);
-            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('show', 'active'));
-            document.getElementById(tableId).classList.add('show', 'active');
+
+
+const modal = new bootstrap.Modal(document.querySelector('#deleteModal'));
+const deleteButtons = document.querySelectorAll('#delete');
+
+
+deleteButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+        const service_id = button.getAttribute('data-id');
+        document.querySelector('.yes').setAttribute('data-id', service_id);
+        modal.show();
+    });
+});
+
+document.querySelector('.yes').addEventListener('click', function () {
+    const service_id = this.getAttribute('data-id');
+
+    // Perform the AJAX request to delete the service
+    $.ajax({
+        url: "{% url 'booking:service_crud' %}?service_id=" + service_id,
+        type: 'DELETE', // If deletion requires GET, otherwise change to 'DELETE' or 'POST'
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}", // Include CSRF token if required
+        },
+    })
+        .done(function (response) {
+            // Hide the delete confirmation modal
+            modal.hide();
+
+            // Show a success modal or message
+            Swal.fire({
+                icon: 'success',
+                title: 'Deleted',
+                text: 'The service has been deleted successfully.',
+                timer: 2000,
+            });
+
+            // Reload the page after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        })
+        .fail(function (error) {
+            // Handle errors (e.g., failed to delete)
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to delete the service. Please try again.',
+            });
         });
-    });
+});
 
-    document.getElementById('searchBar').addEventListener('input', function () {
-        const query = this.value.toLowerCase();
-        const rows = document.querySelectorAll('tbody tr');
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(query) ? '' : 'none';
-        });
-    });
 
-    // Event delegation for dynamically added delete buttons
-    document.getElementById('itemTableBody').addEventListener('click', function (event) {
-        if (event.target.closest('.delete-item')) {
-            const row = event.target.closest('tr');
-            const itemId = row.getAttribute('data-id');
+function populateModal(id, name, description, quantity, cost, price) {
 
-            if (confirm("Are you sure you want to delete this item?")) {
-                // Perform the delete request
-                fetch(`/items/delete/${itemId}/`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',
-                    },
-                })
-                    .then(response => {
-                        if (response.ok) {
-                            alert('Item deleted successfully.');
-                            row.remove(); // Remove the row from the table
-                        } else {
-                            alert('Failed to delete the item.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('An error occurred.');
-                    });
-            }
-        }
-    });
+    document.getElementById("serviceId").value = id;
+    document.getElementById("serviceName").value = name;
+    document.getElementById("description").value = description;
+    document.getElementById("quantity").value = quantity;
+    document.getElementById("cost").value = cost;
+    document.getElementById("price").value = price;
+}
 
-    // Function to add a new row dynamically
-    function addNewItem(itemData) {
-        const tableBody = document.getElementById('itemTableBody');
-        const newRow = document.createElement('tr');
-        newRow.setAttribute('data-id', itemData.id);
+function saveChanges() {
+    const id = document.getElementById("serviceId").value;
+    const name = document.getElementById("serviceName").value;
+    const description = document.getElementById("description").value;
+    const quantity = document.getElementById("quantity").value;
+    const cost = document.getElementById("cost").value;
+    const price = document.getElementById("price").value;
 
-        newRow.innerHTML = `
-            <td>${itemData.name}</td>
-            <td>${itemData.description}</td>
-            <td>${itemData.quantity}</td>
-            <td>${itemData.cost}</td>
-            <td>
-                <a href="/items/view/${itemData.id}/" class="text-info me-2" title="View Item">
-                    <i class="bx bx-show"></i>
-                </a>
-                <a href="/items/edit/${itemData.id}/" class="text-warning me-2" title="Edit Item">
-                    <i class="bx bx-edit"></i>
-                </a>
-                <a href="#" class="text-danger delete-item" title="Delete Item">
-                    <i class="bx bx-trash-alt"></i>
-                </a>
-            </td>
-        `;
-        tableBody.appendChild(newRow);
+    data = {
+        "service_id": id,
+        'service_name': name,
+        'description': description,
     }
 
-    
+    console.log(data)
+
+    fetch("{% url 'booking:service_crud' %}", {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}",
+        },
+        body: JSON.stringify(data),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                const row = document.querySelector(`#services_table tr[data-id="${id}"]`);
+                row.cells[0].innerText = name;
+                row.cells[1].innerText = description;
+                row.cells[2].innerText = quantity;
+                row.cells[3].innerText = cost;
+                row.cells[4].innerText = price;
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Changes Saved",
+                    text: "The service details have been successfully updated.",
+                    confirmButtonText: "OK",
+                });
+
+                bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Save Failed",
+                    text: "Unable to save changes. Please try again.",
+                    confirmButtonText: "OK",
+                });
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "An unexpected error occurred. Please try again later.",
+                confirmButtonText: "OK",
+            });
+        });
+}
+
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(button => {
+            button.addEventListener('click', function () {
+                const tableId = this.getAttribute('data-bs-target').substring(1);
+                document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('show', 'active'));
+                document.getElementById(tableId).classList.add('show', 'active');
+            });
+        });
+
+        document.getElementById('searchBar').addEventListener('input', function () {
+            const query = this.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+
+        
+        // Function to add a new row dynamically
+        function addNewItem(itemData) {
+            const tableBody = document.getElementById('itemTableBody');
+            const newRow = document.createElement('tr');
+            newRow.setAttribute('data-id', itemData.id);
+
+            newRow.innerHTML = `
+                <td>${itemData.name}</td>
+                <td>${itemData.description}</td>
+                <td>${itemData.quantity}</td>
+                <td>${itemData.cost}</td>
+                <td>
+                    <a href="/items/view/${itemData.id}/" class="text-info me-2" title="View Item">
+                        <i class="bx bx-show"></i>
+                    </a>
+                    <a href="#" class="text-dark edit-item" title="Edit Item">
+                        <i class="bx bx-edit"></i>
+                    </a>
+                    <a href="#" class="text-dark delete-item" title="Delete Item">
+                        <i class="bx bx-trash-alt"></i>
+                    </a>
+                </td>
+            `;
+            tableBody.appendChild(newRow);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+        // Inline editing functionality
+        document.getElementById('services_table').addEventListener('click', function (event) {
+            if (event.target.closest('.edit-service')) {
+                const row = event.target.closest('tr');
+                const cells = row.querySelectorAll('td');
+
+                // If already in edit mode, save changes
+                if (row.classList.contains('editing')) {
+                    const updatedData = {
+                        name: cells[0].querySelector('input').value,
+                        description: cells[1].querySelector('input').value,
+                        quantity: cells[2].querySelector('input').value,
+                        cost: cells[3].querySelector('input').value,
+                        price: cells[4].querySelector('input').value,
+                    };
+
+                    fetch(`/services/update/${row.dataset.id}/`, {
+                        method: 'PUT',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(updatedData),
+                    })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            if (data.success) {
+                                // Replace inputs with updated values
+                                cells[0].innerHTML = updatedData.name;
+                                cells[1].innerHTML = updatedData.description;
+                                cells[2].innerHTML = updatedData.quantity;
+                                cells[3].innerHTML = updatedData.cost;
+                                cells[4].innerHTML = updatedData.price;
+                                row.classList.remove('editing');
+
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: 'Service updated successfully!',
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Failed to save changes.',
+                                });
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An error occurred while saving changes.',
+                            });
+                        });
+                } else {
+                    // Enter edit mode
+                    row.classList.add('editing');
+                    cells.forEach((cell, index) => {
+                        if (index < 5) {
+                            const value = cell.textContent.trim();
+                            cell.innerHTML = `<input class="form-control form-control-sm" type="text" value="${value}">`;
+                        }
+                    });
+                }
+            }
+        });
+    })
+     
+    function populateModal(id, name, description, quantity, cost, price) {
+
+        document.getElementById("serviceId").value = id;
+        document.getElementById("serviceName").value = name;
+        document.getElementById("description").value = description;
+        document.getElementById("quantity").value = quantity;
+        document.getElementById("cost").value = cost;
+        document.getElementById("price").value = price;
+    }
+
+    function saveChanges() {
+        const id = document.getElementById("serviceId").value;
+        const name = document.getElementById("serviceName").value;
+        const description = document.getElementById("description").value;
+        const quantity = document.getElementById("quantity").value;
+        const cost = document.getElementById("cost").value;
+        const price = document.getElementById("price").value;
+
+        data = {
+            "service_id": id,
+            'service_name': name,
+            'description': description,
+        }
+
+        console.log(data)
+
+        fetch("{% url 'booking:service_crud' %}", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+            body: JSON.stringify(data),
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                
+                Swal.fire({
+                    icon: "success",
+                    title: "Changes Saved",
+                    text: "The service details have been successfully updated.",
+                    confirmButtonText: "OK",
+                });
+
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Save Failed",
+                    text: "Unable to save changes. Please try again.",
+                    confirmButtonText: "OK",
+                });
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "An unexpected error occurred. Please try again later.",
+                confirmButtonText: "OK",
+            });
+        });
+    }
 
 </script>
 {% endblock %}

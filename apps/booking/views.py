@@ -17,7 +17,7 @@ from loguru import logger
 def services_view(request):
     serviceform = ServiceForm()
     service = Services.objects.all().values()
-    items = inventory.objects.all().values()
+    items = ItemOfUse.objects.all().values('service__id', 'description', 'name__item_of_use_name', 'cost', 'quantity')
     category = Category.objects.all().values()
     itemsofuse = ItemOfUse.objects.all().values()
     logger.info(items)
@@ -39,12 +39,14 @@ def services(request):
     iouForm = AddIouName()
     categoryForm = AddCategory()
     names = itemOfUseName.objects.all()
+    category = Category.objects.all().values()
     measurements = UnitMeasurement.objects.all()
     return render(request, 'service_products.html',{
         'names':names,
         'iouForm':iouForm,
         'services': services,
         'service': serviceform,
+        'category_data': category,
         'inventory': inventoryform,
         'measurements':measurements,
         'categoryForm':categoryForm,
@@ -100,14 +102,16 @@ def service_crud(request):
     if request.method == "PUT":
         try:
             data = json.loads(request.body)
-            service_id = data('service_id')
-            service_name = data('service_name')
-            
+            service_id = data.get('service_id')
+            service_name = data.get('service_name')
+            service_description = data.get('description')
+            logger.info(service_name,service_description)
             if not Services.objects.filter(id = service_id).exists():
                 return JsonResponse({'success': False, 'message': f'user with {service_id} does not exist'}, status = 400)
             else:
                 service_edit = Services.objects.get(id = service_id)
-                service_edit.name = service_name
+                service_edit.service_name = service_name
+                service_edit.description = service_description
                 service_edit.save()
                 return JsonResponse({'success':True},status = 200)
         except Exception as e:
@@ -743,7 +747,8 @@ def item_of_use_crud(request):
                     name,
                     quantity,
                     cost,
-                    category
+                    category,
+                    description
                 }]
             ]
         """
@@ -753,6 +758,7 @@ def item_of_use_crud(request):
             cost = data.get('cost')
             category = data.get('category')
             quantity = data.get('quantity')
+            description = data.get('description')
             name = name.lower()
 
             logger.info(f'name: {name}')
@@ -770,6 +776,7 @@ def item_of_use_crud(request):
 
                 ItemOfUse.objects.create(
                     name = item,
+                    description = description,
                     cost=cost,
                     category=category,
                     quantity=quantity,
