@@ -377,9 +377,9 @@
     const unitMeasurementBtn = document.getElementById('unit_measurement');
     const unitBtn = document.getElementById('unitBtn');
     const serviceBtn = document.getElementById('id_add_service');
-    const addIouBtn = document.getElementById('add_iou');
+    
 
-    const submitIou = document.getElementById('add_iou_name')
+    const submitIou = document.getElementById('add_iou')
     const submitCat = document.getElementById('id_submit_category')
     const submitService = document.getElementById('add_service')
 
@@ -405,6 +405,7 @@
         )
     })
 
+
     // $(document).ready(function() {
     //     $('#id_name').select2(
     //         {placeholder: 'Select Service'}
@@ -428,7 +429,7 @@
         serviceModal.show()
     })
 
-    addIouBtn .addEventListener('click', ()=>{
+    addIouBtn.addEventListener('click', ()=>{
         serviceModal.show()
     })
 
@@ -594,64 +595,64 @@
     })
 
     // item of use submit event
-    // submitIou.addEventListener('click', ()=>{
+    submitIou.addEventListener('click', ()=>{
 
-    //     /* posting unit of meaasurement form field and on success populating the unit of measure select */
+        /* posting unit of meaasurement form field and on success populating the unit of measure select */
 
-    //     const name = document.getElementById('id_item_of_use_name').value;
-    //     const cost = document.getElementById('id_cost').value
-    //     const quantity = document.getElementById('id_quantity').value
-    //     const category = document.getElementById('id_category').value
+        const name = document.getElementById('id_item_of_use_name').value;
+        const cost = document.getElementById('id_cost').value
+        const quantity = document.getElementById('id_quantity').value
+        const category = document.getElementById('id_category').value
 
-    //     const data = {
-    //         'name':name,
-    //         'cost':cost,
-    //         'quantity':quantity,
-    //         'category':category
-    //     }
+        const data = {
+            'name':name,
+            'cost':cost,
+            'quantity':quantity,
+            'category':category
+        }
 
-    //     console.log('Iou data: ', data) 
+        console.log('Iou data: ', data)
 
-    //     fetch("{% url 'booking:item_of_use_crud' %}",{
-    //         method:'POST',
-    //         headers:{
-    //             'content-Type':'application/json',
-    //             'X-CSRFToken': 
-    //         },
-    //         body: JSON.stringify(data)
-    //     })
-    //     .then(response => response.json())
-    //     .then(data =>{
-    //         console.log(data, 'data')
-    //         if (data.success){
+        fetch("{% url 'booking:item_of_use_crud' %}",{
+            method:'POST',
+            headers:{
+                'content-Type':'application/json',
+                'X-CSRFToken': {getCSRFToken}
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data =>{
+            console.log(data, 'data')
+            if (data.success){
 
-    //             iouModal.hide()
+                iouModal.hide()
 
-    //             Swal.fire({
-    //                 icon:'success',
-    //                 text:'Item of use Successfully saved.',
-    //                 title:'succcess'
-    //             }).then(()=>{
-    //                 const iouEl = document.getElementById('id_name')
-    //                 iouEl.innerHTML = ''
+                Swal.fire({
+                    icon:'success',
+                    text:'Item of use Successfully saved.',
+                    title:'succcess'
+                }).then(()=>{
+                    const iouEl = document.getElementById('id_name')
+                    iouEl.innerHTML = ''
                     
-    //                 iouEl.innerHTML = `<option value = '' class='text-muted'>Select Item of Use</option>`;
+                    iouEl.innerHTML = `<option value = '' class='text-muted'>Select Item of Use</option>`;
 
-    //                 data.data.forEach((item)=>{
-    //                     iouEl.innerHTML += `
-    //                         <option value = '${item.id}'>${item.item_of_use_name}</option>
-    //                 `
-    //             })
-    //         })
-    //         }else{
-    //             Swal.fire({
-    //                 icon:'error',
-    //                 title:'error',
-    //                 text:data.message
-    //             })
-    //         }
-    //     })
-    // })
+                    data.data.forEach((item)=>{
+                        iouEl.innerHTML += `
+                            <option value = '${item.id}'>${item.item_of_use_name}</option>
+                    `
+                })
+            })
+            }else{
+                Swal.fire({
+                    icon:'error',
+                    title:'error',
+                    text:data.message
+                })
+            }
+        })
+    })
 
     // unit of measurement submit event
     unitMeasurementBtn.addEventListener('click', ()=>{

@@ -736,6 +736,7 @@ def item_of_use_crud(request):
             data = [
                 servivce:int (id)
                 itemsofsue = [{
+                    name,
                     quantity,
                     cost,
                     category
@@ -746,6 +747,9 @@ def item_of_use_crud(request):
             data = json.loads(request.body)
             name = data.get('name')
             service = data.get('service')
+            cost = data.get('cost')
+            category = data.get('category')
+            quantity = data.get('quantity')
             name = name.lower()
 
             logger.info(f'name: {name}')
@@ -759,17 +763,14 @@ def item_of_use_crud(request):
                 item = itemOfUseName.objects.create(
                     item_of_use_name = name
                 )
-
                 category = Category.objects.get(id=data.get('category'))
-
                 ItemOfUse.objects.create(
-                    name=item,
-                    service=service,
-                    cost=data.get('cost'),
+                    name = item,
+                    service = service,
+                    cost=cost,
                     category=category,
-                    quantity=data.get('quantity')
+                    quantity=quantity
                 )
-
                 items = itemOfUseName.objects.all().values()
 
                 logger.info(f'items: {items}')
