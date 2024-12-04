@@ -39,6 +39,7 @@ def services(request):
     iouForm = AddIouName()
     categoryForm = AddCategory()
     names = itemOfUseName.objects.all()
+    unit_measure = UnitMeasurement.objects.all()
     return render(request, 'service_products.html',{
         'names':names,
         'iouForm':iouForm,
@@ -46,6 +47,7 @@ def services(request):
         'service': serviceform,
         'inventory': inventoryform,
         'categoryForm':categoryForm,
+        'unit_measure': unit_measure,
         'unit_measurement':unit_measurement
     })
 
