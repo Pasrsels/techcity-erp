@@ -99,8 +99,8 @@
                         <!-- Initial data rendered by Django -->
                         {% for item in items %}
                             <tr data-id="{{ item.id }}">
-                                <td>{{ item.name }}</td>
-                                <td>{{ item.category_name }}</td>
+                                <td>{{ item.name__item_of_use_name }}</td>
+                                <td>{{ item.description }}</td>
                                 <td>{{ item.quantity }}</td>
                                 <td>{{ item.cost }}</td>
                                 <td>

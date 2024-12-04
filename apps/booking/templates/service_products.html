@@ -243,8 +243,8 @@
                         <div class="d-flex">
                             <select name="category" class="select form-select" required id="id_category"> 
                                 <option value="" selected>Select Category</option>
-                                {% for category in categories %}
-                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% for category in category_data %}
+                                    <option value="{{ category.id }}">{{ category.category_name }}</option>
                                 {% endfor %}
                             </select>
                             <button type="button" class="btn btn-sm bx bx-plus" id="id_add_category"></button>
@@ -715,7 +715,7 @@
 
         const name = document.getElementById('id_item_of_use_name').value;
         const cost = document.getElementById('id_cost').value;
-        const description = document.getElementById('id_iou_description');
+        const description = document.getElementById('id_iou_description').value;
         const quantity = document.getElementById('id_quantity').value;
         const category = document.getElementById('id_category').value;
 
