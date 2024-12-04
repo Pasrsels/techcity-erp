@@ -232,10 +232,14 @@
                 <form method="POST">
                     {% csrf_token %}
                     {{ iouForm | crispy}}
+                    <div class="mb-3">
+                        <label for="description" class="form-label requiredField">Description</label>
+                        <input type="text" name="description" class="form-control" required id="id_iou_description"> 
+                    </div>
                     <div id="div_id_category" class="mb-3"> 
                         <label for="id_category" class="form-label requiredField">
                         Category<span class="asteriskField">*</span> 
-                        </label> 
+                        </label>
                         <div class="d-flex">
                             <select name="category" class="select form-select" required id="id_category"> 
                                 <option value="" selected>Select Category</option>
@@ -710,12 +714,14 @@
         /* posting unit of meaasurement form field and on success populating the unit of measure select */
 
         const name = document.getElementById('id_item_of_use_name').value;
-        const cost = document.getElementById('id_cost').value
-        const quantity = document.getElementById('id_quantity').value
-        const category = document.getElementById('id_category').value
+        const cost = document.getElementById('id_cost').value;
+        const description = document.getElementById('id_iou_description');
+        const quantity = document.getElementById('id_quantity').value;
+        const category = document.getElementById('id_category').value;
 
         const data = {
             'name':name,
+            'descrition': description,
             'cost':cost,
             'quantity':quantity,
             'category':category
