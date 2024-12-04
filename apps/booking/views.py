@@ -17,7 +17,7 @@ from loguru import logger
 def services_view(request):
     serviceform = ServiceForm()
     service = Services.objects.all().values()
-    items = inventory.objects.all().values()
+    items = ItemOfUse.objects.all().values('description', 'name__item_of_use_name', 'cost', 'quantity')
     category = Category.objects.all().values()
     itemsofuse = ItemOfUse.objects.all().values()
     logger.info(items)
@@ -39,12 +39,14 @@ def services(request):
     iouForm = AddIouName()
     categoryForm = AddCategory()
     names = itemOfUseName.objects.all()
+    category = Category.objects.all().values()
     measurements = UnitMeasurement.objects.all()
     return render(request, 'service_products.html',{
         'names':names,
         'iouForm':iouForm,
         'services': services,
         'service': serviceform,
+        'category_data': category,
         'inventory': inventoryform,
         'measurements':measurements,
         'categoryForm':categoryForm,
@@ -743,7 +745,8 @@ def item_of_use_crud(request):
                     name,
                     quantity,
                     cost,
-                    category
+                    category,
+                    description
                 }]
             ]
         """
@@ -753,6 +756,7 @@ def item_of_use_crud(request):
             cost = data.get('cost')
             category = data.get('category')
             quantity = data.get('quantity')
+            description = data.get('description')
             name = name.lower()
 
             logger.info(f'name: {name}')
@@ -770,6 +774,7 @@ def item_of_use_crud(request):
 
                 ItemOfUse.objects.create(
                     name = item,
+                    description = description,
                     cost=cost,
                     category=category,
                     quantity=quantity,
