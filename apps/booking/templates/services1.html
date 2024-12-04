@@ -72,8 +72,8 @@
                                         </a>
                                     </span>
                             
-                                        <span id='delete' data-id="{{ service.id }}" onclick="serviceId(this)" class="text-dark">
-                                            <i class='bx bx-trash-alt'></i>
+                                        <span id='delete' data-id="{{ service.id }}" onclick="deleteService('{{ service.id}}')" class="text-dark">
+                                            <i class='bx bx-trash'></i>
                                         </span>
                                 </td>
                             </tr>
@@ -122,7 +122,7 @@
             </div>
         </div>
          <!-- delete modal -->
-         <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+         <!-- <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-body" id='payment_content'>
@@ -138,7 +138,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> -->
 
 <!-- Modal for Editing -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -329,7 +329,50 @@ deleteButtons.forEach((button)=>{
             }
         });
     })
-     
+    
+    function deleteService(id){
+        data = {
+            'service_id': id,
+        }
+        console.log(data)
+
+        fetch("{% url 'booking:service_crud' %}",{
+            method: 'DELETE',
+            headers:{
+                'content-Type': 'application/json',
+                'X-CSRFToken': "{{ csrf_token }}",
+            },
+            body: JSON.stringify(data),
+        }).then((response) => response.json)
+        .then((data) =>{
+            if (data.success) {
+                Swal.fire({
+                    icon: "success",
+                    title: "Delete",
+                    text: "The service details have been successfully deleted.",
+                    confirmButtonText: "OK",
+                });
+
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Delete Failed",
+                    text: data.message ,
+                    confirmButtonText: "OK",
+                });
+            }  
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "An unexpected error occurred. Please try again later.",
+                confirmButtonText: "OK",
+            });
+        });
+    }
+
     function populateModal(id, name, description, quantity, cost, price) {
 
         document.getElementById("serviceId").value = id;

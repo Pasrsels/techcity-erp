@@ -68,26 +68,6 @@
                             </thead>
                             <tbody id="service_productsTableBody"></tbody>
                             <tbody id="itemTableBody">
-                                <!-- Initial data rendered by Django
-                                {% for item in items %}
-                                <tr data-id="{{ item.id }}">
-                                    <td>{{ item.name }}</td>
-                                    <td>{{ item.description }}</td>
-                                    <td>{{ item.quantity }}</td>
-                                    <td>{{ item.cost }}</td>
-                                    <td>
-                                        <a href="{% url 'booking:service_crud' %}" class="text-info me-2" title="View Item">
-                                            <i class="bx bx-show"></i>
-                                        </a>
-                                        <a href="{% url 'booking:service_crud' %}" class="text-dark me-2" title="Edit Item">
-                                            <i class="bx bx-edit"></i>
-                                        </a>
-                                        <a href="#" class="text-danger delete-item" title="Delete Item">
-                                            <i class="bx bx-trash-alt"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %} -->
                                 <!-- Rows added dynamically will go here -->
                             </tbody>    
                         </table> 
