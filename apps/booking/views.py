@@ -813,8 +813,16 @@ def item_of_use_crud(request):
     
 @login_required
 def save_combined_service(request):
+    """
+        we are saying we have a service and an item of use so, both they need to be linked to each other 
+        thus one item of use can have many services it is used on (many to many relationship)
+        from the front we take the service id selected and a list of ioum(s) in the iom(s) we mostly need
+        an id so that we query the instance of the ioum we want to add the service to, we didnt use set since 
+        only set one service over another but add so that we just add without specifically saying the ioum 
+        is using this service.
+    
+    """
     if request.method == 'POST':
-
         try:
             data = json.loads(request.body)
             service_id = data.get('service_id')
@@ -823,13 +831,12 @@ def save_combined_service(request):
             #get service 
             service = Services.objects.get(id=service_id)
             logger.info(service)
+
             # add service to iou
             for item in iout_items:
                 iou = ItemOfUse.objects.get(id=item['id'])
                 iou.service.add(service)
                 iou.save()
-
-                print(iou.service.all)
 
             return JsonResponse({'success': True}, status = 200)
         except Exception as e:
