@@ -132,7 +132,7 @@ def ServiceCrud(request):
     """
         payload
         [
-            service_name:str,
+
             items = {
                 name: str,
                 service_range: str,
@@ -739,7 +739,6 @@ def item_of_use_crud(request):
         """
             payload
             data = [
-                servivce:int (id)
                 itemsofsue = [{
                     name,
                     quantity,
@@ -751,7 +750,6 @@ def item_of_use_crud(request):
         try:
             data = json.loads(request.body)
             name = data.get('name')
-            service = data.get('service')
             cost = data.get('cost')
             category = data.get('category')
             quantity = data.get('quantity')
@@ -769,12 +767,12 @@ def item_of_use_crud(request):
                     item_of_use_name = name
                 )
                 category = Category.objects.get(id=data.get('category'))
+
                 ItemOfUse.objects.create(
                     name = item,
-                    service = service,
                     cost=cost,
                     category=category,
-                    quantity=quantity
+                    quantity=quantity,
                 )
                 items = itemOfUseName.objects.all().values()
 
@@ -793,17 +791,47 @@ def item_of_use_crud(request):
         if iou_id and service_id:
             try:
                 iou = itemOfUseName.objects.get(id=iou_id)
-                service = Services.objects.get(id=service_id)
-                items_iou = ItemOfUse.objects.filter(name=iou).values(
+                service = Services.objects.filter(id=service_id).values('service_range')
+
+                logger.info(f'name {iou}')
+                items_iou = ItemOfUse.objects.filter(name=iou.id).values(
                     'name__item_of_use_name',
                     'quantity',
                     'cost',
                     'description',
-                    'category__category_name'
+                    'category__category_name',
+                    'id',
                 )
                 logger.info(f'iou_items: {items_iou}')
-                return JsonResponse({'success': True, 'date':list(items_iou)}, status = 400)
+                return JsonResponse({
+                    'success': True, 
+                    'items':list(items_iou),
+                    'service_range':list(service),
+                }, status = 200)
             except Exception as e:
                 return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
     
+@login_required
+def save_combined_service(request):
+    if request.method == 'POST':
+
+        try:
+            data = json.loads(request.body)
+            service_id = data.get('service_id')
+            iout_items = data.get('iou')
+
+            #get service 
+            service = Services.objects.get(id=service_id)
+            logger.info(service)
+            # add service to iou
+            for item in iout_items:
+                iou = ItemOfUse.objects.get(id=item['id'])
+                iou.service.add(service)
+                iou.save()
+
+                print(iou.service.all)
+
+            return JsonResponse({'success': True}, status = 200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
     

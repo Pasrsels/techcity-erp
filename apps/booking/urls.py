@@ -22,4 +22,5 @@ urlpatterns = [
 
     #item of use
     path('item_of_use_crud', item_of_use_crud, name='item_of_use_crud'),
+    path('save_combined_service/', save_combined_service, name='save_combined_service'),
 ]

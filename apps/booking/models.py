@@ -56,7 +56,7 @@ class itemOfUseName(models.Model):
          return self.item_of_use_name
      
 class ItemOfUse(models.Model):
-    service = models.ForeignKey(Services, on_delete=models.CASCADE)
+    service = models.ManyToManyField(Services)
     name = models.ForeignKey(itemOfUseName, on_delete=models.CASCADE)
     quantity = models.IntegerField( default= 0)
     cost = models.DecimalField(max_digits=4, decimal_places= 2, default= 0.00)
