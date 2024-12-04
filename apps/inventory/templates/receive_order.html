@@ -354,7 +354,6 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    editStatus = false
                     const orderedQnty = parseInt(document.getElementById(`purchased_quantity_${itemId}`).textContent)
                     const tableRow = document.getElementById(`tr_${itemId}`)
 
