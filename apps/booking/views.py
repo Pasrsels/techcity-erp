@@ -48,6 +48,7 @@ def services(request):
         'inventory': inventoryform,
         'measurements':measurements,
         'categoryForm':categoryForm,
+        'unit_measure': unit_measure,
         'unit_measurement':unit_measurement
     })
 
