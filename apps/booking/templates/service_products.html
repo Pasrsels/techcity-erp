@@ -68,7 +68,7 @@
                             </thead>
                             <tbody id="service_productsTableBody"></tbody>
                             <tbody id="itemTableBody">
-                                <!-- Initial data rendered by Django -->
+                                <!-- Initial data rendered by Django
                                 {% for item in items %}
                                 <tr data-id="{{ item.id }}">
                                     <td>{{ item.name }}</td>
@@ -87,7 +87,7 @@
                                         </a>
                                     </td>
                                 </tr>
-                                {% endfor %}
+                                {% endfor %} -->
                                 <!-- Rows added dynamically will go here -->
                             </tbody>    
                         </table> 
@@ -574,8 +574,8 @@
             displayTable.innerHTML +=`
                 <td><small>${ item.name }</small></td>
                 <td><small>${ item.description}</small></td>
-                <td><small>${ item.cost }</small></td>
                 <td><small>${ item.quantity }</small></td>
+                <td><small>${ item.cost }</small></td>
                 <td><small><button class='btn btn-outlin-dark bx bx-trash' onclick='removeItem(${item.id})'></button></small></td>
             `
         })
