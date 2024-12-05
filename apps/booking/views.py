@@ -485,7 +485,7 @@ def save_combined_service(request):
 @login_required
 def members_view(request):
     memberForm = AddMember()
-    return render(request, 'members.html',{
+    return render(request, 'offices.html',{
         'memberForm ': memberForm
     })
 
