@@ -58,20 +58,22 @@
                                 <td><small><span class="hint--bottom" aria-label="{{ service.service.description }}">{{ service.service_name }}</span></small></td>
                                 <td><small>{{ service.description }}</small></td>
                                 <td><small>{{ service.quantity }}</small></td>
-                                <td><small>{{ item.cost }}</small></td>
+                                <td><small>{{ service.cost }}</small></td>
                                 <td><small>{{ service.price }}</small></td>
                                 <td>
-                                    <span>
-                                        <a href="#" class="text-dark" title="Edit Item" data-bs-toggle="modal" data-bs-target="#editModal" onclick="populateModal('{{ service.id }}', '{{ service.service_name }}', '{{ service.description }}', '{{ service.quantity }}', '{{ service.cost }}', '{{ service.price }}')">
-                                            <i class="bx bx-edit"></i>
-                                        </a>
-                                    </span>
+                                    
                                     <span>
                                         <a href="{% url 'booking:service_crud' %}" class="text-dark">
                                             <i class="bx bx-show"></i>
                                         </a>
                                     </span>
                             
+                                    <span>
+                                        <a href="#" class="text-dark" title="Edit Item" data-bs-toggle="modal" data-bs-target="#editModal" onclick="populateModal('{{ service.id }}', '{{ service.service_name }}', '{{ service.description }}', '{{ service.quantity }}', '{{ service.cost }}', '{{ service.price }}')">
+                                            <i class="bx bx-edit"></i>
+                                        </a>
+                                    </span>
+
                                         <span id='delete' data-id="{{ service.id }}" onclick="deleteService('{{ service.id}}')" class="text-dark">
                                             <i class='bx bx-trash'></i>
                                         </span>
@@ -104,16 +106,18 @@
                                 <td>{{ item.quantity }}</td>
                                 <td>{{ item.cost }}</td>
                                 <td>
-                                    <a href="{% url 'booking:service_crud' %}" class="text-info me-2" title="View Item">
-                                        <i class="bx bx-show"></i>
-                                    </a>
+                                    <span>
+                                        <a href="{% url 'booking:service_crud' %}" class="text-dark">
+                                            <i class="bx bx-show"></i>
+                                        </a>
+                                    </span>
                                     <span>
                                         <a href="#" class="text-dark" title="Edit Item" data-bs-toggle="modal" data-bs-target="#edititemModal" onclick="populateModal('{{ item.id }}', '{{ item.name__item_of_use_name }}', '{{  item.description }}', '{{  item.quantity  }}', '{{  item.cost }}')">
                                             <i class="bx bx-edit"></i>
                                         </a>
                                     </span>
                                     <span id = "item_delete" value ="{{ item.id }}" onclick="itemOfUse_delete('{{item.id}}')">
-                                        <a href="#" class="text-danger delete-item" title="Delete Item">
+                                        <a href="#" class="text-dark delete-item" title="Delete Item">
                                             <i class="bx bx-trash"></i>
                                         </a>
                                     </span>
