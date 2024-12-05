@@ -321,38 +321,39 @@ deleteButtons.forEach((button)=>{
     })
     
     function deleteService(id){
-        data = {
-            'service_id': id,
-        }
-        console.log(data)
+        try{
+            data = {
+                'service_id': id,
+            }
+            console.log(data)
 
-        fetch("{% url 'booking:service_crud' %}",{
-            method: 'DELETE',
-            headers:{
-                'content-Type': 'application/json',
-                'X-CSRFToken': "{{ csrf_token }}",
-            },
-            body: JSON.stringify(data),
-        }).then((response) => response.json)
-        .then((data) =>{
-            if (data.success) {
-                Swal.fire({
-                    icon: "success",
-                    title: "Delete",
-                    text: "The service details have been successfully deleted.",
-                    confirmButtonText: "OK",
-                });
+            fetch("{% url 'booking:service_crud' %}",{
+                method: 'DELETE',
+                headers:{
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: JSON.stringify(data),
+            }).then((response) => response.json())
+            .then(data =>{
+                if (data.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Delete",
+                        text: "The service details have been successfully deleted.",
+                        confirmButtonText: "OK",
+                    });
 
-            } else {
-                Swal.fire({
-                    icon: "error",
-                    title: "Delete Failed",
-                    text: data.message ,
-                    confirmButtonText: "OK",
-                });
-            }  
-        })
-        .catch((error) => {
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Delete Failed",
+                        text: data.message ,
+                        confirmButtonText: "OK",
+                    });
+                }  
+            })
+        }catch(error){
             console.error("Error:", error);
             Swal.fire({
                 icon: "error",
@@ -360,7 +361,7 @@ deleteButtons.forEach((button)=>{
                 text: "An unexpected error occurred. Please try again later.",
                 confirmButtonText: "OK",
             });
-        });
+        }
     }
 
     function populateModal(id, name, description, quantity, cost, price) {
@@ -442,7 +443,7 @@ deleteButtons.forEach((button)=>{
                     'X-CSRFToken': getCSRFToken(),
                 },
                 body: JSON.stringify(data)
-            }).then(answer => answer.json)
+            }).then(answer => answer.json())
             .then(data =>{
                 if(data.success){
                     Swal.fire({
