@@ -11,9 +11,6 @@ class Members(models.Model):
     Company = models.CharField(max_length= 255, blank= True)
     Age = models.IntegerField(blank=False)
     Gender = models.Choices("M", "F")
-    Member_accounts = models.ForeignKey("MemberAccounts", on_delete=models.CASCADE, null = True)
-    Services = models.ForeignKey("Services", on_delete=models.CASCADE, null = True)
-    Payments = models.ForeignKey("Payments", on_delete=models.CASCADE, null = True)
     delete = models.BooleanField(default=False)
     #add def funtion to every class
     def __str__(self) -> str:
@@ -22,6 +19,7 @@ class Members(models.Model):
 class MemberAccounts(models.Model):
     Balance = models.DecimalField(max_digits= 8, decimal_places= 2, default= 0.00)
     Payments = models.ForeignKey("Payments", on_delete=models.CASCADE)
+    Member = models.ForeignKey(Members, on_delete= models.CASCADE, null = True)
     delete = models.BooleanField(default= False)
     def __str__(self) -> str:
         return f"{self.Balance}"
@@ -31,6 +29,8 @@ class Payments(models.Model):
     Amount = models.DecimalField(max_digits= 8, decimal_places= 2, default= 0.00)
     Admin_fee = models.DecimalField(max_digits=8 , decimal_places=2, default= 0.00)
     Description = models.CharField(max_length= 255, default='')
+    Member = models.ForeignKey(Members, on_delete= models.PROTECT, null= True)
+
     def __str__(self) -> str:
         return f"{self.Amount}"
 
@@ -39,6 +39,7 @@ class Services(models.Model): # removed the foreign key to itemofuse
     description = models.CharField(max_length=255, default= 'none')
     unit_measure = models.ForeignKey('UnitMeasurement', on_delete= models.CASCADE, null=True)
     service_range = models.CharField(max_length=255, default= 'none')
+    delete_s = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.service_name}'
@@ -62,6 +63,7 @@ class ItemOfUse(models.Model):
     cost = models.DecimalField(max_digits=4, decimal_places= 2, default= 0.00)
     description = models.CharField(max_length=255, default= 'none', null= True)
     category = models.ForeignKey('Category', on_delete= models.CASCADE)
+    delete_iou = models.BooleanField(default=False)
     pass
     def __str__(self):
         return f"{self.name}"

@@ -37,8 +37,13 @@
                 <h5>Services Products</h5>
                 <div>
                     <button class="btn btn-outline-dark btn-sm ms-10">Analytics</button>
+<<<<<<< HEAD
                     <a class="btn btn-outline-dark ms-10 btn-sm" href="{%url 'booking:member'%}">Members</a> 
                     <a class="btn btn-outline-dark ms-10 btn-sm" href="{%url 'booking:service_view'%}">Back</a>
+=======
+                    <a class="btn btn-outline-dark ms-10 btn-sm" href="{% url 'booking:member' %}">Members</a>
+                    <a class="btn btn-outline-dark ms-10 btn-sm" href="{% url 'booking:service_view' %}">Back to services</a> 
+>>>>>>> 3c568b0a5cf73400361ddbba488dc7441011e4ae
                 </div>
             </div>
         </div>
@@ -126,7 +131,7 @@
                                 <select name="category" class="select form-select" required id="id_name"> 
                                     <option value="" selected>Select Item of use</option>
                                     {% for name in names %}
-                                        <option value="{{ name.id }}">{{ name.item_of_use_name }}</option>
+                                        <option value="{{ name.id }}">{{ name.name.item_of_use_name }}</option>
                                     {% endfor %}
                                 </select> 
                                 <button type="button" class="btn btn-sm bx bx-plus" id="id_add_name"></button>

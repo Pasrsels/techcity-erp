@@ -27,3 +27,7 @@ class AddCategory(forms.ModelForm):
         model = Category
         fields = '__all__'
     
+class AddMember(forms.ModelForm):
+    class Meta:
+        model = Members
+        fields = '__all__'
