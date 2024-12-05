@@ -375,6 +375,7 @@
     // global
     let service = ''
     let serviceId = ''
+    let edit = false
 
     // modals
     const unitModal = new bootstrap.Modal(document.getElementById('addunitmeasureModal'))
@@ -618,6 +619,7 @@
         }
 
         const data = {
+            'edit':edit,
             'name':name,
             'description': description,
             'unit_measure': unitOfMeasurement.value,
@@ -1086,72 +1088,7 @@ document.getElementById('id_edit_service').addEventListener('click', function ()
         return;
     }
 
-    // trial for using add modal for editing
-    document.getElementById('id_service').value = serviceId; 
-    document.querySelector('#id_service_name').value = serviceName; 
-    //populate other fields
-    const editModal = new bootstrap.Modal(document.getElementById('addServiceModal'));
-    editModal.show();
-
-    document.getElementById('add_service').onclick = function () {
-        const updatedName = document.querySelector('#id_service_name').value;
-        const unitMeasure = document.querySelector('#id_unit_measure').value;
-        const fixedValue = document.querySelector('#fixed_inp').value;
-        const rangeFrom = document.querySelector('#range_inp_from').value;
-        const rangeTo = document.querySelector('#range_inp_to').value;
-
-        if (!updatedName.trim()) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Invalid Input',
-                text: 'Service Name cannot be empty.',
-            });
-            return;
-        }
-
-        $.ajax({
-            url: "{% url 'booking:service_crud' %}",
-            type: 'PUT',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-            },
-            data: {
-                id: serviceId,
-                service_name: updatedName,
-                unit_measure: unitMeasure,
-                fixed_value: fixedValue,
-                range_from: rangeFrom,
-                range_to: rangeTo,
-            },
-            success: function (response) {
-                if (response.success) {
-                    selectedService.textContent = updatedName;
-                    editModal.hide();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Updated',
-                        text: 'Service details have been updated successfully.',
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Update Failed',
-                        text: response.error || 'An error occurred while updating the service.',
-                    });
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An unexpected error occurred. Please try again.',
-                });
-            },
-        });
-    };
-});
-
+  
     
     function getCSRFToken() {
         let cookieValue = null;
@@ -1168,5 +1105,6 @@ document.getElementById('id_edit_service').addEventListener('click', function ()
         }
         return cookieValue;
     }
+})
 </script>
 {% endblock %}
