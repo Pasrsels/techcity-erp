@@ -17,7 +17,7 @@ from loguru import logger
 def services_view(request):
     serviceform = ServiceForm()
     service = Services.objects.all().values()
-    items = ItemOfUse.objects.all().values('service__id', 'description', 'name__item_of_use_name', 'cost', 'quantity')
+    items = ItemOfUse.objects.all().values('id','service__id', 'description', 'name__item_of_use_name', 'cost', 'quantity')
     category = Category.objects.all().values()
     itemsofuse = ItemOfUse.objects.all().values()
     logger.info(items)
@@ -119,11 +119,11 @@ def service_crud(request):
     #delete
     elif request.method == "DELETE":
         data = json.loads(request.body)
-        service_id = data('service_id')
+        service_id = data.get('service_id')
+        logger.info(data)
         if Services.objects.filter(id = service_id).exists():
             service_del = Services.objects.get(id= service_id)
-            service_del.delete = True
-            service_del.save()
+            service_del.delete()
             return JsonResponse({'success':True}, status=200)
         return JsonResponse({'success': False, 'response': 'cannot delete none existing field'}, status = 400)
     return JsonResponse({'success':False, 'response': 'invalid request'}, status =  500)
@@ -817,6 +817,20 @@ def item_of_use_crud(request):
                 }, status = 200)
             except Exception as e:
                 return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
+    elif request.method == 'DELETE':
+        try:
+            data = json.loads(request.body)
+            item_id = data.get('item_of_use_id')
+            logger.info(item_id)
+
+            if ItemOfUse.objects.filter(id = item_id).exists():
+                item_delete = ItemOfUse.objects.get(id = item_id)
+                item_delete.delete()
+                return JsonResponse({'success':True}, status = 200)
+            return JsonResponse({'success': False, 'message': 'item does not exist'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'error: {e}'}, status = 400)
+    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
     
 @login_required
 def save_combined_service(request):

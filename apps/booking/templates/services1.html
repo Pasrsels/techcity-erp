@@ -110,9 +110,11 @@
                                     <a href="{% url 'booking:service_crud' %}" class="text-dark me-2" title="Edit Item">
                                         <i class="bx bx-edit"></i>
                                     </a>
-                                    <a href="#" class="text-danger delete-item" title="Delete Item">
-                                        <i class="bx bx-trash-alt"></i>
-                                    </a>
+                                    <span id = "item_delete" value ="{{ item.id }}" onclick="itemOfUse_delete('{{item.id}}')">
+                                        <a href="#" class="text-danger delete-item" title="Delete Item">
+                                            <i class="bx bx-trash"></i>
+                                        </a>
+                                    </span>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -425,19 +427,19 @@ deleteButtons.forEach((button)=>{
             });
         });
     }
-
-    function itemOfUse_delete(){
-        console.log('this is id', id)
+    // item of use delete
+    function itemOfUse_delete(item_id){
+        console.log('this is id', item_id)
         try {
             data = {
-                'item_of_use_id': id
+                'item_of_use_id': item_id
             }
             console.log(data);
-            fetch("{% url 'booking:item_of_use_crud' &}",{
+            fetch("{% url 'booking:item_of_use_crud' %}",{
                 method : 'DELETE',
                 headers : {
                     'content-Type': 'application/json',
-                    'X-CSRFToken': '{csrf_token}',
+                    'X-CSRFToken': getCSRFToken(),
                 },
                 body: JSON.stringify(data)
             }).then(answer => answer.json)
@@ -465,6 +467,22 @@ deleteButtons.forEach((button)=>{
                 'text': error,
             });
         }
+    }
+
+    function getCSRFToken() {
+        let cookieValue = null;
+        const name = 'csrftoken';
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 </script>
 {% endblock %}
