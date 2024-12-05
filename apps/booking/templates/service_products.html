@@ -108,7 +108,7 @@
                             <select name="service_name" class="select form-select" required id="id_service"> 
                                 <option value="">---------</option> 
                                 {% for service in services %}
-                                    <option value="{{service.id}}">{{service.service_name}}</option>
+                                    <option id="services_id" value="{{service.id}}">{{service.service_name}}</option>
                                 {% endfor %}
                             </select>
                             <button type="button" class="btn btn-sm bx bx-plus" id="id_add_service"></button>
@@ -166,7 +166,9 @@
                                     <option value="{{um.id}}">{{um.measurement}}</option>
                                 {% endfor %}
                             </select>
-                            <button type="button" class="btn btn-sm bx bx-plus" id="unitBtn"></button> 
+                            <button type="button" class="btn btn-sm bx bx-plus" id="unitBtn"></button>
+                            <button type="button" class="btn btn-sm bx bx-edit" id="unitEditBtn"></button>
+                            <button type="button" class="btn btn-sm bx bx-trash" id="unitDeleteBtn"></button>
                         </div>
                     </div>   
                     <div id="div_id_service_range" class="mb-3">
@@ -408,6 +410,7 @@
 
     // modal events
     unitBtn.addEventListener('click', ()=>{
+        serviceModal.hide()
         unitModal.show()
     })
 
@@ -1006,6 +1009,50 @@
         }
     })
     
+    const id_delete_service = document.getElementById('id_delete_service')
+
+    id_delete_service.addEventListener('click', function(e){
+        e.preventDefault();
+        const id = document.getElementById('id_service')
+        const id_value = id.value;
+        console.log(id_value)
+        try{
+            data = {
+                'service_id': id_value
+            }
+            fetch("{% url 'booking:service_crud' %}",{
+                method: 'DELETE',
+                headers : {
+                    'content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: JSON.stringify(data),
+            }).then(response => response.json)
+            .then(data => {
+                if(data.success){
+                    Swal.fire({
+                        'icon': 'success',
+                        'title': 'success',
+                        'text': 'successfully deleted'
+                    })
+                }
+                else{
+                    Swal.fire({
+                        'icon': 'error',
+                        'title': 'failed',
+                        'text': 'failed to deleted'
+                    })
+                }
+            })
+        }catch (error){
+            Swal.fire({
+                        'icon': 'error',
+                        'title': 'failed',
+                        'text': 'failed to deleted'
+                    })
+        }
+    })
+
     document.getElementById('searchBar').addEventListener('input', function () {
      const query = this.value.toLowerCase();
      const rows = document.querySelectorAll('tbody tr');
