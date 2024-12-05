@@ -72,9 +72,9 @@
                                         </a>
                                     </span>
                             
-                                        <span id='delete' data-id="{{ service.id }}" onclick="deleteService('{{ service.id}}')" class="text-dark">
+                                        <button id='delete' data-id="{{ service.id }}" class="btn btn-dark btn-sm">
                                             <i class='bx bx-trash'></i>
-                                        </span>
+                                        </button>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -190,34 +190,50 @@
             </div>
 <script>
 
-
-const modal = new bootstrap.Modal(document.querySelector('#deleteModal'));
 const deleteButtons = document.querySelectorAll('#delete');
 
-deleteButtons.forEach((button)=>{
-            button.addEventListener(
-                'click', ()=>{
-                    modal.show()
-                }
-            )
+deleteButtons.forEach((button) => {
+    button.addEventListener('click', function () {
+        const service_id = this.getAttribute('data-id');
+
+        $.ajax({
+            url: "{% url 'booking:service_crud' %}?service_id=" + service_id,
+            type: 'DELETE', 
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}", 
+            },
         })
-        
-        document.querySelector('.yes').addEventListener(
-            'click', ()=>{
-                console.log(service_id)
-                $.ajax({
-                    url: "{% url 'booking:service_crud' %}?service_id=" + service_id,
-                    type: 'GET',
-                    }).done(function(response) {
-                        modal.hide()
-                        successModal.show()
-                        setTimeout(()=>{
-                            window.location.reload()
-                        }, 2000)
+            .done(function (response) {
+                if (response.success) {
+                    const row = document.querySelector(`#services_table tr[data-id="${service_id}"]`);
+                    if (row) {
+                        row.remove();
                     }
-                )
-            }
-        )
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted',
+                        text: 'The service has been deleted successfully.',
+                        timer: 2000,
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Delete Failed',
+                        text: response.error || 'Could not delete the service.',
+                    });
+                }
+            })
+            .fail(function (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred. Please try again.',
+                });
+            });
+    });
+});
+
 
 
         document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(button => {
