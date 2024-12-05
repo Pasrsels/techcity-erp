@@ -18,7 +18,6 @@ class Members(models.Model):
 
 class MemberAccounts(models.Model):
     Balance = models.DecimalField(max_digits= 8, decimal_places= 2, default= 0.00)
-    Payments = models.ForeignKey("Payments", on_delete=models.CASCADE)
     Member = models.ForeignKey(Members, on_delete= models.CASCADE, null = True)
     delete = models.BooleanField(default= False)
     def __str__(self) -> str:
@@ -30,6 +29,7 @@ class Payments(models.Model):
     Admin_fee = models.DecimalField(max_digits=8 , decimal_places=2, default= 0.00)
     Description = models.CharField(max_length= 255, default='')
     Member = models.ForeignKey(Members, on_delete= models.PROTECT, null= True)
+    Account = models.ForeignKey(MemberAccounts, on_delete= models.CASCADE, null = True)
 
     def __str__(self) -> str:
         return f"{self.Amount}"
