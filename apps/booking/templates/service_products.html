@@ -38,6 +38,7 @@
                 <div>
                     <button class="btn btn-outline-dark btn-sm ms-10">Analytics</button>
                     <a class="btn btn-outline-dark ms-10 btn-sm" href="{%url 'booking:member'%}">Members</a> 
+                    <a class="btn btn-outline-dark ms-10 btn-sm" href="{%url 'booking:service_view'%}">Back</a>
                 </div>
             </div>
         </div>
@@ -156,7 +157,7 @@
                     {{service | crispy}}
                     <div id="div_id_unit_measure" class="mb-3">
                         <label class="form-label">
-                            Unit measure
+                            Unit of measurement
                             <span class="asteriskField">*</span>
                         </label>
                         <div class="d-flex align-content-center">
@@ -714,7 +715,7 @@
     // item of use submit event
     submitIou.addEventListener('click', ()=>{
 
-        /* posting unit of meaasurement form field and on success populating the unit of measure select */
+        /* posting unit of measurement form field and on success populating the unit of measure select */
 
         const name = document.getElementById('id_item_of_use_name').value;
         const cost = document.getElementById('id_cost').value;
@@ -1061,6 +1062,89 @@
             row.style.display = text.includes(query) ? '' : 'none';
         })
     })   
+
+    // Edit Service Logic
+document.getElementById('id_edit_service').addEventListener('click', function () {
+    const selectedService = document.querySelector('#id_service option:checked');
+    const serviceId = selectedService.value;
+    const serviceName = selectedService.textContent;
+
+    // Check if a service is selected
+    if (!serviceId) {
+        Swal.fire({
+            icon: 'error',
+            title: 'No Service Selected',
+            text: 'Please select a service to edit.',
+        });
+        return;
+    }
+
+    // trial for using add modal for editing
+    document.getElementById('id_service').value = serviceId; 
+    document.querySelector('#id_service_name').value = serviceName; 
+    //populate other fields
+    const editModal = new bootstrap.Modal(document.getElementById('addServiceModal'));
+    editModal.show();
+
+    document.getElementById('add_service').onclick = function () {
+        const updatedName = document.querySelector('#id_service_name').value;
+        const unitMeasure = document.querySelector('#id_unit_measure').value;
+        const fixedValue = document.querySelector('#fixed_inp').value;
+        const rangeFrom = document.querySelector('#range_inp_from').value;
+        const rangeTo = document.querySelector('#range_inp_to').value;
+
+        if (!updatedName.trim()) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Input',
+                text: 'Service Name cannot be empty.',
+            });
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'booking:service_crud' %}",
+            type: 'PUT',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            data: {
+                id: serviceId,
+                service_name: updatedName,
+                unit_measure: unitMeasure,
+                fixed_value: fixedValue,
+                range_from: rangeFrom,
+                range_to: rangeTo,
+            },
+            success: function (response) {
+                if (response.success) {
+                    selectedService.textContent = updatedName;
+                    editModal.hide();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Updated',
+                        text: 'Service details have been updated successfully.',
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Update Failed',
+                        text: response.error || 'An error occurred while updating the service.',
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred. Please try again.',
+                });
+            },
+        });
+    };
+});
+
     
     function getCSRFToken() {
         let cookieValue = null;

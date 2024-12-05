@@ -43,7 +43,7 @@
             <div class="table-responsive">
                 <table class="table border table-bordered table-striped table-hover table-sm rounded w-100" id="service">
                     <thead>
-                        <tr>
+                        <tr data-id="{{ service.id }}">
                             <th>Name</th>
                             <th>Description</th>
                             <th>Total Services</th>
@@ -72,9 +72,9 @@
                                         </a>
                                     </span>
                             
-                                        <button id='delete' data-id="{{ service.id }}" class="btn btn-dark btn-sm">
+                                        <span id='delete' data-id="{{ service.id }}" onclick="deleteService('{{ service.id}}')" class="text-dark">
                                             <i class='bx bx-trash'></i>
-                                        </button>
+                                        </span>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -107,12 +107,16 @@
                                     <a href="{% url 'booking:service_crud' %}" class="text-info me-2" title="View Item">
                                         <i class="bx bx-show"></i>
                                     </a>
-                                    <a href="{% url 'booking:service_crud' %}" class="text-dark me-2" title="Edit Item">
-                                        <i class="bx bx-edit"></i>
-                                    </a>
-                                    <a href="#" class="text-danger delete-item" title="Delete Item">
-                                        <i class="bx bx-trash-alt"></i>
-                                    </a>
+                                    <span>
+                                        <a href="#" class="text-dark" title="Edit Item" data-bs-toggle="modal" data-bs-target="#edititemModal" onclick="populateModal('{{ item.id }}', '{{ item.name__item_of_use_name }}', '{{  item.description }}', '{{  item.quantity  }}', '{{  item.cost }}')">
+                                            <i class="bx bx-edit"></i>
+                                        </a>
+                                    </span>
+                                    <span id = "item_delete" value ="{{ item.id }}" onclick="itemOfUse_delete('{{item.id}}')">
+                                        <a href="#" class="text-danger delete-item" title="Delete Item">
+                                            <i class="bx bx-trash"></i>
+                                        </a>
+                                    </span>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -121,26 +125,7 @@
                 </table>
             </div>
         </div>
-         <!-- delete modal -->
-         <!-- <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body" id='payment_content'>
-                        <p class="h5 fw-bold">Confirm Service deletion</p>
-                            <div>
-                                <button class="w-100 btn btn-secondary btn-sm yes">
-                                    yes
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div> -->
-
-<!-- Modal for Editing -->
+<!-- Modal for Editing services-->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -180,6 +165,44 @@
         </div>
     </div>
 </div>
+
+<!-- Modal for Editing IOU-->
+<div class="modal fade" id="edititemModal" tabindex="-1" aria-labelledby="edititemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="edititemModalLabel">Edit Items Of Use</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edititemForm">
+                    <input type="hidden" id="itemId">
+                    <div class="mb-3">
+                        <label for="itemName" class="form-label">Item Of Use Name</label>
+                        <input type="text" class="form-control" id="itemName">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="itemdescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="itemquantity">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cost" class="form-label">Cost</label>
+                        <input type="text" class="form-control" id="itemcost">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal for View -->
 <div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -196,9 +219,11 @@ deleteButtons.forEach((button) => {
     button.addEventListener('click', function () {
         const service_id = this.getAttribute('data-id');
 
+        console.log("Service ID:", service_id); 
+
         $.ajax({
             url: "{% url 'booking:service_crud' %}?service_id=" + service_id,
-            type: 'DELETE', 
+            type: 'GET', 
             headers: {
                 "X-CSRFToken": "{{ csrf_token }}", 
             },
@@ -209,7 +234,6 @@ deleteButtons.forEach((button) => {
                     if (row) {
                         row.remove();
                     }
-
                     Swal.fire({
                         icon: 'success',
                         title: 'Deleted',
@@ -224,7 +248,8 @@ deleteButtons.forEach((button) => {
                     });
                 }
             })
-            .fail(function (error) {
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                console.error("AJAX error:", textStatus, errorThrown);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -280,79 +305,7 @@ deleteButtons.forEach((button) => {
             tableBody.appendChild(newRow);
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-        // Inline editing functionality
-        document.getElementById('services_table').addEventListener('click', function (event) {
-            if (event.target.closest('.edit-service')) {
-                const row = event.target.closest('tr');
-                const cells = row.querySelectorAll('td');
-
-                // If already in edit mode, save changes
-                if (row.classList.contains('editing')) {
-                    const updatedData = {
-                        name: cells[0].querySelector('input').value,
-                        description: cells[1].querySelector('input').value,
-                        quantity: cells[2].querySelector('input').value,
-                        cost: cells[3].querySelector('input').value,
-                        price: cells[4].querySelector('input').value,
-                    };
-
-                    fetch(`/services/update/${row.dataset.id}/`, {
-                        method: 'PUT',
-                        headers: {
-                            'X-CSRFToken': '{{ csrf_token }}',
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(updatedData),
-                    })
-                        .then((response) => response.json())
-                        .then((data) => {
-                            if (data.success) {
-                                // Replace inputs with updated values
-                                cells[0].innerHTML = updatedData.name;
-                                cells[1].innerHTML = updatedData.description;
-                                cells[2].innerHTML = updatedData.quantity;
-                                cells[3].innerHTML = updatedData.cost;
-                                cells[4].innerHTML = updatedData.price;
-                                row.classList.remove('editing');
-
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Success',
-                                    text: 'Service updated successfully!',
-                                    timer: 1500,
-                                    showConfirmButton: false,
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'Failed to save changes.',
-                                });
-                            }
-                        })
-                        .catch((error) => {
-                            console.error('Error:', error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'An error occurred while saving changes.',
-                            });
-                        });
-                } else {
-                    // Enter edit mode
-                    row.classList.add('editing');
-                    cells.forEach((cell, index) => {
-                        if (index < 5) {
-                            const value = cell.textContent.trim();
-                            cell.innerHTML = `<input class="form-control form-control-sm" type="text" value="${value}">`;
-                        }
-                    });
-                }
-            }
-        });
-    })
-    
+       
     function deleteService(id){
         data = {
             'service_id': id,
@@ -366,7 +319,7 @@ deleteButtons.forEach((button) => {
                 'X-CSRFToken': "{{ csrf_token }}",
             },
             body: JSON.stringify(data),
-        }).then(response => response.json)
+        }).then((response) => response.json)
         .then((data) =>{
             if (data.success) {
                 Swal.fire({
@@ -375,12 +328,13 @@ deleteButtons.forEach((button) => {
                     text: "The service details have been successfully deleted.",
                     confirmButtonText: "OK",
                 });
+
             } else {
                 Swal.fire({
                     icon: "error",
                     title: "Delete Failed",
                     text: data.message ,
-                   confirmButtonText: "OK",
+                    confirmButtonText: "OK",
                 });
             }  
         })
@@ -429,7 +383,7 @@ deleteButtons.forEach((button) => {
             },
             body: JSON.stringify(data),
         })
-        .then(response => response.json())
+        .then((response) => response.json())
         .then((data) => {
             if (data.success) {
                 
@@ -460,6 +414,127 @@ deleteButtons.forEach((button) => {
         });
     }
 
+    function populateModal(id, name, description, quantity, cost) {
+
+document.getElementById("itemId").value = id;
+document.getElementById("itemName").value = name;
+document.getElementById("itemdescription").value = description;
+document.getElementById("itemquantity").value = quantity;
+document.getElementById("itemcost").value = cost;
+}
+
+function saveChanges() {
+const id = document.getElementById("itemId").value;
+const name = document.getElementById("itemName").value;
+const description = document.getElementById("itemdescription").value;
+const quantity = document.getElementById("itemquantity").value;
+const cost = document.getElementById("itemcost").value;
+
+data = {
+    "item_id": id,
+    'item_name': name,
+    'item_description': description,
+    
+}
+
+console.log(data)
+
+fetch("{% url 'booking:service_crud' %}", {
+    method: "PUT",
+    headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}",
+    },
+    body: JSON.stringify(data),
+})
+.then((response) => response.json())
+.then((data) => {
+    if (data.success) {
+        
+        Swal.fire({
+            icon: "success",
+            title: "Changes Saved",
+            text: "The service details have been successfully updated.",
+            confirmButtonText: "OK",
+        });
+
+    } else {
+        Swal.fire({
+            icon: "error",
+            title: "Save Failed",
+            text: "Unable to save changes. Please try again.",
+            confirmButtonText: "OK",
+        });
+    }
+})
+.catch((error) => {
+    console.error("Error:", error);
+    Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred. Please try again later.",
+        confirmButtonText: "OK",
+    });
+});
+}
+
+    // item of use delete
+    function itemOfUse_delete(item_id){
+        console.log('this is id', item_id)
+        try {
+            data = {
+                'item_of_use_id': item_id
+            }
+            console.log(data);
+            fetch("{% url 'booking:item_of_use_crud' %}",{
+                method : 'DELETE',
+                headers : {
+                    'content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: JSON.stringify(data)
+            }).then(answer => answer.json)
+            .then(data =>{
+                if(data.success){
+                    Swal.fire({
+                        'icon': 'success',
+                        'title': 'successful',
+                        'text': 'successfully deleted item of use',
+                    })
+                }
+                else{
+                    Swal.fire({
+                        'icon': 'error',
+                        'title': 'delete failed',
+                        'text': data.message,
+                    });
+                }
+            });
+        }catch (error) {
+            console.log(error),
+            Swal.fire({
+                'icon': 'error',
+                'title': 'error',
+                'text': error,
+            });
+        }
+    }
+
+    function getCSRFToken() {
+        let cookieValue = null;
+        const name = 'csrftoken';
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 </script>
 {% endblock %}
 
