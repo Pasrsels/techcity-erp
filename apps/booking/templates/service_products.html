@@ -629,13 +629,15 @@
                         serviceEl.innerHTML += `
                             <option value = '${item.id}'>${item.service_name}</option>
                     `
-                })
+                }).then(
+                    window.location.reload(),
+                )
             })
             }else{
                 Swal.fire({
                     icon:'error',
                     title:'error',
-                    text:data.message
+                    text: 'failed'
                 })
             }
         })
@@ -748,7 +750,9 @@
                         iouEl.innerHTML += `
                             <option value ='${item.id}'>${item.name__item_of_use_name}${item.id}</option>
                     `
-                })
+                }).then(
+                    window.location.reload()
+                )
             })
             }else{
                 Swal.fire({

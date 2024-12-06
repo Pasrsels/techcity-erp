@@ -76,9 +76,17 @@ def service_crud(request):
             service_range = data.get('service_range')
             customer_type = data.get('customer_type')
 
-            if Services.objects.filter(service_name = name.lower()).exists():
-                return JsonResponse({'success': False, 'message': f'{name} already exists'}, status = 400)
-            
+            if Services.objects.filter(service_name = name.lower()).exists() and Services.objects.filter(delete_s = True).exists():
+                service = Services.objects.get(service_name = name)
+                service.delete_s = False
+                service.save()
+                service_data = Services.objects.filter(delete_s = False).values(
+                    'id',
+                    'service_name'
+                )
+                return JsonResponse({'success':True, 'message': f'{name} brought back' , 'data': list(service_data)}, status = 200)
+            elif Services.objects.filter(service_name = name.lower()).exists() and Services.objects.filter(delete_s = False).exists():
+                return JsonResponse({'success':False, 'message': f'{name} brought back'}, status = 400)
             logger.info(f'service name: {name}')
             with transaction.atomic():
 
@@ -391,9 +399,19 @@ def item_of_use_crud(request):
             logger.info(f'decription: {description}')
 
             # validation for existance
-            if itemOfUseName.objects.filter(item_of_use_name=name).exists():
-                return JsonResponse({'success': False, 'message':f'{name} Item of use exists.' }, status = 400) 
+            if itemOfUseName.objects.filter(item_of_use_name = name).exists() and itemOfUseName.objects.filter(delete_iou = True).exists():
+                item_undelete = ItemOfUse.objects.get(name__item_of_use_name = name)
+                item_undelete.delete_iou = False
+                item_undelete.save()
 
+                items = ItemOfUse.objects.filter(delete_iou = False).values(
+                    'id',
+                    'name__item_of_use_name'
+                )
+                logger.info(f'items: {items}')
+                return JsonResponse({'success': True, 'message':f'{name} item of use brought back.', 'data':list(items) }, status = 200) 
+            elif itemOfUseName.objects.filter(item_of_use_name = name).exists() and itemOfUseName.objects.filter(delete_iou = False).exists():
+                return JsonResponse({'success': False, 'message':f'{name} item already exists.' }, status = 400)
             with transaction.atomic():
                 # creation 
                 item = itemOfUseName.objects.create(
@@ -408,7 +426,7 @@ def item_of_use_crud(request):
                     category=category,
                     quantity=quantity,
                 )
-                items = ItemOfUse.objects.all().values(
+                items = ItemOfUse.objects.filter(delete_iou = False).values(
                     'id',
                     'name__item_of_use_name'
                 )
