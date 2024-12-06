@@ -464,38 +464,37 @@ def inventory_index(request):
     accessories = Accessory.objects.all()
     inventory = Inventory.objects.filter(branch=request.user.branch, status=True).order_by('name')
 
+    # # Step 1: Get the inventory products with quantity 0 and not logged in ActivityLog
+    # products_with_zero_quantity = Inventory.objects.filter(
+    #     branch=request.user.branch, 
+    #     status=True, 
+    #     quantity=0
+    # ).exclude(
+    #     id__in=ActivityLog.objects.values('inventory_id') 
+    # )
 
-    # Step 1: Get the inventory products with quantity 0 and not logged in ActivityLog
-    products_with_zero_quantity = Inventory.objects.filter(
-        branch=request.user.branch, 
-        status=True, 
-        quantity=0
-    ).exclude(
-        id__in=ActivityLog.objects.values('inventory_id') 
-    )
+    # print(products_with_zero_quantity)
 
-    print(products_with_zero_quantity)
+    # # Step 2: Find duplicate products based on name
+    # duplicates = products_with_zero_quantity.values('name').annotate(
+    #     count=Count('name')
+    # ).filter(count__gt=1)  # Only consider products with more than 1 instance
 
-    # Step 2: Find duplicate products based on name
-    duplicates = products_with_zero_quantity.values('name').annotate(
-        count=Count('name')
-    ).filter(count__gt=1)  # Only consider products with more than 1 instance
-
-    # Step 3: For each group of duplicates, delete all but the first product
-    for product in duplicates:
-        # Get all products with the same name
-        product_group = products_with_zero_quantity.filter(name=product['name'])
+    # # Step 3: For each group of duplicates, delete all but the first product
+    # for product in duplicates:
+    #     # Get all products with the same name
+    #     product_group = products_with_zero_quantity.filter(name=product['name'])
         
-        # Keep the first product and delete the rest
-        first_product = product_group.first()  # Get the first product
-        product_group.exclude(id=first_product.id).delete() 
-        logger.info(f'{first_product}, deleted') # 
+    #     # Keep the first product and delete the rest
+    #     first_product = product_group.first()  # Get the first product
+    #     product_group.exclude(id=first_product.id).delete() 
+    #     logger.info(f'{first_product}, deleted') # 
 
-    if category:
-        if category == 'inactive':
-            inventory = Inventory.objects.filter(branch=request.user.branch, status=False)
-        else:
-            inventory = inventory.filter(category__name=category)
+    # if category:
+    #     if category == 'inactive':
+    #         inventory = Inventory.objects.filter(branch=request.user.branch, status=False)
+    #     else:
+    #         inventory = inventory.filter(category__name=category)
                 
     if 'download' and 'excel' in request.GET:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -1806,8 +1805,13 @@ def confirm_purchase_order_items(request, po_id):
                     )
                 )
 
-                quantity_change = item.received_quantity - item.product.quantity
-                logger.info(quantity_change)
+                existing_quantity = item.product.quantity 
+                new_quantity = item.received_quantity + item.product.quantity
+
+                quantity_change = abs(new_quantity -  existing_quantity)
+
+                print(f' bvbproduct quantity {item.product.quantity}')
+                print(f'update product quantity {item.product.quantity + item.received_quantity}')
 
                 logs.append(
                     ActivityLog(
