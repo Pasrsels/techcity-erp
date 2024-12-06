@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}User{% endblock title %}
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="container">
+            <div class="d-flex flex-row align-items-center justify-content-between">
+                {{user.username}}
+                <span>
+                    <a href='{% url 'users:user' user.id %}'>Edit</a>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
