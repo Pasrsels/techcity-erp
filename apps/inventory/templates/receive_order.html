@@ -181,7 +181,7 @@
         </tbody>
     </table>
     <div class="floating-button">
-        <button class="btn btn-outline-dark btn-sm" id="confirmPurchaseOrder">
+        <button class="btn btn-outline-dark btn-sm" id="confirmPurchaseOrder"  disabled>
             Confirm Purchase Order
         </button>
     </div>
@@ -197,6 +197,40 @@
         scrollY: '850px',
         scrollCollapse: true
     });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const confirmButton = document.getElementById('confirmPurchaseOrder');
+        const orderItems = document.querySelectorAll('#receive_table tr');
+
+        function updateConfirmButtonState() {
+            let allReceived = true;
+
+            orderItems.forEach(row => {
+                const orderedQty = parseFloat(row.querySelector(`[id^='purchased_quantity_']`).textContent.trim());
+                const receivedInput = row.querySelector(`[id^='quantity_']`);
+
+                if (receivedInput) {
+                    const receivedQty = parseFloat(receivedInput.value.trim());
+                    if (isNaN(receivedQty) || receivedQty < orderedQty) {
+                        allReceived = false;
+                    }
+                }
+            });
+
+            confirmButton.disabled = !allReceived;
+        }
+
+
+        orderItems.forEach(row => {
+            const receivedInput = row.querySelector(`[id^='quantity_']`);
+            if (receivedInput) {
+                receivedInput.addEventListener('input', updateConfirmButtonState);
+            }
+        });
+
+        updateConfirmButtonState();
+    });
+
 
     document.addEventListener('DOMContentLoaded', function () {
         expectedProfitOnLoad();
