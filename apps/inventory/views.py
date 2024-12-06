@@ -812,7 +812,6 @@ def inventory_transfers(request):
         transfer__delete=False
     )
     
-
     transfers = Transfer.objects.filter(
         Q(branch=request.user.branch) |
         Q(transfer_to__in = [request.user.branch]),
@@ -916,103 +915,93 @@ def print_transfer(request, transfer_id):
 @login_required
 @transaction.atomic
 def receive_inventory(request):
-    transfers =  TransferItems.objects.filter(to_branch=request.user.branch).order_by('-date')
-    all_transfers = Transfer.objects.filter(transfer_to=request.user.branch, delete=False).order_by('-time')    
-
     if request.method == 'POST':
-        transfer_id = request.POST.get('id')  
+        try:  
+            transfer_id = request.POST['id']
+            quantity_received = int(request.POST['quantity'])
+            received = request.POST['received']
 
-        try:
-            branch_transfer = get_object_or_404(transfers, id=transfer_id)
-            transfer_obj = get_object_or_404(all_transfers, id=branch_transfer.transfer.id)
-            # validation
-            if int(request.POST['quantity']) > branch_transfer.quantity:
-                messages.error(request, 'Quantity received cannot be more than quanity transfered') 
-                return redirect('inventory:receive_inventory')
-                
-            if request.POST['received'] == 'true':                                                       
-                if int(request.POST['quantity']) != int(branch_transfer.quantity):
-                    branch_transfer.over_less_quantity =  branch_transfer.quantity - int(request.POST['quantity']) 
+            logger.info(f'transfer item data{received}')
+
+            branch_transfer = get_object_or_404(TransferItems, id=transfer_id, to_branch=request.user.branch)
+            transfer_obj = get_object_or_404(Transfer, id=branch_transfer.transfer.id, transfer_to=request.user.branch)
+
+            if quantity_received > branch_transfer.quantity:
+                return JsonResponse({'success': 'false', 'message': 'Quantity received cannot be more than quantity transferred'}, status=400)
+
+            if received:
+                if quantity_received != branch_transfer.quantity:
+                    branch_transfer.over_less_quantity = branch_transfer.quantity - quantity_received
                     branch_transfer.over_less = True
                     branch_transfer.save()
 
-                product, _ = Inventory.objects.get_or_create(
+                product, created = Inventory.objects.get_or_create(
                     name=branch_transfer.product.name,
                     branch=request.user.branch,
-
                     defaults={
-                        'cost':branch_transfer.cost,
-                        'price':branch_transfer.price,
+                        'cost': branch_transfer.cost,
+                        'price': branch_transfer.price,
                         'quantity': branch_transfer.quantity,
-                        'branch':request.user.branch,
-                        'dealer_price':branch_transfer.dealer_price,
-                        'description':branch_transfer.product.description or '',
-                        'category':branch_transfer.product.category,
-                        'tax_type':branch_transfer.product.tax_type,
-                        'stock_level_threshold':branch_transfer.product.stock_level_threshold,
+                        'dealer_price': branch_transfer.dealer_price,
+                        'description': branch_transfer.product.description or '',
+                        'category': branch_transfer.product.category,
+                        'tax_type': branch_transfer.product.tax_type,
+                        'stock_level_threshold': branch_transfer.product.stock_level_threshold,
                     }
                 )
 
-                if not _:
-                    product.quantity += int(request.POST['quantity'])
+                if not created:
+                    product.quantity += quantity_received
                     product.price = branch_transfer.price
                     product.cost = branch_transfer.cost
                     product.dealer_price = branch_transfer.dealer_price
                     product.save()
 
-                    ActivityLog.objects.create(
-                        branch = request.user.branch,
-                        user=request.user,
-                        action= 'stock in',
-                        inventory=product,
-                        dealer_price = product.dealer_price,
-                        selling_price = product.price or 0,
-                        system_quantity = product.quantity, 
-                        quantity=int(request.POST['quantity']),
-                        total_quantity= product.quantity,
-                        product_transfer=branch_transfer,
-                        description = f'received f{request.POST['quantity']} out of {branch_transfer.quantity}' 
-                    )
-                    messages.success(request, 'Product received')
-                else:
-                    ActivityLog.objects.create(
-                        branch = request.user.branch,
-                        user=request.user,
-                        action= 'stock in',
-                        inventory=product,
-                        quantity=product.quantity,
-                        selling_price = product.price,
-                        dealer_price = product.dealer_price or 0,
-                        system_quantity = product.quantity, 
-                        total_quantity=product.quantity,
-                        product_transfer=branch_transfer,
-                        description = f'received {request.POST['quantity']} out of {branch_transfer.quantity}'
-                    )
-                    messages.success(request, 'Product received')
+                ActivityLog.objects.create(
+                    branch=request.user.branch,
+                    user=request.user,
+                    action='stock in',
+                    inventory=product,
+                    dealer_price=product.dealer_price,
+                    selling_price=product.price,
+                    system_quantity=product.quantity,
+                    quantity=quantity_received,
+                    total_quantity=product.quantity,
+                    product_transfer=branch_transfer,
+                    description=f'received {quantity_received} out of {branch_transfer.quantity}'
+                )
 
                 product.batch += f'{branch_transfer.product.batch}, '
                 product.save()
-                    
-            transfer = Transfer.objects.get(id = branch_transfer.transfer.id)
-            if not transfer.receive_status:
-                transfer.receive_status = True
-                transfer.save()
-                    
-            branch_transfer.quantity_track = branch_transfer.quantity - int(request.POST['quantity'])
-            branch_transfer.receieved_quantity += int(request.POST['quantity'])
+
+            branch_transfer.quantity_track = branch_transfer.quantity - quantity_received
+            branch_transfer.receieved_quantity += quantity_received
             branch_transfer.received_by = request.user
             branch_transfer.received = True
-            branch_transfer.description = f'received {request.POST['quantity']} - {branch_transfer.quantity}'
+            branch_transfer.description = f'received {quantity_received} out of {branch_transfer.quantity}'
             branch_transfer.save()
-            
-            transfer_obj.total_quantity_track -= int(request.POST['quantity'])
-            transfer_obj.save()
-            return redirect('inventory:receive_inventory')  
 
+            transfer_obj.total_quantity_track -= quantity_received
+            transfer_obj.save()
+
+            if not transfer_obj.receive_status:
+                transfer_obj.receive_status = True
+                transfer_obj.save()
+
+            return JsonResponse({'success': True, 'message': 'Product received successfully'}, status=200)
+
+        except TransferItems.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Invalid transfer ID'}, status=400)
         except Transfer.DoesNotExist:
-            messages.error(request, 'Invalid transfer ID')
-            return redirect('inventory:receive_inventory')  
-    return render(request, 'receive_inventory.html', {'r_transfers': transfers, 'transfers':all_transfers})
+            return JsonResponse({'success': False, 'message': 'Transfer object not found'}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+    # Handle GET requests
+    transfers = TransferItems.objects.filter(to_branch=request.user.branch).order_by('-date')
+    all_transfers = Transfer.objects.filter(transfer_to=request.user.branch, delete=False).order_by('-time')
+    return render(request, 'receive_inventory.html', {'r_transfers': transfers, 'transfers': all_transfers})
+
 
 @login_required
 def receive_inventory_json(request):
@@ -1814,12 +1803,16 @@ def confirm_purchase_order_items(request, po_id):
             for item in order_items:
                 print(item.received_quantity)
                 print(item.product)
+                logger.info(f'actual product cost {item.actual_unit_cost}')
+                logger.info(f'actual product cost {item.price}')
+                logger.info(f'dummy {item.unit_cost}')
                 inventory_updates.append(
                     Inventory(
                         id=item.product.id,
                         quantity=item.product.quantity + item.received_quantity,
                         price=item.price,
-                        dealer_price=item.wholesale_price
+                        dealer_price=item.wholesale_price,
+                        cost=item.actual_unit_cost
                     )
                 )
 
@@ -1848,7 +1841,7 @@ def confirm_purchase_order_items(request, po_id):
                 )
 
             Inventory.objects.bulk_update(
-                inventory_updates, ['quantity', 'price', 'dealer_price']
+                inventory_updates, ['quantity', 'price', 'dealer_price', 'cost']
             )
 
             ActivityLog.objects.bulk_create(logs)
