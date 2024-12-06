@@ -136,18 +136,18 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 DATABASES = {
 
-    # 'default': dj_database_url.config(
-    #     default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
-    # )
+    'default': dj_database_url.config(
+        default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
+    )
 
-   'default': {
-     'ENGINE': 'django.db.backends.postgresql',
-       'NAME':  'techcoty',
-       'USER': 'postgres',
-       'PASSWORD': 'neverfail',
-       'HOST': 'localhost',
-       'PORT': '5432'
- }
+#    'default': {
+#      'ENGINE': 'django.db.backends.postgresql',
+#        'NAME':  'techcoty',
+#        'USER': 'postgres',
+#        'PASSWORD': 'neverfail',
+#        'HOST': 'localhost',
+#        'PORT': '5432'
+#  }
     # 'default': {
     #     'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
     #      'NAME': os.getenv('DB_NAME', 'railway'),
