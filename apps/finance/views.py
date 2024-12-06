@@ -705,6 +705,8 @@ def create_invoice(request):
 
                     accessories = Accessory.objects.filter(main_product=item).values('accessory_product', 'accessory_product__quantity')
 
+                    logger.info(f'Accessories for this product: {accessories}')
+
                     for acc in accessories:
                         COGSItems.objects.get_or_create(
                             invoice=invoice,
@@ -1919,7 +1921,6 @@ def send_invoice_whatsapp(request, invoice_id):
         logger.exception(f"Error sending invoice via WhatsApp: {e}")
         return JsonResponse({"error": "Error sending invoice via WhatsApp"})
     
-
 @login_required
 def end_of_day(request):
     today = timezone.now().date()
@@ -1943,7 +1944,10 @@ def end_of_day(request):
     now = timezone.now() 
     today = now.date()  
     
+    # invoices = filter_by_date_range(today, today)
     invoices = filter_by_date_range(today, today)
+
+    logger.info(f'Invoices {invoices}')
     withdrawals = CashWithdraw.objects.filter(user__branch=request.user.branch, date=today, status=False)
     
     total_cash_amounts = [
@@ -1953,12 +1957,16 @@ def end_of_day(request):
         }
     ]
 
+    logger.info(f'cash amounts: {total_cash_amounts}')
+
     sold_inventory = (
-        StockTransaction.objects
-        .filter(invoice__branch=request.user.branch, date=today, transaction_type=StockTransaction.TransactionType.SALE)
-        .values('item__id', 'item__name')
+        ActivityLog.objects
+        .filter(invoice__branch=request.user.branch, timestamp__date=today, action='Sale')
+        .values('inventory__id', 'inventory__name')
         .annotate(quantity_sold=Sum('quantity'))
     )
+
+    logger.info(f'Sold Inventory: {sold_inventory}')
     
     if request.method == 'GET':
         all_inventory = Inventory.objects.filter(branch=request.user.branch, status=True).values(
@@ -1967,12 +1975,13 @@ def end_of_day(request):
 
         inventory_data = []
         for item in sold_inventory:
-            sold_info = next((inv for inv in all_inventory if item['item__id'] == inv['id']), None)
+            logger.info(item)
+            sold_info = next((inv for inv in all_inventory if item['inventory__id'] == inv['id']), None)
             
             if sold_info:
                 inventory_data.append({
-                    'id': item['item__id'],
-                    'name': item['item__name'],
+                    'id': item['inventory__id'],
+                    'name': item['inventory__name'],
                     'initial_quantity': item['quantity_sold'] + sold_info['quantity'] if sold_info else 0,
                     'quantity_sold':  item['quantity_sold'],
                     'remaining_quantity':sold_info['quantity'] if sold_info else 0,
@@ -1992,10 +2001,10 @@ def end_of_day(request):
                     inventory.physical_count = item['physical_count']
                     inventory.save()
 
-                    sold_info = next((i for i in sold_inventory if i['item__id'] == inventory.id), None)
+                    sold_info = next((i for i in sold_inventory if i['inventory__id'] == inventory.id), None)
                     inventory_data.append({
                         'id': inventory.id,
-                        'name': inventory.product.name,
+                        'name': inventory.name,
                         'initial_quantity': inventory.quantity,
                         'quantity_sold': sold_info['quantity_sold'] if sold_info else 0,
                         'remaining_quantity': inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0),
@@ -2003,7 +2012,7 @@ def end_of_day(request):
                         'difference': inventory.physical_count - (inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0))
                     })
                 except Inventory.DoesNotExist:
-                    return JsonResponse({'success': False, 'error': f'Inventory item with id {item["item_id"]} does not exist.'})
+                    return JsonResponse({'success': False, 'error': f'Inventory item with id {item["inventory_id"]} does not exist.'})
 
             today_min = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
             today_max = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)

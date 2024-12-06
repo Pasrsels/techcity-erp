@@ -1,11 +1,11 @@
 {% load static%}
 {% block content %}
-   <div class="table mt-2 w-100">
+   <div class="table w-100">
         <!-- inventory table -->
         {% include 'components/loader.html' %}
         <div class='products'>
             <table class='table border table-bordered table-striped table-hover table-responsive table-sm rounded p-2 w-100 ' style="width:100%" id='inventory'>
-                <thead>
+                <thead class="table-dark">
                     <tr>
                         <th>#</th>
                         <th>Image</th>
@@ -25,9 +25,9 @@
                         <td>{{ forloop.counter }}</td>
                         <td><small><span class='hint--bottom' aria-label='{{ product.description }}'>
                             {% if product.image %}
-                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" width="20px">
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" width="20px" class="rounded-3">
                                 {% else %}
-                                    <img src="{% static 'placeholder.png'%}" alt="{{ product.name }}" width="20px">
+                                    <img src="{% static 'placeholder.png'%}" alt="{{ product.name }}" width="20px" class="rounded-3">
                             {% endif %}
                             {{ product.name }}</span></small></td>
                         <td><small>{{ product.description }}</small></td>

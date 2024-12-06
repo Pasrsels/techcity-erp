@@ -79,6 +79,16 @@ def create_cashbook_entry(instance, debit, credit):
                 currency=instance.currency,
                 branch=instance.branch
             )
+    else:
+        Cashbook.objects.create(
+            issue_date=instance.issue_date,
+            description=f'Sale  ({instance.invoice_number})',
+            debit=debit,
+            credit=credit,
+            amount=instance.amount_paid,
+            currency=instance.currency,
+            branch=instance.branch
+        )
 
 @receiver(post_save, sender=Invoice)
 def create_invoice_cashbook_entry(sender, instance, **kwargs):

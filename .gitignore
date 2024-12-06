@@ -25,3 +25,7 @@ test.png
 .base.py
 dev/*.pyc
 *base.py
+Dockerfile
+docker_compose.yml
+*.pyc
+*.pyc

@@ -1,242 +1,76 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Linkspot - Services{% endblock %}
+{% block title %}Services{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <header class="bg-dark text-white p-3">
-        <h1 class="mb-0" style="text-align: left;">LINKSPOT</h1>
-    </header>
+<div class="container mt-5">
+    <h2 class="text-center">Services</h2>
 
-    <div class="row">
-        <aside class="col-2 bg-dark text-white p-4">
-            <ul class="list-unstyled">
-                <li><a href="]" class="text-white">Services</a></li>
-                <li><a href="{% url 'booking:member' %}" class="text-white">Members</a></li>
-                <li><a href="#" class="text-white">Logs</a></li>
-                <li><a href="#" class="text-white">Settings</a></li>
-            </ul>
-        </aside>
-
-        <div class="col-10">
-            <nav class="d-flex justify-content-between align-items-center p-3 bg-primary text-white shadow-sm">
-                <h5>Services</h5>
-                <div>
-                    <input type="text" id="searchInput" class="form-control d-inline w-50" placeholder="Search services...">
-                    <button id="addServiceBtn" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#addServiceModal">Add Service</button>
-                </div>
-            </nav>
-
-            <div class="row mt-5">
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow-lg border-primary">
-                        <div class="card-body text-center" id="monthlyServiceCard" style="cursor: pointer;">
-                            <h5 class="card-title text-primary">Monthly Services</h5>
-                            <p class="card-text text-muted">Explore our monthly service packages tailored to your needs.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow-lg border-info">
-                        <div class="card-body text-center" id="hourlyServiceCard" style="cursor: pointer;">
-                            <h5 class="card-title text-info">Hourly Services</h5>
-                            <p class="card-text text-muted">Discover hourly service options for flexible schedules.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
->
-            <div id="typesTable" class="mt-4">
-                <h5 class="mb-4">Service Types</h5>
-                <table class="table table-striped table-bordered table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Name</th>
-                            <th>Price</th>
-                            <th>Duration</th>
-                            <th>Promotion</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="typesTableBody">
-                        <!-- Content will be dynamically populated -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div id="searchResultsTable" class="mt-4">
-                <h5 class="mb-4">Search Results</h5>
-                <table class="table table-striped table-bordered table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Name</th>
-                            <th>Price</th>
-                            <th>Duration</th>
-                            <th>Promotion</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="searchResultsBody">
-                        <!-- Content will be dynamically populated -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <div class="text-center mt-4">
+        <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+            + Service
+        </button>
     </div>
 </div>
 
-<div class="modal fade" id="addServiceModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel"  data-backdrop="static" data-keyboard="false" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-dialog-centered">>
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Add New Service</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header">
+                <h5 class="modal-title" id="addServiceModalLabel">Add Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background-color: red; color: white; border-radius: 50%; padding: 0.5rem;"></button>
             </div>
+
             <div class="modal-body">
-                <form id="addServiceForm">
-                    <div class="mb-3">
-                        <label for="serviceName" class="form-label">Service Name</label>
-                        <input type="text" class="form-control" id="serviceName" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="servicePrice" class="form-label">Price</label>
-                        <input type="number" class="form-control" id="servicePrice" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="serviceDuration" class="form-label">Duration</label>
-                        <input type="text" class="form-control" id="serviceDuration" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="servicePromotion" class="form-label">Promotion</label>
-                        <input type="text" class="form-control" id="servicePromotion">
-                    </div>
-                    <div class="mb-3">
-                        <label for="serviceType" class="form-label">Service Type</label>
-                        <select id="serviceType" class="form-select" required>
-                            <option value="monthly">Monthly</option>
-                            <option value="hourly">Hourly</option>
-                        </select>
+                <form id="addServiceForm" method="POST" action="{% url 'services' %}"> <!--to be adjusted-->
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <div class="d-flex justify-content-between mt-3">
+                        <button type="reset" class="btn btn-secondary">Reset</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="saveServiceBtn">Save Service</button>
-            </div>
         </div>
     </div>
 </div>
 
-<script>
-    function fetchServices(serviceType) {
-        fetch(`/service_crud/?service_type=${serviceType}`)
-            .then(response => response.json())
-            .then(data => populateTable(data, serviceType))
-            .catch(error => console.error("Error fetching services:", error));
-    }fetchServices
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="successModalLabel">Success</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                            <p>Service added successfully!</p>
+                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" id="redirectButton">OK</button>
+                    </div>
+            </div>
+        </div>
+    </div>
 
-    document.getElementById("monthlyServiceCard").addEventListener("click", function() {
-        fetchServices("monthly");
-    });
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const form = document.querySelector("#addServiceForm");
+            const successModal = new bootstrap.Modal(document.getElementById("successModal"));
+            const redirectButton = document.getElementById("redirectButton");
 
-    document.getElementById("hourlyServiceCard").addEventListener("click", function() {
-        fetchServices("hourly");
-    });
+            
+            form.addEventListener("submit", (event) => {
+                event.preventDefault(); 
+                const addServiceModal = bootstrap.Modal.getInstance(document.getElementById("addServiceModal"));
+                addServiceModal.hide(); 
+                successModal.show(); 
+            });
 
-    function populateTable(data, type) {
-        const tableBody = type === "monthly" ? document.getElementById("typesTableBody") : document.getElementById("searchResultsBody");
-        tableBody.innerHTML = ""; 
-
-        data.forEach(service => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${service.name}</td>
-                <td>${service.price}</td>
-                <td>${service.duration}</td>
-                <td>${service.promotion ? 'Yes' : 'No'}</td>
-                <td>
-                    <button class="btn btn-danger btn-sm" onclick="deleteService(${service.id})">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </td>
-            `;
-            tableBody.appendChild(row);
+            redirectButton.addEventListener("click", () => {
+                window.location.href = "/new-page/"; // to be adjusted
+            });
         });
-    }
+    </script>
 
-    document.getElementById("saveServiceBtn").addEventListener("click", function() {
-        const newService = {
-            name: document.getElementById("serviceName").value,
-            price: document.getElementById("servicePrice").value,
-            duration: document.getElementById("serviceDuration").value,
-            promotion: document.getElementById("servicePromotion").value,
-            service_type: document.getElementById("serviceType").value
-        };
-
-        fetch(`/service_crud/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCSRFToken()
-                },
-                body: JSON.stringify(data)
-            })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Service saved:", data);
-            $('#addServiceModal').modal('hide');
-            fetchServices(newService.service_type);  
-        })
-        .catch(error => console.error("Error saving new service:", error));
-    });
-
-    function deleteService(serviceId) {
-        const confirmation = confirm("Are you sure you want to delete this service?");
-        if (confirmation) {
-            fetch(`/service_crud/`, {
-                method: "DELETE",
-                headers: { 'Content-Type': 'application/json'},
-                body: JSON.stringify({ service_id: serviceId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert("Service deleted successfully.");
-                    populateTable(data.services, data.service_type); 
-                } else {
-                    alert("Failed to delete the service.");
-                }
-            })
-            .catch(error => console.error("Error deleting service:", error));
-        }
-    }
-
-    document.getElementById("searchInput").addEventListener("keyup", function() {
-        const searchTerm = this.value.toLowerCase();
-        const rows = document.querySelectorAll("#searchResultsBody tr");
-
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? "" : "none";
-        });
-    });
-        
-    // Utility function to get the CSRF token from cookies
-    function getCSRFToken() {
-        let cookieValue = null;
-        const name = 'csrftoken';
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-    }
-        return cookieValue;
-
-</script>
-{% endblock content %}
+{% endblock %}

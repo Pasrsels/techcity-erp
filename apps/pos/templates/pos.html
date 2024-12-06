@@ -938,8 +938,8 @@ function totals(){
         totalAmount = totalAmount - discount
         
         discountAmount = calculateTotalAmount(cart) - totalAmount
-        vatAmount = totalAmount * 0.15
-        payable = totalAmount + vatAmount + delivery;
+        vatAmount = (totalAmount * 0.15) / (1 + 0.15) //  to be provided from the back
+        payable = totalAmount + delivery;
         
         vat_amount = vatAmount
         payable_amount = payable
@@ -1226,36 +1226,35 @@ async function displayReceipt(invoiceId) {
         } = invoice;
 
         let prvDue = parseFloat(document.getElementById('tpreviousDue').textContent.split('')[1]);
+        let availabeB = invoiceTotal - amountPaid + prvDue;
 
         document.getElementById('rcp-payment')
         document.getElementById('rcp-pterms').textContent = payment_terms;
         document.getElementById('rcp-currency').textContent = currencySymbol;
         document.getElementById('rcp_amount_paid').textContent = currencySymbol + ' ' + amountPaid;
-        document.getElementById('rcp_previous_due').textContent = currencySymbol + ' ' + prvDue;
-        document.getElementById('available_balance').textContent = currencySymbol + ' ' + (invoiceTotal - amountPaid + prvDue)
-        document.getElementById('total_amount').textContent = currencySymbol + ' ' + invoiceTotal
+        document.getElementById('rcp_previous_due').textContent = currencySymbol + ' ' + `${prvDue ? prvDue : 0.00}`;
+        document.getElementById('available_balance').textContent = currencySymbol + ' ' + `${availabeB ? availabeB : 0.00}`;
+        document.getElementById('total_amount').textContent = currencySymbol + ' ' + invoiceTotal;
         document.querySelector('#invoiceNumber').textContent = invoiceNumber;
 
         const receiptTableBody = document.querySelector('#receipt');
         receiptTableBody.innerHTML = '';
 
+        console.log('invoice items', invoiceItems)
+
         // Populate the table with invoice items
-        invoiceItems.forEach(({ quantity, item__product__name, unit_price, item__product__description, total_amount }) => {
+        invoiceItems.forEach(({ quantity, item__name, unit_price, item__description, total_amount }) => {
             const newRow = receiptTableBody.insertRow();
-            newRow.insertCell().textContent = `${item__product__name}`
-            newRow.insertCell().textContent = `(${item__product__description})`;
+            newRow.insertCell().textContent = `${item__name}`
+            newRow.insertCell().textContent = `(${item__description})`;
             newRow.insertCell().textContent = quantity;
             newRow.insertCell().textContent = `${unit_price}`;
-            newRow.insertCell().textContent = `${(0.15 * unit_price).toFixed(2)}`;
             newRow.insertCell().textContent = `${quantity * unit_price}`;
         });;
 
-        // Update total amounts in the footer
         document.querySelector('#subTotalAmount').textContent = `${currencySymbol} ${subTotal}`;
-        //document.querySelector('#totalAmount').textContent = `${currencySymbol} ${invoiceTotal}`;
         document.querySelector('#vatAmount').textContent = `${currencySymbol} ${vatAmount}`;
-       //document.querySelector('#rid_paid_amount').textContent = `${currencySymbol} ${amount_paid.toFixed(2)}`;
-        //document.querySelector('#rprevious_due').textContent = `${currencySymbol} ${previousDue.toFixed(2)}`;
+;
         
         const laybyDateEl = document.getElementById('rcp_payment_dates')
         const laybyTerms = document.getElementById('laybyTerms');

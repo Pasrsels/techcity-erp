@@ -39,7 +39,7 @@
                     <p id="cart-title" class="fw-bold fs-6 rounded mx-1">Purchase order Items</p>
                     <div>
                       <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search products..." oninput="searchTable()">
-                  </div>
+                    </div>
                   </div>
                     <table class="table border rounder p-2" id="cart-table">
                         <thead>
@@ -743,13 +743,11 @@
             title: "Are you sure?",
             text: "Once deleted, you will not be able to recover this product!",
             icon: "warning",
-            buttons: true,
-            dangerMode: true,
         }).then(async (willDelete) => {
             if (willDelete) {
                 try {
                     const response = await fetch("{% url 'inventory:delete' %}", {
-                        method: 'DELETE',
+                        method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRFToken': getCookie('csrftoken'), 
@@ -763,18 +761,18 @@
 
                     const result = await response.json();
                     if (result.success) {
+                      console.log(result, 'reponse');
                       Swal.fire({
-                          title: "Are success",
-                          text: "Product successfully deleted",
+                          title: "success",
+                          text: result.message,
                           icon: "success",
                       })
                         fetchProducts()
                     } else {
                       Swal.fire({
                           title: "Failed to delete",
-                          text: data.message,
+                          text: result.message,
                           icon: "error",
-                          dangerMode: true,
                       })
                     }
                 } catch (error) {
@@ -783,7 +781,6 @@
                           title: "An error occurred while trying to delete the product.",
                           text: error,
                           icon: "error",
-                          dangerMode: true,
                       })
                 }
             } else {
@@ -1517,7 +1514,6 @@
         localStorage.setItem('cart', JSON.stringify(cart))
         console.log(localStorage.getItem(cart, 'delete'))
         console.log(cart)
-        updateCartDisplay();
     }
     
     function processCart() {
@@ -1555,6 +1551,16 @@
           'other_amount':parseFloat(document.getElementById('id_other').value) || 0
         }
       }
+
+        // Show processing Swal
+      Swal.fire({
+        title: 'Processing...',
+        text: 'Please wait while your purchase order is being created.',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
       
       fetch("{% url 'inventory:create_purchase_order' %}", {
         method: "POST",
@@ -1567,6 +1573,7 @@
       .then(response => response.json())
       .then(data=>{
           if (data.success) {
+            localStorage.clear('cart')
             Swal.fire({
               icon: 'success',
               title: 'success',
@@ -1590,8 +1597,6 @@
           });
         });
     }
-
-
     function calculateTotals() {
       let subtotal = 0;
       cart.forEach(item => {

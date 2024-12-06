@@ -25,7 +25,7 @@
         </table>
 
         <h5>Cash</h5>
-        <table class="table table-bordered" id="cash">
+        <table class="table table-bordered">
             <thead>
                 <tr>
                     <th>Invoices</th>
@@ -35,7 +35,7 @@
                     <th>Difference</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="cashTable">
             </tbody>
         </table>
 
@@ -48,137 +48,141 @@
     </div>
 
 <script>
-fetch('/finance/end_of_day/')
-    .then(response => response.json())
-    .then(data => {
-        const inventoryData = data.inventory;
-        const cashData = data.total_cash_amounts;
+    fetch('/finance/end_of_day/')
+        .then(response => response.json())
+        .then(data => {
+            const inventoryData = data.inventory;
+            const cashData = data.total_cash_amounts;
 
-        const row = cash.insertRow();
-        row.insertCell().textContent = cashData[0].total_invoices_amount;
-        row.insertCell().textContent = cashData[0].total_withdrawals_amount;
-        row.insertCell().textContent = 0;
-        
-        const inputCell = row.insertCell();
-        const input = document.createElement('input');
-        input.type = 'number';
-        input.className = 'form-control';
-
-        inputCell.appendChild(input);
-
-        const cashDiffCell = row.insertCell();
-        cashDiffCell.textContent = '';
-
-        input.addEventListener('input', () => {
-            const invoices = parseFloat(cashData[0].total_invoices_amount) || 0;
-            const withdrawals = parseFloat(cashData[0].total_withdrawals_amount) || 0;
-            const deposits = parseFloat(0) || 0;
-            const collected = parseFloat(input.value, 10) || 0;
-            const difference = collected - (invoices - withdrawals + deposits);
-
-            cashDiffCell.textContent = difference;
-            cashDiffCell.style.color = difference < 0 ? 'red' : 'green'; 
-        });
-
-        inventoryData.forEach(item => {
-            const row = stockTable.insertRow();
-            row.insertCell().textContent = item.name;
-            row.insertCell().textContent = item.initial_quantity;
-            row.insertCell().textContent = item.quantity_sold;
-            row.insertCell().textContent = item.remaining_quantity;
+            const cashTbody = document.getElementById('cashTable'); 
+            console.log(cashTbody)
+            const row = cashTbody.insertRow(); 
+            row.insertCell().textContent = cashData[0].total_invoices_amount;
+            row.insertCell().textContent = cashData[0].total_withdrawals_amount;
+            row.insertCell().textContent = 0;
 
             const inputCell = row.insertCell();
             const input = document.createElement('input');
             input.type = 'number';
             input.className = 'form-control';
-            input.dataset.itemId = item.id; 
-
-            const diffCell = row.insertCell();
-            diffCell.textContent = '';
 
             inputCell.appendChild(input);
 
+            const cashDiffCell = row.insertCell();
+            cashDiffCell.textContent = '';
+
+
             input.addEventListener('input', () => {
-                const physicalCount = parseInt(input.value, 10) || 0;
-                const remainingQuantity = parseInt(item.remaining_quantity, 10);
-                const difference = physicalCount - remainingQuantity;
+                const invoices = parseFloat(cashData[0].total_invoices_amount) || 0;
+                const withdrawals = parseFloat(cashData[0].total_withdrawals_amount) || 0;
+                const deposits = parseFloat(0) || 0;
+                const collected = parseFloat(input.value, 10) || 0;
+                const difference = collected - (invoices - withdrawals + deposits);
 
-                diffCell.textContent = difference;
-                diffCell.style.color = difference < 0 ? 'red' : 'green'; 
+                cashDiffCell.textContent = difference;
+                cashDiffCell.style.color = difference < 0 ? 'red' : 'green'; 
             });
-        });
 
+            const stockTable = document.getElementById('stockTable'); 
+            inventoryData.forEach(item => {
+                const row = stockTable.insertRow();
+                row.insertCell().textContent = item.name;
+                row.insertCell().textContent = item.initial_quantity;
+                row.insertCell().textContent = item.quantity_sold;
+                row.insertCell().textContent = item.remaining_quantity;
 
+                const inputCell = row.insertCell();
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'form-control';
+                input.dataset.itemId = item.id;
 
-        saveStockBtn.addEventListener('click', () => {
-            const physicalCounts = [];
-            stockTable.querySelectorAll('input').forEach(input => {
-                physicalCounts.push({
-                    item_id: input.dataset.itemId,
-                    physical_count: parseInt(input.value, 10) || 0 
+                const diffCell = row.insertCell();
+                diffCell.textContent = '';
+
+                inputCell.appendChild(input);
+
+                input.addEventListener('input', () => {
+                    const physicalCount = parseInt(input.value, 10) || 0;
+                    const remainingQuantity = parseInt(item.remaining_quantity, 10);
+                    const difference = physicalCount - remainingQuantity;
+
+                    diffCell.textContent = difference;
+                    diffCell.style.color = difference < 0 ? 'red' : 'green'; 
                 });
             });
+        })
+        .catch(error => console.error('Error fetching data:', error));
 
-            fetch('/finance/end_of_day/', { 
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    "X-CSRFToken": getCookie("csrftoken"), 
-                },
-                body: JSON.stringify(physicalCounts)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    endOfDayModal.hide()
-                    alert('Stock take saved successfully!');
-                } else {
-                    alert('Error saving stock take.');
-                }
+            saveStockBtn.addEventListener('click', () => {
+                const physicalCounts = [];
+                stockTable.querySelectorAll('input').forEach(input => {
+                    physicalCounts.push({
+                        item_id: input.dataset.itemId,
+                        physical_count: parseInt(input.value, 10) || 0 
+                    });
                 });
-            });
-        });
 
-fetch('{% url "inventory:product_list" %}')
-    .then(response => response.json())
-    .then(data => {
-        const inventoryData = data;
-        const categorySummary = document.getElementById('categorySummary'); 
-    
-        const productsByCategory = {};
-        inventoryData.forEach(item => {
-            console.log(item.end_of_day)
-            if(item.end_of_day){
-                const category = item.category_name; 
-                if (!productsByCategory[category]) {
-                    productsByCategory[category] = { totalQuantity: 0, products: [] };
+                fetch('/finance/end_of_day/', { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "X-CSRFToken": getCookie("csrftoken"), 
+                    },
+                    body: JSON.stringify(physicalCounts)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        endOfDayModal.hide()
+                        alert('Stock take saved successfully!');
+                    } else {
+                        alert('Error saving stock take.');
+                    }
+                    });
+                });
+
+
+    fetch('{% url "inventory:product_list" %}')
+        .then(response => response.json())
+        .then(data => {
+            const inventoryData = data;
+            const categorySummary = document.getElementById('categorySummary'); 
+        
+            const productsByCategory = {};
+            inventoryData.forEach(item => {
+                console.log(item.end_of_day)
+                if(item.end_of_day){
+                    const category = item.category_name; 
+                    if (!productsByCategory[category]) {
+                        productsByCategory[category] = { totalQuantity: 0, products: [] };
+                    }
+                    productsByCategory[category].totalQuantity += parseInt(item.quantity, 10);
+                    productsByCategory[category].products.push(item);
                 }
-                productsByCategory[category].totalQuantity += parseInt(item.quantity, 10);
-                productsByCategory[category].products.push(item);
+            });
+
+            for (const category in productsByCategory) {
+                const categoryContainer = document.createElement('div');
+                categoryContainer.className = 'category-container';
+
+                const categoryHeading = document.createElement('h6');
+                categoryHeading.classList.add('fw-bold')
+                categoryHeading.textContent = `${category} (Total Quantity: ${productsByCategory[category].totalQuantity})`;
+                categoryContainer.appendChild(categoryHeading);
+
+                const productList = document.createElement('ol');
+                productList.className = 'product-list';
+                productsByCategory[category].products.forEach(product => {
+                    const productItem = document.createElement('li');
+                    productItem.textContent = `${product.product_name} (At Hand: ${product.quantity})`;
+                    productList.appendChild(productItem);
+                });
+                categoryContainer.appendChild(productList);
+
+                categorySummary.appendChild(categoryContainer);
             }
         });
-
-        for (const category in productsByCategory) {
-            const categoryContainer = document.createElement('div');
-            categoryContainer.className = 'category-container';
-
-            const categoryHeading = document.createElement('h6');
-            categoryHeading.classList.add('fw-bold')
-            categoryHeading.textContent = `${category} (Total Quantity: ${productsByCategory[category].totalQuantity})`;
-            categoryContainer.appendChild(categoryHeading);
-
-            const productList = document.createElement('ol');
-            productList.className = 'product-list';
-            productsByCategory[category].products.forEach(product => {
-                const productItem = document.createElement('li');
-                productItem.textContent = `${product.product_name} (At Hand: ${product.quantity})`;
-                productList.appendChild(productItem);
-            });
-            categoryContainer.appendChild(productList);
-
-            categorySummary.appendChild(categoryContainer);
-        }
-    });
 
     function getCookie(name) {
         let cookieValue = null;

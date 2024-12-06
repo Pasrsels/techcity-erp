@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Account</title>
+</head>
+<body>
+    <h5>Stock Account for product {{ inventory.name }}</h5>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Timestamp</th>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Debits</th>
+                    <th>Credits</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if stock_account_data %}
+                    {% for entry in stock_account_data %}
+                        <tr>
+                            <td><small>{{ forloop.counter }}</small></td>
+                            <td><small>{{ entry.timestamp }}</small></td>
+                            <td><small>{{ entry.description }}</small></td>
+                            <td><small>{{ entry.quantity }}</small></td>
+                            {% if entry.type == 'debits' %}
+                                <td><small>{{ entry.cost|floatformat:2 }}</small></td>
+                                <td></td>
+                            {% else %}
+                                <td></td>
+                                <td><small>{{ entry.cost|floatformat:2 }}</small></td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                    
+                    <!-- Totals Row -->
+                    <tr class="fw-bold">
+                        <td class="text-start">Totals</td>
+                        <td colspan="2" ></td>
+                        <td><small>{{ remaining_stock_quantity }}</small></td>
+                        <td><small>{{ total_debits|floatformat:2 }}</small></td>
+                        <td><small>{{ total_credits|floatformat:2 }}</small></td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">No stock account data available.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

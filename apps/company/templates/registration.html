@@ -20,6 +20,7 @@
         <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         
     {% endblock css %}
     
@@ -31,7 +32,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <title>
-        {% block title %}Registration{% endblock title %}
+        {% block title %}Company Registration{% endblock title %}
     </title>
     <style>
         .custom-file-input {
@@ -105,9 +106,6 @@
                     <div class="d-flex justify-content-end">
                         <button type="button" class="btn btn-primary">next</button>
                     </div>
-
-                
-
             </div>
 
             <div id="user_info" class="border rounded p-4" style="display: none;">
@@ -279,6 +277,12 @@
                             window.location.href = "{% url 'users:login' %}";
                         }, 10000)
                         
+                    }else{
+                        Swal.fire({
+                            icon:'error',
+                            title:'error',
+                            text: data.message
+                        })
                     }
                 })
                 .catch(error => {

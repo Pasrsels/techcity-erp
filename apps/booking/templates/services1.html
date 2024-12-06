@@ -1,0 +1,493 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %}Services{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="Services">
+        <div class="nav-services">
+            <div class="d-flex align-items-center justify-content-between rounded shadow header p-2 mb-4">
+                <h5>Services </h5>
+                <div>
+                    <a class="btn btn-outline-dark btn-sm" href="{% url 'booking:services' %}">Add Services</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- navigation bar -->
+    <div class="nav-container d-flex justify-content-between align-items-center border rounded p-2">
+        <div class="d-flex">
+            <ul class="nav nav-pills justify-content-center" id="tableNav" role="tablist">
+                <li class="nav-item">
+                    <button class="btn btn-sm text-dark active" id="service-tab" data-bs-toggle="tab" data-bs-target="#service-content" type="button" role="tab" aria-controls="service-content" aria-selected="true">
+                        Services
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="btn btn-sm text-dark" id="itemofuse-tab" data-bs-toggle="tab" data-bs-target="#items-content" type="button" role="tab" aria-controls="itemofuse-content" aria-selected="false">
+                        Items of Use
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div>
+            <input type="text" class="form-control form-control-sm" id="searchBar" placeholder="search...">
+        </div>
+    </div>
+
+    <div class="tab-content mt-3">
+        <!-- Services Table -->
+        <div class="tab-pane fade show active" id="service-content" role="tabpanel" aria-labelledby="service-tab">
+            <div class="table-responsive">
+                <table class="table border table-bordered table-striped table-hover table-sm rounded w-100" id="service">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Total Services</th>
+                            <th>Cost</th>
+                            <th>Price</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="services_table">
+                        {% for service in services %}
+                            <tr>
+                                <td><small>{{ forloop.counter }}</small></td>
+                                <td><small><span class="hint--bottom" aria-label="{{ service.service.description }}">{{ service.service_name }}</span></small></td>
+                                <td><small>{{ service.description }}</small></td>
+                                <td><small>{{ service.quantity }}</small></td>
+                                <td><small>{{ item.cost }}</small></td>
+                                <td><small>{{ service.price }}</small></td>
+                                <td>
+                                    <span>
+                                        <a href="#" class="text-dark" title="Edit Item" data-bs-toggle="modal" data-bs-target="#editModal" onclick="populateModal('{{ service.id }}', '{{ service.service_name }}', '{{ service.description }}', '{{ service.quantity }}', '{{ service.cost }}', '{{ service.price }}')">
+                                            <i class="bx bx-edit"></i>
+                                        </a>
+                                    </span>
+                                    <span>
+                                        <a href="{% url 'booking:service_crud' %}" class="text-dark">
+                                            <i class="bx bx-show"></i>
+                                        </a>
+                                    </span>
+                            
+                                        <span id='delete' data-id="{{ service.id }}" onclick="deleteService('{{ service.id}}')" class="text-dark">
+                                            <i class='bx bx-trash'></i>
+                                        </span>
+                                    </small>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="items-content" role="tabpanel" aria-labelledby="items-tab">
+            <div class="table-responsive">
+                <table class="table border table-bordered table-striped table-hover table-sm rounded w-100" id="itemTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Cost</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemTableBody">
+                        {% for item in items %}
+                            <tr data-id="{{ item.id }}">
+                                <td><small>{{ forloop.counter }}</small></td>
+                                <td><small>{{ item.name__item_of_use_name }}</small></td>
+                                <td><small>{{ item.description }}</small></td>
+                                <td><small>{{ item.quantity }}</small></td>
+                                <td><small>{{ item.cost }}</small></td>
+                                <td>
+                                    <a href="{% url 'booking:service_crud' %}" class="text-info me-2" title="View Item">
+                                        <i class="bx bx-show"></i>
+                                    </a>
+                                    <a href="{% url 'booking:service_crud' %}" class="text-dark me-2" title="Edit Item">
+                                        <i class="bx bx-edit"></i>
+                                    </a>
+                                    <span id = "item_delete" value ="{{ item.id }}" onclick="itemOfUse_delete('{{item.id}}')">
+                                        <a href="#" class="text-danger delete-item" title="Delete Item">
+                                            <i class="bx bx-trash"></i>
+                                        </a>
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+<!-- Modal for Editing -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="serviceId">
+                    <div class="mb-3">
+                        <label for="serviceName" class="form-label">Service Name</label>
+                        <input type="text" class="form-control" id="serviceName">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cost" class="form-label">Cost</label>
+                        <input type="text" class="form-control" id="cost">
+                    </div>
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Price</label>
+                        <input type="text" class="form-control" id="price">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal for View -->
+<div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewModalLabel">View Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+<script>
+
+
+const modal = new bootstrap.Modal(document.querySelector('#deleteModal'));
+const deleteButtons = document.querySelectorAll('#delete');
+
+deleteButtons.forEach((button)=>{
+            button.addEventListener(
+                'click', ()=>{
+                    modal.show()
+                }
+            )
+        })
+        
+        document.querySelector('.yes').addEventListener(
+            'click', ()=>{
+                console.log(service_id)
+                $.ajax({
+                    url: "{% url 'booking:service_crud' %}?service_id=" + service_id,
+                    type: 'GET',
+                    }).done(function(response) {
+                        modal.hide()
+                        successModal.show()
+                        setTimeout(()=>{
+                            window.location.reload()
+                        }, 2000)
+                    }
+                )
+            }
+        )
+
+
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(button => {
+            button.addEventListener('click', function () {
+                const tableId = this.getAttribute('data-bs-target').substring(1);
+                document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('show', 'active'));
+                document.getElementById(tableId).classList.add('show', 'active');
+            });
+        });
+
+        document.getElementById('searchBar').addEventListener('input', function () {
+            const query = this.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+
+        
+        // Function to add a new row dynamically
+        function addNewItem(itemData) {
+            const tableBody = document.getElementById('itemTableBody');
+            const newRow = document.createElement('tr');
+            newRow.setAttribute('data-id', itemData.id);
+
+            newRow.innerHTML = `
+                <td>${itemData.name}</td>
+                <td>${itemData.description}</td>
+                <td>${itemData.quantity}</td>
+                <td>${itemData.cost}</td>
+                <td>
+                    <a href="/items/view/${itemData.id}/" class="text-info me-2" title="View Item">
+                        <i class="bx bx-show"></i>
+                    </a>
+                    <a href="#" class="text-dark edit-item" title="Edit Item">
+                        <i class="bx bx-edit"></i>
+                    </a>
+                    <a href="#" class="text-dark delete-item" title="Delete Item">
+                        <i class="bx bx-trash-alt"></i>
+                    </a>
+                </td>
+            `;
+            tableBody.appendChild(newRow);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+        // Inline editing functionality
+        document.getElementById('services_table').addEventListener('click', function (event) {
+            if (event.target.closest('.edit-service')) {
+                const row = event.target.closest('tr');
+                const cells = row.querySelectorAll('td');
+
+                // If already in edit mode, save changes
+                if (row.classList.contains('editing')) {
+                    const updatedData = {
+                        name: cells[0].querySelector('input').value,
+                        description: cells[1].querySelector('input').value,
+                        quantity: cells[2].querySelector('input').value,
+                        cost: cells[3].querySelector('input').value,
+                        price: cells[4].querySelector('input').value,
+                    };
+
+                    fetch(`/services/update/${row.dataset.id}/`, {
+                        method: 'PUT',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(updatedData),
+                    })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            if (data.success) {
+                                // Replace inputs with updated values
+                                cells[0].innerHTML = updatedData.name;
+                                cells[1].innerHTML = updatedData.description;
+                                cells[2].innerHTML = updatedData.quantity;
+                                cells[3].innerHTML = updatedData.cost;
+                                cells[4].innerHTML = updatedData.price;
+                                row.classList.remove('editing');
+
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: 'Service updated successfully!',
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Failed to save changes.',
+                                });
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An error occurred while saving changes.',
+                            });
+                        });
+                } else {
+                    // Enter edit mode
+                    row.classList.add('editing');
+                    cells.forEach((cell, index) => {
+                        if (index < 5) {
+                            const value = cell.textContent.trim();
+                            cell.innerHTML = `<input class="form-control form-control-sm" type="text" value="${value}">`;
+                        }
+                    });
+                }
+            }
+        });
+    })
+    
+    function deleteService(id){
+        data = {
+            'service_id': id,
+        }
+        console.log(data)
+
+        fetch("{% url 'booking:service_crud' %}",{
+            method: 'DELETE',
+            headers:{
+                'content-Type': 'application/json',
+                'X-CSRFToken': "{{ csrf_token }}",
+            },
+            body: JSON.stringify(data),
+        }).then((response) => response.json)
+        .then((data) =>{
+            if (data.success) {
+                Swal.fire({
+                    icon: "success",
+                    title: "Delete",
+                    text: "The service details have been successfully deleted.",
+                    confirmButtonText: "OK",
+                });
+
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Delete Failed",
+                    text: data.message ,
+                    confirmButtonText: "OK",
+                });
+            }  
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "An unexpected error occurred. Please try again later.",
+                confirmButtonText: "OK",
+            });
+        });
+    }
+
+    function populateModal(id, name, description, quantity, cost, price) {
+
+        document.getElementById("serviceId").value = id;
+        document.getElementById("serviceName").value = name;
+        document.getElementById("description").value = description;
+        document.getElementById("quantity").value = quantity;
+        document.getElementById("cost").value = cost;
+        document.getElementById("price").value = price;
+    }
+
+    function saveChanges() {
+        const id = document.getElementById("serviceId").value;
+        const name = document.getElementById("serviceName").value;
+        const description = document.getElementById("description").value;
+        const quantity = document.getElementById("quantity").value;
+        const cost = document.getElementById("cost").value;
+        const price = document.getElementById("price").value;
+
+        data = {
+            "service_id": id,
+            'service_name': name,
+            'description': description,
+        }
+
+        console.log(data)
+
+        fetch("{% url 'booking:service_crud' %}", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+            body: JSON.stringify(data),
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                
+                Swal.fire({
+                    icon: "success",
+                    title: "Changes Saved",
+                    text: "The service details have been successfully updated.",
+                    confirmButtonText: "OK",
+                });
+
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Save Failed",
+                    text: "Unable to save changes. Please try again.",
+                    confirmButtonText: "OK",
+                });
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "An unexpected error occurred. Please try again later.",
+                confirmButtonText: "OK",
+            });
+        });
+    }
+    // item of use delete
+    function itemOfUse_delete(item_id){
+        console.log('this is id', item_id)
+        try {
+            data = {
+                'item_of_use_id': item_id
+            }
+            console.log(data);
+            fetch("{% url 'booking:item_of_use_crud' %}",{
+                method : 'DELETE',
+                headers : {
+                    'content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: JSON.stringify(data)
+            }).then(answer => answer.json)
+            .then(data =>{
+                if(data.success){
+                    Swal.fire({
+                        'icon': 'success',
+                        'title': 'successful',
+                        'text': 'successfully deleted item of use',
+                    })
+                }
+                else{
+                    Swal.fire({
+                        'icon': 'error',
+                        'title': 'delete failed',
+                        'text': data.message,
+                    });
+                }
+            });
+        }catch (error) {
+            console.log(error),
+            Swal.fire({
+                'icon': 'error',
+                'title': 'error',
+                'text': error,
+            });
+        }
+    }
+
+    function getCSRFToken() {
+        let cookieValue = null;
+        const name = 'csrftoken';
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}
+
+

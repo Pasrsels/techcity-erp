@@ -18,6 +18,7 @@ urlpatterns = [
     path('activate/product/<int:product_id>/', activate_inventory, name='activate_inventory'),
     path('defective_product_list/', defective_product_list, name='defective_product_list'),
     path('inventory/branches/json', branches_inventory_json, name='branches_inventory_json'),
+    path('detail/<int:id>/', inventory_detail, name='inventory_detail' ),
 
     #Stocktake
     path('stocktake/', stock_take, name= 'stocktake'),
@@ -68,6 +69,7 @@ urlpatterns = [
     path('edit_purchase_order/<int:po_id>/', edit_purchase_order, name='edit_po'),
     path('mark_purchase_order_done/<int:po_id>/', mark_purchase_order_done, name='mark_done'),
     path('sales_price_list_pdf/<int:order_id>/', sales_price_list_pdf, name='sales_price_list'),
+    path('confirm-purchase-order/<int:po_id>/', confirm_purchase_order_items, name='confirm_purchase_order'),
 
     # transfers
     path('transfers', inventory_transfers, name='transfers'),
@@ -77,7 +79,6 @@ urlpatterns = [
     path('over_less_list/', over_less_list_stock, name='over_less_list_stock'),
     path('delete/transfer/<int:transfer_id>/', delete_transfer, name='delete_transfer'),
     path('add/transfer/', add_inventory_transfer, name='add_transfer'),
-    path('detail/<int:id>/', inventory_detail, name='inventory_detail' ),
     path('transfer/detail/<int:transfer_id>/', transfer_details, name='transfer_details'),
     path('process-transfer-cart/', ProcessTransferCartView.as_view(), name='process_transfer_cart'),
     path('held_transfer_json/<int:transfer_id>/', held_transfer_json, name='held_transfer'),
