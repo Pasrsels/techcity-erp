@@ -53,7 +53,8 @@ THIRD_PARTY_APPS = [
     'apps.pos',
     'apps.settings',
     'apps.Analytics',
-    'apps.booking'
+    'apps.booking',
+    'apps.vouchers'
 ]
 
 LOCAL_APPS = [
@@ -134,9 +135,9 @@ DATABASES = {
 
    'default': {
      'ENGINE': 'django.db.backends.postgresql',
-       'NAME':  'Techcity',
+       'NAME':  'booking',
        'USER': 'postgres',
-       'PASSWORD': '5052',
+       'PASSWORD': 'neverfail',
        'HOST': 'localhost',
        'PORT': '5432'
  }
