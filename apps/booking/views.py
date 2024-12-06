@@ -485,33 +485,42 @@ def save_combined_service(request):
 @login_required
 def members_view(request):
     memberForm = AddMember()
+    member_data = Members.objects.all().values()
+    account = MemberAccounts.objects.all().values()
+    logger.info(member_data)
+    logger.info(account)
     return render(request, 'offices.html',{
-        'memberForm ': memberForm
+        'memberForm': memberForm,
+        'members': member_data,
+        'account': account
     })
 
 #member
 @login_required
 def member_crud(request):
+    if request.method == 'GET':
+        member_data = Members.objects.get(id = id)
+        return JsonResponse({'success': True, 'data':member_data}, status = 200)
     #Add
-    if request.method == "POST":
+    if request.method == 'POST':
 
         data = json.loads(request.body)
- 
+        logger.info(data)
         n_ID = data.get('National_ID')
         m_name = data.get('Name')
         m_email = data.get('Email')
         m_phone = data.get('Phone')
         m_adress = data.get('Address')
-        m_enrollment = data.get('Enrollment')
+        m_enrollment = data.get('Enrollmnet')
         m_company = data.get('Company')
         m_age = data.get('Age')
         m_gender = data.get('Gender')
 
         if Members.objects.filter(National_ID = n_ID).exists():
             return JsonResponse({'success': True, 'message': 'Member already exists'}, status = 400)
-        elif not n_ID or not m_name or not m_email or not m_phone or not m_adress or not m_enrollment \
-        or not m_company or not m_age or not m_gender:
-            return JsonResponse({'success': False, 'message': 'Pliz fill in empty fields'}, status = 400)
+        # elif not n_ID or not m_name or not m_email or not m_phone or not m_adress or not m_enrollment \
+        # or not m_company or not m_age or not m_gender:
+        #     return JsonResponse({'success': False, 'message': 'Pliz fill in empty fields'}, status = 400)
         with transaction.atomic():
             try: 
                
@@ -527,7 +536,7 @@ def member_crud(request):
                     Email = m_email,
                     Phone = m_phone,
                     Address = m_adress,
-                    Enrollment = m_enrollment,
+                    Enrollmnet = m_enrollment,
                     Company = m_company,
                     Age = m_age,
                     Gender = m_gender,
@@ -540,9 +549,9 @@ def member_crud(request):
                     delete = False
                 )
 
-                Logs.objects.create(
-                    action = 'create'
-                )
+                # Logs.objects.create(
+                #     action = 'create'
+                # )
                 return JsonResponse({'success': True, 'response': 'Data saved'}, status = 200)
             except Exception as e:
                 return JsonResponse({'success': False, 'message': f'error: {e}'}, status = 400)

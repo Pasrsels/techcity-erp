@@ -4,19 +4,17 @@
 {% block content %}
 <div class="suppliers">
     <div class="d-flex align-items-center justify-content-between rounded text-light shadow header py-2 mb-4" style="background: #373f4c;">
-        <h5 class="text-light px-1">Supplier List</h5>
-        <!-- Add Supplier Button -->
-        <div class="px-1">
-            <button type="button" class="btn btn-primary btn-sm" id="addButton">
-                <i class="bx bx-plus"></i> Add Supplier
-            </button>
-        </div>
+      <h5 class="text-light px-1">Member List</h5>
+      <!-- Add Member Button -->
+      <div class="px-1">
+        <button type="button" class="btn btn-primary bx bx-plus" id="addButton">Add Member</button>
+      </div>
     </div>
     <table class="table table-striped table-bordered table-hover rounded p-2 mt-3 mt-2" id="supplier_list" style="width: 100%;">
         <thead>
             <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supplier List</title>
+    <title>Member List</title>
     <style>
         #supplier_list th {
             transition: transform 0.3s ease;
@@ -29,101 +27,49 @@
     </style>
             <tr>
                 <th>Name</th>
-                <th>Products</th>
-                <th>Lifetime</th>
-                <th>Next Due</th>
-                <th>Returns</th>
-                <th>Accounts Payable</th>
-                <th>Accounts Receivable</th>
+                <th>Enrollment</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>Balance</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            {%for supplier in suppliers%}
+            {%for member in members%}
             <tr style="font-size:small; text-align: center;">
                 <td >
                     <small>
-                        <button style = "font-size: small;" class="btn btn-link p-0 m-0 text-primary" onclick="fetchSupplierDetails({{ supplier.id }})">
-                            {%if supplier.delete == False%}
-                                {{ supplier.name }}
-                            {%endif%}
+                        <button style = "font-size: small;" class="btn btn-link p-0 m-0 text-primary" id="memberPersonalDetails" value="{{member.id}}">
+                          {{member.Name}}
                         </button>
                     </small>
                 </td>
                 <td >
                     <small>
-                        {% for product in products %}
-                            {%if supplier in product.suppliers.all%}
-                                {{product.category.name}},
-                            {%endif%}
+                      {{member.Enrollmnet}}
+                    </small>
+                </td>
+                <td >
+                    <small>
+                        {{member.Phone}}
+                    </small>
+                </td>
+                <td >
+                    <small>
+                        {{member.Address}}
+                    </small>
+                </td>
+                <td >
+                    <small>
+                        {%  for bal in account %}
+                          {% if member.id == bal.Member_id %}
+                            {{bal.Balance}}
+                          {%endif%}
                         {% endfor %}
                     </small>
                 </td>
-                <td >
-                    <small>
-                        {% for life in life_time %}
-                            {% for l, details in life.items %}
-                                {%if supplier.id == l%}
-                                    $
-                                    {{details.amount}} [
-                                    {{details.count}}x ]
-                                {%endif%}
-                            {%endfor%}
-                        {% endfor %}
-                    </small>
-                </td>
-                <td >
-                    <small>
-                        {%for dat in balances%}
-                            {%if supplier.id == dat.supplier__id%}
-                                {{dat.date}}
-                            {%endif%}
-                        {%endfor%}
-                    </small>
-                </td>
-                <td >
-                    <small>
-                        {%for lt in life_time%}
-                            {%for l, t in lt.items%}
-                                {%if supplier.id == l%}
-                                    {{t.returned}}/{{t.quantity}}
-                                {%endif%}
-                            {%endfor%}
-                        {%endfor%}
-                    </small>
-                </td>
-                <td >
-                    <small>
-                        {% for bal in balances %}
-                            {% if supplier.id == bal.supplier__id%}
-                                {% if bal.balance > 0 %}
-                                    {{bal.currency__name}}
-                                    {{ bal.balance }} |
-                                {%else%}
-                                    {{bal.currency__name}}0 |
-                                {% endif %}
-                            {%endif%}
-                        {% endfor %}
-                    </small>
-                </td>
-                <td >
-                    <small>
-                        {% for bal in balances %}
-                            {% if supplier.id == bal.supplier__id%}
-                                {% if bal.balance < 0 %}
-                                    {{bal.currency__name}}
-                                    {{ bal.balance }} |
-                                {%else%}
-                                    {{bal.currency__name}}0 |
-                                {% endif %}
-                            {%endif%}
-                        {% endfor %}
-                    </small>
-                </td>
-                
-                <td >
-                    
-                    <button class="btn bx bx-play mx-1" style="color: green; font-size:medium;" onclick="openPaymentHistoryModal({{ supplier.id }})"></button>
+                <td >    
+                    <button class="btn bx bx-play mx-1" style="color: green; font-size:medium;" onclick="openPaymentHistoryModal('{{supplier.id}}')"></button>
                 </td>
             </tr>
             {%endfor%}
@@ -138,12 +84,11 @@
                 <div class="finance d-flex flex-column" style="height: 100%;">
                     <!-- Heading for Supplier Details -->
                     <div class='px-2 py-2 bg-dark d-flex justify-content-between text-light align-items-center rounded'>
-                        <div class='h5'>Supplier Details</div>
+                        <div class='h5'>Member Details</div>
                         <div>
                             <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">
                                 <i class="fas fa-times red-icon"></i>
-                              </button>
-                              
+                              </button>    
                         </div>
                     </div>
                     <!-- Upper Section (60%) split into two quarters: Supplier Details and Account Info + Purchase Order Count -->
@@ -187,7 +132,7 @@
                                 <div class="col-md-12" style="height: 50%;">
                                     <div class="card shadow" style="height: 50%;">
                                         <div class="card-body">
-                                            <h6>Purchase Order Count</h6>
+                                            <h6>Payment Count</h6>
                                             <h6 class="text-center text-muted fw-bold" id="purchase_countO">
                                                
                                             </h6>
@@ -205,10 +150,10 @@
                             <nav class="recent-nav navbar navbar-expand-lg navbar-light bg-dark text-light px-2">
                                 <ul class="navbar-nav items mr-auto">
                                     <li class="nav-item" data-name="supplier_payment_history" id="supplier_tab">
-                                        <a href="#" class="nav-link text-light">Supplier Payment History</a>
+                                        <a href="#" class="nav-link text-light">Member Payment History</a>
                                     </li>
                                     <li class="nav-item px-2" data-name="purchase_orders" id="purchase_tab">
-                                        <a href="#" class="nav-link text-light">Purchase Order</a>
+                                        <a href="#" class="nav-link text-light"></a><!--table dont forget-->
                                     </li>
                                 </ul>
                                 <div class="ms-auto">
@@ -225,8 +170,6 @@
                                 <thead>
                                     <tr>
                                         <th>Date</th>
-                                        <th>Currency</th>
-                                        <th>Payment method</th>
                                         <th>Amount paid</th>
                                         <th>Account Balance</th>
                                         <th>Accounts Payable</th>
@@ -241,7 +184,7 @@
                         </div>
                         
                         <!-- Purchase Order Table -->
-                        <div id="purchase_order_section" style="display: none;">
+                        <!-- <div id="purchase_order_section" style="display: none;">
                             <div class="mt-2 w-100">
                                 <table class='table table-bordered' id='order_table' style="width: 100%;">
                                     <thead>
@@ -260,7 +203,7 @@
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
+                        </div> -->
                         
                         <style>
                             /* Style for the active underline */
@@ -281,27 +224,6 @@
                                 border: 1px solid #dee2e6 !important; /* Add visible divisions */
                             }
                         </style>
-                        
-                       
-                        
-                                   
-                        <!-- <div id="zigTable" style="display: none;">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Order name</th>
-                                        <th>Amount</th>
-                                        <th>Paid</th>
-                                        <th>Account balance</th>
-                                        <th>Accounts Payable</th>
-                                        <th>Accounts Receivable</th>
-                                        <th>User</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="zig_payment_table"></tbody>
-                            </table>
-                        </div> -->
                     </div>
                 </div>
             </div>
@@ -338,14 +260,14 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
-                    <h5 class="fw-bold">Add Supplier</h5>
+                    <h5 class="fw-bold">Add Member</h5>
                     <hr class="rounded">
                     <form method="post" id="supplierForm">
                         {% csrf_token %}
-                        {{ form | crispy }}
+                        {{ memberForm | crispy }}
                         <div class="d-flex align-items-center justify-content-between">
                             <button type="reset" class="btn btn-danger btn-sm bx bx-reset mx-2"></button>
-                            <button type="submit" class="btn btn-secondary btn-sm">
+                            <button type="submit" class="btn btn-secondary btn-sm" id="SubmitMemberdetails">
                                 <i class="bx bx-save"></i>
                                 Save
                             </button>
@@ -517,21 +439,103 @@
 </div>
 
 <script>
-    // Utility function to get the CSRF token from cookies
-    function getCSRFToken() {
-        let cookieValue = null;
-        const name = 'csrftoken';
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
+
+  const id = document.getElementById('memberPersonalDetails').value;
+  console.log(id);
+
+  const addbtn = document.getElementById('addButton');
+  const detailsBtn = document.getElementById('memberPersonalDetails');
+
+  const addMemberModal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
+  const memberDetailModal = new bootstrap.Modal(document.getElementById('supplierDetailsModal'));
+
+  const SubmitMemberBtn = document.getElementById('SubmitMemberdetails');
+  
+
+  addbtn.addEventListener('click', ()=>{
+    addMemberModal.show()
+  })
+
+  detailsBtn.addEventListener('click', () =>{
+    memberDetailModal.show()
+  })
+
+
+
+  SubmitMemberBtn.addEventListener('click', (e) =>{
+    e.preventDefault();
+    const Name = document.getElementById('id_Name').value;
+    const Phone = document.getElementById('id_Phone').value;
+    const Email = document.getElementById('id_Email').value;
+    const Address = document.getElementById('id_Address').value;
+    const N_id = document.getElementById('id_National_ID').value;
+    const Company = document.getElementById('id_Company').value;
+    const Age = document.getElementById('id_Age').value;
+    const Gender = document.getElementById('id_Gender').value;
+    const Enrollment = document.getElementById('id_Enrollmnet').value;
+
+    data = {
+      'National_ID': N_id,
+      'Name': Name,
+      'Email':Email,
+      'Phone':Phone,
+      'Address':Address,
+      'Enrollment':Enrollment,
+      'Company': Company,
+      'Age':Age,
+      'Gender':Gender
     }
+    try{
+      console.log(data)
+      fetch("{% url 'booking:member_crud' %}",{
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCSRFToken(),
+        },
+        body: JSON.stringify(data),
+      }).then(answer => answer.json())
+      .then(data =>{
+        if(data.success){
+          Swal.fire({
+            'icon': 'success',
+            'title': 'success',
+            'text': 'successfully added',
+          });
+        }else{
+          Swal.fire({
+            'icon': 'error',
+            'title': 'Failed',
+            'text': 'Failed to delete',
+          });
+        }
+      })
+    }
+    catch (error){
+      Swal.fire({
+            'icon': 'error',
+            'title': 'Failed',
+            'text': 'Failed to delete',
+          });
+    }
+
+  })
+
+  // Utility function to get the CSRF token from cookies
+  function getCSRFToken() {
+      let cookieValue = null;
+      const name = 'csrftoken';
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
 </script>
 {% endblock %}

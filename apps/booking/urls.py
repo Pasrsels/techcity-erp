@@ -12,8 +12,10 @@ urlpatterns = [
     #path('service_range_crud/', service_range_crud, name='service_range_crud'),
     path('unit_measurement_crud/', unit_measurement_crud, name='unit_measurement_crud'),
     #path('service_data/', ServiceData, name = 'service_data'),
+
+    #members
     path('member/', members_view, name= 'member'),
-    path('member_crud/', member_crud, name= 'members'),
+    path('member_crud/', member_crud, name= 'member_crud'),
     path('member_acc_crud/', member_acc_crud, name= 'members_acc'),
     path('payments/', payments_crud, name= 'payments'),
 

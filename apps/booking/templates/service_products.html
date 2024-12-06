@@ -577,10 +577,9 @@
         //     })
         //     return;
         // }
-
+        console.log('ted', cart)
         const displayTable = document.getElementById('service_productsTableBody')
         displayTable.innerHTML =''
-
         cart.forEach((item)=>{
             displayTable.innerHTML +=`
                 <td><small>${ item.name }</small></td>
@@ -905,7 +904,6 @@
                 category:category
             }
         }
-
         cart.push(newItem)
 
         console.log('items', cart)

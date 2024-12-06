@@ -30,4 +30,4 @@ class AddCategory(forms.ModelForm):
 class AddMember(forms.ModelForm):
     class Meta:
         model = Members
-        fields = '__all__'
+        exclude = ['delete']

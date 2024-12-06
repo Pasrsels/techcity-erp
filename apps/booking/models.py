@@ -7,10 +7,10 @@ class Members(models.Model):
     Email = models.EmailField(max_length=255, blank=False)
     Phone = models.CharField(max_length=12, blank=False)
     Address = models.CharField(max_length= 255, blank= False)
-    Enrollmnet = models.Choices("permanent","temporary")
+    Enrollmnet = models.CharField(max_length=60, null= True)
     Company = models.CharField(max_length= 255, blank= True)
     Age = models.IntegerField(blank=False)
-    Gender = models.Choices("M", "F")
+    Gender = models.CharField(max_length=10)
     delete = models.BooleanField(default=False)
     #add def funtion to every class
     def __str__(self) -> str:
