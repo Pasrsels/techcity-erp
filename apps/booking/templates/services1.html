@@ -44,6 +44,7 @@
                 <table class="table border table-bordered table-striped table-hover table-sm rounded w-100" id="service">
                     <thead>
                         <tr data-id="{{ service.id }}">
+                            <th>#</th>
                             <th>Name</th>
                             <th>Description</th>
                             <th>Total Services</th>
@@ -64,7 +65,7 @@
                                 <td>
                                     
                                     <span>
-                                        <a href="{% url 'booking:service_crud' %}" class="text-dark">
+                                        <a href="{% url 'booking:service_personal_details' service_id=service.id%}" class="text-dark">
                                             <i class="bx bx-show"></i>
                                         </a>
                                     </span>

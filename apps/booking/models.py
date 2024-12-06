@@ -66,7 +66,7 @@ class ItemOfUse(models.Model):
     cost = models.DecimalField(max_digits=4, decimal_places= 2, default= 0.00)
     description = models.CharField(max_length=255, default= 'none', null= True)
     category = models.ForeignKey('Category', on_delete= models.CASCADE)
-    delete_iou = models.BooleanField(default=False)
+    delete_iou = models.BooleanField(default=False, null=True)
 
     def __str__(self):
         return f"{self.name}"

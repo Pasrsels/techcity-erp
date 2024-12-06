@@ -37,7 +37,6 @@
                 <h5>Services</h5>
                 <div>
                     <button class="btn btn-outline-dark btn-sm ms-10">Analytics</button>
-                    <a class="btn btn-outline-dark ms-10 btn-sm" href="{%url 'booking:member'%}">Members</a> 
                     <a class="btn btn-outline-dark ms-10 btn-sm" href="{%url 'booking:service_view'%}">Back</a>
                 </div>
             </div>
@@ -102,7 +101,7 @@
                                 <select name="category" class="select form-select" required id="id_name"> 
                                     <option value="" selected>Select Item of use</option>
                                     {% for name in names %}
-                                        <option value="{{ name.id }}">{{ name.name.item_of_use_name }}</option>
+                                        <option value="{{ name.id }}">{{ name.name.item_of_use_name }} {{ name.id }}</option>
                                     {% endfor %}
                                 </select> 
                                 <button type="button" class="btn btn-sm bx bx-plus" id="id_add_name"></button>
@@ -147,7 +146,11 @@
                             <button type="button" class="btn btn-sm bx bx-edit" id="unitEditBtn"></button>
                             <button type="button" class="btn btn-sm bx bx-trash" id="unitDeleteBtn"></button>
                         </div>
-                    </div>   
+                    </div>
+                    <div class="mb-3">
+                        <label for="time">Time</label>
+                        <input type="text" class="form-control" required id="time" name="time" placeholder="enter time required">
+                    </div>
                     <div id="div_id_service_range" class="mb-3">
                         <label for="id_service_range" class="form-label requiredField">
                             Number Of Units Per Service
@@ -165,15 +168,13 @@
                         </div>
                         <div class="d-none mt-3" id="fixed">
                             <label for="id_fixed_inp" class="form-label requiredField">
-                                Fixed units
-                                <span class="asteriskField">*</span>
+                                <span class="asteriskField"></span>
                             </label>
                             <input type="number" name="fixed_inp" id="fixed_inp" class="form-control">
                         </div>
                         <div class="d-none mt-3" id="range">
                             <label for="id_fixed_inp" class="form-label requiredField">
-                                Range units
-                                <span class="asteriskField">*</span>
+                                <span class="asteriskField"></span>
                             </label>
                             <div class="d-flex align-items-center">
                                 <div class="d-flex align-items-center">
@@ -391,9 +392,8 @@
         )
         .on('change', function (e){
             const value = iouEl.value;
-            serviceId = $(this).val()
-            console.log(serviceId)
-       
+            console.log(serviceId, 'service id')
+            console.log('iou_id',value)
             if(!serviceId){
                 Swal.fire({
                     icon:'error',
@@ -411,7 +411,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log('iou data: ', data)
+                console.log('iou data: ', data.items)
                 if(data.success){
                     console.log(data.items, 'items')
                     addItem(data.items)
@@ -746,7 +746,7 @@
 
                     data.data.forEach((item)=>{
                         iouEl.innerHTML += `
-                            <option value = '${item.id}'>${item.item_of_use_name}</option>
+                            <option value ='${item.id}'>${item.name__item_of_use_name}${item.id}</option>
                     `
                 })
             })
@@ -994,6 +994,50 @@
         }
     })
     
+    const delete_iou = document.getElementById('id_delete_name')
+
+    delete_iou.addEventListener('click', () =>{
+        const id = document.getElementById('id_name').value;
+        console.log(id)
+        data = {
+            'item_of_use_id': id
+        }
+        try{
+            fetch("{% url 'booking:item_of_use_crud' %}", {
+                method: 'DELETE',
+                headers: {
+                    'content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: JSON.stringify(data)
+            }).then(answer => answer.json())
+            .then(data =>{
+                if(data.success){
+                    Swal.fire({
+                        'icon': 'success',
+                        'title': 'success',
+                        'text': 'successfully deleted'
+                    }).then(
+                        window.location.reload(),
+                    )
+                }else{
+                    Swal.fire({
+                        'icon': 'error',
+                        'title': 'Failed',
+                        'text': 'Delete failed'
+                    })
+                }
+            })
+
+        }catch (error){
+            Swal.fire({
+                        'icon': 'error',
+                        'title': 'Error',
+                        'text': error || 'Delete failed'
+                    })
+        }
+    })
+
     const id_delete_service = document.getElementById('id_delete_service')
 
     id_delete_service.addEventListener('click', function(e){
@@ -1012,21 +1056,23 @@
                     'X-CSRFToken': getCSRFToken(),
                 },
                 body: JSON.stringify(data),
-            }).then(response => response.json)
+            }).then(response => response.json())
             .then(data => {
                 if(data.success){
                     Swal.fire({
                         'icon': 'success',
                         'title': 'success',
                         'text': 'successfully deleted'
-                    })
+                    }).then(
+                        window.location.reload()
+                    )
                 }
                 else{
                     Swal.fire({
                         'icon': 'error',
                         'title': 'failed',
                         'text': 'failed to deleted'
-                    })
+                    });
                 }
             })
         }catch (error){
@@ -1034,7 +1080,7 @@
                         'icon': 'error',
                         'title': 'failed',
                         'text': 'failed to deleted'
-                    })
+                    });
         }
     })
 
