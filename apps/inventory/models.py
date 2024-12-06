@@ -111,6 +111,7 @@ class Inventory(models.Model):
     end_of_day = models.BooleanField(default=False, null=True)
     service = models.BooleanField(default=False, null=True)
     image = models.ImageField(upload_to='product_images/', default='placeholder.png', null=True)
+    disable = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('id', 'branch') 

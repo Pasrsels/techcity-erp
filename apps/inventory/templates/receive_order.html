@@ -73,6 +73,7 @@
     <table class='table table-striped table-responsive table-bordered' id='order_items_table' style='width:100%;'>
         <thead>
             <tr>
+                <th>#</th>
                 <th>Product Name</th>
                 <th>Description</th>
                 <th>Ordered Quantity</th>
@@ -91,6 +92,7 @@
             {% for item in orders %}
             <tr id="tr_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
                 <span class="d-none" id="rq_{{ item.id }}">{{ item.received_quantity }}</span>
+                <td>{{ forloop.counter }}</td>
                 <td id="name_{{ item.id }}" style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.product.name }}</td>
                 <td style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.product.description }}</td>
                 <td id="purchased_quantity_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.quantity }}</td>
@@ -279,6 +281,9 @@
     }
 
     function edit(itemId, sPrice, dPrice, quantity, acp) {
+
+        editStatus = true;
+
         const parentEl = document.getElementById('itemId');
         const sellingPrice = document.getElementById(`selling_${itemId}`);
         const pQuantity = document.getElementById(`rq_${itemId}`).textContent;
@@ -292,7 +297,7 @@
         document.getElementById(`submit_${itemId}`).style.display = 'block';
 
         // add cancel button
-        document.getElementById(`cancel_${itemId}`).style.display = 'block'
+        document.getElementById(`cancel_${itemId}`).style.display = 'block';
 
         console.log(pQuantity)
 
@@ -342,7 +347,6 @@
             >
         `;
         expectedProfitOnLoad()
-        editStatus = true
     }
 
     function cancel(itemId, originalSellingPrice, originalDealerPrice) {

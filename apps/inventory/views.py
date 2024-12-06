@@ -474,7 +474,12 @@ def inventory_index(request):
     # )
 
     # print(products_with_zero_quantity)
+    # print(products_with_zero_quantity)
 
+    # # Step 2: Find duplicate products based on name
+    # duplicates = products_with_zero_quantity.values('name').annotate(
+    #     count=Count('name')
+    # ).filter(count__gt=1)  # Only consider products with more than 1 instance
     # # Step 2: Find duplicate products based on name
     # duplicates = products_with_zero_quantity.values('name').annotate(
     #     count=Count('name')
@@ -484,7 +489,15 @@ def inventory_index(request):
     # for product in duplicates:
     #     # Get all products with the same name
     #     product_group = products_with_zero_quantity.filter(name=product['name'])
+    # # Step 3: For each group of duplicates, delete all but the first product
+    # for product in duplicates:
+    #     # Get all products with the same name
+    #     product_group = products_with_zero_quantity.filter(name=product['name'])
         
+    #     # Keep the first product and delete the rest
+    #     first_product = product_group.first()  # Get the first product
+    #     product_group.exclude(id=first_product.id).delete() 
+    #     logger.info(f'{first_product}, deleted') # 
     #     # Keep the first product and delete the rest
     #     first_product = product_group.first()  # Get the first product
     #     product_group.exclude(id=first_product.id).delete() 
@@ -1626,7 +1639,7 @@ def create_purchase_order(request):
         suppliers = Supplier.objects.all()
         note_form = noteStatusForm()
         batch_form = BatchForm()
-        products = Inventory.objects.filter(branch=request.user.branch, status=True).order_by('name')
+        products = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name')
 
         batch_codes = BatchCode.objects.all()
         return render(request, 'create_purchase_order.html',
@@ -2237,17 +2250,17 @@ def receive_order(request, order_id):
 
     new_po_items =  []
     for item in purchase_order_items:
-        product_name = item.product.name  
-        product_data = product_prices.get(product_name)
-        logger.info(product_name)
-        if product_data:
-            item.dealer_price = product_data['dealer_price']
-            item.selling_price = product_data['price']
-        else:
-            item.dealer_price = 0  
-            item.selling_price = 0 
-        new_po_items.append(item)
-
+        if(item.product):
+            product_name = item.product.name  
+            product_data = product_prices.get(product_name)
+            logger.info(product_name)
+            if product_data:
+                item.dealer_price = product_data['dealer_price']
+                item.selling_price = product_data['price']
+            else:
+                item.dealer_price = 0  
+                item.selling_price = 0 
+            new_po_items.append(item)
 
     logger.info(f'Purchase order items: {new_po_items}')
     
@@ -3075,7 +3088,7 @@ def product(request):
             product.description = data['description']
             product.end_of_day = True if data.get('end_of_day') else False
             product.service = True if data.get('service') else False
-            product.image=image
+            product.image=product.image
             product.batch = product.batch
         else:
             """creating a new product"""
@@ -3097,7 +3110,7 @@ def product(request):
                 end_of_day = True if data['end_of_day'] else False,
                 service = True if data['service'] else False,
                 branch = request.user.branch,
-                image = image,
+                # image = image,
                 status = True
             )
         product.save()
@@ -3106,7 +3119,7 @@ def product(request):
 
             
     if request.method == 'GET':
-        products = Inventory.objects.filter(branch = request.user.branch, status=True).values(
+        products = Inventory.objects.filter(branch = request.user.branch, status=True, disable=False).values(
             'id',
             'name',
             'quantity'
@@ -3118,16 +3131,19 @@ def product(request):
 
 @login_required
 def delete_product(request):
-    if request.method == 'DELETE':
+    if request.method == 'POST':
         try:
             data = json.loads(request.body)
             product_id = data.get('id', '')
 
             product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+
+            logger.info(product)
             if product.quantity > 0:
-                return JsonResponse({'success': True, 'message': 'Product cannot be deleted.'})
+                product.disable = True
+                return JsonResponse({'False': True, 'message': 'Product cannot be deleted it have quantity more than zero.'})
             else:
-                product.delete()
+                product.disable = True
             product.save()
 
             return JsonResponse({'success': True, 'message': 'Product deleted successfully.'})
@@ -3135,6 +3151,7 @@ def delete_product(request):
         except Inventory.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Product not found.'}, status=404)
         except Exception as e:
+            logger.info(e)
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
