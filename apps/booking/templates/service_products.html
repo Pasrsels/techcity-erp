@@ -619,7 +619,7 @@
         }
 
         const data = {
-            'edit':edit,
+           // 'edit':edit,
             'name':name,
             'description': description,
             'unit_measure': unitOfMeasurement.value,
@@ -1078,18 +1078,86 @@ document.getElementById('id_edit_service').addEventListener('click', function ()
     const serviceId = selectedService.value;
     const serviceName = selectedService.textContent;
 
-    // Check if a service is selected
     if (!serviceId) {
         Swal.fire({
             icon: 'error',
             title: 'No Service Selected',
             text: 'Please select a service to edit.',
         });
+        
         return;
     }
+    document.getElementById('id_service').value = serviceId; 
+    document.querySelector('#id_service_name').value = serviceName; 
+    document.querySelector('#id_unit_measure').value = response.data.unit_measure; 
+    document.querySelector('#fixed_inp').value = response.data.fixed_value || ''; 
+    document.querySelector('#range_inp_from').value = response.data.range_from || ''; 
+    document.querySelector('#range_inp_to').value = response.data.range_to || ''; 
 
+    const editModal = new bootstrap.Modal(document.getElementById('addServiceModal'));
+    editModal.show();
   
-    
+    edit = true;
+    serviceId = response.data.id;
+
+    document.getElementById('add_service').onclick = function () {
+        const updatedName = document.querySelector('#id_service_name').value;
+        const unitMeasure = document.querySelector('#id_unit_measure').value;
+        const fixedValue = document.querySelector('#fixed_inp').value;
+        const rangeFrom = document.querySelector('#range_inp_from').value;
+        const rangeTo = document.querySelector('#range_inp_to').value;
+
+        if (!updatedName.trim()) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Input',
+                text: 'Service Name cannot be empty.',
+            });
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'booking:service_crud' %}",
+            type: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            data: {
+                'edit':edit,
+                'name':name,
+            'description': description,
+            'unit_measure': unitOfMeasurement.value,
+            'service_range': range
+            },
+            success: function (response) {
+                if (response.success) {
+                    selectedService.textContent = updatedName;
+                    editModal.hide();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Updated',
+                        text: 'Service details have been updated successfully.',
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Update Failed',
+                        text: response.error || 'An error occurred while updating the service.',
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred. Please try again.',
+                });
+            },
+        });
+    };
+});
+  
     function getCSRFToken() {
         let cookieValue = null;
         const name = 'csrftoken';
@@ -1105,6 +1173,5 @@ document.getElementById('id_edit_service').addEventListener('click', function ()
         }
         return cookieValue;
     }
-})
 </script>
 {% endblock %}
