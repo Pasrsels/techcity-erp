@@ -3,20 +3,17 @@
 {% block title %}vouchers list{% endblock title %}
 {% block content %}
 
-<div class="dashboard">
-    <div class="py-3">
-        <div class="py-3 ">
-            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';" class="d-flex align-items-center justify-content-between rounded shadow header mt-0 mb-2">
-                <h5 class="d-flex justify-content-between mx-3">Vouchers List</h5>
-                <ol class="breadcrumb w-100 container d-flex justify-content-end">
-                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:home' %}">Dashboard</a></li>
-                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:voucherLogs' %}">Voucher Logs</a></li>
-                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:voucherFiles' %}">Voucher Files</a></li>
-                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'users:users' %}">Users</a></li>
-                </ol>
-            </nav>
-          
-        </div>
+<div class="container">
+    <div class="Dashboard">
+        <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';" class="d-flex align-items-center justify-content-between rounded shadow header p-2 mb-4">
+            <h5 class="d-flex justify-content-left mx-3">Vouchers</h5>
+            <ol class="breadcrumb w-100 container d-flex justify-content-end">
+                <li class="mx-1 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'booking:service_view' %}">Services</a></li>
+                <li class="mx-1 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:home' %}">Dashboard</a></li>
+                <li class="mx-1 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:voucherLogs' %}">Voucher Logs</a></li>
+                <li class="mx-1 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:voucherFiles' %}">Voucher Files</a></li>
+            </ol>
+        </nav>
     </div>
 </div>
 <div class="vouchers-list mt-3">
