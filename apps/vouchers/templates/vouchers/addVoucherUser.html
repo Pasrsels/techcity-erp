@@ -4,35 +4,54 @@
 {% load crispy_forms_filters %}
 {% load crispy_forms_tags%}
 {% block content %}
-    <div class="row">
-        <div class="col-12">
-            <div class="content container mt-2">
-                <div class="d-flex align-items-center justify-content-between">
-                    <h4 class='px-1 mt-3'>Add voucher user</h4>
-                </div> 
-                <div class="d-flex flex-column justify-content-center">
-                    <form method="post" class="py-2">
-                        {% csrf_token %}
-                        <div id="div_id_name" class="mb-3 mt-3"> 
-                            <label for="id_name" class="form-label requiredField">
-                                Name
+
+
+<div class="dashboard">
+    <div class="py-3">
+        <div class="py-3 ">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';" class="d-flex align-items-center justify-content-between rounded shadow header mt-0 mb-2">
+                <h5 class="d-flex justify-content-left mx-3">Add Vouchers</h5>
+                <ol class="breadcrumb w-100 container d-flex justify-content-end">
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:home' %}">Dashboard</a></li>
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:voucherList' %}">Vouchers List</a></li>
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:voucherLogs' %}">Voucher Logs</a></li>
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:voucherFiles' %}">Voucher Files</a></li>
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'users:users' %}">Users</a></li>
+                </ol>
+              </nav>
+          </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="content container mt-2">
+            <div class="d-flex align-items-center justify-content-between">
+                <h4 class='px-1 mt-3'>Add voucher user</h4>
+            </div>
+            <div class="d-flex flex-column justify-content-center">
+                <form method="post" class="py-2">
+                    {% csrf_token %}
+                    <div id="div_id_name" class="mb-3 mt-3"> 
+                        <label for="id_name" class="form-label requiredField">
+                            Name
+                        <span class="asteriskField">*</span> 
+                        </label> 
+                        <input type="text" name="name" maxlength="50" class="textinput form-control" required id="id_name"> 
+                    </div> 
+                    <div id="div_id_phonenumber" class="mb-3"> 
+                        <label for="id_phonenumber" class="form-label requiredField">
+                            Phonenumber
                             <span class="asteriskField">*</span> 
-                            </label> 
-                            <input type="text" name="name" maxlength="50" class="textinput form-control" required id="id_name"> 
-                        </div> 
-                        <div id="div_id_phonenumber" class="mb-3"> 
-                            <label for="id_phonenumber" class="form-label requiredField">
-                                Phonenumber
-                                <span class="asteriskField">*</span> 
-                            </label> 
-                            <input type="text" name="phonenumber" maxlength="50" class="textinput form-control" required id="id_phonenumber">
-                         </div>
-                        <button class=" btn btn-primary w-100" >Proceed to print</button>
-                    </form>
-                </div>
+                        </label> 
+                        <input type="text" name="phonenumber" maxlength="50" class="textinput form-control" required id="id_phonenumber">
+                        </div>
+                    <button class=" btn btn-primary w-100" >Proceed to print</button>
+                </form>
             </div>
         </div>
     </div>
-    <script src="{% static 'js/jquery.js' %}"></script>
-    <script src="{% static 'assets/plugins/select2/dist/js/select2.min.js' %}"></script>
+</div>
+<script src="{% static 'js/jquery.js' %}"></script>
+<script src="{% static 'assets/plugins/select2/dist/js/select2.min.js' %}"></script>
 {% endblock content %}

@@ -6,6 +6,10 @@ from django.contrib.auth.decorators import login_required
 from apps.vouchers.forms import addVoucherFileForm, voucherUserForm
 
 @login_required
+def home(request):
+    return render(request, 'dashboardv.html')
+
+@login_required
 def voucherFiles(request):
     files = voucherFile.objects.all()
     form = addVoucherFileForm()

@@ -8,9 +8,10 @@
     <div class="Services">
         <div class="nav-services">
             <div class="d-flex align-items-center justify-content-between rounded shadow header p-2 mb-4">
-                <h5>Services </h5>
+                <h5>Services</h5>
                 <div>
                     <a class="btn btn-outline-dark btn-sm" href="{% url 'booking:services' %}">Add Services</a>
+                    <a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:home' %}">Vouchers</a>
                 </div>
             </div>
         </div>
@@ -71,7 +72,7 @@
                                     </span>
                             
                                     <span>
-                                        <a href="#" class="text-dark" title="Edit Item" data-bs-toggle="modal" data-bs-target="#editModal" onclick="populateModal('{{ service.id }}', '{{ service.service_name }}', '{{ service.description }}', '{{ service.quantity }}', '{{ service.cost }}', '{{ service.price }}')">
+                                        <a href="#" class="text-dark" title="Edit Item" data-bs-toggle="modal" data-bs-target="#editModal" onclick="populateServiceModal('{{ service.id }}', '{{ service.service_name }}', '{{ service.description }}', '{{ service.customer_type }}')">
                                             <i class="bx bx-edit"></i>
                                         </a>
                                     </span>
@@ -142,32 +143,13 @@
             </div>
             <div class="modal-body">
                 <form id="editForm">
-                    <input type="hidden" id="serviceId">
-                    <div class="mb-3">
-                        <label for="serviceName" class="form-label">Service Name</label>
-                        <input type="text" class="form-control" id="serviceName">
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="quantity" class="form-label">Quantity</label>
-                        <input type="number" class="form-control" id="quantity">
-                    </div>
-                    <div class="mb-3">
-                        <label for="cost" class="form-label">Cost</label>
-                        <input type="text" class="form-control" id="cost">
-                    </div>
-                    <div class="mb-3">
-                        <label for="price" class="form-label">Price</label>
-                        <input type="text" class="form-control" id="price">
-                    </div>
+                    {{serviceform | crispy}}
+                    <input type="hidden" id="id_service_id">
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="saveChanges()">Save Changes</button>
+                <button type="button" class="btn btn-primary" onclick="saveServiceChanges()">Save Changes</button>
             </div>
         </div>
     </div>
@@ -363,28 +345,25 @@ deleteButtons.forEach((button) => {
         }
     }
 
-    function populateModal(id, name, description, quantity, cost, price) {
-
-        document.getElementById("serviceId").value = id;
-        document.getElementById("serviceName").value = name;
-        document.getElementById("description").value = description;
-        document.getElementById("quantity").value = quantity;
-        document.getElementById("cost").value = cost;
-        document.getElementById("price").value = price;
+    function populateServiceModal(id, name, description, customer_type) {
+        console.log(customer_type)
+        document.getElementById("id_service_id").value = id;
+        document.getElementById("id_service_name").value = name;
+        document.getElementById("id_description").value = description;
+        document.getElementById("id_customer_type").value = customer_type;
     }
 
-    function saveChanges() {
-        const id = document.getElementById("serviceId").value;
-        const name = document.getElementById("serviceName").value;
-        const description = document.getElementById("description").value;
-        const quantity = document.getElementById("quantity").value;
-        const cost = document.getElementById("cost").value;
-        const price = document.getElementById("price").value;
-
+    function saveServiceChanges() {
+        const id = document.getElementById("id_service_id").value;
+        const name = document.getElementById("id_service_name").value;
+        const description = document.getElementById("id_description").value;
+        const customer_type = document.getElementById("id_customer_type").value;
+        
         data = {
             "service_id": id,
             'service_name': name,
             'description': description,
+            'customer_type': customer_type
         }
 
         console.log(data)
@@ -406,7 +385,9 @@ deleteButtons.forEach((button) => {
                     title: "Changes Saved",
                     text: "The service details have been successfully updated.",
                     confirmButtonText: "OK",
-                });
+                }).then(
+                    window.location.reload()
+                )
 
             } else {
                 Swal.fire({
@@ -470,7 +451,9 @@ fetch("{% url 'booking:service_crud' %}", {
             title: "Changes Saved",
             text: "The service details have been successfully updated.",
             confirmButtonText: "OK",
-        });
+        }).then(
+            window.location.reload()
+        )
 
     } else {
         Swal.fire({

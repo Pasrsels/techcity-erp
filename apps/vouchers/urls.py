@@ -1,9 +1,11 @@
 from . import views
 from django.urls import path
 
-app_name = 'vouchers'
+app_name = 'apps.vouchers'
 
 urlpatterns = [
+    path('', views.home, name= 'home'),
+
     path('voucherLogs/', views.voucherLog, name='voucherLogs'),
     path('addCategory/', views.addCategory, name='addCategory'),
     path("voucherList/", views.vouchersList,  name="voucherList"),
