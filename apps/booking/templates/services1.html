@@ -4,39 +4,39 @@
 {% block title %}Services{% endblock %}
 
 {% block content %}
-<div class="container me-5">
+<div class="container">
     <div class="Services">
         <div class="nav-services">
             <div class="d-flex align-items-center justify-content-between rounded shadow header p-2 mb-4">
                 <h5>Services </h5>
                 <div>
-                    <a class="btn btn-outline-dark btn-sm ms-3 w-15 h-5" href="{% url 'booking:services' %}">Add Services</a>
+                    <a class="btn btn-outline-dark btn-sm" href="{% url 'booking:services' %}">Add Services</a>
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="nav-container" style="background-color: black; padding: 5px; border-radius: 2px; margin-top: 150px; ">
-        <div class="d-flex justify-content-left me-3">
+    <!-- navigation bar -->
+    <div class="nav-container d-flex justify-content-between align-items-center border rounded p-2">
+        <div class="d-flex">
             <ul class="nav nav-pills justify-content-center" id="tableNav" role="tablist">
                 <li class="nav-item">
-                    <button class="nav-link text-white active" id="service-tab" data-bs-toggle="tab" data-bs-target="#service-content" type="button" role="tab" aria-controls="service-content" aria-selected="true">
+                    <button class="btn btn-sm text-dark active" id="service-tab" data-bs-toggle="tab" data-bs-target="#service-content" type="button" role="tab" aria-controls="service-content" aria-selected="true">
                         Services
                     </button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link text-white" id="itemofuse-tab" data-bs-toggle="tab" data-bs-target="#items-content" type="button" role="tab" aria-controls="itemofuse-content" aria-selected="false">
+                    <button class="btn btn-sm text-dark" id="itemofuse-tab" data-bs-toggle="tab" data-bs-target="#items-content" type="button" role="tab" aria-controls="itemofuse-content" aria-selected="false">
                         Items of Use
                     </button>
                 </li>
             </ul>
         </div>
-    </div>
-    <div class="d-flex justify-content-end ms-3">
-        <div class="input-group w-25">
-            <input type="text" class="form-control" id="searchBar" placeholder="search...">
+        <div>
+            <input type="text" class="form-control form-control-sm" id="searchBar" placeholder="search...">
         </div>
     </div>
+
     <div class="tab-content mt-3">
         <!-- Services Table -->
         <div class="tab-pane fade show active" id="service-content" role="tabpanel" aria-labelledby="service-tab">
@@ -44,6 +44,7 @@
                 <table class="table border table-bordered table-striped table-hover table-sm rounded w-100" id="service">
                     <thead>
                         <tr data-id="{{ service.id }}">
+                            <th>#</th>
                             <th>Name</th>
                             <th>Description</th>
                             <th>Total Services</th>
@@ -55,6 +56,7 @@
                     <tbody id="services_table">
                         {% for service in services %}
                             <tr>
+                                <td><small>{{ forloop.counter }}</small></td>
                                 <td><small><span class="hint--bottom" aria-label="{{ service.service.description }}">{{ service.service_name }}</span></small></td>
                                 <td><small>{{ service.description }}</small></td>
                                 <td><small>{{ service.quantity }}</small></td>
@@ -63,7 +65,7 @@
                                 <td>
                                     
                                     <span>
-                                        <a href="{% url 'booking:service_crud' %}" class="text-dark">
+                                        <a href="{% url 'booking:service_personal_details' service_id=service.id%}" class="text-dark">
                                             <i class="bx bx-show"></i>
                                         </a>
                                     </span>
@@ -77,6 +79,7 @@
                                         <span id='delete' data-id="{{ service.id }}" onclick="deleteService('{{ service.id}}')" class="text-dark">
                                             <i class='bx bx-trash'></i>
                                         </span>
+                                    </small>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -88,8 +91,9 @@
         <div class="tab-pane fade" id="items-content" role="tabpanel" aria-labelledby="items-tab">
             <div class="table-responsive">
                 <table class="table border table-bordered table-striped table-hover table-sm rounded w-100" id="itemTable">
-                    <thead>
+                    <thead class="table-dark">
                         <tr>
+                            <th>#</th>
                             <th>Name</th>
                             <th>Description</th>
                             <th>Quantity</th>
@@ -98,13 +102,13 @@
                         </tr>
                     </thead>
                     <tbody id="itemTableBody">
-                        <!-- Initial data rendered by Django -->
                         {% for item in items %}
                             <tr data-id="{{ item.id }}">
-                                <td>{{ item.name__item_of_use_name }}</td>
-                                <td>{{ item.description }}</td>
-                                <td>{{ item.quantity }}</td>
-                                <td>{{ item.cost }}</td>
+                                <td><small>{{ forloop.counter }}</small></td>
+                                <td><small>{{ item.name__item_of_use_name }}</small></td>
+                                <td><small>{{ item.description }}</small></td>
+                                <td><small>{{ item.quantity }}</small></td>
+                                <td><small>{{ item.cost }}</small></td>
                                 <td>
                                     <span>
                                         <a href="{% url 'booking:service_crud' %}" class="text-dark">
@@ -124,7 +128,6 @@
                                 </td>
                             </tr>
                         {% endfor %}
-                        <!-- Rows added dynamically will go here -->
                     </tbody>
                 </table>
             </div>
@@ -218,6 +221,10 @@
 <script>
 
 const deleteButtons = document.querySelectorAll('#delete');
+
+// new DataTable('#itemTable', {
+//     paging:false
+// })
 
 deleteButtons.forEach((button) => {
     button.addEventListener('click', function () {
@@ -332,7 +339,9 @@ deleteButtons.forEach((button) => {
                         title: "Delete",
                         text: "The service details have been successfully deleted.",
                         confirmButtonText: "OK",
-                    });
+                    }).then(()=>{
+                        location.reload()
+                    })
 
                 } else {
                     Swal.fire({
@@ -505,7 +514,9 @@ fetch("{% url 'booking:service_crud' %}", {
                         'icon': 'success',
                         'title': 'successful',
                         'text': 'successfully deleted item of use',
-                    })
+                    }).then(
+                        window.location.reload(),
+                    )
                 }
                 else{
                     Swal.fire({

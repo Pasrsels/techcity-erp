@@ -63,7 +63,8 @@ def service_crud(request):
                 name: str,
                 descrption: str,
                 unit_measure: int (fk),
-                service_range: str
+                service_range: strl,
+                customer_type: str,
             }]
     """
     if request.method == 'POST':
@@ -73,10 +74,19 @@ def service_crud(request):
             description = data.get('description')
             unit_measure = data.get('unit_measure')
             service_range = data.get('service_range')
+            customer_type = data.get('customer_type')
 
-            if Services.objects.filter(service_name = name.lower()).exists():
-                return JsonResponse({'success': False, 'message': f'{name} already exists'}, status = 400)
-            
+            if Services.objects.filter(service_name = name.lower()).exists() and Services.objects.filter(delete_s = True).exists():
+                service = Services.objects.get(service_name = name)
+                service.delete_s = False
+                service.save()
+                service_data = Services.objects.filter(delete_s = False).values(
+                    'id',
+                    'service_name'
+                )
+                return JsonResponse({'success':True, 'message': f'{name} brought back' , 'data': list(service_data)}, status = 200)
+            elif Services.objects.filter(service_name = name.lower()).exists() and Services.objects.filter(delete_s = False).exists():
+                return JsonResponse({'success':False, 'message': f'{name} brought back'}, status = 400)
             logger.info(f'service name: {name}')
             with transaction.atomic():
 
@@ -86,10 +96,11 @@ def service_crud(request):
                     service_name  = name,
                     description = description,
                     service_range = service_range,
-                    unit_measure = um
+                    unit_measure = um,
+                    customer_type = customer_type
                 )
 
-                service_data = Services.objects.all().values(
+                service_data = Services.objects.filter(delete_s = False).values(
                     'id',
                     'service_name'
                 )
@@ -385,12 +396,22 @@ def item_of_use_crud(request):
             description = data.get('description')
             name = name.lower()
 
-            logger.info(f'name: {name}')
+            logger.info(f'decription: {description}')
 
             # validation for existance
-            if itemOfUseName.objects.filter(item_of_use_name=name).exists():
-                return JsonResponse({'success': False, 'message':f'{name} Item of use exists.' }, status = 400) 
+            if itemOfUseName.objects.filter(item_of_use_name = name).exists() and itemOfUseName.objects.filter(delete_iou = True).exists():
+                item_undelete = ItemOfUse.objects.get(name__item_of_use_name = name)
+                item_undelete.delete_iou = False
+                item_undelete.save()
 
+                items = ItemOfUse.objects.filter(delete_iou = False).values(
+                    'id',
+                    'name__item_of_use_name'
+                )
+                logger.info(f'items: {items}')
+                return JsonResponse({'success': True, 'message':f'{name} item of use brought back.', 'data':list(items) }, status = 200) 
+            elif itemOfUseName.objects.filter(item_of_use_name = name).exists() and itemOfUseName.objects.filter(delete_iou = False).exists():
+                return JsonResponse({'success': False, 'message':f'{name} item already exists.' }, status = 400)
             with transaction.atomic():
                 # creation 
                 item = itemOfUseName.objects.create(
@@ -405,7 +426,10 @@ def item_of_use_crud(request):
                     category=category,
                     quantity=quantity,
                 )
-                items = itemOfUseName.objects.all().values()
+                items = ItemOfUse.objects.filter(delete_iou = False).values(
+                    'id',
+                    'name__item_of_use_name'
+                )
 
                 logger.info(f'items: {items}')
                 return JsonResponse({'success': True, 'data':list(items)}, status = 200)
@@ -421,11 +445,10 @@ def item_of_use_crud(request):
 
         if iou_id and service_id:
             try:
-                iou = itemOfUseName.objects.get(id=iou_id)
+                logger.info(ItemOfUse.objects.all().values('id'))
                 service = Services.objects.filter(id=service_id).values('service_range')
-
-                logger.info(f'name {iou}')
-                items_iou = ItemOfUse.objects.filter(name=iou.id).values(
+                
+                items_iou = ItemOfUse.objects.filter(id=iou_id).values(
                     'name__item_of_use_name',
                     'quantity',
                     'cost',
@@ -459,242 +482,263 @@ def item_of_use_crud(request):
     
 @login_required
 def save_combined_service(request):
+    """
+        we are saying we have a service and an item of use so, both they need to be linked to each other 
+        thus one item of use can have many services it is used on (many to many relationship)
+        from the front we take the service id selected and a list of ioum(s) in the iom(s) we mostly need
+        an id so that we query the instance of the ioum we want to add the service to, we didnt use set since 
+        only set one service over another but add so that we just add without specifically saying the ioum 
+        is using this service.
+    
+    """
     if request.method == 'POST':
-
         try:
             data = json.loads(request.body)
             service_id = data.get('service_id')
             iout_items = data.get('iou')
 
             #get service 
+            logger.info(f'srvice_id:{service_id}')
             service = Services.objects.get(id=service_id)
             logger.info(service)
+
             # add service to iou
             for item in iout_items:
                 iou = ItemOfUse.objects.get(id=item['id'])
                 iou.service.add(service)
                 iou.save()
 
-                print(iou.service.all)
-
             return JsonResponse({'success': True}, status = 200)
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
     
-#member view
+#Personal service details
 @login_required
-def members_view(request):
-    memberForm = AddMember()
+def service_detail(request,service_id):
+    logger.info(service_id)
+    service_data = Services.objects.get(id = service_id)
+    logger.info(service_data)
+    items_of_use_data = ItemOfUse.objects.filter(service__id=service_id)
     return render(request, 'offices.html',{
-        'memberForm ': memberForm
+        'service_data': service_data,
+        'item_of_use':items_of_use_data
     })
 
 #member
 @login_required
-def member_crud(request):
-    #Add
-    if request.method == "POST":
+def service_detail_crud(request):
+    if request.method == 'GET':
+        # data = json.loads(request.body)
+        # service_id = data.get('id')
+        # item_of_use = ItemOfUse.objects.filter(service__id = service_id).values('name__item_of_use_name')
+        # logger.info(item_of_use)
+        dataD = Services.objects.all().values()
+        logger.info(dataD)
+        return JsonResponse({'success': True, 'details':list(dataD)}, status = 200)
+    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 400)
+#     #Add
+#     if request.method == 'POST':
 
-        data = json.loads(request.body)
- 
-        n_ID = data.get('National_ID')
-        m_name = data.get('Name')
-        m_email = data.get('Email')
-        m_phone = data.get('Phone')
-        m_adress = data.get('Address')
-        m_enrollment = data.get('Enrollment')
-        m_company = data.get('Company')
-        m_age = data.get('Age')
-        m_gender = data.get('Gender')
+#         data = json.loads(request.body)
+#         logger.info(data)
+#         n_ID = data.get('National_ID')
+#         m_name = data.get('Name')
+#         m_email = data.get('Email')
+#         m_phone = data.get('Phone')
+#         m_adress = data.get('Address')
+#         m_enrollment = data.get('Enrollmnet')
+#         m_company = data.get('Company')
+#         m_age = data.get('Age')
+#         m_gender = data.get('Gender')
 
-        if Members.objects.filter(National_ID = n_ID).exists():
-            return JsonResponse({'success': True, 'message': 'Member already exists'}, status = 400)
-        elif not n_ID or not m_name or not m_email or not m_phone or not m_adress or not m_enrollment \
-        or not m_company or not m_age or not m_gender:
-            return JsonResponse({'success': False, 'message': 'Pliz fill in empty fields'}, status = 400)
-        with transaction.atomic():
-            try: 
+#         if Members.objects.filter(National_ID = n_ID).exists():
+#             return JsonResponse({'success': True, 'message': 'Member already exists'}, status = 400)
+#         # elif not n_ID or not m_name or not m_email or not m_phone or not m_adress or not m_enrollment \
+#         # or not m_company or not m_age or not m_gender:
+#         #     return JsonResponse({'success': False, 'message': 'Pliz fill in empty fields'}, status = 400)
+#         with transaction.atomic():
+#             try: 
                
-                """"
-                    1. we are going to receive a total amount which consists of admin if its a first payment,
-                    2. we are going to seperate it into 2 thus admin and service amount, 
-                    3. we are going to check if they is an balance
-                """
+#                 """"
+#                     1. we are going to receive a total amount which consists of admin if its a first payment,
+#                     2. we are going to seperate it into 2 thus admin and service amount, 
+#                     3. we are going to check if they is an balance
+#                 """
 
-                member_add = Members.objects.create(
-                    National_ID = n_ID,
-                    Name = m_name,
-                    Email = m_email,
-                    Phone = m_phone,
-                    Address = m_adress,
-                    Enrollment = m_enrollment,
-                    Company = m_company,
-                    Age = m_age,
-                    Gender = m_gender,
-                    delete = False
-                )
+#                 member_add = Members.objects.create(
+#                     National_ID = n_ID,
+#                     Name = m_name,
+#                     Email = m_email,
+#                     Phone = m_phone,
+#                     Address = m_adress,
+#                     Enrollmnet = m_enrollment,
+#                     Company = m_company,
+#                     Age = m_age,
+#                     Gender = m_gender,
+#                     delete = False
+#                 )
 
-                MemberAccounts.objects.create(
-                    Balance = 20,
-                    Member = member_add,
-                    delete = False
-                )
+#                 MemberAccounts.objects.create(
+#                     Balance = 20,
+#                     Member = member_add,
+#                     delete = False
+#                 )
 
-                Logs.objects.create(
-                    action = 'create'
-                )
-                return JsonResponse({'success': True, 'response': 'Data saved'}, status = 200)
-            except Exception as e:
-                return JsonResponse({'success': False, 'message': f'error: {e}'}, status = 400)
-    #Update
-    elif request.method == "PUT":
-        #get data part of file
-        try:
-            data = json.loads(request.body)
+#                 # Logs.objects.create(
+#                 #     action = 'create'
+#                 # )
+#                 return JsonResponse({'success': True, 'response': 'Data saved'}, status = 200)
+#             except Exception as e:
+#                 return JsonResponse({'success': False, 'message': f'error: {e}'}, status = 400)
+#     #Update
+#     elif request.method == "PUT":
+#         #get data part of file
+#         try:
+#             data = json.loads(request.body)
 
-            n_ID = data.get('National_ID')
-            m_id = data.get('member_id')
-            m_name = data.get('Name')
-            m_email = data.get('Email')
-            m_phone = data.get('Phone')
-            m_adress = data.get('Address')
-            m_enrollment = data.get('Enrollment')
-            m_company = data.get('Company')
-            m_age = data.get('Age')
-            m_gender = data.get('Gender')
+#             n_ID = data.get('National_ID')
+#             m_id = data.get('member_id')
+#             m_name = data.get('Name')
+#             m_email = data.get('Email')
+#             m_phone = data.get('Phone')
+#             m_adress = data.get('Address')
+#             m_enrollment = data.get('Enrollment')
+#             m_company = data.get('Company')
+#             m_age = data.get('Age')
+#             m_gender = data.get('Gender')
 
-            if Members.objects.filter(National_ID = n_ID).exists():
-                with transaction.Atomic():
-                    Member_update = Members.objects.get(id = m_id)
-                    Member_update.National_ID = n_ID,
-                    Member_update.Name = m_name,
-                    Member_update.Email = m_email,
-                    Member_update.Phone = m_phone,
-                    Member_update.Address = m_adress,
-                    Member_update.Enrollment = m_enrollment,
-                    Member_update.Company = m_company,
-                    Member_update.Age = m_age,
-                    Member_update.Gender = m_gender,
-                    Member_update.delete = False,
-                    Member_update.save()
+#             if Members.objects.filter(National_ID = n_ID).exists():
+#                 with transaction.Atomic():
+#                     Member_update = Members.objects.get(id = m_id)
+#                     Member_update.National_ID = n_ID,
+#                     Member_update.Name = m_name,
+#                     Member_update.Email = m_email,
+#                     Member_update.Phone = m_phone,
+#                     Member_update.Address = m_adress,
+#                     Member_update.Enrollment = m_enrollment,
+#                     Member_update.Company = m_company,
+#                     Member_update.Age = m_age,
+#                     Member_update.Gender = m_gender,
+#                     Member_update.delete = False,
+#                     Member_update.save()
 
-                    Logs.objects.create(
-                        action = 'update'
-                    )
-        except Exception as e:
-            return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
-    elif request.method == "DELETE":
-        try:
-            data = json.loads(request.body)
-            id = data.get('id')
+#                     Logs.objects.create(
+#                         action = 'update'
+#                     )
+#         except Exception as e:
+#             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
+#     elif request.method == "DELETE":
+#         try:
+#             data = json.loads(request.body)
+#             id = data.get('id')
 
-            if Members.objects.filter(id = id).exists():
-                Members.objects.get(id = id)
-                member = Members.objects.get(id = id)
-                member.delete = True
-                member.save()
-                Logs.objects.create(
-                    action = 'delete'
-                )
-                return JsonResponse({'success': True}, status = 200)
-            return JsonResponse({'success':False, 'message': 'member doesnot exist'}, status = 400)
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': f'{e}'}, status = 400)
-    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
-#member_acc    
-@login_required
-def member_acc_crud(request):
-    #update
-    if request.method == "PUT":
-        data = json.loads(request.body)
-        member_id = data.get('id')
-        member_balance = data('Balance')
-        try:
-            if MemberAccounts.objects.get(id = member_id).DoesNotExist():
-                return JsonResponse({'success': False, 'message': 'cannot update none existing field'}, status = 400)
-            elif not member_id or not member_balance:
-                return JsonResponse({'success': False, 'message': 'empty fields'}, status = 400)
+#             if Members.objects.filter(id = id).exists():
+#                 Members.objects.get(id = id)
+#                 member = Members.objects.get(id = id)
+#                 member.delete = True
+#                 member.save()
+#                 Logs.objects.create(
+#                     action = 'delete'
+#                 )
+#                 return JsonResponse({'success': True}, status = 200)
+#             return JsonResponse({'success':False, 'message': 'member doesnot exist'}, status = 400)
+#         except Exception as e:
+#             return JsonResponse({'success': False, 'message': f'{e}'}, status = 400)
+#     return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
+# #member_acc    
+# @login_required
+# def member_acc_crud(request):
+#     #update
+#     if request.method == "PUT":
+#         data = json.loads(request.body)
+#         member_id = data.get('id')
+#         member_balance = data('Balance')
+#         try:
+#             if MemberAccounts.objects.get(id = member_id).DoesNotExist():
+#                 return JsonResponse({'success': False, 'message': 'cannot update none existing field'}, status = 400)
+#             elif not member_id or not member_balance:
+#                 return JsonResponse({'success': False, 'message': 'empty fields'}, status = 400)
             
-            with transaction():
-                member_account = MemberAccounts.objects.get(id = member_id)
-                member_account.Balance = member_balance
-                member_account.save()
-                return JsonResponse({'success': True, 'response': 'items updated'}, status = 200)
-        except Exception as e:
-            return JsonResponse({'success': False, 'response':f'{e}'}, status = 200)
-    #delete
-    elif request.method == "DELETE":
-        try:
-            data = json.loads(request.body)
+#             with transaction():
+#                 member_account = MemberAccounts.objects.get(id = member_id)
+#                 member_account.Balance = member_balance
+#                 member_account.save()
+#                 return JsonResponse({'success': True, 'response': 'items updated'}, status = 200)
+#         except Exception as e:
+#             return JsonResponse({'success': False, 'response':f'{e}'}, status = 200)
+#     #delete
+#     elif request.method == "DELETE":
+#         try:
+#             data = json.loads(request.body)
 
-            member_id = data('id')
+#             member_id = data('id')
 
-            if MemberAccounts.objects.filter(id = member_id).exists():
-                return JsonResponse({'success': False, 'response':'cannot delete no existing field'}, status = 400)
-            elif not member_id:
-                return JsonResponse({'success': False, 'response': 'empty field please fill'}, status = 400)
-            member_acc_del = MemberAccounts.objects.get(id = member_id)
-            member_acc_del.delete = True
-            member_acc_del.save()
-            return JsonResponse({'success': True}, status = 200)
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': f'error: {e}'}, status = 400)
-    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
+#             if MemberAccounts.objects.filter(id = member_id).exists():
+#                 return JsonResponse({'success': False, 'response':'cannot delete no existing field'}, status = 400)
+#             elif not member_id:
+#                 return JsonResponse({'success': False, 'response': 'empty field please fill'}, status = 400)
+#             member_acc_del = MemberAccounts.objects.get(id = member_id)
+#             member_acc_del.delete = True
+#             member_acc_del.save()
+#             return JsonResponse({'success': True}, status = 200)
+#         except Exception as e:
+#             return JsonResponse({'success': False, 'message': f'error: {e}'}, status = 400)
+#     return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
 
-#Payments
-@login_required
-def payments_crud(request):
-    #add
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
+# #Payments
+# @login_required
+# def payments_crud(request):
+#     #add
+#     if request.method == "POST":
+#         try:
+#             data = json.loads(request.body)
 
-            payments_fee = data.get('fee')
-            payments_amount = data.get('Amount')
-            member_id = data.get('member_id')
-            account_id = data.get('account_id')
+#             payments_fee = data.get('fee')
+#             payments_amount = data.get('Amount')
+#             member_id = data.get('member_id')
+#             account_id = data.get('account_id')
     
-            if not payments_amount or not member_id or not account_id:
-                return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
-            with transaction.atomic():
-                member_details = Members.objects.get(id = member_id)
-                account_details = MemberAccounts.objects.get(id = account_id)        
-                Payments.objects.create(
-                    Amount = payments_amount,
-                    Member = member_details,
-                    Account = account_details
-                )
-                old_balance = account_details.Balance
-                account_details.Balance =  old_balance - payments_amount
-                account_details.save()
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': f'error: {e}'}, status = 400)
-    #update
-    elif request.method == "PUT":
+#             if not payments_amount or not member_id or not account_id:
+#                 return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
+#             with transaction.atomic():
+#                 member_details = Members.objects.get(id = member_id)
+#                 account_details = MemberAccounts.objects.get(id = account_id)        
+#                 Payments.objects.create(
+#                     Amount = payments_amount,
+#                     Member = member_details,
+#                     Account = account_details
+#                 )
+#                 old_balance = account_details.Balance
+#                 account_details.Balance =  old_balance - payments_amount
+#                 account_details.save()
+#         except Exception as e:
+#             return JsonResponse({'success': False, 'message': f'error: {e}'}, status = 400)
+#     #update
+#     elif request.method == "PUT":
 
-        data = json.loads(request.body)
+#         data = json.loads(request.body)
 
-        payments_id = data.get('id')
-        payments_amount = data.get('Amount')
-        member_account = data.get('account_id')
+#         payments_id = data.get('id')
+#         payments_amount = data.get('Amount')
+#         member_account = data.get('account_id')
         
-        try:
-            if not payments_id or not payments_amount or not member_account:
-                return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
-            with transaction.atomic():
-                payments = Payments.objects.get(id = payments_id)
-                old_amount = payments.Amount
-                payments.Amount = payments_amount
+#         try:
+#             if not payments_id or not payments_amount or not member_account:
+#                 return JsonResponse({'success': False, 'response': 'empty fields'}, status = 400)
+#             with transaction.atomic():
+#                 payments = Payments.objects.get(id = payments_id)
+#                 old_amount = payments.Amount
+#                 payments.Amount = payments_amount
                 
-                member_acc = MemberAccounts.objects.get(id = member_account)
-                current_balance = member_acc.Balance
-                member_acc.Balance = (current_balance + old_amount) - payments_amount
+#                 member_acc = MemberAccounts.objects.get(id = member_account)
+#                 current_balance = member_acc.Balance
+#                 member_acc.Balance = (current_balance + old_amount) - payments_amount
 
-                payments.save()
-                member_acc.save()
-                return JsonResponse({'success': True}, status = 200)
-        except Exception as e:
-            return JsonResponse({'success': False, 'response':f'{e}'}, status = 200)
+#                 payments.save()
+#                 member_acc.save()
+#                 return JsonResponse({'success': True}, status = 200)
+#         except Exception as e:
+#             return JsonResponse({'success': False, 'response':f'{e}'}, status = 200)
     # #delete
     # if request.method == "DELETE":
     #     data = json.loads(request.body)

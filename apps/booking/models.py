@@ -7,10 +7,10 @@ class Members(models.Model):
     Email = models.EmailField(max_length=255, blank=False)
     Phone = models.CharField(max_length=12, blank=False)
     Address = models.CharField(max_length= 255, blank= False)
-    Enrollmnet = models.Choices("permanent","temporary")
+    Enrollmnet = models.CharField(max_length=60, null= True)
     Company = models.CharField(max_length= 255, blank= True)
     Age = models.IntegerField(blank=False)
-    Gender = models.Choices("M", "F")
+    Gender = models.CharField(max_length=10)
     delete = models.BooleanField(default=False)
     #add def funtion to every class
     def __str__(self) -> str:
@@ -36,10 +36,13 @@ class Payments(models.Model):
 
 class Services(models.Model): # removed the foreign key to itemofuse 
     service_name = models.CharField(max_length= 255, default='')
-    description = models.CharField(max_length=255, default= 'none')
+    description = models.CharField(max_length=255, default= 'none', null=True)
     unit_measure = models.ForeignKey('UnitMeasurement', on_delete= models.CASCADE, null=True)
     service_range = models.CharField(max_length=255, default= 'none')
     delete_s = models.BooleanField(default=False)
+    customer_type = models.CharField(max_length=20, choices=[
+        ('patients', 'patients')
+    ])
 
     def __str__(self):
         return f'{self.service_name}'
@@ -63,8 +66,8 @@ class ItemOfUse(models.Model):
     cost = models.DecimalField(max_digits=4, decimal_places= 2, default= 0.00)
     description = models.CharField(max_length=255, default= 'none', null= True)
     category = models.ForeignKey('Category', on_delete= models.CASCADE)
-    delete_iou = models.BooleanField(default=False)
-    pass
+    delete_iou = models.BooleanField(default=False, null=True)
+
     def __str__(self):
         return f"{self.name}"
 

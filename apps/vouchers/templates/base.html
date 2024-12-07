@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/plugins/toastr//toastr.min.css' %}" media="all">
+    
+    {% comment %} css {% endcomment %}
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'sass/main.css' %}">
+
+    <link rel="stylesheet" href="{% static 'assets/plugins/select2/dist/css/select2.min.css' %}">
+    <title>{% block title %}Voucher System{% endblock title %}</title>
+</head>
+<body id="body-pd">
+    <header class="header bg-light border d-flex align-items-center" id="header">
+        <div class="header_toggle"> 
+            <h5>Voucher Management</h5>
+        </div>
+        <div class="d-flex align-items-center">
+            <small class="px-2 text-dark">
+                {{request.user.username}} 
+            </small>
+            <span class="header_img px-2"><img src="{{request.user.image.url}}" alt=""></span>
+            <span class="fs-3">
+                <a href="{% url 'users:logout' %}">
+                    <i class='bx bx-log-out' style="color: #333;"></i>
+                </a>
+            </span>
+        </div>
+    </header>      
+      
+    <div class="py-3">
+        <div class="container py-3 ">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';" class="px-3">
+                <ol class="breadcrumb" class="py-5">
+                  <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                  <li class="breadcrumb-item"><a href="{% url 'vouchers:voucherList' %}">Vouchers List</a></li>
+                  <li class="breadcrumb-item"><a href="{% url 'vouchers:voucherLogs' %}">Voucher Logs</a></li>
+                  <li class="breadcrumb-item"><a href="{% url 'vouchers:voucherFiles' %}">Voucher Files</a></li>
+                  <li class="breadcrumb-item"><a href="{% url 'users:users' %}">Users</a></li>
+                </ol>
+              </nav>
+          </div>
+        {% block content %}{% endblock content %}
+    </div>
+    <script src="{% static 'js/jquery.js' %}"></script>
+    <script src="{% static 'assets/plugins/select2/dist/js/select2.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/plugins/toastr/toastr.min.js' %}"></script>
+</body>
+</html>

@@ -37,7 +37,6 @@
                 <h5>Services</h5>
                 <div>
                     <button class="btn btn-outline-dark btn-sm ms-10">Analytics</button>
-                    <a class="btn btn-outline-dark ms-10 btn-sm" href="{%url 'booking:member'%}">Members</a> 
                     <a class="btn btn-outline-dark ms-10 btn-sm" href="{%url 'booking:service_view'%}">Back</a>
                 </div>
             </div>
@@ -57,46 +56,22 @@
                         />
                     </div>
                 </div>
-                    <div class="container mt-4">
-                        <table class="table table-striped table-bordered table-hover">
-                            <thead class="table-dark">
-                                <th>Name</th>
-                                <th>Description</th>
-                                <th>Quantity</th>
-                                <th>Cost</th>
-                                <th>Action</th>
-                                <!-- <th>Total</th> -->
-                            </thead>
-                            <tbody id="service_productsTableBody"></tbody>
-                            <tbody id="itemTableBody">
-                                <!-- Initial data rendered by Django
-                                {% for item in items %}
-                                <tr data-id="{{ item.id }}">
-                                    <td>{{ item.name }}</td>
-                                    <td>{{ item.description }}</td>
-                                    <td>{{ item.quantity }}</td>
-                                    <td>{{ item.cost }}</td>
-                                    <td>
-                                        <a href="{% url 'booking:service_crud' %}" class="text-info me-2" title="View Item">
-                                            <i class="bx bx-show"></i>
-                                        </a>
-                                        <a href="{% url 'booking:service_crud' %}" class="text-dark me-2" title="Edit Item">
-                                            <i class="bx bx-edit"></i>
-                                        </a>
-                                        <a href="#" class="text-danger delete-item" title="Delete Item">
-                                            <i class="bx bx-trash-alt"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %} -->
-                                <!-- Rows added dynamically will go here -->
-                            </tbody>    
-                        </table> 
-                        <div class="d-flex justify-content-end">
-                            <button onclick="saveService()" class="btn btn-outline-dark btn-sm mt-3">save service</button>
-                        </div>
+                <div class="container mt-4">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead class="table-dark">
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Cost</th>
+                            <th>Action</th>
+                        </thead>
+                        <tbody id="service_productsTableBody"></tbody>  
+                    </table> 
+                    <div class="d-flex justify-content-end">
+                        <button onclick="saveService()" class="btn btn-outline-dark btn-sm mt-3">save service</button>
                     </div>
                 </div>
+            </div>
             <div class="col-3 rounded" style="background: #fff;">
                 <h5 class="mt-2 mb-2 fw-bold">Add Service</h5>
                 <hr>
@@ -126,7 +101,7 @@
                                 <select name="category" class="select form-select" required id="id_name"> 
                                     <option value="" selected>Select Item of use</option>
                                     {% for name in names %}
-                                        <option value="{{ name.id }}">{{ name.name.item_of_use_name }}</option>
+                                        <option value="{{ name.id }}">{{ name.name.item_of_use_name }} {{ name.id }}</option>
                                     {% endfor %}
                                 </select> 
                                 <button type="button" class="btn btn-sm bx bx-plus" id="id_add_name"></button>
@@ -171,7 +146,11 @@
                             <button type="button" class="btn btn-sm bx bx-edit" id="unitEditBtn"></button>
                             <button type="button" class="btn btn-sm bx bx-trash" id="unitDeleteBtn"></button>
                         </div>
-                    </div>   
+                    </div>
+                    <div class="mb-3">
+                        <label for="time">Time</label>
+                        <input type="text" class="form-control" required id="time" name="time" placeholder="enter time required">
+                    </div>
                     <div id="div_id_service_range" class="mb-3">
                         <label for="id_service_range" class="form-label requiredField">
                             Number Of Units Per Service
@@ -189,15 +168,13 @@
                         </div>
                         <div class="d-none mt-3" id="fixed">
                             <label for="id_fixed_inp" class="form-label requiredField">
-                                Fixed units
-                                <span class="asteriskField">*</span>
+                                <span class="asteriskField"></span>
                             </label>
                             <input type="number" name="fixed_inp" id="fixed_inp" class="form-control">
                         </div>
                         <div class="d-none mt-3" id="range">
                             <label for="id_fixed_inp" class="form-label requiredField">
-                                Range units
-                                <span class="asteriskField">*</span>
+                                <span class="asteriskField"></span>
                             </label>
                             <div class="d-flex align-items-center">
                                 <div class="d-flex align-items-center">
@@ -414,6 +391,40 @@
         $('#id_name').select2(
             {placeholder: 'Select Item '}
         )
+        .on('change', function (e){
+            const value = iouEl.value;
+            console.log(serviceId, 'service id')
+            console.log('iou_id',value)
+            if(!serviceId){
+                Swal.fire({
+                    icon:'error',
+                    text:'Please select a service first.',
+                    title:'error'
+                })
+                return;
+            }
+
+            fetch(`{% url 'booking:item_of_use_crud' %}?id=${value}&service_id=${serviceId}`, {
+                method: 'GET',
+                headers:{
+                    'content-Type':'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('iou data: ', data.items)
+                if(data.success){
+                    console.log(data.items, 'items')
+                    addItem(data.items)
+                }else{
+                    Swal.fire({
+                        icon:'error',
+                        title:'error',
+                        text:data.message
+                    })
+                }
+            })
+        })
     })
 
 
@@ -455,41 +466,6 @@
         service = 'range'
     })
     
-    
-    iouEl.addEventListener('change', ()=>{
-        console.log('iou')
-        const value = iouEl.value;
-
-        if(!serviceId){
-            Swal.fire({
-                icon:'error',
-                text:'Please select a service first.',
-                title:'error'
-            })
-            return;
-        }
-
-        fetch(`{% url 'booking:item_of_use_crud' %}?id=${value}&service_id=${serviceId}`, {
-            method: 'GET',
-            headers:{
-                'content-Type':'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('iou data: ', data)
-            if(data.success){
-                console.log(data.items, 'items')
-                addItem(data.items)
-            }else{
-                Swal.fire({
-                    icon:'error',
-                    title:'error',
-                    text:data.message
-                })
-            }
-        })
-    })
 
     //save service
     const saveService = () =>{
@@ -534,7 +510,7 @@
     // add item to cart
     const addItem = (data) =>{
 
-        console.log(data, 'data')
+        console.log(data, 'add item data')
 
         let existingItemOfUse = false
 
@@ -578,10 +554,9 @@
         //     })
         //     return;
         // }
-
+        console.log('ted', cart)
         const displayTable = document.getElementById('service_productsTableBody')
         displayTable.innerHTML =''
-
         cart.forEach((item)=>{
             displayTable.innerHTML +=`
                 <td><small>${ item.name }</small></td>
@@ -601,7 +576,7 @@
         const name = document.getElementById('id_service_name').value;
         const description = document.getElementById('id_description').value;
         const unitOfMeasurement = document.getElementById('id_unit_measure');
-
+        const customerType = document.getElementById('id_customer_type').value;
         const uomName = unitOfMeasurement.options[unitOfMeasurement.selectedIndex].textContent;
 
         // make a condition to check the type of range to use
@@ -623,7 +598,8 @@
             'name':name,
             'description': description,
             'unit_measure': unitOfMeasurement.value,
-            'service_range': range
+            'service_range': range,
+            'customer_type':customerType
         }
 
         console.log('Service data: ', data) 
@@ -655,13 +631,15 @@
                         serviceEl.innerHTML += `
                             <option value = '${item.id}'>${item.service_name}</option>
                     `
-                })
+                }).then(
+                    window.location.reload(),
+                )
             })
             }else{
                 Swal.fire({
                     icon:'error',
                     title:'error',
-                    text:data.message
+                    text: 'failed'
                 })
             }
         })
@@ -732,9 +710,11 @@
         const quantity = document.getElementById('id_quantity').value;
         const category = document.getElementById('id_category').value;
 
+        console.log('description: ', description)
+
         const data = {
             'name':name,
-            'descrition': description,
+            'description': description,
             'cost':cost,
             'quantity':quantity,
             'category':category
@@ -770,9 +750,11 @@
 
                     data.data.forEach((item)=>{
                         iouEl.innerHTML += `
-                            <option value = '${item.id}'>${item.item_of_use_name}</option>
+                            <option value ='${item.id}'>${item.name__item_of_use_name}${item.id}</option>
                     `
-                })
+                }).then(
+                    window.location.reload()
+                )
             })
             }else{
                 Swal.fire({
@@ -907,7 +889,6 @@
                 category:category
             }
         }
-
         cart.push(newItem)
 
         console.log('items', cart)
@@ -1019,6 +1000,50 @@
         }
     })
     
+    const delete_iou = document.getElementById('id_delete_name')
+
+    delete_iou.addEventListener('click', () =>{
+        const id = document.getElementById('id_name').value;
+        console.log(id)
+        data = {
+            'item_of_use_id': id
+        }
+        try{
+            fetch("{% url 'booking:item_of_use_crud' %}", {
+                method: 'DELETE',
+                headers: {
+                    'content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: JSON.stringify(data)
+            }).then(answer => answer.json())
+            .then(data =>{
+                if(data.success){
+                    Swal.fire({
+                        'icon': 'success',
+                        'title': 'success',
+                        'text': 'successfully deleted'
+                    }).then(
+                        window.location.reload(),
+                    )
+                }else{
+                    Swal.fire({
+                        'icon': 'error',
+                        'title': 'Failed',
+                        'text': 'Delete failed'
+                    })
+                }
+            })
+
+        }catch (error){
+            Swal.fire({
+                        'icon': 'error',
+                        'title': 'Error',
+                        'text': error || 'Delete failed'
+                    })
+        }
+    })
+
     const id_delete_service = document.getElementById('id_delete_service')
 
     id_delete_service.addEventListener('click', function(e){
@@ -1037,21 +1062,23 @@
                     'X-CSRFToken': getCSRFToken(),
                 },
                 body: JSON.stringify(data),
-            }).then(response => response.json)
+            }).then(response => response.json())
             .then(data => {
                 if(data.success){
                     Swal.fire({
                         'icon': 'success',
                         'title': 'success',
                         'text': 'successfully deleted'
-                    })
+                    }).then(
+                        window.location.reload()
+                    )
                 }
                 else{
                     Swal.fire({
                         'icon': 'error',
                         'title': 'failed',
                         'text': 'failed to deleted'
-                    })
+                    });
                 }
             })
         }catch (error){
@@ -1059,7 +1086,7 @@
                         'icon': 'error',
                         'title': 'failed',
                         'text': 'failed to deleted'
-                    })
+                    });
         }
     })
 

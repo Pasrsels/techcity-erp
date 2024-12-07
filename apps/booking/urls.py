@@ -12,10 +12,12 @@ urlpatterns = [
     #path('service_range_crud/', service_range_crud, name='service_range_crud'),
     path('unit_measurement_crud/', unit_measurement_crud, name='unit_measurement_crud'),
     #path('service_data/', ServiceData, name = 'service_data'),
-    path('member/', members_view, name= 'member'),
-    path('member_crud/', member_crud, name= 'members'),
-    path('member_acc_crud/', member_acc_crud, name= 'members_acc'),
-    path('payments/', payments_crud, name= 'payments'),
+
+    #members
+    path('service_personal_details/<int:service_id>/', service_detail, name= 'service_personal_details'),
+    path('items_of_use_detail/', service_detail_crud, name= 'service_details_crud'),
+    # path('member_acc_crud/', member_acc_crud, name= 'members_acc'),
+    # path('payments/', payments_crud, name= 'payments'),
 
     #category
     path('category_crud/', category_crud, name='category_crud'),
