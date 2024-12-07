@@ -33,7 +33,7 @@ def services(request):
     serviceform = ServiceForm()
     inventoryform = InventoryForm()
     unit_measurement = UnitForm()
-    services = Services.objects.filter(delete_s = False)
+    services = Services.objects.filter(delete_s = False).values()
     iouForm = AddIouName()
     logger.info(services)
     categoryForm = AddCategory()

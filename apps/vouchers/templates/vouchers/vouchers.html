@@ -4,9 +4,26 @@
 {% load crispy_forms_tags%}
 {% block title %}Voucher Files{% endblock title %}
 {% block content %}
+<div class="dashboard">
+    <div class="py-3">
+        <div class="py-3 ">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';" class="d-flex align-items-center justify-content-between rounded shadow header mt-0 mb-2">
+                <h5 class="d-flex justify-content-left mx-3">Vouchers</h5>
+                <ol class="breadcrumb w-100 container d-flex justify-content-end">
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:home' %}">Dashboard</a></li>
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:voucherList' %}">Vouchers List</a></li>
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:voucherLogs' %}">Voucher Logs</a></li>
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:voucherFiles' %}">Voucher Files</a></li>
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'users:users' %}">Users</a></li>
+                </ol>
+              </nav>
+          </div>
+    </div>
+</div>
+
 <div class="voucher-file">
     <div class="row">
-        <div class="mod" id="addBookingModal">
+        <div class="mod d-none" id="addBookingModal">
             <div class="modal-content">
                 <div class="d-flex justify-content-between align-items-center py-3">
                     <h5>Add category</h5>
@@ -31,20 +48,20 @@
                         {% csrf_token %}
                         {{form | crispy}}
                         <div class="add-category">
-                            <button class="btn btn-secondary btn-sm d-flex align-items-center" type='button' id="modalBtn">
+                            <button class="btn btn-outline-dark btn-sm d-flex align-items-center" type='button' id="modalBtn">
                                 <i class='bx bx-plus-circle' ></i>
                                 <span class='px-1'>category</span>
                             </button>
                         </div>
                         <div class="d-flex justify-content-end">
-                            <button class="btn btn-primary">Add file</button>
+                            <button class="btn btn-outline-dark btn-sm">Add file</button>
                         </div>
                     </form>
                 </div>
                 <div class="add-voucher border p-3 mt-2">
-                    <h5 class='py-4'>Voucher Files</h5>
-                    <table class="table table-striped table-hover file-table">
-                        <thead class='bg-primary text-light' style="position: sticky; top: 0">
+                    <h5 class=' table-responsive py-4'>Voucher Files</h5>
+                    <table class="table table-striped table-hover border table-bordered w-100 file-table">
+                        <thead style="position: sticky; top: 0">
                             <th>Date created</th>
                             <th>File name</th>
                             <th>Category</th>

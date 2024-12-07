@@ -2,6 +2,23 @@
 {% load static %}
 {% block title %}vouchers list{% endblock title %}
 {% block content %}
+
+<div class="dashboard">
+    <div class="py-3">
+        <div class="py-3 ">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';" class="d-flex align-items-center justify-content-between rounded shadow header mt-0 mb-2">
+                <h5 class="d-flex justify-content-left mx-3">Vouchers List</h5>
+                <ol class="breadcrumb w-100 container d-flex justify-content-end">
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:home' %}">Dashboard</a></li>
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:voucherList' %}">Vouchers List</a></li>
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:voucherLogs' %}">Voucher Logs</a></li>
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'vouchers:voucherFiles' %}">Voucher Files</a></li>
+                  <li class="mx-3 mt-3"><a class="btn btn-outline-dark btn-sm" href="{% url 'users:users' %}">Users</a></li>
+                </ol>
+              </nav>
+          </div>
+    </div>
+</div>
 <div class="vouchers-list mt-3">
     <div class="row">
         <div class="col-12">
@@ -17,13 +34,13 @@
                             </form>
                             <div>
                                 <span>
-                                    <a href="{% url 'vouchers:voucherLogs' %}" class="btn btn-secondary btn-sm">
+                                    <a href="{% url 'vouchers:voucherLogs' %}" class="btn btn-outline-dark btn-sm">
                                         <i class='bx bx-file'></i>
                                         <span>voucher logs</span>
                                     </a>
                                 </span>
                                 <span>
-                                    <a href="{% url 'vouchers:voucherFiles' %}" class="btn btn-primary btn-sm">
+                                    <a href="{% url 'vouchers:voucherFiles' %}" class="btn btn-outline-dark btn-sm">
                                         <i class='bx bx-plus-circle'></i>
                                         <span>Add voucher file</span>
                                     </a>
@@ -45,9 +62,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="voucher-table">
-                    <table class="table table-hover table-responsive mt-2">
-                        <thead class="bg-primary text-light"  style="position: sticky; top: 0">
+                <div class="voucher-table table-responsive">
+                    <table class="table border table-bordered table-striped table-hover rounded table-sm mt-2 w-100">
+                        <thead style="position: sticky; top: 0">
                             <tr>
                                 <th>date</th>
                                 <th>voucher no</th>
