@@ -1812,7 +1812,9 @@ def confirm_purchase_order_items(request, po_id):
                         quantity=item.product.quantity + item.received_quantity,
                         price=item.price,
                         dealer_price=item.wholesale_price,
-                        cost=item.actual_unit_cost
+                        cost=item.actual_unit_cost,
+                        status=True,
+                        disable=False,
                     )
                 )
 
@@ -2471,7 +2473,9 @@ def edit_purchase_order(request, po_id):
                             actual_unit_cost=actual_unit_cost,
                             received_quantity= 0 if not log_quantity else log_quantity[0]['quantity'],
                             received=False,
-                            supplier = supplier
+                            supplier = supplier,
+                            price=0,
+                            wholesale_price=0
                         )
                     )
 
