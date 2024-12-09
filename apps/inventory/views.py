@@ -373,6 +373,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         
     def transfer_update_quantity(self, transfer_item, transfer):
         transfer = Transfer.objects.get(id=transfer.id)
+        logger.info(f'Transfer quantity: {transfer_item.quantity}')
         transfer.quantity += transfer_item.quantity
         transfer.save()
        
@@ -941,7 +942,7 @@ def receive_inventory(request):
                     defaults={
                         'cost': branch_transfer.cost,
                         'price': branch_transfer.price,
-                        'quantity': branch_transfer.quantity,
+                        'quantity': quantity_received,
                         'dealer_price': branch_transfer.dealer_price,
                         'description': branch_transfer.product.description or '',
                         'category': branch_transfer.product.category,

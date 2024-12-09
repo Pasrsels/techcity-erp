@@ -116,10 +116,6 @@
             const formData = new FormData(form);
             console.log(formData)
 
-            for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value}`);
-            }
-
             const response = await fetch("{% url 'inventory:receive_inventory' %}", {
                 method: 'POST',
                 body: formData,
