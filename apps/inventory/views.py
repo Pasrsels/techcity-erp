@@ -388,7 +388,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
             selling_price = transfer_item.price,
             inventory=inventory,
             system_quantity = inventory.quantity,
-            quantity=transfer_item.quantity,
+            quantity = -transfer_item.quantity,
             total_quantity=inventory.quantity
         )
 
@@ -406,7 +406,7 @@ def delete_transfer(request, transfer_id):
             for item in transfer_items:
                 logger.info(f'From branch {item.from_branch}')
 
-                product = Inventory.objects.get(branch=item.from_branch, product=item.product)
+                product = Inventory.objects.get(branch=item.from_branch, id=item.product.id)
                 product.quantity += item.quantity
                 product.save()
 
