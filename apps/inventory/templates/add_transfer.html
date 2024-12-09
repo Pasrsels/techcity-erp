@@ -63,9 +63,12 @@
             <!-- Table Column -->
             <div class="col col-7">
                 <div id="cart-display" class="mt-2 rounded p-2" style="background: #fff;">
-                    <p id="cart-title">
+                    <div id="cart-title" class=" d-flex justify-content-between align-items-center mb-2">
                         <span>Transfer Items</span>
-                    </p>
+                        <div id="branch_totals" class="bg-light border rounded p-1" style="overflow-x: auto;">
+                            <!-- to be dynamically populated with js -->
+                        </div>
+                    </div>
                     
                     <table class="table border rounded p-2" id="cart-table">
                         <thead>
@@ -158,7 +161,9 @@
   const prodEl = document.querySelector('#id_price');
   const dealerEl = document.querySelector('#id_dealer_price');
   const submitBtn = document.getElementById('id_submit');
-  const quantityEl = document.getElementById('id_quantity')
+  const quantityEl = document.getElementById('id_quantity');
+  const branchTotals = document.getElementById('branch_totals');
+
 
   if (userRole === 'sales'){
       salesPerson = true
@@ -191,7 +196,8 @@
             if (!branchExists) {
                 branches.push({
                     'name': data.dataset.name,
-                    'value': data.value
+                    'value': data.value,
+                    'cost':0
                 });
                 branchesList.push(data.dataset.name);
             }
@@ -311,7 +317,7 @@
         console.log(`Remaining quantity for ${branchName}:`, remainingQuantities[branchName]);
     };
 
-
+    const branchesCosts  = []
     const saveDataToServer = (action) => {
         const branchElements = document.querySelectorAll('.branch-data');
         const dataToSend = [];
@@ -389,6 +395,7 @@
             
             console.log(cart, 'cart');
 
+            // calutate the total cost of goods transfered for each branch
             
         }
 
@@ -533,10 +540,25 @@
                         </small>
                     </td>
                 `;
+                const branchExists = branchesCosts.find(branch => branch.name === item.branch_name);
+
+                if (branchExists) {
+                    branchExists.cost += parseFloat(item.cost) * parseInt(item.quantity, 10);
+                    console.log('Updated Branch cost: ', branchExists);
+                } else {
+                    branchesCosts.push({
+                        name: item.branch_name, // Ensure you're referencing the correct branch name
+                        cost: parseFloat(item.cost) * parseInt(item.quantity, 10)
+                    });
+                    console.log('New Branch created: ', branchesCosts);
+                }
+                                
+                console.log('Branch exists: ', branchesCosts)
+                updateTotalCost()
                 function toggleEdit() {
-                isEditing = !isEditing;
-                updateRowContent();
-            }
+                    isEditing = !isEditing;
+                    updateRowContent();
+                }
         }
 
         updateRowContent();
@@ -548,6 +570,17 @@
         });
 
         document.getElementById("branchesTable").innerHTML = "";
+    }
+
+    const updateTotalCost = () =>{
+        branchTotals.innerHTML = ''
+        branchesCosts.forEach((b)=>{
+            branchTotals.innerHTML += `
+                <small class='mx-2'>
+                    ${b.name} [USD ${b.cost}]
+                </small>
+            `
+        })
     }
 
     function updateCartItem(id, field, value) {
