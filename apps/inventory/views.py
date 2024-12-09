@@ -13,8 +13,7 @@ from . tasks import (
 )
 from decimal import Decimal
 from django.views import View
-from django.db.models import Q
-from django.db.models import Sum
+from django.db.models import Q, Sum, F, FloatField, ExpressionWrapper
 from django.db import transaction
 from django.contrib import messages
 from utils.utils import generate_pdf
@@ -814,11 +813,15 @@ def inventory_transfers(request):
     )
     
     transfers = Transfer.objects.filter(
-        Q(branch=request.user.branch) |
-        Q(transfer_to__in = [request.user.branch]),
-        delete=False
+    Q(branch=request.user.branch) |
+    Q(transfer_to__in=[request.user.branch]),
+    delete=False
     ).annotate(
         total_quantity=Sum('transferitems__quantity'),
+        total_amount=ExpressionWrapper(
+            Sum(F('transferitems__quantity') * F('transferitems__cost')),
+            output_field=FloatField()
+        )
     ).order_by('-time').distinct()
 
     logger.info(f'transfers: {transfers}')

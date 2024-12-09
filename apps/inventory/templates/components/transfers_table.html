@@ -10,7 +10,7 @@
                 <th>Date</th>
                 <th>Reference</th>
                 <th>Product List</th>
-                <th>Trans Qnty</th>
+                <th>Trans Qnty | Amnt trans</th>
                 <th class='text-center'>Status</th>
                 <th>User</th>
                 <th>Discrepancy</th>
@@ -42,7 +42,7 @@
                         <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_ref }}</small></td>
                         <td class='transfer-btn' data-id="{{ transfer.id }}"><small class="d-flex align-items-center justify-content-center"><i class='bx bx-box'></i></small></td>
                         <td>
-                            <small >{{ transfer.total_quantity }}</small>
+                            <small class="d-flex justify-content-between"><span>{{ transfer.total_quantity }}</span><span class="text-primary">USD {{ transfer.total_amount|floatformat:2 }}</span></small>
                         </td>
                         <td class='transfer-btn text-center' data-id="{{ transfer.id }}">
                             <small  class='hint--bottom' aria-label='Defective'>
