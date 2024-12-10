@@ -396,12 +396,15 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 @login_required
 def delete_transfer(request, transfer_id):
     try:
+        logger.info(f'transfer id: {transfer_id}')
         transfer = get_object_or_404(Transfer, id=transfer_id)
+        logger.info(f'transfer: {transfer}')
 
         if transfer.receive_status:
             return JsonResponse({'success':False, 'message':f'Cancel failed the transfer is already received.'})
 
         transfer_items = TransferItems.objects.filter(transfer=transfer)
+        logger.info(f'transfer: {transfer_items}')
 
         with transaction.atomic():
             inventory_updates = []
