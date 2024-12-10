@@ -69,7 +69,9 @@
                             <!-- to be dynamically populated with js -->
                         </div>
                     </div>
-                    
+                    <div class="mb-2 mt-2">
+                        <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search products..." oninput="searchTable()">
+                    </div>
                     <table class="table border rounded p-2" id="cart-table">
                         <thead>
                             <tr>
@@ -164,6 +166,38 @@
   const submitBtn = document.getElementById('id_submit');
   const quantityEl = document.getElementById('id_quantity');
   const branchTotals = document.getElementById('branch_totals');
+
+
+  const searchTable = () => {
+    const input = document.getElementById('search-input');
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('cart-table');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName('td');
+        let found = false;
+
+        // Check each cell in the row
+        for (let j = 1; j < cells.length; j++) {
+            const cell = cells[j];
+            if (cell) {
+                const txtValue = cell.textContent || cell.innerText;
+                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        if (found) {
+            rows[i].style.display = "";
+        } else {
+            rows[i].style.display = "none";
+        }
+    }
+      }
+
 
 
   if (userRole === 'sales'){
@@ -503,7 +537,9 @@
             updateRowContent();
         }
 
-        cart.reverse().forEach((item, index) => {
+        cart.sort((a, b) => b.count - a.count)
+
+        cart.forEach((item, index) => {
 
             if (currentProduct !== item.product) {
                 currentProduct = item.product; 
