@@ -389,7 +389,8 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
             inventory=inventory,
             system_quantity = inventory.quantity,
             quantity = -transfer_item.quantity,
-            total_quantity=inventory.quantity
+            total_quantity=inventory.quantity,
+            description=f'to {transfer_item.to_branch}'
         )
 
 @login_required
