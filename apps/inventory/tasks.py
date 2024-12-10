@@ -30,7 +30,7 @@ def send_low_stock_email(notification_id):
         notification = StockNotifications.objects.get(inventory__id=notification_id)
         
         branch = notification.inventory.branch.name
-        product = notification.inventory.product.name
+        product = notification.inventory.name
         threshold = notification.inventory.stock_level_threshold
         quantity = notification.inventory.quantity
         

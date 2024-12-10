@@ -404,28 +404,39 @@ def delete_transfer(request, transfer_id):
         transfer_items = TransferItems.objects.filter(transfer=transfer)
 
         with transaction.atomic():
+            inventory_updates = []
+            activity_logs = []
+
             for item in transfer_items:
                 logger.info(f'From branch {item.from_branch}')
 
+                # Update product quantity
                 product = Inventory.objects.get(branch=item.from_branch, id=item.product.id)
+                logger.info(f'Product is: {product}')
                 product.quantity += item.quantity
-                product.save()
+                inventory_updates.append(product)  
 
-                logger.info(f'returned product {product}')
+                logger.info(f'Returned product {product}')
 
-                ActivityLog.objects.create(
-                    invoice = None,
-                    product_transfer = item,
-                    branch = request.user.branch,
+                # Create activity log entry
+                activity_logs.append(ActivityLog(
+                    invoice=None,
+                    product_transfer=item,
+                    branch=request.user.branch,
                     user=request.user,
-                    action= 'transfer cancel',
+                    action='transfer cancel',
                     inventory=product,
-                    selling_price = item.price,
-                    dealer_price = item.dealer_price,
+                    selling_price=item.price,
+                    dealer_price=item.dealer_price,
                     quantity=item.quantity,
                     total_quantity=product.quantity,
-                    description = 'Transfer cancelled'
-                )
+                    description='Transfer cancelled'
+                ))
+
+            # Perform bulk updates
+            Inventory.objects.bulk_update(inventory_updates, ['quantity'])  
+            ActivityLog.objects.bulk_create(activity_logs)  
+
             transfer.delete = True
             transfer.save()
 
