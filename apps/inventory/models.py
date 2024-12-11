@@ -105,7 +105,7 @@ class Inventory(models.Model):
     batch = models.CharField(max_length=255, blank=True, null=True)
     category = models.ForeignKey('ProductCategory', on_delete=models.SET_NULL, null=True)
     tax_type = models.CharField(max_length=50, choices=TAX_CHOICES, null=True)
-    batch = models.CharField(max_length=255, blank=True, default='')
+    batch = models.TextField(blank=True, default='')
     suppliers = models.ManyToManyField('Supplier', related_name="products_suppliers")
     description = models.TextField(max_length=255, default='')
     end_of_day = models.BooleanField(default=False, null=True)

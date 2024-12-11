@@ -409,36 +409,41 @@ def delete_transfer(request, transfer_id):
         with transaction.atomic():
             inventory_updates = []
             activity_logs = []
+            quantity_updates = {}
 
             for item in transfer_items:
                 logger.info(f'From branch {item.from_branch}')
 
-                # Update product quantity
                 product = Inventory.objects.get(branch=item.from_branch, id=item.product.id)
                 logger.info(f'Product is: {product}')
-                product.quantity += item.quantity
-                inventory_updates.append(product)  
 
-                logger.info(f'Returned product {product}')
+                if product.id not in quantity_updates:
+                    quantity_updates[product.id] = {'product': product, 'increment': 0}
 
-                # Create activity log entry
+                quantity_updates[product.id]['increment'] += item.quantity
+
+            for update in quantity_updates.values():
+                product = update['product']
+                product.quantity += update['increment']
+                inventory_updates.append(product)
+
                 activity_logs.append(ActivityLog(
                     invoice=None,
-                    product_transfer=item,
+                    product_transfer=None,  
                     branch=request.user.branch,
                     user=request.user,
                     action='transfer cancel',
                     inventory=product,
-                    selling_price=item.price,
-                    dealer_price=item.dealer_price,
-                    quantity=item.quantity,
+                    selling_price=None,  
+                    dealer_price=None,  
+                    quantity=update['increment'],
                     total_quantity=product.quantity,
                     description='Transfer cancelled'
                 ))
 
             # Perform bulk updates
-            Inventory.objects.bulk_update(inventory_updates, ['quantity'])  
-            ActivityLog.objects.bulk_create(activity_logs)  
+            Inventory.objects.bulk_update(inventory_updates, ['quantity'])
+            ActivityLog.objects.bulk_create(activity_logs)
 
             transfer.delete = True
             transfer.save()
@@ -816,8 +821,10 @@ def get_stock_account_data(logs):
 
 
 @login_required    
-def inventory_transfers(request):
-    form = addTransferForm()
+def inventory_transfers(request): 
+    """
+        transfers index. Shows transfers in and out of the branch and the total cost of items transfered in/out
+    """
     q = request.GET.get('q', '') 
     branch_id = request.GET.get('branch', '')
 
@@ -825,12 +832,17 @@ def inventory_transfers(request):
         Q(from_branch=request.user.branch) |
         Q(to_branch = request.user.branch),
         transfer__delete=False
+    ).annotate(
+        total_amount = ExpressionWrapper(
+            Sum(F('quantity') * F('product__cost')),
+            output_field=FloatField()
+        )
     )
     
     transfers = Transfer.objects.filter(
-    Q(branch=request.user.branch) |
-    Q(transfer_to__in=[request.user.branch]),
-    delete=False
+        Q(branch=request.user.branch) |
+        Q(transfer_to__in=[request.user.branch]),
+        delete=False
     ).annotate(
         total_quantity=Sum('transferitems__quantity'),
         total_amount=ExpressionWrapper(
@@ -862,7 +874,6 @@ def inventory_transfers(request):
     return render(request, 'transfers.html', {
         'transfers': transfers,
         'search_query': q, 
-        'form':form, 
         'transfer_items':transfer_items,
         'transferred_value':total_transferred_value,
         'received_value':total_received_value,
@@ -940,7 +951,7 @@ def receive_inventory(request):
             quantity_received = int(request.POST['quantity'])
             received = request.POST['received']
 
-            logger.info(f'transfer item data{received}')
+            logger.info(f'transfer item data {received}')
 
             branch_transfer = get_object_or_404(TransferItems, id=transfer_id, to_branch=request.user.branch)
             transfer_obj = get_object_or_404(Transfer, id=branch_transfer.transfer.id, transfer_to=request.user.branch)
@@ -976,6 +987,8 @@ def receive_inventory(request):
                     product.dealer_price = branch_transfer.dealer_price
                     product.save()
 
+                logger.info('created')
+
                 ActivityLog.objects.create(
                     branch=request.user.branch,
                     user=request.user,
@@ -991,7 +1004,9 @@ def receive_inventory(request):
                 )
 
                 product.batch += f'{branch_transfer.product.batch}, '
+                logger.info(f'Product batch numbers: {product.batch}')
                 product.save()
+                logger.info('product received')
 
             branch_transfer.quantity_track = branch_transfer.quantity - quantity_received
             branch_transfer.receieved_quantity += quantity_received
@@ -1016,7 +1031,6 @@ def receive_inventory(request):
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
-    # Handle GET requests
     transfers = TransferItems.objects.filter(to_branch=request.user.branch).order_by('-date')
     all_transfers = Transfer.objects.filter(transfer_to=request.user.branch, delete=False).order_by('-time')
     return render(request, 'receive_inventory.html', {'r_transfers': transfers, 'transfers': all_transfers})

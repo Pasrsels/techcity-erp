@@ -1,5 +1,10 @@
 {% load static%}
 {% block content %}
+<style>
+    .items td, .items small{
+        opacity: 80%;
+    }
+</style>
 <div class="table transfers-table mt-2">
     {% include 'components/loader.html' %}
     <div class='table-scroll'>
@@ -42,7 +47,7 @@
                         <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_ref }}</small></td>
                         <td class='transfer-btn' data-id="{{ transfer.id }}"><small class="d-flex align-items-center justify-content-center"><i class='bx bx-box'></i></small></td>
                         <td>
-                            <small class="d-flex justify-content-between"><span>{{ transfer.total_quantity }}</span><span class="text-primary">USD {{ transfer.total_amount|floatformat:2 }}</span></small>
+                            <small class="d-flex justify-content-between"><span>{{ transfer.total_quantity }}</span><span class="text-primary text-bold">${{ transfer.total_amount|floatformat:2 }}</span></small>
                         </td>
                         <td class='transfer-btn text-center' data-id="{{ transfer.id }}">
                             <small  class='hint--bottom' aria-label='Defective'>
@@ -89,11 +94,18 @@
                     <tbody class="bg-primary">
                         {% for item in transfer_items %}
                             {% if transfer.id == item.transfer.id %}
-                                <tr id="id_items" class="hidden" data-transfer-id="{{ transfer.id }}">
+                                <tr id="id_items" class="hidden items" data-transfer-id="{{ transfer.id }}">
                                     <td colspan="2" style="background: #f8f9fa;"></td>
                                     <td style="background: #f8f9fa;"><small>{{ item.transfer.transfer_ref }}</small></td>
                                     <td style="background: #f8f9fa;"><small>{{ item.product.name }}</small></td>
-                                    <td style="background: #f8f9fa;"><small>{{ item.quantity }}</small></td>
+                                    <td style="background: #f8f9fa;"><small class="d-flex justify-content-between">
+                                        <span>
+                                            {{ item.quantity }}  @ {{ item.product.cost }}
+                                        </span>
+                                        <span class="text-muted text-primary">
+                                            ${{ item.total_amount|floatformat:2 }}
+                                        </span>
+                                    </small></td>
                                     <td style="background: #f8f9fa;" class="text-center">
                                         <small>
                                             <span>

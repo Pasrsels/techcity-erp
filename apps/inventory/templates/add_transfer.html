@@ -265,7 +265,6 @@
         }
     });
 
-
     const displayTables = (values, product, prodData) => {
         let tableEl = document.getElementById('branchesTable');
 
@@ -357,8 +356,6 @@
     const saveDataToServer = (action) => {
         const branchElements = document.querySelectorAll('.branch-data');
         const dataToSend = [];
-
-   
         let hasError = false; 
         let productAdded = false; 
         let prodName = '';
@@ -380,8 +377,12 @@
             let product_id = pElement.value;
 
             product = product.split(' [')[0];
+            pSelectedQnty = product.split(/\[(\d+)\]/);
+
+            console.log('chopped', pSelectedQnty)
 
             productQnty += parseInt(quantity);
+
             console.log('Product qnty: ', productQnty, 'Product quantity from product: ', productQuantity)
 
             if (productQuantity <= 0){
@@ -412,6 +413,7 @@
             }
 
             console.log(quantity)
+
             if (quantity){
                 const newItem = {
                     product_id:product_id,
