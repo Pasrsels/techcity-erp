@@ -352,7 +352,7 @@
         console.log(`Remaining quantity for ${branchName}:`, remainingQuantities[branchName]);
     };
 
-    const branchesCosts  = []
+    
     const saveDataToServer = (action) => {
         const branchElements = document.querySelectorAll('.branch-data');
         const dataToSend = [];
@@ -596,26 +596,16 @@
                         </small>
                     </td>
                 `;
-                const branchExists = branchesCosts.find(branch => branch.name === item.branch_name);
-
-                if (branchExists) {
-                    branchExists.cost += parseFloat(item.cost) * parseInt(item.quantity, 10);
-                    console.log('Updated Branch cost: ', branchExists);
-                } else {
-                    branchesCosts.push({
-                        name: item.branch_name, // Ensure you're referencing the correct branch name
-                        cost: parseFloat(item.cost) * parseInt(item.quantity, 10)
-                    });
-                    console.log('New Branch created: ', branchesCosts);
-                }
-                                
-                console.log('Branch exists: ', branchesCosts)
-                updateTotalCost()
                 function toggleEdit() {
                     isEditing = !isEditing;
                     updateRowContent();
                 }
         }
+
+        
+        
+
+        
 
         updateRowContent();
         row.querySelector("button.btn-outline-dark").addEventListener("click", () => {
@@ -628,18 +618,38 @@
         if (!insufficientQnt){
             document.getElementById("branchesTable").innerHTML = "";
         }
+
+        updateTotalCost()
     }
 
-    const updateTotalCost = () =>{
-        branchTotals.innerHTML = ''
-        branchesCosts.forEach((b)=>{
+    const updateTotalCost = () => {
+        const branchesCosts = []; 
+
+        cart.forEach((item) => {
+            let branchExists = branchesCosts.find(branch => branch.name === item.branch_name);
+
+            if (branchExists) {
+                branchExists.cost += parseFloat(item.cost) * parseInt(item.quantity, 10); 
+                console.log('Updated Branch cost: ', branchExists);
+            } else {
+                branchesCosts.push({
+                    name: item.branch_name,
+                    cost: parseFloat(item.cost) * parseInt(item.quantity, 10) 
+                });
+                console.log('New Branch created: ', branchesCosts);
+            }
+        });
+
+        branchTotals.innerHTML = '';
+        branchesCosts.forEach((b) => {
             branchTotals.innerHTML += `
                 <small class='mx-2'>
                     ${b.name} [USD ${b.cost}]
                 </small>
-            `
-        })
-    }
+            `;
+        });
+    };
+
 
     function updateCartItem(id, field, value) {
         const item = cart.find((item) => item.id === id);
