@@ -160,6 +160,8 @@
   let count = 1;0
   let branchesCount = 0;
   let productQuantity = 0;
+  let trackProductQuantity = 0;
+  let trackQuantity = [] 
 
   const errorEl = document.getElementById('error');
   const prodEl = document.querySelector('#id_price');
@@ -322,12 +324,7 @@
             }
         });
     };
-
-    let remainingQuantities = {}; 
-    let previousQuantities = {}; 
-
-    let trackProductQuantity = 0;
-    let trackQuantity = [] 
+    
 
     const calculateQuantityDifference = (quantity, productQuantity, branchName) => {
         
@@ -464,7 +461,8 @@
             // calutate the total cost of goods transfered for each branch
             
         }
-
+            trackProductQuantity = 0;
+            trackQuantity = [] 
             updateCartDisplay(insufficientQnt);
 
         }
