@@ -79,6 +79,7 @@
                                 <th>Product</th>
                                 <th>Qnty</th>
                                 {% if request.user.role != 'sales' %}
+                                    <th>Cost</th>
                                     <th>Price</th>
                                     <th>W Price</th>
                                 {% endif %}
@@ -394,6 +395,8 @@
             const quantity = branch.querySelector('.quantity-input').value;
             const cost = parseFloat(branch.querySelector('.cost-input').value);
 
+            console.log(cost)
+
             const pElement = document.getElementById('id_product');
             const pSelectedOption = pElement.options[pElement.selectedIndex];
             let product = pSelectedOption.textContent;
@@ -573,6 +576,7 @@
                 currentColor = currentColor === "#ebeced" ? "white" : "#ebeced"; 
             }
 
+            console.log(item.cost)
             const row = document.createElement("tr");
             row.style.backgroundColor = currentColor; 
 
@@ -588,6 +592,11 @@
                                 value="${item.quantity}" min="1" 
                                 onchange="updateCartItem('${String(item.id)}', 'quantity', this.value);" />`
                             : `${item.quantity}`}
+                        </small>
+                    </td>
+                    <td style='background:${currentColor}'>
+                        <small class='${item.product}'>
+                            ${item.cost}
                         </small>
                     </td>
                     <td style='background:${currentColor}' class="${salesPerson ? 'd-none' : ''}">
@@ -675,7 +684,6 @@
         });
     };
 
-
     function updateCartItem(id, field, value) {
         const item = cart.find((item) => item.id === id);
         if (item) {
@@ -689,7 +697,6 @@
         }
 
     }
-
 
   function clearFields() {
       document.getElementById('id_quantity').value = '';
@@ -753,7 +760,7 @@
                       window.location.href = '{% url "inventory:transfers" %}';
                   }, 1500);
               } else {
-                  Swal.fire({
+                  Swal.fire({ 
                       icon: 'error',
                       title: data.message,
                       text: data.message
