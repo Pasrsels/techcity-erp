@@ -148,15 +148,15 @@ DATABASES = {
 #        'HOST': 'localhost',
 #        'PORT': '5432'
 #  }
-#     'default': {
-#         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-#          'NAME': os.getenv('DB_NAME', 'railway'),
-#          'USER': os.getenv('DB_USERNAME', 'postgres'),
-#          'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvsaDuHLnxhw'),  
-#          'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
-#          'PORT': os.getenv('DB_PORT', '26269'),
-#      }
-  }
+    # 'default': {
+    #     'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+    #      'NAME': os.getenv('DB_NAME', 'railway'),
+    #      'USER': os.getenv('DB_USERNAME', 'postgres'),
+    #      'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvsaDuHLnxhw'),  
+    #      'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
+    #      'PORT': os.getenv('DB_PORT', '26269'),
+    #  }
+ }
 
 if 'test' in sys.argv:
     DATABASES = {

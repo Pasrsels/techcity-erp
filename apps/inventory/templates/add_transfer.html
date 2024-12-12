@@ -157,7 +157,7 @@
   let branchesList = [];
   let branches = [];
   let userRole = `{{ request.user.role }}`
-  let count = 1;
+  let count = 1;0
   let branchesCount = 0;
   let productQuantity = 0;
 
@@ -326,30 +326,56 @@
     let remainingQuantities = {}; 
     let previousQuantities = {}; 
 
+    let trackProductQuantity = 0;
+    let trackQuantity = [] 
+
     const calculateQuantityDifference = (quantity, productQuantity, branchName) => {
-        quantity = parseInt(quantity) || 0; 
+        
+        let exist = trackQuantity.find(branch => branch.name === branchName) 
 
-        // Initialize if not already done
-        if (!(branchName in remainingQuantities)) {
-            remainingQuantities[branchName] = productQuantity; 
-        }
-        if (!(branchName in previousQuantities)) {
-            previousQuantities[branchName] = 0; 
-        }
+        console.log('track qnt', trackProductQuantity)
 
-        const difference = quantity - previousQuantities[branchName];
-        remainingQuantities[branchName] -= difference; 
+        console.log('exists, ', exist)
 
-        previousQuantities[branchName] = quantity;
-        document.querySelector(`#id_${branchName}`).textContent = remainingQuantities[branchName];
-
-        branchesList.forEach((b) => {
-            if (remainingQuantities[b]) {
-                document.querySelector(`#id_${b}`).textContent = remainingQuantities[b];
+        if(exist){
+            let difference = quantity - exist.value;
+            console.log('difference: ', difference)
+            console.log('before: ', exist.value)
+            exist.value = quantity
+            console.log('after: ', exist.value)
+            if(difference < 0){ // 3- 2 = 1
+                trackProductQuantity -= difference
+                console.log('after: ', trackProductQuantity)
+                branches.forEach((b)=>{
+                    document.getElementById(`id_${b.name}`).innerText = trackProductQuantity;
+                })
+                return;
+            }else if (difference > 0){
+                trackProductQuantity += difference
+                console.log('greater than difference:',difference, 'trackprod',trackProductQuantity)
+            }else{
+                trackProductQuantity = trackProductQuantity
+                return;
             }
-        });
+        }else{
+            value = {
+                name : branchName,
+                value: quantity
+            }
+            trackQuantity.push(value)
+        }
 
-        console.log(`Remaining quantity for ${branchName}:`, remainingQuantities[branchName]);
+        if (trackProductQuantity !== 0){
+            trackProductQuantity -= quantity
+        }else{
+            let updatedQuantity  = productQuantity - quantity; // 10 -1 = 9 
+            trackProductQuantity = updatedQuantity;
+        }
+        
+        branches.forEach((b)=>{
+            document.getElementById(`id_${b.name}`).innerText = trackProductQuantity;
+        })
+       
     };
 
     
