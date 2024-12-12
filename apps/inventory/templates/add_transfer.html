@@ -656,6 +656,7 @@
                 branchExists.cost += parseFloat(item.cost) * parseInt(item.quantity, 10); 
                 console.log('Updated Branch cost: ', branchExists);
             } else {
+                let cost = parseFloat(item.cost) * parseInt(item.quantity, 10) 
                 branchesCosts.push({
                     name: item.branch_name,
                     cost: parseFloat(item.cost) * parseInt(item.quantity, 10) 
@@ -668,7 +669,7 @@
         branchesCosts.forEach((b) => {
             branchTotals.innerHTML += `
                 <small class='mx-2'>
-                    ${b.name} [USD ${b.cost}]
+                    ${b.name} [USD ${b.cost.toFixed(2)}]
                 </small>
             `;
         });
@@ -695,8 +696,12 @@
 
   const removeItem = (el) => {
       const id = el.dataset.id;
+      let insufficientQnt = false;
       cart = cart.filter((item) => item.id !== id);
-      let insufficientQnt = false
+      
+      trackProductQuantity = 0;
+      trackQuantity = [] 
+
       updateCartDisplay(insufficientQnt);
       updateTotalCost()
   };
