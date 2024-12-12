@@ -63,10 +63,15 @@
             <!-- Table Column -->
             <div class="col col-7">
                 <div id="cart-display" class="mt-2 rounded p-2" style="background: #fff;">
-                    <p id="cart-title">
+                    <div id="cart-title" class=" d-flex justify-content-between align-items-center mb-2">
                         <span>Transfer Items</span>
-                    </p>
-                    
+                        <div id="branch_totals" class="bg-light border rounded p-1" style="overflow-x: auto;">
+                            <!-- to be dynamically populated with js -->
+                        </div>
+                    </div>
+                    <div class="mb-2 mt-2">
+                        <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search products..." oninput="searchTable()">
+                    </div>
                     <table class="table border rounded p-2" id="cart-table">
                         <thead>
                             <tr>
@@ -113,6 +118,7 @@
                                 {% endif %}
                             {% endfor %}
                         </div>
+                    </div>
                     <div class="mb-1">
                         <label for="id_product" class="form-label requiredField">Product</label>
                         <select class="select form-select" id="id_product">
@@ -153,12 +159,47 @@
   let userRole = `{{ request.user.role }}`
   let count = 1;
   let branchesCount = 0;
+  let productQuantity = 0;
 
   const errorEl = document.getElementById('error');
   const prodEl = document.querySelector('#id_price');
   const dealerEl = document.querySelector('#id_dealer_price');
   const submitBtn = document.getElementById('id_submit');
-  const quantityEl = document.getElementById('id_quantity')
+  const quantityEl = document.getElementById('id_quantity');
+  const branchTotals = document.getElementById('branch_totals');
+
+
+  const searchTable = () => {
+    const input = document.getElementById('search-input');
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('cart-table');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName('td');
+        let found = false;
+
+        // Check each cell in the row
+        for (let j = 1; j < cells.length; j++) {
+            const cell = cells[j];
+            if (cell) {
+                const txtValue = cell.textContent || cell.innerText;
+                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        if (found) {
+            rows[i].style.display = "";
+        } else {
+            rows[i].style.display = "none";
+        }
+    }
+      }
+
+
 
   if (userRole === 'sales'){
       salesPerson = true
@@ -191,7 +232,8 @@
             if (!branchExists) {
                 branches.push({
                     'name': data.dataset.name,
-                    'value': data.value
+                    'value': data.value,
+                    'cost':0
                 });
                 branchesList.push(data.dataset.name);
             }
@@ -222,7 +264,6 @@
             text.innerText='Show branches'
         }
     });
-
 
     const displayTables = (values, product, prodData) => {
         let tableEl = document.getElementById('branchesTable');
@@ -311,15 +352,16 @@
         console.log(`Remaining quantity for ${branchName}:`, remainingQuantities[branchName]);
     };
 
-
+    
     const saveDataToServer = (action) => {
         const branchElements = document.querySelectorAll('.branch-data');
         const dataToSend = [];
-
-   
         let hasError = false; 
         let productAdded = false; 
-        let prodName = ''
+        let prodName = '';
+        let productQnty = 0
+
+        let insufficientQnt = false;
 
         for (let i = 0; i < branchElements.length; i++) {
             const branch = branchElements[i]; 
@@ -332,22 +374,25 @@
             const pElement = document.getElementById('id_product');
             const pSelectedOption = pElement.options[pElement.selectedIndex];
             let product = pSelectedOption.textContent;
-            let product_id = pElement.value
+            let product_id = pElement.value;
 
             product = product.split(' [')[0];
+            pSelectedQnty = product.split(/\[(\d+)\]/);
 
-            
+            console.log('chopped', pSelectedQnty)
 
-            // if (!price || !quantity || quantity <= 0) {
-            //     Swal.fire({
-            //         icon: 'error',
-            //         title: 'Error',
-            //         text: 'Please ensure all fields are filled correctly.'
-            //     });
-            //     hasError = true; 
-            //     break; 
-            // }
+            productQnty += parseInt(quantity);
 
+            console.log('Product qnty: ', productQnty, 'Product quantity from product: ', productQuantity)
+
+            if (productQuantity <= 0){
+                insufficientQnt = true
+                break;
+            }else if (productQnty > productQuantity){
+                insufficientQnt = true
+                break;
+            }else{
+                
             const existingItem = cart.find((item) => item.product === product && item.branch_name === branchName);
             console.log(existingItem, 'existing item');
 
@@ -368,6 +413,7 @@
             }
 
             console.log(quantity)
+
             if (quantity){
                 const newItem = {
                     product_id:product_id,
@@ -389,10 +435,13 @@
             
             console.log(cart, 'cart');
 
+            // calutate the total cost of goods transfered for each branch
             
         }
 
-        updateCartDisplay();
+            updateCartDisplay(insufficientQnt);
+
+        }
 
         if (!hasError) { 
             count += 1;
@@ -412,6 +461,17 @@
                     text: 'No items were added to the cart because the product does not exist.'
                 });
             }
+        }
+
+        if (insufficientQnt){
+            Swal.fire({
+                icon: 'error',
+                title: 'error',
+                text: 'Insufficient quantity!.',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            return
         }
     }
         
@@ -442,7 +502,8 @@
                         prodData = data;
                         console.log(prodData, 'product data')
                         if (prodData){
-                            let values = branches
+                            let values = branches;
+                            productQuantity = prodData[0].quantity;
                             displayTables(values, product, prodData);
                         }
                         
@@ -461,7 +522,7 @@
     }
 
 
-    function updateCartDisplay() {
+    function updateCartDisplay(insufficientQnt) {
         const cartItemsList = document.getElementById("cart-items");
         cartItemsList.innerHTML = "";
 
@@ -471,7 +532,7 @@
         
         let isEditing = false;
 
-        
+        console.log('Quantitty: ', prodQauntity)
         console.log(branchesList.length);
 
         function toggleEdit() {
@@ -479,7 +540,9 @@
             updateRowContent();
         }
 
-        cart.reverse().forEach((item, index) => {
+        cart.sort((a, b) => b.count - a.count)
+
+        cart.forEach((item, index) => {
 
             if (currentProduct !== item.product) {
                 currentProduct = item.product; 
@@ -534,10 +597,15 @@
                     </td>
                 `;
                 function toggleEdit() {
-                isEditing = !isEditing;
-                updateRowContent();
-            }
+                    isEditing = !isEditing;
+                    updateRowContent();
+                }
         }
+
+        
+        
+
+        
 
         updateRowContent();
         row.querySelector("button.btn-outline-dark").addEventListener("click", () => {
@@ -547,14 +615,48 @@
             cartItemsList.appendChild(row);
         });
 
-        document.getElementById("branchesTable").innerHTML = "";
+        if (!insufficientQnt){
+            document.getElementById("branchesTable").innerHTML = "";
+        }
+
+        updateTotalCost()
     }
+
+    const updateTotalCost = () => {
+        const branchesCosts = []; 
+
+        cart.forEach((item) => {
+            let branchExists = branchesCosts.find(branch => branch.name === item.branch_name);
+
+            if (branchExists) {
+                branchExists.cost += parseFloat(item.cost) * parseInt(item.quantity, 10); 
+                console.log('Updated Branch cost: ', branchExists);
+            } else {
+                branchesCosts.push({
+                    name: item.branch_name,
+                    cost: parseFloat(item.cost) * parseInt(item.quantity, 10) 
+                });
+                console.log('New Branch created: ', branchesCosts);
+            }
+        });
+
+        branchTotals.innerHTML = '';
+        branchesCosts.forEach((b) => {
+            branchTotals.innerHTML += `
+                <small class='mx-2'>
+                    ${b.name} [USD ${b.cost}]
+                </small>
+            `;
+        });
+    };
+
 
     function updateCartItem(id, field, value) {
         const item = cart.find((item) => item.id === id);
         if (item) {
             item[field] = field === "quantity" ? parseInt(value, 10) : parseFloat(value).toFixed(2);
-            updateCartDisplay();
+            let insufficientQnt = false
+            updateCartDisplay(insufficientQnt);
         }
     }
 
@@ -570,7 +672,8 @@
   const removeItem = (el) => {
       const id = el.dataset.id;
       cart = cart.filter((item) => item.id !== id);
-      updateCartDisplay();
+      let insufficientQnt = false
+      updateCartDisplay(insufficientQnt);
   };
 
   function processCart(action) {
@@ -609,7 +712,8 @@
                       timer: 1500
                   });
                   cart = [];
-                  updateCartDisplay();
+                  let insufficientQnt = false
+                  updateCartDisplay(insufficientQnt);
                   setTimeout(() => {
                       window.location.href = '{% url "inventory:transfers" %}';
                   }, 1500);
@@ -629,7 +733,7 @@
                   text: 'An unexpected error occurred. Please try again.'
               });
           });
-  }
+        }
 
   function getCookie(name) {
     let cookieValue = null;

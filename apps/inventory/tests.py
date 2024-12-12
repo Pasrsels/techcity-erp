@@ -1,247 +1,39 @@
-from django.test import TestCase, Client
+import pytest
 from django.urls import reverse
-from users.models import User
-from inventory.models import *
-from company.models import *
-from finance.models import *
-from inventory.views import if_purchase_order_is_received
-from decimal import Decimal
-import json
+from django.test import Client
+from apps.users.models import User
+from apps.inventory.models import *
+from apps.company.models import Branch, Company
 
-# class CreatePurchaseOrderTest(TestCase):
-#     def setUp(self):
-#         self.client = Client()
-#         # Create a user for authentication
-#         self.user = User.objects.create_user(username='testuser', password='12345', email='test@email.com')
-#         self.client.login(email='test@email.com', password='12345')
+#global objects
 
-#         # Set up data
-#         self.supplier = Supplier.objects.create(name='Test Supplier')
-#         self.product = Product.objects.create(name='Test Product', price=Decimal('10.00'))
+# create company and branch
+test_company = Company.objects.create(name='test company')
+test_branch = Company.objects.create(name='test_branch', company=test_company)
 
-#         # URL to create purchase order
-#         self.url = reverse('create_purchase_order')
+# create and login test user
+test_user = User.objects.create_user(
+    username='test',
+    password='test_password',
+    branch=test_branch
+)
 
-#     def test_get_create_purchase_order(self):
-#         """Test the GET request to ensure forms and initial data are loaded"""
-#         response = self.client.get(self.url)
-#         self.assertEqual(response.status_code, 200)
-#         self.assertIn('supplier_form', response.context)
-#         self.assertIn('product_form', response.context)
-#         self.assertIn('batch_codes', response.context)
+@pytest.mark.django_db
+def inventory_transfer_tests(client):
+    """
+        Testing the GET request of the view and to match if the required data is been back
+    """
 
-#     def test_post_create_purchase_order_success(self):
-#         """Test successful creation of a purchase order"""
-#         data = {
-#             'purchase_order': {
-#                 'supplier': self.supplier.id,
-#                 'delivery_date': '2024-12-31',
-#                 'status': 'Pending',
-#                 'notes': 'Test order',
-#                 'total_cost': '100.00',
-#                 'discount': '0.00',
-#                 'tax_amount': '10.00',
-#                 'other_amount': '0.00',
-#                 'payment_method': 'Cash'
-#             },
-#             'po_items': [
-#                 {'product': self.product.name, 'quantity': 5, 'price': '10.00', 'actualPrice': '10.00'}
-#             ],
-#             'expenses': [
-#                 {'name': 'Shipping', 'amount': '10.00'}
-#             ]
-#         }
+    Client.login(test_user)
 
-#         response = self.client.post(
-#             self.url,
-#             data=json.dumps(data),
-#             content_type='application/json'
-#         )
-#         self.assertEqual(response.status_code, 200)
-#         self.assertTrue(PurchaseOrder.objects.filter(supplier=self.supplier).exists())
-#         purchase_order = PurchaseOrder.objects.get(supplier=self.supplier)
-#         self.assertEqual(purchase_order.total_cost, Decimal('100.00'))
+    branch = test_user.branch 
+    transfer = Transfer.objects.create(branch=branch, transfer_to=branch, delete=False) 
+    TransferItems.objects.create(from_branch=branch, to_branch=branch, transfer=transfer, product__name='lenovo', quantity=10, product__cost=20)
 
-#         # Verify items and expenses
-#         self.assertEqual(PurchaseOrderItem.objects.filter(purchase_order=purchase_order).count(), 1)
-#         self.assertEqual(otherExpenses.objects.filter(purchase_order=purchase_order).count(), 1)
-
-#     def test_post_create_purchase_order_missing_fields(self):
-#         """Test failure when required fields are missing"""
-#         data = {
-#             'purchase_order': {
-#                 'supplier': self.supplier.id,
-#                 'delivery_date': '',
-#                 'status': 'Pending',
-#                 'notes': 'Test order',
-#                 'total_cost': '100.00',
-#                 'discount': '0.00',
-#                 'tax_amount': '10.00',
-#                 'other_amount': '0.00',
-#                 'payment_method': 'Cash'
-#             },
-#             'po_items': [
-#                 {'product': self.product.name, 'quantity': 5, 'price': '10.00', 'actualPrice': '10.00'}
-#             ],
-#             'expenses': []
-#         }
-
-#         response = self.client.post(
-#             self.url,
-#             data=json.dumps(data),
-#             content_type='application/json'
-#         )
-#         self.assertEqual(response.status_code, 400)
-#         self.assertIn('Missing required fields', response.json()['message'])
-
-#     def test_post_create_purchase_order_invalid_json(self):
-#         """Test failure when invalid JSON is sent"""
-#         response = self.client.post(
-#             self.url,
-#             data='Invalid JSON',
-#             content_type='application/json'
-#         )
-#         self.assertEqual(response.status_code, 400)
-#         self.assertIn('Invalid JSON payload', response.json()['message'])
-
-# class IfPurchaseOrderIsReceivedTest(TestCase):
-#     def setUp(self):
-#         self.client = Client()
-#         self.user = User.objects.create_user(username='testuser', password='12345')
-#         self.client.login(username='testuser', password='12345')
-        
-#         self.supplier = Supplier.objects.create(name='Test Supplier')
-#         self.purchase_order = PurchaseOrder.objects.create(
-#             supplier=self.supplier,
-#             order_number='PO001',
-#             delivery_date='2024-12-31',
-#             total_cost=Decimal('100.00'),
-#             tax_amount=Decimal('10.00'),
-#             status='Received',
-#             branch=self.user.branch
-#         )
-        
-#         self.currency = Currency.objects.create(name='USD', default=True)
-#         self.vat_rate = VATRate.objects.create(rate=Decimal('10.00'), status=True)
+    #GET request to the inventory_transfers view 
+    response = client.get(reverse('inventory:inventory_transfers')) 
     
-#     def test_purchase_order_is_received(self):
-#         """Test finance records are correctly created when purchase order is received"""
-#         response = if_purchase_order_is_received(
-#             request=self.client.request(),
-#             purchase_order=self.purchase_order,
-#             tax_amount=Decimal('10.00'),
-#             payment_method='Cash'
-#         )
-        
-#         self.assertIsNone(response)  
-        
-#         # Assert expense was created
-#         expense = Expense.objects.get(purchase_order=self.purchase_order)
-#         self.assertEqual(expense.amount, Decimal('90.00'))  # Total cost - tax amount
-        
-#         # Assert cashbook entry was created
-#         cashbook = Cashbook.objects.get(expense=expense)
-#         self.assertEqual(cashbook.amount, Decimal('100.00'))
-
-#         # Assert VAT transaction was created
-#         vat_transaction = VATTransaction.objects.get(purchase_order=self.purchase_order)
-#         self.assertEqual(vat_transaction.tax_amount, Decimal('10.00'))
-
-class AssessoryViewTests(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.client.login(username='testuser', password='testpass')
+    assert response.status_code == 200
 
 
-        self.branch = Branch.objects.create(name="Test Branch")
-        self.inventory = Inventory.objects.create(
-            branch=self.branch,
-            name="Test Product",
-            cost=10.00,
-            price=15.00,
-            dealer_price=12.00,
-            quantity=100
-        )
 
-        self.accessory1 = Accessory.objects.create()
-        self.accessory1.product.add(self.inventory)
-
-        self.accessory2 = Accessory.objects.create()
-
-        self.url = reverse('accessory_view', args=[self.inventory.id])
-
-    def test_get_accessories(self):
-        # Test GET request for accessories
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.json()['success'])
-        self.assertEqual(len(response.json()['data']), 1)
-        self.assertEqual(response.json()['data'][0]['id'], self.accessory1.id)
-
-    def test_post_add_accessories(self):
-        # Test POST request to add accessories
-        data = {
-            'accessories': [{'id': self.accessory2.id}]
-        }
-        response = self.client.post(
-            self.url,
-            data=json.dumps(data),
-            content_type='application/json'
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.json()['success'])
-        updated_data = response.json()['data']
-        self.assertEqual(len(updated_data), 2)  
-
-    def test_post_remove_accessories(self):
-        # Test POST request to remove accessories
-        data = {
-            'accessories': []  
-        }
-        response = self.client.post(
-            self.url,
-            data=json.dumps(data),
-            content_type='application/json'
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.json()['success'])
-        updated_data = response.json()['data']
-        self.assertEqual(len(updated_data), 0) 
-
-    def test_get_nonexistent_product(self):
-        # Test GET request with a non-existent product
-        url = reverse('accessory_view', args=[9999])  
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)  
-        self.assertTrue(response.json()['success'])
-        self.assertEqual(response.json()['data'], [])
-
-    def test_post_nonexistent_product(self):
-        # Test POST request with a non-existent product
-        url = reverse('accessory_view', args=[9999]) 
-        data = {
-            'accessories': [{'id': self.accessory2.id}]
-        }
-        response = self.client.post(
-            url,
-            data=json.dumps(data),
-            content_type='application/json'
-        )
-        self.assertEqual(response.status_code, 404)
-        self.assertFalse(response.json()['success'])
-        self.assertEqual(response.json()['message'], 'Product not found.')
-
-    def test_post_invalid_data(self):
-        # Test POST request with invalid data
-        data = {
-            'accessories': [{'invalid_field': 123}] 
-        }
-        response = self.client.post(
-            self.url,
-            data=json.dumps(data),
-            content_type='application/json'
-        )
-        self.assertEqual(response.status_code, 400)
-        self.assertFalse(response.json()['success'])
-        self.assertIn('message', response.json())
