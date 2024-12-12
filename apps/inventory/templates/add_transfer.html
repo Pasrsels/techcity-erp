@@ -674,6 +674,7 @@
       cart = cart.filter((item) => item.id !== id);
       let insufficientQnt = false
       updateCartDisplay(insufficientQnt);
+      updateTotalCost()
   };
 
   function processCart(action) {
