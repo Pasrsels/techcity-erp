@@ -10,21 +10,10 @@ from django.contrib.auth.decorators import login_required
 from loguru import logger
 from apps.settings.models import TaxSettings
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from apps.inventory.models import Inventory
 
-
-class productsAPIView(APIView):
-    """ Api view which returns products """
-    def get(self, request):
-        products = Inventory.objects.all().values(
-            'id',
-            'name',
-            'price',
-            'dealer_price',
-            'category__name'
-        )
-        return Response({'success':True, 'data':products})
 
 @login_required
 @transaction.atomic
@@ -57,4 +46,24 @@ def upload_file():
     file.save(file_path)
     return JsonResponse({"status": "success", "file_path": file_path}), 200
 
+
+#################################################################################################################################################################################################
+""" Pos API end points mainly for:
+    customers crud: check finance api views, 
+    products
+    processing the sale 
+"""
+
+class productsAPIView(APIView):
+    """ Api view which returns products """
+    def get(self, request):
+        products = Inventory.objects.all().values(
+            'id',
+            'name',
+            'price',
+            'dealer_price',
+            'category__name'
+        )
+        return Response({'success':True, 'data':products})
+    
 

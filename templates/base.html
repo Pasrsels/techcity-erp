@@ -47,21 +47,6 @@
         {% block title %}Techcity{% endblock title %}
     </title>
 </head>
-<style>
-    .l-p{
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        position: fixed;
-        right: 0;
-        /* z-index: 1000; */
-    }
-    .l-p button{
-        border-top-left-radius: 50%;
-        border-bottom-left-radius: 50%;
-    }
-</style>
 <body>
     <div class="techcity">
         <div class="row">
@@ -70,7 +55,7 @@
                 <div class='row' style='margin-top:58px;'>
                     <div class="aside-bar col-2 text-light" style="background: #242140 !important;"> {% include "base/aside.html" %} </div>
                     <div class="app-area col w-100 bg-light overflow">
-                        <div class="l-p ">
+                        <div class="l-p">
                             <button class="btn btn-secondary">L</button>
                             <button class="btn mt-2 btn-secondary ">P</button>
                         </div>

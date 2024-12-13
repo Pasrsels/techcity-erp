@@ -13,14 +13,13 @@ from django.apps import apps
 from apps.company.models import Branch
 from django.contrib.auth.models import AbstractUser, Group
 from django.db.models.signals import post_migrate, post_save
+from django.contrib.auth.base_user import BaseUserManager
+from django.utils.translation import gettext_lazy as _
+from rest_framework_simplejwt.tokens import RefreshToken
 
 ADMIN_GROUP_NAME = 'Admin'
 ACCOUNTANT_GROUP_NAME = 'Accountant'
 SALESPERSON_GROUP_NAME = 'Salesperson'
-
-from django.contrib.auth.base_user import BaseUserManager
-from django.utils.translation import gettext_lazy as _
-
 
 class CustomUserManager(BaseUserManager):
     """
@@ -96,6 +95,13 @@ class User(AbstractUser):
         # validate that the user's branch is associated with the same company
         if self.branch and self.company and self.branch.company != self.company:
             raise ValueError('The branch does not belong to the specified company')
+    
+    def tokens(self):
+        refresh = RefreshToken.for_user(self)
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token)
+        }
 
     def __str__(self) -> str:
         return self.username

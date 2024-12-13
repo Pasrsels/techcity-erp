@@ -1091,7 +1091,7 @@ def over_less_list_stock(request):
   
         branch_transfer = get_object_or_404(transfers, id=transfer_id)
         transfer = get_object_or_404(Transfer, id=branch_transfer.transfer.id)
-        product = Inventory.objects.get(product=branch_transfer.product, branch=request.user.branch)
+        product = Inventory.objects.get(id=branch_transfer.product.id, branch=request.user.branch)
        
         if int(branch_transfer.over_less_quantity) > 0:
             if action == 'write_off':    

@@ -6,6 +6,7 @@ import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
 from django.apps import apps
+from datetime import timedelta
 
 env = environ.Env()   
 load_dotenv()
@@ -136,18 +137,18 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 DATABASES = {
 
-    'default': dj_database_url.config(
-        default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
-    )
+    # 'default': dj_database_url.config(
+    #     default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
+    # )
 
-#    'default': {
-#      'ENGINE': 'django.db.backends.postgresql',
-#        'NAME':  'techcoty',
-#        'USER': 'postgres',
-#        'PASSWORD': 'neverfail',
-#        'HOST': 'localhost',
-#        'PORT': '5432'
-#  }
+   'default': {
+     'ENGINE': 'django.db.backends.postgresql',
+       'NAME':  'techcoty',
+       'USER': 'postgres',
+       'PASSWORD': 'neverfail',
+       'HOST': 'localhost',
+       'PORT': '5432'
+ }
     # 'default': {
     #     'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
     #      'NAME': os.getenv('DB_NAME', 'railway'),
@@ -280,3 +281,14 @@ CELERY_BEAT_SCHEDULE = {
 # Inventory
 LOW_STOCK_THRESHHOLD =  6
 INVENTORY_EMAIL_NOTIFICATIONS_STATUS = True
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # to be changeed
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
