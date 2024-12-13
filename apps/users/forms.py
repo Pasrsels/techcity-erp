@@ -1,7 +1,7 @@
 from django import forms
 from loguru import logger
 from apps.company.models import Company, Branch
-from apps.users.models import User
+from apps.users.models import User, UserPermissions
 from django.contrib.auth.forms import UserCreationForm
 
 
@@ -99,3 +99,8 @@ class UserDetailsForm2(forms.ModelForm):
                 pass
         elif self.instance.pk:
             self.fields['edit_branch'].queryset = self.instance.company.branch_set.order_by('name')
+
+class UserPermissionsForm(forms.ModelForm):
+    class Meta:
+        model = UserPermissions
+        fields = ['name', 'category']

@@ -34,44 +34,68 @@
     <div class="Service_Products">
         <div class="nav-service">
             <div class="d-flex align-items-center justify-content-between rounded shadow header p-2 mb-4">
-                <h5>Services Products</h5>
+                <h5>Services</h5>
                 <div>
+                    <a class="btn btn-outline-dark ms-10 btn-sm" href="{%url 'booking:service_view'%}">Back</a>
                     <button class="btn btn-outline-dark btn-sm ms-10">Analytics</button>
-                    <a class="btn btn-outline-dark ms-10 btn-sm" href="{%url 'booking:member'%}">Members</a> 
                 </div>
             </div>
         </div>
         
         <div class="row">
-            <div class ="col-9">
-                <div class="d-flex align-items-center justify-content-between border-bottom">
-                    <h5 class="text-dark">Services</h4>
+            <div class ="col-9" >
+                <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+                    <h5 class="text-dark mb-0">Items Of Use</h4>
                     <div class="d-flex">
                         <input 
                             type="text" 
                             class="form-control me-2 form-control-sm"  
                             id="searchBar" 
-                            placeholder="Search Service Product" 
+                            placeholder="Search Item Of Use" 
                             oninput="filterProducts()"
                         />
                     </div>
                 </div>
-                <div class="container mt-4">
-                    <table class="table table-striped table-bordered table-hover">
-                        <thead class="table-dark">
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Quantity</th>
-                            <th>Cost</th>
-                            <th>Action</th>
-                        </thead>
-                        <tbody id="service_productsTableBody"></tbody>  
-                    </table> 
-                    <div class="d-flex justify-content-end">
-                        <button onclick="saveService()" class="btn btn-outline-dark btn-sm mt-3">save service</button>
+                    <div class="container mt-4">
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead class="table-dark">
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Cost</th>
+                                <th>Action</th>
+                                <!-- <th>Total</th> -->
+                            </thead>
+                            <tbody id="service_productsTableBody"></tbody>
+                            <tbody id="itemTableBody">
+                                <!-- Initial data rendered by Django
+                                {% for item in items %}
+                                <tr data-id="{{ item.id }}">
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.description }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ item.cost }}</td>
+                                    <td>
+                                        <a href="{% url 'booking:service_crud' %}" class="text-info me-2" title="View Item">
+                                            <i class="bx bx-show"></i>
+                                        </a>
+                                        <a href="{% url 'booking:service_crud' %}" class="text-dark me-2" title="Edit Item">
+                                            <i class="bx bx-edit"></i>
+                                        </a>
+                                        <a href="#" class="text-danger delete-item" title="Delete Item">
+                                            <i class="bx bx-trash-alt"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %} -->
+                                <!-- Rows added dynamically will go here -->
+                            </tbody>    
+                        </table> 
+                        <div class="d-flex justify-content-end">
+                            <button onclick="saveService()" class="btn btn-outline-dark btn-sm mt-3">save service</button>
+                        </div>
                     </div>
                 </div>
-            </div>
             <div class="col-3 rounded" style="background: #fff;">
                 <h5 class="mt-2 mb-2 fw-bold">Add Service</h5>
                 <hr>
@@ -82,7 +106,7 @@
                         </label>
                         <div class="d-flex align-content-center">
                             <select name="service_name" class="select form-select" required id="id_service"> 
-                                <option value="">---------</option> 
+                                <option value="">---------</option>
                                 {% for service in services %}
                                     <option id="services_id" value="{{service.id}}">{{service.service_name}}</option>
                                 {% endfor %}
@@ -92,23 +116,23 @@
                             <button type="button" class="btn btn-sm bx bx-trash" id="id_delete_service"></button>
                         </div>
                     </div>
-                        <!-- add item of form -->
-                        <div id="div_id_name" class="mb-3"> 
-                            <label for="id_name" class="form-label requiredField">
-                                Item of Use<span class="asteriskField"></span> 
-                            </label> 
-                            <div class="d-flex">
-                                <select name="category" class="select form-select" required id="id_name"> 
-                                    <option value="" selected>Select Item of use</option>
-                                    {% for name in names %}
-                                        <option value="{{ name.id }}">{{ name.item_of_use_name }}</option>
-                                    {% endfor %}
-                                </select> 
-                                <button type="button" class="btn btn-sm bx bx-plus" id="id_add_name"></button>
-                                <button type="button" class="btn btn-sm bx bx-edit" id="id_edit_name"></button>
-                                <button type="button" class="btn btn-sm bx bx-trash" id="id_delete_name"></button>
-                            </div>
-                        </div>          
+                    <!-- add item of form -->
+                    <div id="div_id_name" class="mb-3"> 
+                        <label for="id_name" class="form-label requiredField">
+                            Item of Use<span class="asteriskField"></span> 
+                        </label> 
+                        <div class="d-flex">
+                            <select name="category" class="select form-select" required id="id_name"> 
+                                <option value="" selected>Select Item of use</option>
+                                {% for name in names %}
+                                    <option value="{{ name.id }}">{{ name.name.item_of_use_name }}</option>
+                                {% endfor %}
+                            </select> 
+                            <button type="button" class="btn btn-sm bx bx-plus" id="id_add_name"></button>
+                            <button type="button" class="btn btn-sm bx bx-edit" id="id_edit_name"></button>
+                            <button type="button" class="btn btn-sm bx bx-trash" id="id_delete_name"></button>
+                        </div>
+                    </div>          
                     <div class="d-flex justify-content-end mb-3">
                         <button type="reset" class="btn btn-outline-dark btn-sm me-2 w-25 bx bx-reset"></button>
                         <button type="button" class="btn btn-dark btn-sm w-25" onclick="displayItems()">Save</button> <!-- linked from the script  2-->
@@ -132,7 +156,7 @@
                     {{service | crispy}}
                     <div id="div_id_unit_measure" class="mb-3">
                         <label class="form-label">
-                            Unit measure
+                            Unit of measurement
                             <span class="asteriskField">*</span>
                         </label>
                         <div class="d-flex align-content-center">
@@ -324,7 +348,7 @@
         </div>
     </div>
 </div>
-
+<!-- service -->
 <div class="modal fade" id="addservicerangeModal" tabindex="-1" aria-labelledby="addservicerangeModal" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -344,19 +368,16 @@
         </div>
     </div>
 </div>
-
-
 <script>
     // global
-    let service = ''
+    
+let service = ''
     let serviceId = ''
-
     // modals
     const unitModal = new bootstrap.Modal(document.getElementById('addunitmeasureModal'))
     const iouModal = new bootstrap.Modal(document.getElementById('addIouName'));
     const categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
     const serviceModal = new bootstrap.Modal(document.getElementById('addServiceModal'))
-
     //buttons
     const iouBtn = document.getElementById('id_add_name');
     const catBtn = document.getElementById('id_add_category');
@@ -364,16 +385,12 @@
     const unitBtn = document.getElementById('unitBtn');
     const serviceBtn = document.getElementById('id_add_service');
     
-
     const submitIou = document.getElementById('add_iou')
     const submitCat = document.getElementById('id_submit_category')
     const submitService = document.getElementById('add_service')
-
-
     // elements
     const iouEl = document.getElementById('id_name');
     const unitOfMeasurement = document.getElementById('id_unit_measure');
-
     $(document).ready(function() {
         $('#id_service').select2(
             {placeholder: 'Select Service'}
@@ -383,38 +400,68 @@
             console.log(serviceId)
         })
     })
-
+    $(document).ready(function() {
+        $('#id_name').select2(
+            {placeholder: 'Select Item '}
+        )
+        .on('change', function (e){
+            const value = iouEl.value;
+            console.log(serviceId, 'service id')
+            console.log('iou_id',value)
+            if(!serviceId){
+                Swal.fire({
+                    icon:'error',
+                    text:'Please select a service first.',
+                    title:'error'
+                })
+                return;
+            }
+            fetch(`{% url 'booking:item_of_use_crud' %}?id=${value}&service_id=${serviceId}`, {
+                method: 'GET',
+                headers:{
+                    'content-Type':'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('iou data: ', data.items)
+                if(data.success){
+                    console.log(data.items, 'items')
+                    addItem(data.items)
+                }else{
+                    Swal.fire({
+                        icon:'error',
+                        title:'error',
+                        text:data.message
+                    })
+                }
+            })
+        })
+    })
     // modal events
     unitBtn.addEventListener('click', ()=>{
         serviceModal.hide()
         unitModal.show()
     })
-
     iouBtn.addEventListener('click', ()=>{
         iouModal.show()
     })
-
     catBtn.addEventListener('click', ()=>{
         categoryModal.show()
     })
-
     serviceBtn.addEventListener('click', ()=>{
         serviceModal.show()
     })
-
-
     const fixed = document.getElementById('fixed');
     const range = document.getElementById('range');
     const fixedEl = document.getElementById('fixed_value')
     const rangeEl = document.getElementById('range_value')
-
     fixedEl.addEventListener('change', ()=>{
         fixed.classList.remove('d-none')
         range.classList.add('d-none')
         rangeEl.checked = false
         service = 'fixed'
     })
-
     rangeEl.addEventListener('change', ()=>{
         fixed.classList.add('d-none')
         range.classList.remove('d-none')
@@ -422,49 +469,12 @@
         service = 'range'
     })
     
-    
-    iouEl.addEventListener('change', ()=>{
-        console.log('iou')
-        const value = iouEl.value;
-
-        if(!serviceId){
-            Swal.fire({
-                icon:'error',
-                text:'Please select a service first.',
-                title:'error'
-            })
-            return;
-        }
-
-        fetch(`{% url 'booking:item_of_use_crud' %}?id=${value}&service_id=${serviceId}`, {
-            method: 'GET',
-            headers:{
-                'content-Type':'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('iou data: ', data)
-            if(data.success){
-                console.log(data.items, 'items')
-                addItem(data.items)
-            }else{
-                Swal.fire({
-                    icon:'error',
-                    title:'error',
-                    text:data.message
-                })
-            }
-        })
-    })
-
     //save service
     const saveService = () =>{
         const data = {
             service_id:serviceId,
             iou:cart
         }
-
         console.log(data)
         fetch("{% url 'booking:save_combined_service' %}",{
             method:'POST',
@@ -478,9 +488,7 @@
         .then(data =>{
             console.log(data, 'data')
             if (data.success){
-
                 serviceModal.hide()
-
                 Swal.fire({
                     icon:'success',
                     text:'Service Successfully saved.',
@@ -497,14 +505,10 @@
             }
         })
     }
-
     // add item to cart
     const addItem = (data) =>{
-
-        console.log(data, 'data')
-
+        console.log(data, 'add item data')
         let existingItemOfUse = false
-
         for(item in cart){
             console.log(item.id)
             if (item.id === data[0].id ){
@@ -512,9 +516,7 @@
                 break;
             }
         }
-
         console.log(existingItemOfUse, 'bool')
-
         if(existingItemOfUse){
             Swal.fire({
             icon:'error',
@@ -534,9 +536,7 @@
         }
         console.log('items', cart )
     }
-
     const displayItems = () => {
-
         // if(cart.length === 0){
         //     Swal.fire({
         //         icon:'error',
@@ -545,10 +545,9 @@
         //     })
         //     return;
         // }
-
+        console.log('ted', cart)
         const displayTable = document.getElementById('service_productsTableBody')
         displayTable.innerHTML =''
-
         cart.forEach((item)=>{
             displayTable.innerHTML +=`
                 <td><small>${ item.name }</small></td>
@@ -558,19 +557,15 @@
                 <td><small><button class='btn btn-outlin-dark bx bx-trash' onclick='removeItem(${item.id})'></button></small></td>
             `
         })
-
     }
-
     // service add event 
     submitService.addEventListener('click', ()=>{
-
         let range = ''
         const name = document.getElementById('id_service_name').value;
         const description = document.getElementById('id_description').value;
         const unitOfMeasurement = document.getElementById('id_unit_measure');
-
+        const customerType = document.getElementById('id_customer_type').value;
         const uomName = unitOfMeasurement.options[unitOfMeasurement.selectedIndex].textContent;
-
         // make a condition to check the type of range to use
         console.log('service', service, 'name', uomName, 'unitOfMeasurement', unitOfMeasurement)
         if(service === 'fixed'){
@@ -584,16 +579,14 @@
         }else{
             range = '';
         }
-
         const data = {
             'name':name,
             'description': description,
             'unit_measure': unitOfMeasurement.value,
-            'service_range': range
+            'service_range': range,
+            'customer_type':customerType
         }
-
         console.log('Service data: ', data) 
-
         fetch("{% url 'booking:service_crud' %}",{
             method:'POST',
             headers:{
@@ -606,9 +599,7 @@
         .then(data =>{
             console.log(data, 'data')
             if (data.success){
-
                 serviceModal.hide()
-
                 Swal.fire({
                     icon:'success',
                     text:'Service Successfully saved.',
@@ -621,31 +612,27 @@
                         serviceEl.innerHTML += `
                             <option value = '${item.id}'>${item.service_name}</option>
                     `
-                })
+                }).then(
+                    window.location.reload(),
+                )
             })
             }else{
                 Swal.fire({
                     icon:'error',
                     title:'error',
-                    text:data.message
+                    text: 'failed'
                 })
             }
         })
     })
-
-
     // category submit event
     submitCat.addEventListener('click', ()=>{
-
         /* posting unit of meaasurement form field and on success populating the unit of measure select */
-
         const name = document.getElementById('id_category_name').value;
         const data = {
             'name':name
         }
-
         console.log('Iou data: ', data) 
-
         fetch("{% url 'booking:category_crud' %}",{
             method:'POST',
             headers:{
@@ -658,9 +645,7 @@
         .then(data =>{
             console.log(data, 'data')
             if (data.success){
-
                 categoryModal.hide()
-
                 Swal.fire({
                     icon:'success',
                     text:'Category Successfully saved.',
@@ -670,7 +655,6 @@
                     catEl.innerHTML = ''
                     
                     catEl.innerHTML = `<option value = '' class='text-muted'>Select Category</option>`;
-
                     data.data.forEach((item)=>{
                         catEl.innerHTML += `
                             <option value = '${item.id}'>${item.category_name}</option>
@@ -686,29 +670,23 @@
             }
         })
     })
-
     // item of use submit event
     submitIou.addEventListener('click', ()=>{
-
-        /* posting unit of meaasurement form field and on success populating the unit of measure select */
-
+        /* posting unit of measurement form field and on success populating the unit of measure select */
         const name = document.getElementById('id_item_of_use_name').value;
         const cost = document.getElementById('id_cost').value;
         const description = document.getElementById('id_iou_description').value;
         const quantity = document.getElementById('id_quantity').value;
         const category = document.getElementById('id_category').value;
-
+        console.log('description: ', description)
         const data = {
             'name':name,
-            'descrition': description,
+            'description': description,
             'cost':cost,
             'quantity':quantity,
             'category':category
         }
-
         console.log('Iou data: ', data)
-
-
         fetch("{% url 'booking:item_of_use_crud' %}",{
             method:'POST',
             headers:{
@@ -721,9 +699,7 @@
         .then(data =>{
             console.log(data, 'data')
             if (data.success){
-
                 iouModal.hide()
-
                 Swal.fire({
                     icon:'success',
                     text:'Item of use Successfully saved.',
@@ -733,12 +709,13 @@
                     iouEl.innerHTML = ''
                     
                     iouEl.innerHTML = `<option value = '' class='text-muted'>Select Item of Use</option>`;
-
                     data.data.forEach((item)=>{
                         iouEl.innerHTML += `
-                            <option value = '${item.id}'>${item.item_of_use_name}</option>
+                            <option value ='${item.id}'>${item.name__item_of_use_name}${item.id}</option>
                     `
-                })
+                }).then(
+                    window.location.reload()
+                )
             })
             }else{
                 Swal.fire({
@@ -749,19 +726,14 @@
             }
         })
     })
-
     // unit of measurement submit event
     unitMeasurementBtn.addEventListener('click', ()=>{
-
         /* posting unit of meaasurement form field and on success populating the unit of measure select */
-
         const measurement = document.getElementById('id_measurement').value;
         const data = {
             'measurement':measurement
         }
-
         console.log('measurement data: ', data) 
-
         fetch("{% url 'booking:unit_measurement_crud' %}",{
             method:'POST',
             headers:{
@@ -774,9 +746,7 @@
         .then(data =>{
             console.log(data, 'data')
             if (data.success){
-
                 unitModal.hide()
-
                 Swal.fire({
                     icon:'success',
                     text:'Unit of Measure Successfully saved.',
@@ -786,7 +756,6 @@
                     unitMeasurentEl.innerHTML = ''
                     
                     unitMeasurentEl.innerHTML = `<option value = ''>Select Measurement</option>`;
-
                     data.data.forEach((unit)=>{
                         unitMeasurentEl.innerHTML += `
                             <option value = '${unit.id}'>${unit.measurement}</option>
@@ -802,7 +771,6 @@
             }
         })
     })
-
     /*
         Implementation of a list of objects (item of use) to be rendered to a table before saving:
         1. define a global list variable to hold the item of use and its attributes 
@@ -818,11 +786,9 @@
         4. create a display function which wil populate our table data with ptem saved in the object.
         5. to have a delete function in the table.
     */
-
     // 1
     let cart = []
     let count = 0
-
     //2
     const saveToCart = () =>{
         /* this is linked to the save button element 
@@ -836,11 +802,9 @@
         const service = document.getElementById('id_service_range')
         let fixed = ''
         let range = ''
-
         const unitOfMeasurement = document.getElementById('id_unit_measure')
         // to get the item of use name to be readable in the table we need to access the  options part of it
         const unitOfMeasurementName = unitOfMeasurement.options[unitOfMeasurement.selectedIndex].textContent
-
         // make a condition to check the type of range to use
         if(service === 'fixed'){
             fixed = document.getElementById('fixed_inp')
@@ -851,7 +815,6 @@
         }else{
             range = '';
         }
-
         let existingItemOfUse = cart.find((item) => item.item_of_use_id === itemOfUseEl.value);
         if(existingItemOfUse){
             Swal.fire({
@@ -873,20 +836,16 @@
                 category:category
             }
         }
-
         cart.push(newItem)
-
         console.log('items', cart)
         isCartEmpty()
         displayItems()
     }
-
     const removeItem = (id) =>{
         console.log('delete item', id)
         cart = cart.filter((item) => item.id !== id);
         displayItems();
     }
-
     const isCartEmpty = () => {
         if (cart.length === 0){
             confirmBtndisabled=true;
@@ -895,18 +854,14 @@
         }
     }
     isCartEmpty()
-
     // document.getElementById('saveItems').addEventListener('submit', function(e){
     //     e.preventDefault();
-
     //     const serviceName = document.getElementById('id_service').value
     //     const name = serviceName.options[serviceName.selectedIndex].textContent
-
     //     const data = {
     //         service_namae:data,
     //         items:cart
     //     }
-
     //     try 
     //     {
     //         fetch('{% url "booking:service_product_crud" %}', {
@@ -942,13 +897,10 @@
     //     }
         
     // })
-
     document.getElementById('AddServiceProduct').addEventListener('submit', function(e) {
         e.preventDefault(); 
-
         try
         {
-
         fetch('{% url "booking:service_product_crud" %}', {  
             method: 'POST',
             body: formData,
@@ -978,15 +930,54 @@
                 }
              })
         }
-
           catch (error)
         {
             console.error('Error:', error);
         }
     })
     
+    const delete_iou = document.getElementById('id_delete_name')
+    delete_iou.addEventListener('click', () =>{
+        const id = document.getElementById('id_name').value;
+        console.log(id)
+        data = {
+            'item_of_use_id': id
+        }
+        try{
+            fetch("{% url 'booking:item_of_use_crud' %}", {
+                method: 'DELETE',
+                headers: {
+                    'content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: JSON.stringify(data)
+            }).then(answer => answer.json())
+            .then(data =>{
+                if(data.success){
+                    Swal.fire({
+                        'icon': 'success',
+                        'title': 'success',
+                        'text': 'successfully deleted'
+                    }).then(
+                        window.location.reload(),
+                    )
+                }else{
+                    Swal.fire({
+                        'icon': 'error',
+                        'title': 'Failed',
+                        'text': 'Delete failed'
+                    })
+                }
+            })
+        }catch (error){
+            Swal.fire({
+                        'icon': 'error',
+                        'title': 'Error',
+                        'text': error || 'Delete failed'
+                    })
+        }
+    })
     const id_delete_service = document.getElementById('id_delete_service')
-
     id_delete_service.addEventListener('click', function(e){
         e.preventDefault();
         const id = document.getElementById('id_service')
@@ -1003,21 +994,23 @@
                     'X-CSRFToken': getCSRFToken(),
                 },
                 body: JSON.stringify(data),
-            }).then(response => response.json)
+            }).then(response => response.json())
             .then(data => {
                 if(data.success){
                     Swal.fire({
                         'icon': 'success',
                         'title': 'success',
                         'text': 'successfully deleted'
-                    })
+                    }).then(
+                        window.location.reload()
+                    )
                 }
                 else{
                     Swal.fire({
                         'icon': 'error',
                         'title': 'failed',
                         'text': 'failed to deleted'
-                    })
+                    });
                 }
             })
         }catch (error){
@@ -1025,10 +1018,9 @@
                         'icon': 'error',
                         'title': 'failed',
                         'text': 'failed to deleted'
-                    })
+                    });
         }
     })
-
     document.getElementById('searchBar').addEventListener('input', function () {
      const query = this.value.toLowerCase();
      const rows = document.querySelectorAll('tbody tr');
@@ -1037,6 +1029,82 @@
             row.style.display = text.includes(query) ? '' : 'none';
         })
     })   
+    // Edit Service Logic
+document.getElementById('id_edit_service').addEventListener('click', function () {
+    const selectedService = document.querySelector('#id_service option:checked');
+    const serviceId = selectedService.value;
+    const serviceName = selectedService.textContent;
+    // Check if a service is selected
+    if (!serviceId) {
+        Swal.fire({
+            icon: 'error',
+            title: 'No Service Selected',
+            text: 'Please select a service to edit.',
+        });
+        return;
+    }
+    // trial for using add modal for editing
+    document.getElementById('id_service').value = serviceId; 
+    document.querySelector('#id_service_name').value = serviceName; 
+    //populate other fields
+    const editModal = new bootstrap.Modal(document.getElementById('addServiceModal'));
+    editModal.show();
+    document.getElementById('add_service').onclick = function () {
+        const updatedName = document.querySelector('#id_service_name').value;
+        const unitMeasure = document.querySelector('#id_unit_measure').value;
+        const fixedValue = document.querySelector('#fixed_inp').value;
+        const rangeFrom = document.querySelector('#range_inp_from').value;
+        const rangeTo = document.querySelector('#range_inp_to').value;
+        if (!updatedName.trim()) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Input',
+                text: 'Service Name cannot be empty.',
+            });
+            return;
+        }
+        $.ajax({
+            url: "{% url 'booking:service_crud' %}",
+            type: 'PUT',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            data: {
+                id: serviceId,
+                service_name: updatedName,
+                unit_measure: unitMeasure,
+                fixed_value: fixedValue,
+                range_from: rangeFrom,
+                range_to: rangeTo,
+            },
+            success: function (response) {
+                if (response.success) {
+                    selectedService.textContent = updatedName;
+                    editModal.hide();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Updated',
+                        text: 'Service details have been updated successfully.',
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Update Failed',
+                        text: response.error || 'An error occurred while updating the service.',
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred. Please try again.',
+                });
+            },
+        });
+    };
+});
     
     function getCSRFToken() {
         let cookieValue = null;

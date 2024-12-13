@@ -5,16 +5,52 @@ from django.http import JsonResponse
 from django.views import View
 from django.shortcuts import render, redirect
 from loguru import logger
+import json
 from django.contrib.auth import get_user_model
 from apps.company.models import Branch
 from apps.settings.models import NotificationsSettings
 from utils.authenticate import authenticate_user
-from .models import User
-from .forms import UserRegistrationForm, UserDetailsForm, UserDetailsForm2
+from .models import User, UserPermissions
+from .forms import UserRegistrationForm, UserDetailsForm, UserDetailsForm2, UserPermissionsForm
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.hashers import make_password
 
+def UserPermission_CR(request,id):
+    if request.method == 'GET':
+        permission_data = UserPermissions.objects.all().values()
+        return JsonResponse({'success': True, 'data': permission_data})
+    elif request.method == 'POST':
+        user_permission_form = UserPermissionsForm(request.POST)
+        name = request.POST.get('name')
+        if user_permission_form.is_valid():
+            if  not UserPermissions.objects.filter(name = name).exists():
+                user_permission_form.save()
+                return JsonResponse({'success':True}, status = 201)
+            return JsonResponse({'success': False, 'message': 'Permission already exists'}, status = 400)
+        return JsonResponse({'success': False, 'message': 'Invalid form data'}, 400)
+    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
+
+def UserPermission_UD(request,id):
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        name = data.get('name')
+        if UserPermissions.objects.filter(id = id).exists():
+            permissions_data = UserPermissions.objects.get(id = id)
+            permissions_data.name = name
+            permissions_data.save()
+            return JsonResponse({'success': True}, status = 200)
+        return JsonResponse({'success': False, 'message': 'permission doesnot exist'}, status = 400)
+    elif request.method == 'DELETE':
+        data = json.loads(request.body)
+        if UserPermissions.objects.filter(id = id).exists():
+            permission_delete = UserPermissions.objects.get(id = id)
+            permission_delete.delete()
+            return JsonResponse({'success': True}, status = 200)
+        return JsonResponse({'success': False, 'message': 'permission doesnot exist'}, status = 400)
+    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
+
+        
 
 def users(request):
     search_query = request.GET.get('q', '')
