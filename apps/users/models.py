@@ -20,7 +20,14 @@ SALESPERSON_GROUP_NAME = 'Salesperson'
 
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
+from django.db import models
 
+class UserPermissions(models.Model):
+    name = models.CharField(max_length= 100)
+    category = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f'{self.name}'
 
 class CustomUserManager(BaseUserManager):
     """
@@ -75,6 +82,7 @@ class User(AbstractUser):
     # todo remove user code and groups
     code = models.CharField(max_length=50, null=True, blank=True)
     groups = models.ManyToManyField(Group)
+    user_permissions = models.ManyToManyField(UserPermissions)
 
     phonenumber = models.CharField(max_length=13)
     role = models.CharField(choices=USER_ROLES, max_length=50)
