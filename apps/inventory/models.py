@@ -24,15 +24,6 @@ class BatchCode(models.Model):
     def __str__(self) -> str:
         return self.code
     
-
-class ProductCategory(models.Model):
-    """Model for product categories."""
-
-    name = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.name
-
 class Supplier(models.Model):
     """Model for suppliers."""
     name = models.CharField(max_length=102)
@@ -44,6 +35,19 @@ class Supplier(models.Model):
 
     def __str__(self):
         return self.name
+
+class ProductCategory(models.Model):
+    """Model for product categories."""
+
+    name = models.CharField(max_length=255)
+    supplier = models.ForeignKey(Supplier, on_delete= models.PROTECT, null=True)
+    
+    class Meta:
+        unique_together = ('name', 'supplier')
+
+    def __str__(self):
+        return self.name
+
 
 class SupplierAccount(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)

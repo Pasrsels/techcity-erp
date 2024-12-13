@@ -53,7 +53,8 @@ THIRD_PARTY_APPS = [
     'apps.pos',
     'apps.settings',
     'apps.Analytics',
-    'apps.booking'
+    'apps.booking',
+    'apps.vouchers'
 ]
 
 LOCAL_APPS = [
@@ -136,18 +137,17 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 DATABASES = {
 
-    'default': dj_database_url.config(
-        default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
-    )
-
-#    'default': {
-#      'ENGINE': 'django.db.backends.postgresql',
-#        'NAME':  'techcoty',
-#        'USER': 'postgres',
-#        'PASSWORD': 'neverfail',
-#        'HOST': 'localhost',
-#        'PORT': '5432'
-#  }
+    # 'default': dj_database_url.config(
+    #     default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
+    # )
+   'default': {
+     'ENGINE': 'django.db.backends.postgresql',
+       'NAME':  'techcoty',
+       'USER': 'postgres',
+       'PASSWORD': 'neverfail',
+       'HOST': 'localhost',
+       'PORT': '5432'
+ }
     # 'default': {
     #     'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
     #      'NAME': os.getenv('DB_NAME', 'railway'),

@@ -38,7 +38,6 @@ urlpatterns = [
     path('supplier_prices/<int:product_id>/', supplier_prices, name='supplier_prices'),
     path("suppliers/payment-history/<int:supplier_id>/", PaymentHistory, name="payment-history"),
     path('suppliers/supplier-information/<int:supplierId>/', supplier_details_view, name = 'supplier_details'),
-
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),
     
