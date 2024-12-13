@@ -16,3 +16,8 @@ def split_name(value):
 @stringfilter
 def trim(value):
     return value.strip()
+
+@register.filter
+def in_list(value, arg):
+    """Check if a value is in a list."""
+    return value in arg

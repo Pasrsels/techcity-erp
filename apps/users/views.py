@@ -50,8 +50,7 @@ def login_view(request):
         except ValidationError:
             messages.error(request, 'Invalid email format')
             return render(request, 'auth/login.html')
-        # todo check if user is not already authenticted
-        # todo allow authentication to verified email addresses
+
         user = authenticate_user(email=email_address, password=password)
         logger.info(f'User: {user}')
         if user is not None:

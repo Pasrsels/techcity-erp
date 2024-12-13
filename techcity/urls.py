@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 from django.views import defaults as default_views
+from apps.company.views import verify_email
 
 urlpatterns = [
     path('pos/', include('apps.pos.urls', namespace='pos')),
@@ -16,7 +17,7 @@ urlpatterns = [
     path('inventory/', include('apps.inventory.urls', namespace='inventory')),
     path('dashboard/', include('apps.Dashboard.urls', namespace='dashboard')),
     path('booking', include('apps.booking.urls', namespace='booking')),
-    path('vouchers/', include('apps.vouchers.urls', namespace='vouchers')),
+    path('verify/<uidb64>/<token>/', verify_email, name='verify_email'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

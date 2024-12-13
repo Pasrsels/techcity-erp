@@ -19,7 +19,7 @@ from . utils import update_latest_due
 from django.http import JsonResponse
 from utils.utils import generate_pdf
 from asgiref.sync import async_to_sync, sync_to_async
-from apps.inventory.models import Inventory
+from apps.inventory.models import Inventory, Accessory
 from channels.layers import get_channel_layer
 import json, datetime, os, boto3, openpyxl 
 from utils.account_name_identifier import account_identifier
@@ -644,7 +644,6 @@ def create_invoice(request):
                         status = False
                     )
 
-                
                 # #create transaction
                 transaction_obj = Transaction.objects.create(
                     date=timezone.now(),
@@ -663,7 +662,7 @@ def create_invoice(request):
                 # Create InvoiceItem objects
                 for item_data in items_data:
                     item = Inventory.objects.get(pk=item_data['inventory_id'])
-                    product = Product.objects.get(pk=item.product.id)
+                    # product = Product.objects.get(pk=item.product.id)
                     
                     item.quantity -= item_data['quantity']
                     item.save()
@@ -677,22 +676,22 @@ def create_invoice(request):
                     )
                     
                     # Create StockTransaction for each sold item
-                    stock_transaction = StockTransaction.objects.create(
-                        item=product,
-                        transaction_type=StockTransaction.TransactionType.SALE,
-                        quantity=item_data['quantity'],
-                        unit_price=item.price,
-                        invoice=invoice,
-                        date=timezone.now()
-                    )
-                    stock_transaction.save()
+                    # stock_transaction = StockTransaction.objects.create(
+                    #     item=product,
+                    #     transaction_type=StockTransaction.TransactionType.SALE,
+                    #     quantity=item_data['quantity'],
+                    #     unit_price=item.price,
+                    #     invoice=invoice,
+                    #     date=timezone.now()
+                    # )
+                    # stock_transaction.save()
                     
                     # cost of sales item
                     COGSItems.objects.get_or_create(
                         invoice=invoice,
-                        defaults={'cogs': cogs, 'product': Inventory.objects.get(product=product, branch=request.user.branch)}
+                        defaults={'cogs': cogs, 'product': Inventory.objects.get(id=item.id, branch=request.user.branch)}
                     )
-                    
+                
                     # stock log  
                     ActivityLog.objects.create(
                         branch=request.user.branch,
@@ -703,7 +702,32 @@ def create_invoice(request):
                         action='Sale',
                         invoice=invoice
                     )
-                    
+
+                    accessories = Accessory.objects.filter(main_product=item).values('accessory_product', 'accessory_product__quantity')
+
+                    logger.info(f'Accessories for this product: {accessories}')
+
+                    for acc in accessories:
+                        COGSItems.objects.get_or_create(
+                            invoice=invoice,
+                            defaults={'cogs': cogs, 'product': Inventory.objects.get(id=acc['accessory_product'], branch=request.user.branch)}
+                        )
+                        prod_acc = Inventory.objects.get(id = acc['accessory_product'] )
+                        prod_acc.quantity -= 1
+
+                        logger.info(f'accessory quantity: {acc['accessory_product__quantity']}')
+
+                        ActivityLog.objects.create(
+                            branch=request.user.branch,
+                            inventory=prod_acc,
+                            user=request.user,
+                            quantity=1,
+                            total_quantity = acc['accessory_product__quantity'],
+                            action='Sale',
+                            invoice=invoice
+                        )
+                        prod_acc.save()
+                        
                 # # Create VATTransaction
                 VATTransaction.objects.create(
                     invoice=invoice,
@@ -759,7 +783,7 @@ def create_invoice(request):
 def held_invoice(items_data, invoice, request, vat_rate):
     for item_data in items_data:
         item = Inventory.objects.get(pk=item_data['inventory_id'])
-        product = Product.objects.get(pk=item.product.id)
+        # product = Product.objects.get(pk=item.product.id)
                     
         item.quantity -= item_data['quantity']
         item.save()
@@ -772,15 +796,15 @@ def held_invoice(items_data, invoice, request, vat_rate):
             vat_rate = vat_rate
         )
                     
-        # Create StockTransaction for each sold item
-        stock_transaction = StockTransaction.objects.create(
-            item=product,
-            transaction_type=StockTransaction.TransactionType.SALE,
-            quantity=item_data['quantity'],
-            unit_price=item.price,
-            invoice=invoice,
-            date=timezone.now()
-        )
+        # # Create StockTransaction for each sold item
+        # stock_transaction = StockTransaction.objects.create(
+        #     item=item,
+        #     transaction_type=StockTransaction.TransactionType.SALE,
+        #     quantity=item_data['quantity'],
+        #     unit_price=item.price,
+        #     invoice=invoice,
+        #     date=timezone.now()
+        # )
               
         # stock log  
         ActivityLog.objects.create(
@@ -1745,9 +1769,9 @@ def invoice_preview_json(request, invoice_id):
         dates = laybyDates.objects.filter(layby__invoice=invoice).values('due_date')
      
     invoice_items = InvoiceItem.objects.filter(invoice=invoice).values(
-        'item__product__name', 
+        'item__name', 
         'quantity',
-        'item__product__description',
+        'item__description',
         'total_amount',
         'unit_price'
     )
@@ -1897,7 +1921,6 @@ def send_invoice_whatsapp(request, invoice_id):
         logger.exception(f"Error sending invoice via WhatsApp: {e}")
         return JsonResponse({"error": "Error sending invoice via WhatsApp"})
     
-
 @login_required
 def end_of_day(request):
     today = timezone.now().date()
@@ -1921,7 +1944,10 @@ def end_of_day(request):
     now = timezone.now() 
     today = now.date()  
     
+    # invoices = filter_by_date_range(today, today)
     invoices = filter_by_date_range(today, today)
+
+    logger.info(f'Invoices {invoices}')
     withdrawals = CashWithdraw.objects.filter(user__branch=request.user.branch, date=today, status=False)
     
     total_cash_amounts = [
@@ -1931,26 +1957,31 @@ def end_of_day(request):
         }
     ]
 
+    logger.info(f'cash amounts: {total_cash_amounts}')
+
     sold_inventory = (
-        StockTransaction.objects
-        .filter(invoice__branch=request.user.branch, date=today, transaction_type=StockTransaction.TransactionType.SALE)
-        .values('item__id', 'item__name')
+        ActivityLog.objects
+        .filter(invoice__branch=request.user.branch, timestamp__date=today, action='Sale')
+        .values('inventory__id', 'inventory__name')
         .annotate(quantity_sold=Sum('quantity'))
     )
+
+    logger.info(f'Sold Inventory: {sold_inventory}')
     
     if request.method == 'GET':
         all_inventory = Inventory.objects.filter(branch=request.user.branch, status=True).values(
-            'id', 'product__name', 'quantity'
+            'id', 'name', 'quantity'
         )
 
         inventory_data = []
         for item in sold_inventory:
-            sold_info = next((inv for inv in all_inventory if item['item__id'] == inv['id']), None)
+            logger.info(item)
+            sold_info = next((inv for inv in all_inventory if item['inventory__id'] == inv['id']), None)
             
             if sold_info:
                 inventory_data.append({
-                    'id': item['item__id'],
-                    'name': item['item__name'],
+                    'id': item['inventory__id'],
+                    'name': item['inventory__name'],
                     'initial_quantity': item['quantity_sold'] + sold_info['quantity'] if sold_info else 0,
                     'quantity_sold':  item['quantity_sold'],
                     'remaining_quantity':sold_info['quantity'] if sold_info else 0,
@@ -1970,10 +2001,10 @@ def end_of_day(request):
                     inventory.physical_count = item['physical_count']
                     inventory.save()
 
-                    sold_info = next((i for i in sold_inventory if i['item__id'] == inventory.id), None)
+                    sold_info = next((i for i in sold_inventory if i['inventory__id'] == inventory.id), None)
                     inventory_data.append({
                         'id': inventory.id,
-                        'name': inventory.product.name,
+                        'name': inventory.name,
                         'initial_quantity': inventory.quantity,
                         'quantity_sold': sold_info['quantity_sold'] if sold_info else 0,
                         'remaining_quantity': inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0),
@@ -1981,7 +2012,7 @@ def end_of_day(request):
                         'difference': inventory.physical_count - (inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0))
                     })
                 except Inventory.DoesNotExist:
-                    return JsonResponse({'success': False, 'error': f'Inventory item with id {item["item_id"]} does not exist.'})
+                    return JsonResponse({'success': False, 'error': f'Inventory item with id {item["inventory_id"]} does not exist.'})
 
             today_min = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
             today_max = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)

@@ -4,12 +4,20 @@
 {% block title%} Edit Inventory {% endblock%}
 {% block content %}
    <div class="edit-inventory">
-        <div class='add-product-nav d-flex py-2 px-2 align-items-center shadow bg-dark text-light rounded'>
+        <div 
+            class="add-product-nav d-flex py-2 px-2 align-items-center shadow rounded justify-content-between align-items-center sticky-top bg-white" 
+            style="z-index: 1000;">
+            <div class="d-flex align-items-center">
+                <div class="hint--bottom" aria-label="products">
+                    <a href="{% url 'inventory:inventory' %}" class="btn btn-outline-dark bx bx-left-arrow-alt" ></a>
+                </div>
+                <h5 class="fw-normal px-2 text-uppercase">Edit / Update Product - {{ product.name }}</h5>
+            </div>
             <div>
-                <h5 class='fw-normal px-2 mt-2n fw-bold'>Edit / Update Product - {{product.product.name}}</h5>
+                <a href="{% url 'inventory:inventory_detail' product.id %}" class="btn btn-outline-dark btn-sm">Logs</a>
             </div>
         </div>
-        
+
         <form method="post" class="rounded border mt-2 p-2">
             {% csrf_token %}
             <div id="div_id_name" class="mb-3">
@@ -20,11 +28,24 @@
                <input 
                    type="text" 
                    name="name" 
-                   value='{{product.product.name}}'
+                   value='{{product.name}}'
                    class="textinput form-control" 
                    required id="id_name"
                > 
            </div>
+           <div id="div_id_category form-group" class="mb-3"> 
+            <label for="id_category" class="form-label requiredField">
+                Category<span class="asteriskField">*</span> 
+            </label> 
+            <div class='d-flex align-items-center'>
+                <select name="category" class="select form-select" required id="id_category"> 
+                    <option value="">---------</option> 
+                </select> 
+                <button class='btn border small' type="button" id='id_add_category'>
+                    <i class='bx bx-plus'></i>
+                </button>
+            </div>
+        </div> 
             <div id="div_id_cost" class="mb-3"> 
                 <label for="id_cost" class="form-label requiredField">
                     Cost
@@ -80,7 +101,7 @@
                     rows="2" 
                     class="form-control" 
                     required id="id_description"
-                >{{ product.product.description }}</textarea> 
+                >{{ product.description }}</textarea> 
             </div>
             <div class="mb-3"> 
                 <div id="div_id_end_of_day" class="form-check">
@@ -101,5 +122,129 @@
             </div>
         </form>
    </div>
-   <script src='{% static 'js/productValidation.js'%}'></script>
+
+   <!-- category modal -->
+    <div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="category">
+                        <div class='add-product-category' id="id_category_form">
+                            <div class='add-product-category-nav d-flex mt-2 py-3 px-2 align-items-center'>
+                                <div>
+                                    <h6 class='mt-2 fw-bold'>Add Category</h6>
+                                </div>
+                            </div>
+                            <form method='post' class='px-2'>
+                                {% csrf_token %}
+                                <div class='mb-2'>
+                                    <label for='id_name'>Category Name</label>
+                                    <input 
+                                        name='name' 
+                                        id='id_category_name' 
+                                        type='text' 
+                                        class='form-control'
+                                    />
+                                </div>
+                                <small id='id_error'></small>
+                                <div class="d-flex justify-content-end">
+                                    <div class="">
+                                        <button type="reset" class="btn btn-danger btn-sm w-100">
+                                            <i class='bx bx-reset'></i>
+                                            reset
+                                        </button>
+                                    </div>
+                                    <span class="px-1"></span>
+                                    <div class="">
+                                        <button type="button" onclick="categorySubmit();" class="btn btn-secondary btn-sm w-100">
+                                            <i class='bx bx-save'></i>
+                                            save
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div> 
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const categoryModal = new bootstrap.Modal(document.querySelector('#categoryModal'));
+    
+    document.querySelector('#id_add_category').addEventListener(
+        'click', ()=>{
+            categoryModal.show()
+        }
+    ) 
+
+     function categorySubmit(){
+        
+        const data = {name:$('#id_category_name').val()}
+          
+        fetch("{% url 'inventory:add_product_category' %}", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": getCookie("csrftoken"), 
+            },
+            body: JSON.stringify(data),
+          })
+            .then(response => response.json())
+            .then((response) => {
+              if (response.success) {
+                Swal.fire({
+                  title: 'success',
+                  text: 'Category successfully saved.',
+                  icon:'success',
+                  timer: 2000,
+                  showConfirmButton: false
+                })
+                fetchCategories()
+                categoryModal.hide()
+                supplierFormModal.show()
+              } else {
+                Swal.fire({
+                  title:'warning',
+                  text:response.message,
+                  icon:'warning',
+                })
+              }
+            })
+            .catch((error) => {
+              console.log(error)
+            });
+          }
+  
+        async function fetchCategories(){
+            try {
+                const response = await fetch('{% url "inventory:add_product_category" %}');
+    
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
+                const data = await response.json();
+                updateCategory(data);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            } 
+        }
+  
+        fetchCategories()
+  
+        function updateCategory(data){
+            const catElement = document.querySelector('#id_category')
+  
+            console.log('loading products')
+        
+            while(catElement.options.length > 1){
+                catElement.remove(1)
+            }
+            data.forEach((category)=>{
+                catElement.innerHTML += `<option value=${category.id}>${category.name}</option>`
+            })
+        }
+  
+   </script>
 {% endblock content %}

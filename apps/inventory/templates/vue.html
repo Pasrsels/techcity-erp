@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Purchase Order</title>
+    <!-- Vue.js CDN -->
+</head>
+<body>
+    <div id="app">
+        <!-- Vue app content goes here -->
+        <h1>{{ message }}</h1>
+        <button @click="reverseMessage">Reverse Message</button>
+    </div>
+
+    <!-- Your script to initialize Vue -->
+    <script>
+        // const { createApp } = Vue;
+
+        // createApp({
+        //     data() {
+        //         return {
+        //             message: "Create a Purchase Order"
+        //         }
+        //     },
+        //     methods: {
+        //         reverseMessage() {
+        //             this.message = this.message.split('').reverse().join('');
+        //         }
+        //     }
+        // }).mount('#app');
+        // import Vue from 'vue';
+
+        new Vue({
+            el: '#app',
+            data: {
+                message: 'Hello Vue!'
+            }
+        });
+    </script>
+</body>
+</html>
+

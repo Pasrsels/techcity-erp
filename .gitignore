@@ -1,4 +1,5 @@
-
+.node_modules
+/node_modules/
 /migrations/
 */migrations/*
 .env
@@ -24,3 +25,7 @@ test.png
 .base.py
 dev/*.pyc
 *base.py
+Dockerfile
+docker_compose.yml
+*.pyc
+*.pyc

@@ -8,6 +8,13 @@ from django.db.models import F
 from loguru import logger
 from apps.finance.models import Currency
 
+
+TAX_CHOICES = [
+    ('exempted', 'Exempted'),
+    ('standard', 'Standard'),
+    ('zero rated', 'Zero Rated')
+]
+
 class BatchCode(models.Model):
     code = models.CharField(max_length=255)
 
@@ -19,8 +26,8 @@ class BatchCode(models.Model):
     
 class Supplier(models.Model):
     """Model for suppliers."""
-    name = models.CharField(max_length=100)
-    contact_person = models.CharField(max_length=255)
+    name = models.CharField(max_length=102)
+    contact_person = models.CharField(max_length=254)
     phone = models.CharField(max_length=255)
     email = models.EmailField(max_length=255)
     address = models.CharField(max_length=255, null= True)
@@ -43,7 +50,7 @@ class ProductCategory(models.Model):
 
 
 class SupplierAccount(models.Model):
-    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE)  
     balance = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     date = models.DateField(null= True)
@@ -55,11 +62,11 @@ class SupplierAccount(models.Model):
         return f'{self.supplier.name} balance -> {self.balance}'
 
 class SupplierAccountsPayments(models.Model):
-    account = models.ForeignKey(SupplierAccount, on_delete=models.PROTECT)
+    account = models.ForeignKey(SupplierAccount, on_delete=models.CASCADE)
     payment_method = models.CharField(max_length=15, choices=[
         ('cash', 'cash'),
         ('bank', 'bank'),
-        ('ecocash', 'ecocash')
+        ('Ecocash', 'ecocash')
     ])
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE) 
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)
@@ -72,30 +79,60 @@ class SupplierAccountsPayments(models.Model):
 
 class Product(models.Model):
     """Model for products."""
-    TAX_CHOICES = [
-        ('exempted', 'Exempted'),
-        ('standard', 'Standard'),
-        ('zero rated', 'Zero Rated')
-    ]
     
-    batch = models.CharField(max_length=255, blank=True, default='')
     name = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     quantity = models.IntegerField(default=0, null=True)
-    category = models.ForeignKey('ProductCategory', on_delete=models.SET_NULL, null=True)
-    tax_type = models.CharField(max_length=50, choices=TAX_CHOICES, null=True)
     min_stock_level = models.IntegerField(default=0, null=True)
     description = models.TextField(max_length=255, default='')
     end_of_day = models.BooleanField(default=False, null=True)
     service = models.BooleanField(default=False, null=True)
     dealer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
     suppliers = models.ManyToManyField('Supplier', related_name="products")
+    image = models.ImageField(upload_to='product_images/', null=True)
 
     def __str__(self):
-        return self.name
+        return self.name 
 
+class Inventory(models.Model):
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255, null=True)
+    cost =  models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    dealer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    quantity = models.IntegerField(null=True)
+    status = models.BooleanField(default=True, null=True)
+    stock_level_threshold = models.IntegerField(default=5, null=True)
+    reorder = models.BooleanField(default=False, null=True)
+    alert_notification = models.BooleanField(default=False, null=True, blank=True)
+    batch = models.CharField(max_length=255, blank=True, null=True)
+    category = models.ForeignKey('ProductCategory', on_delete=models.SET_NULL, null=True)
+    tax_type = models.CharField(max_length=50, choices=TAX_CHOICES, null=True)
+    batch = models.TextField(blank=True, default='')
+    suppliers = models.ManyToManyField('Supplier', related_name="products_suppliers")
+    description = models.TextField(max_length=255, default='')
+    end_of_day = models.BooleanField(default=False, null=True)
+    service = models.BooleanField(default=False, null=True)
+    image = models.ImageField(upload_to='product_images/', default='placeholder.png', null=True)
+    disable = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('id', 'branch') 
+
+    def update_stock(self, added_quantity):
+        self.quantity += added_quantity
+        self.save()
     
+    def __str__(self):
+        return f'{self.branch.name} : ({self.name}) quantity ({self.quantity})'
+
+class Accessory(models.Model):
+    main_product = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='main_product')
+    accessory_product = models.ManyToManyField(Inventory)
+
+    def __str__(self):
+        return self.product.name
 
 class PurchaseOrder(models.Model):
     """Model for purchase orders."""
@@ -148,7 +185,7 @@ class PurchaseOrder(models.Model):
 class PurchaseOrderItem(models.Model):
 
     purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
+    product = models.ForeignKey(Inventory, on_delete=models.SET_NULL, null=True)
     quantity = models.IntegerField()
     unit_cost = models.DecimalField(max_digits=10, decimal_places=2)
     actual_unit_cost = models.DecimalField(max_digits=10, decimal_places=2)
@@ -157,6 +194,9 @@ class PurchaseOrderItem(models.Model):
     expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     dealer_expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, default=1)
+    # cost =  models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    wholesale_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def receive_items(self, quantity):
     
@@ -185,8 +225,8 @@ class PurchaseOrderItem(models.Model):
         purchase_order.received = all_received
         purchase_order.save()
 
-    def __str__(self):
-        return f"{self.product.name} x {self.quantity}"
+    # def __str__(self):
+    #     return f"{self.product.name} x {self.quantity}"
     
 
 class costAllocationPurchaseOrder(models.Model):
@@ -218,29 +258,6 @@ class otherExpenses(models.Model):
 
     def __str__(self) -> str:
         return f'{self.purchase_order} : {self.name} -> {self.amount}'
-    
-
-class Inventory(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
-    name = models.CharField(max_length=255, null=True)
-    cost =  models.DecimalField(max_digits=10, decimal_places=2)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    dealer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    quantity = models.IntegerField(null=True)
-    status = models.BooleanField(default=True, null=True)
-    stock_level_threshold = models.IntegerField(default=5, null=True)
-    reorder = models.BooleanField(default=False, null=True)
-    alert_notification = models.BooleanField(default=False, null=True, blank=True)
-    batch = models.CharField(max_length=255, blank=True, null=True)
-
-    
-    def update_stock(self, added_quantity):
-        self.quantity += added_quantity
-        self.save()
-    
-    def __str__(self):
-        return f'{self.branch.name} : ({self.product.name}) quantity ({self.quantity})'
     
     
 class Transfer(models.Model):
@@ -279,7 +296,7 @@ class TransferItems(models.Model):
     transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
     from_branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='destination')
     to_branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='source')
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
+    product = models.ForeignKey(Inventory, on_delete=models.SET_NULL, null=True)
     quantity = models.IntegerField()
     over_less_quantity = models.IntegerField(null=True, default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -296,8 +313,8 @@ class TransferItems(models.Model):
     receieved_quantity = models.IntegerField(default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
-    def __str__(self):
-        return f'{self.product.name} to {self.to_branch}'
+    # def __str__(self):
+    #     return f'{self.product.name} to {self.to_branch}'
     
 class Holdtransfer(models.Model):
     transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
@@ -311,8 +328,8 @@ class Holdtransfer(models.Model):
     description = models.TextField(null=True)
     dealer_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
-    def __str__(self):
-        return f'{self.product.name} to {self.to_branch}'
+    # def __str__(self):
+    #     return f'{self.product.name} to {self.to_branch}'
 
 class DefectiveProduct(models.Model):
     product = models.ForeignKey(Inventory, on_delete=models.SET_NULL, null=True)

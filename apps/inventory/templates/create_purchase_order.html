@@ -27,49 +27,58 @@
 </style>
 <div class="inventory">
     <div class='add-purchase-order'>
-        <div class='purchase-order-nav shadow p-2 text-light d-flex justify-content-between align-items-center rounded' style="background:#373f4c !important;">
+        <div class='purchase-order-nav shadow p-2 d-flex justify-content-between align-items-center rounded'>
             <div>
                 <h5 class='fw-bold mt-2'>Create Purchase order</h5>
             </div>
         </div>
         <div class="row mt-2 main" id="main-section">
             <div class="col-9">
-                <div class="d-flex flex-column rounded" style="background: #fff;">
-                    <p id="cart-title" class="fw-bold fs-6 pt-1 mx-1">Purchase order Items</p>
+                <div class="d-flex flex-column rounded p-2" style="background: #fff;">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <p id="cart-title" class="fw-bold fs-6 rounded mx-1">Purchase order Items</p>
+                    <div>
+                      <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search products..." oninput="searchTable()">
+                    </div>
+                  </div>
                     <table class="table border rounder p-2" id="cart-table">
                         <thead>
-                        <th>Action</th>
-                        <th>Product</th>
-                        <th>Quantity</th>
-                        <th>Unit Price</th>
-                        <th class="text-center">Total</th>
+                          <th id="sort-number" style="cursor: pointer;">#
+                            <span id="sort-arrow" class="sort-arrow">↕</span>
+                          </th>
+                          <th>Action</th>
+                          <th>Product</th>
+                          <th>Supplier</th>
+                          <th>Quantity</th>
+                          <th>Unit Price</th>
+                          <th class="text-center">Total</th>
                         </thead>
                         <tbody id="cart-items"></tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="3"></td>
+                                <td colspan="5"></td>
                                 <td class="fw-bold">Subtotal</td>
                                 <td class="text-center fw-bold" id="subtotal"></td>
                             </tr>
                             <tr>
-                                <td colspan="3"></td>
+                                <td colspan="5"></td>
                                 <td class="fw-bold">Discount</td>
                                 <td>
                                     <input id="id_discount" class="form-control text-center fw-bold" oninput="calculateTotals()">
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="3"></td>
+                                <td colspan="5"></td>
                                 <td class="fw-bold">Tax Rate</td>
                                 <td id="tax_rate" class="fw-bold text-center">15%</td>
                             </tr>
                             <tr>
-                                <td colspan="3"></td>
+                                <td colspan="5"></td>
                                 <td class="fw-bold">Tax Total</td>
                                 <td id="tax" class="fw-bold text-center"></td>
                             </tr>
                             <tr>
-                                <td colspan="3"></td>
+                                <td colspan="5"></td>
                                 <td class="fw-bold">Expenses</td>
                                 <td>
                                     <input id="id_other" style="border:none;" value="0.00"  class="form-control text-center fw-bold" oninput="calculateTotals()" readonly>
@@ -77,20 +86,20 @@
                             </tr>
                             <!-- Add dynamic rows for other expenses here -->
                             <tr id="other-expense-row">
-                                <td colspan="4"></td>
+                                <td colspan="6"></td>
                                 <td>
                                     <button class="btn btn-outline-dark btn-sm w-100" id="add-expense-btn" onclick="addExpense()">Add Expense</button>
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="3"></td>
+                                <td colspan="5"></td>
                                 <td class="fw-bold">Total</td>
                                 <td class="fw-bold text-center" id="id_total"></td>
                             </tr>
                         </tfoot>
                     </table>
                     <div class="d-flex justify-content-end">
-                      <button class="btn btn-outline-dark btn-sm flex mx-2" onclick="reload();">Cancel</button>
+                      <button class="btn btn-outline-dark btn-sm flex mx-2" onclick="reload();">Clear</button>
                       <button class="btn btn-dark btn-sm flex" id="next_button">Next</button>
                     </div>                        
                 </div>
@@ -108,10 +117,12 @@
                             <div class="d-flex form-group">
                                 <select class="select form-select" id='id_product'>
                                     <option value="">Select Product</option>
-                                    {% for product in inventory %}
-                                        <option value={{product.product.id}}>{{product.product.name}} [{{ product.quantity }}]</option>
+                                    {% for product in products %}
+                                        <option value={{product.id}}>{{product.name}} [{{ product.quantity }}]</option>
                                     {% endfor %}
                                 </select>
+                                <button type="button" class="btn bx bx-edit border me-2" onclick="editModal()"></button>
+                                <button type="button" class="btn bx bx-trash border me-2 m" onclick="deleteProduct()"></button>
                                 <button type="button" class="btn bx bx-plus border" id="id_add_supplier"></button>
                             </div>
                         </div>
@@ -134,7 +145,7 @@
                                 Unit price
                             </label> 
                             <input  
-                                type="number" 
+                                type="text" 
                                 name="price" step="0.01" 
                                 class="numberinput form-control" 
                                 required 
@@ -142,6 +153,9 @@
                             >
                             <p id="price_error" class="fs-6 text-danger"></p>
                         </div> 
+                        <div id="supplier_prices" class="mb-1"> 
+                          <!-- to be rendered by js -->
+                        </div>
                         <div id="div_id_quantity" class="mb-1"> 
                             <label for="id_p_quantity" class="form-label requiredField">
                                 Quantity
@@ -157,7 +171,18 @@
                             <p id="quantity_error" class="fs-6 text-danger"></p>
                             <p id="cart_error" class="text-danger"></p>
                         </div> 
-                        <div class='d-flex justify-content-end mb-2'>
+                        <!-- <div id="div_id_tax_method" class="mb-2"> 
+                          <label for="id_tax_method" class="form-label requiredField">
+                            Tax Calculation Method
+                          </label> 
+                          <select class="select form-select" id='id_tax_method'>
+                            <option value="">-----</option>
+                            <option value='inclusive'>Inclusive</option>
+                            <option value="exclusive">Exclusive</option>
+                            <option value="no">No tax charge</option>
+                        </select>
+                      </div>  -->
+                        <div class='d-flex justify-content-end mt-2'>
                             <button type='button' class='btn btn-dark btn-sm w-100' id="id_add_to_cart" onclick="addItem();">
                               <i class='bx bx-save' ></i>
                                 save
@@ -177,7 +202,7 @@
                         {% csrf_token %}
                         <div id="div_id_name" class="mb-3"> <label for="id_name" class="form-label requiredField">
                         Name<span class="asteriskField">*</span> </label> <input type="text" name="name" maxlength="255" class="textinput form-control" required="" id="id_sup_name"> </div> <div id="div_id_contact" class="mb-3"> <label for="id_contact" class="form-label requiredField">
-                        Contact Name<span class="asteriskField">*</span> </label> <input type="text" name="contact" maxlength="255" class="textinput form-control" required="" id="id_contact_name"> </div> <div id="div_id_email" class="mb-3"> <label for="id_email" class="form-label requiredField">
+                        Contact Name<span class="asteriskField">*</span> </label> <input type="text" name="contact" maxlength="255" class="textinput form-control" required="" id="id_contact_person"> </div> <div id="div_id_email" class="mb-3"> <label for="id_email" class="form-label requiredField">
                         Email<span class="asteriskField">*</span> </label> <input type="email" name="email" maxlength="254" class="emailinput form-control" required="" id="id_email"> </div> <div id="div_id_phone" class="mb-3"> <label for="id_phone" class="form-label requiredField">
                         Phone<span class="asteriskField">*</span> </label> <input type="text" name="phone" maxlength="20" class="textinput form-control" required="" id="id_phone"> </div> <div id="div_id_address" class="mb-3"> <label for="id_address" class="form-label requiredField">
                         Address<span class="asteriskField">*</span> </label> <textarea name="address" cols="40" rows="10" class="textarea form-control" required="" id="id_address"></textarea> </div>
@@ -311,7 +336,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-body">
-                <h5 class="fw-bold">Add Product</h5>
+                <h5 class="fw-bold" id="title">Add Product</h5>
                 <form method="post" class='mt-2 p-2'>
                   {% csrf_token %} 
                   <div id="div_id_batch_code" class="mb-3 d-none"> 
@@ -329,33 +354,44 @@
                         </button>
                     </div>
                   </div>
-                  <div class="d-flex form-group">
-                    <label for="" class="form-label requiredField">
-                      Check Product for existance
-                    <span class="asteriskField">*</span> 
-                  </label> 
-                    <select class="select form-select form-select-sm" id='id_search'   data-clearable="true" data-searchable="true">
+                  <div class="d-flex form-group d-none">
+                    <select class="select form-select form-select-sm" id='id_search' data-clearable="true" data-searchable="true">
                         <option value="">Search Product</option>
                         {% for product in inventory %}
                             <option value={{product.product.id}}>{{product.product.name}} [{{ product.quantity }}]</option>
                         {% endfor %}
                     </select>
                 </div>
-                  <div id="div_id_name" class="mb-3 form-group">
-                        <label for="id_name" class="form-label requiredField">
-                          Name
-                          <span class="asteriskField">*</span> 
-                      </label> 
-                        <div class="d-flex align-items-center">
-                            <input type="text"
-                                   name="name"
-                                   maxlength="255"
-                                   class="textinput form-control"
-                                   required id="id_name">
-                            <button class="btn btn-light border btn-sm" type="button">s</button>
-                            <button class="btn btn-light bx bx-edit border mx-1" type="button"></button>
-                            <button class="btn btn-light bx bx-trash border" type="button"></button>
-                        </div>
+                <div id="div_id_name" class="mb-3 form-group">
+                  <label for="id_name" class="form-label requiredField">
+                    Product Image
+                    <span class="asteriskField">*</span> 
+                 </label> 
+                  <div class="d-flex align-items-center">
+                      <input type="file"
+                        name="image"
+                        maxlength="255"
+                        class="textinput form-control"
+                        required
+                        id="id_image"
+                      >
+                  </div>
+                </div> 
+                <div id="div_id_name" class="mb-3 form-group">
+                    <label for="id_name" class="form-label requiredField">
+                      Name
+                      <span class="asteriskField">*</span> 
+                    </label> 
+                    <div class="d-flex align-items-center">
+                        <input type="text"
+                              name="name"
+                              maxlength="255"
+                              class="textinput form-control"
+                              required id="id_name">
+                        <button class="btn btn-light border btn-sm" type="button">s</button>
+                        <button class="btn btn-light bx bx-edit border mx-1" type="button"></button>
+                        <button class="btn btn-light bx bx-trash border" type="button"></button>
+                  </div>
                   </div> 
                   <div id="div_id_category form-group" class="mb-3"> 
                       <label for="id_category" class="form-label requiredField">
@@ -469,6 +505,9 @@
   </div>
 </div>
 
+<!-- product edit modal -->
+
+
 <!-- Details Modal (for displaying generated details in a table) -->
 <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-dialog-centered">
@@ -531,6 +570,7 @@
 </div>   
 <script src="{% static 'js/calculater.js' %}"></script>
 <script>
+    let itemCount = 0;
     let count = 1;
     let cart = [];
     let prodData = [];
@@ -545,7 +585,9 @@
     let products = [];
     let purchaseData = [];
     let formData = [];
-    let holdPurchaseOrder = false
+    let holdPurchaseOrder = false;
+    let isAscending = true; // for sort function
+    let productID = '' // for product editing and deleting
    
     const errorEl = document.getElementById('error');
     const addToCartError = document.getElementById('cart_error');
@@ -574,8 +616,8 @@
 
     const savePurchasaeOrderButton = document.getElementById('save_purchase_order')
 
-    const example = new UseBootstrapSelect(document.getElementById('id_search')); 
-    const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'))
+    const search = new UseBootstrapSelect(document.getElementById('id_search')); 
+    const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
     const formAddBtn = document.getElementById('formAddBtn');
     const otherFormsEl = document.getElementById('otherForms');
 
@@ -583,6 +625,169 @@
       noteModal.hide()
       paymentModal.show()
     }
+
+    calculateExpression('id_p_price', errorId = null) // calculator for price field
+
+    // event listener to sort the table
+    document.getElementById('sort-number').addEventListener('click', () => {
+        sortTable();
+    });
+
+    const sortTable = () => {
+        const table = document.getElementById("cart-table");
+        const tbody = table.getElementsByTagName("tbody")[0];
+        const rows = Array.from(tbody.getElementsByTagName("tr"));
+
+        rows.sort((a, b) => {
+            const aIndex = parseInt(a.cells[0].textContent);
+            const bIndex = parseInt(b.cells[0].textContent);
+            return isAscending ? aIndex - bIndex : bIndex - aIndex;
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+
+        isAscending = !isAscending;
+
+        document.getElementById('sort-arrow').textContent = isAscending ? '↑' : '↓';
+    }
+
+    //check if local storage have anything and populate at the page load
+    const checkLocalCart = () => {
+        Swal.fire({
+            title: 'Loading products...',
+            text: 'Please wait while we load your cart.',
+            allowOutsideClick: false, 
+            didOpen: () => {
+                Swal.showLoading();
+                const cartData = localStorage.getItem('cart');
+
+                if (!cartData){
+                  Swal.close();
+                  return;
+                }else{
+                  if (cartData.length == 2) {
+                      Swal.close();
+                      return;
+                  }
+                }
+                
+                if (localStorage.getItem('cart')) {
+                    cart = JSON.parse(localStorage.getItem('cart')); 
+
+                    // update count
+                    itemCount = cart[cart.length - 1].count;
+
+                    updateCartDisplay().then(() => {
+                        Swal.close(); 
+                    }).catch(error => {
+                        console.error('Error updating cart:', error);
+                        Swal.fire('Error', 'Failed to load products. Please try again.', 'error');
+                    });
+                } else {
+                    Swal.close(); 
+                    Swal.fire('Info', 'No products found in your cart.', 'info');
+                }
+            },
+        });
+    };
+
+    checkLocalCart()
+
+    // search functionality of the table -> js
+    const searchTable = () => {
+      const input = document.getElementById('search-input');
+      const filter = input.value.toLowerCase();
+      const table = document.getElementById('cart-table');
+      const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+      for (let i = 0; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            let found = false;
+
+            // Check each cell in the row
+            for (let j = 2; j < cells.length; j++) {
+                const cell = cells[j];
+                if (cell) {
+                    const txtValue = cell.textContent || cell.innerText;
+                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (found) {
+                rows[i].style.display = "";
+            } else {
+                rows[i].style.display = "none";
+            }
+        }
+      }
+
+    // edit product modal call
+    const editModal = () => {
+      document.getElementById('title').textContent = `Edit Product: ${prodData[0][0].name.toUpperCase()}`;
+      document.getElementById('id_name').value = prodData[0][0].name;
+      document.getElementById('id_min_stock_level').value = prodData[0][0].min_stock_level;
+      document.getElementById('id_description').value = prodData[0][0].description;
+      document.getElementById('id_tax_type').value = prodData[0][0].tax_type;
+      document.getElementById('id_category').value = prodData[0][0].category_id; 
+      document.getElementById('id_image').value = ''; 
+
+      supplierFormModal.show()
+    };
+
+    // delete product 
+    const deleteProduct = async () => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "Once deleted, you will not be able to recover this product!",
+            icon: "warning",
+        }).then(async (willDelete) => {
+            if (willDelete) {
+                try {
+                    const response = await fetch("{% url 'inventory:delete' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken'), 
+                        },
+                        body: JSON.stringify({ id: productID }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const result = await response.json();
+                    if (result.success) {
+                      console.log(result, 'reponse');
+                      Swal.fire({
+                          title: "success",
+                          text: result.message,
+                          icon: "success",
+                      })
+                        fetchProducts()
+                    } else {
+                      Swal.fire({
+                          title: "Failed to delete",
+                          text: result.message,
+                          icon: "error",
+                      })
+                    }
+                } catch (error) {
+                    console.error('There was a problem with the delete operation:', error);
+                    Swal.fire({
+                          title: "An error occurred while trying to delete the product.",
+                          text: error,
+                          icon: "error",
+                      })
+                }
+            } else {
+              return;  
+            }
+        });
+    };
 
     formAddBtn.addEventListener('click', ()=>{
     
@@ -635,17 +840,71 @@
             const productId = $(this).val();
             const productName = $(this).find('option:selected').text().split(' [')[0];
 
-            fetch(`/inventory/inventory/?id=${productId}`)
-                .then(response => response.json())
-                .then(data => {
-                    prodData.push(data);
-                })
-                .catch(error => console.error('Error:', error));
+            getProductData(productId)
+            getBestSupplierPrices(productId)
+
         });
     });
 
+    // fetch prodcut data
+    const getProductData = (productId) => {
+       fetch(`/inventory/inventory/?id=${productId}`)
+        .then(response => response.json())
+        .then(data => {
+          productID = data[0].id;
+          console.log(productID, 'product id');
+          prodData.push(data);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // get best supplies
+    const getBestSupplierPrices = (id) =>{
+      fetch(`/inventory/supplier_prices/${id}/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": getCookie("csrftoken"), 
+            },
+            body: JSON.stringify(),
+          })
+          .then(response => response.json())
+          .then(data=>{
+              if (data.success) {
+                console.log(data)
+                if(data.suppliers){
+                  const supplierPrices = document.getElementById('supplier_prices')
+                  supplierPrices.innerHTML = ''
+                  supplierPrices.innerHTML = `<p class="text-danger">Last best prices for this product</p>`
+                  data.suppliers.forEach((sup)=>{
+                      console.log(sup)
+                      supplierPrices.innerHTML += `
+                        <button type='button' aria-label='Click to choose supplier.' class='btn btn-outline-dark hint--bottom mb-1' onclick="selectedSupplier(${sup?.id})">$${sup?.price}</button>
+                      `
+                  })
+                }
+              } else {
+                Swal.fire({
+                    title: "Error",
+                    text: data.message,
+                    icon: "error"
+                });
+              } 
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              addToCartError.textContent=data.message;
+            });
+    }
+
+    const selectedSupplier = (supplierId) => {
+        const supplierSelect = document.getElementById('id_supplier');
     
-    calculateExpression('id_p_price', errorId = null)
+        supplierSelect.value = supplierId;
+
+        const event = new Event('change');
+        supplierSelect.dispatchEvent(event);
+    }
 
     function addExpense() {
       expenseCount++;
@@ -654,7 +913,7 @@
       row.id = `expense-row-${expenseCount}`;
 
       const cell = document.createElement('td');
-      cell.colSpan='3';
+      cell.colSpan='5';
 
       const nameCell = document.createElement('td');
       const nameInput = document.createElement('input');
@@ -731,15 +990,16 @@
 
     function isCartEmpty(){
         if (cart.length === 0){
-            confirmBtn.disabled=true;
-        }else{
             confirmBtn.disabled=false;
+        }else{
+            confirmBtn.disabled=true;
         }
     }
 
-    isCartEmpty()
+    // isCartEmpty()
 
     function reload(){
+      localStorage.removeItem('cart')
       window.location.reload()
     }
 
@@ -883,56 +1143,94 @@
               catElement.innerHTML += `<option value=${category.id}>${category.name}</option>`
           })
       }
-    
-        function addProduct() {
-            const data = {
-              name: document.getElementById('id_name').value,
-              category: document.getElementById('id_category').value,
-              tax_type: document.getElementById('id_tax_type').value,
-              min_stock_level: parseInt(document.getElementById('id_min_stock_level').value),
-              description: document.getElementById('id_description').value,
-              end_of_day: document.getElementById('id_end_of_day').checked,
-              service: document.getElementById('id_service').checked,
-            };
 
-            console.log(data)
-          
-            fetch("{% url 'inventory:product' %}", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie("csrftoken"),
-              },
-              body: JSON.stringify(data),
-            })
-            .then(response => response.json())
-            .then(data => {
-              if (data.success) {
-                supplierFormModal.hide();
-                fetchProducts();
-                Swal.fire({
-                  icon: 'success',
-                  title: 'Product Added',
-                  text: 'The product has been successfully added!',
-                  timer: 2000,
-                  showConfirmButton: false
-                });
-              } else {
-                Swal.fire({
-                  icon: 'error',
-                  title: 'Error',
-                  text: data.message,
-                });
-              }
-            })
-            .catch((error) => {
+      const processProdData = async (file) => {
+        
+        const readFile = (file) =>
+            new Promise((resolve, reject) => {
+                if (!file) {
+                    resolve(null); 
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result); 
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file); 
+            });
+
+        try {
+            const image = await readFile(file); 
+            const data = {
+                id:productID,
+                name: document.getElementById('id_name').value.trim(),
+                category: document.getElementById('id_category').value.trim(),
+                tax_type: document.getElementById('id_tax_type').value.trim(),
+                min_stock_level: parseInt(document.getElementById('id_min_stock_level').value, 10) || 0,
+                description: document.getElementById('id_description').value.trim(),
+                end_of_day: document.getElementById('id_end_of_day').checked,
+                service: document.getElementById('id_service').checked,
+                image: image, 
+            };
+            return data;
+        } catch (error) {
+            console.error('Error reading file:', error);
+            alert('Failed to process the image. Please try again.');
+            return null; 
+        }
+      }
+    
+      const addProduct = async () => {
+        const fileInput = document.getElementById('id_image');
+        const file = fileInput.files[0];
+
+        data = await processProdData(file)
+
+        fetch("{% url 'inventory:product' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            supplierFormModal.hide();
+            fetchProducts();
+            if(productID){
               Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Something went wrong while adding the product.',
+                icon: 'success',
+                title: 'Product successfully edited or deleted',
+                text: 'Success!',
+                timer: 2000,
+                showConfirmButton: false
               });
+            }else{
+              Swal.fire({
+                icon: 'success',
+                title: 'Product Added',
+                text: 'The product has been successfully added!',
+                timer: 2000,
+                showConfirmButton: false
+              });
+            }
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: data.message,
             });
           }
+        })
+        .catch((error) => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Something went wrong while adding the product.',
+          });
+        });
+      }
           
     async function fetchProducts(){
         try {
@@ -953,10 +1251,12 @@
         const prodElement = document.querySelector('#id_product');
         prodElement.innerHTML = '<option value="">Select Product</option>';
 
+        console.log('product data: ', data)
+
         data.forEach((product) => {
             const option = document.createElement('option');
             option.value = product.id;
-            option.textContent = product.name;
+            option.textContent = `${product.name} [${product.quantity}]`;
             prodElement.appendChild(option);
         });
 
@@ -990,7 +1290,7 @@
       function addSupplier() {
         const data = {
           name: document.getElementById('id_sup_name').value,
-          contact: document.getElementById('id_contact_name').value,
+          contact_person: document.getElementById('id_contact_person').value,
           email: document.getElementById('id_email').value,
           phone: document.getElementById('id_phone').value,
           address: document.getElementById('id_address').value,
@@ -1063,56 +1363,83 @@
 
     function generateUniqueId() {
         return Math.floor(Math.random() * 1000000000).toString(36);
-      }
+    }
     
     function updateCartDisplay() {
-        const cartItemsList = document.getElementById("cart-items");
-        cartItemsList.innerHTML = "";
+      return new Promise((resolve, reject) => {
+        try {
+          const cartItemsList = document.getElementById("cart-items");
+          cartItemsList.innerHTML = "";
+          let items = JSON.parse(localStorage.getItem('cart'))
 
-        cart.forEach((item, index) => {
-            const row = document.createElement("tr");
+          items.reverse().forEach((item, index) => {
+              const row = document.createElement("tr");
+              row.innerHTML = `
+              <td><small>${item.count}</small></td>
+              <td>
+                <small>
+                    <button class="btn" data-id=${item.id} onclick="removeItem(this);">
+                        <i class='bx bx-trash-alt'></i>
+                    </button>
+                </small>
+              </td>
+              <td>
+                <small>
+                  ${item.product}
+                </small>
+              </td>
+              <td>
+                <small>
+                  ${item.supplierName}
+                </small>
+              </td>
+              <td>
+                <small>
+                  <input type="number" class="form-control form-control-sm" id="quantity-${item.id}" value="${item.quantity}" min="1" 
+                      onchange="updateItemQuantity('${item.id}', this.value)">
+                </small>
+              </td>
+              <td>
+                <small>
+                  <input type="number" class="form-control form-control-sm" id="price-${item.id}" value="${item.price}" min="0" step="0.01" 
+                      onchange="updateItemPrice('${item.id}', this.value)">
+                </small>
+              </td>
+              <td class='text-center' id="total-${item.id}">
+                <small>
+                  ${(item.quantity * item.price).toFixed(2)}
+                  </small>
+              </td>
+          `;
+              cartItemsList.appendChild(row);
+          });
 
-            row.innerHTML = `
-            <td>
-                <button class="btn" data-id=${item.id} onclick="removeItem(this);">
-                    <i class='bx bx-trash-alt'></i>
-                </button>
-            </td>
-            <td>
-                ${item.product}
-            </td>
-            <td>
-                <input type="number" class="form-control" id="quantity-${item.id}" value="${item.quantity}" min="1" 
-                    onchange="updateItemQuantity('${item.id}', this.value)">
-            </td>
-            <td>
-                <input type="number" class="form-control" id="price-${item.id}" value="${item.price}" min="0" step="0.01" 
-                    onchange="updateItemPrice('${item.id}', this.value)">
-            </td>
-            <td class='text-center' id="total-${item.id}">${(item.quantity * item.price).toFixed(2)}</td>
-        `;
-            cartItemsList.appendChild(row);
-        });
-
-        calculateTotals(); 
+          calculateTotals(); 
+          resolve();
+        } catch (error) {
+            reject(error); 
+        }
+      });
     }
 
     function updateItemPrice(id, newPrice) {
-        const item = cart.find((item) => item.id === id);
-        if (item) {
-            item.price = parseFloat(newPrice); 
-            updateItemTotal(item); 
-            calculateTotals(); 
-        }
+      const item = cart.find((item) => item.id === id);
+      if (item) {
+          item.price = parseFloat(newPrice); 
+          updateItemTotal(item); 
+          calculateTotals(); 
+      }
     }
 
     function updateItemQuantity(id, newQuantity) {
-        const item = cart.find((item) => item.id === id);
-        if (item) {
-            item.quantity = Number(newQuantity); 
-            updateItemTotal(item); 
-            calculateTotals();
-        }
+      const item = cart.find((item) => item.id === id);
+      if (item) {
+          item.quantity = Number(newQuantity); 
+          updateItemTotal(item); 
+          calculateTotals();
+      }
+      console.log('updated cart', cart)
+      localStorage.setItem('cart', cart)
     }
 
     function updateItemTotal(item) {
@@ -1121,18 +1448,18 @@
         totalElement.textContent = totalPrice; 
     }
 
-    
-
     function addItem() {
         const pElement = document.getElementById('id_product');
         const pSelectedOption = pElement.options[pElement.selectedIndex];
         let product = pSelectedOption.textContent.split(' [')[0];
-        const supplier = document.getElementById('id_supplier').value;
+
+        const supplier = document.getElementById('id_supplier');
+        const sSelectedOption = supplier.options[supplier.selectedIndex];
+        const supplierName = sSelectedOption.textContent;
+
         const price = parseFloat(document.getElementById('id_p_price').value);
         const quantity = Number(document.getElementById('id_p_quantity').value);
 
-        
-      
         if (!product || !quantity || !price || !supplier) {
           Swal.fire({
             icon: 'error',
@@ -1143,6 +1470,7 @@
         }
       
         const existingItem = cart.find((item) => item.product === product);
+        
         if (existingItem) {
           Swal.fire({
             icon:'error',
@@ -1151,21 +1479,26 @@
           })
           return;
         } else {
+          itemCount += 1;
           const newTransfer = { 
+            count:itemCount,
             id: generateUniqueId(),
+            product_id:pElement.value,
             product: product,
             quantity: quantity,
             price: price,
-            supplier: supplier,
+            supplierName: supplierName,
+            supplier: supplier.value,
           };
             cart.push(newTransfer);
-            cart.reverse()
         }
+
+        localStorage.setItem('cart', JSON.stringify(cart));
         
         updateCartDisplay();
         calculateTotals();
-        isCartEmpty();
-      
+        // isCartEmpty();
+
         Swal.fire({
           icon: 'success',
           title: 'Item Added',
@@ -1175,11 +1508,12 @@
         });
       }
       
-    
     const removeItem = (el) => {
         const id = el.dataset.id
         cart = cart.filter((item) => item.id !== id);
-        updateCartDisplay();
+        localStorage.setItem('cart', JSON.stringify(cart))
+        console.log(localStorage.getItem(cart, 'delete'))
+        console.log(cart)
     }
     
     function processCart() {
@@ -1217,6 +1551,16 @@
           'other_amount':parseFloat(document.getElementById('id_other').value) || 0
         }
       }
+
+        // Show processing Swal
+      Swal.fire({
+        title: 'Processing...',
+        text: 'Please wait while your purchase order is being created.',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
       
       fetch("{% url 'inventory:create_purchase_order' %}", {
         method: "POST",
@@ -1229,6 +1573,7 @@
       .then(response => response.json())
       .then(data=>{
           if (data.success) {
+            localStorage.clear('cart')
             Swal.fire({
               icon: 'success',
               title: 'success',
@@ -1252,8 +1597,6 @@
           });
         });
     }
-
-
     function calculateTotals() {
       let subtotal = 0;
       cart.forEach(item => {
@@ -1280,6 +1623,7 @@
 
     // cost apportionment
     document.getElementById('next_button').addEventListener('click', ()=>{
+      console.log(cart, 'cart')
       if (cart.length != 0){
 
         document.getElementById('main-section').style.display = 'none';
@@ -1300,7 +1644,7 @@
         apportionmentTable.innerHTML = '';
         
           // populate the table 
-        cart.reverse().forEach((item) => {
+        cart.forEach((item) => {
           const row = document.createElement("tr");
           let id = 1;
           let actualCostPrice = 0;

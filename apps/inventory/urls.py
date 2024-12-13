@@ -18,6 +18,7 @@ urlpatterns = [
     path('activate/product/<int:product_id>/', activate_inventory, name='activate_inventory'),
     path('defective_product_list/', defective_product_list, name='defective_product_list'),
     path('inventory/branches/json', branches_inventory_json, name='branches_inventory_json'),
+    path('detail/<int:id>/', inventory_detail, name='inventory_detail' ),
 
     #Stocktake
     path('stocktake/', stock_take, name= 'stocktake'),
@@ -27,15 +28,16 @@ urlpatterns = [
     
     # product
     path('create/product/', product, name='product'),
+    path('delete_product', delete_product, name='delete'),
     
     # suppliers
     path("suppliers/", supplier_view, name="suppliers"),
     path('supplier/json/list/', supplier_list_json, name='supplier_list_json'),
     path("suppliers/delete/<int:supplier_id>/", supplier_delete, name="delete_supplier"),
     path("suppliers/edit/<int:supplier_id>/", supplier_edit, name="edit_supplier"),
+    path('supplier_prices/<int:product_id>/', supplier_prices, name='supplier_prices'),
     path("suppliers/payment-history/<int:supplier_id>/", PaymentHistory, name="payment-history"),
     path('suppliers/supplier-information/<int:supplierId>/', supplier_details_view, name = 'supplier_details'),
-    path('suppliers/supplier-payment/<int:supplierId>/', payments, name = 'payment'),
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),
     
@@ -66,6 +68,7 @@ urlpatterns = [
     path('edit_purchase_order/<int:po_id>/', edit_purchase_order, name='edit_po'),
     path('mark_purchase_order_done/<int:po_id>/', mark_purchase_order_done, name='mark_done'),
     path('sales_price_list_pdf/<int:order_id>/', sales_price_list_pdf, name='sales_price_list'),
+    path('confirm-purchase-order/<int:po_id>/', confirm_purchase_order_items, name='confirm_purchase_order'),
 
     # transfers
     path('transfers', inventory_transfers, name='transfers'),
@@ -75,7 +78,6 @@ urlpatterns = [
     path('over_less_list/', over_less_list_stock, name='over_less_list_stock'),
     path('delete/transfer/<int:transfer_id>/', delete_transfer, name='delete_transfer'),
     path('add/transfer/', add_inventory_transfer, name='add_transfer'),
-    path('detail/<int:id>/', inventory_detail, name='inventory_detail' ),
     path('transfer/detail/<int:transfer_id>/', transfer_details, name='transfer_details'),
     path('process-transfer-cart/', ProcessTransferCartView.as_view(), name='process_transfer_cart'),
     path('held_transfer_json/<int:transfer_id>/', held_transfer_json, name='held_transfer'),
@@ -91,5 +93,10 @@ urlpatterns = [
 
 
     #stocktake
-    path('stocktake', stock_take, name='stock_take')
+    path('stocktake', stock_take, name='stock_take'),
+
+    #accessories
+    path('accessory_view/<int:product_id>/', accessory_view, name='accessory_view'),
+
+    path('vue_view/', vue_view, name='vue')
 ]

@@ -1,14 +1,16 @@
 {% load static%}
 {% block content %}
-   <div class="table mt-2 w-100">
+   <div class="table w-100">
         <!-- inventory table -->
         {% include 'components/loader.html' %}
         <div class='products'>
             <table class='table border table-bordered table-striped table-hover table-responsive table-sm rounded p-2 w-100 ' style="width:100%" id='inventory'>
-                <thead>
+                <thead class="table-dark">
                     <tr>
-                        <th>Name</th>
+                        <th>#</th>
+                        <th>Image</th>
                         <th>Description</th>
+                        <th>Accessories</th>
                         <th>Average Sales Per</th>
                         <th>Quantity</th>
                         <th>Cost</th>
@@ -20,38 +22,53 @@
                 <tbody id='inventory_table' >
                     {% for product in inventory %}
                     <tr>
-                        <td><small><span class='hint--bottom' aria-label='{{ product.product.description }}'>{{ product.product.name }}</span></small></td>
-                        <td><small>{{ product.product.description }}</small></td>
+                        <td>{{ forloop.counter }}</td>
+                        <td><small><span class='hint--bottom' aria-label='{{ product.description }}'>
+                            {% if product.image %}
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" width="20px" class="rounded-3">
+                                {% else %}
+                                    <img src="{% static 'placeholder.png'%}" alt="{{ product.name }}" width="20px" class="rounded-3">
+                            {% endif %}
+                            {{ product.name }}</span></small></td>
+                        <td><small>{{ product.description }}</small></td>
+                        <td>
+                            <small>
+                                {% for accessory in accessories %}
+                                    {% if accessory.main_product ==  product %}
+                                        <ul class="list-unstyled">
+                                            {% for acc in accessory.accessory_product.all %}
+                                                <li>{{ acc.name }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% endfor %}
+                            </small>
+                        </td>
                         <td></td>
                         <td><small>{{ product.quantity }}</small></td>
                         <td><small>{{ product.cost }}</small></td>
                         <td><small>{{ product.price }}</small></td>
                         <td><small>{{ product.dealer_price }}</small></td>
                         <td>
-                            <small>
-                                <span class="px-2">
-                                    <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#accessoriesModal" onclick="setProductForAccessories({{ product.id }})">
-                                        <i class="bx bx-cart-add"></i> Accessories
-                                    </button>
-                                </span>
-                                  
+                            <small>  
                                 <span>
                                     <a href="{% url 'inventory:inventory_detail' product.id %}" class='text-dark'>
                                         <i class='bx bx-show'></i>
                                     </a>
                                 </span>
-                                
-                                <!-- <span class='px-2'>
-                                    <a href="" class="text-dark">
+                       
+                                <span class='px-2'>
+                                    <a href="{% url 'inventory:edit_inventory' product.id %}" class="text-dark">
                                         <i class='bx bx-edit-alt'></i>
                                     </a>
-                                </span> --><!-- Add Accessories Button -->
+                                </span>
                                 
                                 <span>
                                     <span id='delete' data-id="{{ product.id }}" onclick="productId(this)" class="text-dark">
                                         <i class='bx bx-trash-alt'></i>
                                     </span>
                                 </span>
+
                                 <span>
                                     {%if product.status == False %}
                                     <a href='{% url "inventory:activate_inventory" product.id %}' class="btn btn-sm text-primary">
@@ -59,7 +76,12 @@
                                     </a>
                                     {% endif %}
                                 </span>
-                                
+
+                                <span class="px-2">
+                                    <button class="btn btn-sm btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#accessoriesModal" onclick="setProductForAccessories({{ product.id }},'{{ product.name }}')">
+                                        <i class="bx bx-cart-add"></i> Accessories
+                                    </button>
+                                </span>
                             </small>
                         </td>
                     </tr>
@@ -130,69 +152,37 @@
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header d-flex align-items-left">
-                        <h5 class="modal-title" id="accessoriesModalLabel">Add Accessories</h5>
-                        <span id="product-name" 
-                              style="border: 1px solid black; 
-                                     padding: 10px 20px; 
-                                     margin-left: 10px; 
-                                     border-radius: 8px; 
-                                     background-color: #f8f9fa; 
-                                     font-size: 1 rem; 
-                                     font-weight: bold;
-                                     display: inline-block; 
-                                     min-width: 220px;"> 
-                            PRODUCT
-                        </span>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                                style="background-color: red; border: none; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; padding: 0;">
-                            <i class="bi bi-x" style="color: white; font-size: 1.5rem;"></i>
-                        </button>
+                        <h5 class="modal-title" id="accessoriesModalLabel">
+                            Add Accessories
+                            <span id="product-name"></span>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <!-- Add Accessory -->
                         <div class="mb-3">
-                            <label for="accessoryDropdown" class="form-label" style="font-size: 1.1rem;">Select Accessory</label>
-                            <div class="d-flex align-items-center">
-                                <select class="form-select" id="accessoryDropdown" style="width: 100%;">
-                                    <!-- Options dynamically populated via GET API -->
+                            <div class="form-group d-flex">
+                                <select class="form-select form-select-sm me-2" id="accessorries" data-clearable="true" data-searchable="true">
+                                    <option value="">Select Accessory</option>
+                                    {% for product in inventory %}
+                                        <option value="{{ product.id }}">{{ product.name }}</option>
+                                    {% endfor %}
                                 </select>
-                                <div class="d-flex flex-column ms-2">
-                                    <button class="btn btn-primary" onclick="addAccessory()" 
-                                            style="width: 100px; height: 40px; display: flex; justify-content: center; align-items: center;">
-                                        Add
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-        
-                        <div id="accessoriesList">
-                            <!-- First Row: Remove Button with Dropdown -->
-                            <div class="d-flex align-items-center mb-3">
-                                <select class="form-select me-2" id="removeAccessoryDropdown" style="flex: 1;">
-                                    <!-- Options dynamically populated from added accessories -->
-                                </select>
-                                <div class="d-flex flex-column ms-auto">
-                                    <button class="btn btn-danger" onclick="removeAccessory()" 
-                                            style="width: 100px; height: 40px; display: flex; justify-content: center; align-items: center;">
-                                        Remove
-                                    </button>
-                                </div>
-                            </div>
-                        
-                            <!-- Rows for displaying added accessories (displayed in three per row) -->
-                            <div id="addedAccessoriesContainer" class="border p-2" style="display: flex; flex-wrap: wrap;">
-                                <!-- Accessories will be dynamically displayed here -->
-                            </div>
-                        </div>
-                        
-                        <div class="modal-footer d-flex">
-                            <div class="ms-auto">
-                                <button type="button" class="btn btn-success" onclick="saveAccessories()" 
-                                        style="width: 100px; height: 40px; display: flex; justify-content: center; align-items:center">
-                                    Save
+                                <button class="btn btn-outline-secondary btn-sm" onclick="addAccessory()">
+                                    Add
                                 </button>
                             </div>
                         </div>
+        
+                        <div id="accessoriesList" class="mb-3 mt-3 px-2">
+                            <!-- Wrapper for Remove Dropdown and Accessories Container -->
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <div>
+                                <button type="button" class="btn btn-secondary btn-sm bx bx-save" onclick="saveAccessories()"></button>
+                            </div>
+                        </div> 
+                    </div>                        
                         
                 </div>
             </div>
@@ -222,205 +212,242 @@
         
            
     
-   <script src="{% static 'js/jquery.js'%}"></script>
-   <script>
-        let product_id = '';
-        const inventoryData = [];
-        const modal = new bootstrap.Modal(document.querySelector('#deleteModal'));
-        const successModal = new bootstrap.Modal(document.querySelector('#successModal'));
-        const deleteButtons = document.querySelectorAll('#delete');
-        const loader = document.querySelector('#loader');
-        const tableEl = document.querySelector('#inventory');
-        const serviceTable = document.querySelector('#serviceTable');
+<script src="{% static 'js/jquery.js'%}"></script>
+<script>
+    let product_id = '';
+    const inventoryData = [];
+    const modal = new bootstrap.Modal(document.querySelector('#deleteModal'));
+    const successModal = new bootstrap.Modal(document.querySelector('#successModal'));
+    const deleteButtons = document.querySelectorAll('#delete');
+    const loader = document.querySelector('#loader');
+    const tableEl = document.querySelector('#inventory');
+    const serviceTable = document.querySelector('#serviceTable');
 
-        const inventoryTable = document.querySelector('#inventory_table'); 
+    const inventoryTable = document.querySelector('#inventory_table'); 
 
-        const products = $('.products')
-        const services = $('.services')
-        const navButtons = document.querySelectorAll('.nav-item');
+    const products = $('.products')
+    const services = $('.services')
+    const navButtons = document.querySelectorAll('.nav-item');
+    // const example = new UseBootstrapSelect(document.getElementById('id_accessories')); 
 
-        loader.classList.add('hidden');
-        loader.classList.remove('d-flex')
-        tableEl.classList.remove('hidden')
+    loader.classList.add('hidden');
+    loader.classList.remove('d-flex')
+    tableEl.classList.remove('hidden')
 
-        navButtons.forEach((btn)=>{
-            btn.addEventListener(
-                'click', ()=>{
-                    let name = event.target.getAttribute('data-name')
-
-                    navButtons.forEach(b => b.classList.remove('active')); 
-                    event.target.classList.add('active'); 
-
-                    show(name)
-                }
-            )
-        })
-
-        function show(name) {
-            products.addClass('hidden');
-            services.addClass('hidden'); 
-
-            $(`.${name}`).removeClass('hidden'); 
-        }
-
-   
-        const productId=(element)=>{
-            product_id = element.dataset.id
-            modal.show()
-        }
-
-        deleteButtons.forEach((button)=>{
-            button.addEventListener(
-                'click', ()=>{
-                    modal.show()
-                }
-            )
-        })
-        
-        document.querySelector('.yes').addEventListener(
+    navButtons.forEach((btn)=>{
+        btn.addEventListener(
             'click', ()=>{
-                console.log(product_id)
-                $.ajax({
-                    url: "{% url 'inventory:delete_inventory' %}?product_id=" + product_id,
-                    type: 'GET',
-                    }).done(function(response) {
-                        modal.hide()
-                        successModal.show()
-                        setTimeout(()=>{
-                            window.location.reload()
-                        }, 2000)
-                    }
-                )
+                let name = event.target.getAttribute('data-name')
+
+                navButtons.forEach(b => b.classList.remove('active')); 
+                event.target.classList.add('active'); 
+
+                show(name)
             }
         )
+    })
 
-        $.ajax({
-            url: '{% url "inventory:inventory_index_json" %}',
-            type: 'GET',
-            }).done(function(response) {
-                const data = response
-                console.log(data)
-                inventoryData.push(data)
+    function show(name) {
+        products.addClass('hidden');
+        services.addClass('hidden'); 
+
+        $(`.${name}`).removeClass('hidden'); 
+    }
+
+
+    const productId=(element)=>{
+        product_id = element.dataset.id
+        modal.show()
+    }
+
+    deleteButtons.forEach((button)=>{
+        button.addEventListener(
+            'click', ()=>{
+                modal.show()
             }
         )
-
-                    let accessories = []; // List of added accessories
-                let availableAccessories = []; // List of available accessories fetched from the API
-
-                function setProductForAccessories(id, productName) {
-    productId = id;
-    document.getElementById('product-name').textContent = productName || "PRODUCT";
-    fetchAccessories();}
-
-                // Fetch available accessories via GET API
-                async function fetchAccessories() {
-                    try {
-                        const response = await fetch(`/api/accessories?product_id=${productId}`, {
-                            method: "GET",
-                        });
-                        const data = await response.json();
-
-                        if (data.success) {
-                            availableAccessories = data.accessories;
-                            populateDropdown("accessoryDropdown", availableAccessories);
-                        } else {
-                            showError("Failed to fetch accessories.");
-                        }
-                    } catch (error) {
-                        showError("Error fetching accessories.");
-                    }
+    })
+    
+    document.querySelector('.yes').addEventListener(
+        'click', ()=>{
+            console.log(product_id)
+            $.ajax({
+                url: "{% url 'inventory:delete_inventory' %}?product_id=" + product_id,
+                type: 'GET',
+                }).done(function(response) {
+                    modal.hide()
+                    successModal.show()
+                    setTimeout(()=>{
+                        window.location.reload()
+                    }, 2000)
                 }
+            )
+        }
+    )
 
-                // Populate dropdown with options
-                function populateDropdown(dropdownId, options) {
-                    const dropdown = document.getElementById(dropdownId);
-                    dropdown.innerHTML = `<option value="" disabled selected>Select an accessory</option>`;
-                    options.forEach(option => {
-                        const opt = document.createElement("option");
-                        opt.value = option.id;
-                        opt.textContent = option.name;
-                        dropdown.appendChild(opt);
-                    });
+    // $.ajax({
+    //     url: '{% url "inventory:inventory_index_json" %}',
+    //     type: 'GET',
+    //     }).done(function(response) {
+    //         const data = response
+    //         console.log(data)
+    //         inventoryData.push(data)
+    //     }
+    // )
+
+    let accessories = []; // List of added accessories
+    let availableAccessories = []; // List of available accessories fetched from the API
+    let prodId = ''
+    function setProductForAccessories(id, productName) {
+        prodId = id
+        console.log(id, 'id')
+        document.getElementById('product-name').textContent = `for product ${productName}` || "PRODUCT";
+        fetchAccessories(id);
+    }
+        // Fetch available accessories via GET API
+    async function fetchAccessories(id) {
+        try {
+            const response = await fetch(`/inventory/accessory_view/${id}/`, {
+                method: "GET",
+            });
+            const data = await response.json();
+            console.log(data, 'data')
+            if (data.success) {
+                
+                availableAccessories = data.accessories;
+                populateDropdown("accessoryDropdown", availableAccessories);
+            } else {
+                showError("Failed to fetch accessories.");
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    // Populate dropdown with options
+    function populateDropdown(dropdownId, options) {
+        const dropdown = document.getElementById(dropdownId);
+        dropdown.innerHTML = `<option value="" disabled selected>Select an accessory</option>`;
+        options.forEach(option => {
+            const opt = document.createElement("option");
+            opt.value = option.id;
+            opt.textContent = option.name;
+            dropdown.appendChild(opt);
+        });
+    }
+
+    // Add accessory to the list
+    function addAccessory() {
+        const dropdown = document.getElementById("accessorries");
+        const selectedOption = dropdown.options[dropdown.selectedIndex];
+        const selectedAccessoryId = selectedOption.value;
+        const selectedAccessoryName = selectedOption.text;
+
+        const isDuplicate = accessories.some(acc => acc.id === selectedAccessoryId);
+
+        if (isDuplicate) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Duplicate Accessory',
+                text: 'This accessory has already been added.',
+                confirmButtonText: 'OK'
+            });
+        } else {
+            accessories.push({
+                id: selectedAccessoryId,
+                name: selectedAccessoryName
+            });
+            
+            displayAccessories();
+}
+    }
+
+    // Display accessories in rows
+    function displayAccessories() {
+        const container = document.getElementById("accessoriesList");
+        container.innerHTML = "";
+        
+        console.log(accessories, 'acc')
+
+        accessories.forEach(accessory => {
+            console.log(accessory.name)
+            const row = document.createElement("div");
+            row.innerHTML = `
+                                <div class='d-flex justify-content-between align-items-center mb-2'>
+                                    <span>${accessory.name}</span>
+                                    <button class='btn btn-sm border bx bx-minus' onclick="removeAccessory(${accessory.id})"></button>
+                                </div>
+                            `
+            container.appendChild(row);
+        });
+    }
+
+    // Remove selected accessory
+    function removeAccessory(accessoryId) {
+        accessories = accessories.filter(acc => acc.id != accessoryId);
+        displayAccessories();
+    }
+
+    async function saveAccessories() {
+        
+        if (accessories.length === 0) {
+            showError("No accessories selected.");
+            return;
+        }
+
+        try {
+    
+    Swal.fire({
+        title: 'Processing...',
+        text: 'Please wait while your data is being processed.',
+        icon: 'info',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    const response = await fetch(`/inventory/accessory_view/${prodId}/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            'accessories': accessories
+        }),
+    });
+
+    const data = await response.json();
+
+        if (data.success) {
+            
+            Swal.fire({
+                title: 'Success!',
+                text: 'The data has been processed successfully.',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.reload(); 
                 }
+            });
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                text: 'Failed to process the data. Please try again.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    } catch (error) {
+        Swal.fire({
+            title: 'Error!',
+            text: 'An unexpected error occurred. Please check your connection and try again.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+        console.error(error);
+    }
 
-                // Add accessory to the list
-                function addAccessory() {
-                    const dropdown = document.getElementById("accessoryDropdown");
-                    const selectedAccessoryId = dropdown.value;
-                    const selectedAccessory = availableAccessories.find(acc => acc.id == selectedAccessoryId);
-
-                    if (selectedAccessory && !accessories.some(acc => acc.id == selectedAccessoryId)) {
-                        // Add the accessory to the list
-                        accessories.push(selectedAccessory);
-                        displayAccessories();
-                    } else {
-                        showError("Please select a valid accessory or avoid duplicates.");
-                    }
-                }
-
-                // Display accessories in rows
-                function displayAccessories() {
-                    const container = document.getElementById("addedAccessoriesContainer");
-                    container.innerHTML = ""; // Clear the container before updating
-
-                    accessories.forEach(accessory => {
-                        const row = document.createElement("div");
-                        row.className = "d-flex justify-content-between align-items-center mb-2";
-                        row.innerHTML = `<span>${accessory.name}</span>`;
-                        container.appendChild(row);
-                    });
-
-                    // Populate remove dropdown
-                    populateDropdown("removeAccessoryDropdown", accessories);
-                }
-
-                // Remove selected accessory
-                function removeAccessory() {
-                    const dropdown = document.getElementById("removeAccessoryDropdown");
-                    const selectedAccessoryId = dropdown.value;
-
-                    // Filter out the selected accessory from the list
-                    accessories = accessories.filter(acc => acc.id != selectedAccessoryId);
-                    displayAccessories();
-                }
-
-                // Save accessories via POST API
-                async function saveAccessories() {
-                    if (accessories.length === 0) {
-                        showError("No accessories selected.");
-                        return;
-                    }
-
-                    try {
-                        const response = await fetch("/api/save-accessories", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ product_id: productId, accessories }),
-                        });
-
-                        const data = await response.json();
-                        if (data.success) {
-                            showSuccess("Accessories saved successfully!");
-                        } else {
-                            showError("Failed to save accessories.");
-                        }
-                    } catch (error) {
-                        showError("Error saving accessories.");
-                    }
-                }
-
-                // Show error modal
-                function showError(message) {
-                    const errorModal = new bootstrap.Modal(document.querySelector("#errorModal"));
-                    document.querySelector("#error-message").textContent = message;
-                    errorModal.show();
-                }
-
-                // Show success modal
-                function showSuccess(message) {
-                    const successModal = new bootstrap.Modal(document.querySelector("#successModal"));
-                    document.querySelector("#successModal .modal-body").textContent = message;
-                    successModal.show();
-                }
-   </script>
+    }
+</script>
 {% endblock content %}
