@@ -71,8 +71,8 @@
                     <div class="aside-bar col-2 text-light" style="background: #242140 !important;"> {% include "base/aside.html" %} </div>
                     <div class="app-area col w-100 bg-light overflow">
                         <div class="l-p ">
-                            <button class="btn btn-secondary">L</button>
-                            <button class="btn mt-2 btn-secondary ">P</button>
+                            <button class="btn btn-secondary"data-bs-toggle="modal" data-bs-target="#laybyModal">L</button>
+                            <button class="btn mt-2 btn-secondary"data-bs-toggle="modal" data-bs-target="#PaylaterModal">P</button>
                         </div>
                         {% if messages %}
                             {% for message in messages %}
@@ -131,6 +131,60 @@
             </div>
         </div>
     </div>
+
+        <div class="modal fade" id="laybyModal" tabindex="-1" aria-labelledby="laybyModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header d-flex align-items-center justify-content-between w-100 py-2 mb-4">
+                        <h5 class="modal-title" id="laybyModalLabel">Laybys</h5>
+                        <p id="recordCount"></p><span id="count" class="ms-3">0</span>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                     </div>
+                        <div class="modal-body">
+                            <table id="laybyTable" class="table table-striped table-bordered" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Customer Name</th>
+                                        <th>Product</th>
+                                        <th>Amount</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="laybyTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+           </div>
+        </div>   
+        <div class="modal fade" id="PaylaterModal" tabindex="-1" aria-labelledby="PaylaterModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header d-flex align-items-center justify-content-between w-100 py-2 mb-4">
+                        <h5 class="modal-title" id="PaylaterModalLabel">Pay Later List</h5>
+                        <p id="recordCount"></p><span id="count"class="ms-3">0</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                     </div>
+                        <div class="modal-body">
+                            <table id="PaylaterTable" class="table table-striped table-bordered" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Customer Name</th>
+                                        <th>Product</th>
+                                        <th>Amount</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="PaylaterTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+           </div>
+        </div>   
     <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>    
     
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -262,6 +316,101 @@
                 });
             });
         }
+
+        const apiUrl =''//update endpoint
+        async function fetchCustomerData() {
+            try {
+                const response = await fetch(apiUrl);  
+                const customers = await response.json();  
+
+                if (Array.isArray(customers) && customers.length > 0) {
+                    const tableBody = document.getElementById("laybyTableBody");
+                    const recordCount = document.getElementById("count");
+                    tableBody.innerHTML = '';
+
+                    customers.forEach(customer => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${customer.name}</td>
+                            <td>${product}</td>
+                            <td>${amount}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Send
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item"  href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
+                                            <i class='bx bxl-whatsapp'></i></a></li>
+                                        <li><a class="dropdown-item"  href='mailto:{{customer.account.customer.email}}' class="text-dark">
+                                            <i class='bx bx-envelope'></i></a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    // Updating the record count
+                    recordCount.innerText = customers.length;
+                } else {
+                    alert('No customer data available.');
+                }
+            } catch (error) {
+                console.error('Error fetching customer data:', error);
+                alert('Failed to load customer data. Please try again later.');
+            }
+        }
+
+        document.getElementById('laybyModal').addEventListener('shown.bs.modal', fetchCustomerData);
+
+    
+        async function fetchCustomerData() {
+            try {
+                const response = await fetch('',{  //update url
+                method: "GET",
+                });
+                const customers = await response.json();  
+
+                if (Array.isArray(customers) && customers.length > 0) {
+                    const tableBody = document.getElementById("PaylaterTableBody");
+                    const recordCount = document.getElementById("count");
+                    tableBody.innerHTML = '';
+
+                    customers.forEach(customer => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${customer.name}</td>
+                            <td>${product}</td>
+                            <td>${amount}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Send
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item"  href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
+                                            <i class='bx bxl-whatsapp'></i></a></li>
+                                        <li><a class="dropdown-item"  href='mailto:{{customer.account.customer.email}}' class="text-dark">
+                                            <i class='bx bx-envelope'></i></a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    recordCount.innerText = customers.length;
+                } else {
+                    showError("No customer data available.");
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        document.getElementById('PaylaterModal').addEventListener('shown.bs.modal', fetchCustomerData);
+
 
         function getCookie(name) {
             let cookieValue = null;
