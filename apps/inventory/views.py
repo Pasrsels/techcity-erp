@@ -929,18 +929,35 @@ def process_held_transfer(request, transfer_id):
 
 @login_required
 def print_transfer(request, transfer_id):
-    try:
-        transfer = Transfer.objects.get(id=transfer_id)
-        transfer_items = TransferItems.objects.filter(transfer=transfer)
-    
-        return render(request, 'components/ibt.html', {
-            'date':datetime.datetime.now(),
-            'transfer':transfer, 
-            'transfer_items':transfer_items
-        })
-    except:
-        messages.warning(request, 'Transfer doesnt exists')
-        return redirect('inventory:transfers')
+    if request.method == 'GET':
+        try:
+            transfer = Transfer.objects.get(id=transfer_id)
+            transfer_items = TransferItems.objects.filter(transfer=transfer)
+        
+            return render(request, 'components/ibt.html', {
+                'date':datetime.datetime.now(),
+                'transfer':transfer, 
+                'transfer_items':transfer_items
+            })
+        except:
+            messages.warning(request, 'Transfer doesnt exists')
+            return redirect('inventory:transfers')
+        
+    if request.method == 'POST':
+        try:
+            transfer = Transfer.objects.get(id=transfer_id)
+            transfer_items = TransferItems.objects.filter(transfer=transfer).values(
+                'product__name',
+                'product__price',
+                'quantity',
+                'to_branch__name', 
+                'product__cost'
+            )
+
+            logger.info(transfer_items)
+            return JsonResponse({'success':True, 'data':list(transfer_items)})
+        except Exception as e:
+            return JsonResponse({'success':False, 'meesage':f'{e}'})
     
 @login_required
 @transaction.atomic
@@ -1091,7 +1108,7 @@ def over_less_list_stock(request):
   
         branch_transfer = get_object_or_404(transfers, id=transfer_id)
         transfer = get_object_or_404(Transfer, id=branch_transfer.transfer.id)
-        product = Inventory.objects.get(product=branch_transfer.product, branch=request.user.branch)
+        product = Inventory.objects.get(id=branch_transfer.product.id, branch=request.user.branch)
        
         if int(branch_transfer.over_less_quantity) > 0:
             if action == 'write_off':    
