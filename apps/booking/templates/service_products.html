@@ -106,7 +106,7 @@
                         </label>
                         <div class="d-flex align-content-center">
                             <select name="service_name" class="select form-select" required id="id_service"> 
-                                <option value="">---------</option> 
+                                <option value="">---------</option>
                                 {% for service in services %}
                                     <option id="services_id" value="{{service.id}}">{{service.service_name}}</option>
                                 {% endfor %}
@@ -116,23 +116,23 @@
                             <button type="button" class="btn btn-sm bx bx-trash" id="id_delete_service"></button>
                         </div>
                     </div>
-                        <!-- add item of form -->
-                        <div id="div_id_name" class="mb-3"> 
-                            <label for="id_name" class="form-label requiredField">
-                                Item of Use<span class="asteriskField"></span> 
-                            </label> 
-                            <div class="d-flex">
-                                <select name="category" class="select form-select" required id="id_name"> 
-                                    <option value="" selected>Select Item of use</option>
-                                    {% for name in names %}
-                                        <option value="{{ name.id }}">{{ name.name.item_of_use_name }}</option>
-                                    {% endfor %}
-                                </select> 
-                                <button type="button" class="btn btn-sm bx bx-plus" id="id_add_name"></button>
-                                <button type="button" class="btn btn-sm bx bx-edit" id="id_edit_name"></button>
-                                <button type="button" class="btn btn-sm bx bx-trash" id="id_delete_name"></button>
-                            </div>
-                        </div>          
+                    <!-- add item of form -->
+                    <div id="div_id_name" class="mb-3"> 
+                        <label for="id_name" class="form-label requiredField">
+                            Item of Use<span class="asteriskField"></span> 
+                        </label> 
+                        <div class="d-flex">
+                            <select name="category" class="select form-select" required id="id_name"> 
+                                <option value="" selected>Select Item of use</option>
+                                {% for name in names %}
+                                    <option value="{{ name.id }}">{{ name.name.item_of_use_name }}</option>
+                                {% endfor %}
+                            </select> 
+                            <button type="button" class="btn btn-sm bx bx-plus" id="id_add_name"></button>
+                            <button type="button" class="btn btn-sm bx bx-edit" id="id_edit_name"></button>
+                            <button type="button" class="btn btn-sm bx bx-trash" id="id_delete_name"></button>
+                        </div>
+                    </div>          
                     <div class="d-flex justify-content-end mb-3">
                         <button type="reset" class="btn btn-outline-dark btn-sm me-2 w-25 bx bx-reset"></button>
                         <button type="button" class="btn btn-dark btn-sm w-25" onclick="displayItems()">Save</button> <!-- linked from the script  2-->
