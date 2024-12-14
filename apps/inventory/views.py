@@ -68,6 +68,7 @@ from xhtml2pdf import pisa
 from django.template.loader import get_template
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from apps.inventory.utils import best_price
+from collections import defaultdict
 
 
 @login_required
@@ -275,16 +276,32 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
                 if action == 'process':
                     logger.info(f'branches: {branch_obj_list}')
+
+                    product_quantities_dict = defaultdict(int)
+
+                    for branch_obj in branch_obj_list:
+                        for item in data['cart']:
+                            product_id = item['product_id']
+                            quantity = item['quantity']
+                            product_quantities_dict[product_id] += quantity
+                            
+                    logger.info(f'product quantities {product_quantities_dict}')
+
                     for branch_obj in branch_obj_list:
                         for item in data['cart']:
                             logger.info(f'Cart Item: {item}')
                             
                             product = Inventory.objects.get(id=item['product_id'], branch=request.user.branch)
 
+                            total_requested_quantity = product_quantities_dict[f'{product_id}']
+
+                            logger.info(f'Total requested quantity for {product.name}: {total_requested_quantity}')
+
+                            if total_requested_quantity > product.quantity:
+                                return JsonResponse({'success': False, 'message': 'Insufficient stock to process.', 'id': product.id})
+
                             logger.info(f'Transfered product: {product.name}')
-
                             branch_name = item['branch_name']
-
                             logger.info(f'branch name: {branch_name}')
 
                             if branch_name == branch_obj.name:
@@ -299,7 +316,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                                     to_branch= branch_obj,
                                     description=f'from {request.user.branch} to {branch_obj} '
                                 ) 
-                                         
+
                                 transfer_item.save()
 
                                 logger.info(f'Transfered product: product saved')
