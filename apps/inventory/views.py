@@ -929,18 +929,33 @@ def process_held_transfer(request, transfer_id):
 
 @login_required
 def print_transfer(request, transfer_id):
-    try:
-        transfer = Transfer.objects.get(id=transfer_id)
-        transfer_items = TransferItems.objects.filter(transfer=transfer)
-    
-        return render(request, 'components/ibt.html', {
-            'date':datetime.datetime.now(),
-            'transfer':transfer, 
-            'transfer_items':transfer_items
-        })
-    except:
-        messages.warning(request, 'Transfer doesnt exists')
-        return redirect('inventory:transfers')
+    if request.method == 'GET':
+        try:
+            transfer = Transfer.objects.get(id=transfer_id)
+            transfer_items = TransferItems.objects.filter(transfer=transfer)
+        
+            return render(request, 'components/ibt.html', {
+                'date':datetime.datetime.now(),
+                'transfer':transfer, 
+                'transfer_items':transfer_items
+            })
+        except:
+            messages.warning(request, 'Transfer doesnt exists')
+            return redirect('inventory:transfers')
+        
+    if request.method == 'POST':
+        try:
+            transfer = Transfer.objects.get(id=transfer_id)
+            transfer_items = TransferItems.objects.filter(transfer=transfer).values(
+                'product__name',
+                'product__price',
+                'quantity',
+                'to_branch__name',
+                'product__cost'
+            )
+            return JsonResponse({'success':True, 'data':transfer_items})
+        except Exception as e:
+            return JsonResponse({'success':False, 'meesage':f'{e}'})
     
 @login_required
 @transaction.atomic
