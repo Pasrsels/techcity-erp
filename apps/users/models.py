@@ -13,14 +13,13 @@ from django.apps import apps
 from apps.company.models import Branch
 from django.contrib.auth.models import AbstractUser, Group
 from django.db.models.signals import post_migrate, post_save
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.base_user import BaseUserManager
+from django.utils.translation import gettext_lazy as _
 
 ADMIN_GROUP_NAME = 'Admin'
 ACCOUNTANT_GROUP_NAME = 'Accountant'
 SALESPERSON_GROUP_NAME = 'Salesperson'
-
-from django.contrib.auth.base_user import BaseUserManager
-from django.utils.translation import gettext_lazy as _
-
 
 class CustomUserManager(BaseUserManager):
     """
@@ -79,6 +78,13 @@ class User(AbstractUser):
     phonenumber = models.CharField(max_length=13)
     role = models.CharField(choices=USER_ROLES, max_length=50)
 
+    def tokens(self):
+        refresh = RefreshToken.for_user(self)
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token)
+        }
+
     def code_generator(self) -> str:
         length = 5
         chars = string.ascii_uppercase + string.digits
@@ -117,3 +123,7 @@ def create_groups(sender, **kwargs):
 
 post_save.connect(assign_admin_group, sender=User)
 post_migrate.connect(create_groups, sender=apps.get_app_config('users'))
+
+
+
+

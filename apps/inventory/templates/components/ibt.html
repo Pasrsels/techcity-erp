@@ -124,10 +124,8 @@
         if (data.success) {
             const transferItems = data.data;
 
-            // Extract unique branches
             const uniqueBranches = [...new Set(transferItems.map(item => item.to_branch__name))];
 
-            // Populate table headers dynamically
             const theadRow = document.querySelector("thead tr");
             uniqueBranches.forEach((branch) => {
                 const th = document.createElement("th");
@@ -136,14 +134,13 @@
                 theadRow.appendChild(th);
             });
 
-            // Add "Total Cost" column
             const thTotalCost = document.createElement("th");
             thTotalCost.textContent = "Total Cost";
             theadRow.appendChild(thTotalCost);
 
             const branchMap = {};
             uniqueBranches.forEach((branch, index) => {
-                branchMap[branch] = index + 3; // Adjust index for table structure
+                branchMap[branch] = index + 3; 
             });
 
             const tbody = document.querySelector("tbody");
@@ -169,23 +166,20 @@
                     quantityCell.textContent = 
                         parseInt(quantityCell.textContent || "0") + item.quantity;
 
-                    // Update total cost for this row
                     const cost = parseFloat(row.children[1].textContent || "0");
                     const quantities = Array.from(row.children)
-                        .slice(3, -1) // Exclude product name, cost, and last total cost column
+                        .slice(3, -1) 
                         .map(cell => parseInt(cell.textContent || "0"));
                     const totalCost = quantities.reduce((sum, qty) => sum + qty * cost, 0);
                     row.querySelector(".total-cost").textContent = totalCost.toFixed(2);
                 }
             });
 
-            // Calculate and display total quantity
             const totalQtyCells = Array.from(tbody.querySelectorAll("tr td:nth-child(3)"));
             const totalQuantity = totalQtyCells.reduce(
                 (sum, cell) => sum + parseInt(cell.textContent || "0"),
                 0
             );
-            // document.querySelector("#id_quantity").textContent = totalQuantity;
         } else {
             alert(data.message || "Failed to fetch transfer data.");
         }
