@@ -697,7 +697,7 @@ def create_invoice(request):
                         branch=request.user.branch,
                         inventory=item,
                         user=request.user,
-                        quantity=item_data['quantity'],
+                        quantity = -item_data['quantity'],
                         total_quantity = item.quantity,
                         action='Sale',
                         invoice=invoice
@@ -2961,3 +2961,37 @@ def vat(request):
         except Exception as e:
             return JsonResponse({'success':False, 'message':f'{e}'}, status = 400)
         return JsonResponse({'success':False, 'message':'VAT successfully paid'}, status = 200)
+    
+
+    
+############################################################################################################################################################################################
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.response import Response
+from apps.finance.serializers import (
+    CustomerSerializer
+)
+
+""" Finance API views """
+class CustomerViewset(ModelViewSet):
+    """
+        viewset customer crud
+    """
+    serializer_class = CustomerSerializer
+    queryset = Customer.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        request.data['branch'] = self.request.user.branch or Branch.objects.get(id=i) # to  be removed just for testsing
+  
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_create(self, serializer):
+        logger.info(f"Creating a new customer with data: {serializer.validated_data}")
+      
+        serializer.save()
+
+        logger.info(f"Customer created successfully: {serializer.instance.id}")
+    

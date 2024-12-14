@@ -1,0 +1,57 @@
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'sass/main.css' %}">
+<div class="print-voucher">
+    <div class="row">
+        <div class="col-12">
+            <div class="content container w-50">
+                <div class="d-flex flex-column align-items-center justify-content-center mt-5 mb-5">
+                    <img src="{% static 'assets/logos/logo.jpg' %}" alt="logo" width="200px" class='py-2'>
+                    <div >
+                        <span>{{voucher.file.category.name}}</span>
+                    </div>
+                    <div class="py-4" >
+                        <span class="fw-bold bg-light p-3">{{voucher.voucher_no}}</span>
+                    </div>
+                    <div class='mb-2'>
+                        <span class="fs-7" style="font-style: italic;">Enjoy the connection!</span>
+                    </div>
+                    <form method="post" id="voucher-form">
+                        {% csrf_token %}
+                        <input type="text" name="status" value="used" id="status" hidden>
+                        <div>
+                            <button class="btn btn-light" onclick="printVoucher()" type="button">
+                                <span class="text-dark"><i class="bx bx-printer"></i></span>
+                                Print voucher
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class='d-flex justify-content-center mt-5'  >
+                    <img src='{% static 'assets/review.jpg'%}' width='800px'/>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{% static 'js/jquery.js' %}"></script>
+<script>
+    function printVoucher() {
+        console.log('clicked')
+        $.ajax({
+            type: "POST",
+            url: "{% url 'vouchers:printVoucher' voucher.id %}",
+            data: {
+                csrfmiddlewaretoken: $("input[name = 'csrfmiddlewaretoken']").val(),
+                status: $('#status').val()
+            },
+            success: function (data) {
+                console.log(data)
+                document.querySelector('.btn').style.display='none';
+                window.print();
+            }
+        });
+    }
+</script>
+{% endblock content %}

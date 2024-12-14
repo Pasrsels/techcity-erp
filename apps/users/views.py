@@ -9,12 +9,54 @@ from django.contrib.auth import get_user_model
 from apps.company.models import Branch
 from apps.settings.models import NotificationsSettings
 from utils.authenticate import authenticate_user
-from .models import User
-from .forms import UserRegistrationForm, UserDetailsForm, UserDetailsForm2
+from .models import User, UserPermissions
+from .forms import UserRegistrationForm, UserDetailsForm, UserDetailsForm2, UserPermissionsForm
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.hashers import make_password
+import json
 
+def UserPermission_CR(request):
+    if request.method == 'GET':
+        permission_data = UserPermissions.objects.all().values()
+        logger.info(list(permission_data))
+        return JsonResponse({'success': True, 'Permissiondata': list(permission_data)}, status = 200)
+    elif request.method == 'POST':
+        user_permission_form = UserPermissionsForm(request.POST)
+        name = request.POST.get('name')
+        name.lower()
+        if user_permission_form.is_valid():
+            if  not UserPermissions.objects.filter(name = name).exists():
+                user_permission_form.save()
+                return JsonResponse({'success':True}, status = 201)
+            return JsonResponse({'success': False, 'message': 'Permission already exists'}, status = 400)
+        return JsonResponse({'success': False, 'message': 'Invalid form data'}, 400)
+    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
+
+def UserPermission_UD(request,id):
+    if request.method == 'GET':
+        permissions_data = User.objects.filter(id = id).values()
+        logger.info(permissions_data)
+        return JsonResponse({'success':True, 'data':list(permissions_data)}, status = 200)
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        name = data.get('name')
+        if UserPermissions.objects.filter(id = id).exists():
+            permissions_data = UserPermissions.objects.get(id = id)
+            permissions_data.name = name
+            permissions_data.save()
+            return JsonResponse({'success': True}, status = 200)
+        return JsonResponse({'success': False, 'message': 'permission doesnot exist'}, status = 400)
+    elif request.method == 'DELETE':
+        data = json.loads(request.body)
+        if UserPermissions.objects.filter(id = id).exists():
+            permission_delete = UserPermissions.objects.get(id = id)
+            permission_delete.delete()
+            return JsonResponse({'success': True}, status = 200)
+        return JsonResponse({'success': False, 'message': 'permission doesnot exist'}, status = 400)
+    return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
+
+        
 
 def users(request):
     search_query = request.GET.get('q', '')
@@ -22,7 +64,7 @@ def users(request):
         'first_name', 'last_name')
     form = UserRegistrationForm()
     user_details_form = UserDetailsForm2()
-
+    formPermissions = UserPermissionsForm()
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
@@ -34,7 +76,7 @@ def users(request):
         else:
             messages.error(request, 'Invalid form data')
 
-    return render(request, 'auth/users.html', {'users': users, 'form': form, 'user_details_form': user_details_form})
+    return render(request, 'auth/users.html', {'users': users, 'form': form, 'user_details_form': user_details_form, 'PermData':formPermissions})
 
 
 def login_view(request):
@@ -92,11 +134,10 @@ def user_edit(request, user_id):
 def user_detail(request, user_id):
     user = User.objects.get(id=user_id)
     form = UserDetailsForm()
-
     logger.info(f'User details: {user.first_name + " " + user.email}')
     # render user details
     if request.method == 'GET':
-        return render(request, 'users/user_detail.html', {'user': user, 'form': form})
+        return render(request, 'user_detail.html', {'user': user, 'form': form})
     if request.method == 'POST':
         form = UserDetailsForm(request.POST, instance=user)
         if form.is_valid():
@@ -105,7 +146,6 @@ def user_detail(request, user_id):
         else:
             messages.error(request, 'Invalid form data')
         return render(request, 'users/user_detail.html', {'user': user, 'form': form})
-
 
 def register(request):
     form = UserRegistrationForm()
@@ -158,8 +198,6 @@ def logout_view(request):
     logout(request)
     return redirect('users:login')
 
-
-
 ##############################################################################################################################################################
 """ User API End points """
 
@@ -168,20 +206,45 @@ from .serializers import(
     UserSerializer,
     RegisterSerializer,
     LoginSerializer,
-    LogoutSerializer
+    LogoutSerializer,
+    UserPermissionsSerializer,
 )
-from .models import User
+from apps.company.models import Branch
+from .models import User, UserPermissions
 from django.contrib.auth.models import Group
 from rest_framework import generics, status, views, permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+class UserPermissionViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = UserPermissions.objects.all()
+    serializer_class = UserPermissionsSerializer
+
+class BranchSwitch(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, branch_id):
+        """ Enables the admin or the ownwe to switch between branches """
+        user = request.user
+        if user.role == 'Admin' or user.role == 'admin':
+            user.branch = Branch.objects.get(id=branch_id)
+            user.save()
+        else:
+            return Response(status = status.HTTP_401_UNAUTHORIZED)
+        data = {
+            'user': user,
+            'branch': user.branch
+        }
+        logger.info(data)
+        return Response(data, status=status.HTTP_200_OK)
+
 
 class UserViewSet(viewsets.ModelViewSet):
     """
     An endpoint which allows viewers to be viewed or edited
     """
+    permission_classes = [IsAuthenticated]
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
 

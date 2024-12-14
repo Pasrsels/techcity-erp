@@ -418,6 +418,101 @@
             });
         }
 
+        const apiUrl =''//update endpoint
+        async function fetchCustomerData() {
+            try {
+                const response = await fetch(apiUrl);  
+                const customers = await response.json();  
+
+                if (Array.isArray(customers) && customers.length > 0) {
+                    const tableBody = document.getElementById("laybyTableBody");
+                    const recordCount = document.getElementById("count");
+                    tableBody.innerHTML = '';
+
+                    customers.forEach(customer => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${customer.name}</td>
+                            <td>${product}</td>
+                            <td>${amount}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Send
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item"  href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
+                                            <i class='bx bxl-whatsapp'></i></a></li>
+                                        <li><a class="dropdown-item"  href='mailto:{{customer.account.customer.email}}' class="text-dark">
+                                            <i class='bx bx-envelope'></i></a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    // Updating the record count
+                    recordCount.innerText = customers.length;
+                } else {
+                    alert('No customer data available.');
+                }
+            } catch (error) {
+                console.error('Error fetching customer data:', error);
+                alert('Failed to load customer data. Please try again later.');
+            }
+        }
+
+        document.getElementById('laybyModal').addEventListener('shown.bs.modal', fetchCustomerData);
+
+    
+        async function fetchCustomerData() {
+            try {
+                const response = await fetch('',{  //update url
+                method: "GET",
+                });
+                const customers = await response.json();  
+
+                if (Array.isArray(customers) && customers.length > 0) {
+                    const tableBody = document.getElementById("PaylaterTableBody");
+                    const recordCount = document.getElementById("count");
+                    tableBody.innerHTML = '';
+
+                    customers.forEach(customer => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${customer.name}</td>
+                            <td>${product}</td>
+                            <td>${amount}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Send
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item"  href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
+                                            <i class='bx bxl-whatsapp'></i></a></li>
+                                        <li><a class="dropdown-item"  href='mailto:{{customer.account.customer.email}}' class="text-dark">
+                                            <i class='bx bx-envelope'></i></a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    recordCount.innerText = customers.length;
+                } else {
+                    showError("No customer data available.");
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        document.getElementById('PaylaterModal').addEventListener('shown.bs.modal', fetchCustomerData);
+
+
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== "") {

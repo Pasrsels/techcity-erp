@@ -951,9 +951,10 @@ def print_transfer(request, transfer_id):
                 'product__name',
                 'product__price',
                 'quantity',
-                'to_branch__name',
+                'to_branch__name', 
                 'product__cost'
             )
+
             logger.info(transfer_items)
             return JsonResponse({'success':True, 'data':list(transfer_items)})
         except Exception as e:
@@ -1108,7 +1109,7 @@ def over_less_list_stock(request):
   
         branch_transfer = get_object_or_404(transfers, id=transfer_id)
         transfer = get_object_or_404(Transfer, id=branch_transfer.transfer.id)
-        product = Inventory.objects.get(product=branch_transfer.product, branch=request.user.branch)
+        product = Inventory.objects.get(id=branch_transfer.product.id, branch=request.user.branch)
        
         if int(branch_transfer.over_less_quantity) > 0:
             if action == 'write_off':    
@@ -2880,58 +2881,6 @@ def supplier_view(request):
         supplier_products = Product.objects.all()
         supplier_balances = SupplierAccount.objects.all().values('supplier__id', 'balance', 'date')
         purchase_orders = PurchaseOrderItem.objects.all()
-        # try:
-        # list_orders = {}
-        # supplier = {}
-        # for item in purchase_orders:
-        #     po = PurchaseOrder.objects.get(id=item.purchase_order.id)
-        #     received_quantity = item.received_quantity
-        #     unit_cost = item.unit_cost
-        #     if item.supplier:
-        #         logger.info(f'supplier: {item.supplier}')
-        #         if list_orders:
-        #             if list_orders.get(item.supplier):
-        #                 supplier = list_orders.get(item.supplier)
-        #                 logger.info(f'supplier object: {supplier}')
-
-        #                 if supplier['purchase_order'] == po:
-        #                     logger.info('existing ')
-        #                     supplier['count'] = supplier['count']
-        #                     logger.info(f'{supplier}:{supplier['count']}')
-        #                 else:
-        #                     logger.info('new')
-        #                     supplier['count'] += 1
-        #                     logger.info(f'supplier {supplier}')
-        #                     logger.info('count')
-        #                     logger.info(f'{supplier}:{supplier['count']}')
-        #                     supplier['amount'] += (unit_cost * received_quantity)
-        #                     logger.info(f'Amount {supplier}:{supplier['amount']}')
-        #                     supplier['quantity'] += item.quantity
-        #                     supplier['quantity_received'] += item.received_quantity
-        #                     supplier['returned'] = supplier['returned'] + (item.quantity - item.received_quantity)
-                    
-        #         else:
-        #             account_info = SupplierAccount.objects.filter()
-        #             for supplier in account_info:
-        #                 for item in purchase_orders:
-        #                     if supplier.id == item.supplier.id:
-        #                         list_orders[item.supplier] = {
-        #                             'supplier_id': item.supplier.id,
-        #                             'amount': item.unit_cost * item.received_quantity,
-        #                             'purchase_order': po,
-        #                             'category': item.product.category.name,
-        #                             'quantity': item.quantity,
-        #                             'quantity_received': item.received_quantity,
-        #                             'returned': item.quantity - item.received_quantity,
-        #                             'date': supplier.date,
-        #                             'balance': supplier.balance,
-        #                             'count': 1
-        #                         }                       
-        # logger.info([list_orders])
-        # # logger.info(f'supplier: {.values()}')
-
-        # for prod in supplier_products.values('name','suppliers'):
-        #     logger.info(f'suppliers: {prod}')
 
         list_orders = {}
 
@@ -3406,7 +3355,5 @@ def accessory_view(request, product_id):
 def vue_view(request):
     return render(request, 'vue.html')
 
-
-
-    
-        
+#API
+##########################################################################################################

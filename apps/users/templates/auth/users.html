@@ -11,6 +11,10 @@
                     <i class="bx bx-plus"></i>
                     User
                 </button>
+                <button class="btn btn-light " id="viewAllPermissions">
+                    <i class="bx bx-show"></i>
+                    Permissions
+                </button>
             </div>
             
         </div>
@@ -88,8 +92,46 @@
             </form>
             </div>
         </div>
-      </div>
+    </div>
     
+    <div class="modal fade" id="PermissionsModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content w-100 p-4">
+                <h6 class="fw-bold">Add User</h6>
+                <table class="border table-bordered table-responsive table-striped">
+                    <tr>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Actions</th>
+                    </tr>
+                    <tbody id="PermissionsTableBody">
+                        
+                    </tbody>
+                </table>
+                <div>
+                    <button class="btn btn-outline-dark btn-sm bx bx-plus d-flex justify-content-end align-items-end" type="button" id="addPermission">Add Permission</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="AddPermissionsModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content w-100 p-4">
+                <h6 class="fw-bold">Add User</h6>
+                <form method="POST" action="{% url 'users:userPermissionsCR' %}">
+                    {% csrf_token %}
+                    {{PermData | crispy}}
+                    <div>
+                        <button class="btn btn-secondary bx bx-plus" type="submit">Add</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
     <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content w-100 p-4">
@@ -199,5 +241,79 @@
             }
         });
     });
+
+    const viewPermissions = document.getElementById('viewAllPermissions');
+    const viewPermissionsModal = new bootstrap.Modal(document.getElementById('PermissionsModal'));
+
+    viewPermissions.addEventListener('click', (e)=>{
+        e.preventDefault()
+        viewPermissionsModal.show()
+        console.log('hello')
+        fetch("{% url 'users:userPermissionsCR' %}",{
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(answer => answer.json())
+        .then(data =>{
+            console.log('hie')
+            if(data.success){
+                console.log('again')
+                data.Permissiondata.forEach( item =>{
+                    console.log('i am in')
+                    const tableBody =  document.getElementById('PermissionsTableBody');
+                    tableBody.innerHTML = `
+                        <td><small>${item.name}</small></td>
+                        <td><small>${item.category}</small></td>
+                        <td>
+                            <small><button class = "btn btn-sm bx bx-trash" type = "button" onclick = "removePermission${item.id}")></button></small>
+                            <small><button class = "btn btn-sm bx bx-edit" type = "button" onclick = "editPermission${item.id}")></button></small>
+                        </td>
+                    `
+                });
+            }else{
+                Swal.fire({
+                    'icon': 'error',
+                    'title': 'Error',
+                    'text': data.message
+                });
+            }
+        })
+    })
+
+    const addPermissionBtn = document.getElementById('addPermission');
+    const addPermissionModal = new bootstrap.Modal(document.getElementById('AddPermissionsModal'));
+
+    addPermissionBtn.addEventListener('click', ()=>{
+        viewPermissionsModal.hide();
+        addPermissionModal.show();
+    })
+    removePermission = (itemId) =>{
+        fetch("{% url 'users:userPermissionsUD' 0 %}".replace(0, itemId),{
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(answer => answer.json())
+        .then(data => {
+            if(data.success){
+                Swal.fire({
+                    'icon': 'success',
+                    'title': 'Success',
+                    'text': 'Successfully deleted'
+                })
+            }else{
+                Swal.fire({
+                    'icon': 'error',
+                    'title': 'error',
+                    'text': 'Failed to delete'
+                })
+            }
+        })
+    }
+
+    editPermission = (itemId) =>{
+
+    }
 </script>
 {% endblock content %}

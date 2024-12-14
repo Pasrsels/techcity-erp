@@ -9,22 +9,6 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from loguru import logger
 from apps.settings.models import TaxSettings
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from apps.inventory.models import Inventory
-
-
-class productsAPIView(APIView):
-    """ Api view which returns products """
-    def get(self, request):
-        products = Inventory.objects.all().values(
-            'id',
-            'name',
-            'price',
-            'dealer_price',
-            'category__name'
-        )
-        return Response({'success':True, 'data':products})
 
 @login_required
 @transaction.atomic
@@ -57,4 +41,27 @@ def upload_file():
     file.save(file_path)
     return JsonResponse({"status": "success", "file_path": file_path}), 200
 
+#API EndPoint
+################################################################################################################
+from rest_framework import views, status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
+class POS(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        invoice_count = Invoice.objects.filter(issue_date=timezone.now(), branch=request.user.branch).count()
+        held_invoices_count = Invoice.objects.filter(hold_status=True, branch=request.user.branch).count()
+        data = {
+            'invoice count': invoice_count,
+            'held invoice count': held_invoices_count
+        }        
+        return Response(data, status= status.HTTP_200_OK)
+
+class LastDueInvoice(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, customer_id):
+        invoice = Invoice.objects.filter(customer__id=customer_id, payment_status=Invoice.PaymentStatus.PARTIAL)\
+        .order_by('-issue_date').values('invoice_number')
+        logger.info(invoice)
+        return Response(invoice, status= status.HTTP_200_OK)

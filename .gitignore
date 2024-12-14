@@ -29,3 +29,5 @@ Dockerfile
 docker_compose.yml
 *.pyc
 *.pyc
+.docker_compose
+.Dockerfile

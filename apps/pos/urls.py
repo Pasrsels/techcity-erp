@@ -7,6 +7,8 @@ urlpatterns = [
     path('', pos, name='pos'),
     path('last_due_invoice/<int:customer_id>/', last_due_invoice, name='last_due_invoice'),
 
-    # end point for mobile
-    path('products_list', productsAPIView.as_view(), name='product_list')
+    #API URL PATTERNS
+    ###################################################################################################
+    path('POS/', POS.as_view(), name='api_pos'),
+    path('last_due_invoice/<int:customer_id>/', LastDueInvoice.as_view(), name= 'api_last_due_invoice'),
 ]

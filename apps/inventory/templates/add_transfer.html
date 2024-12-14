@@ -164,6 +164,7 @@
   let productQuantity = 0;
   let trackProductQuantity = 0;
   let trackQuantity = [] 
+  let costs = []
 
   const errorEl = document.getElementById('error');
   const prodEl = document.querySelector('#id_price');
@@ -528,15 +529,9 @@
                     cost: cost
                 };
                 cart.push(newItem);
+                localStorage.setItem('transfer_cart', JSON.stringify(cart));
                 productAdded = true; 
             }
-
-            // dataToSend.push(newItem);
-            
-            console.log(cart, 'cart');
-
-            // calutate the total cost of goods transfered for each branch
-            
         }
             trackProductQuantity = 0;
             trackQuantity = [] 
@@ -630,7 +625,14 @@
                 let currentProduct = null; 
                 
                 let isEditing = false;
+                let total = 0;
+                let currentColor = "gray"; 
+                let currentProduct = null; 
+                
+                let isEditing = false;
 
+                console.log('Quantitty: ', prodQauntity)
+                console.log(branchesList.length);
                 console.log('Quantitty: ', prodQauntity)
                 console.log(branchesList.length);
 
@@ -638,11 +640,21 @@
                     isEditing = !isEditing;
                     updateRowContent();
                 }
+                function toggleEdit() {
+                    isEditing = !isEditing;
+                    updateRowContent();
+                }
 
+                cart.sort((a, b) => b.count - a.count)
                 cart.sort((a, b) => b.count - a.count)
 
                 cart.forEach((item, index) => {
+                cart.forEach((item, index) => {
 
+                    if (currentProduct !== item.product) {
+                        currentProduct = item.product; 
+                        currentColor = currentColor === "#ebeced" ? "white" : "#ebeced"; 
+                    }
                     if (currentProduct !== item.product) {
                         currentProduct = item.product; 
                         currentColor = currentColor === "#ebeced" ? "white" : "#ebeced"; 
@@ -651,7 +663,11 @@
                     console.log(item.cost)
                     const row = document.createElement("tr");
                     row.style.backgroundColor = currentColor; 
+                    console.log(item.cost)
+                    const row = document.createElement("tr");
+                    row.style.backgroundColor = currentColor; 
 
+                    function updateRowContent() {
                     function updateRowContent() {
 
                         row.innerHTML = `
@@ -714,7 +730,17 @@
                 });
                     cartItemsList.appendChild(row);
                 });
+                updateRowContent();
+                row.querySelector("button.btn-outline-dark").addEventListener("click", () => {
+                    isEditing = !isEditing;
+                    updateRowContent();
+                });
+                    cartItemsList.appendChild(row);
+                });
 
+                if (!insufficientQnt){
+                    document.getElementById("branchesTable").innerHTML = "";
+                }
                 if (!insufficientQnt){
                     document.getElementById("branchesTable").innerHTML = "";
                 }
@@ -731,7 +757,7 @@
     }
 
     const updateTotalCost = () => {
-        const branchesCosts = []; 
+        let branchesCosts = []; 
 
         cart.forEach((item) => {
             let branchExists = branchesCosts.find(branch => branch.name === item.branch_name);
@@ -757,6 +783,8 @@
                 </small>
             `;
         });
+
+        localStorage.setItem('branchesCosts', branchesCosts)
     };
 
     function updateCartItem(id, field, value) {
@@ -772,6 +800,7 @@
 
             updateCartDisplay(insufficientQnt);
         }
+        localStorage.setItem('transfer_cart', cart)
 
     }
 
@@ -786,11 +815,14 @@
   const removeItem = (el) => {
       const id = el.dataset.id;
       let insufficientQnt = false;
+
       cart = cart.filter((item) => item.id !== id);
     
       localStorage.setItem('transfers', JSON.stringify(cart));
       trackProductQuantity = 0;
       trackQuantity = [] 
+
+      localStorage.setItem('transfer_cart', JSON.stringify(cart))
 
       updateCartDisplay(insufficientQnt);
       updateTotalCost()
@@ -870,5 +902,5 @@
     }
     return cookieValue;
   }
- </script>
+</script>
 {% endblock %}

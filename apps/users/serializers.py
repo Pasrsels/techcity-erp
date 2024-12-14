@@ -1,4 +1,4 @@
-from .models import User
+from apps.users.models import User, UserPermissions
 from django.contrib import auth
 from rest_framework import serializers
 from django.contrib.auth.models import Group
@@ -7,11 +7,9 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 
 class UserSerializer(serializers.ModelSerializer):
-    # url = serializers.HyperlinkedIdentityField(view_name="users:user-detail")
-
     class Meta:
         model = User
-        fields = ['username', 'email', 'groups']
+        fields = ['username', 'email', 'first_name', 'last_name', 'phonenumber']
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -53,13 +51,18 @@ class LoginSerializer(serializers.ModelSerializer):
         username = attrs.get('username', '')
         password = attrs.get('password', '')
         user = auth.authenticate(username=username, password=password)
+
         if not user:
             raise AuthenticationFailed('Invalid credentials, try again')
         if not user.is_active:
             raise AuthenticationFailed('Account disabled, contact admin')
+        
         return {
             'email': user.email,
             'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'role': user.role,
             'tokens': user.tokens
         }
 
@@ -77,10 +80,7 @@ class LogoutSerializer(serializers.Serializer):
         except TokenError:
             self.fail('bad_token')
 
-
-class GroupSerializers(serializers.HyperlinkedModelSerializer):
+class UserPermissionsSerializer(serializers.Serializer):
     class Meta:
-        model = Group
-        fields = ['url', 'name']
-
-        
+        model = UserPermissions
+        fields = ['name', 'category']
