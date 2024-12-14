@@ -1,11 +1,13 @@
 from django.urls import path
 from .views import *
 from rest_framework.routers import DefaultRouter
+from django.shortcuts import include
 
 app_name = 'users'
 
 router = DefaultRouter()
 router.register(r'api/', UserViewSet, basename='users')
+router.register(r'permissions/', UserPermissionViewSet, basename='userpermissions')
 
 urlpatterns = [
     path('users/', users, name='users'),
@@ -25,4 +27,6 @@ urlpatterns = [
     path('api/register/', RegisterView.as_view(), name="register"),
     path('api/login/', LoginAPIView.as_view(), name="login"),
     path('api/logout/', LogoutAPIView.as_view(), name="logout"),
+    path('api/branch-switch/', BranchSwitch.as_view(), name='branch_switch'),
+    path('api/router', include(router.urls), name='routes')
 ]

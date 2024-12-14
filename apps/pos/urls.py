@@ -10,5 +10,5 @@ urlpatterns = [
     #API URL PATTERNS
     ###################################################################################################
     path('POS/', POS.as_view(), name='api_pos'),
-    path('last_due_invoice/<int:customer_id>/', LastDueInvoice.as_view(), name= 'api_last_due_invoice')
+    path('last_due_invoice/<int:customer_id>/', LastDueInvoice.as_view(), name= 'api_last_due_invoice'),
 ]
