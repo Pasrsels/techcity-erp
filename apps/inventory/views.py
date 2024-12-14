@@ -335,16 +335,17 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         with transaction.atomic():
             for branch_obj in branch_obj_list:
                 for item in data['cart']:
-                    product = Product.objects.get(name=item['product'])
+                    product = Inventory.objects.get(id=item['product_id'], branch=request.user.branch)
 
                     branch_name = item['branch_name']
 
                     logger.info(f'branch name: {branch_name}')
+                    logger.info(f'branch obj {branch_obj.name}')
                     logger.info(f'cost: {item['cost']}')
-
+                    logger.info(f'Product {product}')
                     try:
                         if branch_name == branch_obj.name:
-                            transfer_item = Holdtransfer(
+                            transfer_item = Holdtransfer.objects.create(
                                 transfer=transfer,
                                 product = product,
                                 cost = item['cost'],
@@ -355,9 +356,9 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                                 to_branch= branch_obj,
                                 description=f'from {request.user.branch} to {branch_obj}'
                             ) 
+                            logger.info('here')
                             transfer.hold = True
                             transfer.save()         
-                            transfer_item.save()
                             logger.info('Transfer has been hold')
                     except Exception as e:
                         return JsonResponse({'success':False, 'message':f'{e}'})

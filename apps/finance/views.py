@@ -1944,7 +1944,6 @@ def end_of_day(request):
     now = timezone.now() 
     today = now.date()  
     
-    # invoices = filter_by_date_range(today, today)
     invoices = filter_by_date_range(today, today)
 
     logger.info(f'Invoices {invoices}')
