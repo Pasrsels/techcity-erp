@@ -953,7 +953,8 @@ def print_transfer(request, transfer_id):
                 'to_branch__name',
                 'product__cost'
             )
-            return JsonResponse({'success':True, 'data':transfer_items})
+            logger.info(transfer_items)
+            return JsonResponse({'success':True, 'data':list(transfer_items)})
         except Exception as e:
             return JsonResponse({'success':False, 'meesage':f'{e}'})
     

@@ -6,6 +6,7 @@ import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
 from django.apps import apps
+from datetime import timedelta
 
 env = environ.Env()   
 load_dotenv()
@@ -53,7 +54,8 @@ THIRD_PARTY_APPS = [
     'apps.pos',
     'apps.settings',
     'apps.Analytics',
-    'apps.booking'
+    'apps.booking',
+    'apps.vouchers'
 ]
 
 LOCAL_APPS = [
@@ -139,7 +141,6 @@ DATABASES = {
     'default': dj_database_url.config(
         default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
     )
-
 #    'default': {
 #      'ENGINE': 'django.db.backends.postgresql',
 #        'NAME':  'techcoty',
@@ -280,3 +281,14 @@ CELERY_BEAT_SCHEDULE = {
 # Inventory
 LOW_STOCK_THRESHHOLD =  6
 INVENTORY_EMAIL_NOTIFICATIONS_STATUS = True
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # to be changeed
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
