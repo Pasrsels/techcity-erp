@@ -20,7 +20,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 ADMIN_GROUP_NAME = 'Admin'
 ACCOUNTANT_GROUP_NAME = 'Accountant'
 SALESPERSON_GROUP_NAME = 'Salesperson'
-
+class UserPermissions(models.Model):
+    name = models.CharField(max_length=60)
+    category = models.CharField(max_length=60)
+    def __str__(self):
+        return f'{self.name}'
+    
 class CustomUserManager(BaseUserManager):
     """
     Custom user model manager with extra functionalities.
@@ -74,7 +79,7 @@ class User(AbstractUser):
     # todo remove user code and groups
     code = models.CharField(max_length=50, null=True, blank=True)
     groups = models.ManyToManyField(Group)
-
+    user_permissions = models.ManyToManyField(UserPermissions)
     phonenumber = models.CharField(max_length=13)
     role = models.CharField(choices=USER_ROLES, max_length=50)
 

@@ -9,11 +9,12 @@ from django.contrib.auth import get_user_model
 from apps.company.models import Branch
 from apps.settings.models import NotificationsSettings
 from utils.authenticate import authenticate_user
-from .models import User
-from .forms import UserRegistrationForm, UserDetailsForm, UserDetailsForm2
+from .models import User, UserPermissions
+from .forms import UserRegistrationForm, UserDetailsForm, UserDetailsForm2, UserPermissionsForm
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.hashers import make_password
+import json
 
 def UserPermission_CR(request):
     if request.method == 'GET':
@@ -23,6 +24,7 @@ def UserPermission_CR(request):
     elif request.method == 'POST':
         user_permission_form = UserPermissionsForm(request.POST)
         name = request.POST.get('name')
+        name.lower()
         if user_permission_form.is_valid():
             if  not UserPermissions.objects.filter(name = name).exists():
                 user_permission_form.save()
@@ -204,20 +206,39 @@ from .serializers import(
     UserSerializer,
     RegisterSerializer,
     LoginSerializer,
-    LogoutSerializer
+    LogoutSerializer,
+    UserPermissionsSerializer,
 )
-from .models import User
+from .models import User, UserPermissions
 from django.contrib.auth.models import Group
 from rest_framework import generics, status, views, permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+class UserPermissionViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = UserPermissions.objects.all()
+    serializer_class = UserPermissionsSerializer
+
+class BranchSwitch(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, branch_id):
+        """ Enables the admin or the ownwe to switch between branches """
+        user = request.user
+        if user.role == 'Admin' or user.role == 'admin':
+            user.branch = Branch.objects.get(id=branch_id)
+            user.save()
+        else:
+            return Response('You are not authorized', status = status.HTTP_401_UNAUTHORIZED)
+        return redirect('pos:pos')
+
 
 class UserViewSet(viewsets.ModelViewSet):
     """
     An endpoint which allows viewers to be viewed or edited
     """
+    permission_classes = [IsAuthenticated]
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
 

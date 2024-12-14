@@ -1,4 +1,4 @@
-from apps.users.models import User
+from apps.users.models import User, UserPermissions
 from django.contrib import auth
 from rest_framework import serializers
 from django.contrib.auth.models import Group
@@ -80,3 +80,7 @@ class LogoutSerializer(serializers.Serializer):
         except TokenError:
             self.fail('bad_token')
 
+class UserPermissionsSerializer(serializers.Serializer):
+    class Meta:
+        model = UserPermissions
+        fields = ['name', 'category']
