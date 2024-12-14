@@ -272,7 +272,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                     transfer = Transfer.objects.get(id=transfer_id)
                 
                 #assign many2many objects to transfer branch
-                transfer.transfer_to.set(branch_obj_list),
+                transfer.transfer_to.set(branch_obj_list)
 
                 if action == 'process':
                     logger.info(f'branches: {branch_obj_list}')

@@ -143,7 +143,7 @@ DATABASES = {
         default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
     )
 
-    #    'default': {
+#        'default': {
 #      'ENGINE': 'django.db.backends.postgresql',
 #        'NAME':  'techcoty',
 #        'USER': 'postgres',
