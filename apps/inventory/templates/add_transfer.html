@@ -528,6 +528,10 @@
                         console.log(data);
                         prodData = data;
                         console.log(prodData, 'product data')
+
+                        trackProductQuantity = 0;
+                        trackQuantity = [] 
+                        
                         if (prodData){
                             let values = branches;
                             productQuantity = prodData[0].quantity;
