@@ -1,7 +1,11 @@
 from django.urls import path
 from .views import *
+from rest_framework.routers import DefaultRouter
 
 app_name = 'users'
+
+router = DefaultRouter()
+router.register(r'api/', UserViewSet, basename='users')
 
 urlpatterns = [
     path('users/', users, name='users'),
@@ -12,9 +16,13 @@ urlpatterns = [
     path('user/detail/<int:user_id>/', user_detail, name='user_detail'),
     path('ajax/load-branches/', load_branches, name='ajax_load_branches'),
     path('ajax/get-user-data/<int:user_id>/', get_user_data, name='ajax_get_user_data'),
-
+    
     #User Permissions
     path('permissions/create-and-read/', UserPermission_CR, name= 'userPermissionsCR'),
-    path('permission/update-and-delete/<int:id>/', UserPermission_UD, name= 'userPermissionsUD')
+    path('permission/update-and-delete/<int:id>/', UserPermission_UD, name= 'userPermissionsUD'),
 
+    #api end point
+    path('api/register/', RegisterView.as_view(), name="register"),
+    path('api/login/', LoginAPIView.as_view(), name="login"),
+    path('api/logout/', LogoutAPIView.as_view(), name="logout"),
 ]

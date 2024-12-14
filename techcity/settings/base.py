@@ -6,6 +6,7 @@ import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
 from django.apps import apps
+from datetime import timedelta
 
 env = environ.Env()   
 load_dotenv()
@@ -280,3 +281,14 @@ CELERY_BEAT_SCHEDULE = {
 # Inventory
 LOW_STOCK_THRESHHOLD =  6
 INVENTORY_EMAIL_NOTIFICATIONS_STATUS = True
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # to be changeed
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}

@@ -69,7 +69,7 @@ class AddSupplierForm(forms.ModelForm):
 class EditSupplierForm(forms.ModelForm):
     class Meta:
         model = Supplier
-        exclude = ['delete']
+        fields = '__all__'
 
 class CreateOrderForm(forms.ModelForm):
     class Meta:
