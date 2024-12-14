@@ -437,7 +437,6 @@
        
     };
 
-    
     const saveDataToServer = (action) => {
         const branchElements = document.querySelectorAll('.branch-data');
         const dataToSend = [];
@@ -445,8 +444,9 @@
         let productAdded = false; 
         let prodName = '';
         let productQnty = 0
-
         let insufficientQnt = false;
+
+        itemCount += 1;
 
         for (let i = 0; i < branchElements.length; i++) {
             const branch = branchElements[i]; 
@@ -502,7 +502,6 @@
             console.log(quantity)
 
             if (quantity){
-                itemCount += 1;
                 const newItem = {
                     product_id:product_id,
                     count: itemCount,
