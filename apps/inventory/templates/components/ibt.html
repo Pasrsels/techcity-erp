@@ -119,74 +119,79 @@
             "X-CSRFToken": csrfToken,
         },
     })
-    .then((response) => response.json())
-    .then((data) => {
-        if (data.success) {
-            console.log(data)
-            const transferItems = data.data;
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                const transferItems = data.data;
 
-            const uniqueBranches = [...new Set(transferItems.map(item => item.to_branch__name))];
+                // Extract unique branches
+                const uniqueBranches = [
+                    ...new Set(transferItems.map((item) => item.to_branch__name)),
+                ];
 
-            const theadRow = document.querySelector("thead tr");
-            uniqueBranches.forEach((branch) => {
-                const th = document.createElement("th");
-                th.setAttribute("data-branch", branch);
-                th.textContent = branch;
-                theadRow.appendChild(th);
-            });
+                // Populate table headers dynamically
+                const theadRow = document.querySelector("thead tr");
+                uniqueBranches.forEach((branch) => {
+                    const th = document.createElement("th");
+                    th.setAttribute("data-branch", branch);
+                    th.textContent = branch;
+                    theadRow.appendChild(th);
+                });
 
-            const thTotalCost = document.createElement("th");
-            thTotalCost.textContent = "Total Cost";
-            theadRow.appendChild(thTotalCost);
+                const thTotalCost = document.createElement("th");
+                thTotalCost.textContent = "Total Cost";
+                theadRow.appendChild(thTotalCost);
 
-            const branchMap = {};
-            uniqueBranches.forEach((branch, index) => {
-                branchMap[branch] = index + 3; 
-            });
+                const branchMap = {};
+                uniqueBranches.forEach((branch, index) => {
+                    branchMap[branch] = index + 3; 
+                });
 
-            const tbody = document.querySelector("tbody");
-            transferItems.forEach((item) => {
-                let row = Array.from(tbody.querySelectorAll("tr")).find(tr => 
-                    tr.firstElementChild.textContent.trim().startsWith(item.product__name)
+                const tbody = document.querySelector("tbody");
+                transferItems.forEach((item) => {
+                    let row = Array.from(tbody.querySelectorAll("tr")).find((tr) =>
+                        tr.firstElementChild.textContent.trim().startsWith(item.product__name)
+                    );
+
+                    if (!row) {
+                        row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${item.product__name}</td>
+                            <td>${item.product__cost}</td>
+                            ${uniqueBranches.map(() => "<td>0</td>").join("")}
+                            <td class="total-cost">0</td>
+                        `;
+                        tbody.appendChild(row);
+                    }
+
+                    const branchIndex = branchMap[item.to_branch__name];
+                    if (branchIndex) {
+                        const quantityCell = row.children[branchIndex];
+                        quantityCell.textContent =
+                            parseInt(quantityCell.textContent || "0") + item.quantity;
+
+                        const cost = parseFloat(row.children[1].textContent || "0");
+                        const quantities = Array.from(row.children)
+                            .slice(3, -1) 
+                            .map((cell) => parseInt(cell.textContent || "0"));
+                        const totalCost = quantities.reduce((sum, qty) => sum + qty * cost, 0);
+                        row.querySelector(".total-cost").textContent = totalCost.toFixed(2);
+                    }
+                });
+                const totalQtyCells = Array.from(
+                    tbody.querySelectorAll("tr td:nth-child(3)")
                 );
-
-                if (!row) {
-                    row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td>${item.product__name}</td>
-                        <td>${item.product__cost}</td>
-                        ${uniqueBranches.map(() => "<td>0</td>").join("")}
-                        <td class="total-cost">0</td>
-                    `;
-                    tbody.appendChild(row);
-                }
-
-                const branchIndex = branchMap[item.to_branch__name];
-                if (branchIndex) {
-                    const quantityCell = row.children[branchIndex];
-                    quantityCell.textContent = 
-                        parseInt(quantityCell.textContent || "0") + item.quantity;
-
-                    const cost = parseFloat(row.children[1].textContent || "0");
-                    const quantities = Array.from(row.children)
-                        .slice(3, -1) 
-                        .map(cell => parseInt(cell.textContent || "0"));
-                    const totalCost = quantities.reduce((sum, qty) => sum + qty * cost, 0);
-                    row.querySelector(".total-cost").textContent = totalCost.toFixed(2);
-                }
-            });
-
-            const totalQtyCells = Array.from(tbody.querySelectorAll("tr td:nth-child(3)"));
-            const totalQuantity = totalQtyCells.reduce(
-                (sum, cell) => sum + parseInt(cell.textContent || "0"),
-                0
-            );
-        } else {
-            alert(data.message || "Failed to fetch transfer data.");
-        }
-    })
-    .catch((error) => console.error("Error fetching data:", error));
+                const totalQuantity = totalQtyCells.reduce(
+                    (sum, cell) => sum + parseInt(cell.textContent || "0"),
+                    0
+                );
+                document.querySelector("#id_quantity").textContent = totalQuantity;
+            } else {
+                alert(data.message || "Failed to fetch transfer data.");
+            }
+        })
+        .catch((error) => console.error("Error fetching data:", error));
 });
-// window.print()
+
 </script>
 </html>
