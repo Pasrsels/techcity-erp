@@ -138,13 +138,14 @@
                     theadRow.appendChild(th);
                 });
 
+                // Add a "Total Cost" column
                 const thTotalCost = document.createElement("th");
                 thTotalCost.textContent = "Total Cost";
                 theadRow.appendChild(thTotalCost);
 
                 const branchMap = {};
                 uniqueBranches.forEach((branch, index) => {
-                    branchMap[branch] = index + 3; 
+                    branchMap[branch] = index + 2; // Adjust index for table structure
                 });
 
                 const tbody = document.querySelector("tbody");
@@ -170,14 +171,17 @@
                         quantityCell.textContent =
                             parseInt(quantityCell.textContent || "0") + item.quantity;
 
+                        // Update total cost for this row using product__cost
                         const cost = parseFloat(row.children[1].textContent || "0");
                         const quantities = Array.from(row.children)
-                            .slice(3, -1) 
+                            .slice(2, -1) // Exclude product name, cost, and last total cost column
                             .map((cell) => parseInt(cell.textContent || "0"));
                         const totalCost = quantities.reduce((sum, qty) => sum + qty * cost, 0);
                         row.querySelector(".total-cost").textContent = totalCost.toFixed(2);
                     }
                 });
+
+                // Calculate and display total quantity
                 const totalQtyCells = Array.from(
                     tbody.querySelectorAll("tr td:nth-child(3)")
                 );
