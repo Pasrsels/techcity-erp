@@ -466,19 +466,32 @@
             product = product.split(' [')[0];
             pSelectedQnty = product.split(/\[(\d+)\]/);
 
-            console.log('chopped', pSelectedQnty)
 
-            productQnty += parseInt(quantity);
+            for (let i = 0; i < branchElements.length; i++) {
+                const branch = branchElements[i]; 
+                const quantity = branch.querySelector('.quantity-input').value;
 
-            console.log('Product qnty: ', productQnty, 'Product quantity from product: ', productQuantity)
+                productQnty += parseInt(quantity);
 
-            if (productQuantity <= 0){
-                insufficientQnt = true
+                if (productQuantity <= 0){
+                    insufficientQnt = true
                 break;
-            }else if (productQnty > productQuantity){
-                insufficientQnt = true
-                break;
-            }else{
+                }else if (productQnty > productQuantity){
+                    insufficientQnt = true
+                    break;
+                }
+            }
+
+           if (insufficientQnt){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'error',
+                    text: 'Insufficient quantity!.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                return
+           }else{
                 
             const existingItem = cart.find((item) => item.product === product && item.branch_name === branchName);
             console.log(existingItem, 'existing item');
@@ -553,16 +566,6 @@
             }
         }
 
-        if (insufficientQnt){
-            Swal.fire({
-                icon: 'error',
-                title: 'error',
-                text: 'Insufficient quantity!.',
-                showConfirmButton: false,
-                timer: 1500
-            });
-            return
-        }
     }
         
     document.addEventListener('DOMContentLoaded', function() {
