@@ -164,7 +164,6 @@
   let productQuantity = 0;
   let trackProductQuantity = 0;
   let trackQuantity = [] 
-  let costs = []
 
   const errorEl = document.getElementById('error');
   const prodEl = document.querySelector('#id_price');
@@ -450,19 +449,30 @@
         itemCount += 1;
 
         for (let i = 0; i < branchElements.length; i++) {
-            const branch = branchElements[i]; 
-            const quantity = branch.querySelector('.quantity-input').value;
+                const branch = branchElements[i]; 
+                const quantity = branch.querySelector('.quantity-input').value;
 
-            productQnty += parseInt(quantity);
+                productQnty += parseInt(quantity);
 
-            if (productQuantity <= 0){
-                insufficientQnt = true
-            break;
-            }else if (productQnty > productQuantity){
-                insufficientQnt = true
+                if (productQuantity <= 0){
+                    insufficientQnt = true
                 break;
+                }else if (productQnty > productQuantity){
+                    insufficientQnt = true
+                    break;
+                }
             }
-        }
+        
+            if (insufficientQnt){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'error',
+                    text: 'Insufficient quantity!.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                return
+            }else{
 
         for (let i = 0; i < branchElements.length; i++) {
             const branch = branchElements[i]; 
@@ -481,18 +491,6 @@
 
             product = product.split(' [')[0];
             pSelectedQnty = product.split(/\[(\d+)\]/);
-
-
-           if (insufficientQnt){
-                Swal.fire({
-                    icon: 'error',
-                    title: 'error',
-                    text: 'Insufficient quantity!.',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-                return
-           }else{
                 
             const existingItem = cart.find((item) => item.product === product && item.branch_name === branchName);
             console.log(existingItem, 'existing item');
@@ -529,9 +527,15 @@
                     cost: cost
                 };
                 cart.push(newItem);
-                localStorage.setItem('transfer_cart', JSON.stringify(cart));
                 productAdded = true; 
             }
+
+            // dataToSend.push(newItem);
+            
+            console.log(cart, 'cart');
+
+            // calutate the total cost of goods transfered for each branch
+            
         }
             trackProductQuantity = 0;
             trackQuantity = [] 
@@ -625,14 +629,7 @@
                 let currentProduct = null; 
                 
                 let isEditing = false;
-                let total = 0;
-                let currentColor = "gray"; 
-                let currentProduct = null; 
-                
-                let isEditing = false;
 
-                console.log('Quantitty: ', prodQauntity)
-                console.log(branchesList.length);
                 console.log('Quantitty: ', prodQauntity)
                 console.log(branchesList.length);
 
@@ -640,21 +637,11 @@
                     isEditing = !isEditing;
                     updateRowContent();
                 }
-                function toggleEdit() {
-                    isEditing = !isEditing;
-                    updateRowContent();
-                }
 
-                cart.sort((a, b) => b.count - a.count)
                 cart.sort((a, b) => b.count - a.count)
 
                 cart.forEach((item, index) => {
-                cart.forEach((item, index) => {
 
-                    if (currentProduct !== item.product) {
-                        currentProduct = item.product; 
-                        currentColor = currentColor === "#ebeced" ? "white" : "#ebeced"; 
-                    }
                     if (currentProduct !== item.product) {
                         currentProduct = item.product; 
                         currentColor = currentColor === "#ebeced" ? "white" : "#ebeced"; 
@@ -663,11 +650,7 @@
                     console.log(item.cost)
                     const row = document.createElement("tr");
                     row.style.backgroundColor = currentColor; 
-                    console.log(item.cost)
-                    const row = document.createElement("tr");
-                    row.style.backgroundColor = currentColor; 
 
-                    function updateRowContent() {
                     function updateRowContent() {
 
                         row.innerHTML = `
@@ -730,17 +713,7 @@
                 });
                     cartItemsList.appendChild(row);
                 });
-                updateRowContent();
-                row.querySelector("button.btn-outline-dark").addEventListener("click", () => {
-                    isEditing = !isEditing;
-                    updateRowContent();
-                });
-                    cartItemsList.appendChild(row);
-                });
 
-                if (!insufficientQnt){
-                    document.getElementById("branchesTable").innerHTML = "";
-                }
                 if (!insufficientQnt){
                     document.getElementById("branchesTable").innerHTML = "";
                 }
@@ -757,7 +730,7 @@
     }
 
     const updateTotalCost = () => {
-        let branchesCosts = []; 
+        const branchesCosts = []; 
 
         cart.forEach((item) => {
             let branchExists = branchesCosts.find(branch => branch.name === item.branch_name);
@@ -783,8 +756,6 @@
                 </small>
             `;
         });
-
-        localStorage.setItem('branchesCosts', branchesCosts)
     };
 
     function updateCartItem(id, field, value) {
@@ -800,7 +771,6 @@
 
             updateCartDisplay(insufficientQnt);
         }
-        localStorage.setItem('transfer_cart', cart)
 
     }
 
@@ -815,14 +785,11 @@
   const removeItem = (el) => {
       const id = el.dataset.id;
       let insufficientQnt = false;
-
       cart = cart.filter((item) => item.id !== id);
     
       localStorage.setItem('transfers', JSON.stringify(cart));
       trackProductQuantity = 0;
       trackQuantity = [] 
-
-      localStorage.setItem('transfer_cart', JSON.stringify(cart))
 
       updateCartDisplay(insufficientQnt);
       updateTotalCost()
@@ -902,5 +869,5 @@
     }
     return cookieValue;
   }
-</script>
+ </script>
 {% endblock %}

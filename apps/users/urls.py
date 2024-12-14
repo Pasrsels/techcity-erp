@@ -23,9 +23,9 @@ urlpatterns = [
     path('permission/update-and-delete/<int:id>/', UserPermission_UD, name= 'userPermissionsUD'),
 
     #api end point
-    path('api/register/', RegisterView.as_view(), name="register"),
-    path('api/login/', LoginAPIView.as_view(), name="login"),
-    path('api/logout/', LogoutAPIView.as_view(), name="logout"),
-    path('api/branch-switch/<int:branch_id>/', BranchSwitch.as_view(), name='branch_switch'),
+    path('api/register/', RegisterView.as_view(), name="api_register"),
+    path('api/login/', LoginAPIView.as_view(), name="api_login"),
+    path('api/logout/', LogoutAPIView.as_view(), name="api_logout"),
+    path('api/branch-switch/<int:branch_id>/', BranchSwitch.as_view(), name='api_branch_switch'),
     path('', include(router.urls))
 ]
