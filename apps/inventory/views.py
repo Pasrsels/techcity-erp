@@ -929,18 +929,35 @@ def process_held_transfer(request, transfer_id):
 
 @login_required
 def print_transfer(request, transfer_id):
-    try:
-        transfer = Transfer.objects.get(id=transfer_id)
-        transfer_items = TransferItems.objects.filter(transfer=transfer)
-    
-        return render(request, 'components/ibt.html', {
-            'date':datetime.datetime.now(),
-            'transfer':transfer, 
-            'transfer_items':transfer_items
-        })
-    except:
-        messages.warning(request, 'Transfer doesnt exists')
-        return redirect('inventory:transfers')
+    if request.method == 'GET':
+        try:
+            transfer = Transfer.objects.get(id=transfer_id)
+            transfer_items = TransferItems.objects.filter(transfer=transfer)
+        
+            return render(request, 'components/ibt.html', {
+                'date':datetime.datetime.now(),
+                'transfer':transfer, 
+                'transfer_items':transfer_items
+            })
+        except:
+            messages.warning(request, 'Transfer doesnt exists')
+            return redirect('inventory:transfers')
+        
+    if request.method == 'POST':
+        try:
+            transfer = Transfer.objects.get(id=transfer_id)
+            transfer_items = TransferItems.objects.filter(transfer=transfer).values(
+                'product__name',
+                'product__price',
+                'quantity',
+                'to_branch__name', 
+                'product__cost'
+            )
+
+            logger.info(transfer_items)
+            return JsonResponse({'success':True, 'data':list(transfer_items)})
+        except Exception as e:
+            return JsonResponse({'success':False, 'meesage':f'{e}'})
     
 @login_required
 @transaction.atomic
@@ -1091,7 +1108,7 @@ def over_less_list_stock(request):
   
         branch_transfer = get_object_or_404(transfers, id=transfer_id)
         transfer = get_object_or_404(Transfer, id=branch_transfer.transfer.id)
-        product = Inventory.objects.get(product=branch_transfer.product, branch=request.user.branch)
+        product = Inventory.objects.get(id=branch_transfer.product.id, branch=request.user.branch)
        
         if int(branch_transfer.over_less_quantity) > 0:
             if action == 'write_off':    
@@ -2681,15 +2698,11 @@ def supplier_delete(request, supplier_id):
 
     if request.method == "DELETE":
         try:
-            if request.user.is_authenticated:
-                username = request.user.username
-                logger.info(username)
-                if username == 'admin':
-                    supplier = Supplier.objects.get(id=supplier_id)
-                    supplier.delete = True
-                    supplier.save()
-                    return JsonResponse({'success':True}, status = 200)
-            return JsonResponse({'success':False, 'message': ' not authorized'}, status = 300)
+            supplier = Supplier.objects.get(id=supplier_id)
+            supplier.delete = True
+            supplier.save()
+
+            return JsonResponse({'success':True}, status = 200)
         except Exception as e:
             logger.info(e)
             return JsonResponse({"success":False, "message":f"{e}"})
@@ -2707,33 +2720,31 @@ def supplier_edit(request, supplier_id):
     if request.method == "POST":
          
         try:
-            username = request.user.username
-            if request.user.username == 'admin': 
-                data = json.loads(request.body)
-                logger.info(data)
+            data = json.loads(request.body)
+            logger.info(data)
 
-                name = data.get('name')
-                contact_person = data.get('contact_person')
-                email = data.get('email')
-                address = data.get('address')
-                phone = data.get('phone')
+            name = data.get('name')
+            contact_person = data.get('contact_person')
+            email = data.get('email')
+            address = data.get('address')
+            phone = data.get('phone')
 
-                supplier = Supplier.objects.get(id=supplier_id)
+            supplier = Supplier.objects.get(phone=phone)
 
-                supplier.name=name
-                supplier.contact_person=contact_person
-                supplier.email=email
-                supplier.phone=phone
-                supplier.address=address
-                
-                supplier.save()
-                logger.info(f'{supplier} saved')
-                return JsonResponse({'success':True}, status = 200)
-            return JsonResponse({"success":False, "message":" not authorized"}, status = 300)
+            supplier.name=name
+            supplier.contact_person=contact_person
+            supplier.email=email
+            supplier.phone=phone
+            supplier.address=address
+            
+            supplier.save()
+            logger.info(f'{supplier} saved')
+
+            return JsonResponse({'success':True}, status = 200)
         except Exception as e:
             logger.info(e)
             return JsonResponse({"success":False, "message":f"{e}"})
-    return JsonResponse({"success":False, "message":"Invalid Request"}, status = 500)
+    return JsonResponse({"success":False, "message":"Invalid Request"})
 
 #payments
 def supplier_payments(po, payment_data):
@@ -2801,51 +2812,34 @@ def PaymentHistory(request, supplier_id):
         purchase order amount
     """
     if request.method == 'GET':
-        supplier_history = SupplierAccountsPayments.objects.filter(account__supplier_id = supplier_id)
-        list_history = []
-        for items in supplier_history:
-            list_history.append({
-                'payment_id': items.id,
-                'paid_currency': items.currency.name,
-                'amount_paid': items.amount,
-                'date': items.timestamp,
-                'account_balance': items.account.balance,
-                'account_currency': items.account.currency.name,
-                'user': items.user.username  
-            })
-
+        supplier_history = SupplierAccountsPayments.objects.filter(account__supplier_id = supplier_id).\
+        values(
+            'timestamp', 
+            'amount',
+            'account__balance',
+            'user__username',
+            'currency__name'
+        )
         supplier_purchase_order_details = PurchaseOrderItem.objects.filter(supplier__id = supplier_id)
-
         list_details = {}
         for items in supplier_purchase_order_details:
-            if items:
-                if list_details.get(items.purchase_order.order_number):
-                    purchase_order = list_details.get(items.purchase_order.order_number)
-                    purchase_order['order_date'] = items.purchase_order.order_date
-                    purchase_order['order_number'] = items.purchase_order.order_number
-                    purchase_order['amount'] = items.received_quantity * items.unit_cost
-                else:
-                    list_details[items.purchase_order.order_number] = {
-                        'order_date': items.purchase_order.order_date,
-                        'order_number': items.purchase_order.order_number,
-                        'amount': items.received_quantity * items.unit_cost
-                    }      
+            if items.purchase_order.order_number == list_details.get('order_number'):
+                list_details['amount'] = items.quantity * items.unit_cost
+            else:
+                list_details['order_number'] = items.purchase_order.order_number
+                list_details['amount']= items.quantity * items.unit_cost
         logger.info(list_details)
-        logger.info(list_history)
-        return JsonResponse({'success':True, 'history':list_history, 'pOrder': list_details}, status=200)
+        logger.info(list(supplier_history))
+        return JsonResponse({'success':True, 'history':list(supplier_history), 'pOrder': list_details}, status=200)
     return JsonResponse({'success':False, 'message':'Invalid request'}, status=500)
 
 
 #individual supplier details
 @login_required
-def supplier_details_view(request, supplierId):
+def supplier_details_view(request,supplierId):
     if request.method == 'GET':
         try:
             supplier_details = Supplier.objects.get(id = supplierId)
-            account_details = SupplierAccount.objects.filter(supplier__id = supplierId)
-            account_history_details = SupplierAccountsPayments.objects.filter(account__supplier_id = supplierId)
-            purchase_order_details = PurchaseOrderItem.objects.filter(supplier__id = supplierId)
-
             supplier_data = {
                 'name': supplier_details.name,
                 'contact_person': supplier_details.contact_person,
@@ -2854,64 +2848,8 @@ def supplier_details_view(request, supplierId):
                 'address': supplier_details.address 
             }
 
-            list_account_details = []
-            for items in account_details:
-                list_account_details.append(
-                    {   
-                        'account_id': items.id,
-                        'supplier_id': items.supplier.id,
-                        'currency': items.currency.name,
-                        'balance': items.balance,
-                        'date': items.date
-                    }
-                )
-            
-            list_account_history = []
-            for items in account_history_details:
-                list_account_history.append(
-                    {
-                        'account_id': items.account.id,
-                        'payment_method': items.payment_method,
-                        'currency': items.currency.name,
-                        'amount': items.amount,
-                        'timestamp': items.timestamp,
-                        'user': items.user.username
-                    }
-                )
-            
-            list_purchase_order_details = []
-            purchase_order_count = 0
-            pOrder = ''
-            for items in purchase_order_details:
-                if pOrder != items.purchase_order.id:
-                    purchase_order_count += 1
-
-                list_purchase_order_details.append(
-                    {
-                        'purchase_order_number': items.purchase_order.order_number,
-                        'purchase_order_date': items.purchase_order.order_date,
-                        'delivery_date': items.purchase_order.delivery_date,
-                        'product': items.product.name,
-                        'received_quantity': items.received_quantity,
-                        'unit_cost': items.unit_cost,
-                        'supplier': items.supplier.name,
-
-                    }
-                )
-                pOrder = items.purchase_order.id
-            logger.info(purchase_order_count)
-            logger.info(list_purchase_order_details)
-            logger.info(list_account_history)
-            logger.info(list_account_details)
             logger.info(supplier_data)
-            return JsonResponse({
-                'success': True, 
-                'supplier_data': supplier_data,
-                'purchase_data': list_purchase_order_details,
-                'account_history_data': list_account_history,
-                'account_data': list_account_details,
-                'purchase_order_count': purchase_order_count,
-            }, status = 200)
+            return JsonResponse({'success': True, 'data': supplier_data}, status = 200)
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
     return JsonResponse({'success': False, 'response': 'invalid request'}, status = 500)
@@ -2938,40 +2876,94 @@ def view_LifeTimeOrders(request, supplier_id):
 
 @login_required
 def supplier_view(request):
-
     if request.method == 'GET':
         supplier_products = Product.objects.all()
-        supplier_balances = SupplierAccount.objects.all().values('supplier__id', 'balance', 'date', 'currency__name')
+        supplier_balances = SupplierAccount.objects.all().values('supplier__id', 'balance', 'date')
         purchase_orders = PurchaseOrderItem.objects.all()
-    
-        list_orders = {}
-        for items in purchase_orders:
-            if items:
-                if list_orders.get(items.supplier.id):
-                    supplier = list_orders.get(items.supplier.id)
-                    logger.info(f'quantity: {supplier}')
-                    supplier['quantity'] += items.quantity
-                    supplier['received_quantity'] += items.received_quantity
-                    supplier['returned'] += (items.quantity - items.received_quantity)
-                    supplier['amount'] += (items.unit_cost * items.received_quantity)
+        # try:
+        # list_orders = {}
+        # supplier = {}
+        # for item in purchase_orders:
+        #     po = PurchaseOrder.objects.get(id=item.purchase_order.id)
+        #     received_quantity = item.received_quantity
+        #     unit_cost = item.unit_cost
+        #     if item.supplier:
+        #         logger.info(f'supplier: {item.supplier}')
+        #         if list_orders:
+        #             if list_orders.get(item.supplier):
+        #                 supplier = list_orders.get(item.supplier)
+        #                 logger.info(f'supplier object: {supplier}')
 
-                    if items.purchase_order.id == supplier['order_id']:
-                        supplier['count'] = supplier['count']
-                    else:
-                        supplier['count'] += 1
-                        supplier['order_id'] = items.purchase_order.id
+        #                 if supplier['purchase_order'] == po:
+        #                     logger.info('existing ')
+        #                     supplier['count'] = supplier['count']
+        #                     logger.info(f'{supplier}:{supplier['count']}')
+        #                 else:
+        #                     logger.info('new')
+        #                     supplier['count'] += 1
+        #                     logger.info(f'supplier {supplier}')
+        #                     logger.info('count')
+        #                     logger.info(f'{supplier}:{supplier['count']}')
+        #                     supplier['amount'] += (unit_cost * received_quantity)
+        #                     logger.info(f'Amount {supplier}:{supplier['amount']}')
+        #                     supplier['quantity'] += item.quantity
+        #                     supplier['quantity_received'] += item.received_quantity
+        #                     supplier['returned'] = supplier['returned'] + (item.quantity - item.received_quantity)
+                    
+        #         else:
+        #             account_info = SupplierAccount.objects.filter()
+        #             for supplier in account_info:
+        #                 for item in purchase_orders:
+        #                     if supplier.id == item.supplier.id:
+        #                         list_orders[item.supplier] = {
+        #                             'supplier_id': item.supplier.id,
+        #                             'amount': item.unit_cost * item.received_quantity,
+        #                             'purchase_order': po,
+        #                             'category': item.product.category.name,
+        #                             'quantity': item.quantity,
+        #                             'quantity_received': item.received_quantity,
+        #                             'returned': item.quantity - item.received_quantity,
+        #                             'date': supplier.date,
+        #                             'balance': supplier.balance,
+        #                             'count': 1
+        #                         }                       
+        # logger.info([list_orders])
+        # # logger.info(f'supplier: {.values()}')
+
+        # for prod in supplier_products.values('name','suppliers'):
+        #     logger.info(f'suppliers: {prod}')
+
+        list_orders = {}
+
+        for items in purchase_orders:
+            if list_orders.get(items.supplier.id):
+                
+                supplier = list_orders.get(items.supplier.id)
+                logger.info(f'quantity: {supplier}')
+                supplier['quantity'] += items.quantity
+                supplier['received_quantity'] += items.received_quantity
+                supplier['returned'] += (items.quantity - items.received_quantity)
+                supplier['amount'] += (items.unit_cost * items.received_quantity)
+
+                if items.purchase_order.id == supplier['order_id']:
+                    supplier['count'] = supplier['count']
                 else:
-                    list_orders[items.supplier.id] = {
-                        'order_id': items.purchase_order.id,
-                        'quantity' : items.quantity,
-                        'received_quantity' : items.received_quantity,
-                        'returned' : (items.quantity - items.received_quantity),
-                        'amount' : (items.unit_cost * items.received_quantity),
-                        'count' : 1
-                    }         
+                    supplier['count'] += 1
+                    supplier['order_id'] = items.purchase_order.id
+            else:
+                list_orders[items.supplier.id] = {
+                    'order_id': items.purchase_order.id,
+                    'quantity' : items.quantity,
+                    'received_quantity' : items.received_quantity,
+                    'returned' : (items.quantity - items.received_quantity),
+                    'amount' : (items.unit_cost * items.received_quantity),
+                    'count' : 1
+                }
+                
+
         logger.info([list_orders])
         logger.info(supplier_balances)
-        form = EditSupplierForm()
+        form = AddSupplierForm()
         suppliers = Supplier.objects.filter(delete = False)
         logger.info(suppliers)
         return render(request, 'Supplier/Suppliers.html', {
@@ -2979,8 +2971,13 @@ def supplier_view(request):
             'products':supplier_products,
             'balances':supplier_balances,
             'life_time': [list_orders],
-            'suppliers':suppliers,
+            'suppliers':suppliers
         })
+        # except Exception as e:
+        #     # logger.info(e)
+        #     messages.error(request, f'{e}')
+        #     return redirect('inventory:suppliers')
+            
     if request.method == 'POST':
         """
         payload = {
@@ -3009,49 +3006,50 @@ def supplier_view(request):
 
             # check is supplier exists
             if Supplier.objects.filter(email=email).exists() and Supplier.objects.filter(delete = True).exists():
-                supplier_bring_back = Supplier.objects.get(email = email)
-                supplier_bring_back.delete = False
-                supplier_bring_back.save()
-                logger.info(supplier_bring_back)
+                bring_back =  Supplier.objects.filter(email = email)
+                bring_back.delete = False
+                bring_back.update()
+                logger.info(bring_back.delete)
                 return JsonResponse({'success': True, 'response':f'Supplier{name} brought back'}, status=200)
             elif Supplier.objects.filter(email=email).exists():
                 return JsonResponse({'success': False, 'response':f'Supplier{name} already exists'}, status=400)
-            else:
-                with transaction.atomic():
-                    if not Currency.objects.filter(name = 'USD').exists() and not Currency.objects.filter(name = 'ZIG').exists():
-                        Currency.objects.create(
-                            code = '001',
-                            name = 'USD',
-                            symbol = '$',
-                            exchange_rate = 1,
-                            default = True
-                        )
-                        Currency.objects.create(
-                            code = '002',
-                            name = 'ZIG',
-                            symbol = 'Z',
-                            exchange_rate = 26.78,
-                            default =  False
-                        )
-                    supplier = Supplier.objects.create(
-                        name = name,
-                        contact_person = contact_person,
-                        email = email,
-                        phone = phone,
-                        address = address,
-                        delete = False
+           
+            with transaction.atomic():
+                if not Currency.objects.filter(name = 'USD').exists() and not Currency.objects.filter(name = 'ZIG').exists():
+                    Currency.objects.create(
+                        code = '001',
+                        name = 'USD',
+                        symbol = '$',
+                        exchange_rate = 1,
+                        default = True
                     )
-                    SupplierAccount.objects.create(
-                        supplier = supplier,
-                        currency = Currency.objects.get(default = True),
-                        balance = 0,
+                    Currency.objects.create(
+                        code = '002',
+                        name = 'ZIG',
+                        symbol = 'Z',
+                        exchange_rate = 26.78,
+                        default =  False
                     )
-                    SupplierAccount.objects.create(
-                        supplier = supplier,
-                        currency = Currency.objects.get(default = False),
-                        balance = 0,
-                    )
-                return JsonResponse({'success': True}, status=200)
+
+                supplier = Supplier.objects.create(
+                    name = name,
+                    contact_person = contact_person,
+                    email = email,
+                    phone = phone,
+                    address = address,
+                    delete = False
+                )
+                SupplierAccount.objects.create(
+                    supplier = supplier,
+                    currency = Currency.objects.get(default = True),
+                    balance = 0,
+                )
+                SupplierAccount.objects.create(
+                    supplier = supplier,
+                    currency = Currency.objects.get(default = False),
+                    balance = 0,
+                )
+            return JsonResponse({'success': True}, status=200)
         except Exception as e:
             logger.info(e)
             return JsonResponse({'success': False}, status=400)
@@ -3305,36 +3303,40 @@ def payments(request):
             supplier_amount = data.get('amount')
             supplier_currency_used = data.get('currency')
             supplier_method = data.get('payment_method')
-            supplier_date = data.get('next_due')
 
             supplier_details = Supplier.objects.get(id = supplier_id)
             supplier_currency = Currency.objects.get(name = supplier_currency_used)
-            supplier_payment = SupplierAccountsPayments.objects.get(account__supplier__id = supplier_id)
+            supplier_payment = SupplierAccountsPayments.objects.filter(account__supplier__id = supplier_id)\
+            .values('user', 'timestamp', 'amount', 'account__balance', 'payment_method')
 
-            supplier_balance = supplier_payment.account.balance
+            supplier_balance = supplier_payment['account__balance']
+            # supplier_timestamp = supplier_payment['timestamp']
+            # supplier_user = supplier_payment['amount']
+            #supplier_pay_method = supplier_payment['payment_method']
 
             if supplier_balance <= 0:
-                return JsonResponse({'success': True, 'message': 'We donot owe this supplier'})
+                return JsonResponse({'success': True, 'response': 'We donot owe this supplier'})
             else:
-                if supplier_currency_used == 'USD':
+                if supplier_method == 'USD':
                     new_balance = supplier_balance - supplier_amount
                 else:
-                    new_balance = supplier_balance - supplier_amount
+                    exchange_rate = Currency.objects.filter(name = supplier_method)
+                    new_balance_zig = (supplier_balance * exchange_rate['exchange_rate'] ) - supplier_amount
+                    new_balance = new_balance_zig/exchange_rate['exchange_rate']
             
-                with transaction.atomic():
-                    supplier_acc = SupplierAccount.objects.update(
-                        suppliers = supplier_details,
-                        currency = supplier_currency,
-                        balance = new_balance,
-                        date = supplier_date
-                    )
+            with transaction.Atomic():
+                supplier_acc = SupplierAccount.objects.update(
+                    suppliers = supplier_details,
+                    currency = supplier_currency,
+                    balance = new_balance,
+                )
 
-                    SupplierAccountsPayments.objects.create(
-                        account = supplier_acc,
-                        payment_method = supplier_method,
-                        currency = supplier_currency,
-                        amount = supplier_amount,
-                    )
+                SupplierAccountsPayments.objects.create(
+                    account = supplier_acc,
+                    payment_method = supplier_method,
+                    currency = supplier_currency,
+                    amount = supplier_amount,
+                )
                 return JsonResponse({'success': True, 'response': 'Data saved'})
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)

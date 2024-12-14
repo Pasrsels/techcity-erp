@@ -1,7 +1,11 @@
-from django.urls import path
+from django.urls import path, include
 from . views import *
+from rest_framework.routers import DefaultRouter
 
 app_name = 'finance'
+
+router = DefaultRouter()
+router.register(r'customers', CustomerViewset,  basename='customers')
 
 urlpatterns = [
     path('', Finance.as_view(), name='finance'),
@@ -105,5 +109,9 @@ urlpatterns = [
     path('expense_json/', expense_json, name='expense_json'),
 
     # vat
-    path('vat/', vat, name='vat')
+    path('vat/', vat, name='vat'),
+
+    ########################################################################################################################
+    # API end points
+    path('api/', include(router.urls))
 ]   

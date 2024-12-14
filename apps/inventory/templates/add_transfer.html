@@ -163,6 +163,7 @@
   let productQuantity = 0;
   let trackProductQuantity = 0;
   let trackQuantity = [] 
+  let costs = []
 
   const errorEl = document.getElementById('error');
   const prodEl = document.querySelector('#id_price');
@@ -170,6 +171,55 @@
   const submitBtn = document.getElementById('id_submit');
   const quantityEl = document.getElementById('id_quantity');
   const branchTotals = document.getElementById('branch_totals');
+
+//   //check if local storage have anything and populate at the page load
+//   const checkLocalCart = () => {
+//         Swal.fire({
+//             title: 'Loading products...',
+//             text: 'Please wait while we load your cart.',
+//             allowOutsideClick: false, 
+//             didOpen: () => {
+//                 Swal.showLoading();
+//                 const cartData = localStorage.getItem('cart');
+
+//                 if (!cartData){
+//                   Swal.close();
+//                   return;
+//                 }else{
+//                   if (cartData.length == 2) {
+//                       Swal.close();
+//                       return;
+//                   }
+//                 }
+                
+//                 if (localStorage.getItem('transfer_cart')) {
+//                     cart = JSON.parse(localStorage.getItem('transfer_cart')); 
+//                     console.log(cart, 'cart')
+
+                   
+
+//                     // update count
+//                     itemCount = cart[cart.length - 1].count;
+
+//                     // if(localStorage.getItem('branchesCosts')){
+//                     //     costs = JSON.parse(localStorage.getItem('branchesCosts'))
+//                     // }
+
+//                     updateCartDisplay().then(() => {
+//                         Swal.close(); 
+//                     }).catch(error => {
+//                         console.error('Error updating cart:', error);
+//                         Swal.fire('Error', 'Failed to load products. Please try again.', 'error');
+//                     });
+//                 } else {
+//                     Swal.close(); 
+//                     Swal.fire('Info', 'No products found in your cart.', 'info');
+//                 }
+//             },
+//         });
+//     };
+
+//     checkLocalCart()
 
 
   const searchTable = () => {
@@ -454,15 +504,9 @@
                     cost: cost
                 };
                 cart.push(newItem);
+                localStorage.setItem('transfer_cart', JSON.stringify(cart));
                 productAdded = true; 
             }
-
-            // dataToSend.push(newItem);
-            
-            console.log(cart, 'cart');
-
-            // calutate the total cost of goods transfered for each branch
-            
         }
             trackProductQuantity = 0;
             trackQuantity = [] 
@@ -550,113 +594,115 @@
 
 
     function updateCartDisplay(insufficientQnt) {
-        const cartItemsList = document.getElementById("cart-items");
-        cartItemsList.innerHTML = "";
+        return new Promise((resolve, reject) => {
+            try {
+                const cartItemsList = document.getElementById("cart-items");
+                cartItemsList.innerHTML = "";
 
-        let total = 0;
-        let currentColor = "gray"; 
-        let currentProduct = null; 
-        
-        let isEditing = false;
+                let total = 0;
+                let currentColor = "gray"; 
+                let currentProduct = null; 
+                
+                let isEditing = false;
 
-        console.log('Quantitty: ', prodQauntity)
-        console.log(branchesList.length);
+                console.log('Quantitty: ', prodQauntity)
+                console.log(branchesList.length);
 
-        function toggleEdit() {
-            isEditing = !isEditing;
-            updateRowContent();
-        }
-
-        cart.sort((a, b) => b.count - a.count)
-
-        cart.forEach((item, index) => {
-
-            if (currentProduct !== item.product) {
-                currentProduct = item.product; 
-                currentColor = currentColor === "#ebeced" ? "white" : "#ebeced"; 
-            }
-
-            console.log(item.cost)
-            const row = document.createElement("tr");
-            row.style.backgroundColor = currentColor; 
-
-            function updateRowContent() {
-
-                row.innerHTML = `
-                    <td style='background:${currentColor}'><small class='${item.product}'>${item.count}</small></td>
-                    <td style='background:${currentColor}'><small class='${item.product}'>${item.product}</small></td>
-                    <td style='background:${currentColor}'>
-                        <small class='${item.product}'>
-                        ${isEditing
-                            ? `<input type="number" class="form-control form-control-sm" 
-                                value="${item.quantity}" min="1" 
-                                onchange="updateCartItem('${String(item.id)}', 'quantity', this.value);" />`
-                            : `${item.quantity}`}
-                        </small>
-                    </td>
-                    <td style='background:${currentColor}'>
-                        <small class='${item.product}'>
-                            ${item.cost}
-                        </small>
-                    </td>
-                    <td style='background:${currentColor}' class="${salesPerson ? 'd-none' : ''}">
-                        <smallclass='${item.product}' >
-                        ${isEditing
-                            ? `<input type="number" class="form-control form-control-sm" 
-                                value="${item.price}" step="0.01" min="0" 
-                                onchange="updateCartItem('${String(item.id)}', 'price', this.value);" />`
-                            : `${item.price}`}
-                        </small>
-                    </td>
-                    <td style='background:${currentColor}' class="${salesPerson ? 'd-none' : ''}">
-                        <small class='${item.product}'>
-                        ${isEditing
-                            ? `<input type="number" class="form-control form-control-sm" 
-                                value="${item.dealer_price}" step="0.01" min="0" 
-                                onchange="updateCartItem('${String(item.id)}', 'dealer_price', this.value);" />`
-                            : `${item.dealer_price}`}
-                        </small>
-                    </td>
-                    <td style='background:${currentColor}' class='${item.product}'><small>${item.branch_name}</small></td>
-                    <td style='background:${currentColor}' class='${item.product}'>
-                        <small>
-                        <button class="btn btn-sm btn-outline-dark mx-1 edit" onclick="toggleEdit();">
-                            ${isEditing ? "Save" : "Edit"}
-                        </button>
-                        <button class="btn btn-sm btn-danger" data-id="${String(item.id)}" onclick="removeItem(this);">
-                            <i class='bx bx-trash-alt'></i>
-                        </button>
-                        </small>
-                    </td>
-                `;
                 function toggleEdit() {
                     isEditing = !isEditing;
                     updateRowContent();
                 }
-        }
 
-        
-        
+                cart.sort((a, b) => b.count - a.count)
 
-        
+                cart.forEach((item, index) => {
 
-        updateRowContent();
-        row.querySelector("button.btn-outline-dark").addEventListener("click", () => {
-            isEditing = !isEditing;
-            updateRowContent();
+                    if (currentProduct !== item.product) {
+                        currentProduct = item.product; 
+                        currentColor = currentColor === "#ebeced" ? "white" : "#ebeced"; 
+                    }
+
+                    console.log(item.cost)
+                    const row = document.createElement("tr");
+                    row.style.backgroundColor = currentColor; 
+
+                    function updateRowContent() {
+
+                        row.innerHTML = `
+                            <td style='background:${currentColor}'><small class='${item.product}'>${item.count}</small></td>
+                            <td style='background:${currentColor}'><small class='${item.product}'>${item.product}</small></td>
+                            <td style='background:${currentColor}'>
+                                <small class='${item.product}'>
+                                ${isEditing
+                                    ? `<input type="number" class="form-control form-control-sm" 
+                                        value="${item.quantity}" min="1" 
+                                        onchange="updateCartItem('${String(item.id)}', 'quantity', this.value);" />`
+                                    : `${item.quantity}`}
+                                </small>
+                            </td>
+                            <td style='background:${currentColor}'>
+                                <small class='${item.product}'>
+                                    ${item.cost}
+                                </small>
+                            </td>
+                            <td style='background:${currentColor}' class="${salesPerson ? 'd-none' : ''}">
+                                <smallclass='${item.product}' >
+                                ${isEditing
+                                    ? `<input type="number" class="form-control form-control-sm" 
+                                        value="${item.price}" step="0.01" min="0" 
+                                        onchange="updateCartItem('${String(item.id)}', 'price', this.value);" />`
+                                    : `${item.price}`}
+                                </small>
+                            </td>
+                            <td style='background:${currentColor}' class="${salesPerson ? 'd-none' : ''}">
+                                <small class='${item.product}'>
+                                ${isEditing
+                                    ? `<input type="number" class="form-control form-control-sm" 
+                                        value="${item.dealer_price}" step="0.01" min="0" 
+                                        onchange="updateCartItem('${String(item.id)}', 'dealer_price', this.value);" />`
+                                    : `${item.dealer_price}`}
+                                </small>
+                            </td>
+                            <td style='background:${currentColor}' class='${item.product}'><small>${item.branch_name}</small></td>
+                            <td style='background:${currentColor}' class='${item.product}'>
+                                <small>
+                                <button class="btn btn-sm btn-outline-dark mx-1 edit" onclick="toggleEdit();">
+                                    ${isEditing ? "Save" : "Edit"}
+                                </button>
+                                <button class="btn btn-sm btn-danger" data-id="${String(item.id)}" onclick="removeItem(this);">
+                                    <i class='bx bx-trash-alt'></i>
+                                </button>
+                                </small>
+                            </td>
+                        `;
+                        function toggleEdit() {
+                            isEditing = !isEditing;
+                            updateRowContent();
+                        }
+                }
+
+                updateRowContent();
+                row.querySelector("button.btn-outline-dark").addEventListener("click", () => {
+                    isEditing = !isEditing;
+                    updateRowContent();
+                });
+                    cartItemsList.appendChild(row);
+                });
+
+                if (!insufficientQnt){
+                    document.getElementById("branchesTable").innerHTML = "";
+                }
+
+                updateTotalCost()
+                resolve()
+        } catch (error) {
+                reject(error); 
+            }
         });
-            cartItemsList.appendChild(row);
-        });
-
-        if (!insufficientQnt){
-            document.getElementById("branchesTable").innerHTML = "";
-        }
-
-        updateTotalCost()
     }
 
     const updateTotalCost = () => {
-        const branchesCosts = []; 
+        let branchesCosts = []; 
 
         cart.forEach((item) => {
             let branchExists = branchesCosts.find(branch => branch.name === item.branch_name);
@@ -682,6 +728,8 @@
                 </small>
             `;
         });
+
+        localStorage.setItem('branchesCosts', branchesCosts)
     };
 
     function updateCartItem(id, field, value) {
@@ -695,6 +743,7 @@
             
             updateCartDisplay(insufficientQnt);
         }
+        localStorage.setItem('transfer_cart', cart)
 
     }
 
@@ -709,10 +758,13 @@
   const removeItem = (el) => {
       const id = el.dataset.id;
       let insufficientQnt = false;
+
       cart = cart.filter((item) => item.id !== id);
 
       trackProductQuantity = 0;
       trackQuantity = [] 
+
+      localStorage.setItem('transfer_cart', JSON.stringify(cart))
 
       updateCartDisplay(insufficientQnt);
       updateTotalCost()
@@ -791,5 +843,5 @@
     }
     return cookieValue;
   }
- </script>
+</script>
 {% endblock %}
