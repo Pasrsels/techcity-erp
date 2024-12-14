@@ -16,10 +16,6 @@ urlpatterns = [
     path('user/detail/<int:user_id>/', user_detail, name='user_detail'),
     path('ajax/load-branches/', load_branches, name='ajax_load_branches'),
     path('ajax/get-user-data/<int:user_id>/', get_user_data, name='ajax_get_user_data'),
-     
-    #User Permissions
-    path('permissions/create-and-read/', UserPermission_CR, name= 'userPermissionsCR'),
-    path('permission/update-and-delete/<int:id>/', UserPermission_UD, name= 'userPermissionsUD'),
 
     #api end point
     path('api/register/', RegisterView.as_view(), name="register"),

@@ -22,7 +22,6 @@ def users(request):
         'first_name', 'last_name')
     form = UserRegistrationForm()
     user_details_form = UserDetailsForm2()
-    formPermissions = UserPermissionsForm()
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
@@ -34,7 +33,7 @@ def users(request):
         else:
             messages.error(request, 'Invalid form data')
 
-    return render(request, 'auth/users.html', {'users': users, 'form': form, 'user_details_form': user_details_form, 'PermData':formPermissions})
+    return render(request, 'auth/users.html', {'users': users, 'form': form, 'user_details_form': user_details_form})
 
 
 def login_view(request):
