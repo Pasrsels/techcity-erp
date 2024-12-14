@@ -16,10 +16,11 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.hashers import make_password
 
-def UserPermission_CR(request,id):
+def UserPermission_CR(request):
     if request.method == 'GET':
         permission_data = UserPermissions.objects.all().values()
-        return JsonResponse({'success': True, 'data': permission_data})
+        logger.info(list(permission_data))
+        return JsonResponse({'success': True, 'Permissiondata': list(permission_data)}, status = 200)
     elif request.method == 'POST':
         user_permission_form = UserPermissionsForm(request.POST)
         name = request.POST.get('name')
@@ -32,6 +33,10 @@ def UserPermission_CR(request,id):
     return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
 
 def UserPermission_UD(request,id):
+    if request.method == 'GET':
+        permissions_data = User.objects.filter(id = id).values()
+        logger.info(permissions_data)
+        return JsonResponse({'success':True, 'data':list(permissions_data)}, status = 200)
     if request.method == 'PUT':
         data = json.loads(request.body)
         name = data.get('name')
@@ -58,7 +63,7 @@ def users(request):
         'first_name', 'last_name')
     form = UserRegistrationForm()
     user_details_form = UserDetailsForm2()
-
+    formPermissions = UserPermissionsForm()
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
@@ -70,7 +75,7 @@ def users(request):
         else:
             messages.error(request, 'Invalid form data')
 
-    return render(request, 'auth/users.html', {'users': users, 'form': form, 'user_details_form': user_details_form})
+    return render(request, 'auth/users.html', {'users': users, 'form': form, 'user_details_form': user_details_form, 'PermData':formPermissions})
 
 
 def login_view(request):
@@ -128,11 +133,10 @@ def user_edit(request, user_id):
 def user_detail(request, user_id):
     user = User.objects.get(id=user_id)
     form = UserDetailsForm()
-
     logger.info(f'User details: {user.first_name + " " + user.email}')
     # render user details
     if request.method == 'GET':
-        return render(request, 'users/user_detail.html', {'user': user, 'form': form})
+        return render(request, 'user_detail.html', {'user': user, 'form': form})
     if request.method == 'POST':
         form = UserDetailsForm(request.POST, instance=user)
         if form.is_valid():
@@ -141,7 +145,6 @@ def user_detail(request, user_id):
         else:
             messages.error(request, 'Invalid form data')
         return render(request, 'users/user_detail.html', {'user': user, 'form': form})
-
 
 def register(request):
     form = UserRegistrationForm()

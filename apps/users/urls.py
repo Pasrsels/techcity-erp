@@ -15,6 +15,6 @@ urlpatterns = [
 
     #User Permissions
     path('permissions/create-and-read/', UserPermission_CR, name= 'userPermissionsCR'),
-    path('permission/update-and-delete/<int:id>/', UserPermission_UD, name= 'userPermissionsCR')
+    path('permission/update-and-delete/<int:id>/', UserPermission_UD, name= 'userPermissionsUD')
 
 ]
