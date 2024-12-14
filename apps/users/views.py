@@ -230,7 +230,7 @@ class BranchSwitch(views.APIView):
             user.branch = Branch.objects.get(id=branch_id)
             user.save()
         else:
-            return Response('You are not authorized', status = status.HTTP_401_UNAUTHORIZED)
+            return Response(status = status.HTTP_401_UNAUTHORIZED)
         return redirect('pos:pos')
 
 
