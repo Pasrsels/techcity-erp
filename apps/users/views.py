@@ -209,6 +209,7 @@ from .serializers import(
     LogoutSerializer,
     UserPermissionsSerializer,
 )
+from apps.company.models import Branch
 from .models import User, UserPermissions
 from django.contrib.auth.models import Group
 from rest_framework import generics, status, views, permissions, viewsets
@@ -231,7 +232,12 @@ class BranchSwitch(views.APIView):
             user.save()
         else:
             return Response(status = status.HTTP_401_UNAUTHORIZED)
-        return redirect('pos:pos')
+        data = {
+            'user': user,
+            'branch': user.branch
+        }
+        logger.info(data)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.ModelViewSet):
