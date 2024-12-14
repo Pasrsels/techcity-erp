@@ -98,6 +98,7 @@
             <tbody>
                 <!-- Rows will be added dynamically -->
             </tbody>
+            <tfoot></tfoot>
         </table>
     </div>
     <div class="mt-2">
@@ -138,16 +139,26 @@
                     theadRow.appendChild(th);
                 });
 
-                // Add a "Total Cost" column
+                // Add "Total Cost" column
                 const thTotalCost = document.createElement("th");
                 thTotalCost.textContent = "Total Cost";
                 theadRow.appendChild(thTotalCost);
 
-                const branchMap = {};
-                uniqueBranches.forEach((branch, index) => {
-                    branchMap[branch] = index + 2; // Adjust index for table structure
-                });
+                // Initialize footer row for totals
+                const tfoot = document.createElement("tfoot");
+                const footerRow = document.createElement("tr");
+                footerRow.innerHTML = `
+                    <th colspan="2">Branch Totals</th>
+                    ${uniqueBranches.map(() => "<th class='branch-total'>0</th>").join("")}
+                    <th id="grand-total">0</th>
+                `;
+                tfoot.appendChild(footerRow);
+                document.querySelector("table").appendChild(tfoot);
 
+                const branchTotals = {};
+                uniqueBranches.forEach((branch) => (branchTotals[branch] = 0));
+
+                // Populate table rows dynamically
                 const tbody = document.querySelector("tbody");
                 transferItems.forEach((item) => {
                     let row = Array.from(tbody.querySelectorAll("tr")).find((tr) =>
@@ -165,31 +176,36 @@
                         tbody.appendChild(row);
                     }
 
-                    const branchIndex = branchMap[item.to_branch__name];
-                    if (branchIndex) {
-                        const quantityCell = row.children[branchIndex];
-                        quantityCell.textContent =
-                            parseInt(quantityCell.textContent || "0") + item.quantity;
+                    const branchIndex = uniqueBranches.indexOf(item.to_branch__name) + 2;
+                    const quantityCell = row.children[branchIndex];
+                    quantityCell.textContent =
+                        parseInt(quantityCell.textContent || "0") + item.quantity;
 
-                        // Update total cost for this row using product__cost
-                        const cost = parseFloat(row.children[1].textContent || "0");
-                        const quantities = Array.from(row.children)
-                            .slice(2, -1) // Exclude product name, cost, and last total cost column
-                            .map((cell) => parseInt(cell.textContent || "0"));
-                        const totalCost = quantities.reduce((sum, qty) => sum + qty * cost, 0);
-                        row.querySelector(".total-cost").textContent = totalCost.toFixed(2);
-                    }
+                    // Update row total cost
+                    const cost = parseFloat(row.children[1].textContent || "0");
+                    const quantities = Array.from(row.children)
+                        .slice(2, -1)
+                        .map((cell) => parseInt(cell.textContent || "0"));
+                    const totalCost = quantities.reduce((sum, qty) => sum + qty * cost, 0);
+                    row.querySelector(".total-cost").textContent = totalCost.toFixed(2);
+
+                    // Update branch totals
+                    branchTotals[item.to_branch__name] += item.quantity * cost;
                 });
 
-                // Calculate and display total quantity
-                const totalQtyCells = Array.from(
-                    tbody.querySelectorAll("tr td:nth-child(3)")
-                );
-                const totalQuantity = totalQtyCells.reduce(
-                    (sum, cell) => sum + parseInt(cell.textContent || "0"),
+                // Populate branch totals in the footer
+                const footerCells = document.querySelectorAll(".branch-total");
+                footerCells.forEach((cell, index) => {
+                    const branchName = uniqueBranches[index];
+                    cell.textContent = branchTotals[branchName].toFixed(2);
+                });
+
+                // Calculate and update grand total
+                const grandTotal = Object.values(branchTotals).reduce(
+                    (sum, total) => sum + total,
                     0
                 );
-                document.querySelector("#id_quantity").textContent = totalQuantity;
+                document.getElementById("grand-total").textContent = grandTotal.toFixed(2);
             } else {
                 alert(data.message || "Failed to fetch transfer data.");
             }

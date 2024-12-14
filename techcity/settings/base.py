@@ -55,7 +55,7 @@ THIRD_PARTY_APPS = [
     'apps.settings',
     'apps.Analytics',
     'apps.booking',
-    'apps.vouchers'
+    # 'apps.vouchers'
 ]
 
 LOCAL_APPS = [
