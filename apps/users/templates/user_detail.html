@@ -79,10 +79,11 @@
     <div class="modal-dialog">
         <div class="modal-content w-100 p-4">
             <h6 class="fw-bold">User Permissions</h6>
-            <table>
+            <table class="border table-bordered table-striped table-responsive">
                 <tr>
                     <th>Name</th>
                     <th>Category</th>
+                    <th>Actions</th>
                 </tr>
                 <tbody id="Permission-data">
                     
@@ -154,20 +155,32 @@
         }).then(answer => answer.json())
         .then(data =>{
             if(data.success){
+                document.getElementById('Permission-data').innerHTML = ''
                 data.data.forEach( item =>{
-                    console.log(item.username)
                     const tableBody =  document.getElementById('Permission-data');
-                    const tableRow = document.createElement('tr');
+                    tableBody.innerHTML +=`
+                        <td><small>${ item.username }</small></td>
+                        <td><small>${ item.category}</small></td>
+                        <td><small><button class='btn btn-outlin-dark bx bx-trash' onclick='removeItem(${item.id})'></button></small></td>
+                    `
+                    // console.log(item.username)
+                    // const tableBody =  document.getElementById('Permission-data');
+                    // const tableRow = document.createElement('tr');
 
-                    const name = document.createElement('td');
-                    name.textContent = item.username;
-                    tableRow.appendChild(name);
+                    // const name = document.createElement('td');
+                    // name.textContent = item.username;
+                    // tableRow.appendChild(name);
 
-                    const category = document.createElement('td');
-                    category.textContent = item.category;
-                    tableRow.appendChild(category);
+                    // const category = document.createElement('td');
+                    // category.textContent = item.category;
+                    // tableRow.appendChild(category);
 
-                    tableBody.appendChild(tableRow);
+                    // const editPermissionBtn = document.createElement('button')
+                    // editPermissionBtn.id =  'editPermissions'
+                    // editPermissionBtn.textContent = 'Edit'
+                    // tableRow.appendChild(editPermissionBtn);
+
+                    // tableBody.appendChild(tableRow);
                 });
             }else{
                 Swal.fire({
@@ -178,5 +191,29 @@
             }
         });
     });
+
+    removeItem = (itemId)=>{
+        fetch("{% url 'users:userPermissionsUD' 0 %}".replace(0, itemId),{
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(answer => answer.json())
+        .then(data=>{
+            if(data.success){
+                Swal.fire({
+                    'icon': 'success',
+                    'title': 'Success',
+                    'text': 'Successfully deleted'
+                });
+            }else{
+                Swal.fire({
+                    'icon': 'error',
+                    'title': 'error',
+                    'text': 'Failed to delete'
+                });
+            }
+        })
+    }
 </script>
 {% endblock content %}

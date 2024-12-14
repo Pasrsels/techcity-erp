@@ -98,19 +98,18 @@
         <div class="modal-dialog">
             <div class="modal-content w-100 p-4">
                 <h6 class="fw-bold">Add User</h6>
-                <table>
+                <table class="border table-bordered table-responsive table-striped">
                     <tr>
                         <th>Name</th>
                         <th>Category</th>
+                        <th>Actions</th>
                     </tr>
                     <tbody id="PermissionsTableBody">
-                        <tr id="PermissionsTableRow">
-                            
-                        </tr>
+                        
                     </tbody>
                 </table>
                 <div>
-                    <button class="btn btn-sm bx bx-plus" type="button" id="addPermission">Add Permission</button>
+                    <button class="btn btn-outline-dark btn-sm bx bx-plus d-flex justify-content-end align-items-end" type="button" id="addPermission">Add Permission</button>
                 </div>
             </div>
         </div>
@@ -263,23 +262,14 @@
                 data.Permissiondata.forEach( item =>{
                     console.log('i am in')
                     const tableBody =  document.getElementById('PermissionsTableBody');
-                    const tableRow = document.getElementById('PermissionsTableRow');
-
-                    const name = document.createElement('td');
-                    name.textContent = item.name || 'no data';
-                    tableRow.appendChild(name);
-
-                    const category = document.createElement('td');
-                    category.textContent = item.category || 'no data';
-                    tableRow.appendChild(category);
-                    
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.id = 'PermissionDelete' ;
-                    deleteBtn.textContent = 'Delete';
-                    tableRow.appendChild(deleteBtn);
-
-
-                    tableBody.appendChild(tableRow);
+                    tableBody.innerHTML = `
+                        <td><small>${item.name}</small></td>
+                        <td><small>${item.category}</small></td>
+                        <td>
+                            <small><button class = "btn btn-sm bx bx-trash" type = "button" onclick = "removePermission${item.id}")></button></small>
+                            <small><button class = "btn btn-sm bx bx-edit" type = "button" onclick = "editPermission${item.id}")></button></small>
+                        </td>
+                    `
                 });
             }else{
                 Swal.fire({
@@ -298,5 +288,32 @@
         viewPermissionsModal.hide();
         addPermissionModal.show();
     })
+    removePermission = (itemId) =>{
+        fetch("{% url 'users:userPermissionsUD' 0 %}".replace(0, itemId),{
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(answer => answer.json())
+        .then(data => {
+            if(data.success){
+                Swal.fire({
+                    'icon': 'success',
+                    'title': 'Success',
+                    'text': 'Successfully deleted'
+                })
+            }else{
+                Swal.fire({
+                    'icon': 'error',
+                    'title': 'error',
+                    'text': 'Failed to delete'
+                })
+            }
+        })
+    }
+
+    editPermission = (itemId) =>{
+
+    }
 </script>
 {% endblock content %}
