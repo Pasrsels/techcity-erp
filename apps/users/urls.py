@@ -5,7 +5,7 @@ from rest_framework.routers import DefaultRouter
 app_name = 'users'
 
 router = DefaultRouter()
-router.register(r'api/', UserViewSet, basename='users')
+router.register(r'api/users/', UserViewSet, basename='users')
 router.register(r'permissions/', UserPermissionViewSet, basename='userpermissions')
 
 urlpatterns = [
@@ -27,5 +27,5 @@ urlpatterns = [
     path('api/login/', LoginAPIView.as_view(), name="login"),
     path('api/logout/', LogoutAPIView.as_view(), name="logout"),
     path('api/branch-switch/<int:branch_id>/', BranchSwitch.as_view(), name='branch_switch'),
-    path('api/router', include(router.urls), name='routes')
+    path('', include(router.urls))
 ]

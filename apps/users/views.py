@@ -217,21 +217,25 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+
+
 class UserPermissionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = UserPermissions.objects.all()
     serializer_class = UserPermissionsSerializer
 
+
 class BranchSwitch(views.APIView):
-    permission_classes = [IsAuthenticated]
+    """ Enables the admin or the ownwer to switch between branches """
+    # permission_classes = [IsAuthenticated]
+
     def get(self, request, branch_id):
-        """ Enables the admin or the ownwe to switch between branches """
         user = request.user
         if user.role == 'Admin' or user.role == 'admin':
             user.branch = Branch.objects.get(id=branch_id)
             user.save()
         else:
-            return Response(status = status.HTTP_401_UNAUTHORIZED)
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         data = {
             'user': user,
             'branch': user.branch

@@ -451,6 +451,21 @@
 
         for (let i = 0; i < branchElements.length; i++) {
             const branch = branchElements[i]; 
+            const quantity = branch.querySelector('.quantity-input').value;
+
+            productQnty += parseInt(quantity);
+
+            if (productQuantity <= 0){
+                insufficientQnt = true
+            break;
+            }else if (productQnty > productQuantity){
+                insufficientQnt = true
+                break;
+            }
+        }
+
+        for (let i = 0; i < branchElements.length; i++) {
+            const branch = branchElements[i]; 
             const branchName = branch.dataset.branchName;
             const price = branch.querySelector('.price-input').value;
             const dealerPrice = branch.querySelector('.dealer-price-input').value;
@@ -467,21 +482,6 @@
             product = product.split(' [')[0];
             pSelectedQnty = product.split(/\[(\d+)\]/);
 
-
-            for (let i = 0; i < branchElements.length; i++) {
-                const branch = branchElements[i]; 
-                const quantity = branch.querySelector('.quantity-input').value;
-
-                productQnty += parseInt(quantity);
-
-                if (productQuantity <= 0){
-                    insufficientQnt = true
-                break;
-                }else if (productQnty > productQuantity){
-                    insufficientQnt = true
-                    break;
-                }
-            }
 
            if (insufficientQnt){
                 Swal.fire({
