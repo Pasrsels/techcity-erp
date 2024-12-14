@@ -2995,4 +2995,372 @@ class CustomerViewset(ModelViewSet):
         serializer.save()
 
         logger.info(f"Customer created successfully: {serializer.instance.id}")
+
+#API 
+#############################################################################################################
+from rest_framework import status, views, viewsets
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .serializers import *
+
+class CustomerCrud(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+
+    def post(self, request):
+        data = request.data
+        
+        validation_errors = validate_customer_data(data)
+        if validation_errors:
+            return Response(validation_errors, status= status.HTTP_406_NOT_ACCEPTABLE)
+        if Customer.objects.filter(phone_number=data['phonenumber']).exists():
+            return Response('Customer exists', status= status.HTTP_409_CONFLICT)
+        else:
+            customer = Customer.objects.create(
+                name=data['name'],
+                email=data['email'],
+                address=data['address'],
+                phone_number=data['phonenumber'],
+                branch=request.user.branch
+            )
+            account = CustomerAccount.objects.create(customer=customer)
+
+        balances_to_create = [
+            CustomerAccountBalances(account=account, currency=currency, balance=0) 
+            for currency in Currency.objects.all()
+        ]
+        CustomerAccountBalances.objects.bulk_create(balances_to_create)
+        return JsonResponse(status.HTTP_201_CREATED)
+
+class CustomerList(views.APIView):   
+    def get(self, request):
+        search_query = request.GET.get('q', '')
+        
+        customers = Customer.objects.filter(branch=request.user.branch)
+        accounts = CustomerAccountBalances.objects.all()
+        
+        total_balances_per_currency = CustomerAccountBalances.objects.filter(account__customer__branch=request.user.branch).values('currency__name').annotate(
+            total_balance=Sum('balance')
+        )
+        
+        if search_query:
+            customers = CustomerAccount.objects.filter(Q(customer__name__icontains=search_query))
+            
+        if 'receivable' in request.GET:
+            negative_balances_per_currency = CustomerAccountBalances.objects.filter(account__customer__branch=request.user.branch, balance__lt=0) \
+                .values('currency') \
+                .annotate(total_balance=Sum('balance'))
+
+            customers = Customer.objects.filter(
+                id__in=negative_balances_per_currency.values('account__customer_id'),
+            ).distinct()
+            
+            total_balances_per_currency = negative_balances_per_currency.values('currency__name').annotate(
+                total_balance=Sum('balance')
+            )
+            
+            logger.info(f'Customers:{total_balances_per_currency.values}')
+
+        if 'download' in request.GET: 
+            customers = Customer.objects.all() 
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=customers.xlsx'
+
+            workbook = openpyxl.Workbook()
+            worksheet = workbook.active
+            
+            header_font = Font(bold=True)
+            header_alignment = Alignment(horizontal='center')
+            for col_num, header_title in enumerate(['Customer Name', 'Phone Number', 'Email', 'Account Balance'], start=1):
+                cell = worksheet.cell(row=1, column=col_num)
+                cell.value = header_title
+                cell.font = header_font
+                cell.alignment = header_alignment
+                
+                column_letter = openpyxl.utils.get_column_letter(col_num)
+                worksheet.column_dimensions[column_letter].width = max(len(header_title), 20)
+
+            customer_accounts = CustomerAccountBalances.objects.all()
+            for customer in customer_accounts:
+                worksheet.append(
+                    [
+                        customer.account.customer.name, 
+                        customer.account.customer.phone_number, 
+                        customer.account.customer.email, 
+                        customer.balance if customer.balance else 0,
+                    ]
+                )  
+                
+            workbook.save(response)
+            return response
+            
+        return Response({
+            'customers':customers, 
+            'accounts':accounts,
+            'total_balances_per_currency':total_balances_per_currency,
+        },status= status.HTTP_200_OK)
+
+class CustomerAccount(views.APIView):
+    def get(self, request, customer_id):
+        form = customerDepositsForm()
+        refund_form = customerDepositsRefundForm()
+        customer = get_object_or_404(Customer, id=customer_id)
+        customer_serializer = CustomerSerializer(customer)
+
+        account = CustomerAccountBalances.objects.filter(account__customer=customer)
+        account_serializer = CustomerAccountBalancesSerializer(account)
+
+        invoices = Invoice.objects.filter(
+            customer=customer, 
+            branch=request.user.branch, 
+            status=True
+        )
+        invoice_serializer = InvoiceSerializer(invoice)
+
+        invoice_payments = Payment.objects.filter(
+            invoice__branch=request.user.branch, 
+            invoice__customer=customer
+        ).order_by('-payment_date')
+        invoice_payments_serializer = PaymentSerializer(invoice_payments)
+
+        filters = Q()
+        if request.GET.get('q'):
+            filters &= Q(payment_status=request.GET['q'])
+        if request.GET.get('search_query'):
+            search_query = request.GET['search_query']
+            filters &= (Q(invoice_number__icontains=search_query) | Q(issue_date__icontains=search_query))
+
+        invoices = invoices.filter(filters)
+
+        if request.GET.get('email_bool'):
+            send_account_statement_email(customer.id, request.user.branch.id, request.user.id)
+            return Response({'message': 'Email sent'},status.HTTP_200_OK)
+
+        paid_invoice = invoices.filter(payment_status='Paid').count()
+        due_invoice = invoices.filter(payment_status='Partial').count()
+        return Response({
+            'account': account_serializer.data,
+            'invoices': invoice_serializer.data,
+            'customer': customer_serializer.data,
+            'invoice_count': invoices.count(),
+            'invoice_payments': invoice_payments_serializer,
+            'paid': paid_invoice,  
+            'due': due_invoice, 
+        },status.HTTP_200_OK)
     
+class customer_account_payments_json(views.APIView):
+    def get(self, request):
+        customer_id = request.GET.get('customer_id')
+        transaction_type = request.GET.get('type')
+
+        customer = get_object_or_404(Customer, id=customer_id)
+
+        if transaction_type == 'invoice_payments':
+            invoice_payments = Payment.objects.select_related('invoice', 'invoice__currency', 'user').filter(
+                invoice__branch=request.user.branch, 
+                invoice__customer=customer
+            ).order_by('-payment_date').values(
+                'invoice__products_purchased',
+                'payment_date',
+                'invoice__invoice_number',
+                'invoice__currency__symbol', 
+                'invoice__payment_status',
+                'invoice__amount_due',
+                'invoice__amount', 
+                'user__username', 
+                'amount_paid', 
+                'amount_due'
+            )
+            invoice_payment_serializer = PaymentSerializer(invoice_payments)
+            return Response(invoice_payment_serializer.data,status.HTTP_200_OK, safe=FALSE)
+        else:
+            return Response(status.HTTP_400_BAD_REQUEST)
+
+class Quatation(viewsets.ModelViewSet):
+    def post(self, request):
+        if request.method == 'POST':
+            data = request.data
+            qoute_data = data['data'][0]  
+            items_data = data['items']
+            
+            customer = Customer.objects.get(id=int(qoute_data['client_id']))
+            currency = Currency.objects.get(id=qoute_data['currency'])
+            
+            qoute = Qoutation.objects.create(
+                customer = customer,
+                amount =  Decimal(qoute_data['subtotal']),
+                branch = request.user.branch,
+                currency = currency,
+                qoute_reference = Qoutation.generate_qoute_number(request.user.branch.name),
+                products = ', '.join([f'{item['product_name']} x {item['quantity']}' for item in items_data])
+            )
+            
+            for item_data in items_data:
+                item = Inventory.objects.get(pk=item_data['inventory_id'])
+                
+                QoutationItems.objects.create(
+                    qoute=qoute,
+                    product=item,
+                    unit_price=item.price,
+                    quantity=item_data['quantity'],
+                    total_amount= item.price * item_data['quantity'],
+                )
+            return Response({'qoute_id': qoute.id}, status.HTTP_200_OK)
+        return Response(status.HTTP_400_BAD_REQUEST)
+    
+class QuotationList(views.APIView):
+    def get(self, request):
+        search_query = request.GET.get('q', '')
+        qoutations = Qoutation.objects.filter(branch=request.user.branch).order_by('-date')
+    
+        if search_query:
+
+            qoutations = qoutations.filter(
+                Q(customer__name__icontains=search_query)|
+                Q(products__icontains=search_query)|
+                Q(date__icontains=search_query)|
+                Q(qoute_reference__icontains=search_query)
+            )
+            quote_serializer = QuotationSerializer(qoutations)
+        return Response(quote_serializer.data, status.HTTP_200_OK)
+
+class QuotationDelete(views.APIView):
+    def delete(request, qoutation_id):
+        qoute = get_object_or_404(Qoutation, id=qoutation_id)
+        qoute.delete()
+        return Response(status.HTTP_202_ACCEPTED)
+
+class QuotationView(views.APIView):
+    def get(request, qoutation_id):
+        qoute = Qoutation.objects.get(id=qoutation_id)
+        quote_serializer = QuotationSerializer(qoute)
+        qoute_items = QoutationItems.objects.filter(qoute=qoute)
+        quote_item_serializer = QuotationItemSerializer(qoute_items)
+        return render({quote_serializer.data, quote_item_serializer.data}, status.HTTP_200_OK)
+
+class Invoice(views.APIView):
+    def get(self, request):
+        form = InvoiceForm()
+        invoices = Invoice.objects.filter(branch=request.user.branch, status=True).order_by('-invoice_number')
+
+        query_params = request.GET
+        if query_params.get('q'):
+            search_query = query_params['q']
+            invoices = invoices.filter(
+                Q(customer__name__icontains=search_query) |
+                Q(invoice_number__icontains=search_query) |
+                Q(issue_date__icontains=search_query)
+            )
+
+        user_timezone_str = request.user.timezone if hasattr(request.user, 'timezone') else 'UTC'
+        user_timezone = pytz_timezone(user_timezone_str)  
+
+        def filter_by_date_range(start_date, end_date):
+            start_datetime = user_timezone.localize(
+                timezone.datetime.combine(start_date, timezone.datetime.min.time())
+            )
+            end_datetime = user_timezone.localize(
+                timezone.datetime.combine(end_date, timezone.datetime.max.time())
+            )
+            return invoices.filter(issue_date__range=[start_datetime, end_datetime])
+
+        now = timezone.now().astimezone(user_timezone)
+        today = now.date()
+
+        now = timezone.now() 
+        today = now.date()  
+        
+        date_filters = {
+            'today': lambda: filter_by_date_range(today, today),
+            'yesterday': lambda: filter_by_date_range(today - timedelta(days=1), today - timedelta(days=1)),
+            't_week': lambda: filter_by_date_range(today - timedelta(days=today.weekday()), today),
+            'l_week': lambda: filter_by_date_range(today - timedelta(days=today.weekday() + 7), today - timedelta(days=today.weekday() + 1)),
+            't_month': lambda: invoices.filter(issue_date__month=today.month, issue_date__year=today.year),
+            'l_month': lambda: invoices.filter(issue_date__month=today.month - 1 if today.month > 1 else 12, issue_date__year=today.year if today.month > 1 else today.year - 1),
+            't_year': lambda: invoices.filter(issue_date__year=today.year),
+        }
+
+        if query_params.get('day') in date_filters:
+            invoices = date_filters[query_params['day']]()
+
+        total_partial = invoices.filter(payment_status='Partial').aggregate(Sum('amount'))['amount__sum'] or 0
+        total_paid = invoices.filter(payment_status='Paid').aggregate(Sum('amount'))['amount__sum'] or 0
+        total_amount = invoices.aggregate(Sum('amount'))['amount__sum'] or 0
+
+        logger.info(f'Invoices: {invoices.values}')
+
+        return render({
+            'invoices': invoices,
+            'total_paid': total_paid,
+            'total_due': total_partial,
+            'total_amount': total_amount,
+        },status.HTTP_200_OK)
+
+class Expense(views.APIView):
+    def get(self, request, expense_id):
+        expense = get_object_or_404(Expense, id=expense_id)
+        data = {
+            'id': expense.id,
+            'amount': expense.amount,
+            'description': expense.description,
+            'category': expense.category.id
+        }
+        expense_serializer = ExpenseSerializer(data)
+        return JsonResponse(data, status.HTTP_200_OK)
+    
+class ExpenseCategory(views.APIView):
+    def post(self, request):
+        categories = ExpenseCategory.objects.all().values()
+        data = request.data
+        category = data['name']
+        logger.info(data)
+        
+        if ExpenseCategory.objects.filter(name=category).exists():
+            return JsonResponse({'success':False, 'message':f'Category with ID {category} Exists.'}, status=400)
+        
+        ExpenseCategory.objects.create(
+            name=category
+        )
+        expense_category_serializer = ExpenseCategorySerializer(categories)
+        return JsonResponse(expense_category_serializer.data, status.HTTP_201_CREATED)
+    
+class AddOrEditExpense(views.APIView):
+    def post(request):
+        try:
+            data = request.data
+            amount = data.get('amount')
+            description = data.get('description')
+            category_id = data.get('category')
+            expense_id = data.get('id')
+
+            if not amount or not description or not category_id:
+                return JsonResponse({'success': False, 'message': 'Missing fields: amount, description, category.'})
+            
+            category = get_object_or_404(ExpenseCategory, id=category_id)
+            
+            if expense_id:  
+                expense = get_object_or_404(Expense, id=expense_id)
+                before_amount = expense.amount
+                
+                expense.amount = amount
+                expense.description = description
+                expense.category = category
+                expense.save()
+                message = 'Expense successfully updated'
+                
+                try:
+                    cashbook_expense = Cashbook.objects.get(expense=expense)
+                    expense_amount = Decimal(expense.amount)
+                    if cashbook_expense.amount < expense_amount:
+                        cashbook_expense.amount = expense_amount
+                        cashbook_expense.description = cashbook_expense.description + f'Expense (update from {before_amount} to {cashbook_expense.amount})'
+                    else:
+                        cashbook_expense.amount -= cashbook_expense.amount - expense_amount
+                        cashbook_expense.description = cashbook_expense.description + f'(update from {before_amount} to {cashbook_expense.amount})'
+                    cashbook_expense.save()
+                except Exception as e:
+                    return Response({'success': False, 'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+            return Response({'success': True, 'message': message}, status.HTTP_201_CREATED)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)

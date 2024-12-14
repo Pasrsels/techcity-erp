@@ -5,3 +5,38 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         exclude = ['branch']
+
+class CustomerAccountBalancesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerAccountBalances
+        fields = '__all__'
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invoice
+        fields = '__all__'
+
+class PaymentSerializer(serializers.Serializer):
+    class Meta:
+        model = Payment
+        fields = '__all__'
+
+class QuotationSerializer(serializers.Serializer):
+    class Meta:
+        model = Qoutation
+        fields = '__all__'
+
+class QuotationItemSerializer(serializers.Serializer):
+    class Meta:
+        model = QoutationItems
+        fields = '__all__'
+
+class ExpenseSerializer(serializers.Serializer):
+    class Meta:
+        model = Expense
+        fields = '__all__'
+
+class ExpenseCategorySerializer(serializers.Serializer):
+    class Meta:
+        model = ExpenseCategory
+        fields = '__all__'
