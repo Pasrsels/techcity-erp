@@ -20,6 +20,12 @@ ADMIN_GROUP_NAME = 'Admin'
 ACCOUNTANT_GROUP_NAME = 'Accountant'
 SALESPERSON_GROUP_NAME = 'Salesperson'
 
+class UserPermissions(models.Model):
+    name = models.CharField(max_length=60)
+    category = models.CharField(max_length=60)
+    def __str__(self):
+        return f'{self.name}'
+
     
 class CustomUserManager(BaseUserManager):
     """
