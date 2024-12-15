@@ -298,7 +298,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                             logger.info(f'Total requested quantity for {product.name}: {total_requested_quantity}')
 
                             if total_requested_quantity > product.quantity:
-                                return JsonResponse({'success': False, 'message': 'Insufficient stock to process.', 'id': product.id})
+                                return JsonResponse({'success': False, 'message': f'Insufficient stock to process product: {product.name}.', 'id': product.id})
 
                             logger.info(f'Transfered product: {product.name}')
                             branch_name = item['branch_name']

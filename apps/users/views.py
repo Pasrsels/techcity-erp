@@ -18,65 +18,99 @@ import json
 
 def UserPermission_CR(request):
     if request.method == 'GET':
+
         permission_data = UserPermissions.objects.all().values()
         logger.info(list(permission_data))
         return JsonResponse({'success': True, 'Permissiondata': list(permission_data)}, status = 200)
+    
     elif request.method == 'POST':
+
         user_permission_form = UserPermissionsForm(request.POST)
         name = request.POST.get('name')
         name.lower()
+
         if user_permission_form.is_valid():
+
             if  not UserPermissions.objects.filter(name = name).exists():
                 user_permission_form.save()
                 return JsonResponse({'success':True}, status = 201)
+            
             return JsonResponse({'success': False, 'message': 'Permission already exists'}, status = 400)
         return JsonResponse({'success': False, 'message': 'Invalid form data'}, 400)
     return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
 
 def UserPermission_UD(request,id):
+
     if request.method == 'GET':
         permissions_data = User.objects.filter(id = id).values()
         logger.info(permissions_data)
         return JsonResponse({'success':True, 'data':list(permissions_data)}, status = 200)
+    
     if request.method == 'PUT':
         data = json.loads(request.body)
         name = data.get('name')
+
         if UserPermissions.objects.filter(id = id).exists():
+
             permissions_data = UserPermissions.objects.get(id = id)
             permissions_data.name = name
             permissions_data.save()
+
             return JsonResponse({'success': True}, status = 200)
         return JsonResponse({'success': False, 'message': 'permission doesnot exist'}, status = 400)
+    
     elif request.method == 'DELETE':
+
         data = json.loads(request.body)
+
         if UserPermissions.objects.filter(id = id).exists():
             permission_delete = UserPermissions.objects.get(id = id)
             permission_delete.delete()
+
             return JsonResponse({'success': True}, status = 200)
+        
         return JsonResponse({'success': False, 'message': 'permission doesnot exist'}, status = 400)
     return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
 
         
 
 def users(request):
-    search_query = request.GET.get('q', '')
-    users = User.objects.filter(Q(username__icontains=search_query) | Q(email__icontains=search_query)).order_by(
-        'first_name', 'last_name')
     form = UserRegistrationForm()
     user_details_form = UserDetailsForm2()
     formPermissions = UserPermissionsForm()
+
+    search_query = request.GET.get('q', '')
+    users = User.objects.filter(
+        
+        Q(username__icontains=search_query) | 
+        Q(email__icontains=search_query)
+
+    ).order_by(
+        'first_name', 'last_name'
+    )
+    
     if request.method == 'POST':
+
         form = UserRegistrationForm(request.POST)
+
         if form.is_valid():
-            form.save()
+
             user = form.save(commit=False)
+
             user.password = make_password(form.cleaned_data['password'])
             user.save()
+
             messages.success(request, 'User successfully added')
         else:
             messages.error(request, 'Invalid form data')
 
-    return render(request, 'auth/users.html', {'users': users, 'form': form, 'user_details_form': user_details_form, 'PermData':formPermissions})
+    return render(request, 'auth/users.html', {
+        'users': users,
+        'form': form, 
+        'user_details_form': user_details_form, 
+        'PermData':formPermissions
+        }
+    )
 
 
 def login_view(request):
@@ -149,16 +183,16 @@ def user_detail(request, user_id):
 
 def register(request):
     form = UserRegistrationForm()
+
     if request.method == 'POST':
+
         form = UserRegistrationForm(request.POST)
+
         if form.is_valid():
             form.save()
             user = form.save(commit=False)
             user.password = make_password(form.cleaned_data['password'])
             user.save()
-
-            # create notifications settings for the user
-            NotificationsSettings.objects.create(user=user)
 
             messages.success(request, 'User successfully added')
         else:
@@ -179,7 +213,9 @@ def load_branches(request):
 
 
 def get_user_data(request, user_id):
+
     user = User.objects.get(id=user_id)
+
     user_data = {
         'first_name': user.first_name,
         'last_name': user.last_name,
@@ -190,7 +226,9 @@ def get_user_data(request, user_id):
         'branch': user.branch.id if user.branch else None,
         'role': user.role,
     }
+
     logger.info(f'User data: {user_data}')
+    
     return JsonResponse(user_data)
 
 
