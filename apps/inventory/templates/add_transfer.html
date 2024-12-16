@@ -335,37 +335,6 @@
         }
     });
 
-    let branchQuantities = {};
-    let totalQuantity = 0; 
-
-    const initializeState = (branches, initialQuantity) => {
-        totalQuantity = initialQuantity;
-        branches.forEach(branch => {
-            branchQuantities[branch.name] = 0; 
-        });
-    };
-
-    const calculateQuantityDifference = (inputElement, productQuantity, branchName) => {
-        let newQuantity = parseInt(inputElement.value, 10) || 0;
-        let oldQuantity = branchQuantities[branchName] || 0;
-
-        // Update the remaining product quantity
-        let difference = newQuantity - oldQuantity;
-        totalQuantity -= difference;
-
-        if (totalQuantity < 0) {
-            alert("Exceeded available product quantity!");
-            inputElement.value = oldQuantity; 
-            return;
-        }
-
-        branchQuantities[branchName] = newQuantity; 
-
-        Object.keys(branchQuantities).forEach(branch => {
-            document.getElementById(`id_${branch}`).innerText = totalQuantity;
-        });
-    };
-
     const handleEnterKeyNavigation = (event, currentElement) => {
         if (event.key === "Enter") {
             event.preventDefault();
@@ -376,42 +345,6 @@
             }
         }
     };
-
-    document.querySelectorAll(".quantity-input").forEach(input => {
-        input.addEventListener("change", event => calculateQuantityDifference(event.target, totalQuantity, event.target.dataset.branchName));
-        input.addEventListener("keydown", event => handleEnterKeyNavigation(event, event.target));
-    });
-
-    // const displayTables = (values, product, prodData) => {
-    //     let tableEl = document.getElementById("branchesTable");
-    //     tableEl.innerHTML = "";
-
-    //     const productData = prodData[0]; 
-    //     initializeState(values, productData.quantity);
-
-    //     values.forEach(value => {
-    //         if (!branchesList.includes(value)) {
-    //             tableEl.innerHTML += `
-    //                 <div class="m-1 branch-data border p-2 rounded" data-branch-name="${value.name}">
-    //                     <div class="d-flex justify-content-center align-items-center branch text-light rounded shadow">
-    //                         <small class="text-center px-2">${value.name}</small>
-    //                     </div>
-    //                     <div id="div_id_quantity" class="mb-1">
-    //                         <label for="id_quantity" class="form-label requiredField">
-    //                             <small>Quantity [<span id="id_${value.name}">${productData.quantity}</span>]</small>
-    //                         </label>
-    //                         <input type="number" name="quantity" min="0" 
-    //                             data-branch-name="${value.name}" 
-    //                             class="numberinput form-control quantity-input custom-input-size" 
-    //                             required>
-    //                     </div>
-    //                 </div>
-    //             `;
-    //         }
-    //     });
-
-
-    // };
 
     const displayTables = (values, product, prodData) => {
         let tableEl = document.getElementById('branchesTable');
@@ -430,7 +363,6 @@
 
                 const productData = prodData[0]; 
 
-                console.log(defaultAverage(productData.quantity), 'branches average quantitty')
                 tableEl.innerHTML += `
                     <div class='m-1 branch-data border p-2 rounded' data-branch-name="${value?.name}">
                         <div class='d-flex justify-content-center align-items-center branch text-light rounded shadow'>
@@ -461,25 +393,72 @@
                         </div>
                         <div id="div_id_quantity" class="mb-1">
                             <label for="id_quantity" class="form-label requiredField">
-                                <small>Quantity [<span id="id_${value.name}">${productData.quantity}</span>]</small>
+                                <small>Quantity [<span id='id_${value.name}'>${productData.quantity}</span>]</small>
                             </label>
-                            <input type="number" name="quantity" min="0" 
-                                data-branch-name="${value.name}" 
-                                class="numberinput form-control quantity-input custom-input-size" 
-                                required>
+                            <input 
+                                type="number" 
+                                name="quantity" 
+                                min="0" 
+                                onchange='calculateQuantityDifference(this.value, ${productData.quantity}, "${(value.name)}")'
+                                onkeydown="handleEnterKeyNavigation(event, this)"
+                                class="numberinput form-control quantity-input custom-input-size" required>
                         </div>
                     </div>
-                    `
-                ;
+                `;
             }
-        });
-        // Reattach event listeners for dynamically added elements
-        document.querySelectorAll(".quantity-input").forEach(input => {
-            input.addEventListener("change", event => calculateQuantityDifference(event.target, productData.quantity, event.target.dataset.branchName));
-            input.addEventListener("keydown", event => handleEnterKeyNavigation(event, event.target));
         });
     };
     
+
+
+    const calculateQuantityDifference = (quantity, productQuantity, branchName) => {
+        
+        let exist = trackQuantity.find(branch => branch.name === branchName) 
+
+        console.log('track qnt', trackProductQuantity)
+
+        console.log('exists, ', exist)
+
+        if(exist){
+            let difference = quantity - exist.value;
+            console.log('difference: ', difference)
+            console.log('before: ', exist.value)
+            exist.value = quantity
+            console.log('after: ', exist.value)
+            if(difference < 0){ // 3- 2 = 1
+                trackProductQuantity -= difference
+                console.log('after: ', trackProductQuantity)
+                branches.forEach((b)=>{
+                    document.getElementById(`id_${b.name}`).innerText = trackProductQuantity;
+                })
+                return;
+            }else if (difference > 0){
+                trackProductQuantity += difference
+                console.log('greater than difference:',difference, 'trackprod',trackProductQuantity)
+            }else{
+                trackProductQuantity = trackProductQuantity
+                return;
+            }
+        }else{
+            value = {
+                name : branchName,
+                value: quantity
+            }
+            trackQuantity.push(value)
+        }
+
+        if (trackProductQuantity !== 0){
+            trackProductQuantity -= quantity
+        }else{
+            let updatedQuantity  = productQuantity - quantity; // 10 -1 = 9 
+            trackProductQuantity = updatedQuantity;
+        }
+        
+        branches.forEach((b)=>{
+            document.getElementById(`id_${b.name}`).innerText = trackProductQuantity;
+        })
+       
+    };
 
     const saveDataToServer = (action) => {
         const branchElements = document.querySelectorAll('.branch-data');

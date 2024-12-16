@@ -3,9 +3,9 @@
 {% block content %}
 <div class="stocktake">
     <div class="d-flex align-items-center justify-content-between rounded shadow header py-2 mb-4">
-        <h5 class="text-light px-1">Stocktake</h5>
+        <h5 class="px-1">Stocktake</h5>
         <div>
-            <button class="btn btn-outline-dark" id="createStockTakeButton">
+            <button class="btn btn-sm btn-outline-dark" id="createStockTakeButton">
                 <i class="bx bx-plus"></i>
                 stocktake
             </button>
@@ -13,17 +13,13 @@
     </div>
 
     <!-- stocktake table -->
-    <div class="d-flex justify-content-between align-items-center">
-        <p>List</p>
-        <input type="search" class="form-control form-control-sm" placeholder="search ...">
-    </div>
-    
+
     <div class="table-responsive">
-        <table class="table table-striped">
+        <table class="table table-striped" id="stock" style="width: 100%;">
             <thead class="table-dark">
                 <th>#</th>
                 <th>Stocktake #</th>
-                <th>Result</th>
+                <th>Status</th>
                 <th>Actions</th>
             </thead>
             <tbody>
@@ -31,7 +27,17 @@
                     <tr>
                         <td><small>{{ forloop.counter }}</small></td>
                         <td><small>{{ item.s_t_number }}</small></td>
-                        <td><small>{{ item.result }}</small></td>
+                        <td><small>
+                            {% if not result %}
+                                Empty
+                            {% endif %}
+                        </small></td>
+                        <td>
+                            <small>
+                                <button class="btn btn-sm bx bx-show"></button>
+                                <button class="btn btn-sm bx bx-trash"></button>
+                            </small>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -39,6 +45,9 @@
     </div>  
 </div>
 <script>
+    new DataTable('#stock', {
+        pagin:false
+    })
     document.getElementById('createStockTakeButton').addEventListener('click', async () => {
         const confirmation = await Swal.fire({
             title: 'Are you sure?',
@@ -51,7 +60,7 @@
 
         if (confirmation.isConfirmed) {
             try {
-                const response = await fetch('/stock-take/', {
+                const response = await fetch('/inventory/stocktake/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -61,7 +70,7 @@
                 });
 
                 const result = await response.json();
-
+                console.log(result)
                 if (response.ok) {
                     Swal.fire({
                         icon: 'success',

@@ -458,7 +458,7 @@ class StockTake(models.Model):
     status = models.BooleanField(default=False)
 
     def stocktake_number(self, branch):
-        prv_stock_take = StockTake.objects.filter(Branch__name=branch).order_by('-id').first()
+        prv_stock_take = StockTake.objects.filter(branch__name=branch).order_by('-id').first()
         if prv_stock_take:
             last_stocktake_number = int(prv_stock_take.s_t_number)
             new_stocktake_number = last_stocktake_number + 1
