@@ -279,6 +279,8 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
                     product_quantities_dict = defaultdict(int)
 
+                    # new
+                    
                     for item in data['cart']:
                         logger.info(f'quantity: {item['quantity']}')
                         product_id = item['product_id']
