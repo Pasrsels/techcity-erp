@@ -4,8 +4,8 @@ from rest_framework.routers import DefaultRouter
 
 app_name = 'finance'
 
-router = DefaultRouter()
-router.register(r'customers', CustomerCrud,  basename='customers')
+# router = DefaultRouter()
+# router.register(r'customers', CustomerCrud,  basename='customers')
 
 urlpatterns = [
     path('', Finance.as_view(), name='finance'),
@@ -113,5 +113,5 @@ urlpatterns = [
 
     ########################################################################################################################
     # API end points
-    path('api/', include(router.urls))
+    # path('api/', include(router.urls))
 ]   

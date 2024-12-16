@@ -3356,3 +3356,13 @@ def vue_view(request):
 
 #API
 ##########################################################################################################
+from rest_framework import views, status
+from rest_framework.response import Response
+from .serializers import *
+
+class CategoriesList(views.APIView):
+    def get(request): 
+        categories = ProductCategory.objects.all().values()
+        logger.info(categories)
+        categories_serializer = CategorySerializer(categories)
+        return Response(categories_serializer.data, status.HTTP_200_OK)

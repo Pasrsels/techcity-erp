@@ -11,9 +11,36 @@ class CustomerAccountBalancesSerializer(serializers.ModelSerializer):
         model = CustomerAccountBalances
         fields = '__all__'
 
+class CustomerDepositSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerDeposits
+        fields = '__all__'
+
+class CashTransferSerializer(serializers.Serializer):
+    model = CashTransfers
+    fields = '__all__'
+
+
+class FinanceNotificationSerializer(serializers.Serializer):
+    model = FinanceNotifications
+    fields = '__all__'
+
+class CurrencySerializer(serializers.Serializer):
+    model = Currency
+    fields = '__all__'
+
+class CashWithdrawalSerializer(serializers.Serializer):
+    model = CashWithdrawals
+    fields = '__all__'
+
 class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
+        fields = '__all__'
+
+class InvoiceItemsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvoiceItem
         fields = '__all__'
 
 class PaymentSerializer(serializers.Serializer):
@@ -39,4 +66,9 @@ class ExpenseSerializer(serializers.Serializer):
 class ExpenseCategorySerializer(serializers.Serializer):
     class Meta:
         model = ExpenseCategory
+        fields = '__all__'
+
+class LayByDatesSerializer(serializers.Serializer):
+    class Meta:
+        model = laybyDates
         fields = '__all__'

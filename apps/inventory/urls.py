@@ -99,5 +99,10 @@ urlpatterns = [
     #accessories
     path('accessory_view/<int:product_id>/', accessory_view, name='accessory_view'),
 
-    path('vue_view/', vue_view, name='vue')
+    path('vue_view/', vue_view, name='vue'),
+
+
+    #API ENDPOINTS
+    ################################################################################################
+    path('api/category', CategoriesList.as_view(), name = 'categories')
 ]
