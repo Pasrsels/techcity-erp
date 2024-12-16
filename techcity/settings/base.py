@@ -152,26 +152,7 @@ DATABASES = {
 #        'PORT': '5432'
 #  }
 
-    # 'default': {
-    #     'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-    #      'NAME': os.getenv('DB_NAME', 'railway'),
-    #      'USER': os.getenv('DB_USERNAME', 'postgres'),
-    #      'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvsaDuHLnxhw'),  
-    #      'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
-    #      'PORT': os.getenv('DB_PORT', '26269'),
-    #  }
- }
-
-if 'test' in sys.argv:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': ':memory:',
-        }
-    }
-
-DATABASES["default"]["ATOMIC_REQUESTS"] = True
-# https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
+}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # AUTH_USER_MODEL = "users.User"
