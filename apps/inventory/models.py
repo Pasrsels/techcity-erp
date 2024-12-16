@@ -449,10 +449,32 @@ class reorderSettings(models.Model):
     order_enough_stock = models.BooleanField(default=False)
     date_created = models.DateField(auto_now_add=True)
 
-class Stocktake(models.Model):
+
+class StockTake(models.Model):
+    date = models.DateField()
+    s_t_number = models.CharField(max_length=255)
+    result = models.CharField(max_length=255, null=True)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    status = models.BooleanField(default=False)
+
+    def stocktake_number(self, branch):
+        prv_stock_take = StockTake.objects.filter(Branch__name=branch).order_by('-id').first()
+        if prv_stock_take:
+            last_stocktake_number = int(prv_stock_take.s_t_number)
+            new_stocktake_number = last_stocktake_number + 1
+        else:
+            new_stocktake_number = 1
+
+        return new_stocktake_number
+    
+    def __str__(self):
+        return f'{self.date}: {self.s_t_number}'
+        
+class StocktakeItem(models.Model):
+    stocktake = models.ForeignKey(StockTake, on_delete=models.CASCADE, null=True)
     product = models.ForeignKey(Inventory, on_delete=models.CASCADE)
     quantity = models.IntegerField()
-    date = models.DateField()
+    quantity_difference = models.IntegerField()
 
     def __str__(self):
         return self.product.product.name

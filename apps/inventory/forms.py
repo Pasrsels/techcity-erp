@@ -8,7 +8,8 @@ from . models import (
     Supplier, 
     PurchaseOrder,
     BatchCode, 
-    reorderSettings
+    reorderSettings,
+    StockTake
 )
 from datetime import date
 from loguru import logger
@@ -121,3 +122,8 @@ class ReorderSettingsForm(forms.ModelForm):
         model = reorderSettings
         fields = ['supplier', 'quantity_suggestion', 'number_of_days_from', 'number_of_days_to', 'order_enough_stock']
        
+
+class StockTakeForm(forms.ModelForm):
+    class Meta:
+        model = StockTake
+        exclude = ['branch', 's_t_number']

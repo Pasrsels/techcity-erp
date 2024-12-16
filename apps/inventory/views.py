@@ -51,7 +51,8 @@ from . forms import (
     noteStatusForm,
     PurchaseOrderStatus,
     ReorderSettingsForm,
-    EditSupplierForm
+    EditSupplierForm,
+    StockTakeForm
 )
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
@@ -3232,7 +3233,7 @@ def reorder_settings(request):
 @login_required
 def stock_take(request):
     if request.method == 'GET':
-        products = Inventory.objects.filter(branch=request.user.branch)
+        products = Inventory.objects.filter(branch=request.user.branch, disable=False)
         return render(request, 'stocktake/stocktake.html',{
             'products':products
         })
@@ -3269,7 +3270,47 @@ def stock_take(request):
            
        except Exception as e:
            return JsonResponse({'success': False, 'response': e}, status = 400)
+       
+@login_required
+def stock_take_index(request):
+    if request.method == 'GET':
+        form = StockTakeForm()
+        stock_takes = StockTake.objects.all()
+        return render(request, 'stocktake.html', {
+            'form': form,
+            'stock_takes': stock_takes
+        })
+    
+    if request.method == 'POST':
+        try:
+            date = timezone.now().date()
+            branch = request.user.branch 
+            result = ""  # Example result value
 
+            s_t_number = StockTake().stocktake_number(branch.name)
+
+            stock_take = StockTake.objects.create(
+                date=date,
+                s_t_number=s_t_number,
+                result=result,
+                branch=branch,
+                status=False
+            )
+
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Stock take recorded successfully.',
+                'stock_take': {
+                    'id': stock_take.id,
+                    'date': stock_take.date,
+                    's_t_number': stock_take.s_t_number,
+                    'result': stock_take.result,
+                    'branch': stock_take.branch.name,
+                }
+            }, status=201)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        
 #supplier payments
 @login_required
 def payments(request):

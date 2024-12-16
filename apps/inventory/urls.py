@@ -21,7 +21,7 @@ urlpatterns = [
     path('detail/<int:id>/', inventory_detail, name='inventory_detail' ),
 
     #Stocktake
-    path('stocktake/', stock_take, name= 'stocktake'),
+    path('stocktake/', stock_take_index, name= 'stocktake'),
 
     #batch_code 
     path('batch_code/', batch_code, name='batch_code'),

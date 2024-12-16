@@ -2,112 +2,112 @@
 {% load crispy_forms_tags %}
 {% block content %}
 <div class="stocktake">
-    <div class="d-flex align-items-center justify-content-between rounded text-light shadow header py-2 mb-4" style="background: #373f4c;">
+    <div class="d-flex align-items-center justify-content-between rounded shadow header py-2 mb-4">
         <h5 class="text-light px-1">Stocktake</h5>
+        <div>
+            <button class="btn btn-outline-dark" id="createStockTakeButton">
+                <i class="bx bx-plus"></i>
+                stocktake
+            </button>
+        </div>
     </div>
 
-    <div class="mt-2">
+    <!-- stocktake table -->
+    <div class="d-flex justify-content-between align-items-center">
+        <p>List</p>
+        <input type="search" class="form-control form-control-sm" placeholder="search ...">
+    </div>
+    
+    <div class="table-responsive">
         <table class="table table-striped">
-            <thead>
-                <th>Product</th>
-                <th>System Quantity</th>
-                <th>Physical Quantity</th>
-                <th>Quantity Difference</th>
-                <th>Quantity Difference Value</th>
-                <th>Adjust</th>
+            <thead class="table-dark">
+                <th>#</th>
+                <th>Stocktake #</th>
+                <th>Result</th>
+                <th>Actions</th>
             </thead>
             <tbody>
-                {% for product in products %}
+                {% for item in stocktakes %}
                     <tr>
-                        <td>{{ product.product.name }}</td>
-                        <td id="id_quantity">{{ product.quantity }}</td>
-                        <td>
-                            <input id="p_quantity" class="form-control-sm" type="number" onchange="postQuantity(this.value, {{ product.id }})">
-                        </td>
-                        <td id="q_difference"></td>
-                        <td id="q_cost"></td>
-                        <td>
-                            <button class="btn btn-outline-dark" onclick="accept()">Accept</button>
-                        </td>
+                        <td><small>{{ forloop.counter }}</small></td>
+                        <td><small>{{ item.s_t_number }}</small></td>
+                        <td><small>{{ item.result }}</small></td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
-    </div>
+    </div>  
 </div>
 <script>
-    async function postQuantity(newQuantity, productId) {
-        try {
-            Swal.fire({
-                title: 'Processing',
-                text: 'Please wait while the quantity is being updated...',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            const response = await fetch(`inventory/stock_take/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')  
-                },
-                body: JSON.stringify({
-                    quantity: newQuantity,
-                    product_id: productId
-                })
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Quantity Updated',
-                    text: 'The quantity has been updated successfully.',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-
-                const differenceCell = document.querySelector(`#q_difference[data-product-id="${productId}"]`);
-                differenceCell.textContent = data.q_difference;
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message || 'Failed to update the quantity.'
-                });
-            }
-        } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'An error occurred while processing your request.'
-            });
-            console.error('Error:', error);
-        }
-    }
-
-    function accept() {
-        Swal.fire({
+    document.getElementById('createStockTakeButton').addEventListener('click', async () => {
+        const confirmation = await Swal.fire({
             title: 'Are you sure?',
-            text: "Do you want to proceed with accepting this update?",
+            text: 'Do you want to create a stocktake record?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, accept it'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire(
-                    'Accepted!',
-                    'Your changes have been accepted.',
-                    'success'
-                );
-            }
+            confirmButtonText: 'Yes, create it!',
+            cancelButtonText: 'No, cancel',
         });
+
+        if (confirmation.isConfirmed) {
+            try {
+                const response = await fetch('/stock-take/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({}) 
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: result.message,
+                    }).then(() => {
+                        location.reload(); 
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message,
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'An Error Occurred',
+                    text: 'An unexpected error occurred while creating the stock take. Please try again.',
+                });
+            }
+        } else {
+            Swal.fire({
+                icon: 'info',
+                title: 'Action Cancelled',
+                text: 'No stocktake record was created.',
+            });
+        }
+    });
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 
 </script>
-{% endblock content %}
+{% endblock content %} 

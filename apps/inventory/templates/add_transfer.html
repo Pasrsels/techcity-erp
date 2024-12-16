@@ -382,19 +382,82 @@
         input.addEventListener("keydown", event => handleEnterKeyNavigation(event, event.target));
     });
 
+    // const displayTables = (values, product, prodData) => {
+    //     let tableEl = document.getElementById("branchesTable");
+    //     tableEl.innerHTML = "";
+
+    //     const productData = prodData[0]; 
+    //     initializeState(values, productData.quantity);
+
+    //     values.forEach(value => {
+    //         if (!branchesList.includes(value)) {
+    //             tableEl.innerHTML += `
+    //                 <div class="m-1 branch-data border p-2 rounded" data-branch-name="${value.name}">
+    //                     <div class="d-flex justify-content-center align-items-center branch text-light rounded shadow">
+    //                         <small class="text-center px-2">${value.name}</small>
+    //                     </div>
+    //                     <div id="div_id_quantity" class="mb-1">
+    //                         <label for="id_quantity" class="form-label requiredField">
+    //                             <small>Quantity [<span id="id_${value.name}">${productData.quantity}</span>]</small>
+    //                         </label>
+    //                         <input type="number" name="quantity" min="0" 
+    //                             data-branch-name="${value.name}" 
+    //                             class="numberinput form-control quantity-input custom-input-size" 
+    //                             required>
+    //                     </div>
+    //                 </div>
+    //             `;
+    //         }
+    //     });
+
+
+    // };
+
     const displayTables = (values, product, prodData) => {
-        let tableEl = document.getElementById("branchesTable");
-        tableEl.innerHTML = "";
+        let tableEl = document.getElementById('branchesTable');
 
-        const productData = prodData[0]; 
-        initializeState(values, productData.quantity);
+        tableEl.innerHTML = ''
 
-        values.forEach(value => {
+        const defaultAverage = (quantity) =>{
+            let branches = branchesList.length;
+            average_quantity = Math.round(quantity / branches);
+            
+            return average_quantity.toFixed(1)
+        }
+
+        values.forEach((value) => {
             if (!branchesList.includes(value)) {
+
+                const productData = prodData[0]; 
+
+                console.log(defaultAverage(productData.quantity), 'branches average quantitty')
                 tableEl.innerHTML += `
-                    <div class="m-1 branch-data border p-2 rounded" data-branch-name="${value.name}">
-                        <div class="d-flex justify-content-center align-items-center branch text-light rounded shadow">
-                            <small class="text-center px-2">${value.name}</small>
+                    <div class='m-1 branch-data border p-2 rounded' data-branch-name="${value?.name}">
+                        <div class='d-flex justify-content-center align-items-center branch text-light rounded shadow'>
+                            <small class='text-center px-2'>${value?.name}</small>
+                        </div>
+                        <div class="{% if request.user.role == 'sales' %} d-none {% endif %} mt-2">
+                             <div id="div_id_price" class="mb-1">
+                                <label for="id_cost" class="form-label requiredField">
+                                    <small>Cost</small>
+                                </label>
+                                <input type="number" name="cost" step="0.01" value="${productData.cost || ''}" class="numberinput form-control cost-input custom-input-size" disabled>
+                                <p id="price_error" class="fs-6 text-danger"></p>
+                            </div>
+                            <div id="div_id_price" class="mb-1">
+                                <label for="id_price" class="form-label requiredField">
+                                    <small>Price</small>
+                                </label>
+                                <input type="number" name="price" step="0.01" value="${productData.price || ''}" class="numberinput form-control price-input custom-input-size" required>
+                                <p id="price_error" class="fs-6 text-danger"></p>
+                            </div>
+                            <div id="div_id_dealer_price" class="mb-1">
+                                <label for="id_dealer_price" class="form-label requiredField">
+                                    <small>Wholesale Price</small>
+                                </label>
+                                <input type="number" name="dealer_price" step="0.01" value="${productData.dealer_price || ''}" class="numberinput form-control dealer-price-input custom-input-size" required>
+                                <p id="dealer_price_error" class="fs-6 text-danger"></p>
+                            </div>
                         </div>
                         <div id="div_id_quantity" class="mb-1">
                             <label for="id_quantity" class="form-label requiredField">
@@ -406,17 +469,17 @@
                                 required>
                         </div>
                     </div>
-                `;
+                    `
+                ;
             }
         });
-
         // Reattach event listeners for dynamically added elements
         document.querySelectorAll(".quantity-input").forEach(input => {
             input.addEventListener("change", event => calculateQuantityDifference(event.target, productData.quantity, event.target.dataset.branchName));
             input.addEventListener("keydown", event => handleEnterKeyNavigation(event, event.target));
         });
     };
-
+    
 
     const saveDataToServer = (action) => {
         const branchElements = document.querySelectorAll('.branch-data');
