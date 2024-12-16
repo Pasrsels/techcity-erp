@@ -104,5 +104,5 @@ urlpatterns = [
 
     #API ENDPOINTS
     ################################################################################################
-    path('api/category', CategoriesList.as_view(), name = 'categories')
+    path('api/categories', CategoriesList.as_view(), name = 'categories')
 ]

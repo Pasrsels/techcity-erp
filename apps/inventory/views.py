@@ -3361,8 +3361,8 @@ from rest_framework.response import Response
 from .serializers import *
 
 class CategoriesList(views.APIView):
-    def get(request): 
+    def get(self, request): 
         categories = ProductCategory.objects.all().values()
         logger.info(categories)
         categories_serializer = CategorySerializer(categories)
-        return Response(categories_serializer.data, status.HTTP_200_OK)
+        return Response(categories, status.HTTP_200_OK)
