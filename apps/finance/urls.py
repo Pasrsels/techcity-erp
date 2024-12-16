@@ -5,7 +5,7 @@ from rest_framework.routers import DefaultRouter
 app_name = 'finance'
 
 router = DefaultRouter()
-router.register(r'customers', CustomerViewset,  basename='customers')
+router.register(r'customers', CustomerCrud,  basename='customers')
 
 urlpatterns = [
     path('', Finance.as_view(), name='finance'),

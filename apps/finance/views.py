@@ -2964,38 +2964,6 @@ def vat(request):
         return JsonResponse({'success':False, 'message':'VAT successfully paid'}, status = 200)
     
 
-    
-############################################################################################################################################################################################
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.response import Response
-from apps.finance.serializers import (
-    CustomerSerializer
-)
-
-""" Finance API views """
-class CustomerViewset(ModelViewSet):
-    """
-        viewset customer crud
-    """
-    serializer_class = CustomerSerializer
-    queryset = Customer.objects.all()
-
-    def create(self, request, *args, **kwargs):
-        request.data['branch'] = self.request.user.branch or Branch.objects.get(id=i) # to  be removed just for testsing
-  
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def perform_create(self, serializer):
-        logger.info(f"Creating a new customer with data: {serializer.validated_data}")
-      
-        serializer.save()
-
-        logger.info(f"Customer created successfully: {serializer.instance.id}")
-
 #API 
 #############################################################################################################
 from rest_framework import status, views, viewsets
@@ -3033,73 +3001,96 @@ class CustomerCrud(viewsets.ModelViewSet):
         CustomerAccountBalances.objects.bulk_create(balances_to_create)
         return JsonResponse(status.HTTP_201_CREATED)
 
-class CustomerList(views.APIView):   
-    def get(self, request):
-        search_query = request.GET.get('q', '')
-        
-        customers = Customer.objects.filter(branch=request.user.branch)
-        accounts = CustomerAccountBalances.objects.all()
-        
-        total_balances_per_currency = CustomerAccountBalances.objects.filter(account__customer__branch=request.user.branch).values('currency__name').annotate(
-            total_balance=Sum('balance')
-        )
-        
-        if search_query:
-            customers = CustomerAccount.objects.filter(Q(customer__name__icontains=search_query))
-            
-        if 'receivable' in request.GET:
-            negative_balances_per_currency = CustomerAccountBalances.objects.filter(account__customer__branch=request.user.branch, balance__lt=0) \
-                .values('currency') \
-                .annotate(total_balance=Sum('balance'))
+# """ Finance API views """
+# class CustomerViewset(ModelViewSet):
+#     """
+#         viewset customer crud
+#     """
+#     serializer_class = CustomerSerializer
+#     queryset = Customer.objects.all()
 
-            customers = Customer.objects.filter(
-                id__in=negative_balances_per_currency.values('account__customer_id'),
-            ).distinct()
-            
-            total_balances_per_currency = negative_balances_per_currency.values('currency__name').annotate(
-                total_balance=Sum('balance')
-            )
-            
-            logger.info(f'Customers:{total_balances_per_currency.values}')
+#     def create(self, request, *args, **kwargs):
+#         request.data['branch'] = self.request.user.branch or Branch.objects.get(id=i) # to  be removed just for testsing
+  
+#         serializer = self.get_serializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         self.perform_create(serializer)
 
-        if 'download' in request.GET: 
-            customers = Customer.objects.all() 
-            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = 'attachment; filename=customers.xlsx'
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-            workbook = openpyxl.Workbook()
-            worksheet = workbook.active
+#     def perform_create(self, serializer):
+#         logger.info(f"Creating a new customer with data: {serializer.validated_data}")
+      
+#         serializer.save()
+
+#         logger.info(f"Customer created successfully: {serializer.instance.id}")
+# class CustomerList(views.APIView):   
+#     def get(self, request):
+#         search_query = request.GET.get('q', '')
+        
+#         customers = Customer.objects.filter(branch=request.user.branch)
+#         accounts = CustomerAccountBalances.objects.all()
+        
+#         total_balances_per_currency = CustomerAccountBalances.objects.filter(account__customer__branch=request.user.branch).values('currency__name').annotate(
+#             total_balance=Sum('balance')
+#         )
+        
+#         if search_query:
+#             customers = CustomerAccount.objects.filter(Q(customer__name__icontains=search_query))
             
-            header_font = Font(bold=True)
-            header_alignment = Alignment(horizontal='center')
-            for col_num, header_title in enumerate(['Customer Name', 'Phone Number', 'Email', 'Account Balance'], start=1):
-                cell = worksheet.cell(row=1, column=col_num)
-                cell.value = header_title
-                cell.font = header_font
-                cell.alignment = header_alignment
+#         if 'receivable' in request.GET:
+#             negative_balances_per_currency = CustomerAccountBalances.objects.filter(account__customer__branch=request.user.branch, balance__lt=0) \
+#                 .values('currency') \
+#                 .annotate(total_balance=Sum('balance'))
+
+#             customers = Customer.objects.filter(
+#                 id__in=negative_balances_per_currency.values('account__customer_id'),
+#             ).distinct()
+            
+#             total_balances_per_currency = negative_balances_per_currency.values('currency__name').annotate(
+#                 total_balance=Sum('balance')
+#             )
+            
+#             logger.info(f'Customers:{total_balances_per_currency.values}')
+
+#         if 'download' in request.GET: 
+#             customers = Customer.objects.all() 
+#             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+#             response['Content-Disposition'] = 'attachment; filename=customers.xlsx'
+
+#             workbook = openpyxl.Workbook()
+#             worksheet = workbook.active
+            
+#             header_font = Font(bold=True)
+#             header_alignment = Alignment(horizontal='center')
+#             for col_num, header_title in enumerate(['Customer Name', 'Phone Number', 'Email', 'Account Balance'], start=1):
+#                 cell = worksheet.cell(row=1, column=col_num)
+#                 cell.value = header_title
+#                 cell.font = header_font
+#                 cell.alignment = header_alignment
                 
-                column_letter = openpyxl.utils.get_column_letter(col_num)
-                worksheet.column_dimensions[column_letter].width = max(len(header_title), 20)
+#                 column_letter = openpyxl.utils.get_column_letter(col_num)
+#                 worksheet.column_dimensions[column_letter].width = max(len(header_title), 20)
 
-            customer_accounts = CustomerAccountBalances.objects.all()
-            for customer in customer_accounts:
-                worksheet.append(
-                    [
-                        customer.account.customer.name, 
-                        customer.account.customer.phone_number, 
-                        customer.account.customer.email, 
-                        customer.balance if customer.balance else 0,
-                    ]
-                )  
+#             customer_accounts = CustomerAccountBalances.objects.all()
+#             for customer in customer_accounts:
+#                 worksheet.append(
+#                     [
+#                         customer.account.customer.name, 
+#                         customer.account.customer.phone_number, 
+#                         customer.account.customer.email, 
+#                         customer.balance if customer.balance else 0,
+#                     ]
+#                 )  
                 
-            workbook.save(response)
-            return response
+#             workbook.save(response)
+#             return response
             
-        return Response({
-            'customers':customers, 
-            'accounts':accounts,
-            'total_balances_per_currency':total_balances_per_currency,
-        },status= status.HTTP_200_OK)
+#         return Response({
+#             'customers':customers, 
+#             'accounts':accounts,
+#             'total_balances_per_currency':total_balances_per_currency,
+#         },status= status.HTTP_200_OK)
 
 class CustomerAccount(views.APIView):
     def get(self, request, customer_id):
