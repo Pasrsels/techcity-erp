@@ -280,14 +280,28 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                     product_quantities_dict = defaultdict(int)
 
                     # new
-                    
+
                     for item in data['cart']:
                         logger.info(f'quantity: {item['quantity']}')
                         product_id = item['product_id']
                         quantity = item['quantity']
-                        product_quantities_dict[product_id] += quantity
+
+                        if product_quantities_dict[product_id]:
+                            logger.info('New')
+                            product_quantities_dict[product_id] += quantity
+                        else:
+                            logger.info('Existing')
+                            product_quantities_dict[product_id] = quantity
                             
                     logger.info(f'product quantities {product_quantities_dict}')
+
+
+                    for item in data['cart']:
+                        product = Inventory.objects.get(id=item['product_id'], branch=request.user.branch)
+                        if product_quantities_dict[f'{product.id}'] > product.quantity:
+                            logger.info('The product has more quantity')
+                            return JsonResponse({'success': False, 'message': f'Insufficient stock to process product: {product.name}.', 'id': product.id})
+
 
                     for branch_obj in branch_obj_list:
                         for item in data['cart']:
@@ -297,11 +311,9 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
                             total_requested_quantity = product_quantities_dict[f'{product_id}']
 
-                            logger.info(f'Total requested quantity for {product.name}: {total_requested_quantity}')
-
-                            if total_requested_quantity > product.quantity:
-                                return JsonResponse({'success': False, 'message': f'Insufficient stock to process product: {product.name}.', 'id': product.id})
-
+                            logger.info(f'Total requested quantity for {product.name}: {total_requested_quantity} product quantity {product.quantity}')
+                            logger.info(total_requested_quantity == product.quantity)
+                          
                             logger.info(f'Transfered product: {product.name}')
                             branch_name = item['branch_name']
                             logger.info(f'branch name: {branch_name}')
@@ -325,21 +337,18 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                                 
                                 self.deduct_inventory(transfer_item)
                                 self.transfer_update_quantity(transfer_item, transfer) 
-              
-                    # send email for transfer alert
-                    # transaction.on_commit(lambda: send_transfer_email(request.user.email, transfer.id, transfer.transfer_to.id))
+            
+                                # send email for transfer alert
+                                # transaction.on_commit(lambda: send_transfer_email(request.user.email, transfer.id, transfer.transfer_to.id))
 
-                    # held transfer items 
-                    transfer_items = Holdtransfer.objects.filter(transfer__id=transfer.id)
-                    transfer_items.delete()
+                                # held transfer items 
+                                transfer_items = Holdtransfer.objects.filter(transfer__id=transfer.id)
+                                transfer_items.delete()
 
-                    # save the transfer
-                    transfer.hold = False
-                    transfer.date = datetime.datetime.now()
-                    transfer.save()  
-                                
-                else:
-                    self.hold_transfer(branch_obj_list, data, transfer, request)
+                                # save the transfer
+                                transfer.hold = False
+                                transfer.date = datetime.datetime.now()
+                                transfer.save()  
             return JsonResponse({'success': True})     
         except Exception as e:
             logger.info(e)
