@@ -113,5 +113,6 @@ urlpatterns = [
 
     ########################################################################################################################
     # API end points
-    path('api/customers/', include(router.urls))
+    path('api/customers/', include(router.urls)),
+    path('api/customer-account/<int:customer_id>/', CustomerAccount.as_view(), name='customer_account'),
 ]   

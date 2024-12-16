@@ -3105,7 +3105,7 @@ class CustomerAccount(views.APIView):
             branch=request.user.branch, 
             status=True
         )
-        invoice_serializer = InvoiceSerializer(invoice)
+        invoice_serializer = InvoiceSerializer(invoices)
 
         invoice_payments = Payment.objects.filter(
             invoice__branch=request.user.branch, 
@@ -3737,7 +3737,7 @@ class QuotationView(views.APIView):
         quote_item_serializer = QuotationItemSerializer(qoute_items)
         return render({quote_serializer.data, quote_item_serializer.data}, status.HTTP_200_OK)
 
-class Invoice(views.APIView):
+class InvoiceList(views.APIView):
     def get(self, request):
         form = InvoiceForm()
         invoices = Invoice.objects.filter(branch=request.user.branch, status=True).order_by('-invoice_number')
