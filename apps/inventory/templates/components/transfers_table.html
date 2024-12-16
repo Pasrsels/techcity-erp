@@ -47,7 +47,14 @@
                         <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_ref }}</small></td>
                         <td class='transfer-btn' data-id="{{ transfer.id }}"><small class="d-flex align-items-center justify-content-center"><i class='bx bx-box'></i></small></td>
                         <td>
-                            <small class="d-flex justify-content-between"><span>{{ transfer.total_quantity }}</span><span class="text-primary text-bold">${{ transfer.total_amount|floatformat:2 }}</span></small>
+                            <small class="d-flex justify-content-between">
+                                {% for qt in totals %}
+                                    {% if qt.transfer__id == transfer.id %}
+                                        <span>{{ qt.total_quantity }}</span>
+                                        <span class="text-primary text-bold">${{ qt.total_cost|floatformat:2 }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </small>
                         </td>
                         <td class='transfer-btn text-center' data-id="{{ transfer.id }}">
                             <small  class='hint--bottom' aria-label='Defective'>

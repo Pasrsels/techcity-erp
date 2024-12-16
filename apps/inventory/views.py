@@ -868,6 +868,14 @@ def inventory_transfers(request):
             output_field=FloatField()
         )
     )
+
+    transfer_summary = transfer_items.values('transfer__id').annotate(
+        total_cost=Sum(F('quantity') * F('cost')), 
+        total_quantity=Sum('quantity') 
+    )
+
+    for item in transfer_summary:
+        print(f"Transfer ID: {item['transfer__id']}, Total Cost: {item['total_cost']}")
     
     transfers = Transfer.objects.filter(
         Q(branch=request.user.branch) |
@@ -880,8 +888,6 @@ def inventory_transfers(request):
             output_field=FloatField()
         )
     ).order_by('-time').distinct()
-
-    logger.info(f'transfers: {transfers}')
     
     if q:
         transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
@@ -907,6 +913,7 @@ def inventory_transfers(request):
         'transfer_items':transfer_items,
         'transferred_value':total_transferred_value,
         'received_value':total_received_value,
+        'totals':transfer_summary,
         'hold_transfers_count':Transfer.objects.filter(
                 Q(branch=request.user.branch) |
                 Q(transfer_to__in=[request.user.branch]),
