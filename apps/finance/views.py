@@ -3139,8 +3139,8 @@ class CustomerAccount(views.APIView):
         },status.HTTP_200_OK)
     
 class customer_account_payments_json(views.APIView):
-    def get(self, request):
-        customer_id = request.GET.get('customer_id')
+    def get(self, request, customer_id):
+        customer_id = customer_id
         transaction_type = request.GET.get('type')
 
         customer = get_object_or_404(Customer, id=customer_id)
@@ -3385,7 +3385,7 @@ class CustomerDeposits(views.APIView):
 
 
 class DepositList(views.APIView):
-    def get(request):
+    def get(self, request):
         deposits = CustomerDeposits.objects.filter(branch=request.user.branch).order_by('-date_created')
         deposits_serializer = CustomerDepositSerializer(deposits)
         return Response({
@@ -3675,7 +3675,9 @@ class EndOfDay(views.APIView):
 
 
 
-class Quatation(viewsets.ModelViewSet):
+class QuatationCrud(viewsets.ModelViewSet):
+    queryset = Qoutation.objects.all()
+    serializer_class = QuotationSerializer
     def post(self, request):
         if request.method == 'POST':
             data = request.data
@@ -3824,13 +3826,13 @@ class ExpenseCategory(views.APIView):
         return JsonResponse(expense_category_serializer.data, status.HTTP_201_CREATED)
     
 class AddOrEditExpense(views.APIView):
-    def post(request):
+    def post(request, id):
         try:
             data = request.data
             amount = data.get('amount')
             description = data.get('description')
             category_id = data.get('category')
-            expense_id = data.get('id')
+            expense_id = id
 
             if not amount or not description or not category_id:
                 return JsonResponse({'success': False, 'message': 'Missing fields: amount, description, category.'})
@@ -3883,10 +3885,10 @@ class DeleteExpense(views.APIView):
         return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=400)
 
 class UpdateExpenseStatus(views.APIView):
-    def update(self, request):
+    def update(self, request, id):
         try:
             data = request.data
-            expense_id = data.get('id')
+            expense_id = id
             expense_status = data.get('status')
 
             expense = Expense.objects.get(id=expense_id)
@@ -4176,8 +4178,8 @@ class CreateInvoice(views.APIView):
             return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
         
 class InvoicePaymentTrack(views.APIView):
-    def get(self, request):
-        invoice_id = request.GET.get('invoice_id', '')
+    def get(self, request, invoice_id):
+        invoice_id = invoice_id
         
         if invoice_id:
             payments = Payment.objects.filter(invoice__id=invoice_id).order_by('-payment_date').values(
