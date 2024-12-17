@@ -199,12 +199,6 @@
                     // update count
                     itemCount = cart[cart.length - 1].count;
 
-                    branches = [...new Set(cart.map(item => item.branch_name))]
-                    .map(branch => ({ name: branch }));
-
-
-                    console.log(branches)
-
                     updateCartDisplay().then(() => {
                         Swal.close(); 
                     }).catch(error => {

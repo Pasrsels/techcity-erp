@@ -9,6 +9,7 @@
     <div class="mt-2">
         <table class="table table-striped">
             <thead>
+                <th>#</th>
                 <th>Product</th>
                 <th>System Quantity</th>
                 <th>Quantity Difference</th>
@@ -19,6 +20,7 @@
             <tbody>
                 {% for product in products %}
                     <tr>
+                        <td><small>{{ forloop.counter }}</small></td>
                         <td>
                             <small>
                                 {{ product.product.name }}
@@ -36,7 +38,7 @@
                             <small id="q_cost"></small>
                         </td>
                         <td>
-                            <input id="p_quantity" class="form-control-sm" type="number" onchange="postQuantity(this.value, {{ product.product.id }}, product.id)">
+                            <input id="p_quantity" class="form-control-sm" type="number" onchange="postQuantity(this.value, {{ product.product.id }}, {{product.id}})">
                         </td>
                         <!-- <td>
                             <button class="btn btn-outline-dark" onclick="accept()">Accept</button>
