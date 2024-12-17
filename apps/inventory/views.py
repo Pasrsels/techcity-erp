@@ -3242,14 +3242,10 @@ def process_stock_take_item(request):
      if request.method == 'POST':
        """
          payload = {
-            product_id:int
             pyhsical_quantity:int
             stocktake_id:int
         }
        """
-       data = json.loads(request.body)
-       prod_id = data.get('product_id')
-       phy_quantity = data.get('physical_quantity')
 
        try:
            """
@@ -3258,17 +3254,28 @@ def process_stock_take_item(request):
             3. condition to check between physical_quantity and quantity of the product
             4. json to the front {id:inventory.id, different:difference}
            """
-           inventory_details = Inventory.objects.filter(product_id = prod_id).values('product__name', 'quantity', 'id')
 
-           quantity = inventory_details['quantity']
-           inventory_id = inventory_details['id']
+           data = json.loads(request.body)
+           phy_quantity = data.get('quantity')
+           stocktake_id =data.get('stocktake_id')
 
-           if quantity >= 0:
-               descripancy_value =  quantity - phy_quantity
-               details_inventory= {'inventory_id': inventory_id, 'difference': descripancy_value}
-               return JsonResponse({'success': True, 'data': details_inventory }, status = 200)
-           return JsonResponse({'success': False }, status = 400)
+           logger.info(phy_quantity)
+           logger.info(type(phy_quantity))
            
+           # update the stock item object with the quantity
+           s_item = StocktakeItem.objects.get(id=stocktake_id)
+           s_item.quantity = int(phy_quantity)
+           
+           s_item.quantity_difference = int(phy_quantity) - abs(s_item.product.quantity )
+           logger.info(s_item.product.quantity)
+
+           s_item.save()
+
+           logger.info(f'{s_item.quantity_difference}')
+
+           descripancy_value =  s_item.quantity_difference
+           details_inventory= {'item_id': s_item.id, 'difference': descripancy_value}
+           return JsonResponse({'success': True, 'data': details_inventory }, status = 200)
        except Exception as e:
            return JsonResponse({'success': False, 'response': e}, status = 400)
 

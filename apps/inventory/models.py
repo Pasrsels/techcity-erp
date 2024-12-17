@@ -477,4 +477,4 @@ class StocktakeItem(models.Model):
     quantity_difference = models.IntegerField()
 
     def __str__(self):
-        return self.product.product.name
+        return self.product.name

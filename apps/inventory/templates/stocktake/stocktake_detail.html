@@ -4,9 +4,13 @@
 <div class="stocktake">
     <div class="d-flex align-items-center justify-content-between shadow py-2 mb-4">
         <h5 class="px-1">Stocktake #{{ stocktake.s_t_number }}</h5>
+        <!-- Print Button -->
+        <button class="btn btn-light me-2" onclick="printStockSheet()" title="Print Stocktake">
+            <i class="bix bix-printer"></i> Print Sheet
+        </button>
     </div>
 
-    <div class="mt-2">
+    <div id="print-section">
         <table class="table table-striped">
             <thead>
                 <th>#</th>
@@ -15,7 +19,6 @@
                 <th>Quantity Difference</th>
                 <th>Quantity Difference Value</th>
                 <th>Physical Quantity</th>
-                <!-- <th>Adjust</th> -->
             </thead>
             <tbody>
                 {% for product in products %}
@@ -26,31 +29,73 @@
                                 {{ product.product.name }}
                             </small>
                         </td>
-                        <td id="id_quantity">
+                        <td id="id_quantity_{{ product.id }}">
                             <small>
-                                {{ product.quantity }}
+                                {{ product.product.quantity }}
                             </small>
                         </td>
                         <td>
-                            <small id="q_difference"></small>
+                            <small id="id_diff_{{ product.id }}">0</small>
                         </td>
                         <td>
-                            <small id="q_cost"></small>
+                            <small id="id_cost_diff_{{ product.id }}">0.00</small>
                         </td>
                         <td>
-                            <input id="p_quantity" class="form-control-sm" type="number" onchange="postQuantity(this.value, {{ product.product.id }}, {{product.id}})">
+                            <input
+                                value="{{ product.quantity }}"
+                                id="p_quantity_{{ product.id }}"
+                                class="form-control form-control-sm"
+                                type="number"
+                                onchange="handleQuantityChange(this.value, {{ product.product.quantity }}, {{ product.product.cost }}, {{ product.id }}, {{ product.id }})"
+                            >
                         </td>
-                        <!-- <td>
-                            <button class="btn btn-outline-dark" onclick="accept()">Accept</button>
-                        </td> -->
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
 <script>
+    function updateDifference(systemQty, cost, productId) {
+        const physicalQtyInput = document.getElementById(`p_quantity_${productId}`);
+        const diffCell = document.getElementById(`id_diff_${productId}`);
+        const costDiffCell = document.getElementById(`id_cost_diff_${productId}`);
+
+        const physicalQty = physicalQtyInput.value ? parseFloat(physicalQtyInput.value) : 0;
+        const difference = physicalQty - systemQty;
+        const costDifference = difference * cost;
+
+        diffCell.textContent = difference.toFixed(2);
+        costDiffCell.textContent = costDifference.toFixed(2);
+    }
+    function printStockSheet() {
+        const originalContent = document.body.innerHTML;
+
+        const printSection = document.getElementById('print-section').innerHTML;
+        const heading = document.createElement('h5')
+
+        heading.classList.add('text-center')
+        heading.classList.add('m-3')
+
+        document.body.appendChild(heading)
+        document.body.innerHTML = printSection;
+
+        window.print();
+
+        document.body.innerHTML = originalContent;
+        location.reload();
+    }
+
+    function handleQuantityChange(newQuantity, systemQty, cost, productId, stocktakeId) {
+   
+        updateDifference(systemQty, cost, productId);
+
+        postQuantity(newQuantity, productId, stocktakeId);
+    }
+
     async function postQuantity(newQuantity, productId, stocktakeId) {
+        console.log(newQuantity)
         try {
             Swal.fire({
                 title: 'Processing',
@@ -61,7 +106,7 @@
                 }
             });
 
-            const response = await fetch(`inventory/process_stock_take_item/`, {
+            const response = await fetch(`{% url "inventory:process_stock_take_item" %}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,16 +122,17 @@
             const data = await response.json();
 
             if (response.ok && data.success) {
+                let result = data.data
                 Swal.fire({
                     icon: 'success',
                     title: 'Quantity Updated',
-                    text: 'The quantity has been updated successfully.',
+                    text: 'The quantity saved successfully.',
                     timer: 2000,
                     showConfirmButton: false
                 });
-
-                const differenceCell = document.querySelector(`#q_difference[data-product-id="${productId}"]`);
-                differenceCell.textContent = data.q_difference;
+                const differenceCell = document.getElementById(`id_diff_${result.item_id}`);
+                console.log(`id_diff_${result.item_id}`)
+                differenceCell.textContent = result.difference;
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -104,25 +150,33 @@
         }
     }
 
-    function accept() {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "Do you want to proceed with accepting this update?",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, accept it'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire(
-                    'Accepted!',
-                    'Your changes have been accepted.',
-                    'success'
-                );
-            }
+    document.addEventListener('DOMContentLoaded', () => {
+        const products = [
+            {% for product in products %}
+            {
+                id: {{ product.id }},
+                systemQty: {{ product.product.quantity }},
+                cost: {{ product.product.cost }},
+                physicalQtyId: 'p_quantity_{{ product.id }}',
+                diffCellId: 'id_diff_{{ product.id }}',
+                costDiffCellId: 'id_cost_diff_{{ product.id }}'
+            },
+            {% endfor %}
+        ];
+
+        products.forEach(product => {
+            const physicalQtyInput = document.getElementById(product.physicalQtyId);
+            const diffCell = document.getElementById(product.diffCellId);
+            const costDiffCell = document.getElementById(product.costDiffCellId);
+
+            const physicalQty = physicalQtyInput.value ? physicalQtyInput.value : 0;
+            const difference = physicalQty - product.systemQty;
+            const costDifference = difference * product.cost;
+
+            diffCell.textContent = difference.toFixed(2);
+            costDiffCell.textContent = costDifference.toFixed(2);
         });
-    }
+    });
 
 </script>
 {% endblock content %}
