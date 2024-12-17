@@ -3271,6 +3271,22 @@ def stock_take_index(request):
                 status=False
             )
 
+            # create inventory objects to link to a stocktake record
+            inventory = Inventory.objects.filter(branch=request.user.branch, disable=False)
+
+            stocktake_items = []
+            for product in inventory:
+                stocktake_items.append(
+                    StocktakeItem(
+                        stocktake=stock_take,
+                        product=product,
+                        quantity=0,
+                        quantity_difference=0
+                    )
+                )
+            
+            StocktakeItem.objects.bulk_create(stocktake_items)
+
             return JsonResponse({
                 'status': 'success',
                 'message': 'Stock take recorded successfully.',
@@ -3284,6 +3300,20 @@ def stock_take_index(request):
             }, status=201)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        
+@login_required
+def stock_take_detail(request, stocktake_id):
+    if request.method == 'GET':
+        try:
+            products = StocktakeItem.objects.filter(stocktake__id=stocktake_id)
+            stocktake  = StockTake.objects.get(id=stocktake_id)
+            logger.info(stocktake)
+            return render(request, 'stocktake/stocktake_detail.html', {
+                'products':products,
+                'stocktake':stocktake
+            })
+        except Exception as e:
+            return redirect('inventory:stocktake_detail', stocktake_id)
         
 #supplier payments
 @login_required
@@ -3333,10 +3363,8 @@ def payments(request):
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
 
-from django.views.decorators.csrf import csrf_exempt
-
-@csrf_exempt
-# @login_required
+# @csrf_exempt
+@login_required
 def accessory_view(request, product_id):
     if request.method == 'GET':
         accessories = Accessory.objects.filter(product__id=product_id).values('id', 'product__name')
@@ -3400,3 +3428,12 @@ def vue_view(request):
 
 #API
 ##########################################################################################################
+from rest_framework.viewsets import ModelViewSet
+from .serializers import ProductsSerializers
+
+class InventoryViewset(ModelViewSet):
+    serializer_class = ProductsSerializers
+
+    def get_queryset(self):
+        user = self.request.user
+        return Inventory.objects.filter(disable=False)

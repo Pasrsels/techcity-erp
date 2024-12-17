@@ -1,6 +1,10 @@
-from django.urls import path
+from django.urls import path, include
 from . views import *
 from . consumer import InventoryConsumer
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'api/v1/products', InventoryViewset, basename='api_products')
 
 app_name = 'inventory'
 
@@ -22,6 +26,7 @@ urlpatterns = [
 
     #Stocktake
     path('stocktake/', stock_take_index, name= 'stocktake'),
+    path('stocktake/detail/<int:stocktake_id>/', stock_take_detail, name='stock_take_detail'),
 
     #batch_code 
     path('batch_code/', batch_code, name='batch_code'),
@@ -95,5 +100,10 @@ urlpatterns = [
     #accessories
     path('accessory_view/<int:product_id>/', accessory_view, name='accessory_view'),
 
-    path('vue_view/', vue_view, name='vue')
+    path('vue_view/', vue_view, name='vue'),
+
+    #################################################################################################################
+    
+    # end points
+    path('', include(router.urls))
 ]

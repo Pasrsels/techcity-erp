@@ -142,7 +142,7 @@ DATABASES = {
     'default': dj_database_url.config(
         default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
     )
-
+# 
 #        'default': {
 #      'ENGINE': 'django.db.backends.postgresql',
 #        'NAME':  'techcoty',
