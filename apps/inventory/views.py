@@ -115,7 +115,7 @@ def batch_code(request):
             return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
 
 @login_required
-def product_list(request): 
+def product_list(request):
     """ for the pos """
     queryset = Inventory.objects.filter(branch=request.user.branch, status=True)
     services = Service.objects.all().order_by('-name')
@@ -3358,6 +3358,7 @@ def vue_view(request):
 ##########################################################################################################
 from rest_framework import views, status
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from .serializers import *
 
 class CategoriesList(views.APIView):
@@ -3366,3 +3367,211 @@ class CategoriesList(views.APIView):
         logger.info(categories)
         categories_serializer = CategorySerializer(categories)
         return Response(categories, status.HTTP_200_OK)
+
+class AddCategories(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        data = request.data
+        category_name = data['name'].upper()
+        
+        if ProductCategory.objects.filter(name=category_name).exists():
+            return JsonResponse({'success':False, 'message':'Category Exists'})
+        
+        category = ProductCategory.objects.create(
+            name=category_name
+        )
+        return Response({'id': category.id, 'name':category.name},status.HTTP_201_CREATED)        
+
+
+class Products(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        products = Inventory.objects.filter(branch = request.user.branch, status=True, disable=False).values(
+            'id',
+            'name',
+            'quantity'
+        ).order_by('name')  
+        logger.info(products)         
+        return Response(products, status.HTTP_200_OK)
+
+class AddProducts(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        # payload
+        """
+            id,
+            name,
+            cost: float,
+            quantity: int,
+            category,
+            tax_type,
+            min_stock_level,
+            description
+        """
+        try:
+            data = request.data
+            product_id = data.get('id', '')
+            logger.info(product_id)
+            
+        except Exception as e:
+            return JsonResponse({'success':False, 'message':'Invalid data'})
+
+        image_data = data.get('image')
+        if image_data:
+            try:
+                format, imgstr = image_data.split(';base64,') 
+                ext = format.split('/')[-1]
+                image = ContentFile(base64.b64decode(imgstr), name=f'{data['name']}.{ext}')
+            except Exception as e:
+                logger.error(f'Error decoding image: {e}')
+                return JsonResponse({'success': False, 'message': 'Invalid image data'})
+
+        try:
+            category = ProductCategory.objects.get(id=data['category'])
+        except ProductCategory.DoesNotExist:
+            return JsonResponse({'success':False, 'message':f'Category Doesnt Exists'})
+        
+        if product_id:
+            """editing the product"""
+            logger.info(f'Editing product ')
+            product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+            product.name = data['name']
+            product.price = data.get('price', 0)
+            product.cost = data.get('cost', 0)    
+            product.quantity = data.get('quantity', 0)  
+            product.category = category  
+            product.tax_type = data['tax_type']
+            product.stock_level_threshold = data['min_stock_level']
+            product.description = data['description']
+            product.end_of_day = True if data.get('end_of_day') else False
+            product.service = True if data.get('service') else False
+            product.image=product.image
+            product.batch = product.batch
+        else:
+            """creating a new product"""
+            
+            # validation for existance
+            if Inventory.objects.filter(name=data['name']).exists():
+                return JsonResponse({'success':False, 'message':f'Product {data['name']} exists'})
+            logger.info(f'Creating ')
+            product = Inventory.objects.create(
+                batch = '',
+                name = data['name'],
+                price = 0,
+                cost = 0,
+                quantity = 0,
+                category = category,
+                tax_type = data['tax_type'],
+                stock_level_threshold = data['min_stock_level'],
+                description = data['description'], 
+                end_of_day = True if data['end_of_day'] else False,
+                service = True if data['service'] else False,
+                branch = request.user.branch,
+                # image = image,
+                status = True
+            )
+        product.save()
+        return Response(status.HTTP_201_CREATED)
+
+class DeleteProducts(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def delete_product(self, request):
+        try:
+            data = request.data
+            product_id = data.get('id', '')
+
+            product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+
+            logger.info(product)
+            if product.quantity > 0:
+                product.disable = True
+                return Response({'False': True, 'message': 'Product cannot be deleted it have quantity more than zero.'})
+            else:
+                product.disable = True
+            product.save()
+            return Response({'message': 'Product deleted successfully.'}, status.HTTP_200_OK)
+
+        except Inventory.DoesNotExist:
+            return Response({'message': 'Product not found.'}, status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.info(e)
+            return Response({'message': str(e)}, status.HTTP_406_NOT_ACCEPTABLE)
+
+class InventoryList(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, id):
+        product_id = id
+        logger.info(f'product id: {product_id}')
+        if product_id:
+            logger.info(list(Inventory.objects.\
+            filter(id=product_id, branch=request.user.branch, status=True).values()))
+            
+            inventory_data = Inventory.objects.filter(id=product_id, branch=request.user.branch, status=True).values()
+            logger.info(inventory_data)
+
+            inventory_serialized_data = InventorySerializer(inventory_data)
+
+            return Response(inventory_serialized_data.data, status.HTTP_200_OK)
+        return JsonResponse({'error':'product doesnt exists'})
+    
+class DeleteInventory(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def delete(self, request, id):
+        product_id = id
+
+        if product_id:
+            inv = Inventory.objects.get(id=product_id, branch=request.user.branch)
+            inv.status = False
+            inv.save()
+        
+            ActivityLog.objects.create(
+                    branch = request.user.branch,
+                    user=request.user,
+                    action= 'deactivated',
+                    inventory=inv,
+                    quantity=inv.quantity,
+                    total_quantity=inv.quantity
+                )
+            return Response(status.HTTP_202_ACCEPTED)
+        return Response(status.HTTP_406_NOT_ACCEPTABLE)
+    
+class EditInventory(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def edit_inventory(request, product_id):
+        inv_product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+
+        end_of_day = request.data.get('end_of_day')
+
+        if end_of_day:
+            inv_product.end_of_day = True
+        
+        selling_price = Decimal(request.data['price'])
+        dealer_price = Decimal(request.data['dealer_price'])
+        
+        # think through
+        quantity = inv_product.quantity
+        inv_product.name=request.data['name']
+        # inv_product.batch=request.data['batch_code']
+        inv_product.description=request.data['description']
+        
+        inv_product.price = Decimal(request.data['price'])
+        inv_product.cost = Decimal(request.data['cost'])
+        inv_product.dealer_price = Decimal(request.data['dealer_price'])
+        inv_product.stock_level_threshold = request.data['min_stock_level']
+        inv_product.dealer_price = dealer_price
+        inv_product.quantity = request.data['quantity']
+        
+        inv_product.save()
+        
+        ActivityLog.objects.create(
+            branch = request.user.branch,
+            user=request.user,
+            action= 'Edit',
+            inventory=inv_product,
+            quantity=quantity,
+            total_quantity=inv_product.quantity,
+            dealer_price = dealer_price,
+            selling_price = selling_price
+        )
+        
+        return Response({'product':inv_product, 'title':f'Edit >>> {inv_product.name}'}, status.HTTP_202_ACCEPTED)

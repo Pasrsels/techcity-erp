@@ -104,5 +104,19 @@ urlpatterns = [
 
     #API ENDPOINTS
     ################################################################################################
-    path('api/categories', CategoriesList.as_view(), name = 'categories')
+
+    #Categories
+    path('api/categories', CategoriesList.as_view(), name = 'categories'),
+    path('api/categories-add', AddCategories.as_view(), name = 'add_categories'),
+
+    #Products
+    path('api/products', Products.as_view(), name = 'products'),
+    path('api/products-add-and-edit', AddProducts.as_view(), name = 'add_and_edit_products'),
+    path('api/products-delete', DeleteProducts.as_view(), name = 'delete_products'),
+
+    #Inventory
+    path('api/inventory-list/<int:id>/', InventoryList.as_view(), name = 'inventory_list'),
+    path('api/inventory-delete/<int:id>/', DeleteInventory.as_view(), name = 'delete_inventory'),
+    path('api/inventory-edit/<int:product_id>/', EditInventory.as_view(), name = 'edit_inventory'),
+
 ]

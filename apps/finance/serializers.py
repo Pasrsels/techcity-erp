@@ -27,7 +27,7 @@ class FinanceNotificationSerializer(serializers.Serializer):
 
 class CurrencySerializer(serializers.Serializer):
     model = Currency
-    fields = '__all__'
+    fields = ['code', 'name', 'symbol', 'exchange_rate']
 
 class CashWithdrawalSerializer(serializers.Serializer):
     model = CashWithdrawals

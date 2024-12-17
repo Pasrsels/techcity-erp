@@ -2976,7 +2976,7 @@ class CustomerCrud(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
 
-    def post(self, request):
+    def create(self, request):
         data = request.data
         
         validation_errors = validate_customer_data(data)
@@ -3507,12 +3507,44 @@ class FinanceNotification(views.APIView):
 
 
 class CurrencyViewset(viewsets.ModelViewSet):
-    queryset = Currency
+    queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
-
+    def list(self, request):
+        data = self.queryset.values()
+        logger.info(data)
+        return Response(data, status.HTTP_200_OK)
+    def create(self, request):
+        con_data = request.data
+        data = {
+            'code': con_data.get('code'),
+            'name': con_data.get('name'),
+            'symbol': con_data.get('symbol'),
+            'exchange_rate': con_data.get('exchange_rate')
+        }
+        # serializer = CurrencySerializer(data = data)
+        # if not serializer.is_valid():
+        #     serializer.save()
+        if not Currency.objects.filter(name = con_data.get('name')):
+            Currency.objects.create(
+                code = data.get('code'),
+                name = data.get('name'),
+                symbol = data.get('symbol'),
+                exchange_rate = data.get('exchange_rate')
+            )
+            data_saved = Currency.objects.get(name = data.get('name'))
+            logger.info(data_saved)
+            data_returned = {
+                'code': data_saved.code,
+                'name': data_saved.name,
+                'symbol': data_saved.symbol,
+                'exchange_rate': data_saved.exchange_rate
+            }
+            serializer = CurrencySerializer(data_saved)
+            return Response(data_returned,status.HTTP_201_CREATED)
+        return Response(status.HTTP_400_BAD_REQUEST)
 
 class CashWithdrawalsViewset(viewsets.ModelViewSet):
-    queryset = CashWithdrawals
+    queryset = CashWithdrawals.objects.all()
     serializer_class = CashWithdrawalSerializer
 
 
