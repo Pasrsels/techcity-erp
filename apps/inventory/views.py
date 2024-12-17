@@ -3238,13 +3238,40 @@ def reorder_settings(request):
 
 # #stocktake
 @login_required
-def stock_take(request):
-    if request.method == 'GET':
-        products = Inventory.objects.filter(branch=request.user.branch, disable=False)
-        return render(request, 'stocktake/stocktake.html',{
-            'products':products
-        })
-          
+def process_stock_take_item(request):
+     if request.method == 'POST':
+       """
+         payload = {
+            product_id:int
+            pyhsical_quantity:int
+            stocktake_id:int
+        }
+       """
+       data = json.loads(request.body)
+       prod_id = data.get('product_id')
+       phy_quantity = data.get('physical_quantity')
+
+       try:
+           """
+            1. get the product
+            2. get the quantity
+            3. condition to check between physical_quantity and quantity of the product
+            4. json to the front {id:inventory.id, different:difference}
+           """
+           inventory_details = Inventory.objects.filter(product_id = prod_id).values('product__name', 'quantity', 'id')
+
+           quantity = inventory_details['quantity']
+           inventory_id = inventory_details['id']
+
+           if quantity >= 0:
+               descripancy_value =  quantity - phy_quantity
+               details_inventory= {'inventory_id': inventory_id, 'difference': descripancy_value}
+               return JsonResponse({'success': True, 'data': details_inventory }, status = 200)
+           return JsonResponse({'success': False }, status = 400)
+           
+       except Exception as e:
+           return JsonResponse({'success': False, 'response': e}, status = 400)
+
 @login_required
 def stock_take_index(request):
     if request.method == 'GET':

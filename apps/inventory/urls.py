@@ -26,6 +26,7 @@ urlpatterns = [
 
     #Stocktake
     path('stocktake/', stock_take_index, name= 'stocktake'),
+    path('process_stock_take_item/', process_stock_take_item, name='process_stock_take_item'),
     path('stocktake/detail/<int:stocktake_id>/', stock_take_detail, name='stock_take_detail'),
 
     #batch_code 

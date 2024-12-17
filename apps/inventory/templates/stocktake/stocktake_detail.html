@@ -2,8 +2,8 @@
 {% load crispy_forms_tags %}
 {% block content %}
 <div class="stocktake">
-    <div class="d-flex align-items-center justify-content-between rounded text-light shadow header py-2 mb-4" style="background: #373f4c;">
-        <h5 class="text-light px-1">Stocktake #{{ stocktake.s_t_number }}</h5>
+    <div class="d-flex align-items-center justify-content-between shadow py-2 mb-4">
+        <h5 class="px-1">Stocktake #{{ stocktake.s_t_number }}</h5>
     </div>
 
     <div class="mt-2">
@@ -11,24 +11,36 @@
             <thead>
                 <th>Product</th>
                 <th>System Quantity</th>
-                <th>Physical Quantity</th>
                 <th>Quantity Difference</th>
                 <th>Quantity Difference Value</th>
-                <th>Adjust</th>
+                <th>Physical Quantity</th>
+                <!-- <th>Adjust</th> -->
             </thead>
             <tbody>
                 {% for product in products %}
                     <tr>
-                        <td>{{ product.product.name }}</td>
-                        <td id="id_quantity">{{ product.quantity }}</td>
                         <td>
-                            <input id="p_quantity" class="form-control-sm" type="number" onchange="postQuantity(this.value, {{ product.id }})">
+                            <small>
+                                {{ product.product.name }}
+                            </small>
                         </td>
-                        <td id="q_difference"></td>
-                        <td id="q_cost"></td>
+                        <td id="id_quantity">
+                            <small>
+                                {{ product.quantity }}
+                            </small>
+                        </td>
                         <td>
+                            <small id="q_difference"></small>
+                        </td>
+                        <td>
+                            <small id="q_cost"></small>
+                        </td>
+                        <td>
+                            <input id="p_quantity" class="form-control-sm" type="number" onchange="postQuantity(this.value, {{ product.product.id }}, product.id)">
+                        </td>
+                        <!-- <td>
                             <button class="btn btn-outline-dark" onclick="accept()">Accept</button>
-                        </td>
+                        </td> -->
                     </tr>
                 {% endfor %}
             </tbody>
@@ -36,7 +48,7 @@
     </div>
 </div>
 <script>
-    async function postQuantity(newQuantity, productId) {
+    async function postQuantity(newQuantity, productId, stocktakeId) {
         try {
             Swal.fire({
                 title: 'Processing',
@@ -47,7 +59,7 @@
                 }
             });
 
-            const response = await fetch(`inventory/stocktake/`, {
+            const response = await fetch(`inventory/process_stock_take_item/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -55,7 +67,8 @@
                 },
                 body: JSON.stringify({
                     quantity: newQuantity,
-                    product_id: productId
+                    product_id: productId,
+                    stocktake_id: stocktakeId
                 })
             });
 

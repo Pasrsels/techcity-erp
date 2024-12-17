@@ -367,7 +367,9 @@
                 tableEl.innerHTML += `
                     <div class='m-1 branch-data border p-2 rounded' data-branch-name="${value?.name}">
                         <div class='d-flex justify-content-center align-items-center branch text-light rounded shadow'>
-                            <small class='text-center px-2'>${value?.name}</small>
+                            <small class="text-center px-2" title="${value?.name}">
+                                ${value?.name?.length > 6 ? value.name.substring(0, 6) + "..." : value.name}
+                            </small>
                         </div>
                         <div class="{% if request.user.role == 'sales' %} d-none {% endif %} mt-2">
                              <div id="div_id_price" class="mb-1">
@@ -386,7 +388,7 @@
                             </div>
                             <div id="div_id_dealer_price" class="mb-1">
                                 <label for="id_dealer_price" class="form-label requiredField">
-                                    <small>Wholesale Price</small>
+                                    <small>W/Price</small>
                                 </label>
                                 <input type="number" name="dealer_price" step="0.01" value="${productData.dealer_price || ''}" class="numberinput form-control dealer-price-input custom-input-size" required>
                                 <p id="dealer_price_error" class="fs-6 text-danger"></p>
@@ -394,7 +396,7 @@
                         </div>
                         <div id="div_id_quantity" class="mb-1">
                             <label for="id_quantity" class="form-label requiredField">
-                                <small>Quantity [<span id='id_${value.name}'>${productData.quantity}</span>]</small>
+                                <small>Qnty [<span id='id_${value.name}'>${productData.quantity}</span>]</small>
                             </label>
                             <input 
                                 type="number" 
