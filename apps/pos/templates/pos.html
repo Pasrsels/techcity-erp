@@ -218,11 +218,16 @@
         </div>
     </div>
 
-    <div class="payment-modal hidden">
-        <div class="modal-content">
-            {% include 'pay_modal.html' %}
+    <div class="modal fade" id="payment-modal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    {% include 'pay_modal.html' %}
+                </div>
+            </div>
         </div>
     </div>
+    
     <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -726,7 +731,7 @@ const ecocash= document.querySelector('.ecocash')
 
 // modals
 const overlay = document.querySelector(".overlay");
-const modal = document.querySelector('.payment-modal');
+const modal = new bootstrap.Modal(document.querySelector('#payment-modal'));
 const clientModal = new bootstrap.Modal(document.querySelector('#clientModal'));
 const closeModalBtn = document.querySelectorAll(".btn-close");
 const closebtn = document.getElementById('closebtn')
@@ -742,8 +747,7 @@ document.querySelector('#id_pay').addEventListener(
         if(clientName){
             updateCartDisplay();
             setReceiptItems()
-            modal.classList.remove('hidden')
-            overlay.classList.remove('hidden')
+            modal.show()
         }else{
             Swal.fire({
                 icon:'error',
@@ -1342,8 +1346,7 @@ async function displayReceipt(invoiceId) {
             document.getElementById('rcp_installment_deposit').textContent = currencySymbol + ' ' + amountPaid;
         }
 
-        modal.classList.add("hidden");
-        overlay.classList.add("hidden");
+        modal.hide()
 
         Swal.fire({
             icon: 'success',
