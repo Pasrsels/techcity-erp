@@ -1183,6 +1183,15 @@
         const fileInput = document.getElementById('id_image');
         const file = fileInput.files[0];
 
+        Swal.fire({
+            title: 'Processing Product',
+            text: 'Please wait...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
+        });
+
         data = await processProdData(file)
 
         fetch("{% url 'inventory:product' %}", {
@@ -1193,6 +1202,7 @@
           },
           body: JSON.stringify(data),
         })
+        
         .then(response => response.json())
         .then(data => {
           if (data.success) {

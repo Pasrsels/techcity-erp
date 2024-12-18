@@ -618,7 +618,8 @@ def inventory_index(request):
         'category':category,
         'total_price': totals[1],
         'total_cost':totals[0],
-        'accessories':accessories
+        'accessories':accessories,
+        'logs':ActivityLog.objects.all()
     })
 
 @login_required
