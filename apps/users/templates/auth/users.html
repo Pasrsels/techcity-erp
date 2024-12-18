@@ -4,68 +4,79 @@
 {% block title%} Users {% endblock%}
 {% block content %}
 <div class="users mt-2">
-    <div class='d-flex justify-content-between align-items-center border p-2 mt-2 mb-2'>
-        <div class="d-flex align-items-center">
-            <div>
-                <button class="btn btn-light " id="addUser">
-                    <i class="bx bx-plus"></i>
-                    User
-                </button>
-                <button class="btn btn-light " id="viewAllPermissions">
-                    <i class="bx bx-show"></i>
-                    Permissions
-                </button>
-            </div>
-            
+    <div class='d-flex justify-content-between align-items-center shadow p-2 mb-2'>
+        <div class="">
+            <h5>
+                Users
+            </h5>
         </div>
-        <form class="" method="GET">
-            <div class="input-group">
-                <input type="search" class="form-control" placeholder="Search by name or email" name="q" value="{{ search_query }}">
-            </div>
-        </form>
+        <div>
+            <button class="btn btn-outline-dark btn-sm mx-2" id="addUser">
+                <i class="bx bx-plus"></i> user
+            </button>
+            <button class="btn btn-outline-dark btn-sm" id="addUser">
+                <i class="bx bx-plus"></i> Permissions
+            </button>
+        </div>
     </div>
 
-    <p class="fw-bold py-2">Users</p>
-
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Profile Picture</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in users %}
-            <tr>
-                <td>{{ user.id }}</td>
-                <td>
-                    {% if user.profile.profile_image %} 
-                    <img src="{{ user.profile.profile_image.url }}" alt="Profile Picture" class="img-thumbnail" style="width: 50px; height: 50px;">
-                    {% else %}
-                    <img src="{% static 'assets/avatar.png' %}" alt="Default Profile Picture" class="img-thumbnail" style="width: 50px; height: 50px;">
-                    {% endif %}
-                </td>
-                <td><small>{{ user.get_full_name|default:user.username }}</small></td>
-                <td><small>{{ user.email }}</small></td>
-                <td>{{ user.role }}</td>  
-                <td>
-                    <a data-toggle="tooltip" data-placement="top" title="view user profile" href="{% url 'users:user_detail' user.id %}" class="btn btn-light btn-sm ">
-                        <i class="bx bx-show"></i>
-                    </a>
-                    {% if user != request.user %}
-                    <a data-toggle="tooltip" data-placement="top" title="edit user profile" class="btn btn-light btn-sm editUserBtn" id="editUser" data-user-id="{{ user.id }}">
-                        <i class="bx bx-edit"></i>
-                    </a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-striped" id="users" style="width: 100%;">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Profile Picture</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Permissions</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td><small>{{ forloop.counter }}</small></td>
+                    <td>
+                        <small>
+                            {% if user.profile.profile_image %} 
+                            <img src="{{ user.profile.profile_image.url }}" alt="Profile Picture" class="img-thumbnail" style="width: 50px; height: 50px;">
+                            {% else %}
+                            <img src="{% static 'assets/avatar.png' %}" alt="Default Profile Picture" class="img-thumbnail" style="width: 50px; height: 50px;">
+                            {% endif %}
+                        </small>
+                    </td>
+                    <td><small>{{ user.get_full_name|default:user.username }}</small></td>
+                    <td><small>{{ user.email }}</small></td>
+                    <td><small>{{ user.role }}</small></td>  
+                    <td>
+                        <small>
+                            <ul class="list-unstyled">
+                                {% if user.user_permissions.exists %}
+                                    {% for perm in user.user_permissions.all %}
+                                        <li>{{ perm.name }}</li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li class="text-muted">No permissions assigned</li>
+                                {% endif %}
+                            </ul>                            
+                        </small>
+                    </td>
+                    <td>
+                        <a data-toggle="tooltip" data-placement="top" title="view user profile" href="{% url 'users:user_detail' user.id %}" class="btn btn-light btn-sm bx bx-show ">
+                        </a>
+                        {% if user != request.user %}
+                        <button data-toggle="tooltip" data-placement="top" title="edit user profile" class="btn btn-light bx bx-edit btn-sm editUserBtn" id="editUser" data-user-id="{{ user.id }}">
+                        </button>
+                        {% endif %}
+                        <button data-toggle="tooltip" data-placement="top" title="add permissions" class="btn btn-light btn-sm bx bx-lock-alt" id="add-permissions" data-user-id="{{ user.id }}">
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -171,7 +182,10 @@
     const editUserBtns = document.querySelectorAll('.editUserBtn');
     const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
     
-    
+    new DataTable('#users',{
+        paging:false
+    })
+
     addBtn.addEventListener('click', ()=>{
         addModal.show()
     })

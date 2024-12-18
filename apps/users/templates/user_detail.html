@@ -4,8 +4,12 @@
 {% block title%} Users {% endblock%}
 {% block content %}
 <div class="users mt-2"> 
-    <div class="card">
-      <div class="card-header fw-bold">
+    <div class="p-2 shadow">
+       <h5> User detail</h5>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-header bg-dark text-light fw-bold">
         {{user.first_name}} {{user.last_name}}
       </div>
       <div class="card-body">
@@ -13,6 +17,17 @@
             <div class="d-flex justify-content-between">
                 <div>
                     <img src="{% if user.profile.profile_image %}{{ user.profile.profile_image.url }}{% else %}{% static 'assets/avatar.png' %}{% endif %}" alt="Profile Picture" class="img-thumbnail" style="width: 100px; height: 100px;">
+                    <div class="mt-2">
+                        <a id="editUser" class="btn btn-outline-dark btn-sm" data-user-id="{{ user.id }}">
+                            <i class="bx bx-edit"></i>
+                            Details
+                        </a>
+    
+                        <a id="ViewUserPermission" class="btn btn-outline-dark btn-sm" data-user-id="{{ user.id }}">
+                            <i class="bx bx-plus"></i>
+                            Permissions
+                        </a>
+                    </div>
                 </div>
                 <div>
                     {# header#}
@@ -29,17 +44,6 @@
                     <p class="fw-normal">Branch: {{user.branch}}</p>
                     <p class="fw-normal">Role: {{user.role}}</p>
                     <p class="fw-normal">User Code: {{user.code}}</p>
-                </div>
-                <div>
-                    <a id="editUser" class="btn btn-light btn-sm" data-user-id="{{ user.id }}">
-                        <i class="bx bx-edit"></i>
-                        Edit Details
-                    </a>
-
-                    <a id="ViewUserPermission" class="btn btn-light btn-sm" data-user-id="{{ user.id }}">
-                        <i class="bx bx-show"></i>
-                        View User Permissions
-                    </a>
                 </div>
             </div>
         </div>
