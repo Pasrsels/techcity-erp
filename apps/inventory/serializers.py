@@ -9,3 +9,8 @@ class InventorySerializer(serializers.Serializer):
     class Meta:
         model = Inventory
         fields = '__all__'
+
+class StockNotificationSerializer(serializers.Serializer):
+    class Meta:
+        model = StockNotifications
+        fields = '__all__'

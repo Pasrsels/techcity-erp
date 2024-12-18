@@ -118,5 +118,27 @@ urlpatterns = [
     path('api/inventory-list/<int:id>/', InventoryList.as_view(), name = 'inventory_list'),
     path('api/inventory-delete/<int:id>/', DeleteInventory.as_view(), name = 'delete_inventory'),
     path('api/inventory-edit/<int:product_id>/', EditInventory.as_view(), name = 'edit_inventory'),
+    path('api/inventory-index', InventoryIndexJson.as_view(), name = 'inventory_index_json'),
+    path('api/inventory-activate/<int:product_id>/', ActivateInventory.as_view(), name = 'inventory_activate'),
+    path('api/inventory-branch', BranchesInventory.as_view(), name = 'inventory_branch'),
+
+
+    #Notification
+    path('api/notification-json', NotificationJson.as_view(), name = 'notification_json'),
+
+    #Stock Take
+    path('api/stocktake-view-and-edit', StockTakeViewEdit.as_view(), name = 'stock_take'),
+
+    #Branch
+    path('api/branch-view-and-add', BranchCode.as_view(), name = 'branch_code'),
+
+    #Supplier
+    path('api/supplier-view-add', SupplierViewAdd.as_view(), name= 'supplier_view_add'),
+    path('api/supplier-list-json', SupplierListJson.as_view(), name= 'supplier_list'),
+    path('api/supplier-delete-edit/<int:supplier_id>/', SupplierDelete.as_view(), name= 'supplier_delete'),
+    path('api/supplier-prices/<int:supplier_id>/', SupplierPrices.as_view(), name= 'supplier_prices'),
+    path('api/supplier-payment-history/<int:supplier_id>/', SupplierPaymentHistory.as_view(), name= 'supplier_payment_history'),
+    path('api/supplier-view/<int:supplier_id>/', SupplierView.as_view(), name= 'supplier_view'),
+
 
 ]
