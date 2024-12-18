@@ -8,7 +8,7 @@
 {% include 'components/loader.html' %}
 <div class="mt-2 px-2 w-100">
     <table class='table table-bordered border table-hover rounded p-2 receive_inv' id='transfers'>
-        <thead class='bg-primary'>
+        <thead class='table-dark'>
             <tr>
                 <th>Date</th>
                 <th class='text-center'>Status</th>
@@ -22,8 +22,8 @@
         <tbody>
             {% for transfer in transfers %}
             <tr>
-                <td class='transfer-' data-id="{{ transfer.id }}" style="background: #cdcdcd !important;"><small>{{ transfer.time }}</small></td>
-                <td class='transfer- text-center' style="background: #cdcdcd !important;" data-id="{{ transfer.id }}">
+                <td class='transfer-' data-id="{{ transfer.id }}" style="background: #ccd2d7f5 !important;"><small>{{ transfer.time }}</small></td>
+                <td class='transfer- text-center' style="background: #ccd2d7f5 !important;" data-id="{{ transfer.id }}">
                     <small>
                         {% if transfer.defective_status %}
                             <span class='hint--bottom' aria-label='Defective'>
@@ -37,6 +37,7 @@
                             {% elif transfer.total_quantity_track < transfer.quantity %}
                                 <span class='hint--bottom' aria-label='Partial'>
                                     <i class='bx bxs-circle text-warning fs-3'></i>
+
                                 </span>
                             {% elif transfer.quantity == transfer.total_quantity_track %}
                                 <span class='hint--bottom' aria-label='Not yet received'>
@@ -46,16 +47,17 @@
                         {% endif %}
                     </small>
                 </td>
-                <td style="background: #cdcdcd !important;" class='transfer-' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_ref }}</small></td>
-                <td style="background: #cdcdcd !important;" class='transfer-' data-id="{{ transfer.id }}"><small>{{ transfer.description }}</small></td>
-                <td style="background: #cdcdcd !important;" class='transfer-' data-id="{{ transfer.id }}"><small>
+                <td style="background: #ccd2d7f5 !important;" class='transfer-' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_ref }}</small></td>
+                <td style="background: #ccd2d7f5 !important;" class='transfer-' data-id="{{ transfer.id }}"><small>{{ transfer.description }}</small></td>
+                <td style="background: #ccd2d7f5 !important;" class='transfer-' data-id="{{ transfer.id }}"><small>
                     {% for transfer_r in r_transfers %}
                         {% if transfer_r.transfer.id == transfer.id %}
                             {{transfer_r.from_branch.name}}
                         {% endif %}
                     {% endfor %}
                 </small></td>
-                <td style="background: #cdcdcd !important;" class='transfer-' data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
+                <td style="background: #ccd2d7f5 !important;" class='transfer-' data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
+                <td style="background: #ccd2d7f5 !important;"></td>
             </tr>
 
             <tbody>
@@ -86,7 +88,7 @@
                                     <input name="received" value="true" type="hidden" class="form-control form-control-sm"  />
                                     <input type="number" name="quantity" class="form-control form-control-sm number" required />
                                     <span class="px-2"></span>
-                                    <button type="submit" class=" -outline-dark -sm -sm">Accept</button>
+                                    <button type="submit" class="btn btn-outline-dark btn-sm -sm">Accept</button>
                                 </form>
                             {% endif %}
                         </td>

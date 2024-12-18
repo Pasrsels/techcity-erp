@@ -25,7 +25,7 @@
             <tbody>
                 {% for transfer in transfers %}
                     <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %}">
-                        <td>
+                        <td style="background: #ccd2d7f5 !important;">
                             {% if transfer.hold %}
                                 <span class="d-flex align-items-center">
                                     <i class='bx bx-pause fs-2' style='color:#00c0ef' ></i>
@@ -43,10 +43,10 @@
                                 {% endif %}
                             {% endif %}
                         </td>
-                        <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.time }}</small></td>
-                        <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_ref }}</small></td>
-                        <td class='transfer-btn' data-id="{{ transfer.id }}"><small class="d-flex align-items-center justify-content-center"><i class='bx bx-box'></i></small></td>
-                        <td>
+                        <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.time }}</small></td>
+                        <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_ref }}</small></td>
+                        <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small class="d-flex align-items-center justify-content-center"><i class='bx bx-box'></i></small></td>
+                        <td style="background: #ccd2d7f5 !important;">
                             <small class="d-flex justify-content-between">
                                 {% for qt in totals %}
                                     {% if qt.transfer__id == transfer.id %}
@@ -58,7 +58,7 @@
                                 {% endfor %}
                             </small>
                         </td>
-                        <td class='transfer-btn text-center' data-id="{{ transfer.id }}">
+                        <td style="background: #ccd2d7f5 !important;" class='transfer-btn text-center' data-id="{{ transfer.id }}">
                             <small  class='hint--bottom' aria-label='Defective'>
                                 {% if transfer.defective_status %}
                                     <span class='hint--bottom' aria-label='Defective'>
@@ -81,9 +81,9 @@
                                 {% endif %}
                             </small>
                         </td>
-                        <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
-                        <td></td>
-                        <td class='transfer-btn' data-id="{{ transfer.id }}">
+                        <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
+                        <td style="background: #ccd2d7f5 !important;"></td>
+                        <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}">
                             <a href="{% url 'inventory:print_transfer' transfer.id %}" class="btn border btn-sm">
                                 <i class='bx bx-printer '></i>
                             </a>
@@ -99,14 +99,14 @@
                             <button onclick="cancel({{ transfer.id }})" class="btn border bx bx-trash"></button>
                         </td>
                     </tr>
-                    <tbody class="bg-primary">
+                    <tbody>
                         {% for item in transfer_items %}
                             {% if transfer.id == item.transfer.id %}
                                 <tr id="id_items" class="hidden items" data-transfer-id="{{ transfer.id }}">
-                                    <td colspan="2" style="background: #f8f9fa;"></td>
-                                    <td style="background: #f8f9fa;"><small>{{ item.transfer.transfer_ref }}</small></td>
-                                    <td style="background: #f8f9fa;"><small>{{ item.product.name }}</small></td>
-                                    <td style="background: #f8f9fa;"><small class="d-flex justify-content-between">
+                                    <td colspan="2"></td>
+                                    <td><small>{{ item.transfer.transfer_ref }}</small></td>
+                                    <td><small>{{ item.product.name }}</small></td>
+                                    <td><small class="d-flex justify-content-between">
                                         {% if not request.user.role == 'sales' %}
                                             <span>
                                                 {{ item.quantity }}  @ {{ item.product.cost }}
@@ -116,7 +116,7 @@
                                             </span>
                                         {% endif %}
                                     </small></td>
-                                    <td style="background: #f8f9fa;" class="text-center">
+                                    <td class="text-center">
                                         <small>
                                             <span>
                                                 {% if item.declined %}
@@ -135,7 +135,7 @@
                                             </span>
                                         </small>
                                     </td>
-                                    <td class='transfer-btn' style="background: #f8f9fa;" data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
+                                    <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
                                 </tr>
                             {% endif %}
                         {% endfor %}
