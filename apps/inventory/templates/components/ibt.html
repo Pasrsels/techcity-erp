@@ -94,7 +94,10 @@
             <thead class="bg-primary text-white">
                 <tr>
                     <th>Name</th>
-                    <th>Price</th>
+                    {% if not request.user.role == 'sales' %}
+                        <th>Price</th>
+                    {% endif %}
+                    <th>Quantity</th>
                     <!-- Branch headers will be added dynamically -->
                     <!-- Branch headers will be added dynamically -->
                 </tr>
@@ -103,7 +106,9 @@
                 <!-- Rows will be added dynamically -->
                 <!-- Rows will be added dynamically -->
             </tbody>
-            <tfoot></tfoot>
+            {% if not request.user.role == 'sales' %}
+                <tfoot></tfoot>
+            {% endif %}
         </table>
     </div>
     <div class="mt-2">
@@ -145,16 +150,20 @@
                     theadRow.appendChild(th);
                 });
 
-                const thTotalCost = document.createElement("th");
-                thTotalCost.textContent = "Total Cost";
-                theadRow.appendChild(thTotalCost);
-
+                {% if not request.user.role == 'sales' %}
+                    const thTotalCost = document.createElement("th");
+                    thTotalCost.textContent = "Total Cost";
+                    theadRow.appendChild(thTotalCost);
+                {% endif %}
+                
                 const tfoot = document.createElement("tfoot");
                 const footerRow = document.createElement("tr");
                 footerRow.innerHTML = `
-                    <th colspan="2">Branch Totals</th>
-                    ${uniqueBranches.map(() => "<th class='branch-total bg-secondary'>0</th>").join("")}
-                    <th id="grand-total">0</th>
+                    {% if not request.user.role == 'sales' %}
+                        <th colspan="2">Branch Totals</th>
+                        ${uniqueBranches.map(() => "<th style='background:#1ea5da61;'>0</th>").join("")}
+                        <th id="grand-total">0</th>
+                    {% endif %}
                 `;
                 tfoot.appendChild(footerRow);
                 document.querySelector("table").appendChild(tfoot);
@@ -163,22 +172,29 @@
                 uniqueBranches.forEach((branch) => (branchTotals[branch] = 0));
 
                 const tbody = document.querySelector("tbody");
+                quantity = 0
                 transferItems.forEach((item) => {
                     let row = Array.from(tbody.querySelectorAll("tr")).find((tr) =>
                         tr.firstElementChild.textContent.trim().startsWith(item.product__name)
                     );
 
+                    quantity += item.quantity;
+
+
                     if (!row) {
                         row = document.createElement("tr");
                         row.innerHTML = `
                             <td>${item.product__name}</td>
-                            <td>${item.product__cost}</td>
-                            ${uniqueBranches.map(() => "<td class='bg-secondary'>0</td>").join("")}
-                            <td class="total-cost">0</td>
+                            {% if not request.user.role == 'sales' %}
+                                <td>${item.product__cost}</td>
+                            {% endif %}
+                            <td>${quantity}</td>
+                            ${uniqueBranches.map(() => "<td style='background:#1ea5da61;'>0</td>").join("")}
+                            <td class="total-cost"></td>
                         `;
                         tbody.appendChild(row);
                     }
-
+               
                     const branchIndex = uniqueBranches.indexOf(item.to_branch__name) + 2;
                     const quantityCell = row.children[branchIndex];
                     quantityCell.textContent =
@@ -189,9 +205,13 @@
                         .slice(2, -1)
                         .map((cell) => parseInt(cell.textContent || "0"));
                     const totalCost = quantities.reduce((sum, qty) => sum + qty * cost, 0);
-                    row.querySelector(".total-cost").textContent = totalCost.toFixed(2);
+                    {% if not request.user.role == 'sales' %}
+                        row.querySelector(".total-cost").textContent = totalCost.toFixed(2);
+                    {% endif %}
 
                     branchTotals[item.to_branch__name] += item.quantity * cost;
+
+                    quantity = 0;
                 });
 
                 const footerCells = document.querySelectorAll(".branch-total");

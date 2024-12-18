@@ -398,7 +398,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         
         branch_inventory.quantity -= int(transfer_item.quantity)
         branch_inventory.save()
-        self.activity_log('Transfer', branch_inventory, transfer_item)
+        self.activity_log('transfer out', branch_inventory, transfer_item)
         
     def transfer_update_quantity(self, transfer_item, transfer):
         transfer = Transfer.objects.get(id=transfer.id)
@@ -608,7 +608,6 @@ def inventory_index(request):
     all_branches_inventory = Inventory.objects.filter(branch=request.user.branch)
     
     totals = calculate_inventory_totals(all_branches_inventory.filter(status=True))
-    logger.info(inventory.values('image'))
   
     return render(request, 'inventory.html', {
         'form': form,
@@ -619,7 +618,7 @@ def inventory_index(request):
         'total_price': totals[1],
         'total_cost':totals[0],
         'accessories':accessories,
-        'logs':ActivityLog.objects.all()
+        'logs':ActivityLog.objects.all().order_by('-timestamp')
     })
 
 @login_required
@@ -991,7 +990,7 @@ def print_transfer(request, transfer_id):
                 'to_branch__name', 
                 'product__cost'
             )
-
+        
             logger.info(transfer_items)
             return JsonResponse({'success':True, 'data':list(transfer_items)})
         except Exception as e:

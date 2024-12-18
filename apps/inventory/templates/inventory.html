@@ -3,15 +3,24 @@
 {% load crispy_forms_tags %}
 {% block title%} Inventory {% endblock%}
 {% block content %}
+<style>
+    @media screen and (max-width: 768px) { 
+        .col-3 {
+            display: none;
+        }
+        .col-9{
+            width: 100%;
+        }
+    }
+</style>
    <div class="inventory">
     <div class='px-1 shadow d-flex align-items-center justify-content-between rounded'>
         <h5>Products</h5>
-        <div class="d-flex sticky-top bg-white" 
-            style="z-index: 1000;">
+        <div class="d-flex sticky-top bg-white" style="z-index: 1000;">
             <nav class='recent-nav navbar navbar-expand-lg'>
                 <nav class="d-flex justify-content-between align-items-center">
-                    <div class="d-flex">
-
+                    <!-- Static buttons for large screens -->
+                    <div class="d-none d-lg-flex">
                         {% if request.user.role == 'admin' %}
                             <div>
                                 <a href='{% url 'inventory:create_purchase_order' %}' class="btn btn-outline-dark btn-sm">
@@ -20,7 +29,7 @@
                                 </a>
                             </div>
                         {% endif %}
-                        
+        
                         <div class='px-2'>
                             <a href='{% url 'inventory:defective_product_list' %}' class="btn btn-outline-dark btn-sm">
                                 Defective Products
@@ -36,24 +45,60 @@
                                 Purchase Orders
                             </a>
                         </div>
-    
+        
                         <div> 
                             <a href='{% url 'inventory:suppliers' %}' class="btn btn-outline-dark btn-sm">
                                 Suppliers
                             </a>
                         </div>
-    
+        
                         <div class='px-2'> 
                             <a href='{% url 'inventory:stocktake' %}' class="btn btn-outline-dark btn-sm">
                                 Stocktake
                             </a>
                         </div>
-    
                     </div>
-                    <div class="search d-flex align-items-center">
+        
+                    <!-- Dropdown for small screens -->
+                    <div class="dropdown d-lg-none">
+                        <button class="btn btn-outline-dark btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            More Options
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            {% if request.user.role == 'admin' %}
+                                <li><a class="dropdown-item" href='{% url 'inventory:create_purchase_order' %}'>Product</a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href='{% url 'inventory:defective_product_list' %}'>Defective Products</a></li>
+                            <li><a class="dropdown-item" href='{% url 'inventory:reorder_list' %}'>Reorder List</a></li>
+                            <li><a class="dropdown-item" href='{% url 'inventory:purchase_orders' %}'>Purchase Orders</a></li>
+                            <li><a class="dropdown-item" href='{% url 'inventory:suppliers' %}'>Suppliers</a></li>
+                            <li><a class="dropdown-item" href='{% url 'inventory:stocktake' %}'>Stocktake</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href='?download=true&excel=true'>Excel <i class='bx bx-download'></i></a></li>
+                            <li>
+                                <form method="get">
+                                    <select name="category" class="form-control" id='id_category' value={{ category }}>
+                                        <option value="">All Categories</option>
+                                        <option value='inactive'>Inactive</option>
+                                        {% for category in categories %}
+                                            <option value="{{ category.name }}">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-outline-dark btn-sm mt-2">
+                                        <i class="bx bx-filter"></i>
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+        
+                    <!-- Search form on large screens -->
+                    <div class="search d-flex align-items-center d-none d-lg-flex">
                         <span class='px-2'>
                             <a href='?download=true&excel=true' class="btn btn-outline-dark btn-sm">
-                                excel
+                                Excel
                                 <i class='bx bx-download'></i>
                             </a>        
                         </span>
@@ -74,6 +119,8 @@
                 </nav>
             </nav>
         </div>
+        
+        
     </div>
         <div class="row mt-3">
             <div class="col">
@@ -100,13 +147,14 @@
                     {% include "components/inventory_table.html" %}
                 </div>
             </div>
-            <div class="col-3">
+            <div class="col-3 mt-2 p-1 rounded" style="background: #fff;">
                 <h5>Logs</h5>
                 <div  style="height: 60vh; overflow-y: auto;">
                     <table class="table table-bordered" S>
                         <thead>
                             <tr>
                                 <th>Date</th>
+                                <th>Product</th>
                                 <th>Action</th>
                                 <!-- <th>Status</th> -->
                             </tr>
@@ -114,7 +162,20 @@
                         <tbody>
                             {% for log in logs %}
                                 <tr>
-                                    <td><small>{{ log.timestamp }}</small></td>
+                                    <td>
+                                        <small>
+                                            {% with log.timestamp as timestamp %}
+                                                {{ timestamp|date:"Ymd" }} 
+                                            {% endwith %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {{ log.invoice.product.name }}
+                                            {{ log.product_transfer.product.name }}
+                                            {{ log.purchase_order.product.name }}
+                                        </small>
+                                    </td>
                                     <td><small>{{ log.action }}</small></td>
                                     <!-- <td>{{ log.quantity }}</td> -->
                                 </tr>

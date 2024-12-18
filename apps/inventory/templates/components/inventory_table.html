@@ -1,6 +1,6 @@
 {% load static%}
 {% block content %}
-   <div class="table w-100">
+   <div class="table-responsive" style="height: 70vh; overflow-y: auto;">
         <!-- inventory table -->
         {% include 'components/loader.html' %}
         <div class='products'>
@@ -15,7 +15,7 @@
                         <th>Quantity</th>
                         <th>Cost</th>
                         <th>Price</th>
-                        <th>Dealer Price</th>
+                        <th>W/Price</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -78,9 +78,7 @@
                                 </span>
 
                                 <span class="px-2">
-                                    <button class="btn btn-sm btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#accessoriesModal" onclick="setProductForAccessories({{ product.id }},'{{ product.name }}')">
-                                        <i class="bx bx-cart-add"></i> Accessories
-                                    </button>
+                                    <button class="btn btn-sm btn-secondary btn-sm bx bx-cart-add" data-bs-toggle="modal" data-bs-target="#accessoriesModal" onclick="setProductForAccessories({{ product.id }},'{{ product.name }}')"></button>
                                 </span>
                             </small>
                         </td>
@@ -149,7 +147,7 @@
         </div>
 
         <div class="modal fade" id="accessoriesModal" tabindex="-1" aria-labelledby="accessoriesModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header d-flex align-items-left">
                         <h5 class="modal-title" id="accessoriesModalLabel">
@@ -389,65 +387,83 @@
     }
 
     async function saveAccessories() {
-        
         if (accessories.length === 0) {
             showError("No accessories selected.");
             return;
         }
 
         try {
-    
-    Swal.fire({
-        title: 'Processing...',
-        text: 'Please wait while your data is being processed.',
-        icon: 'info',
-        allowOutsideClick: false,
-        showConfirmButton: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-
-    const response = await fetch(`/inventory/accessory_view/${prodId}/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            'accessories': accessories
-        }),
-    });
-
-    const data = await response.json();
-
-        if (data.success) {
-            
             Swal.fire({
-                title: 'Success!',
-                text: 'The data has been processed successfully.',
-                icon: 'success',
-                confirmButtonText: 'OK'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.reload(); 
+                title: 'Processing...',
+                text: 'Please wait while your data is being processed.',
+                icon: 'info',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
                 }
             });
-        } else {
+
+            const csrfToken = getCookie('csrftoken');
+            console.log(csrfToken)
+            const response = await fetch(`/inventory/accessory_view/${prodId}/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken  // Include CSRF token in headers
+                },
+                body: JSON.stringify({
+                    'accessories': accessories
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'The data has been processed successfully.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.reload();
+                    }
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Failed to process the data. Please try again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        } catch (error) {
             Swal.fire({
                 title: 'Error!',
-                text: 'Failed to process the data. Please try again.',
+                text: 'An unexpected error occurred. Please check your connection and try again.',
                 icon: 'error',
                 confirmButtonText: 'OK'
             });
+            console.error(error);
         }
-    } catch (error) {
-        Swal.fire({
-            title: 'Error!',
-            text: 'An unexpected error occurred. Please check your connection and try again.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-        });
-        console.error(error);
     }
 
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            let cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
+
 </script>
 {% endblock content %}
