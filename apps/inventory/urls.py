@@ -1,8 +1,12 @@
-from django.urls import path
+from django.urls import path, include
 from . views import *
+from rest_framework import routers
 from . consumer import InventoryConsumer
 
 app_name = 'inventory'
+
+router = routers.DefaultRouter()
+router.register(r'PurchaseOrder', PurchaseOrderViewset, basename= 'purchase_order_crud')
 
 urlpatterns = [
     path('', inventory_index, name='inventory'),
@@ -140,5 +144,34 @@ urlpatterns = [
     path('api/supplier-payment-history/<int:supplier_id>/', SupplierPaymentHistory.as_view(), name= 'supplier_payment_history'),
     path('api/supplier-view/<int:supplier_id>/', SupplierView.as_view(), name= 'supplier_view'),
 
+    #Reorder
+    path('api/reorder-create-and-get', CreateandGetOrder.as_view(), name= 'create_get_reorder'),
+    path('api/reorder-list-json', ReorderListJson.as_view(), name= 'reorder_list_json'),
+    path('api/reorder-from-notification', ReorderFromNotification.as_view(), name= 'reorder_from_notification'),
+    path('api/reorder-add-quantity', AddReorderQuantity.as_view(), name= 'add_reorder_quantity'),
+    path('api/reorder-settings', ReorderSettings.as_view(), name= 'reorder_settings'),
+
+    #Purchase Order
+    path('api/purchase-order', include(router.urls)),
+    path('api/purchase-order-print/<int:order_id>/', PrintPurchaseOrder.as_view(), name= 'purchase_order_print'),
+    path('api/purchase-receive-order/<int:order_id>/', ReceiveOrder.as_view(), name= 'purchase_order_receive'),
+    path('api/purchase-process-received-order', ProcessReceivedOrder.as_view(), name= 'purchase_order_received'),
+    path('api/purchase-order-detail', PurchaseOrderDetail.as_view(), name= 'purchase_order_detail'),
+    path('api/purchase-order-status/<int:order_id>/', PurchaseOrderStatus.as_view(), name= 'purchase_order_status'),
+    path('api/purchase-order-mark-done/<int:order_id>/', MarkPurchaseOrderDone.as_view(), name= 'purchase_order_mark'),
+    path('api/purchase-order-sales-price-list-pdf/<int:order_id>/', SalesPriceListPDF.as_view(), name= 'purchase_order_sales_price_list_pdf'),
+    path('api/purchase-order-confirm-item/<int:order_id>/', PurchaseOrderConfirmOrderItem.as_view(), name= 'purchase_order_confirm'),
+    
+
+    #Transfer
+    path('api/transfer-print/<int:transfer_id>/', PrintTransfer.as_view(), name= 'print_transfer'),
+    path('api/transfer-recieve-inventory', RecieveInventory.as_view(), name= 'recieve_inventory'),
+    path('api/transfer-over-list-stock', OverListStock.as_view(), name= 'over_list_stock'),
+    path('api/transfer-delete/<int:transfer_id>/', TransferDelete.as_view(), name= 'transfer_delete'),
+    path('api/transfer-add', AddTransferInventory.as_view(), name= 'add_transfer'),
+    path('api/transfer-details/<int:transfer_id>/', TransferDetails.as_view(), name= 'transfer_details'),
+    path('api/transfer-held-json/<int:transfer_id>/', HeldTransferJson.as_view(), name= 'transfer_held'),
+    path('api/transfer-held', HeldTransfers.as_view(), name= 'transfers_held'),
+    path('api/process-transfer-held/<int:transfer_id>/', ProcessHeldTransfer.as_view(), name= 'process_transfer_held'),
 
 ]
