@@ -140,7 +140,7 @@ urlpatterns = [
     path('api/supplier-view-add', SupplierViewAdd.as_view(), name= 'supplier_view_add'),
     path('api/supplier-list-json', SupplierListJson.as_view(), name= 'supplier_list'),
     path('api/supplier-delete-edit/<int:supplier_id>/', SupplierDelete.as_view(), name= 'supplier_delete'),
-    path('api/supplier-prices/<int:supplier_id>/', SupplierPrices.as_view(), name= 'supplier_prices'),
+    path('api/supplier-prices/<int:product_id>/', SupplierPrices.as_view(), name= 'supplier_prices'),
     path('api/supplier-payment-history/<int:supplier_id>/', SupplierPaymentHistory.as_view(), name= 'supplier_payment_history'),
     path('api/supplier-view/<int:supplier_id>/', SupplierView.as_view(), name= 'supplier_view'),
 

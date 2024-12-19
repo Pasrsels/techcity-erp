@@ -3357,6 +3357,7 @@ def vue_view(request):
 #API
 ##########################################################################################################
 from rest_framework import views, status, viewsets
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .serializers import *
@@ -3750,14 +3751,16 @@ class DefectiveProductList(views.APIView):
         )
 
 class BranchesInventory(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         branches_inventory = Inventory.objects.filter(status=True).values(
             'product__name', 'price', 'quantity', 'branch__name'
         )
-        return JsonResponse(branches_inventory, status.HTTP_200_OK)
+        return Response(branches_inventory, status.HTTP_200_OK)
 
 
 class NotificationJson(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         notifications = StockNotifications.objects.filter(inventory__branch=request.user.branch).values(
             'inventory__product__name', 'type', 'notification', 'inventory__id'
@@ -3769,9 +3772,9 @@ class NotificationJson(views.APIView):
 class StockTakeViewEdit(views.APIView):
     def get(self, request):
         products = Inventory.objects.filter(branch=request.user.branch)
-        return render(request, 'stocktake/stocktake.html',{
+        return Response({
             'products':products
-        })
+        }, status.HTTP_200_OK)
     
     def post(self, request):
         """
@@ -3827,48 +3830,56 @@ class BranchCode(views.APIView):
             return Response({'message':f'{e}'}, status.HTTP_406_NOT_ACCEPTABLE)
 
 class SupplierViewAdd(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
-        supplier_products = Product.objects.all().values()
-        supplier_balances = SupplierAccount.objects.all().values('supplier__id', 'balance', 'date')
-        purchase_orders = PurchaseOrderItem.objects.all().values()
+        try:
+            supplier_products = Product.objects.all().values()
+            supplier_balances = SupplierAccount.objects.all().values('supplier__id', 'balance', 'date')
+            purchase_orders = PurchaseOrderItem.objects.all()
 
-        list_orders = {}
+            list_orders = {}
 
-        for items in purchase_orders:
-            if list_orders.get(items.supplier.id):
-                
-                supplier = list_orders.get(items.supplier.id)
-                logger.info(f'quantity: {supplier}')
-                supplier['quantity'] += items.quantity
-                supplier['received_quantity'] += items.received_quantity
-                supplier['returned'] += (items.quantity - items.received_quantity)
-                supplier['amount'] += (items.unit_cost * items.received_quantity)
+            for items in purchase_orders:
+                if list_orders.get(items.supplier.id):
+                    
+                    supplier = list_orders.get(items.supplier.id)
+                    logger.info(f'quantity: {supplier}')
+                    supplier['quantity'] += items.quantity
+                    supplier['received_quantity'] += items.received_quantity
+                    supplier['returned'] += (items.quantity - items.received_quantity)
+                    supplier['amount'] += (items.unit_cost * items.received_quantity)
 
-                if items.purchase_order.id == supplier['order_id']:
-                    supplier['count'] = supplier['count']
+                    if items.purchase_order.id == supplier['order_id']:
+                        supplier['count'] = supplier['count']
+                    else:
+                        supplier['count'] += 1
+                        supplier['order_id'] = items.purchase_order.id
                 else:
-                    supplier['count'] += 1
-                    supplier['order_id'] = items.purchase_order.id
-            else:
-                list_orders[items.supplier.id] = {
-                    'order_id': items.purchase_order.id,
-                    'quantity' : items.quantity,
-                    'received_quantity' : items.received_quantity,
-                    'returned' : (items.quantity - items.received_quantity),
-                    'amount' : (items.unit_cost * items.received_quantity),
-                    'count' : 1
-                }
-        logger.info(list_orders)
-        logger.info(supplier_balances)
-        suppliers = Supplier.objects.filter(delete = False)
-        logger.info(suppliers)
+                    list_orders[items.supplier.id] = {
+                        'order_id': items.purchase_order.id,
+                        'quantity' : items.quantity,
+                        'received_quantity' : items.received_quantity,
+                        'returned' : (items.quantity - items.received_quantity),
+                        'amount' : (items.unit_cost * items.received_quantity),
+                        'count' : 1
+                    }
+                    
 
-        return Response({
-            'products':supplier_products,
-            'balances':supplier_balances,
-            'life_time': list_orders,
-            'suppliers':suppliers
-        }, status.HTTP_200_OK)   
+            logger.info([list_orders])
+            logger.info(supplier_balances)
+            form = AddSupplierForm()
+            suppliers = Supplier.objects.filter(delete = False).values()
+            logger.info(suppliers)
+
+            return Response({
+                'products':supplier_products,
+                'balances':supplier_balances,
+                'life_time': list_orders,
+                'suppliers':suppliers
+            }, status.HTTP_200_OK) 
+        except Exception as e:
+            logger.info(e)
+            return Response({f'{e}'}, status.HTTP_400_BAD_REQUEST)
     def post(self, request):
         """
         payload = {
@@ -3937,7 +3948,7 @@ class SupplierViewAdd(views.APIView):
                 )
                 SupplierAccount.objects.create(
                     supplier = supplier,
-                    currency = Currency.objects.get(default = False),
+                    currency = Currency.objects.get(name = 'ZIG'),
                     balance = 0,
                 )
             return Response(status.HTTP_201_CREATED)
@@ -3946,6 +3957,7 @@ class SupplierViewAdd(views.APIView):
             return Response({f'{e}'}, status.HTTP_406_NOT_ACCEPTABLE)
     
 class SupplierListJson(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         suppliers = Supplier.objects.all().values(
             'id',
@@ -3954,6 +3966,7 @@ class SupplierListJson(views.APIView):
         return Response(suppliers, status.HTTP_200_OK)
 
 class SupplierDelete(views.APIView):
+    permission_classes = [IsAuthenticated]
     def delete(self, request, supplier_id):
         try:
             supplier = Supplier.objects.get(id=supplier_id)
@@ -3992,6 +4005,7 @@ class SupplierDelete(views.APIView):
             return Response({"message":f"{e}"}, status.HTTP_406_NOT_ACCEPTABLE)
     
 class SupplierPrices(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, product_id):
         """
             {
@@ -4006,6 +4020,7 @@ class SupplierPrices(views.APIView):
             return Response({'message': str(e)}, status.HTTP_406_NOT_ACCEPTABLE)
 
 class SupplierPaymentHistory(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, supplier_id):
         """
             order name
@@ -4029,12 +4044,13 @@ class SupplierPaymentHistory(views.APIView):
                 list_details['amount']= items.quantity * items.unit_cost
         logger.info(list_details)
         logger.info(list(supplier_history))
-        return JsonResponse({'history':supplier_history, 'pOrder': list_details}, status.HTTP_200_OK)
+        return Response({'history':supplier_history, 'pOrder': list_details}, status.HTTP_200_OK)
 
 class SupplierView(views.APIView):
-    def get(self, request,supplierId):
+    permission_classes = [IsAuthenticated]
+    def get(self, request,supplier_id):
         try:
-            supplier_details = Supplier.objects.get(id = supplierId)
+            supplier_details = Supplier.objects.get(id = supplier_id)
             supplier_data = {
                 'name': supplier_details.name,
                 'contact_person': supplier_details.contact_person,
