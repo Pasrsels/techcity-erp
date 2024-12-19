@@ -251,9 +251,9 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                 
                 # create list of branch objects
                 branch_obj_list = []
-                branch_names = ''
+                branch_names = []
                 for branch in branches:
-                    branch_names += f'{branch['name']} '
+                    branch_names.append(f'{branch['name']}')
                     if branch.get('value'):
                         branch_obj_list.append(Branch.objects.get(id=branch['value']))
                     else:

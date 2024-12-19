@@ -1048,9 +1048,9 @@ def customer(request):
     elif request.method == 'POST':
         data = json.loads(request.body)
         
-        validation_errors = validate_customer_data(data)
-        if validation_errors:
-            return JsonResponse({'success': False, 'message': 'Validation errors occurred:', 'errors': validation_errors})
+        # validation_errors = validate_customer_data(data)
+        # if validation_errors:
+        #     return JsonResponse({'success': False, 'message': 'Validation errors occurred:', 'errors': validation_errors})
     
         if Customer.objects.filter(phone_number=data['phonenumber']).exists():
             return JsonResponse({'success': False, 'message': 'Customer exists'})
