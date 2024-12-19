@@ -4,7 +4,7 @@
     {% include 'components/loader.html' %}
     <div class='table-scroll'>
     <table class='table table-bordered border table-hover rounded hidden table-striped p-2' id='transfers' style="width: 100%;">
-        <thead class="table-dark">
+        <thead class="table-dark sticky-top">
             <tr>
                 <th>Transfer</th>
                 <th>Reference</th>
@@ -15,7 +15,7 @@
                 <th>Discrepancy</th>
                 <th>Action</th>
             </tr>
-            </thead>
+        </thead>
             <tbody>
                 {% for transfer in transfers %}
                     <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %}">
@@ -82,15 +82,15 @@
                                 <i class='bx bx-printer '></i>
                             </a>
                             {% if transfer.hold %}
-                                <a href="{% url 'inventory:process_held' transfer.id %}" class="btn border btn-sm hint-bottom" aria-label="process transfer">
+                                <a href="{% url 'inventory:process_held' transfer.id %}" class="btn border btn-outline-dark  btn-sm hint-bottom" aria-label="process transfer">
                                     <i class='bx bx-play' style='color:#0b0b0b' ></i>
                                 </a>
                             {% else %}
-                                <a href="#" class="btn border btn-sm">
+                                <a href="#" class="btn border btn-outline-dark btn-sm">
                                     <i class='bx bx-stop' style='color:#0b0b0b' ></i>
                                 </a>
                             {% endif %}
-                            <button onclick="cancel({{ transfer.id }})" class="btn border bx bx-trash"></button>
+                            <button onclick="cancel({{ transfer.id }})" class="btn border btn-outline-dark bx bx-trash"></button>
                         </td>
                     </tr>
                     <tbody>
@@ -98,7 +98,7 @@
                             {% if transfer.id == item.transfer.id %}
                                 <tr id="id_items" class="hidden items" data-transfer-id="{{ transfer.id }}">
                                     <td colspan="1"></td>
-                                    <td><small>{{ item.transfer.transfer_ref }}</small></td>
+                                    <td><small>{{ request.user.branch }} - {{ item.to_branch }}</small></td>
                                     <td><small>{{ item.product.name }}</small></td>
                                     <td><small class="d-flex justify-content-between">
                                         {% if not request.user.role == 'sales' %}
@@ -130,6 +130,7 @@
                                         </small>
                                     </td>
                                     <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
+                                    <td colspan="2"></td>
                                 </tr>
                             {% endif %}
                         {% endfor %}
@@ -194,6 +195,8 @@
 
     const transferRows = document.querySelectorAll('.transfer-btn');
     const hooverProduct = document.querySelectorAll('#id_hover_product');
+
+    // search functionality of the table -> js
 
     setTimeout(()=>{
         loader.classList.add('hidden');

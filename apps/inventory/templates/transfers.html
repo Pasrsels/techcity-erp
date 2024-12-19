@@ -65,6 +65,12 @@
                     </button>
                 </div>
             </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="w-100">
+                    <input type="search" id="search-input" class="form-control form-control-sm" placeholder="Search ...." oninput="searchTable()">
+                </div>
+            </div>
             {% include "components/transfers_table.html" %}
         </div>
         
@@ -217,6 +223,38 @@
         </div>
    </div>  
    <script>
+    const searchTable = () => {
+        const input = document.getElementById('search-input');
+        console.log(input)
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('transfers');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName('td');
+                let found = false;
+
+                // Check each cell in the row
+                for (let j = 2; j < cells.length; j++) {
+                    const cell = cells[j];
+                    if (cell) {
+                        const txtValue = cell.textContent || cell.innerText;
+                        if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (found) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
+
+
         document.addEventListener('DOMContentLoaded', (event) => {
             const transferModal = new bootstrap.Modal(document.querySelector('#transferModal'));
             const transferReportModal = new bootstrap.Modal(document.querySelector('#transferReportModal'));
@@ -240,6 +278,7 @@
 
             const form = document.querySelector('#form');
 
+            
             $(document).ready(function() {
                 const transfersCount = parseInt($('.flick').text()); 
               
