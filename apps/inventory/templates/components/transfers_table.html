@@ -7,7 +7,6 @@
         <thead class="table-dark">
             <tr>
                 <th>Transfer</th>
-                <th>Date</th>
                 <th>Reference</th>
                 <th>Product List</th>
                 <th>Trans Qnty | Amnt trans</th>
@@ -22,23 +21,23 @@
                     <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %}">
                         <td style="background: #ccd2d7f5 !important;">
                             {% if transfer.hold %}
-                                <span class="d-flex align-items-center">
+                                <small class="d-flex align-items-center">
                                     <i class='bx bx-pause fs-2' style='color:#00c0ef' ></i>
                                     
-                                </span>
+                                </small>
                             {% else %}
                                 {% if request.user.branch in transfer.transfer_to.all %}
-                                    <span class="d-flex align-items-center">
+                                    <small class="d-flex align-items-center">
                                         <i class='bx bxs-right-arrow-alt text-success' style="font-size: 35px;"></i>
-                                    </span>
+                                    </small>
                                 {% else %}
-                                    <span class="d-flex align-items-center">
+                                    <small class="d-flex align-items-center">
                                         <i class='bx bxs-left-arrow-alt' style="color: #dc3545eb; font-size: 35px;"></i>
-                                    </span>
+                                    </small>
                                 {% endif %}
                             {% endif %}
+                                <small>{{ transfer.time|date:"d/m/Y H:i" }}</small>
                         </td>
-                        <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.time }}</small></td>
                         <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_ref }}</small></td>
                         <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small class="d-flex align-items-center justify-content-center"><i class='bx bx-box'></i></small></td>
                         <td style="background: #ccd2d7f5 !important;">
@@ -98,7 +97,7 @@
                         {% for item in transfer_items %}
                             {% if transfer.id == item.transfer.id %}
                                 <tr id="id_items" class="hidden items" data-transfer-id="{{ transfer.id }}">
-                                    <td colspan="2"></td>
+                                    <td colspan="1"></td>
                                     <td><small>{{ item.transfer.transfer_ref }}</small></td>
                                     <td><small>{{ item.product.name }}</small></td>
                                     <td><small class="d-flex justify-content-between">

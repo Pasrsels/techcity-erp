@@ -273,14 +273,21 @@ class Transfer(models.Model):
 
     @classmethod
     def generate_transfer_ref(self, branch, branches):
-        print(branch, branches)
+        
+        formatted_branches = ''.join([f"T{b[0].upper()}" for b in branches])
+        
         last_transfer = Transfer.objects.filter(branch__name=branch, delete=False).order_by('-id').first()
-        if last_transfer:
-            last_reference = int(last_transfer.transfer_ref.split(' ')[1])
-            new_reference = f'Ref {last_reference + 1} : {branches}'
-        else:
-            return f'Ref 1 {branch}: {branches}'
+
+        try:
+            if last_transfer:
+                last_reference = int(last_transfer.transfer_ref.split('[')[-1].strip(']'))
+                new_reference = f'{branch}: {formatted_branches} [{last_reference + 1}]'
+            else:
+                return f'{branch}: {formatted_branches} [1]'
+        except:
+             return f'{branch}: {formatted_branches} [1]'
         return new_reference
+
     
     def __str__(self):
         return self.transfer_ref

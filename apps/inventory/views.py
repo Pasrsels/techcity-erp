@@ -127,11 +127,11 @@ def product_list(request):
     category_id = request.GET.get('category', '')
 
     if category_id:
-        queryset = queryset.filter(product__category__id=category_id)
+        queryset = queryset.filter(category__id=category_id)
     if search_query:
         queryset = queryset.filter(
-            Q(product__name__icontains=search_query) | 
-            Q(product__description__icontains=search_query) 
+            Q(name__icontains=search_query) | 
+            Q(description__icontains=search_query) 
         )
     if product_id:
         queryset = queryset.filter(id=product_id)
