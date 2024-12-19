@@ -5301,3 +5301,115 @@ class ProcessHeldTransfer(views.APIView):
             }, status.HTTP_200_OK)
         except:
             return Response({ f'Transfer with id {transfer_id} not found.'}, status.HTTP_400_BAD_REQUEST)
+        
+class InventoryPDF(views.APIView):
+    def post(self, request):
+        category = request.data.get('category', '')
+
+        inventory = get_list_or_404(Inventory, branch=request.user.branch.id, product__category__name=category) if category else get_list_or_404(Inventory, branch=request.user.branch.id)
+        title = f'{category} Inventory' if category else 'All Inventory'
+        
+        totals = calculate_inventory_totals(inventory)
+        
+        return Response(generate_pdf,
+            {
+                'inventory':inventory,
+                'title': f'{request.user.branch.name}: {title}',
+                'date':datetime.date.today(),
+                'total_cost':totals[0],
+                'total_price':totals[1],
+                'pdf_name':'Inventory'
+            }
+        )
+
+class InventoryReport(views.APIView):
+    def post(self, request):
+        view = request.data.get('view', '')
+        choice = request.data.get('type', '') 
+        time_frame = request.data.get('timeFrame', '')
+        branch_id = request.data.get('branch', '')
+        product_id = request.data.get('product', '')
+        transfer_id = request.data.get('transfer_id', '')
+        
+        transfers = TransferItems.objects.filter().order_by('-date') 
+        
+        today = datetime.date.today()
+        
+        if choice in ['All', '', 'Over/Less']:
+            transfers = transfers
+        
+        if product_id:
+            transfers = transfers.filter(product__id=product_id)
+        if branch_id:
+            transfers = transfers.filter(to_branch_id=branch_id)
+        
+        def filter_by_date_range(start_date, end_date):
+            return transfers.filter(date__range=[start_date, end_date])
+        
+        date_filters = {
+            'All': lambda: transfers, 
+            'today': lambda: filter_by_date_range(today, today),
+            'yesterday': lambda: filter_by_date_range(today - timedelta(days=1), today - timedelta(days=1)),
+            'this week': lambda: filter_by_date_range(today - timedelta(days=today.weekday()), today),
+            'this month': lambda: transfers.filter(date__month=today.month, issue_date__year=today.year),
+            'this year': lambda: transfers.filter(date__year=today.year),
+        }
+        
+        
+        if time_frame in date_filters:
+            transfers = date_filters[time_frame]()
+            
+        if view:
+            return Response(transfers.values(
+                    'date',
+                    'product__name', 
+                    'price',
+                    'quantity', 
+                    'from_branch__name',
+                    'from_branch__id',
+                    'to_branch__id',
+                    'to_branch__name',
+                    'received_by__username',
+                    'date_received',
+                    'description',
+                    'received',
+                    'declined'
+                ), 
+                status.HTTP_200_OK
+            )
+        
+        if transfer_id:
+            
+            return Response(transfers.filter(id=transfer_id).values(
+                    'date',
+                    'product__name', 
+                    'price',
+                    'quantity', 
+                    'from_branch__name',
+                    'from_branch__id',
+                    'to_branch__id',
+                    'to_branch__name',
+                    'received_by__username',
+                    'date_received',
+                    'description',
+                    'received',
+                    'declined'
+                ), 
+                status.HTTP_200_OK
+            )
+        
+        return Response(
+            generate_pdf,
+            {
+                'title': 'Transfers', 
+                'date_range': time_frame if time_frame else 'All',
+                'report_date': datetime.date.today(),
+                'transfers':transfers
+            },
+            status.HTTP_200_OK
+        )
+
+class AccessoriesView(views.APIView):
+    def get(self, request, product_id):
+        accessories = Accessory.objects.filter(product__id=product_id).values('id', 'product__name')
+        return Response({'data': accessories}, status.HTTP_200_OK)

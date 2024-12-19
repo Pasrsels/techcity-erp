@@ -172,4 +172,11 @@ urlpatterns = [
     path('api/transfer-held', HeldTransfers.as_view(), name= 'transfers_held'),
     path('api/process-transfer-held/<int:transfer_id>/', ProcessHeldTransfer.as_view(), name= 'process_transfer_held'),
 
+    #Report
+    path('api/inventory-pdf', InventoryPDF.as_view(), name='inventory_pdf'),
+    path('api/inventory-report', InventoryReport.as_view(), name='inventory_report'),
+
+    #Accessories
+    path('api/accessories_view/<int:product_id>/', AccessoriesView.as_view(), name='accessories_view'),
+
 ]
