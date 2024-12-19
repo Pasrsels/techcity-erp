@@ -5,9 +5,6 @@ from . consumer import InventoryConsumer
 
 app_name = 'inventory'
 
-router = routers.DefaultRouter()
-router.register(r'PurchaseOrder', PurchaseOrderViewset, basename= 'purchase_order_crud')
-
 urlpatterns = [
     path('', inventory_index, name='inventory'),
     path('inventory/', inventory, name='inventory_list'),
@@ -152,7 +149,8 @@ urlpatterns = [
     path('api/reorder-settings', ReorderSettings.as_view(), name= 'reorder_settings'),
 
     #Purchase Order
-    path('api/purchase-order', include(router.urls)),
+    path('api/purchase-order-list-create', PurchaseOrderListandCreate.as_view(), name= 'purchase_order_list_create'),
+    path('api/purchase-order-delete-update/<int:purchase_order_id>/', PurchaseOrderDeleteandEdit.as_view(), name= 'purchase_order_delete_edit'),
     path('api/purchase-order-print/<int:order_id>/', PrintPurchaseOrder.as_view(), name= 'purchase_order_print'),
     path('api/purchase-receive-order/<int:order_id>/', ReceiveOrder.as_view(), name= 'purchase_order_receive'),
     path('api/purchase-process-received-order', ProcessReceivedOrder.as_view(), name= 'purchase_order_received'),

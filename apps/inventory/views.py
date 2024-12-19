@@ -4396,9 +4396,199 @@ class PrintPurchaseOrder(views.APIView):
             status.HTTP_200_OK
         )
     
-class PurchaseOrderViewset(viewsets.ModelViewSet):
-    queryset = PurchaseOrder
-    serializer_class = PurchaseOrderSerializer
+class PurchaseOrderListandCreate(views.APIView):
+    def get(self, request):
+        orders = PurchaseOrder.objects.filter(branch = request.user.branch).values().order_by('-order_date')
+        items = PurchaseOrderItem.objects.filter(purchase_order__id=5)
+
+        # Update the 'received' field for each item
+        for item in items:
+            item.expected_profit
+            item.received_quantity
+            item.save()
+            
+
+        # Perform a bulk update on the 'received' field
+        PurchaseOrderItem.objects.bulk_update(items, ['expected_profit', 'received_quantity'])
+    
+        return Response({'orders':orders}, status.HTTP_200_OK)
+
+    def post(self, request): 
+        try:
+            data = request.data
+            purchase_order_data = data.get('purchase_order', {})
+            purchase_order_items_data = data.get('po_items', [])
+            expenses = data.get('expenses', [])
+            cost_allocations = data.get('cost_allocations', [])
+            hold = data.get('hold', False)
+            supplier_payment_data = data.get('supplier_data')
+
+            unique_expenses = []
+
+            seen = set()
+            for expense in expenses:
+                expense_tuple = (expense['name'], expense['amount'])
+                if expense_tuple not in seen:
+                    seen.add(expense_tuple)
+                    unique_expenses.append(expense)
+
+        except json.JSONDecodeError:
+            return Response({'message': 'Invalid JSON payload'}, status.HTTP_400_BAD_REQUEST)
+
+        # Extract data from purchase_order_data
+        batch = purchase_order_data['batch']
+        delivery_date = purchase_order_data['delivery_date']
+        p_status = purchase_order_data['status']
+        notes = purchase_order_data['notes']
+        total_cost = Decimal(purchase_order_data['total_cost'])
+        discount = Decimal(purchase_order_data['discount'])
+        tax_amount = Decimal(purchase_order_data['tax_amount'])
+        other_amount = Decimal(purchase_order_data['other_amount'])
+        payment_method = purchase_order_data.get('payment_method')
+
+        if not all([batch, delivery_date, p_status, total_cost, payment_method]):
+            return Response({'message': 'Missing required fields'}, status.HTTP_400_BAD_REQUEST)
+
+        try:
+            with transaction.atomic():
+                purchase_order = PurchaseOrder(
+                    order_number=PurchaseOrder.generate_order_number(),
+                    batch=batch,
+                    delivery_date=delivery_date,
+                    status=p_status,
+                    notes=notes,
+                    total_cost=total_cost,
+                    discount=discount,
+                    tax_amount=tax_amount,
+                    other_amount=other_amount,
+                    branch=request.user.branch,
+                    is_partial=False,
+                    received=False,
+                    hold=hold
+                )
+                purchase_order.save()
+
+                purchase_order_items_bulk = []
+                for item_data in purchase_order_items_data:
+                    product_id = item_data['product_id']
+                    product_name = item_data['product']
+                    quantity = int(item_data['quantity'])
+                    unit_cost = Decimal(item_data['price'])
+                    actual_unit_cost = Decimal(item_data['actualPrice'])
+                    supplier_id = item_data.get('supplier', [])
+
+                    logger.info(f'Supplier id {{ supplier_id }}')
+
+                    if not all([product_name, quantity, unit_cost, product_id]):
+                        transaction.set_rollback(True)
+                        return Response({'message': 'Missing fields in item data'}, status.HTTP_400_BAD_REQUEST)
+
+                    try:
+                        product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+                    except Inventory.DoesNotExist:
+                        transaction.set_rollback(True)
+                        return Response({'message': f'Product with Name {product_name} not found'}, status.HTTP_404_NOT_FOUND)
+
+                    supplier = Supplier.objects.get(id=supplier_id)
+
+                    po_item = PurchaseOrderItem.objects.create(
+                        purchase_order=purchase_order,
+                        product=product,
+                        quantity=quantity,
+                        unit_cost=unit_cost,
+                        actual_unit_cost=actual_unit_cost,
+                        received_quantity=0,
+                        received=False,
+                        supplier = supplier,
+                        price=0,
+                        wholesale_price=0
+                    )
+                    product.suppliers.add(po_item.supplier.id)
+                    product.batch += f'{batch}, '
+                    product.price = 0
+                    product.save()
+
+                # Handle expenses
+                expense_bulk = []
+                for expense in unique_expenses:
+                    name = expense['name']
+                    amount = expense['amount']
+                    expense_bulk.append(
+                        otherExpenses(
+                            purchase_order=purchase_order,
+                            name=name,
+                            amount=amount
+                        )
+                    )
+                otherExpenses.objects.bulk_create(expense_bulk)
+
+                # Cost allocations
+                costs_list = []
+                for cost in cost_allocations:
+                    costs_list.append(
+                        costAllocationPurchaseOrder(
+                            purchase_order=purchase_order,
+                            allocated=cost['allocated'],
+                            allocationRate=cost['allocationRate'],
+                            expense_cost=cost['expCost'],
+                            price=cost['price'],
+                            quantity=float(cost['price']),
+                            product=cost['product'],
+                            total=cost['total'],
+                            total_buying=cost['totalBuying']
+                        )
+                    )
+                costAllocationPurchaseOrder.objects.bulk_create(costs_list)
+
+                # # Process finance updates
+                # if not purchase_order.hold:
+                #     if purchase_order.status.lower() == 'received':
+                #         # if_purchase_order_is_received(
+                #         #     request, 
+                #         #     purchase_order, 
+                #         #     tax_amount, 
+                #         #     payment_method
+                #         # ) 
+                #         #
+                #         # supplier_payments(purchase_order, supplier_payment_data, request)
+                          
+        except Exception as e:
+            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Purchase order created successfully'}, status.HTTP_201_CREATED)
+
+class PurchaseOrderDeleteandEdit(views.APIView):
+    def delete(self, request, purchase_order_id):
+        try:
+            purchase_order = PurchaseOrder.objects.get(id=purchase_order_id)
+        except PurchaseOrder.DoesNotExist:
+            return Response({'message': f'Purchase order with ID {purchase_order_id} not found'}, status.HTTP_404_NOT_FOUND)
+
+        try:
+            purchase_order.delete()
+            return Response({'message': 'Purchase order deleted successfully'}, status.HTTP_202_ACCEPTED)
+        except Exception as e:
+            return Response({'message': str(e)}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def update(self, request, purchase_order_id):
+        try:
+            expenses = otherExpenses.objects.filter(purchase_order__id=purchase_order_id).values()
+        
+            purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order__id=purchase_order_id).values(
+                'purchase_order__id',
+                'product__name',
+                'product__id',
+                'quantity',
+                'unit_cost',
+                'actual_unit_cost',
+                'expected_profit',
+                'supplier__name',
+                'supplier'
+            )
+
+            return Response({'po_items':purchase_order_items, 'expenses':expenses}, status.HTTP_202_ACCEPTED)
+        except Exception as e:
+            return JsonResponse({'message':f'{e}'}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class ReceiveOrder(views.APIView):
     def get(self, request, order_id):
