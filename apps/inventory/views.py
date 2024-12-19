@@ -618,7 +618,7 @@ def inventory_index(request):
         'total_price': totals[1],
         'total_cost':totals[0],
         'accessories':accessories,
-        'logs':ActivityLog.objects.all().order_by('-timestamp')
+        'logs':ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
     })
 
 @login_required
