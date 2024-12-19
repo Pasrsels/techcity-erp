@@ -128,7 +128,7 @@ class Accessory(models.Model):
     accessory_product = models.ManyToManyField(Inventory)
 
     def __str__(self):
-        return self.product.name
+        return self.main_product.name
 
 class PurchaseOrder(models.Model):
     """Model for purchase orders."""
