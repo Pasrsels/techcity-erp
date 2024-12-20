@@ -46,7 +46,8 @@ from . forms import (
     CashWithdrawForm, 
     cashWithdrawExpenseForm,
     customerDepositsForm,
-    customerDepositsRefundForm
+    customerDepositsRefundForm,
+    cashDepositForm
 )
 from django.contrib.auth import authenticate
 from loguru import logger
@@ -2886,7 +2887,7 @@ def cash_deposit(request):
         deposits = CashDeposit.objects.all()
         return render(request, 'cash_deposit.html', 
             {
-                'form':cashDepositForm,
+                'form':cashDepositForm(),
                 'deposits':deposits
             }
         )
@@ -2959,8 +2960,8 @@ def vat(request):
     if request.method == 'POST':
         # payload 
         {
-            'date_from':date,
-            'date_to':date
+            'date_from':'date',
+            'date_to':'date'
         }
         try:
             data = json.loads(request.body)
@@ -2979,35 +2980,2060 @@ def vat(request):
         return JsonResponse({'success':False, 'message':'VAT successfully paid'}, status = 200)
     
 
-    
-############################################################################################################################################################################################
-from rest_framework.viewsets import ModelViewSet
+#API 
+#############################################################################################################
+from rest_framework import status, views, viewsets
 from rest_framework.response import Response
-from apps.finance.serializers import (
-    CustomerSerializer
-)
+from rest_framework.permissions import IsAuthenticated
+from .serializers import *
 
-""" Finance API views """
-class CustomerViewset(ModelViewSet):
-    """
-        viewset customer crud
-    """
-    serializer_class = CustomerSerializer
+class CustomerCrud(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
 
-    def create(self, request, *args, **kwargs):
-        request.data['branch'] = self.request.user.branch or Branch.objects.get(id=i) # to  be removed just for testsing
+    def create(self, request):
+        data = request.data
+        
+        validation_errors = validate_customer_data(data)
+        if validation_errors:
+            return Response(validation_errors, status= status.HTTP_406_NOT_ACCEPTABLE)
+        if Customer.objects.filter(phone_number=data['phonenumber']).exists():
+            return Response('Customer exists', status= status.HTTP_409_CONFLICT)
+        else:
+            customer = Customer.objects.create(
+                name=data['name'],
+                email=data['email'],
+                address=data['address'],
+                phone_number=data['phonenumber'],
+                branch=request.user.branch
+            )
+            account = CustomerAccount.objects.create(customer=customer)
+
+        balances_to_create = [
+            CustomerAccountBalances(account=account, currency=currency, balance=0) 
+            for currency in Currency.objects.all()
+        ]
+        CustomerAccountBalances.objects.bulk_create(balances_to_create)
+        return JsonResponse(status.HTTP_201_CREATED)
+
+# """ Finance API views """
+# class CustomerViewset(ModelViewSet):
+#     """
+#         viewset customer crud
+#     """
+#     serializer_class = CustomerSerializer
+#     queryset = Customer.objects.all()
+
+#     def create(self, request, *args, **kwargs):
+#         request.data['branch'] = self.request.user.branch or Branch.objects.get(id=i) # to  be removed just for testsing
   
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+#         serializer = self.get_serializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         self.perform_create(serializer)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def perform_create(self, serializer):
-        logger.info(f"Creating a new customer with data: {serializer.validated_data}")
+#     def perform_create(self, serializer):
+#         logger.info(f"Creating a new customer with data: {serializer.validated_data}")
       
-        serializer.save()
+#         serializer.save()
 
-        logger.info(f"Customer created successfully: {serializer.instance.id}")
+#         logger.info(f"Customer created successfully: {serializer.instance.id}")
+# class CustomerList(views.APIView):   
+#     def get(self, request):
+#         search_query = request.GET.get('q', '')
+        
+#         customers = Customer.objects.filter(branch=request.user.branch)
+#         accounts = CustomerAccountBalances.objects.all()
+        
+#         total_balances_per_currency = CustomerAccountBalances.objects.filter(account__customer__branch=request.user.branch).values('currency__name').annotate(
+#             total_balance=Sum('balance')
+#         )
+        
+#         if search_query:
+#             customers = CustomerAccount.objects.filter(Q(customer__name__icontains=search_query))
+            
+#         if 'receivable' in request.GET:
+#             negative_balances_per_currency = CustomerAccountBalances.objects.filter(account__customer__branch=request.user.branch, balance__lt=0) \
+#                 .values('currency') \
+#                 .annotate(total_balance=Sum('balance'))
+
+#             customers = Customer.objects.filter(
+#                 id__in=negative_balances_per_currency.values('account__customer_id'),
+#             ).distinct()
+            
+#             total_balances_per_currency = negative_balances_per_currency.values('currency__name').annotate(
+#                 total_balance=Sum('balance')
+#             )
+            
+#             logger.info(f'Customers:{total_balances_per_currency.values}')
+
+#         if 'download' in request.GET: 
+#             customers = Customer.objects.all() 
+#             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+#             response['Content-Disposition'] = 'attachment; filename=customers.xlsx'
+
+#             workbook = openpyxl.Workbook()
+#             worksheet = workbook.active
+            
+#             header_font = Font(bold=True)
+#             header_alignment = Alignment(horizontal='center')
+#             for col_num, header_title in enumerate(['Customer Name', 'Phone Number', 'Email', 'Account Balance'], start=1):
+#                 cell = worksheet.cell(row=1, column=col_num)
+#                 cell.value = header_title
+#                 cell.font = header_font
+#                 cell.alignment = header_alignment
+                
+#                 column_letter = openpyxl.utils.get_column_letter(col_num)
+#                 worksheet.column_dimensions[column_letter].width = max(len(header_title), 20)
+
+#             customer_accounts = CustomerAccountBalances.objects.all()
+#             for customer in customer_accounts:
+#                 worksheet.append(
+#                     [
+#                         customer.account.customer.name, 
+#                         customer.account.customer.phone_number, 
+#                         customer.account.customer.email, 
+#                         customer.balance if customer.balance else 0,
+#                     ]
+#                 )  
+                
+#             workbook.save(response)
+#             return response
+            
+#         return Response({
+#             'customers':customers, 
+#             'accounts':accounts,
+#             'total_balances_per_currency':total_balances_per_currency,
+#         },status= status.HTTP_200_OK)
+
+class CustomerAccount(views.APIView):
+    def get(self, request, customer_id):
+        customer = get_object_or_404(Customer, id=customer_id)
+        customer_serializer = CustomerSerializer(customer)
+
+        account = CustomerAccountBalances.objects.filter(account__customer=customer)
+        account_serializer = CustomerAccountBalancesSerializer(account)
+
+        invoices = Invoice.objects.filter(
+            customer=customer, 
+            branch=request.user.branch, 
+            status=True
+        )
+        invoice_serializer = InvoiceSerializer(invoices)
+
+        invoice_payments = Payment.objects.filter(
+            invoice__branch=request.user.branch, 
+            invoice__customer=customer
+        ).order_by('-payment_date')
+        invoice_payments_serializer = PaymentSerializer(invoice_payments)
+
+        filters = Q()
+        if request.GET.get('q'):
+            filters &= Q(payment_status=request.GET['q'])
+        if request.GET.get('search_query'):
+            search_query = request.GET['search_query']
+            filters &= (Q(invoice_number__icontains=search_query) | Q(issue_date__icontains=search_query))
+
+        invoices = invoices.filter(filters)
+
+        if request.GET.get('email_bool'):
+            send_account_statement_email(customer.id, request.user.branch.id, request.user.id)
+            return Response({'message': 'Email sent'},status.HTTP_200_OK)
+
+        paid_invoice = invoices.filter(payment_status='Paid').count()
+        due_invoice = invoices.filter(payment_status='Partial').count()
+        return Response({
+            'account': account_serializer.data,
+            'invoices': invoice_serializer.data,
+            'customer': customer_serializer.data,
+            'invoice_count': invoices.count(),
+            'invoice_payments': invoice_payments_serializer.data,
+            'paid': paid_invoice,  
+            'due': due_invoice, 
+        },status.HTTP_200_OK)
     
+class customer_account_payments_json(views.APIView):
+    def get(self, request, customer_id):
+        customer_id = customer_id
+        transaction_type = request.GET.get('type')
+
+        customer = get_object_or_404(Customer, id=customer_id)
+
+        if transaction_type == 'invoice_payments':
+            invoice_payments = Payment.objects.select_related('invoice', 'invoice__currency', 'user').filter(
+                invoice__branch=request.user.branch, 
+                invoice__customer=customer
+            ).order_by('-payment_date').values(
+                'invoice__products_purchased',
+                'payment_date',
+                'invoice__invoice_number',
+                'invoice__currency__symbol', 
+                'invoice__payment_status',
+                'invoice__amount_due',
+                'invoice__amount', 
+                'user__username',
+                'amount_paid', 
+                'amount_due'
+            )
+            invoice_payment_serializer = PaymentSerializer(invoice_payments)
+            return Response(invoice_payment_serializer.data,status.HTTP_200_OK, safe=FALSE)
+        else:
+            return Response(status.HTTP_400_BAD_REQUEST)
+
+class EditCustomerDeposit(views.APIView):
+    def update(self, request, deposit_id):
+        try:
+            deposit = CustomerDeposits.objects.get(id=deposit_id)
+        except CustomerDeposits.DoesNotExist:
+            # messages.warning(request, 'Deposit not found')
+            return Response(status.HTTP_404_NOT_FOUND)
+        
+        form = customerDepositsForm(request.POST)
+        if not form.is_valid():
+            messages.warning(request, 'Invalid form submission')
+            return redirect('finance:edit_customer_deposit', deposit_id)
+
+        amount = Decimal(request.POST.get('amount'))
+        if amount <= 0:
+            messages.warning(request, 'Amount cannot be zero or negative')
+            return redirect('finance:edit_customer_deposit', deposit_id)
+
+        account_types = {
+            'cash': Account.AccountType.CASH,
+            'bank': Account.AccountType.BANK,
+            'ecocash': Account.AccountType.ECOCASH,
+        }
+
+        account_name = f"{request.user.branch} {deposit.currency.name} {deposit.payment_method.capitalize()} Account"
+        
+        try:
+            account = Account.objects.get(name=account_name, type=account_types[deposit.payment_method])
+            account_balance = AccountBalance.objects.get(
+                account=account,
+                currency=deposit.currency,
+                branch=request.user.branch,
+            )
+        except (Account.DoesNotExist, AccountBalance.DoesNotExist) as e:
+            messages.warning(request, str(e))
+            return redirect('finance:edit_customer_deposit', deposit_id)
+        
+        adj_amount = amount - deposit.amount
+
+        if adj_amount != 0:
+            if adj_amount > 0:
+                account_balance.balance += adj_amount
+                debit, credit = True, False
+            else:
+                account_balance.balance += adj_amount 
+                debit, credit = False, True
+
+            Cashbook.objects.create(
+                issue_date=datetime.date.today(),
+                description=f'{deposit.payment_method.upper()} deposit adjustment ({deposit.customer_account.account.customer.name})',
+                debit=debit,
+                credit=credit,
+                amount=abs(adj_amount),
+                currency=deposit.currency,
+                branch=deposit.branch
+            )
+
+            account_balance.save()
+            deposit.amount = amount
+            deposit.save()
+            messages.success(request, 'Customer deposit successfully updated')
+            return redirect('finance:customer', deposit.customer_account.account.customer.id)
+        return render(request, 'customers/edit_deposit.html', {'form': form})
+
+class CustomerAccountJson(views.APIView):
+    def retrive(self, request, customer_id):
+        account = CustomerAccountBalances.objects.filter(account__customer__id=customer_id).values(
+            'currency__symbol', 'balance'
+        )  
+        customer_account_balances_serializer = CustomerAccountBalancesSerializer(account)
+        return Response(customer_account_balances_serializer.data, status.HTTP_200_OK)
+
+
+class CustomerAccountTransactionsJson(views.APIView):
+    def retrive(self, request, id):
+        customer_id = id
+        transaction_type = request.GET.get('type')
+
+        customer = get_object_or_404(Customer, id=customer_id)  
+
+        if transaction_type == 'invoices':
+            invoices = Invoice.objects.filter(
+                customer=customer, 
+                branch=request.user.branch, 
+                status=True
+            ).order_by('-issue_date').values(
+                'issue_date',
+                'invoice_number',
+                'products_purchased', 
+                'amount_paid', 
+                'amount_due', 
+                'amount', 
+                'user__username',
+                'payment_status'
+            )
+            invoice_serializer = InvoiceSerializer(invoices)
+            return Response(invoice_serializer, status.HTTP_200_OK)
+        else:
+            return Response({'message': 'Invalid transaction type.'}, status.HTTP_400_BAD_REQUEST)
+
+
+class RefundCustomerDeposit(views.APIView):
+    def update(self, request, deposit_id):
+        try:
+            deposit = CustomerDeposits.objects.get(id=deposit_id)
+        except CustomerDeposits.DoesNotExist:
+            return Response({'message': 'Deposit not found'}, status.HTTP_404_NOT_FOUND)
+        
+        try:
+            data = request.data
+            amount = Decimal(data.get('amount', 0))
+            if amount <= 0:
+                return Response({'message': 'Invalid amount'}, status.HTTP_400_BAD_REQUEST)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return Response({'message': 'Invalid input data'}, status.HTTP_400_BAD_REQUEST)
+
+        account_types = {
+            'cash': Account.AccountType.CASH,
+            'bank': Account.AccountType.BANK,
+            'ecocash': Account.AccountType.ECOCASH,
+        }
+
+        account_name = f"{request.user.branch} {deposit.currency.name} {deposit.payment_method.capitalize()} Account"
+
+        try:
+            account = Account.objects.get(name=account_name, type=account_types[deposit.payment_method])
+            account_balance = AccountBalance.objects.get(
+                account=account,
+                currency=deposit.currency,
+                branch=request.user.branch,
+            )
+        except (Account.DoesNotExist, AccountBalance.DoesNotExist) as e:
+            return Response({'message': str(e)}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        if amount > deposit.amount:
+            return JsonResponse({'message': 'Refund amount exceeds deposit amount'}, status.HTTP_400_BAD_REQUEST)
+        
+        account_balance.balance -= amount
+        diff_amount = deposit.amount - amount
+
+        if diff_amount == 0:
+            deposit.delete()
+        else:
+            deposit.amount = diff_amount
+            deposit.save()
+
+        Cashbook.objects.create(
+            issue_date=datetime.date.today(),
+            description=f'{deposit.payment_method.upper()} deposit refund ({deposit.customer_account.account.customer.name})',
+            debit=False,
+            credit=True,
+            amount=amount,
+            currency=deposit.currency,
+            branch=deposit.branch
+        )
+
+        account_balance.save()
+        return Response(status.HTTP_200_OK)
+
+class PrintAccountStatement(views.APIView):
+    def get(request, customer_id):
+        try:
+            customer = get_object_or_404(Customer, id=customer_id)
+            
+            account = CustomerAccountBalances.objects.filter(account__customer=customer)
+            
+            invoices = Invoice.objects.filter(
+                customer=customer, 
+                branch=request.user.branch, 
+                status=True
+            )
+        except:
+            #messages.warning(request, 'Error in processing the request')
+            return redirect('finance:customer')
+
+        invoice_payments = Payment.objects.select_related('invoice', 'invoice__currency', 'user').filter(
+            invoice__branch=request.user.branch, 
+            invoice__customer=customer
+        ).order_by('-payment_date')
+        
+        customer_serializer = CustomerSerializer(customer)
+        account_serializer = CustomerAccountBalancesSerializer(account)
+        invoice_serializer = InvoiceSerializer(invoices)
+        invoice_payments_serializer = PaymentSerializer(invoice_payments)
+
+        return Response({
+            'customer':customer,
+            'account':account,
+            'invoices':invoices, 
+            'invoice_payments':invoice_payments
+        }, status.HTTP_200_OK)
+
+class CustomerDeposits(views.APIView):
+    def retrive(self, request, id): 
+        customer_id = id
+        
+        if customer_id: 
+            deposits = CustomerDeposits.objects.filter(branch=request.user.branch).values(
+                'customer_account__account__customer_id',
+                'date_created',
+                'amount', 
+                'reason',
+                'currency__name', 
+                'currency__symbol', 
+                'payment_method',
+                'payment_reference',
+                'cashier__username', 
+                'id'
+            ).order_by('-date_created')
+
+            deposits_serializer = CustomerDepositSerializer(deposits)
+            return Response(deposits_serializer, status.HTTP_200_OK)
+        else:
+            return JsonResponse({
+                'message':f'{customer_id} was not provided'
+            }, status.HTTP_400_BAD_REQUEST)
+
+
+class DepositList(views.APIView):
+    def get(self, request):
+        deposits = CustomerDeposits.objects.filter(branch=request.user.branch).order_by('-date_created')
+        deposits_serializer = CustomerDepositSerializer(deposits)
+        return Response({
+            'deposits':deposits_serializer.data,
+            'total_deposits': deposits_serializer.data.aggregate(Sum('amount'))['amount__sum'] or 0,
+        })
+
+class CashTransfer(views.APIView):
+    def cash_transfer(self, request):
+        transfers = CashTransfers.objects.filter(branch=request.user.branch)
+        
+        account_types = {
+            'cash': Account.AccountType.CASH,
+            'bank': Account.AccountType.BANK,
+            'ecocash': Account.AccountType.ECOCASH,
+        }
+        form = TransferForm(request.POST)
+        if form.is_valid():
+            transfer = form.save(commit=False)
+            transfer.user = request.user
+            transfer.notification_type = 'Expense'
+            transfer.from_branch = request.user.branch
+            transfer.branch = request.user.branch
+            transfer.received_status = False
+            
+            account_name = f"{request.user.branch} {transfer.currency.name} {transfer.transfer_method.capitalize()} Account"
+
+            try:
+                account = Account.objects.get(name=account_name, type=account_types[transfer.transfer_method.lower()])
+            except Account.DoesNotExist:
+                messages.error(request, f"Account '{account_name}' not found.")
+                return redirect('finance:cash_transfer')  
+
+            try:
+                account_balance = AccountBalance.objects.select_for_update().get(
+                    account=account,
+                    currency=transfer.currency,
+                    branch=request.user.branch
+                )
+            except AccountBalance.DoesNotExist:
+                messages.error(request, "Account balance record not found.")
+                return redirect('finance:cash_transfer')
+
+            if account_balance.balance < transfer.amount:
+                messages.error(request, "Insufficient funds in the account.")
+                return redirect('finance:cash_transfer')  
+
+            account_balance.balance -= transfer.amount
+            account_balance.save()
+            transfer.save()  
+            
+            messages.success(request, 'Money successfully transferred.')
+            return redirect('finance:cash_transfer')  
+        else:
+            messages.error(request, "Invalid form data. Please correct the errors.")
+        return render(request, 'transfers/cash_transfers.html', {'form': form, 'transfers':transfers})
+
+class CashTransferList(views.APIView):
+    def get(self, request):
+        search_query = request.GET.get('q', '')
+        transfers = CashTransfers.objects.filter(to=request.user.branch.id)
+        transfers_serializer = CashTransferSerializer(transfers)
+        if search_query:
+            transfers = transfers.filter(Q(date__icontains=search_query))
+            
+        return Response({'transfers':transfers_serializer, 'search_query':search_query}, status.HTTP_200_OK)
+
+
+class ReceiveMoneyTransfer(views.APIView):
+    def get(self, request, transfer_id):
+        if transfer_id:
+            transfer = get_object_or_404(CashTransfers, id=transfer_id)
+            account_types = {
+                'cash': Account.AccountType.CASH,
+                'bank': Account.AccountType.BANK,
+                'ecocash': Account.AccountType.ECOCASH,
+            }
+            
+            account_name = f"{request.user.branch} {transfer.currency.name} {transfer.transfer_method.capitalize()} Account"
+
+            try:
+                account, _ = Account.objects.get_or_create(name=account_name, type=account_types[transfer.transfer_method.lower()])
+            except Account.DoesNotExist:
+                return JsonResponse({'message':f"Account '{account_name}' not found."}) 
+
+            try:
+                account_balance, _ = AccountBalance.objects.get_or_create(
+                    account=account,
+                    currency=transfer.currency,
+                    branch=request.user.branch
+                )
+            except AccountBalance.DoesNotExist:
+                messages.error(request, )
+                return JsonResponse({'message':"Account balance record not found."})  
+
+            account_balance.balance += transfer.amount
+            account_balance.save()
+            
+            transfer.received_status = True
+            transfer.save() 
+            return JsonResponse({'message':True})  
+        return JsonResponse({'message':"Transfer ID is needed"})  
+
+class FinanceNotification(views.APIView):
+    def finance_notifications_json(request):
+        notifications = FinanceNotifications.objects.filter(status=True).values(
+            'transfer__id', 
+            'transfer__to',
+            'expense__id',
+            'expense__branch',
+            'invoice__id',
+            'invoice__branch',
+            'notification',
+            'notification_type',
+            'id'
+        )
+        notifications_serializer = FinanceNotificationSerializer(notifications)
+        return Response(notifications_serializer.data, status.HTTP_200_OK, safe=False)
+
+
+class CurrencyViewset(viewsets.ModelViewSet):
+    queryset = Currency.objects.all()
+    serializer_class = CurrencySerializer
+    def list(self, request):
+        data = self.queryset.values()
+        logger.info(data)
+        return Response(data, status.HTTP_200_OK)
+    def create(self, request):
+        con_data = request.data
+        data = {
+            'code': con_data.get('code'),
+            'name': con_data.get('name'),
+            'symbol': con_data.get('symbol'),
+            'exchange_rate': con_data.get('exchange_rate')
+        }
+        # serializer = CurrencySerializer(data = data)
+        # if not serializer.is_valid():
+        #     serializer.save()
+        if not Currency.objects.filter(name = con_data.get('name')):
+            Currency.objects.create(
+                code = data.get('code'),
+                name = data.get('name'),
+                symbol = data.get('symbol'),
+                exchange_rate = data.get('exchange_rate')
+            )
+            data_saved = Currency.objects.get(name = data.get('name'))
+            logger.info(data_saved)
+            data_returned = {
+                'code': data_saved.code,
+                'name': data_saved.name,
+                'symbol': data_saved.symbol,
+                'exchange_rate': data_saved.exchange_rate
+            }
+            serializer = CurrencySerializer(data_saved)
+            return Response(data_returned,status.HTTP_201_CREATED)
+        return Response(status.HTTP_400_BAD_REQUEST)
+
+class CashWithdrawalsViewset(viewsets.ModelViewSet):
+    queryset = CashWithdrawals.objects.all()
+    serializer_class = CashWithdrawalSerializer
+
+
+class EndOfDay(views.APIView):
+    def end_of_day(request):
+        today = timezone.now().date()
+        
+        user_timezone_str = request.user.timezone if hasattr(request.user, 'timezone') else 'UTC'
+        user_timezone = pytz_timezone(user_timezone_str)  
+
+        # make a utility
+        def filter_by_date_range(start_date, end_date):
+            start_datetime = user_timezone.localize(
+                timezone.datetime.combine(start_date, timezone.datetime.min.time())
+            )
+            end_datetime = user_timezone.localize(
+                timezone.datetime.combine(end_date, timezone.datetime.max.time())
+            )
+            return Invoice.objects.filter(branch=request.user.branch, issue_date__range=[start_datetime, end_datetime])
+
+        now = timezone.now().astimezone(user_timezone)
+        today = now.date()
+
+        now = timezone.now() 
+        today = now.date()  
+        
+        # invoices = filter_by_date_range(today, today)
+        invoices = filter_by_date_range(today, today)
+
+        logger.info(f'Invoices {invoices}')
+        withdrawals = CashWithdraw.objects.filter(user__branch=request.user.branch, date=today, status=False)
+        
+        total_cash_amounts = [
+            {
+                'total_invoices_amount' : invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
+                'total_withdrawals_amount' : withdrawals.aggregate(Sum('amount'))['amount__sum'] or 0
+            }
+        ]
+
+        logger.info(f'cash amounts: {total_cash_amounts}')
+
+        sold_inventory = (
+            ActivityLog.objects
+            .filter(invoice__branch=request.user.branch, timestamp__date=today, action='Sale')
+            .values('inventory__id', 'inventory__name')
+            .annotate(quantity_sold=Sum('quantity'))
+        )
+
+        logger.info(f'Sold Inventory: {sold_inventory}')
+        
+        if request.method == 'GET':
+            all_inventory = Inventory.objects.filter(branch=request.user.branch, status=True).values(
+                'id', 'name', 'quantity'
+            )
+
+            inventory_data = []
+            for item in sold_inventory:
+                logger.info(item)
+                sold_info = next((inv for inv in all_inventory if item['inventory__id'] == inv['id']), None)
+                
+                if sold_info:
+                    inventory_data.append({
+                        'id': item['inventory__id'],
+                        'name': item['inventory__name'],
+                        'initial_quantity': item['quantity_sold'] + sold_info['quantity'] if sold_info else 0,
+                        'quantity_sold':  item['quantity_sold'],
+                        'remaining_quantity':sold_info['quantity'] if sold_info else 0,
+                        'physical_count': None
+                    })
+            
+            return JsonResponse({'inventory': inventory_data, 'total_cash_amounts':total_cash_amounts})
+        
+        elif request.method == 'POST':
+            try:
+                data = json.loads(request.body)
+                inventory_data = []
+                
+                for item in data:
+                    try:
+                        inventory = Inventory.objects.get(id=item['item_id'], branch=request.user.branch, status=True)
+                        inventory.physical_count = item['physical_count']
+                        inventory.save()
+
+                        sold_info = next((i for i in sold_inventory if i['inventory__id'] == inventory.id), None)
+                        inventory_data.append({
+                            'id': inventory.id,
+                            'name': inventory.name,
+                            'initial_quantity': inventory.quantity,
+                            'quantity_sold': sold_info['quantity_sold'] if sold_info else 0,
+                            'remaining_quantity': inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0),
+                            'physical_count': inventory.physical_count,
+                            'difference': inventory.physical_count - (inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0))
+                        })
+                    except Inventory.DoesNotExist:
+                        return JsonResponse({'success': False, 'error': f'Inventory item with id {item["inventory_id"]} does not exist.'})
+
+                today_min = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                today_max = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
+                
+                # Invoice data
+                invoices = Invoice.objects.filter(branch=request.user.branch, issue_date__range=(today_min, today_max))
+                partial_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PARTIAL)
+                paid_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PAID, branch=request.user.branch)
+            
+                # Expenses
+                expenses = Expense.objects.filter(branch=request.user.branch, date=today)
+                confirmed_expenses = expenses.filter(status=True)
+                unconfirmed_expenses = expenses.filter(status=False)
+                
+                # Accounts
+                account_balances = AccountBalance.objects.filter(branch=request.user.branch)
+
+                html_string = render_to_string('day_report.html', {
+                    'request':request,
+                    'invoices':invoices,
+                    'expenses':expenses,
+                    'date': today,
+                    'inventory_data': inventory_data,
+                    'total_sales': paid_invoices.aggregatea,
+                    'partial_payments': partial_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
+                    'total_paid_invoices': paid_invoices.count(),
+                    'total_partial_invoices': partial_invoices.count(),
+                    'total_expenses': confirmed_expenses.aggregate(Sum('amount'))['amount__sum'] or 0,
+                    'confirmed_expenses': confirmed_expenses,
+                    'unconfirmed_expenses': unconfirmed_expenses,
+                    'account_balances': account_balances,
+                })
+                
+                pdf_buffer = BytesIO()
+                pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
+                if not pisa_status.err:
+                    filename = f"{request.user.branch.name}_today_report_{today}.pdf"
+                    return JsonResponse({"success": True})
+                else:
+                    return JsonResponse({"success": False, "error": "Error generating PDF."})
+            except json.JSONDecodeError:
+                return JsonResponse({'success': False, 'error': 'Invalid JSON data.'})
+            except Exception as e:
+                logger.exception(f"Error processing request: {e}")
+                return JsonResponse({'success': False, 'error': str(e)})
+        
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class QuatationCrud(viewsets.ModelViewSet):
+    queryset = Qoutation.objects.all()
+    serializer_class = QuotationSerializer
+    def create(self, request):
+        data = request.data
+        qoute_id = data.get('id'),
+        qoute_subtotal = data.get('subtotal')
+        qoute_currency_id = data.get('currency_id')
+        items_data = data.get('items')
+        
+        customer = Customer.objects.get(id=qoute_id)
+        currency = Currency.objects.get(id=qoute_currency_id)
+        
+        qoute = Qoutation.objects.create(
+            customer = customer,
+            amount =  Decimal(qoute_subtotal),
+            branch = request.user.branch,
+            currency = currency,
+            qoute_reference = Qoutation.generate_qoute_number(request.user.branch.name),
+            products = ', '.join([f'{item['product_name']} x {item['quantity']}' for item in items_data])
+        )
+        
+        for item_data in items_data:
+            item = Inventory.objects.get(pk=item_data['inventory_id'])
+            
+            QoutationItems.objects.create(
+                qoute=qoute,
+                product=item,
+                unit_price=item.price,
+                quantity=item_data['quantity'],
+                total_amount= item.price * item_data['quantity'],
+            )
+        return Response({'qoute_id': qoute.id}, status.HTTP_200_OK)
+    
+class QuotationList(views.APIView):
+    def get(self, request):
+        search_query = request.GET.get('q', '')
+        qoutations = Qoutation.objects.filter(branch=request.user.branch).order_by('-date')
+    
+        if search_query:
+
+            qoutations = qoutations.filter(
+                Q(customer__name__icontains=search_query)|
+                Q(products__icontains=search_query)|
+                Q(date__icontains=search_query)|
+                Q(qoute_reference__icontains=search_query)
+            )
+            quote_serializer = QuotationSerializer(qoutations)
+        return Response(quote_serializer.data, status.HTTP_200_OK)
+
+class QuotationDelete(views.APIView):
+    def delete(request, qoutation_id):
+        qoute = get_object_or_404(Qoutation, id=qoutation_id)
+        qoute.delete()
+        return Response(status.HTTP_202_ACCEPTED)
+
+class QuotationView(views.APIView):
+    def get(request, qoutation_id):
+        qoute = Qoutation.objects.get(id=qoutation_id)
+        quote_serializer = QuotationSerializer(qoute)
+        qoute_items = QoutationItems.objects.filter(qoute=qoute)
+        quote_item_serializer = QuotationItemSerializer(qoute_items)
+        return render({quote_serializer.data, quote_item_serializer.data}, status.HTTP_200_OK)
+
+class InvoiceList(views.APIView):
+    def get(self, request):
+        form = InvoiceForm()
+        invoices = Invoice.objects.filter(branch=request.user.branch, status=True).order_by('-invoice_number')
+
+        query_params = request.GET
+        if query_params.get('q'):
+            search_query = query_params['q']
+            invoices = invoices.filter(
+                Q(customer__name__icontains=search_query) |
+                Q(invoice_number__icontains=search_query) |
+                Q(issue_date__icontains=search_query)
+            )
+
+        user_timezone_str = request.user.timezone if hasattr(request.user, 'timezone') else 'UTC'
+        user_timezone = pytz_timezone(user_timezone_str)  
+
+        def filter_by_date_range(start_date, end_date):
+            start_datetime = user_timezone.localize(
+                timezone.datetime.combine(start_date, timezone.datetime.min.time())
+            )
+            end_datetime = user_timezone.localize(
+                timezone.datetime.combine(end_date, timezone.datetime.max.time())
+            )
+            return invoices.filter(issue_date__range=[start_datetime, end_datetime])
+
+        now = timezone.now().astimezone(user_timezone)
+        today = now.date()
+
+        now = timezone.now() 
+        today = now.date()  
+        
+        date_filters = {
+            'today': lambda: filter_by_date_range(today, today),
+            'yesterday': lambda: filter_by_date_range(today - timedelta(days=1), today - timedelta(days=1)),
+            't_week': lambda: filter_by_date_range(today - timedelta(days=today.weekday()), today),
+            'l_week': lambda: filter_by_date_range(today - timedelta(days=today.weekday() + 7), today - timedelta(days=today.weekday() + 1)),
+            't_month': lambda: invoices.filter(issue_date__month=today.month, issue_date__year=today.year),
+            'l_month': lambda: invoices.filter(issue_date__month=today.month - 1 if today.month > 1 else 12, issue_date__year=today.year if today.month > 1 else today.year - 1),
+            't_year': lambda: invoices.filter(issue_date__year=today.year),
+        }
+
+        if query_params.get('day') in date_filters:
+            invoices = date_filters[query_params['day']]()
+
+        total_partial = invoices.filter(payment_status='Partial').aggregate(Sum('amount'))['amount__sum'] or 0
+        total_paid = invoices.filter(payment_status='Paid').aggregate(Sum('amount'))['amount__sum'] or 0
+        total_amount = invoices.aggregate(Sum('amount'))['amount__sum'] or 0
+
+        logger.info(f'Invoices: {invoices.values}')
+
+        return render({
+            'invoices': invoices,
+            'total_paid': total_paid,
+            'total_due': total_partial,
+            'total_amount': total_amount,
+        },status.HTTP_200_OK)
+
+class Expense(views.APIView):
+    def get(self, request, expense_id):
+        expense = get_object_or_404(Expense, id=expense_id)
+        data = {
+            'id': expense.id,
+            'amount': expense.amount,
+            'description': expense.description,
+            'category': expense.category.id
+        }
+        expense_serializer = ExpenseSerializer(data)
+        return JsonResponse(data, status.HTTP_200_OK)
+    
+class ExpenseCategory(views.APIView):
+    def post(self, request):
+        categories = ExpenseCategory.objects.all().values()
+        data = request.data
+        category = data['name']
+        logger.info(data)
+        
+        if ExpenseCategory.objects.filter(name=category).exists():
+            return JsonResponse({'success':False, 'message':f'Category with ID {category} Exists.'}, status=400)
+        
+        ExpenseCategory.objects.create(
+            name=category
+        )
+        expense_category_serializer = ExpenseCategorySerializer(categories)
+        return JsonResponse(expense_category_serializer.data, status.HTTP_201_CREATED)
+    
+class AddOrEditExpense(views.APIView):
+    def post(request, id):
+        try:
+            data = request.data
+            amount = data.get('amount')
+            description = data.get('description')
+            category_id = data.get('category')
+            expense_id = id
+
+            if not amount or not description or not category_id:
+                return JsonResponse({'success': False, 'message': 'Missing fields: amount, description, category.'})
+            
+            category = get_object_or_404(ExpenseCategory, id=category_id)
+            
+            if expense_id:  
+                expense = get_object_or_404(Expense, id=expense_id)
+                before_amount = expense.amount
+                
+                expense.amount = amount
+                expense.description = description
+                expense.category = category
+                expense.save()
+                message = 'Expense successfully updated'
+                
+                try:
+                    cashbook_expense = Cashbook.objects.get(expense=expense)
+                    expense_amount = Decimal(expense.amount)
+                    if cashbook_expense.amount < expense_amount:
+                        cashbook_expense.amount = expense_amount
+                        cashbook_expense.description = cashbook_expense.description + f'Expense (update from {before_amount} to {cashbook_expense.amount})'
+                    else:
+                        cashbook_expense.amount -= cashbook_expense.amount - expense_amount
+                        cashbook_expense.description = cashbook_expense.description + f'(update from {before_amount} to {cashbook_expense.amount})'
+                    cashbook_expense.save()
+                except Exception as e:
+                    return Response({str(e)}, status.HTTP_400_BAD_REQUEST)
+            return Response({'success': True, 'message': message}, status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({str(e)}, status=400)
+
+class DeleteExpense(views.APIView):
+    def delete(request, expense_id):
+        if request.method == 'DELETE':
+            try:
+                expense = get_object_or_404(Expense, id=expense_id)
+                expense.cancel = True
+                expense.save()
+                
+                Cashbook.objects.create(
+                    amount=expense.amount,
+                    debit=True,
+                    credit=False,
+                    description=f'Expense ({expense.description}): cancelled'
+                )
+                return JsonResponse({'success': True, 'message': 'Expense successfully deleted'})
+            except Exception as e:
+                return JsonResponse({'success': False, 'message': str(e)}, status=400)
+        return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=400)
+
+class UpdateExpenseStatus(views.APIView):
+    def update(self, request, id):
+        try:
+            data = request.data
+            expense_id = id
+            expense_status = data.get('status')
+
+            expense = Expense.objects.get(id=expense_id)
+            expense.status = expense_status
+            expense.save()
+
+            return Response(status.HTTP_202_ACCEPTED)
+        except Exception as e:
+            return JsonResponse({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+
+class InvoicePDF(views.APIView):     
+    def retrive(request, id):
+        invoice_id = id
+        if invoice_id:
+            try:
+                invoice = get_object_or_404(Invoice, pk=invoice_id)
+
+                invoice_items = InvoiceItem.objects.filter(invoice=invoice)
+                
+            except Invoice.DoesNotExist:
+                return HttpResponse("Invoice not found",status.HTTP_404_NOT_FOUND)
+        else:
+            return HttpResponse("Invoice ID is required",status.HTTP_404_NOT_FOUND)
+        
+
+        invoice_serializer = InvoiceSerializer(invoice)
+        invoice_items_serializer = InvoiceItemsSerializer(invoice_items)
+        return Response(invoice_items_serializer.data, invoice_serializer.data, status.HTTP_200_OK)
+        # return generate_pdf(
+        #     None,
+        #     {
+        #         'title': 'Invoice', 
+        #         'report_date': datetime.date.today(),
+        #         'invoice':invoice,
+        #         'invoice_items':invoice_items
+        #     }
+        # )
+
+
+class CreateInvoice(views.APIView):
+    def create(self, request):
+        try:
+            data = request.data
+            invoice_data = data['data'][0]  
+            items_data = data['items']
+            layby_dates = data.get('layby_dates')
+           
+            # get currency
+            currency = Currency.objects.get(id=invoice_data['currency'])
+            
+            # create or get accounts
+            account_types = {
+                'cash': Account.AccountType.CASH,
+                'bank': Account.AccountType.BANK,
+                'ecocash': Account.AccountType.ECOCASH,
+            }
+
+            account_name = f"{request.user.branch} {currency.name} {invoice_data['payment_method'].capitalize()} Account"
+            
+            account, _ = Account.objects.get_or_create(name=account_name, type=account_types[invoice_data['payment_method']])
+            
+            account_balance, _ = AccountBalance.objects.get_or_create(
+                account=account,
+                currency=currency,
+                branch=request.user.branch,
+                defaults={'balance': 0}  
+            )
+            logger.info(f"[Create Invoice]: {account_balance}")
+
+            
+            # accountts_receivable
+            accounts_receivable, _ = ChartOfAccounts.objects.get_or_create(name="Accounts Receivable")
+
+            # VAT rate
+            vat_rate = VATRate.objects.get(status=True)
+
+            # customer
+            customer = Customer.objects.get(id=int(invoice_data['client_id'])) 
+            
+            # customer account
+            customer_account = CustomerAccount.objects.get(customer=customer)
+
+            # customer Account + Balances
+            customer_account_balance, _ = CustomerAccountBalances.objects.get_or_create(
+                account=customer_account,
+                currency=currency, 
+                defaults={'balance': 0}
+            )
+            
+            amount_paid = update_latest_due(customer, Decimal(invoice_data['amount_paid']), request, invoice_data['paymentTerms'], customer_account_balance)
+            invoice_total_amount = Decimal(invoice_data['payable'])
+
+
+            logger.info(f'amount paid: {amount_paid}')
+
+            #if amount_paid > invoice_total_amount:
+            #   amount_paid = invoice_total_amount
+            
+            amount_due = invoice_total_amount - amount_paid  
+
+            cogs = COGS.objects.create(amount=Decimal(0))
+            
+            with transaction.atomic():
+                
+                invoice = Invoice.objects.create(
+                    invoice_number=Invoice.generate_invoice_number(request.user.branch.name),  
+                    customer=customer,
+                    issue_date=timezone.now(),
+                    amount=invoice_total_amount,
+                    amount_paid=amount_paid,
+                    amount_due=amount_due,
+                    vat=Decimal(invoice_data['vat_amount']),
+                    payment_status = Invoice.PaymentStatus.PARTIAL if amount_due > 0 else Invoice.PaymentStatus.PAID,
+                    branch = request.user.branch,
+                    user=request.user,
+                    currency=currency,
+                    subtotal=invoice_data['subtotal'],
+                    reocurring = invoice_data['recourring'],
+                    products_purchased = ', '.join([f'{item['product_name']} x {item['quantity']} ' for item in items_data]),
+                    payment_terms = invoice_data['paymentTerms'],
+                    hold_status = invoice_data['hold_status'],
+                    amount_received = invoice_data['amount_paid']
+                )
+
+                logger.info(invoice.hold_status)
+
+                logger.info(f'Invoice created for customer: {invoice}')
+
+                # check if invoice status is hold
+                if invoice.hold_status == True:
+                    held_invoice(items_data, invoice, request, vat_rate)
+                    return JsonResponse({'hold':True, 'message':'Invoice succesfully on hold'})
+
+                # create layby object
+                if invoice.payment_terms == 'layby':
+                    layby_obj = layby.objects.create(invoice=invoice)
+
+                    logger.info(layby_obj)
+
+                    layby_dates_list = []
+                    for date in layby_dates:
+                        laybyDates.objects.create(
+                            layby=layby_obj,
+                            due_date=date
+                        )
+                    
+                    # laybyDates.objects.bulk_create(layby_dates)
+                
+                # create monthly installment object
+                if invoice.payment_terms == 'installment':
+                    recurringInvoices.objects.create(
+                        invoice = invoice,
+                        status = False
+                    )
+
+                # #create transaction
+                transaction_obj = Transaction.objects.create(
+                    date=timezone.now(),
+                    description=invoice.products_purchased,
+                    account=accounts_receivable,
+                    debit=Decimal(invoice_data['payable']),
+                    credit=Decimal('0.00'),
+                    customer=customer
+                )
+
+                logger.info(f'Creating transaction obj for invoice: {invoice}')
+                
+                # Cost of sales parent object
+                
+                
+                # Create InvoiceItem objects
+                for item_data in items_data:
+                    item = Inventory.objects.get(pk=item_data['inventory_id'])
+                    # product = Product.objects.get(pk=item.product.id)
+                    
+                    item.quantity -= item_data['quantity']
+                    item.save()
+                  
+                    InvoiceItem.objects.create(
+                        invoice=invoice,
+                        item=item,
+                        quantity=item_data['quantity'],
+                        unit_price=item_data['price'],
+                        vat_rate = vat_rate
+                    )
+                    
+                    # Create StockTransaction for each sold item
+                    # stock_transaction = StockTransaction.objects.create(
+                    #     item=product,
+                    #     transaction_type=StockTransaction.TransactionType.SALE,
+                    #     quantity=item_data['quantity'],
+                    #     unit_price=item.price,
+                    #     invoice=invoice,
+                    #     date=timezone.now()
+                    # )
+                    # stock_transaction.save()
+                    
+                    # cost of sales item
+                    COGSItems.objects.get_or_create(
+                        invoice=invoice,
+                        defaults={'cogs': cogs, 'product': Inventory.objects.get(id=item.id, branch=request.user.branch)}
+                    )
+                
+                    # stock log  
+                    ActivityLog.objects.create(
+                        branch=request.user.branch,
+                        inventory=item,
+                        user=request.user,
+                        quantity = -item_data['quantity'],
+                        total_quantity = item.quantity,
+                        action='Sale',
+                        invoice=invoice
+                    )
+
+                    accessories = Accessory.objects.filter(main_product=item).values('accessory_product', 'accessory_product__quantity')
+
+                    logger.info(f'Accessories for this product: {accessories}')
+
+                    for acc in accessories:
+                        COGSItems.objects.get_or_create(
+                            invoice=invoice,
+                            defaults={'cogs': cogs, 'product': Inventory.objects.get(id=acc['accessory_product'], branch=request.user.branch)}
+                        )
+                        prod_acc = Inventory.objects.get(id = acc['accessory_product'] )
+                        prod_acc.quantity -= 1
+
+                        logger.info(f'accessory quantity: {acc['accessory_product__quantity']}')
+
+                        ActivityLog.objects.create(
+                            branch=request.user.branch,
+                            inventory=prod_acc,
+                            user=request.user,
+                            quantity=1,
+                            total_quantity = acc['accessory_product__quantity'],
+                            action='Sale',
+                            invoice=invoice
+                        )
+                        prod_acc.save()
+                        
+                # # Create VATTransaction
+                VATTransaction.objects.create(
+                    invoice=invoice,
+                    vat_type=VATTransaction.VATType.OUTPUT,
+                    vat_rate=VATRate.objects.get(status=True).rate,
+                    tax_amount=invoice_data['vat_amount']
+                )                                                          
+                # Create Sale object
+                sale = Sale.objects.create(
+                    date=timezone.now(),
+                    transaction=invoice,
+                    total_amount=invoice_total_amount
+                )
+                sale.save()
+                
+                #payment
+                Payment.objects.create(
+                    invoice=invoice,
+                    amount_paid=amount_paid,
+                    payment_method=invoice_data['payment_method'],
+                    amount_due=invoice_total_amount - amount_paid,
+                    user=request.user
+                )
+
+                # calculate total cogs amount
+                cogs.amount = COGSItems.objects.filter(cogs=cogs, cogs__date=datetime.datetime.today())\
+                                               .aggregate(total=Sum('product__cost'))['total'] or 0
+                logger.info(f'COGS amount: {cogs.amount}')
+                cogs.save()
+                
+                # updae account balance
+                if invoice.payment_status == 'Partial':
+                    customer_account_balance.balance += -amount_due
+                    customer_account_balance.save()
+                    
+                # Update customer balance
+                account_balance.balance = Decimal(invoice_data['payable']) + Decimal(account_balance.balance)
+                account_balance.save()
+
+                # try:
+                #     return create_invoice_pdf(invoice)
+                # except Exception as e:
+                #     logger.info(e)
+                
+                # return redirect('finance:invoice_preview', invoice.id)
+                return Response({'invoice_id': invoice.id}, status.HTTP_201_CREATED)
+        except (KeyError, json.JSONDecodeError, Customer.DoesNotExist, Inventory.DoesNotExist) as e:
+            return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
+        
+class InvoicePaymentTrack(views.APIView):
+    def get(self, request, invoice_id):
+        invoice_id = invoice_id
+        
+        if invoice_id:
+            payments = Payment.objects.filter(invoice__id=invoice_id).order_by('-payment_date').values(
+                'payment_date', 'amount_paid', 'payment_method', 'user__username'
+            )
+        payments_serializer = PaymentSerializer(payments)
+        return Response(payments_serializer.data, status.HTTP_200_OK)
+    
+class InvoiceDelete(views.APIView):
+    def delete(self, request, invoice_id):
+        try:
+            invoice = get_object_or_404(Invoice, id=invoice_id)
+            account = get_object_or_404(CustomerAccount, customer=invoice.customer)
+            customer_account_balance = get_object_or_404(CustomerAccountBalances, account=account, currency=invoice.currency)
+
+            sale = get_object_or_404(Sale, transaction=invoice)
+            invoice_payment = get_object_or_404(Payment, invoice=invoice)
+            stock_transactions = invoice.stocktransaction_set.all()  
+            vat_transaction = get_object_or_404(VATTransaction, invoice=invoice)
+
+            with transaction.atomic():
+                if invoice.payment_status == Invoice.PaymentStatus.PARTIAL:
+                    customer_account_balance.balance -= invoice.amount_due
+
+                account_types = {
+                    'cash': Account.AccountType.CASH,
+                    'bank': Account.AccountType.BANK,
+                    'ecocash': Account.AccountType.ECOCASH,
+                }
+
+                account = get_object_or_404(
+                    Account, 
+                    name=f"{request.user.branch} {invoice.currency.name} {invoice_payment.payment_method.capitalize()} Account", 
+                    type=account_types.get(invoice_payment.payment_method, None)  
+                )
+                account_balance = get_object_or_404(AccountBalance, account=account, currency=invoice.currency, branch=request.user.branch)
+                account_balance.balance -= invoice.amount_paid
+
+                for stock_transaction in stock_transactions:
+                    product = Inventory.objects.get(product=stock_transaction.item, branch=request.user.branch)
+                    product.quantity += stock_transaction.quantity
+                    product.save()
+
+                    ActivityLog.objects.create(
+                        invoice=invoice,
+                        product_transfer=None,
+                        branch=request.user.branch,
+                        user=request.user,
+                        action='sale return',
+                        inventory=product,
+                        quantity=stock_transaction.quantity,
+                        total_quantity=product.quantity
+                    )
+
+                InvoiceItem.objects.filter(invoice=invoice).delete() 
+                StockTransaction.objects.filter(invoice=invoice).delete()
+                Payment.objects.filter(invoice=invoice).delete()
+
+                account_balance.save()
+                customer_account_balance.save()
+                sale.delete()
+                vat_transaction.delete()
+                invoice.cancelled=True
+                invoice.save()
+
+            return JsonResponse({'message': f'Invoice {invoice.invoice_number} successfully deleted'}, status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({'message': f"{e}"}, status.HTTP_400_BAD_REQUEST)
+        
+class InvoiceUpdate(views.APIView):
+    def update(self, request, invoice_id):
+        invoice = get_object_or_404(Invoice, id=invoice_id)
+        customer_account = get_object_or_404(CustomerAccount, customer=invoice.customer)
+        customer_account_balance = get_object_or_404(
+            CustomerAccountBalances, account=customer_account, currency=invoice.currency
+        )
+
+        data = request.data
+        amount_paid = Decimal(data['amount_paid'])
+
+        invoice = Invoice.objects.select_for_update().get(pk=invoice.pk)
+        customer_account_balance = CustomerAccountBalances.objects.select_for_update().get(pk=customer_account_balance.pk)
+
+        if amount_paid <= 0:
+            return JsonResponse({'success': False, 'message': 'Invalid amount paid.'}, status=400)
+
+        if amount_paid >= invoice.amount_due:
+            invoice.payment_status = Invoice.PaymentStatus.PAID
+            invoice.amount_due = 0
+        else:
+            invoice.amount_due -= amount_paid
+
+        invoice.amount_paid += amount_paid
+        
+        # get the latest payment for the invoice
+        latest_payment = Payment.objects.filter(invoice=invoice).order_by('-payment_date').first()
+        if latest_payment:
+            amount_due = latest_payment.amount_due - amount_paid 
+        else:
+            amount_due = invoice.amount - invoice.amount_paid 
+
+        payment = Payment.objects.create(
+            invoice=invoice,
+            amount_paid=amount_paid,
+            amount_due=amount_due, 
+            payment_method=data['payment_method'],
+            user=request.user
+        )
+
+        account, _ = Account.objects.get_or_create(
+            name=f"{request.user.branch} {invoice.currency.name} {payment.payment_method.capitalize()} Account",
+            type=Account.AccountType[payment.payment_method.upper()] 
+        )
+        account_balance, _ = AccountBalance.objects.get_or_create(
+            account=account,
+            currency=invoice.currency,
+            branch=request.user.branch,
+            defaults={'balance': 0}
+        )
+
+        account_balance.balance += amount_paid
+        if customer_account_balance.balance < 0:
+            customer_account_balance.balance += amount_paid
+        else:
+            customer_account_balance.balance -= amount_paid
+
+        description = ''
+        if invoice.hold_status:
+            description = 'Held invoice payment'
+            sale = Sale.objects.create(
+                date=timezone.now(),
+                transaction=invoice,
+                total_amount=invoice.amount # invoice delivery amount
+            )
+            
+            VATTransaction.objects.create(
+                invoice=invoice,
+                vat_type=VATTransaction.VATType.OUTPUT,
+                vat_rate=VATRate.objects.get(status=True).rate,
+                tax_amount=invoice.vat
+            ) 
+
+        else:
+            description = 'Invoice payment update'
+        
+        Cashbook.objects.create(
+            issue_date=invoice.issue_date,
+            description=f'({description} {invoice.invoice_number})',
+            debit=True,
+            credit=False,
+            amount=invoice.amount_paid,
+            currency=invoice.currency,
+            branch=invoice.branch
+        )
+
+        invoice.hold_status = False
+        account_balance.save()
+        customer_account_balance.save()
+        invoice.save()
+        payment.save()
+        
+        return Response(status.HTTP_202_ACCEPTED)
+    
+class InvoiceDetails(views.APIView):
+    def retrive(request, invoice_id):
+        invoice = Invoice.objects.filter(id=invoice_id, branch=request.user.branch).values(
+            'invoice_number',
+            'customer__id', 
+            'customer__name', 
+            'products_purchased', 
+            'payment_status', 
+            'amount'
+        )
+        invoice_serializer = InvoiceSerializer(invoice)
+        return Response(status.HTTP_200_OK)
+    
+class InvoicePreview(views.APIView):
+    def retrive(self, request, invoice_id):
+        invoice = Invoice.objects.get(id=invoice_id)
+        invoice_serializer = InvoiceSerializer(invoice)
+        invoice_items = InvoiceItem.objects.filter(invoice=invoice)
+        invoice_items_serializer = InvoiceItemsSerializer(invoice_items)
+        return Response({'invoice_id':invoice_id, 'invoice':invoice_serializer, 'invoice_items':invoice_items_serializer}, status.HTTP_200_OK)
+
+class InvoicePreviewJson(views.APIView):
+    def retrive(self, request, invoice_id):
+        try:
+            invoice = Invoice.objects.get(id=invoice_id)
+
+        except Invoice.DoesNotExist:
+            return JsonResponse({"error": "Invoice not found"}, status=404) 
+        
+        dates = {}
+        if invoice.payment_terms == 'layby':
+            dates = laybyDates.objects.filter(layby__invoice=invoice).values('due_date')
+        
+        invoice_items = InvoiceItem.objects.filter(invoice=invoice).values(
+            'item__name', 
+            'quantity',
+            'item__description',
+            'total_amount',
+            'unit_price'
+        )
+
+        invoice_dict = {
+            field.name: getattr(invoice, field.name)
+            for field in invoice._meta.fields
+            if field.name not in ['customer', 'currency', 'branch', 'user']
+        }
+
+        invoice_dict['customer_name'] = invoice.customer.name
+        invoice_dict['customer_email'] = invoice.customer.email
+        invoice_dict['customer_cell'] = invoice.customer.phone_number
+        invoice_dict['customer_address'] = invoice.customer.address
+        invoice_dict['currency_symbol'] = invoice.currency.symbol
+        invoice_dict['amount_paid'] = invoice.amount_paid
+        invoice_dict['payment_terms'] = invoice.payment_terms
+        
+        if invoice.branch:
+            invoice_dict['branch_name'] = invoice.branch.name
+            invoice_dict['branch_phone'] = invoice.branch.phonenumber
+            invoice_dict['branch_email'] = invoice.branch.email
+            
+        invoice_dict['user_username'] = invoice.user.username  
+        
+        invoice_serializer = InvoiceSerializer(invoice_dict)
+        invoice_items_serializer = InvoiceItemsSerializer(invoice_items)
+        lay_by_dates_serializer = LayByDatesSerializer(dates)
+
+        invoice_data = {
+            'invoice': invoice_serializer,
+            'invoice_items': list(invoice_items_serializer),
+            'dates':list(lay_by_dates_serializer)
+        }
+        return Response(invoice_data, status.HTTP_200_OK, safe = False)
+
+class HeldInvoiceView(views.APIView):
+    def get(request):
+        invoices = Invoice.objects.filter(branch=request.user.branch, status=True, hold_status =True).order_by('-invoice_number')
+        logger.info(f'Held invoices: {invoices}')
+        invoice_serializer = InvoiceSerializer(invoices)
+        return Response(invoice_serializer.data, status.HTTP_200_OK)
+    
+class ExpenseReport(views.APIView):
+    def post(self, request):
+        search = request.data.get('search', '')
+        start_date_str = request.data.get('startDate', '')
+        end_date_str = request.data.get('endDate', '')
+        category_id = request.data.get('category', '')
+    
+        if start_date_str and end_date_str:
+            try:
+                end_date = datetime.date.fromisoformat(end_date_str)
+                start_date = datetime.date.fromisoformat(start_date_str)
+            except ValueError:
+                return Response({'messgae':'Invalid date format. Please use YYYY-MM-DD.'}, status.HTTP_400_BAD_REQUEST)
+        else:
+            start_date = ''
+            end_date= ''
+            
+        try:
+            category_id = int(category_id) if category_id else None
+        except ValueError:
+            return Response({'messgae':'Invalid category or search ID.'}, status.HTTP_400_BAD_REQUEST)
+
+        expenses = Expense.objects.all()  
+        
+        if search:
+            expenses = expenses.filter(Q('amount=search'))
+        if start_date:
+            start_date = parse_date(start_date_str)
+            expenses = expenses.filter(date__gte=start_date)
+        if end_date:
+            end_date = parse_date(end_date_str)
+            expenses = expenses.filter(date__lte=end_date)
+        if category_id:
+            expenses = expenses.filter(category__id=category_id)
+        
+        return Response(generate_pdf,
+            {
+                'title': 'Expenses', 
+                'date_range': f"{start_date} to {end_date}", 
+                'report_date': datetime.date.today(),
+                'total_expenses':calculate_expenses_totals(expenses),
+                'expenses':expenses
+            }
+        )
+
+class SendEmails(views.APIView):
+    def post(self, request):
+        data = request.data
+        invoice_id = data['invoice_id']
+        invoice = Invoice.objects.get(id=invoice_id)
+        invoice_items = InvoiceItem.objects.filter(invoice=invoice)
+        account = CustomerAccount.objects.get(customer__id = invoice.customer.id)
+        
+        html_string = render_to_string('Pos/receipt.html', {'invoice': invoice, 'invoice_items':invoice_items, 'account':account})
+        buffer = BytesIO()
+
+        pisa.CreatePDF(html_string, dest=buffer) 
+
+        email = EmailMessage(
+            'Your Invoice',
+            'Please find your invoice attached.',
+            'your_email@example.com',
+            ['recipient_email@example.com'],
+        )
+        
+        buffer.seek(0)
+        email.attach(f'invoice_{invoice.invoice_number}.pdf', buffer.getvalue(), 'application/pdf')
+
+        # Send the email
+        email.send()
+
+        task = send_invoice_email_task.delay(data['invoice_id']) 
+        task_id = task.id 
+        buffer.seek(0)
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename=invoice_{invoice.invoice_number}.pdf'
+        
+        return Response(response)
+
+class SendWhatsapp(views.APIView):
+    def post(self, request, invoice_id):
+        try:
+            
+            invoice = Invoice.objects.get(pk=invoice_id)
+            invoice_items = InvoiceItem.objects.filter(invoice=invoice)
+            img = settings.STATIC_URL + "/assets/logo.png"
+        
+            html_string = render_to_string('Pos/invoice_template.html', {'invoice': invoice, 'request':request, 'invoice_items':invoice_items, 'img':img})
+            pdf_buffer = BytesIO()
+            pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
+            if not pisa_status.err:
+            
+                s3 = boto3.client(
+                    "s3",
+                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                    region_name=settings.AWS_S3_REGION_NAME,
+                )
+                invoice_filename = f"invoice_{invoice.invoice_number}.pdf"
+                s3.put_object(
+                    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                    Key=f"invoices/{invoice_filename}",
+                    Body=pdf_buffer.getvalue(),
+                    ContentType="application/pdf",
+                    ACL="public-read",
+                )
+                s3_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/invoices/{invoice_filename}"
+
+                account_sid = 'AC6890aa7c095ce1315c4a3a86f13bb403'
+                auth_token = '897e02139a624574c5bd175aa7aaf628'
+                client = Client(account_sid, auth_token)
+                from_whatsapp_number = 'whatsapp:' + '+14155238886'
+                to_whatsapp_number = 'whatsapp:' + '+263778587612'
+
+                message = client.messages.create(
+                    from_=from_whatsapp_number,
+                    body="Your invoice is attached.",
+                    to=to_whatsapp_number,
+                    media_url=s3_url
+                )
+                logger.info(f"WhatsApp message SID: {message.sid}")
+                return Response({"message_sid": message.sid}, status.HTTP_200_OK)
+            else:
+                logger.error(f"PDF generation error for Invoice ID: {invoice_id}")
+                return Response({"error": "PDF generation failed"}, status.HTTP_400_BAD_REQUEST)
+        except Invoice.DoesNotExist:
+            logger.error(f"Invoice not found with ID: {invoice_id}")
+            return Response({"error": "Invoice not found"}, status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.exception(f"Error sending invoice via WhatsApp: {e}")
+            return Response({"error": "Error sending invoice via WhatsApp"}, status.HTTP_400_BAD_REQUEST)
+        
+
+class CashbookView(views.APIView):
+    def post(self, request):
+        filter_option = request.data.get('filter', 'today')
+        now = datetime.datetime.now()
+        end_date = now
+        
+        if filter_option == 'today':
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_week':
+            start_date = now - timedelta(days=now.weekday())
+        elif filter_option == 'yesterday':
+            start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_month':
+            start_date = now.replace(day=1)
+        elif filter_option == 'last_month':
+            start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
+        elif filter_option == 'this_year':
+            start_date = now.replace(month=1, day=1)
+        elif filter_option == 'custom':
+            start_date = request.data.get('start_date')
+            end_date = request.data.get('end_date')
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        else:
+            start_date = now - timedelta(days=now.weekday())
+            end_date = now
+
+        entries = Cashbook.objects.filter(issue_date__gte=start_date, issue_date__lte=end_date, branch=request.user.branch).order_by('issue_date')
+        
+        total_debit = entries.filter(debit=True, cancelled=False).aggregate(Sum('amount'))['amount__sum'] or 0
+        total_credit = entries.filter(credit=True, cancelled=False).aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        balance_bf = 0 
+        
+        previous_entries = Cashbook.objects.filter(issue_date__lt=start_date, branch=request.user.branch)
+
+        previous_debit = previous_entries.filter(debit=True).aggregate(Sum('amount'))['amount__sum'] or 0
+        previous_credit = previous_entries.filter(credit=True).aggregate(Sum('amount'))['amount__sum'] or 0
+        balance_bf = previous_debit - previous_credit
+
+        total_balance = total_debit - total_credit
+        logger.info(total_balance)
+        invoice_items = InvoiceItem.objects.all()
+
+        return Response({
+            'filter_option': filter_option,
+            'entries': entries,
+            'balance_bf': balance_bf,
+            'total_debit': total_debit,
+            'total_credit': total_credit,
+            'total_balance': total_balance,
+            'end_date': end_date,
+            'start_date': start_date,
+            'invoice_items': invoice_items
+        }, status.HTTP_200_OK)
+    
+class CashbookNote(views.APIView):
+    def post(self, request):
+        #payload
+        """
+            entry_id:id,
+            note:str
+        """
+        try:
+            data = request.data
+            entry_id = data.get('entry_id')
+            note = data.get('note')
+            
+            entry = Cashbook.objects.get(id=entry_id)
+            entry.note = note
+            
+            entry.save()
+        except Exception as e:
+            return JsonResponse({'success':False, 'message':f'{e}.'}, status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'success':False, 'message':'Note successfully saved.'}, status.HTTP_201_CREATED)
+    
+class CashbookReport(views.APIView):
+    def post(self, request):
+        filter_option = request.data.get('filter', 'this_week')
+        now = datetime.datetime.now()
+        end_date = now
+        
+        if filter_option == 'today':
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_week':
+            start_date = now - timedelta(days=now.weekday())
+        elif filter_option == 'yesterday':
+            start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_month':
+            start_date = now.replace(day=1)
+        elif filter_option == 'last_month':
+            start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
+        elif filter_option == 'this_year':
+            start_date = now.replace(month=1, day=1)
+        elif filter_option == 'custom':
+            start_date = request.data.get('start_date')
+            end_date = request.data.get('end_date')
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        else:
+            start_date = now - timedelta(days=now.weekday())
+            end_date = now
+
+        entries = Cashbook.objects.filter(date__gte=start_date, date__lte=end_date, branch=request.user.branch).order_by('date')
+
+        # Create a CSV response
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="cashbook_report_{filter_option}.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Date', 'Description', 'Expenses', 'Income', 'Balance'])
+
+        balance = 0  
+        for entry in entries:
+            if entry.debit:
+                balance += entry.amount
+            elif entry.credit:
+                balance -= entry.amount
+
+            writer.writerow([
+                entry.issue_date,
+                entry.description,
+                entry.amount if entry.debit else '',
+                entry.amount if entry.credit else '',
+                balance,
+                entry.accountant,
+                entry.manager,
+                entry.director
+            ])
+
+        return Response(response)
+
+class CancelTransaction(views.APIView):
+    def post(self, request):
+        #payload
+        """
+            entry_id:id,
+        """
+        try:
+            data = request.data
+            entry_id = int(data.get('entry_id'))
+            
+            logger.info(entry_id)
+            
+            entry = Cashbook.objects.get(id=entry_id)
+            
+            entry.cancelled = True
+            
+            if entry.director:
+                entry.director = False
+            elif entry.manager:
+                entry.manager = False
+            elif entry.accountant:
+                entry.accountant = False
+                
+            entry.save()
+            logger.info(entry)
+            return Response(status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.info(e)
+            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+        
+class CashbookNoteView(views.APIView):
+    def get(self, request, entry_id):
+        entry = get_object_or_404(Cashbook, id=entry_id)
+    
+        notes = entry.notes.all().order_by('timestamp')
+        notes_data = [
+            {'user': note.user.username, 'note': note.note, 'timestamp': note.timestamp.strftime("%Y-%m-%d %H:%M:%S")}
+            for note in notes
+        ]
+        return Response({'notes': notes_data}, status.HTTP_200_OK)
+    
+    def post(self, request, entry_id):
+        entry = get_object_or_404(Cashbook, id=entry_id)
+        try:
+            data = json.loads(request.body)
+            note_text = data.get('note')
+            CashBookNote.objects.create(entry=entry, user=request.user, note=note_text)
+            return JsonResponse({'success': True, 'message': 'Note successfully added.'}, status=201)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+
+class UpdateTransactionStatus(views.APIView):    
+    def post(self, request, pk):
+        entry = get_object_or_404(Cashbook, pk=pk)
+        data = request.data
+        
+        status_t = data.get('status')
+        field = data.get('field')  
+
+        if field in ['manager', 'accountant', 'director']:
+            setattr(entry, field, status_t)
+
+            if entry.cancelled:
+                entry.cancelled = False
+            entry.save()
+            return Response({'status': getattr(entry, field)}, status.HTTP_200_OK)
+            
+        return Response(status.HTTP_400_BAD_REQUEST)   
+    
+class DaysData(views.APIView):
+    def get(self, request):
+        current_month = get_current_month()
+
+        sales = Sale.objects.filter(date__month=current_month)
+        cogs = COGSItems.objects.filter(date__month=current_month)
+
+        first_day = min(sales.first().date, cogs.first().date)
+        
+        def get_week_data(queryset, start_date, end_date, amount_field):
+            week_data = queryset.filter(date__gte=start_date, date__lt=end_date).values(amount_field, 'date')
+            logger.info(week_data)
+            total = week_data.aggregate(total=Sum(amount_field))['total'] or 0
+            return week_data, total
+
+        data = {}
+        for week in range(1, 5):
+            week_start = first_day + timedelta(days=(week-1)*7)
+            week_end = week_start + timedelta(days=7)
+
+            logger.info(week_start)
+            logger.info(week_end)
+
+            sales_data, sales_total = get_week_data(sales, week_start, week_end, 'total_amount')
+            cogs_data, cogs_total = get_week_data(cogs, week_start, week_end, 'product__cost')
+            
+            data[f'week {week}'] = {
+                'sales': list(sales_data),
+                'cogs': list(cogs_data),
+                'total_sales': sales_total,
+                'total_cogs': cogs_total
+            }
+
+        return Response(data, status.HTTP_200_OK)\
+
+class VAT(views.APIView):
+    def get(request):
+        filter_option = request.GET.get('filter', 'today')
+        download = request.GET.get('download')
+        
+        now = datetime.datetime.now()
+        end_date = now
+        
+        if filter_option == 'today':
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_week':
+            start_date = now - timedelta(days=now.weekday())
+        elif filter_option == 'yesterday':
+            start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_month':
+            start_date = now.replace(day=1)
+        elif filter_option == 'last_month':
+            start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
+        elif filter_option == 'this_year':
+            start_date = now.replace(month=1, day=1)
+        elif filter_option == 'custom':
+            start_date = request.GET.get('start_date')
+            end_date = request.GET.get('end_date')
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        else:
+            start_date = now - timedelta(days=now.weekday())
+            end_date = now
+            
+        vat_transactions = VATTransaction.objects.filter(date__gte=start_date, date__lte=end_date).values().order_by('-date')
+        
+        if download:
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = f'attachment; filename="vat_report_{filter_option}.csv"'
+
+            writer = csv.writer(response)
+            writer.writerow(['Date', 'Description', 'Status', 'Input', 'Output'])
+
+            balance = 0
+            for transaction in vat_transactions:
+
+                if transaction.vat_type == 'Input':
+                    balance += transaction.tax_amount
+                else:
+                    balance -= transaction.tax_amount
+
+                writer.writerow([
+                    transaction.date,
+                    transaction.invoice.invoice_number if transaction.invoice else transaction.purchase_order.order_number,
+                    transaction.tax_amount if transaction.vat_type == 'Input' else  '',
+                    transaction.tax_amount if transaction.vat_type == 'Output' else  ''
+                ])
+
+            writer.writerow(['Total', '', '', balance])
+            
+            return Response(response, status.HTTP_200_OK)
+        return Response( 
+            {
+                'filter_option':filter_option,
+                'vat_transactions':vat_transactions
+            },
+            status.HTTP_200_OK
+        )
+    
+    def post(self, request):
+        # payload 
+        {
+            'date_from':'date',
+            'date_to':'date'
+        }
+        try:
+            data = request.data
+            
+            date_to = data.get('date_to')
+            date_from = data.get('date_from')
+
+            vat_transactions = VATTransaction.objects.filter(
+                date__gte=date_from, 
+                date__lte=date_to
+            )
+            
+            vat_transactions.update(paid=True)
+        except Exception as e:
+            return Response({'message':f'{e}'}, status.HTTP_400_BAD_REQUEST)
+        return Response({'message':'VAT successfully paid'}, status.HTTP_200_OK)
+
+class PLOverview(views.APIView):
+    def get(self, request):
+        filter_option = request.GET.get('filter')
+        today = datetime.date.today()
+        previous_month = get_previous_month()
+        current_year = today.year
+        current_month = today.month
+
+        sales = Sale.objects.filter(transaction__branch=request.user.branch)
+        expenses = Expense.objects.filter(branch=request.user.branch)
+        cogs = COGSItems.objects.filter(invoice__branch=request.user.branch)
+
+        if filter_option == 'today':
+            date_filter = today
+        elif filter_option == 'last_week':
+            last_week_start = today - datetime.timedelta(days=today.weekday() + 7)
+            last_week_end = last_week_start + datetime.timedelta(days=6)
+            date_filter = (last_week_start, last_week_end)
+        elif filter_option == 'this_month':
+            date_filter = (datetime.date(current_year, current_month, 1), today)
+        elif filter_option == 'year':
+            year = int(request.GET.get('year', current_year))
+            date_filter = (datetime.date(year, 1, 1), datetime.date(year, 12, 31))
+        else:
+            date_filter = (datetime.date(current_year, current_month, 1), today)
+
+        if filter_option == 'today':
+            current_month_sales = sales.filter(date=date_filter).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+            current_month_expenses = expenses.filter(issue_date=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
+            cogs_total = cogs.objects.filter(date=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
+        elif filter_option == 'last_week':
+            current_month_sales = sales.filter(date__range=date_filter).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+            current_month_expenses = expenses.filter(issue_date__range=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
+            cogs_total = cogs.filter(date__range=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
+        else:
+            current_month_sales = sales.filter(date__range=date_filter).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+            current_month_expenses = expenses.filter(dissue_date__range=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
+            cogs_total = cogs.filter(date__range=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
+
+        previous_month_sales = sales.filter(date__year=current_year, date__month=previous_month).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+        previous_month_expenses = expenses.filter(issue_date__year=current_year, issue_date__month=previous_month).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
+        previous_cogs =  cogs.filter(date__year=current_year, date__month=previous_month).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
+        
+        current_net_income = current_month_sales
+        previous_net_income = previous_month_sales 
+        current_expenses = current_month_expenses 
+        
+        current_gross_profit = current_month_sales - cogs_total
+        previous_gross_profit = previous_month_sales - previous_cogs
+        
+        current_net_profit = current_gross_profit - current_month_expenses
+        previous_net_profit = previous_gross_profit - previous_month_expenses
+
+        current_gross_profit_margin = (current_gross_profit / current_month_sales * 100) if current_month_sales != 0 else 0
+        previous_gross_profit_margin = (previous_gross_profit / previous_month_sales * 100) if previous_month_sales != 0 else 0
+        
+        # net_income_change = calculate_percentage_change(current_net_income, previous_net_income)
+        # gross_profit_change = calculate_percentage_change(current_gross_profit, previous_gross_profit)
+        # gross_profit_margin_change = calculate_percentage_change(current_gross_profit_margin, previous_gross_profit_margin)
+
+
+        data = {
+            'net_profit':current_net_profit,
+            'cogs_total':cogs_total,
+            'current_expenses':current_expenses,
+            'current_net_profit': current_net_profit,
+            'previous_net_profit':previous_net_profit,
+            'current_net_income': current_net_income,
+            'previous_net_income': previous_net_income,
+            'current_gross_profit': current_gross_profit,
+            'previous_gross_profit': previous_gross_profit,
+            'current_gross_profit_margin': f'{current_gross_profit_margin:.2f}',
+            'previous_gross_profit_margin': previous_gross_profit_margin,
+        }
+        
+        return Response(data, status.HTTP_200_OK)
+
+class IncomeJson(views.APIView):
+    def get(request):
+        current_month = get_current_month()
+        today = datetime.date.today()
+        
+        month = request.GET.get('month', current_month)
+        day = request.GET.get('day', today.day)
+
+        sales = Sale.objects.filter(transaction__branch=request.user.branch)
+        
+        if request.GET.get('filter') == 'today':
+            sales_total = sales.filter(date=today).aggregate(Sum('total_amount'))
+        else:
+            sales_total = sales.filter(date__month=month).aggregate(Sum('total_amount'))
+
+        return Response({'sales_total': sales_total['total_amount__sum'] or 0}, status.HTTP_200_OK)
+    
+
+class ExpenseJson(views.APIView):
+    def get(request):
+        current_month = get_current_month()
+        today = datetime.date.today()
+        
+        month = request.GET.get('month', current_month)
+        day = request.GET.get('day', today.day)
+
+        expenses = Expense.objects.filter(branch=request.user.branch)
+        
+        if request.GET.get('filter') == 'today':
+            expense_total = expenses.filter(issue_date=today, status=False).aggregate(Sum('amount'))
+        else:
+            expense_total = expenses.filter(issue_date__month=month, status=False).aggregate(Sum('amount'))
+        
+        return Response({'expense_total': expense_total['amount__sum'] or 0}, status.HTTP_200_OK)
