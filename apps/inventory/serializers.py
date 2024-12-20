@@ -24,3 +24,8 @@ class InventorySerializer(serializers.Serializer):
     class Meta:
         model = Inventory
         fields = '__all__'
+
+class DefectiveProductSerializer(serializers.Serializer):
+    class Meta:
+        models = DefectiveProduct
+        fields = ['product', 'quantity', 'reason', 'status',]

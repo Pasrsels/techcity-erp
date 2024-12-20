@@ -4066,12 +4066,12 @@ class SupplierView(views.APIView):
 
 class CreateDefectiveProduct(views.APIView):
     def post(self, request):
-        form = AddDefectiveForm(request.POST)
-
+        form = DefectiveProductSerializer(request.data)
+    
         if form.is_valid():
             branch = request.user.branch
-            product = form.cleaned_data['product']
-            quantity = form.cleaned_data['quantity']
+            product = request.data.get('product')
+            quantity = request.data.get('quantity')
             
             # validation
             if quantity > product.quantity:
