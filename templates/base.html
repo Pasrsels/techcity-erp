@@ -193,18 +193,18 @@
                 </div>
             </div>
             <div class="modal fade" id="branchModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-                <div class="modal-dialog modal-dialog-right">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-right">
                     <div class="modal-content">
                         <div class="modal-body">
                             <div class="">
                                 <p class='fw-bold'>Choose Branch</p>
                             </div>
-                            <div class="mt-4">
-                                <ul class='list-unstyled'>
-                                    {% for branch in branches %}
-                                        <li><a href="{% url 'company:switch_branch' branch.id %}" class="px-3 text-dark">{{ branch.name }}</a></li>
-                                    {% endfor %}
-                                </ul>
+                            <div class="row flex-row">
+                                {% for branch in branches %}
+                                    <div class="col m-2">
+                                        <a class="btn btn-primary btn-sm" href="{% url 'company:switch_branch' branch.id %}" class="px-3 text-dark">{{ branch.name }}</a>
+                                    </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>

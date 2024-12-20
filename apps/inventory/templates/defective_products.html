@@ -11,7 +11,7 @@
                     Defective Products
                 </div>
                 <div>
-                    <a href='{% url 'inventory:create_defective_product' %}' class="btn btn-primary">
+                    <a href='{% url 'inventory:create_defective_product' %}' class="btn btn-outline-dark">
                         <i class="bx bx-plus"></i>
                         product
                     </a>
@@ -52,7 +52,7 @@
                                 <td><small>{{ defective.product.cost }}</small></td>
                                 <td><small>{{ defective.reason }}</small></td>
                                 <td>
-                                    <span><button type="button" id='formBtn' data-id={{ defective.id }} data-q={{ defective.quantity }} class='btn btn-success btn-sm btn-primary'>re-stock</button></span>
+                                    <span><button type="button" id='formBtn' data-id={{ defective.id }} data-q={{ defective.quantity }} class='btn btn-success btn-sm btn-outline-dark'>re-stock</button></span>
                                 </td>
                             </tr>
                         {% endif %}

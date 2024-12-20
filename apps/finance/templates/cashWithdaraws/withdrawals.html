@@ -10,12 +10,12 @@
                 <h5 class='fw-bold'>Withdrawals <small class='text-warning'>{{ count }}</small></h5>
             </div>
             <div class='d-flex'>
-                <button id='cashWithdrawBtn' class='btn btn-primary'>
+                <button id='cashWithdrawBtn' class='btn btn-outline-dark'>
                     <i class='bx bx-plus'></i>
                     withdwrawal
                 </button>
                 <span class='px-2'></span>
-                <a href='{% url "finance:withdrawals" %}?download=true' class='btn btn-primary'>
+                <a href='{% url "finance:withdrawals" %}?download=true' class='btn btn-outline-dark'>
                     excel 
                     <i class='bx bx-download'></i>
                 </a>
@@ -76,7 +76,7 @@
                             {% else %}
                                 {% if withdrawal.status == False %}
                                     <span>
-                                        <button data-id={{ withdrawal.id}} id='expenseBtn' class="btn btn-primary btn-sm">
+                                        <button data-id={{ withdrawal.id}} id='expenseBtn' class="btn btn-outline-dark btn-sm">
                                             <i class='bx bx-plus'></i>
                                             <span>Expense</span>
                                         </button>

@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static%}
 {% load crispy_forms_tags %}
 {% block title%} Update Purchase Order {% endblock%}
@@ -49,7 +49,7 @@
                     <table class="table border rounder p-2" id="cart-table">
                         <thead>
                           <th id="sort-number" style="cursor: pointer;">#
-                            <span id="sort-arrow" class="sort-arrow">↕</span>
+                            <span id="sort-arrow" class="sort-arrow">?</span>
                           </th>
                           <th>Action</th>
                           <th>Product</th>
@@ -696,7 +696,7 @@
 
         isAscending = !isAscending;
 
-        document.getElementById('sort-arrow').textContent = isAscending ? '↑' : '↓';
+        document.getElementById('sort-arrow').textContent = isAscending ? '?' : '?';
     }
 
     // edit product modal call

@@ -1238,8 +1238,8 @@ def over_less_list_stock(request):
                     price = product.price,
                     dealer_price = product.dealer_price,
                     description = f'Transfer resend from transfer ref {transfer.transfer_ref}'
-                
                 )
+                
                 branch_transfer.over_less = False
                 branch_transfer.quantity -= branch_transfer.over_less_quantity
                 branch_transfer.save()

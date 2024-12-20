@@ -126,6 +126,7 @@ class Inventory(models.Model):
 class Accessory(models.Model):
     main_product = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='main_product')
     accessory_product = models.ManyToManyField(Inventory)
+    quantity = models.IntegerField()
 
     def __str__(self):
         return self.main_product.name
@@ -384,7 +385,7 @@ class ActivityLog(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     description = models.CharField(max_length=255, null=True)
     purchase_order = models.ForeignKey(PurchaseOrder, null=True, blank=True, on_delete=models.SET_NULL)
-    invoice = models.ForeignKey('finance.invoice', null=True, blank=True, on_delete=models.SET_NULL)
+    invoice = models.ForeignKey('finance.invoice', null=True, blank=True, on_delete=models.SET_NULL) 
     product_transfer = models.ForeignKey(TransferItems, null=True, blank=True, on_delete=models.SET_NULL)
     
     class Meta:

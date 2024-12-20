@@ -58,6 +58,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from django.http import FileResponse
 import io
+from collections import defaultdict
 
 def get_previous_month():
     first_day_of_current_month = datetime.datetime.now().replace(day=1)
@@ -410,9 +411,24 @@ def invoice(request):
 
     logger.info(f'Invoices: {invoices.values}')
 
+    grouped_invoices = defaultdict(list)
+
+    for invoice in invoices:
+
+        issue_date = invoice.issue_date.date() 
+
+        if issue_date == today:
+            grouped_invoices['Today'].append(invoice)
+        elif issue_date == today - timedelta(days=1):
+            grouped_invoices['Yesterday'].append(invoice)
+        else:
+            grouped_invoices[issue_date.strftime('%A, %d %B %Y')].append(invoice)
+    
+    logger.info(grouped_invoices)
+
     return render(request, 'invoices/invoice.html', {
         'form': form,
-        'invoices': invoices,
+        'grouped_invoices': dict(grouped_invoices),
         'total_paid': total_paid,
         'total_due': total_partial,
         'total_amount': total_amount,
