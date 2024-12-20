@@ -13,10 +13,10 @@ urlpatterns = [
     #API
     #####################################################################################################
     #Branch
-    path('api/branch-list-post/', BranchListandPost.as_view(), name='branch_list_post'),
-    path('api/branch-edit-delete/<int:branch_id>/', BranchEditandDelete.as_view(), name='branch_edit_delete'),
+    path('api/branch-list-post/', BranchListandPost.as_view(), name='api_branch_list_post'),
+    path('api/branch-edit-delete/<int:branch_id>/', BranchEditandDelete.as_view(), name='api_branch_edit_delete'),
 
     #Company
-    path('api/company-list/', CompanyList.as_view(), name='company_crud'),
-    path('api/company-register/', RegisterCompany.as_view(), name='register_compan'),
+    path('api/company-list/', CompanyList.as_view(), name='api_company_crud'),
+    path('api/company-register/', RegisterCompany.as_view(), name='api_register_company'),
 ]
