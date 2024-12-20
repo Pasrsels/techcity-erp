@@ -3490,22 +3490,21 @@ def vue_view(request):
 
 #API
 ##########################################################################################################
-<<<<<<< HEAD
-from rest_framework.viewsets import ModelViewSet
-from .serializers import ProductsSerializers
-
-class InventoryViewset(ModelViewSet):
-    serializer_class = ProductsSerializers
-
-    def get_queryset(self):
-        user = self.request.user
-        return Inventory.objects.filter(disable=False)
-=======
 from rest_framework import views, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .serializers import *
+from rest_framework.viewsets import ModelViewSet
+from .serializers import *
+
+class InventoryViewset(ModelViewSet):
+    serializer_class = InventorySerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Inventory.objects.filter(disable=False)
+
 
 class CategoriesList(views.APIView):
     def get(self, request): 
@@ -5558,4 +5557,3 @@ class AccessoriesView(views.APIView):
     def get(self, request, product_id):
         accessories = Accessory.objects.filter(product__id=product_id).values('id', 'product__name')
         return Response({'data': accessories}, status.HTTP_200_OK)
->>>>>>> 4e458560178051856fe1d1650fc899090671a1ab

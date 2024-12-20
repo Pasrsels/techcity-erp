@@ -5,14 +5,10 @@ from rest_framework.routers import DefaultRouter
 app_name = 'finance'
 
 router = DefaultRouter()
-<<<<<<< HEAD
-router.register(r'api/v1/customers', CustomerViewset,  basename='customers')
-=======
-router.register(r'api-customers', CustomerCrud,  basename='customers')
-router.register(r'api-currency', CurrencyViewset, basename= 'currency_crud')
-router.register(r'api-Cashwithrawals', CashWithdrawalsViewset, basename= 'cash_withrawals')
-router.register(r'api-quotation', QuatationCrud, basename= 'quotation')
->>>>>>> 4e458560178051856fe1d1650fc899090671a1ab
+router.register(r'customers', CustomerCrud,  basename='customers')
+router.register(r'currency', CurrencyViewset, basename= 'currency_crud')
+router.register(r'Cashwithrawals', CashWithdrawalsViewset, basename= 'cash_withrawals')
+router.register(r'quotation', QuatationCrud, basename= 'quotation')
 
 urlpatterns = [
     path('', Finance.as_view(), name='finance'),
@@ -120,79 +116,76 @@ urlpatterns = [
 
     ########################################################################################################################
     # API end points
-    path('', include(router.urls))
-
-    path('api/', include(router.urls)),
-
+    path('', include(router.urls)),
     #Customers
-    path('api/customer-account/<int:customer_id>/', CustomerAccount.as_view(), name='customer_account'),
-    path('api/customer-account-payments/<int:customer_id>/', customer_account_payments_json.as_view(), name='customer_account_payments'),
-    path('api/customer-deposit-edit/<int:deposit_id>/', EditCustomerDeposit.as_view(), name='customer_deposit_edit'),
-    path('api/customer-account-json/<int:customer_id>/', CustomerAccountJson.as_view(), name='customer_account_json'),
-    path('api/customer-account-transaction-json/<int:id>/', CustomerAccountTransactionsJson.as_view(), name='customer_account_transaction_json'),
-    path('api/customer-refund-deposit/<int:deposit_id>/', RefundCustomerDeposit.as_view(), name='customer_account_refund'),
-    path('api/print-account-statement/<int:customer_id>/', PrintAccountStatement.as_view(), name='print_account_statement'),
-    path('api/customer-deposits/<int:id>/', CustomerDeposits.as_view(), name='customer-deposits'),
+    path('api/v1/customer-account/<int:customer_id>/', CustomerAccount.as_view(), name='api_customer_account'),
+    path('api/v1/customer-account-payments/<int:customer_id>/', customer_account_payments_json.as_view(), name='api_customer_account_payments'),
+    path('api/v1/customer-deposit-edit/<int:deposit_id>/', EditCustomerDeposit.as_view(), name='api_customer_deposit_edit'),
+    path('api/v1/customer-account-json/<int:customer_id>/', CustomerAccountJson.as_view(), name='api_customer_account_json'),
+    path('api/v1/customer-account-transaction-json/<int:id>/', CustomerAccountTransactionsJson.as_view(), name='api_customer_account_transaction_json'),
+    path('api/v1/customer-refund-deposit/<int:deposit_id>/', RefundCustomerDeposit.as_view(), name='api_customer_account_refund'),
+    path('api/v1/print-account-statement/<int:customer_id>/', PrintAccountStatement.as_view(), name='api_print_account_statement'),
+    path('api/v1/customer-deposits/<int:id>/', CustomerDeposits.as_view(), name='api_customer-deposits'),
 
     #Deposits
-    path('api/deposits-list/', DepositList.as_view(), name='deposits_list'),
+    path('api/v1/deposits-list/', DepositList.as_view(), name='deposits_list'),
 
     #Transfers
-    path('api/cash-transfer/', CashTransfer.as_view(), name='cash_transfer'),
-    path('api/cash-transfer-list/', CashTransferList.as_view(), name='cash_transfer_list'),
-    path('api/recieve-money-transfer/<int:transfer_id>/', ReceiveMoneyTransfer.as_view(), name='recieve_money_transfer'),
+    path('api/v1/cash-transfer/', CashTransfer.as_view(), name='cash_transfer'),
+    path('api/v1/cash-transfer-list/', CashTransferList.as_view(), name='cash_transfer_list'),
+    path('api/v1/recieve-money-transfer/<int:transfer_id>/', ReceiveMoneyTransfer.as_view(), name='recieve_money_transfer'),
 
     #Nitifications
-    path('api/finance-notification/', FinanceNotification.as_view(), name='finance_notification'),
+    path('api/v1/finance-notification/', FinanceNotification.as_view(), name='finance_notification'),
 
     #End of Day
-    path('api/end-of-day/', EndOfDay.as_view(), name='end_of_day'),
+    path('api/v1/end-of-day/', EndOfDay.as_view(), name='end_of_day'),
 
     #Quotation
-    path('api/quotation-list/', QuotationList.as_view(), name='quotation_list'),
+    path('api/v1/quotation-list/', QuotationList.as_view(), name='quotation_list'),
 
     #Expense
-    path('api/expense/<int:expense_id>/', Expense.as_view(), name='expense'),
-    path('api/expense_category/', ExpenseCategory.as_view(), name='expense_category'),
-    path('api/add-or-edit-expense/<int:id>/', AddOrEditExpense.as_view(), name='add_edit_expense'),
-    path('api/delete-expense/', DeleteExpense.as_view(), name='delete_expense'),
-    path('api/update-expense-status/<int:id>/', UpdateExpenseStatus.as_view(), name='update_expense_status'),
+    path('api/v1/expense/<int:expense_id>/', Expense.as_view(), name='expense'),
+    path('api/v1/expense_category/', ExpenseCategory.as_view(), name='expense_category'),
+    path('api/v1/add-or-edit-expense/<int:id>/', AddOrEditExpense.as_view(), name='add_edit_expense'),
+    path('api/v1/delete-expense/', DeleteExpense.as_view(), name='delete_expense'),
+    path('api/v1/update-expense-status/<int:id>/', UpdateExpenseStatus.as_view(), name='update_expense_status'),
 
     #Invoice
-    path('api/invoice-pdf/', InvoicePDF.as_view(), name='invoice_pdf'),
-    path('api/invoice-list/', InvoiceList.as_view(), name='invoice_list'),
-    path('api/invoice-create/', CreateInvoice.as_view(), name='create_invoice'),
-    path('api/invoice-payment-track/<int:invoice_id>/', InvoicePaymentTrack.as_view(), name='invoice_payment_track'),
-    path('api/invoice-delete/<int:invoice_id>/', InvoiceDelete.as_view(), name='invoice_delete'),
-    path('api/invoice-update/<int:invoice_id>/', InvoiceUpdate.as_view(), name='invoice_update'),
-    path('api/invoice-details/<int:invoice_id>/', InvoiceDetails.as_view(), name='invoice_details'),
-    path('api/invoice-preview/<int:invoice_id>/', InvoicePreview.as_view(), name='invoice_preview'),
-    path('api/invoice-preview-json/<int:invoice_id>/', InvoicePreviewJson.as_view(), name='invoice_preview_json'),
-    path('api/invoice-held/', HeldInvoiceView.as_view(), name='invoice_held'),
+    path('api/v1/invoice-pdf/', InvoicePDF.as_view(), name='invoice_pdf'),
+    path('api/v1/invoice-list/', InvoiceList.as_view(), name='invoice_list'),
+    path('api/v1/invoice-create/', CreateInvoice.as_view(), name='create_invoice'),
+    path('api/v1/invoice-payment-track/<int:invoice_id>/', InvoicePaymentTrack.as_view(), name='invoice_payment_track'),
+    path('api/v1/invoice-delete/<int:invoice_id>/', InvoiceDelete.as_view(), name='invoice_delete'),
+    path('api/v1/invoice-update/<int:invoice_id>/', InvoiceUpdate.as_view(), name='invoice_update'),
+    path('api/v1/invoice-details/<int:invoice_id>/', InvoiceDetails.as_view(), name='invoice_details'),
+    path('api/v1/invoice-preview/<int:invoice_id>/', InvoicePreview.as_view(), name='invoice_preview'),
+    path('api/v1/invoice-preview-json/<int:invoice_id>/', InvoicePreviewJson.as_view(), name='invoice_preview_json'),
+    path('api/v1/invoice-held/', HeldInvoiceView.as_view(), name='invoice_held'),
 
     #Report
-    path('api/expense-report/', ExpenseReport.as_view(), name='expense_report'), 
+    path('api/v1/expense-report/', ExpenseReport.as_view(), name='expense_report'), 
 
     #Email
-    path('api/invoice/send/email/', SendEmails.as_view(), name='api_send_email'),
-    path('api/send_invoice_whatsapp/<int:invoice_id>/', SendWhatsapp.as_view(), name='api_send_whatsapp'),
+    path('api/v1/invoice/send/email/', SendEmails.as_view(), name='api_send_email'),
+    path('api/v1/send_invoice_whatsapp/<int:invoice_id>/', SendWhatsapp.as_view(), name='api_send_whatsapp'),
 
     #Casbook
-    path('api/cashbook/', CashbookView.as_view(), name='cashbook-view'),
-    path('api/cashbook/note/', CashbookNote.as_view(), name='cashbook_note_'),
-    path('api/report/', CashbookReport.as_view(), name='cashbook_report'),
-    path('api/cancel-entry/', CancelTransaction.as_view(), name='cancel-entry_'),
-    path('api/cashbook/note/<int:entry_id>/', CashbookNoteView.as_view(), name='cashbook_noteview'),
-    path('api/update_transaction_status/<int:pk>/', UpdateTransactionStatus.as_view(), name='update_transaction_status'),
+    path('api/v1/cashbook/', CashbookView.as_view(), name='cashbook-view'),
+    path('api/v1/cashbook/note/', CashbookNote.as_view(), name='cashbook_note_'),
+    path('api/v1/report/', CashbookReport.as_view(), name='cashbook_report'),
+    path('api/v1/cancel-entry/', CancelTransaction.as_view(), name='cancel-entry_'),
+    path('api/v1/cashbook/note/<int:entry_id>/', CashbookNoteView.as_view(), name='cashbook_noteview'),
+    path('api/v1/update_transaction_status/<int:pk>/', UpdateTransactionStatus.as_view(), name='update_transaction_status'),
 
     #Days data
-    path('api/days_data', DaysData.as_view(), name='daysdata'),
+    path('api/v1/days_data', DaysData.as_view(), name='daysdata'),
 
     #Vat
-    path('api/vat/', VAT.as_view(), name='api_vat'),
+    path('api/v1/vat/', VAT.as_view(), name='api_vat'),
 
     path('aoi/pl_overview/', PLOverview.as_view(), name='api_pl_overview'),
-    path('api/income_json/', IncomeJson.as_view(), name='api_income_json'),
-    path('api/expense_json/', ExpenseJson.as_view(), name='api_expense_json'),
+    path('api/v1/income_json/', IncomeJson.as_view(), name='api_income_json'),
+    path('api/v1/expense_json/', ExpenseJson.as_view(), name='api_expense_json'),
 
 ]   

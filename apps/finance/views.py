@@ -3705,24 +3705,6 @@ class EndOfDay(views.APIView):
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class QuatationCrud(viewsets.ModelViewSet):
     queryset = Qoutation.objects.all()
     serializer_class = QuotationSerializer
