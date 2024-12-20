@@ -3711,36 +3711,36 @@ class EndOfDay(views.APIView):
 class QuatationCrud(viewsets.ModelViewSet):
     queryset = Qoutation.objects.all()
     serializer_class = QuotationSerializer
-    def post(self, request):
-        if request.method == 'POST':
-            data = request.data
-            qoute_data = data['data'][0]  
-            items_data = data['items']
+    def create(self, request):
+        data = request.data
+        qoute_id = data.get('id'),
+        qoute_subtotal = data.get('subtotal')
+        qoute_currency_id = data.get('currency_id')
+        items_data = data.get('items')
+        
+        customer = Customer.objects.get(id=qoute_id)
+        currency = Currency.objects.get(id=qoute_currency_id)
+        
+        qoute = Qoutation.objects.create(
+            customer = customer,
+            amount =  Decimal(qoute_subtotal),
+            branch = request.user.branch,
+            currency = currency,
+            qoute_reference = Qoutation.generate_qoute_number(request.user.branch.name),
+            products = ', '.join([f'{item['product_name']} x {item['quantity']}' for item in items_data])
+        )
+        
+        for item_data in items_data:
+            item = Inventory.objects.get(pk=item_data['inventory_id'])
             
-            customer = Customer.objects.get(id=int(qoute_data['client_id']))
-            currency = Currency.objects.get(id=qoute_data['currency'])
-            
-            qoute = Qoutation.objects.create(
-                customer = customer,
-                amount =  Decimal(qoute_data['subtotal']),
-                branch = request.user.branch,
-                currency = currency,
-                qoute_reference = Qoutation.generate_qoute_number(request.user.branch.name),
-                products = ', '.join([f'{item['product_name']} x {item['quantity']}' for item in items_data])
+            QoutationItems.objects.create(
+                qoute=qoute,
+                product=item,
+                unit_price=item.price,
+                quantity=item_data['quantity'],
+                total_amount= item.price * item_data['quantity'],
             )
-            
-            for item_data in items_data:
-                item = Inventory.objects.get(pk=item_data['inventory_id'])
-                
-                QoutationItems.objects.create(
-                    qoute=qoute,
-                    product=item,
-                    unit_price=item.price,
-                    quantity=item_data['quantity'],
-                    total_amount= item.price * item_data['quantity'],
-                )
-            return Response({'qoute_id': qoute.id}, status.HTTP_200_OK)
-        return Response(status.HTTP_400_BAD_REQUEST)
+        return Response({'qoute_id': qoute.id}, status.HTTP_200_OK)
     
 class QuotationList(views.APIView):
     def get(self, request):
