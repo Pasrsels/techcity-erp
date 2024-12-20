@@ -46,7 +46,8 @@ from . forms import (
     CashWithdrawForm, 
     cashWithdrawExpenseForm,
     customerDepositsForm,
-    customerDepositsRefundForm
+    customerDepositsRefundForm,
+    cashDepositForm
 )
 from django.contrib.auth import authenticate
 from loguru import logger
@@ -2871,7 +2872,7 @@ def cash_deposit(request):
         deposits = CashDeposit.objects.all()
         return render(request, 'cash_deposit.html', 
             {
-                'form':cashDepositForm,
+                'form':cashDepositForm(),
                 'deposits':deposits
             }
         )
@@ -2944,8 +2945,8 @@ def vat(request):
     if request.method == 'POST':
         # payload 
         {
-            'date_from':date,
-            'date_to':date
+            'date_from':'date',
+            'date_to':'date'
         }
         try:
             data = json.loads(request.body)
@@ -4454,4 +4455,570 @@ class HeldInvoiceView(views.APIView):
         logger.info(f'Held invoices: {invoices}')
         invoice_serializer = InvoiceSerializer(invoices)
         return Response(invoice_serializer.data, status.HTTP_200_OK)
+    
+class ExpenseReport(views.APIView):
+    def post(self, request):
+        search = request.data.get('search', '')
+        start_date_str = request.data.get('startDate', '')
+        end_date_str = request.data.get('endDate', '')
+        category_id = request.data.get('category', '')
+    
+        if start_date_str and end_date_str:
+            try:
+                end_date = datetime.date.fromisoformat(end_date_str)
+                start_date = datetime.date.fromisoformat(start_date_str)
+            except ValueError:
+                return Response({'messgae':'Invalid date format. Please use YYYY-MM-DD.'}, status.HTTP_400_BAD_REQUEST)
+        else:
+            start_date = ''
+            end_date= ''
+            
+        try:
+            category_id = int(category_id) if category_id else None
+        except ValueError:
+            return Response({'messgae':'Invalid category or search ID.'}, status.HTTP_400_BAD_REQUEST)
 
+        expenses = Expense.objects.all()  
+        
+        if search:
+            expenses = expenses.filter(Q('amount=search'))
+        if start_date:
+            start_date = parse_date(start_date_str)
+            expenses = expenses.filter(date__gte=start_date)
+        if end_date:
+            end_date = parse_date(end_date_str)
+            expenses = expenses.filter(date__lte=end_date)
+        if category_id:
+            expenses = expenses.filter(category__id=category_id)
+        
+        return Response(generate_pdf,
+            {
+                'title': 'Expenses', 
+                'date_range': f"{start_date} to {end_date}", 
+                'report_date': datetime.date.today(),
+                'total_expenses':calculate_expenses_totals(expenses),
+                'expenses':expenses
+            }
+        )
+
+class SendEmails(views.APIView):
+    def post(self, request):
+        data = request.data
+        invoice_id = data['invoice_id']
+        invoice = Invoice.objects.get(id=invoice_id)
+        invoice_items = InvoiceItem.objects.filter(invoice=invoice)
+        account = CustomerAccount.objects.get(customer__id = invoice.customer.id)
+        
+        html_string = render_to_string('Pos/receipt.html', {'invoice': invoice, 'invoice_items':invoice_items, 'account':account})
+        buffer = BytesIO()
+
+        pisa.CreatePDF(html_string, dest=buffer) 
+
+        email = EmailMessage(
+            'Your Invoice',
+            'Please find your invoice attached.',
+            'your_email@example.com',
+            ['recipient_email@example.com'],
+        )
+        
+        buffer.seek(0)
+        email.attach(f'invoice_{invoice.invoice_number}.pdf', buffer.getvalue(), 'application/pdf')
+
+        # Send the email
+        email.send()
+
+        task = send_invoice_email_task.delay(data['invoice_id']) 
+        task_id = task.id 
+        buffer.seek(0)
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename=invoice_{invoice.invoice_number}.pdf'
+        
+        return Response(response)
+
+class SendWhatsapp(views.APIView):
+    def post(self, request, invoice_id):
+        try:
+            
+            invoice = Invoice.objects.get(pk=invoice_id)
+            invoice_items = InvoiceItem.objects.filter(invoice=invoice)
+            img = settings.STATIC_URL + "/assets/logo.png"
+        
+            html_string = render_to_string('Pos/invoice_template.html', {'invoice': invoice, 'request':request, 'invoice_items':invoice_items, 'img':img})
+            pdf_buffer = BytesIO()
+            pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
+            if not pisa_status.err:
+            
+                s3 = boto3.client(
+                    "s3",
+                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                    region_name=settings.AWS_S3_REGION_NAME,
+                )
+                invoice_filename = f"invoice_{invoice.invoice_number}.pdf"
+                s3.put_object(
+                    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                    Key=f"invoices/{invoice_filename}",
+                    Body=pdf_buffer.getvalue(),
+                    ContentType="application/pdf",
+                    ACL="public-read",
+                )
+                s3_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/invoices/{invoice_filename}"
+
+                account_sid = 'AC6890aa7c095ce1315c4a3a86f13bb403'
+                auth_token = '897e02139a624574c5bd175aa7aaf628'
+                client = Client(account_sid, auth_token)
+                from_whatsapp_number = 'whatsapp:' + '+14155238886'
+                to_whatsapp_number = 'whatsapp:' + '+263778587612'
+
+                message = client.messages.create(
+                    from_=from_whatsapp_number,
+                    body="Your invoice is attached.",
+                    to=to_whatsapp_number,
+                    media_url=s3_url
+                )
+                logger.info(f"WhatsApp message SID: {message.sid}")
+                return Response({"message_sid": message.sid}, status.HTTP_200_OK)
+            else:
+                logger.error(f"PDF generation error for Invoice ID: {invoice_id}")
+                return Response({"error": "PDF generation failed"}, status.HTTP_400_BAD_REQUEST)
+        except Invoice.DoesNotExist:
+            logger.error(f"Invoice not found with ID: {invoice_id}")
+            return Response({"error": "Invoice not found"}, status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.exception(f"Error sending invoice via WhatsApp: {e}")
+            return Response({"error": "Error sending invoice via WhatsApp"}, status.HTTP_400_BAD_REQUEST)
+        
+
+class CashbookView(views.APIView):
+    def post(self, request):
+        filter_option = request.data.get('filter', 'today')
+        now = datetime.datetime.now()
+        end_date = now
+        
+        if filter_option == 'today':
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_week':
+            start_date = now - timedelta(days=now.weekday())
+        elif filter_option == 'yesterday':
+            start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_month':
+            start_date = now.replace(day=1)
+        elif filter_option == 'last_month':
+            start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
+        elif filter_option == 'this_year':
+            start_date = now.replace(month=1, day=1)
+        elif filter_option == 'custom':
+            start_date = request.data.get('start_date')
+            end_date = request.data.get('end_date')
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        else:
+            start_date = now - timedelta(days=now.weekday())
+            end_date = now
+
+        entries = Cashbook.objects.filter(issue_date__gte=start_date, issue_date__lte=end_date, branch=request.user.branch).order_by('issue_date')
+        
+        total_debit = entries.filter(debit=True, cancelled=False).aggregate(Sum('amount'))['amount__sum'] or 0
+        total_credit = entries.filter(credit=True, cancelled=False).aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        balance_bf = 0 
+        
+        previous_entries = Cashbook.objects.filter(issue_date__lt=start_date, branch=request.user.branch)
+
+        previous_debit = previous_entries.filter(debit=True).aggregate(Sum('amount'))['amount__sum'] or 0
+        previous_credit = previous_entries.filter(credit=True).aggregate(Sum('amount'))['amount__sum'] or 0
+        balance_bf = previous_debit - previous_credit
+
+        total_balance = total_debit - total_credit
+        logger.info(total_balance)
+        invoice_items = InvoiceItem.objects.all()
+
+        return Response({
+            'filter_option': filter_option,
+            'entries': entries,
+            'balance_bf': balance_bf,
+            'total_debit': total_debit,
+            'total_credit': total_credit,
+            'total_balance': total_balance,
+            'end_date': end_date,
+            'start_date': start_date,
+            'invoice_items': invoice_items
+        }, status.HTTP_200_OK)
+    
+class CashbookNote(views.APIView):
+    def post(self, request):
+        #payload
+        """
+            entry_id:id,
+            note:str
+        """
+        try:
+            data = request.data
+            entry_id = data.get('entry_id')
+            note = data.get('note')
+            
+            entry = Cashbook.objects.get(id=entry_id)
+            entry.note = note
+            
+            entry.save()
+        except Exception as e:
+            return JsonResponse({'success':False, 'message':f'{e}.'}, status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'success':False, 'message':'Note successfully saved.'}, status.HTTP_201_CREATED)
+    
+class CashbookReport(views.APIView):
+    def post(self, request):
+        filter_option = request.data.get('filter', 'this_week')
+        now = datetime.datetime.now()
+        end_date = now
+        
+        if filter_option == 'today':
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_week':
+            start_date = now - timedelta(days=now.weekday())
+        elif filter_option == 'yesterday':
+            start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_month':
+            start_date = now.replace(day=1)
+        elif filter_option == 'last_month':
+            start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
+        elif filter_option == 'this_year':
+            start_date = now.replace(month=1, day=1)
+        elif filter_option == 'custom':
+            start_date = request.data.get('start_date')
+            end_date = request.data.get('end_date')
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        else:
+            start_date = now - timedelta(days=now.weekday())
+            end_date = now
+
+        entries = Cashbook.objects.filter(date__gte=start_date, date__lte=end_date, branch=request.user.branch).order_by('date')
+
+        # Create a CSV response
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="cashbook_report_{filter_option}.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Date', 'Description', 'Expenses', 'Income', 'Balance'])
+
+        balance = 0  
+        for entry in entries:
+            if entry.debit:
+                balance += entry.amount
+            elif entry.credit:
+                balance -= entry.amount
+
+            writer.writerow([
+                entry.issue_date,
+                entry.description,
+                entry.amount if entry.debit else '',
+                entry.amount if entry.credit else '',
+                balance,
+                entry.accountant,
+                entry.manager,
+                entry.director
+            ])
+
+        return Response(response)
+
+class CancelTransaction(views.APIView):
+    def post(self, request):
+        #payload
+        """
+            entry_id:id,
+        """
+        try:
+            data = request.data
+            entry_id = int(data.get('entry_id'))
+            
+            logger.info(entry_id)
+            
+            entry = Cashbook.objects.get(id=entry_id)
+            
+            entry.cancelled = True
+            
+            if entry.director:
+                entry.director = False
+            elif entry.manager:
+                entry.manager = False
+            elif entry.accountant:
+                entry.accountant = False
+                
+            entry.save()
+            logger.info(entry)
+            return Response(status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.info(e)
+            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+        
+class CashbookNoteView(views.APIView):
+    def get(self, request, entry_id):
+        entry = get_object_or_404(Cashbook, id=entry_id)
+    
+        notes = entry.notes.all().order_by('timestamp')
+        notes_data = [
+            {'user': note.user.username, 'note': note.note, 'timestamp': note.timestamp.strftime("%Y-%m-%d %H:%M:%S")}
+            for note in notes
+        ]
+        return Response({'notes': notes_data}, status.HTTP_200_OK)
+    
+    def post(self, request, entry_id):
+        entry = get_object_or_404(Cashbook, id=entry_id)
+        try:
+            data = json.loads(request.body)
+            note_text = data.get('note')
+            CashBookNote.objects.create(entry=entry, user=request.user, note=note_text)
+            return JsonResponse({'success': True, 'message': 'Note successfully added.'}, status=201)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+
+class UpdateTransactionStatus(views.APIView):    
+    def post(self, request, pk):
+        entry = get_object_or_404(Cashbook, pk=pk)
+        data = request.data
+        
+        status_t = data.get('status')
+        field = data.get('field')  
+
+        if field in ['manager', 'accountant', 'director']:
+            setattr(entry, field, status_t)
+
+            if entry.cancelled:
+                entry.cancelled = False
+            entry.save()
+            return Response({'status': getattr(entry, field)}, status.HTTP_200_OK)
+            
+        return Response(status.HTTP_400_BAD_REQUEST)   
+    
+class DaysData(views.APIView):
+    def get(self, request):
+        current_month = get_current_month()
+
+        sales = Sale.objects.filter(date__month=current_month)
+        cogs = COGSItems.objects.filter(date__month=current_month)
+
+        first_day = min(sales.first().date, cogs.first().date)
+        
+        def get_week_data(queryset, start_date, end_date, amount_field):
+            week_data = queryset.filter(date__gte=start_date, date__lt=end_date).values(amount_field, 'date')
+            logger.info(week_data)
+            total = week_data.aggregate(total=Sum(amount_field))['total'] or 0
+            return week_data, total
+
+        data = {}
+        for week in range(1, 5):
+            week_start = first_day + timedelta(days=(week-1)*7)
+            week_end = week_start + timedelta(days=7)
+
+            logger.info(week_start)
+            logger.info(week_end)
+
+            sales_data, sales_total = get_week_data(sales, week_start, week_end, 'total_amount')
+            cogs_data, cogs_total = get_week_data(cogs, week_start, week_end, 'product__cost')
+            
+            data[f'week {week}'] = {
+                'sales': list(sales_data),
+                'cogs': list(cogs_data),
+                'total_sales': sales_total,
+                'total_cogs': cogs_total
+            }
+
+        return Response(data, status.HTTP_200_OK)\
+
+class VAT(views.APIView):
+    def get(request):
+        filter_option = request.GET.get('filter', 'today')
+        download = request.GET.get('download')
+        
+        now = datetime.datetime.now()
+        end_date = now
+        
+        if filter_option == 'today':
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_week':
+            start_date = now - timedelta(days=now.weekday())
+        elif filter_option == 'yesterday':
+            start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_month':
+            start_date = now.replace(day=1)
+        elif filter_option == 'last_month':
+            start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
+        elif filter_option == 'this_year':
+            start_date = now.replace(month=1, day=1)
+        elif filter_option == 'custom':
+            start_date = request.GET.get('start_date')
+            end_date = request.GET.get('end_date')
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        else:
+            start_date = now - timedelta(days=now.weekday())
+            end_date = now
+            
+        vat_transactions = VATTransaction.objects.filter(date__gte=start_date, date__lte=end_date).values().order_by('-date')
+        
+        if download:
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = f'attachment; filename="vat_report_{filter_option}.csv"'
+
+            writer = csv.writer(response)
+            writer.writerow(['Date', 'Description', 'Status', 'Input', 'Output'])
+
+            balance = 0
+            for transaction in vat_transactions:
+
+                if transaction.vat_type == 'Input':
+                    balance += transaction.tax_amount
+                else:
+                    balance -= transaction.tax_amount
+
+                writer.writerow([
+                    transaction.date,
+                    transaction.invoice.invoice_number if transaction.invoice else transaction.purchase_order.order_number,
+                    transaction.tax_amount if transaction.vat_type == 'Input' else  '',
+                    transaction.tax_amount if transaction.vat_type == 'Output' else  ''
+                ])
+
+            writer.writerow(['Total', '', '', balance])
+            
+            return Response(response, status.HTTP_200_OK)
+        return Response( 
+            {
+                'filter_option':filter_option,
+                'vat_transactions':vat_transactions
+            },
+            status.HTTP_200_OK
+        )
+    
+    def post(self, request):
+        # payload 
+        {
+            'date_from':'date',
+            'date_to':'date'
+        }
+        try:
+            data = request.data
+            
+            date_to = data.get('date_to')
+            date_from = data.get('date_from')
+
+            vat_transactions = VATTransaction.objects.filter(
+                date__gte=date_from, 
+                date__lte=date_to
+            )
+            
+            vat_transactions.update(paid=True)
+        except Exception as e:
+            return Response({'message':f'{e}'}, status.HTTP_400_BAD_REQUEST)
+        return Response({'message':'VAT successfully paid'}, status.HTTP_200_OK)
+
+class PLOverview(views.APIView):
+    def get(self, request):
+        filter_option = request.GET.get('filter')
+        today = datetime.date.today()
+        previous_month = get_previous_month()
+        current_year = today.year
+        current_month = today.month
+
+        sales = Sale.objects.filter(transaction__branch=request.user.branch)
+        expenses = Expense.objects.filter(branch=request.user.branch)
+        cogs = COGSItems.objects.filter(invoice__branch=request.user.branch)
+
+        if filter_option == 'today':
+            date_filter = today
+        elif filter_option == 'last_week':
+            last_week_start = today - datetime.timedelta(days=today.weekday() + 7)
+            last_week_end = last_week_start + datetime.timedelta(days=6)
+            date_filter = (last_week_start, last_week_end)
+        elif filter_option == 'this_month':
+            date_filter = (datetime.date(current_year, current_month, 1), today)
+        elif filter_option == 'year':
+            year = int(request.GET.get('year', current_year))
+            date_filter = (datetime.date(year, 1, 1), datetime.date(year, 12, 31))
+        else:
+            date_filter = (datetime.date(current_year, current_month, 1), today)
+
+        if filter_option == 'today':
+            current_month_sales = sales.filter(date=date_filter).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+            current_month_expenses = expenses.filter(issue_date=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
+            cogs_total = cogs.objects.filter(date=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
+        elif filter_option == 'last_week':
+            current_month_sales = sales.filter(date__range=date_filter).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+            current_month_expenses = expenses.filter(issue_date__range=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
+            cogs_total = cogs.filter(date__range=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
+        else:
+            current_month_sales = sales.filter(date__range=date_filter).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+            current_month_expenses = expenses.filter(dissue_date__range=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
+            cogs_total = cogs.filter(date__range=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
+
+        previous_month_sales = sales.filter(date__year=current_year, date__month=previous_month).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+        previous_month_expenses = expenses.filter(issue_date__year=current_year, issue_date__month=previous_month).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
+        previous_cogs =  cogs.filter(date__year=current_year, date__month=previous_month).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
+        
+        current_net_income = current_month_sales
+        previous_net_income = previous_month_sales 
+        current_expenses = current_month_expenses 
+        
+        current_gross_profit = current_month_sales - cogs_total
+        previous_gross_profit = previous_month_sales - previous_cogs
+        
+        current_net_profit = current_gross_profit - current_month_expenses
+        previous_net_profit = previous_gross_profit - previous_month_expenses
+
+        current_gross_profit_margin = (current_gross_profit / current_month_sales * 100) if current_month_sales != 0 else 0
+        previous_gross_profit_margin = (previous_gross_profit / previous_month_sales * 100) if previous_month_sales != 0 else 0
+        
+        # net_income_change = calculate_percentage_change(current_net_income, previous_net_income)
+        # gross_profit_change = calculate_percentage_change(current_gross_profit, previous_gross_profit)
+        # gross_profit_margin_change = calculate_percentage_change(current_gross_profit_margin, previous_gross_profit_margin)
+
+
+        data = {
+            'net_profit':current_net_profit,
+            'cogs_total':cogs_total,
+            'current_expenses':current_expenses,
+            'current_net_profit': current_net_profit,
+            'previous_net_profit':previous_net_profit,
+            'current_net_income': current_net_income,
+            'previous_net_income': previous_net_income,
+            'current_gross_profit': current_gross_profit,
+            'previous_gross_profit': previous_gross_profit,
+            'current_gross_profit_margin': f'{current_gross_profit_margin:.2f}',
+            'previous_gross_profit_margin': previous_gross_profit_margin,
+        }
+        
+        return Response(data, status.HTTP_200_OK)
+
+class IncomeJson(views.APIView):
+    def get(request):
+        current_month = get_current_month()
+        today = datetime.date.today()
+        
+        month = request.GET.get('month', current_month)
+        day = request.GET.get('day', today.day)
+
+        sales = Sale.objects.filter(transaction__branch=request.user.branch)
+        
+        if request.GET.get('filter') == 'today':
+            sales_total = sales.filter(date=today).aggregate(Sum('total_amount'))
+        else:
+            sales_total = sales.filter(date__month=month).aggregate(Sum('total_amount'))
+
+        return Response({'sales_total': sales_total['total_amount__sum'] or 0}, status.HTTP_200_OK)
+    
+
+class ExpenseJson(views.APIView):
+    def get(request):
+        current_month = get_current_month()
+        today = datetime.date.today()
+        
+        month = request.GET.get('month', current_month)
+        day = request.GET.get('day', today.day)
+
+        expenses = Expense.objects.filter(branch=request.user.branch)
+        
+        if request.GET.get('filter') == 'today':
+            expense_total = expenses.filter(issue_date=today, status=False).aggregate(Sum('amount'))
+        else:
+            expense_total = expenses.filter(issue_date__month=month, status=False).aggregate(Sum('amount'))
+        
+        return Response({'expense_total': expense_total['amount__sum'] or 0}, status.HTTP_200_OK)
