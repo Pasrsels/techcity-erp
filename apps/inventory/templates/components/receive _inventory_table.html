@@ -7,13 +7,12 @@
 </style>
 {% include 'components/loader.html' %}
 <div class="mt-2 px-2 w-100">
-    <table class='table table-bordered border table-hover rounded p-2 receive_inv' id='transfers'>
-        <thead class='table-dark'>
+    <table class='table table-bordered border table-hover rounded p-2' id='transfers'>
+        <thead class='table-dark sticky-top'>
             <tr>
                 <th>Date</th>
                 <th class='text-center'>Status</th>
                 <th>Trans Ref</th>
-                <th>Description</th>
                 <th>From</th>
                 <th>Done by</th>
                 <th>Status</th>
@@ -22,7 +21,7 @@
         <tbody>
             {% for transfer in transfers %}
             <tr>
-                <td class='transfer-' data-id="{{ transfer.id }}" style="background: #ccd2d7f5 !important;"><small>{{ transfer.time }}</small></td>
+                <td class='transfer-' data-id="{{ transfer.id }}" style="background: #ccd2d7f5 !important;"><small>{{ transfer.time|date:"d/m/y H:i" }}</small></td>
                 <td class='transfer- text-center' style="background: #ccd2d7f5 !important;" data-id="{{ transfer.id }}">
                     <small>
                         {% if transfer.defective_status %}
@@ -48,7 +47,6 @@
                     </small>
                 </td>
                 <td style="background: #ccd2d7f5 !important;" class='transfer-' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_ref }}</small></td>
-                <td style="background: #ccd2d7f5 !important;" class='transfer-' data-id="{{ transfer.id }}"><small>{{ transfer.description }}</small></td>
                 <td style="background: #ccd2d7f5 !important;" class='transfer-' data-id="{{ transfer.id }}"><small>
                     {% for transfer_r in r_transfers %}
                         {% if transfer_r.transfer.id == transfer.id %}
@@ -64,8 +62,7 @@
                 {% for transfer_r in r_transfers %}
                     {% if transfer_r.transfer.id == transfer.id %}
                     <tr id="id_items" class="hidden" data-transfer-id="{{ transfer.id }}">
-                        <td><small>{{transfer_r.date}}</small></td>
-                        <td><small>{{transfer_r.date_received}}</small></td>
+                        <td><small>{{transfer_r.date_received | date:"d/m/y H:i"}}</small></td>
                         <td><small>{{transfer_r.product.name}}</small></td>
                         <td><small>{{transfer_r.quantity}}</small></td>
                         <td><small>{{transfer_r.from_branch.name}}</small></td>
@@ -116,8 +113,19 @@
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
 
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait while we process your request.',
+                icon: 'info',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             const formData = new FormData(form);
-            console.log(formData)
+            console.log(formData);
 
             const response = await fetch("{% url 'inventory:receive_inventory' %}", {
                 method: 'POST',
@@ -125,23 +133,25 @@
             });
 
             const result = await response.json();
+            Swal.close();
+
             if (result.success) {
                 Swal.fire({
-                    icon:'info',
-                    text:'Product successfully received',
-                    title:'info',
-                    timer:1000
-                }).then(()=>{
+                    icon: 'info',
+                    text: 'Product successfully received',
+                    title: 'Info',
+                    timer: 1000
+                }).then(() => {
                     form.querySelector('button').disabled = true;
                     form.querySelector('button').innerText = 'Accepted';
                     form.querySelector('.number').disabled = true;
-                })
+                });
             } else {
                 Swal.fire({
-                    icon:'error',
-                    text:'There was an error accepting the transfer.',
-                    title:'error',
-                })
+                    icon: 'error',
+                    text: 'There was an error accepting the transfer.',
+                    title: 'Error',
+                });
             }
         });
     });

@@ -155,6 +155,7 @@
                             <tr>
                                 <th>Date</th>
                                 <th>Product</th>
+                                <th>Cost</th>
                                 <th>Action</th>
                                 <!-- <th>Status</th> -->
                             </tr>
@@ -165,18 +166,32 @@
                                     <td>
                                         <small>
                                             {% with log.timestamp as timestamp %}
-                                                {{ timestamp|date:"Ymd" }} 
+                                                {{ timestamp|date:"d/m/y" }} 
                                             {% endwith %}
                                         </small>
                                     </td>
                                     <td>
                                         <small>
                                             {{ log.inventory.name }}
+                                            
                                             <!-- {{ log.product_transfer.product.name }}
                                             {{ log.purchase_order.product.name }} -->
                                         </small>
                                     </td>
-                                    <td><small>{{ log.action }}</small></td>
+                                    <td>
+                                        <small>
+                                            {% if log.inventory.cost %}
+                                                USD {{ log.inventory.cost }}
+                                            {% else %}
+                                                USD {{ log.inventory.price }}
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {{ log.action }} x {{ log.quantity }}
+                                        </small>
+                                    </td>
                                     <!-- <td>{{ log.quantity }}</td> -->
                                 </tr>
                             {% empty %}

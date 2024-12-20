@@ -161,7 +161,6 @@ input[type="checkbox"] {
             <table class="invoice-table sticky-header" id="invoiceTable">
                 <thead>
                     <tr>
-                        <th><input type="checkbox" id="select-all"></th>
                         <th>Customer Name &#9650;</th>
                         <th>Reference &#9650;</th>
                         <th>Date &#9650;</th>
@@ -176,10 +175,9 @@ input[type="checkbox"] {
                 <tbody>
                     {% for invoice in invoices %}
                     <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
                         <td><small><a href="{% url 'finance:customer' invoice.customer.id %}">{{ invoice.customer.name }}</a></small></td>
                         <td><small>#{{ invoice.invoice_number }}</small></td>
-                        <td><small>{{ invoice.issue_date }}</small></td>
+                        <td><small>{{ invoice.issue_date|date"d/m/y H:i" }}</small></td>
                         <!-- Status Column -->
                         <td>
                             <span class="status {% if invoice.payment_status == 'Paid' %}completed{% else %}pending{% endif %}">
@@ -218,11 +216,11 @@ input[type="checkbox"] {
                             <span class='px-2'>
                                 {% if invoice.amount_due > 0 %}
                                 <span style='cursor:pointer;' data-id="{{ invoice.id }}" data-amount="{{ invoice.amount_due }}" id='id_update' class="text-dark">
-                                    <i class='bx bx-right-arrow'></i>
+                                    <i class='bx bx-right-arrow bg-success'></i>
                                 </span>
                                 {% else %}
                                 <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Invoice fully paid'>
-                                    <i class='bx bx-rectangle'></i>
+                                    <i class='bx bx-bx-right-arrow bg-danger'></i>
                                 </span>
                                 {% endif %}
                             </span>
