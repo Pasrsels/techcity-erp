@@ -5,6 +5,7 @@ from rest_framework.routers import DefaultRouter
 app_name = 'finance'
 
 router = DefaultRouter()
+router.register(r'customers_list', CustomersViewset, basename='customers_list')
 router.register(r'customers', CustomerCrud,  basename='customers')
 router.register(r'currency', CurrencyViewset, basename= 'currency_crud')
 router.register(r'Cashwithrawals', CashWithdrawalsViewset, basename= 'cash_withrawals')
@@ -118,6 +119,7 @@ urlpatterns = [
     # API end points
     path('', include(router.urls)),
     #Customers
+    # path('api/v1/customers/', CustomersViewset.as_view(), name='api_customers'),
     path('api/v1/customer-account/<int:customer_id>/', CustomerAccount.as_view(), name='api_customer_account'),
     path('api/v1/customer-account-payments/<int:customer_id>/', customer_account_payments_json.as_view(), name='api_customer_account_payments'),
     path('api/v1/customer-deposit-edit/<int:deposit_id>/', EditCustomerDeposit.as_view(), name='api_customer_deposit_edit'),

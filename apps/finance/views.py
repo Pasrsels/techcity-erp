@@ -3108,6 +3108,13 @@ class CustomerCrud(viewsets.ModelViewSet):
 #             'total_balances_per_currency':total_balances_per_currency,
 #         },status= status.HTTP_200_OK)
 
+from rest_framework.viewsets import ModelViewSet
+
+class CustomersViewset(ModelViewSet):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+    
+
 class CustomerAccount(views.APIView):
     def get(self, request, customer_id):
         customer = get_object_or_404(Customer, id=customer_id)
