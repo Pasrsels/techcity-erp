@@ -147,7 +147,7 @@ urlpatterns = [
     path('api/v1/quotation-list/', QuotationList.as_view(), name='api_quotation_list'),
 
     #Expense
-    path('api/v1/expense/<int:expense_id>/', Expense.as_view(), name='api_expense'),
+    path('api/v1/expense/<int:expense_id>/', ExpenseView.as_view(), name='api_expense'),
     path('api/v1/expense_category/', ExpenseCategory.as_view(), name='api_expense_category'),
     path('api/v1/add-or-edit-expense/<int:id>/', AddOrEditExpense.as_view(), name='api_add_edit_expense'),
     path('api/v1/delete-expense/', DeleteExpense.as_view(), name='api_delete_expense'),

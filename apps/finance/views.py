@@ -3834,7 +3834,7 @@ class InvoiceList(views.APIView):
             'total_amount': total_amount,
         },status.HTTP_200_OK)
 
-class Expense(views.APIView):
+class ExpenseView(views.APIView):
     def get(self, request, expense_id):
         expense = get_object_or_404(Expense, id=expense_id)
         data = {
