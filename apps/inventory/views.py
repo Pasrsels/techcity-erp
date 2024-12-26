@@ -900,8 +900,6 @@ def inventory_transfers(request):
     transfer_items.annotate(total_value=F('quantity') * F('cost'))\
         .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
     )
-
-    # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
         
     return render(request, 'transfers.html', {
         'transfers': transfers,
