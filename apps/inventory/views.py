@@ -3498,7 +3498,7 @@ from .serializers import *
 from rest_framework.viewsets import ModelViewSet
 from .serializers import *
 
-class InventoryViewset(ModelViewSet):
+class InventoryViewset(viewsets.ModelViewSet):
     serializer_class = InventorySerializer
 
     def get_queryset(self):
@@ -4868,7 +4868,7 @@ class PurchaseOrderDetail(views.APIView):
     
 class PurchaseOrderStatus(views.APIView):
     permission_classes = [IsAuthenticated]
-    def update(self, request, order_id):
+    def put(self, request, order_id):
         try:
             purchase_order = PurchaseOrder.objects.get(id=order_id)
         except PurchaseOrder.DoesNotExist:
@@ -4903,7 +4903,7 @@ class PurchaseOrderStatus(views.APIView):
         
 class MarkPurchaseOrderDone(views.APIView):
     permission_classes = [IsAuthenticated]
-    def update(self, request, po_id):
+    def put(self, request, po_id):
         purchase_order = PurchaseOrder.objects.get(id=po_id)
         purchase_order.received = True
         purchase_order.save()
@@ -4966,7 +4966,7 @@ class SalesPriceListPDF(views.APIView):
         return Response(response, status.HTTP_200_OK)
 
 class PurchaseOrderConfirmOrderItem(views.APIView):
-    def update(self, request, po_id):
+    def put(self, request, po_id):
         try:
             order_items = PurchaseOrderItem.objects.filter(purchase_order__id=po_id).select_related('product')
 
