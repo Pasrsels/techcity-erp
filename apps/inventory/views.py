@@ -872,9 +872,6 @@ def inventory_transfers(request):
         total_cost=Sum(F('quantity') * F('cost')), 
         total_quantity=Sum('quantity') 
     )
-
-    for item in transfer_summary:
-        print(f"Transfer ID: {item['transfer__id']}, Total Cost: {item['total_cost']}")
     
     transfers = Transfer.objects.filter(
         Q(branch=request.user.branch) |
@@ -904,7 +901,7 @@ def inventory_transfers(request):
         .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
     )
 
-    logger.info(f'value: {total_transferred_value}, received {total_received_value}')
+    # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
         
     return render(request, 'transfers.html', {
         'transfers': transfers,
@@ -5091,7 +5088,7 @@ class InventoryTransfer(views.APIView):
             .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
         )
 
-        logger.info(f'value: {total_transferred_value}, received {total_received_value}')
+        # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
             
         return render(request, 'transfers.html', {
             'transfers': transfers,
