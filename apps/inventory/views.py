@@ -561,7 +561,7 @@ def inventory_index(request):
 
     logs = ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
     
-    totals = calculate_inventory_totals(inventory)
+    # totals = calculate_inventory_totals(inventory)
   
     return render(request, 'inventory.html', {
         'form': form,
@@ -572,7 +572,7 @@ def inventory_index(request):
         'total_price': totals[1],
         'total_cost':totals[0],
         'accessories':accessories,
-        'logs':logs
+        'logs':[]
     })
 
 @login_required
@@ -3486,13 +3486,14 @@ class AddCategories(views.APIView):
 
 class Products(views.APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         products = Inventory.objects.filter(branch = request.user.branch, status=True, disable=False).values(
             'id',
             'name',
             'quantity'
         ).order_by('name')  
-        logger.info(products)         
+      
         return Response(products, status.HTTP_200_OK)
 
 class AddProducts(views.APIView):
