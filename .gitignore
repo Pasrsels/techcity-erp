@@ -3,6 +3,7 @@
 /migrations/
 */migrations/*
 .env
+.base.py
 *.pyc
 *~zz 
 *.swp
