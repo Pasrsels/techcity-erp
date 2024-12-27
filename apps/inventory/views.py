@@ -812,23 +812,18 @@ def inventory_transfers(request):
     branch_id = request.GET.get('branch', '')
 
     transfer_items = TransferItems.objects.filter(
-        Q(from_branch=request.user.branch) |
-        Q(to_branch = request.user.branch),
-        transfer__delete=False
-    ).annotate(
-        total_amount = ExpressionWrapper(
-            Sum(F('quantity') * F('product__cost')),
-            output_field=FloatField()
+            Q(from_branch=request.user.branch) |
+            Q(to_branch=request.user.branch),
+            transfer__delete=False
+        ).annotate(
+            total_amount=F('quantity') * F('product__cost')
         )
-    )
+
 
     transfer_summary = transfer_items.values('transfer__id').annotate(
-        total_cost=Sum(F('quantity') * F('cost')), 
-        total_quantity=Sum('quantity') 
+        total_cost=Sum(F('quantity') * F('product__cost')),
+        total_quantity=Sum('quantity')
     )
-
-    for item in transfer_summary:
-        print(f"Transfer ID: {item['transfer__id']}, Total Cost: {item['total_cost']}")
     
     transfers = Transfer.objects.filter(
         Q(branch=request.user.branch) |
@@ -858,7 +853,7 @@ def inventory_transfers(request):
         .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
     )
 
-    logger.info(f'value: {total_transferred_value}, received {total_received_value}')
+    # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
         
     return render(request, 'transfers.html', {
         'transfers': transfers,
