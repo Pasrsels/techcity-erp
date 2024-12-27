@@ -3021,7 +3021,7 @@ class CustomerCrud(viewsets.ModelViewSet):
 class CustomersViewset(ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         data = request.data
@@ -3054,21 +3054,18 @@ class CustomerAccountView(views.APIView):
         customer = get_object_or_404(Customer, id=customer_id)
         customer_serializer = CustomerSerializer(customer)
 
-        account = CustomerAccountBalances.objects.filter(account__customer=customer)
-        account_serializer = CustomerAccountBalancesSerializer(account)
+        account = CustomerAccountBalances.objects.filter(account__customer=customer).values()
 
         invoices = Invoice.objects.filter(
             customer=customer, 
             branch=request.user.branch, 
             status=True
-        )
-        invoice_serializer = InvoiceSerializer(invoices)
+        ).values()
 
         invoice_payments = Payment.objects.filter(
             invoice__branch=request.user.branch, 
             invoice__customer=customer
-        ).order_by('-payment_date')
-        invoice_payments_serializer = PaymentSerializer(invoice_payments)
+        ).order_by('-payment_date').values()
 
         filters = Q()
         if request.GET.get('q'):
@@ -3086,11 +3083,11 @@ class CustomerAccountView(views.APIView):
         paid_invoice = invoices.filter(payment_status='Paid').count()
         due_invoice = invoices.filter(payment_status='Partial').count()
         return Response({
-            'account': account_serializer.data,
-            'invoices': invoice_serializer.data,
+            'account': account,
+            'invoices': invoices,
             'customer': customer_serializer.data,
             'invoice_count': invoices.count(),
-            'invoice_payments': invoice_payments_serializer.data,
+            'invoice_payments': invoice_payments,
             'paid': paid_invoice,  
             'due': due_invoice, 
         },status.HTTP_200_OK)
