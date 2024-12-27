@@ -569,8 +569,8 @@ def inventory_index(request):
         'inventory': inventory,
         'search_query': q,
         'category':category,
-        'total_price': totals[1],
-        'total_cost':totals[0],
+        'total_price': 0,
+        'total_cost':0,
         'accessories':accessories,
         'logs':[]
     })
