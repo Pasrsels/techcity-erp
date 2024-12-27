@@ -1,20 +1,22 @@
 from . models import Inventory, Product, PurchaseOrderItem
-from django.db import models
+from django.db.models import F, Sum, FloatField
 from loguru import logger
+from django.db.models.functions import Coalesce
+
 
 def calculate_inventory_totals(inventory_queryset):
-    total_cost = 0
-    total_price = 0
+    """
+    Optimized calculation of total cost and total price for inventory items,
+    handling null values for cost and price.
+    """
+    totals = inventory_queryset.aggregate(
+        total_cost=Sum(F('quantity') * Coalesce(F('cost'), 0), output_field=FloatField()),
+        total_price=Sum(F('quantity') * Coalesce(F('price'), 0), output_field=FloatField())
+    )
 
-    for item in inventory_queryset:
-        item_total_cost = item.quantity * item.cost
-        total_cost += item_total_cost
-        
-        if hasattr(item, 'price'):  
-            item_total_price = item.quantity * item.price
-            total_price += item_total_price
-        else:
-            print(f"Warning: Item {item} does not have a 'price' attribute.")
+    total_cost = totals.get('total_cost') or 0
+    total_price = totals.get('total_price') or 0
+
     return total_cost, total_price
 
 def average_inventory_cost(product_id, new_cost, new_units, branch_id):

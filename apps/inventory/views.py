@@ -605,6 +605,8 @@ def inventory_index(request):
         return response
     
     all_branches_inventory = Inventory.objects.filter(branch=request.user.branch)
+
+    logs = ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
     
     totals = calculate_inventory_totals(all_branches_inventory.filter(status=True))
   
@@ -617,7 +619,7 @@ def inventory_index(request):
         'total_price': totals[1],
         'total_cost':totals[0],
         'accessories':accessories,
-        'logs':ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
+        'logs':logs
     })
 
 @login_required
