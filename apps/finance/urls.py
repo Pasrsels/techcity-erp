@@ -5,7 +5,7 @@ from rest_framework.routers import DefaultRouter
 app_name = 'finance'
 
 router = DefaultRouter()
-router.register(r'customers_list', CustomersViewset, basename='customers_list')
+router.register(r'api/v1/customers_list', CustomersViewset, basename='customers_list')
 router.register(r'customers', CustomerCrud,  basename='customers')
 router.register(r'currency', CurrencyViewset, basename= 'currency_crud')
 router.register(r'Cashwithrawals', CashWithdrawalsViewset, basename= 'cash_withrawals')
@@ -42,7 +42,7 @@ urlpatterns = [
     path('customer/account/<int:customer_id>/', customer_account, name='customer'),
     path('customers/update/<int:customer_id>/', update_customer, name='update_customer'),
     path('customer/delete/<int:customer_id>/delete/', delete_customer, name='customer_delete'),
-    #path('customer/payments/json/', customer_account_payments_json, name='customer_payments_json'),
+    path('customer/payments/json/', customer_account_payments_json, name='customer_payments_json'),
     path('customer/edit/deposit/<int:deposit_id>/', edit_customer_deposit, name='edit_customer_deposit'),
     path('customer/account/json/<int:customer_id>/', customer_account_json, name='customer_account_json'),
     path('customer/transactions/json/', customer_account_transactions_json, name='customer_transactions_json'),
@@ -120,8 +120,8 @@ urlpatterns = [
     path('', include(router.urls)),
     #Customers
     # path('api/v1/customers/', CustomersViewset.as_view(), name='api_customers'),
-    path('api/v1/customer-account/<int:customer_id>/', CustomerAccount.as_view(), name='api_customer_account'),
-    path('api/v1/customer-account-payments/<int:customer_id>/', customer_account_payments_json.as_view(), name='api_customer_account_payments'),
+    path('api/v1/customer-account/<int:customer_id>/', CustomerAccountView.as_view(), name='api_customer_account'),
+    path('api/v1/customer-account-payments/<int:customer_id>/', CustomerPaymentsJsonView.as_view(), name='api_customer_account_payments'),
     path('api/v1/customer-deposit-edit/<int:deposit_id>/', EditCustomerDeposit.as_view(), name='api_customer_deposit_edit'),
     path('api/v1/customer-account-json/<int:customer_id>/', CustomerAccountJson.as_view(), name='api_customer_account_json'),
     path('api/v1/customer-account-transaction-json/<int:id>/', CustomerAccountTransactionsJson.as_view(), name='api_customer_account_transaction_json'),
@@ -147,7 +147,7 @@ urlpatterns = [
     path('api/v1/quotation-list/', QuotationList.as_view(), name='api_quotation_list'),
 
     #Expense
-    path('api/v1/expense/<int:expense_id>/', Expense.as_view(), name='api_expense'),
+    path('api/v1/expense/<int:expense_id>/', ExpenseView.as_view(), name='api_expense'),
     path('api/v1/expense_category/', ExpenseCategory.as_view(), name='api_expense_category'),
     path('api/v1/add-or-edit-expense/<int:id>/', AddOrEditExpense.as_view(), name='api_add_edit_expense'),
     path('api/v1/delete-expense/', DeleteExpense.as_view(), name='api_delete_expense'),

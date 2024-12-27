@@ -511,53 +511,8 @@ def inventory_index(request):
     
     services = Service.objects.all().order_by('-name')
     accessories = Accessory.objects.all()
-    inventory = Inventory.objects.filter(branch=request.user.branch, status=True).order_by('name')
+    inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name')
 
-    # # Step 1: Get the inventory products with quantity 0 and not logged in ActivityLog
-    # products_with_zero_quantity = Inventory.objects.filter(
-    #     branch=request.user.branch, 
-    #     status=True, 
-    #     quantity=0
-    # ).exclude(
-    #     id__in=ActivityLog.objects.values('inventory_id') 
-    # )
-
-    # print(products_with_zero_quantity)
-    # print(products_with_zero_quantity)
-
-    # # Step 2: Find duplicate products based on name
-    # duplicates = products_with_zero_quantity.values('name').annotate(
-    #     count=Count('name')
-    # ).filter(count__gt=1)  # Only consider products with more than 1 instance
-    # # Step 2: Find duplicate products based on name
-    # duplicates = products_with_zero_quantity.values('name').annotate(
-    #     count=Count('name')
-    # ).filter(count__gt=1)  # Only consider products with more than 1 instance
-
-    # # Step 3: For each group of duplicates, delete all but the first product
-    # for product in duplicates:
-    #     # Get all products with the same name
-    #     product_group = products_with_zero_quantity.filter(name=product['name'])
-    # # Step 3: For each group of duplicates, delete all but the first product
-    # for product in duplicates:
-    #     # Get all products with the same name
-    #     product_group = products_with_zero_quantity.filter(name=product['name'])
-        
-    #     # Keep the first product and delete the rest
-    #     first_product = product_group.first()  # Get the first product
-    #     product_group.exclude(id=first_product.id).delete() 
-    #     logger.info(f'{first_product}, deleted') # 
-    #     # Keep the first product and delete the rest
-    #     first_product = product_group.first()  # Get the first product
-    #     product_group.exclude(id=first_product.id).delete() 
-    #     logger.info(f'{first_product}, deleted') # 
-
-    # if category:
-    #     if category == 'inactive':
-    #         inventory = Inventory.objects.filter(branch=request.user.branch, status=False)
-    #     else:
-    #         inventory = inventory.filter(category__name=category)
-                
     if 'download' and 'excel' in request.GET:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = f'attachment; filename={request.user.branch.name} stock.xlsx'
@@ -603,10 +558,10 @@ def inventory_index(request):
 
         workbook.save(response)
         return response
+
+    logs = ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
     
-    all_branches_inventory = Inventory.objects.filter(branch=request.user.branch)
-    
-    totals = calculate_inventory_totals(all_branches_inventory.filter(status=True))
+    # totals = calculate_inventory_totals(inventory)
   
     return render(request, 'inventory.html', {
         'form': form,
@@ -614,10 +569,10 @@ def inventory_index(request):
         'inventory': inventory,
         'search_query': q,
         'category':category,
-        'total_price': totals[1],
-        'total_cost':totals[0],
+        'total_price': 0,
+        'total_cost':0,
         'accessories':accessories,
-        'logs':ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
+        'logs':[]
     })
 
 @login_required
@@ -848,7 +803,6 @@ def get_stock_account_data(logs):
     
     return stock_account
 
-
 @login_required    
 def inventory_transfers(request): 
     """
@@ -858,23 +812,18 @@ def inventory_transfers(request):
     branch_id = request.GET.get('branch', '')
 
     transfer_items = TransferItems.objects.filter(
-        Q(from_branch=request.user.branch) |
-        Q(to_branch = request.user.branch),
-        transfer__delete=False
-    ).annotate(
-        total_amount = ExpressionWrapper(
-            Sum(F('quantity') * F('product__cost')),
-            output_field=FloatField()
+            Q(from_branch=request.user.branch) |
+            Q(to_branch=request.user.branch),
+            transfer__delete=False
         )
-    )
 
-    transfer_summary = transfer_items.values('transfer__id').annotate(
-        total_cost=Sum(F('quantity') * F('cost')), 
-        total_quantity=Sum('quantity') 
-    )
-
-    for item in transfer_summary:
-        print(f"Transfer ID: {item['transfer__id']}, Total Cost: {item['total_cost']}")
+# .annotate(
+#             total_amount=F('quantity') * F('product__cost')
+#         )
+    # transfer_summary = transfer_items.values('transfer__id').annotate(
+    #     total_cost=Sum(F('quantity') * F('product__cost')),
+    #     total_quantity=Sum('quantity')
+    # )
     
     transfers = Transfer.objects.filter(
         Q(branch=request.user.branch) |
@@ -894,25 +843,25 @@ def inventory_transfers(request):
     if branch_id: 
         transfers = transfers.filter(transfer_to__id=branch_id)
 
-    total_transferred_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
+    # total_transferred_value = (
+    # transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+    #     .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    # )
 
-    total_received_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
+    # total_received_value = (
+    # transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+    #     .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    # )
 
-    logger.info(f'value: {total_transferred_value}, received {total_received_value}')
+    # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
         
     return render(request, 'transfers.html', {
         'transfers': transfers,
         'search_query': q, 
         'transfer_items':transfer_items,
-        'transferred_value':total_transferred_value,
-        'received_value':total_received_value,
-        'totals':transfer_summary,
+        'transferred_value':0,
+        'received_value':0,
+        'totals':[],
         'hold_transfers_count':Transfer.objects.filter(
                 Q(branch=request.user.branch) |
                 Q(transfer_to__in=[request.user.branch]),
@@ -3429,7 +3378,7 @@ def payments(request):
 @login_required
 def accessory_view(request, product_id):
     if request.method == 'GET':
-        accessories = Accessory.objects.filter(product__id=product_id).values('id', 'product__name')
+        accessories = Accessory.objects.filter(main_product__id=product_id).values('id', 'product__name')
         return JsonResponse({'success': True, 'data': list(accessories)}, status=200)
 
     if request.method == 'POST':
@@ -3529,9 +3478,16 @@ class AddCategories(views.APIView):
 
 class Products(views.APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        products = Inventory.objects.filter(branch = request.user.branch, status=True, disable=False).values().order_by('name')  
-        logger.info(products)       
+        products = Inventory.objects.filter(branch = request.user.branch, status=True, disable=False).values(
+            'id',
+            'name',
+            'quantity',
+            'price',
+            'dealer_price'
+        ).order_by('name')  
+      
         return Response(products, status.HTTP_200_OK)
 
 class AddProducts(views.APIView):
@@ -5075,7 +5031,7 @@ class InventoryTransfer(views.APIView):
             .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
         )
 
-        logger.info(f'value: {total_transferred_value}, received {total_received_value}')
+        # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
             
         return Response({
             'transfers': transfers,

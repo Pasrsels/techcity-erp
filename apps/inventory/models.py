@@ -126,7 +126,7 @@ class Inventory(models.Model):
 class Accessory(models.Model):
     main_product = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='main_product')
     accessory_product = models.ManyToManyField(Inventory)
-    quantity = models.IntegerField()
+    # quantity = models.IntegerField()
 
     def __str__(self):
         return self.main_product.name
@@ -271,6 +271,15 @@ class Transfer(models.Model):
     delete = models.BooleanField(default=False, null=True)
     receive_status = models.BooleanField(default=False, null=True)
     hold = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['branch']),
+            models.Index(fields=['transfer_ref']),
+            models.Index(fields=['date']),
+            models.Index(fields=['delete']),
+            models.Index(fields=['hold']),
+        ]
 
     @classmethod
     def generate_transfer_ref(self, branch, branches):
