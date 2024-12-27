@@ -272,6 +272,15 @@ class Transfer(models.Model):
     receive_status = models.BooleanField(default=False, null=True)
     hold = models.BooleanField(default=False)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['branch']),
+            models.Index(fields=['transfer_ref']),
+            models.Index(fields=['date']),
+            models.Index(fields=['delete']),
+            models.Index(fields=['hold']),
+        ]
+
     @classmethod
     def generate_transfer_ref(self, branch, branches):
         formatted_branches = ', '.join([f"T{b[0].upper()}" for b in branches])

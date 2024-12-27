@@ -852,30 +852,48 @@ def get_stock_account_data(logs):
 @login_required    
 def inventory_transfers(request): 
     """
-        transfers index. Shows transfers in and out of the branch and the total cost of items transfered in/out
+    Transfers index. Shows transfers in and out of the branch and the total cost of items transferred in/out.
     """
     q = request.GET.get('q', '') 
     branch_id = request.GET.get('branch', '')
 
-    transfer_items = TransferItems.objects.filter(
-        Q(from_branch=request.user.branch) |
-        Q(to_branch = request.user.branch),
+    branch = request.user.branch
+    transfer_items = _get_transfer_items(branch)
+    transfer_summary = _get_transfer_summary(transfer_items)
+    transfers = _get_transfers(branch, q, branch_id)
+
+    total_transferred_value = _calculate_total_value(transfer_items)
+
+    return render(request, 'transfers.html', {
+        'transfers': transfers,
+        'search_query': q, 
+        'transfer_items': transfer_items,
+        'transferred_value': total_transferred_value,
+        'received_value': total_transferred_value, 
+        'totals': transfer_summary,
+        'hold_transfers_count': _count_hold_transfers(branch)
+    })
+
+def _get_transfer_items(branch):
+    return TransferItems.objects.filter(
+        Q(from_branch=branch) | Q(to_branch=branch),
         transfer__delete=False
     ).annotate(
-        total_amount = ExpressionWrapper(
+        total_amount=ExpressionWrapper(
             Sum(F('quantity') * F('product__cost')),
             output_field=FloatField()
         )
+    ).select_related('product')  # Use select_related for product details
+
+def _get_transfer_summary(transfer_items):
+    return transfer_items.values('transfer__id').annotate(
+        total_cost=Sum(F('quantity') * F('cost')), 
+        total_quantity=Sum('quantity')
     )
 
-    transfer_summary = transfer_items.values('transfer__id').annotate(
-        total_cost=Sum(F('quantity') * F('cost')), 
-        total_quantity=Sum('quantity') 
-    )
-    
+def _get_transfers(branch, q, branch_id):
     transfers = Transfer.objects.filter(
-        Q(branch=request.user.branch) |
-        Q(transfer_to__in=[request.user.branch]),
+        Q(branch=branch) | Q(transfer_to__in=[branch]),
         delete=False
     ).annotate(
         total_quantity=Sum('transferitems__quantity'),
@@ -884,38 +902,26 @@ def inventory_transfers(request):
             output_field=FloatField()
         )
     ).order_by('-time').distinct()
-    
+
     if q:
-        transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
+        transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q))
         
     if branch_id: 
         transfers = transfers.filter(transfer_to__id=branch_id)
 
-    total_transferred_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    return transfers
+
+def _calculate_total_value(transfer_items):
+    return (
+        transfer_items.aggregate(total_sum=Sum(F('quantity') * F('cost')))['total_sum'] or 0
     )
 
-    total_received_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
-        
-    return render(request, 'transfers.html', {
-        'transfers': transfers,
-        'search_query': q, 
-        'transfer_items':transfer_items,
-        'transferred_value':total_transferred_value,
-        'received_value':total_received_value,
-        'totals':transfer_summary,
-        'hold_transfers_count':Transfer.objects.filter(
-                Q(branch=request.user.branch) |
-                Q(transfer_to__in=[request.user.branch]),
-                delete=False, 
-                hold=True
-            ).count()
-        }
-    )
+def _count_hold_transfers(branch):
+    return Transfer.objects.filter(
+        Q(branch=branch) | Q(transfer_to__in=[branch]),
+        delete=False, 
+        hold=True
+    ).count()
 
 @login_required
 def held_transfer_json(request, transfer_id):
