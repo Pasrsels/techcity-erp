@@ -825,7 +825,7 @@ def inventory_transfers(request):
         'transfer_items': transfer_items,
         'transferred_value': 0,
         'received_value': 0, 
-        'totals': 0,
+        'totals': transfer_summary,
         'hold_transfers_count': _count_hold_transfers(branch)
     })
 
