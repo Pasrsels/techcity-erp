@@ -838,7 +838,7 @@ def _get_transfer_items(branch):
             Sum(F('quantity') * F('product__cost')),
             output_field=FloatField()
         )
-    ).select_related('product')  # Use select_related for product details
+    ).select_related('product')  
 
 def _get_transfer_summary(transfer_items):
     return transfer_items.values('transfer__id').annotate(
