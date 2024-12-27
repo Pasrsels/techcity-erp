@@ -820,10 +820,10 @@ def inventory_transfers(request):
 # .annotate(
 #             total_amount=F('quantity') * F('product__cost')
 #         )
-    transfer_summary = transfer_items.values('transfer__id').annotate(
-        total_cost=Sum(F('quantity') * F('product__cost')),
-        total_quantity=Sum('quantity')
-    )
+    # transfer_summary = transfer_items.values('transfer__id').annotate(
+    #     total_cost=Sum(F('quantity') * F('product__cost')),
+    #     total_quantity=Sum('quantity')
+    # )
     
     transfers = Transfer.objects.filter(
         Q(branch=request.user.branch) |
