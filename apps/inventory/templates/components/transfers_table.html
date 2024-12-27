@@ -42,14 +42,14 @@
                         <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small class="d-flex align-items-center justify-content-center"><i class='bx bx-box'></i></small></td>
                         <td style="background: #ccd2d7f5 !important;">
                             <small class="d-flex justify-content-between">
-                                {% for qt in totals %}
+                                <!-- {% for qt in totals %}
                                     {% if qt.transfer__id == transfer.id %}
                                         <span>{{ qt.total_quantity }}</span>
                                         {% if not request.user.role == 'sales' %}
                                             <span class="text-primary text-bold">${{ qt.total_cost|floatformat:2 }}</span>
                                         {% endif %}
                                     {% endif %}
-                                {% endfor %}
+                                {% endfor %} -->
                             </small>
                         </td>
                         <td style="background: #ccd2d7f5 !important;" class='transfer-btn text-center' data-id="{{ transfer.id }}">

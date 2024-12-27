@@ -815,11 +815,11 @@ def inventory_transfers(request):
             Q(from_branch=request.user.branch) |
             Q(to_branch=request.user.branch),
             transfer__delete=False
-        ).annotate(
-            total_amount=F('quantity') * F('product__cost')
         )
 
-
+# .annotate(
+#             total_amount=F('quantity') * F('product__cost')
+#         )
     transfer_summary = transfer_items.values('transfer__id').annotate(
         total_cost=Sum(F('quantity') * F('product__cost')),
         total_quantity=Sum('quantity')
@@ -843,15 +843,15 @@ def inventory_transfers(request):
     if branch_id: 
         transfers = transfers.filter(transfer_to__id=branch_id)
 
-    total_transferred_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
+    # total_transferred_value = (
+    # transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+    #     .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    # )
 
-    total_received_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
+    # total_received_value = (
+    # transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+    #     .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    # )
 
     # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
         
@@ -859,9 +859,9 @@ def inventory_transfers(request):
         'transfers': transfers,
         'search_query': q, 
         'transfer_items':transfer_items,
-        'transferred_value':total_transferred_value,
-        'received_value':total_received_value,
-        'totals':transfer_summary,
+        'transferred_value':0,
+        'received_value':0,
+        'totals':[],
         'hold_transfers_count':Transfer.objects.filter(
                 Q(branch=request.user.branch) |
                 Q(transfer_to__in=[request.user.branch]),
