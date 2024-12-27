@@ -511,53 +511,8 @@ def inventory_index(request):
     
     services = Service.objects.all().order_by('-name')
     accessories = Accessory.objects.all()
-    inventory = Inventory.objects.filter(branch=request.user.branch, status=True).order_by('name')
+    inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name')
 
-    # # Step 1: Get the inventory products with quantity 0 and not logged in ActivityLog
-    # products_with_zero_quantity = Inventory.objects.filter(
-    #     branch=request.user.branch, 
-    #     status=True, 
-    #     quantity=0
-    # ).exclude(
-    #     id__in=ActivityLog.objects.values('inventory_id') 
-    # )
-
-    # print(products_with_zero_quantity)
-    # print(products_with_zero_quantity)
-
-    # # Step 2: Find duplicate products based on name
-    # duplicates = products_with_zero_quantity.values('name').annotate(
-    #     count=Count('name')
-    # ).filter(count__gt=1)  # Only consider products with more than 1 instance
-    # # Step 2: Find duplicate products based on name
-    # duplicates = products_with_zero_quantity.values('name').annotate(
-    #     count=Count('name')
-    # ).filter(count__gt=1)  # Only consider products with more than 1 instance
-
-    # # Step 3: For each group of duplicates, delete all but the first product
-    # for product in duplicates:
-    #     # Get all products with the same name
-    #     product_group = products_with_zero_quantity.filter(name=product['name'])
-    # # Step 3: For each group of duplicates, delete all but the first product
-    # for product in duplicates:
-    #     # Get all products with the same name
-    #     product_group = products_with_zero_quantity.filter(name=product['name'])
-        
-    #     # Keep the first product and delete the rest
-    #     first_product = product_group.first()  # Get the first product
-    #     product_group.exclude(id=first_product.id).delete() 
-    #     logger.info(f'{first_product}, deleted') # 
-    #     # Keep the first product and delete the rest
-    #     first_product = product_group.first()  # Get the first product
-    #     product_group.exclude(id=first_product.id).delete() 
-    #     logger.info(f'{first_product}, deleted') # 
-
-    # if category:
-    #     if category == 'inactive':
-    #         inventory = Inventory.objects.filter(branch=request.user.branch, status=False)
-    #     else:
-    #         inventory = inventory.filter(category__name=category)
-                
     if 'download' and 'excel' in request.GET:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = f'attachment; filename={request.user.branch.name} stock.xlsx'
@@ -603,12 +558,10 @@ def inventory_index(request):
 
         workbook.save(response)
         return response
-    
-    all_branches_inventory = Inventory.objects.filter(branch=request.user.branch)
 
     logs = ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
     
-    totals = calculate_inventory_totals(all_branches_inventory.filter(status=True))
+    totals = calculate_inventory_totals(inventory)
   
     return render(request, 'inventory.html', {
         'form': form,
@@ -3432,7 +3385,7 @@ def payments(request):
 @login_required
 def accessory_view(request, product_id):
     if request.method == 'GET':
-        accessories = Accessory.objects.filter(product__id=product_id).values('id', 'product__name')
+        accessories = Accessory.objects.filter(main_product__id=product_id).values('id', 'product__name')
         return JsonResponse({'success': True, 'data': list(accessories)}, status=200)
 
     if request.method == 'POST':
