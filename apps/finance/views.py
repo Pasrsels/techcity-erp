@@ -3021,7 +3021,7 @@ class CustomerCrud(viewsets.ModelViewSet):
 class CustomersViewset(ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    #permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         data = request.data
@@ -3050,6 +3050,7 @@ class CustomersViewset(ModelViewSet):
     
 
 class CustomerAccountView(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, customer_id):
         customer = get_object_or_404(Customer, id=customer_id)
         customer_serializer = CustomerSerializer(customer)
