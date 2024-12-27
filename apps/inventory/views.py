@@ -3491,7 +3491,9 @@ class Products(views.APIView):
         products = Inventory.objects.filter(branch = request.user.branch, status=True, disable=False).values(
             'id',
             'name',
-            'quantity'
+            'quantity', 
+            'price',
+            'dealer_price'
         ).order_by('name')  
       
         return Response(products, status.HTTP_200_OK)
