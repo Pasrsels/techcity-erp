@@ -817,15 +817,15 @@ def inventory_transfers(request):
     transfer_summary = _get_transfer_summary(transfer_items)
     transfers = _get_transfers(branch, q, branch_id)
 
-    total_transferred_value = _calculate_total_value(transfer_items)
+    # total_transferred_value = _calculate_total_value(transfer_items)
 
     return render(request, 'transfers.html', {
         'transfers': transfers,
         'search_query': q, 
         'transfer_items': transfer_items,
-        'transferred_value': total_transferred_value,
-        'received_value': total_transferred_value, 
-        'totals': transfer_summary,
+        'transferred_value': 0,
+        'received_value': 0, 
+        'totals': 0,
         'hold_transfers_count': _count_hold_transfers(branch)
     })
 
@@ -838,7 +838,7 @@ def _get_transfer_items(branch):
             Sum(F('quantity') * F('product__cost')),
             output_field=FloatField()
         )
-    ).select_related('product')  
+    )
 
 def _get_transfer_summary(transfer_items):
     return transfer_items.values('transfer__id').annotate(
