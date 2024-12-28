@@ -26,7 +26,7 @@
                                     <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
                                 </small>
                             {% else %}
-                                {% if request.user.branch in transfer.transfer_to.all %}
+                                <!-- {% if request.user.branch in transfer.transfer_to.all %}
                                     <small class="d-flex align-items-center">
                                         <i class='bx bxs-right-arrow-alt text-success' style="font-size: 35px;"></i>
                                         <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
@@ -36,7 +36,7 @@
                                         <i class='bx bxs-left-arrow-alt' style="color: #dc3545eb; font-size: 35px;"></i>
                                         <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
                                     </small>
-                                {% endif %}
+                                {% endif %} -->
                             {% endif %}
                         </td>
                         <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small class="d-flex align-items-center justify-content-center"><i class='bx bx-box'></i></small></td>
