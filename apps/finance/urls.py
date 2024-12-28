@@ -127,7 +127,7 @@ urlpatterns = [
     path('api/v1/customer-account-transaction-json/<int:id>/', CustomerAccountTransactionsJson.as_view(), name='api_customer_account_transaction_json'),
     path('api/v1/customer-refund-deposit/<int:deposit_id>/', RefundCustomerDeposit.as_view(), name='api_customer_account_refund'),
     path('api/v1/print-account-statement/<int:customer_id>/', PrintAccountStatement.as_view(), name='api_print_account_statement'),
-    path('api/v1/customer-deposits/<int:id>/', CustomerDeposits.as_view(), name='api_customer_deposits'),
+    path('api/v1/customer-deposits/<int:id>/', CustomerDepositsView.as_view(), name='api_customer_deposits'),
 
     #Deposits
     path('api/v1/deposits-list/', DepositList.as_view(), name='api_deposits_list'),

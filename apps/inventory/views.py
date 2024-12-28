@@ -3485,7 +3485,9 @@ class Products(views.APIView):
             'name',
             'quantity',
             'price',
-            'dealer_price'
+            'dealer_price',
+            'category__id',
+            'category__name',
         ).order_by('name')  
       
         return Response(products, status.HTTP_200_OK)
