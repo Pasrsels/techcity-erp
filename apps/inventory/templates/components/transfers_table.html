@@ -41,16 +41,16 @@
                         </td>
                         <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small class="d-flex align-items-center justify-content-center"><i class='bx bx-box'></i></small></td>
                         <td style="background: #ccd2d7f5 !important;">
-                            <small class="d-flex justify-content-between">
-                                <!-- {% for qt in totals %}
+                            <!-- <small class="d-flex justify-content-between">
+                                {% for qt in totals %}
                                     {% if qt.transfer__id == transfer.id %}
                                         <span>{{ qt.total_quantity }}</span>
                                         {% if not request.user.role == 'sales' %}
                                             <span class="text-primary text-bold">${{ qt.total_cost|floatformat:2 }}</span>
                                         {% endif %}
                                     {% endif %}
-                                {% endfor %} -->
-                            </small>
+                                {% endfor %}
+                            </small> -->
                         </td>
                         <td style="background: #ccd2d7f5 !important;" class='transfer-btn text-center' data-id="{{ transfer.id }}">
                             <small  class='hint--bottom' aria-label='Defective'>
@@ -94,7 +94,7 @@
                             <button onclick="cancel({{ transfer.id }})" class="btn border btn-outline-dark bx bx-trash"></button>
                         </td>
                     </tr>
-                    <tbody>
+                    <!-- <tbody>
                         {% for item in transfer_items %}
                             {% if transfer.id == item.transfer.id %}
                                 <tr id="id_items" class="hidden items" data-transfer-id="{{ transfer.id }}">
@@ -136,7 +136,7 @@
                                 </tr>
                             {% endif %}
                         {% endfor %}
-                    </tbody>
+                    </tbody> -->
                 {% endfor %}
             </tbody>
     </table>
