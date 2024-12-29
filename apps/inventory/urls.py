@@ -80,6 +80,7 @@ urlpatterns = [
 
     # transfers
     path('transfers', inventory_transfers, name='transfers'),
+    path('inventory_transfer_data/', inventory_transfer_data, name='inventory_transfer_data'),
     path('print/transfer/<int:transfer_id>/', print_transfer, name='print_transfer'),
     path('receive/transfer/', receive_inventory, name='receive_inventory'),
     path('receive/transfer/json/', receive_inventory_json, name='receive_inventory_json'),

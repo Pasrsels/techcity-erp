@@ -873,6 +873,72 @@ def inventory_transfers(request):
         }
     )
 
+
+@login_required    
+def inventory_transfer_data(request): 
+    """
+        transfers index. Shows transfers in and out of the branch and the total cost of items transfered in/out
+    """
+    q = request.GET.get('q', '') 
+    branch_id = request.GET.get('branch', '')
+
+    transfer_items = TransferItems.objects.filter(
+        Q(from_branch=request.user.branch) |
+        Q(to_branch=request.user.branch),
+        transfer__delete=False
+    ).annotate(
+            total_amount=F('quantity') * F('product__cost')
+        )
+    transfer_summary = transfer_items.values('transfer__id').annotate(
+        total_cost=Sum(F('quantity') * F('product__cost')),
+        total_quantity=Sum('quantity')
+    )
+    
+    transfers = Transfer.objects.filter(
+        Q(branch=request.user.branch) |
+        Q(transfer_to__in=[request.user.branch]),
+        delete=False
+    ).annotate(
+        total_quantity=Sum('transferitems__quantity'),
+        total_amount=ExpressionWrapper(
+            Sum(F('transferitems__quantity') * F('transferitems__cost')),
+            output_field=FloatField()
+        )
+    ).order_by('-time').distinct()
+    
+    if q:
+        transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
+        
+    if branch_id: 
+        transfers = transfers.filter(transfer_to__id=branch_id)
+
+    total_transferred_value = (
+    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    )
+
+    total_received_value = (
+    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    )
+
+    response_data = {
+        'transfers': list(transfers.values()),
+        'search_query': q, 
+        'transfer_items': list(transfer_items.values()),
+        'transferred_value': total_transferred_value,
+        'received_value': total_received_value,
+        'totals': list(transfer_summary),
+        'hold_transfers_count': Transfer.objects.filter(
+            Q(branch=request.user.branch) |
+            Q(transfer_to__in=[request.user.branch]),
+            delete=False, 
+            hold=True
+        ).count()
+    }
+    
+    return JsonResponse(response_data, safe=False)
+
 @login_required
 def held_transfer_json(request, transfer_id):
     transfer_items = Holdtransfer.objects.filter(transfer__id=transfer_id).values(
