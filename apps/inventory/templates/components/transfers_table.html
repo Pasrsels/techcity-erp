@@ -16,7 +16,7 @@
                 <th>Action</th>
             </tr>
         </thead>
-            <tbody>
+            <tbody id="primary">
                 {% for transfer in transfers %}
                     <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %}">
                         <td style="background: #ccd2d7f5 !important;">
@@ -26,7 +26,7 @@
                                     <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
                                 </small>
                             {% else %}
-                                <!-- {% if request.user.branch in transfer.transfer_to.all %}
+                                {% if request.user.branch in transfer.transfer_to.all %}
                                     <small class="d-flex align-items-center">
                                         <i class='bx bxs-right-arrow-alt text-success' style="font-size: 35px;"></i>
                                         <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
@@ -36,12 +36,12 @@
                                         <i class='bx bxs-left-arrow-alt' style="color: #dc3545eb; font-size: 35px;"></i>
                                         <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
                                     </small>
-                                {% endif %} -->
+                                {% endif %}
                             {% endif %}
                         </td>
                         <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small class="d-flex align-items-center justify-content-center"><i class='bx bx-box'></i></small></td>
                         <td style="background: #ccd2d7f5 !important;">
-                            <!-- <small class="d-flex justify-content-between">
+                            <small class="d-flex justify-content-between">
                                 {% for qt in totals %}
                                     {% if qt.transfer__id == transfer.id %}
                                         <span>{{ qt.total_quantity }}</span>
@@ -50,7 +50,7 @@
                                         {% endif %}
                                     {% endif %}
                                 {% endfor %}
-                            </small> -->
+                            </small>
                         </td>
                         <td style="background: #ccd2d7f5 !important;" class='transfer-btn text-center' data-id="{{ transfer.id }}">
                             <small  class='hint--bottom' aria-label='Defective'>
@@ -94,7 +94,7 @@
                             <button onclick="cancel({{ transfer.id }})" class="btn border btn-outline-dark bx bx-trash"></button>
                         </td>
                     </tr>
-                    <!-- <tbody>
+                    <tbody id="secondary">
                         {% for item in transfer_items %}
                             {% if transfer.id == item.transfer.id %}
                                 <tr id="id_items" class="hidden items" data-transfer-id="{{ transfer.id }}">
@@ -136,7 +136,7 @@
                                 </tr>
                             {% endif %}
                         {% endfor %}
-                    </tbody> -->
+                    </tbody>
                 {% endfor %}
             </tbody>
     </table>
@@ -196,6 +196,24 @@
 
     const transferRows = document.querySelectorAll('.transfer-btn');
     const hooverProduct = document.querySelectorAll('#id_hover_product');
+
+
+    const fetchTransferData = () =>{
+        fetch('',{
+            method:'GET',
+        })
+        .then(response =>responer.json())
+        .then(data=>{
+            if(data.success){
+
+            }
+        })
+    }
+
+    const displayTable = (data) =>{
+        const primaryBody = document.getElementById('primary')
+        const secondaryBody = document.getElementById('secondary')
+    }
 
     // search functionality of the table -> js
 
