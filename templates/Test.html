@@ -1,8 +1,11 @@
-{% load static%}
-{% block content %}
-<div class="table transfers-table mt-2">
-    {% include 'components/loader.html' %}
-    <div class='table-scroll'>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
     <table class='table table-bordered border table-hover rounded hidden table-striped p-2' id='transfers' style="width: 100%;">
         <thead class="table-dark sticky-top">
             <tr>
@@ -19,26 +22,7 @@
             <tbody id="primary">
                 {% for transfer in transfers %}
                     <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %}">
-                        <td style="background: #ccd2d7f5 !important;">
-                            {% if transfer.hold %}
-                                <small class="d-flex align-items-center">
-                                    <i class='bx bx-pause fs-2' style='color:#007bff'></i>
-                                    <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
-                                </small>
-                            {% else %}
-                                {% if request.user.branch in transfer.transfer_to.all %}
-                                    <small class="d-flex align-items-center">
-                                        <i class='bx bxs-right-arrow-alt text-success' style="font-size: 35px;"></i>
-                                        <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
-                                    </small>
-                                {% else %}
-                                    <small class="d-flex align-items-center">
-                                        <i class='bx bxs-left-arrow-alt' style="color: #dc3545eb; font-size: 35px;"></i>
-                                        <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
-                                    </small>
-                                {% endif %}
-                            {% endif %}
-                        </td>
+                        
                         <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small class="d-flex align-items-center justify-content-center"><i class='bx bx-box'></i></small></td>
                         <td style="background: #ccd2d7f5 !important;">
                             <small class="d-flex justify-content-between">
@@ -140,65 +124,9 @@
                 {% endfor %}
             </tbody>
     </table>
-    <div class="modal fade" id="transferItemsModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <h5>Transfered Products</h5>
-                    <table class='table table-striped border rounded p-2'>
-                        <tr>
-                            <thead>
-                                <th>Name</th>
-                                <th>Price</th>
-                                <th>Quantity</th>
-                                <th>Destination</th>
-                                <th>Status</th>
-                            </thead>
-                        </tr>
-                        <tbody id='itemsTransfersTable'></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <h5>Delete Transfer</h5>
-                    <button class="btn btn-secondary w-100" onclick="deleteTransfer()">Yes</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="successDeleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body text-center">
-                    <h5>Transfer Successfully Deleted</h5>
-                </div>
-            </div>
-        </div>
-    </div>
-
+</body>
 <script>
-    let transfer_id = ''
-    const transferBtn = document.querySelectorAll('.transfer-btn');
-    const tranferItemsModal = new bootstrap.Modal(document.getElementById('transferItemsModal'));
-
-    const expandBtn = document.querySelector('#id_expand')
-    const itemsEl = document.querySelectorAll('#id_items')
-
-    const loader = document.querySelector('#loader');
-    const tableEl = document.querySelector('#transfers');
-
-    const transferRows = document.querySelectorAll('.transfer-btn');
-    const hooverProduct = document.querySelectorAll('#id_hover_product');
-
-
-    const fetchTransferData = () =>{
+        const fetchTransferData = () =>{
         fetch('/inventory/inventory_transfer_data/',{
             method:'GET',
             headers: {
@@ -217,25 +145,26 @@
         })
     }
 
+    fetchTransferData()
     const displayTable = (data) => {
         const { transfers, transfer_items, totals } = data;
         const primaryBody = document.getElementById('primary');
 
-        primaryBody.innerHTML = '';
+        primaryBody.innerHTML = ''; 
 
         let userBranch = "Branch_Name";
 
         transfers.forEach((transfer) => {
             const totalInfo = totals.find(qt => qt.transfer__id === transfer.id) || {};
             const transferRow = `
-                <tr class="${transfer.transfer_to === userBranch ? 'bg-success' : 'transfer-btn'} primary-row" data-id="${transfer.id}">
+                <tr class="${transfer.transfer_to === userBranch ? 'bg-success' : 'transfer-btn'}">
                     <td style="background: #ccd2d7f5;">
                         <small class="d-flex align-items-center">
                             <i class="bx ${transfer.hold ? 'bx-pause fs-2 text-primary' : transfer.transfer_to.includes(userBranch) ? 'bxs-right-arrow-alt text-success' : 'bxs-left-arrow-alt text-danger'}" style="font-size: 35px;"></i>
                             <span class="ml-1">${new Date(transfer.date).toLocaleDateString()}</span>
                         </small>
                     </td>
-                    <td style="background: #ccd2d7f5;" class="transfer-btn">
+                    <td style="background: #ccd2d7f5;" class="transfer-btn" data-id="${transfer.id}">
                         <small class="d-flex align-items-center justify-content-center"><i class="bx bx-box"></i></small>
                     </td>
                     <td style="background: #ccd2d7f5;">
@@ -244,7 +173,7 @@
                             <span class="text-primary text-bold">$${transfer.total_cost?.toFixed(2) || '0.00'}</span>
                         </small>
                     </td>
-                    <td style="background: #ccd2d7f5;" class="transfer-btn text-center">
+                    <td style="background: #ccd2d7f5;" class="transfer-btn text-center" data-id="${transfer.id}">
                         <small>
                             ${transfer.defective_status ? `<i class="bx bxs-circle fs-3 text-defective"></i>` :
                                 transfer.quantity === 0 ? `<i class="bx bxs-circle text-received fs-3"></i>` :
@@ -252,14 +181,14 @@
                                 `<i class="bx bxs-circle text-danger fs-3"></i>`}
                         </small>
                     </td>
-                    <td style="background: #ccd2d7f5;" class="transfer-btn">
+                    <td style="background: #ccd2d7f5;" class="transfer-btn" data-id="${transfer.id}">
                         <small>${transfer.username}</small>
                     </td>
                     <td style="background: #ccd2d7f5;"></td>
-                    <td style="background: #ccd2d7f5;" class="transfer-btn">
+                    <td style="background: #ccd2d7f5;" class="transfer-btn" data-id="${transfer.id}">
                         <small>${transfer.transfer_ref}</small>
                     </td>
-                    <td style="background: #ccd2d7f5;">
+                    <td style="background: #ccd2d7f5;" class="transfer-btn" data-id="${transfer.id}">
                         <a href="/inventory/print_transfer/${transfer.id}" class="btn border btn-sm">
                             <i class="bx bx-printer"></i>
                         </a>
@@ -278,7 +207,7 @@
             const relatedItems = transfer_items.filter(item => item.transfer_id === transfer.id);
             relatedItems.forEach(item => {
                 const itemRow = `
-                    <tr id="id_items" class="items d-none" data-transfer-id="${transfer.id}">
+                    <tr id="id_items" class="items" data-transfer-id="${transfer.id}">
                         <td></td>
                         <td><small>${item.product_name}</small></td>
                         <td><small class="d-flex justify-content-between">
@@ -293,7 +222,7 @@
                                     `<small class="bg-danger text-center rounded w-100 p-2">Not yet received</small>`}
                             </small>
                         </td>
-                        <td class="transfer-btn"><small>${item.received_by}</small></td>
+                        <td class="transfer-btn" data-id="${transfer.id}"><small>${item.received_by}</small></td>
                         <td></td>
                         <td><small>${item.from_branch} - ${item.to_branch}</small></td>
                         <td colspan="2"></td>
@@ -302,112 +231,10 @@
                 primaryBody.innerHTML += itemRow;
             });
         });
-
-        // Add toggle functionality
-        document.querySelectorAll('.primary-row').forEach(row => {
-            row.addEventListener('click', () => {
-                const transferId = row.getAttribute('data-id');
-                document.querySelectorAll(`.items[data-transfer-id="${transferId}"]`).forEach(itemRow => {
-                    itemRow.classList.toggle('d-none');
-                });
-            });
-        });
     };
 
-    document.addEventListener('DOMContentLoaded', fetchTransferData);
+document.addEventListener('DOMContentLoaded', fetchTransferData);
 
 
-
-    // search functionality of the table -> js
-
-    setTimeout(()=>{
-        loader.classList.add('hidden');
-        loader.classList.remove('d-flex')
-        tableEl.classList.remove('hidden')
-    }, 300)
-    
-    transferRows.forEach(row => {
-        row.addEventListener('click', function() {
-
-            const transferId = this.dataset.id;
-            const relatedRows = document.querySelectorAll(`#id_items[data-transfer-id="${transferId}"]`);
-            relatedRows.forEach(relatedRow => {
-                relatedRow.classList.toggle('hidden');
-            });
-        });
-    });
-
-    // hover to show products
-    // hooverProduct.forEach((el) => {
-    //     el.addEventListener('mouseover', () => {
-    //         if (el.classList.contains('hidden')){
-    //             el.classList.remove('hidden')
-    //         }else{
-    //             el.classList.add('hidden')
-    //         }
-    //     });
-
-    //     el.addEventListener('mouseout', () => {
-    //         if (el.classList.contains('hidden')){
-    //             el.classList.remove('hidden')
-    //         }else{
-    //             el.classList.add('hidden')
-    //         }
-    //     });
-    // });
-    
-    expandBtn.addEventListener('click', ()=>{
-        itemsEl.forEach((el)=>{
-            if (el.classList.contains('hidden')){
-                el.classList.remove('hidden')
-            }else{
-                el.classList.add('hidden')
-            }
-        })
-    })
-
-    const cancel = (transferId) => {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "Do you really want to cancel this transfer?",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, cancel it',
-            cancelButtonText: 'No, keep it'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({
-                    title: 'Processing...',
-                    text: 'Please wait while we process cancelling the transfer.',
-                    allowOutsideClick: false,
-                    showConfirmButton: false,
-                    willOpen: () => {
-                        Swal.showLoading()
-                    }
-                });
-
-                fetch(`/inventory/delete/transfer/${transferId}/`, {
-                    method: "GET",
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        Swal.close();
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: 'Product(s) cancelled successfully',
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => {
-                            window.location.href = '{% url "inventory:transfers" %}';
-                        })
-                    })
-                    .catch((error) => {
-                        console.error("Error:", error);
-                        Swal.close();
-                    });
-            }
-        });
-    }
 </script>
-{% endblock content %}
+</html>

@@ -803,76 +803,9 @@ def get_stock_account_data(logs):
     
     return stock_account
 
-@login_required    
-def inventory_transfers(request): 
-    """
-        transfers index. Shows transfers in and out of the branch and the total cost of items transfered in/out
-    """
-    q = request.GET.get('q', '') 
-    branch_id = request.GET.get('branch', '')
-
-    transfer_items = TransferItems.objects.filter(
-        Q(from_branch=request.user.branch) |
-        Q(to_branch=request.user.branch),
-        transfer__delete=False
-    ).annotate(
-        total_amount=F('quantity') * F('product__cost')
-    )
-
-    logger.info(f'transfer_items: {transfer_items}')
-
-
-    transfer_summary = transfer_items.values('transfer__id').annotate(
-        total_cost=Sum(F('quantity') * F('product__cost')),
-        total_quantity=Sum('quantity')
-    )
-    
-    transfers = Transfer.objects.filter(
-        Q(branch=request.user.branch) |
-        Q(transfer_to__in=[request.user.branch]),
-        delete=False
-    ).annotate(
-        total_quantity=Sum('transferitems__quantity'),
-        total_amount=ExpressionWrapper(
-            Sum(F('transferitems__quantity') * F('transferitems__cost')),
-            output_field=FloatField()
-        )
-    ).order_by('-time').distinct()
-    
-    if q:
-        transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
-        
-    if branch_id: 
-        transfers = transfers.filter(transfer_to__id=branch_id)
-
-    total_transferred_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
-
-    total_received_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
-
-    logger.info(f'value: {total_transferred_value}, received {total_received_value}')
-        
-    return render(request, 'transfers.html', {
-        'transfers': transfers,
-        'search_query': q, 
-        'transfer_items':transfer_items,
-        'transferred_value':0,
-        'received_value':0,
-        'totals':[],
-        'hold_transfers_count':Transfer.objects.filter(
-                Q(branch=request.user.branch) |
-                Q(transfer_to__in=[request.user.branch]),
-                delete=False, 
-                hold=True
-            ).count()
-        }
-    )
-
+@login_required
+def inventory_transfer_index(request):
+    return render(request, 'transfers.html')
 
 @login_required    
 def inventory_transfer_data(request): 
@@ -888,7 +821,8 @@ def inventory_transfer_data(request):
         transfer__delete=False
     ).annotate(
             total_amount=F('quantity') * F('product__cost')
-        )
+    ).prefetch_related('transfer')
+
     transfer_summary = transfer_items.values('transfer__id').annotate(
         total_cost=Sum(F('quantity') * F('product__cost')),
         total_quantity=Sum('quantity')
@@ -904,7 +838,52 @@ def inventory_transfer_data(request):
             Sum(F('transferitems__quantity') * F('transferitems__cost')),
             output_field=FloatField()
         )
-    ).order_by('-time').distinct()
+    ).prefetch_related('transfer_to').order_by('-time').distinct()
+
+
+    data = [
+        {
+            'id':transfer.id,
+            'transfer_ref': transfer.transfer_ref,
+            'branch': transfer.branch.name,
+            'transfer_to': [branch.name for branch in transfer.transfer_to.all()],
+            'description': transfer.description,
+            'date': transfer.date.strftime('%Y-%m-%d'),
+            'total_quantity': transfer.total_quantity,
+            'total_amount': transfer.total_amount,
+            'username': transfer.user.username
+        }
+        for transfer in transfers
+    ]
+
+    transfer_items_data = [
+        {
+            'transfer_id':transfer.transfer.id,
+            'product_name': transfer.product.name,
+            'product_cost': transfer.product.cost,
+            'date': transfer.date,
+            'date_received': transfer.date_received,
+            'transfer_id': transfer.id,
+            'from_branch': transfer.from_branch.name,
+            'to_branch': transfer.to_branch.name,
+            'quantity': transfer.quantity,
+            'over_less_quantity': transfer.over_less_quantity,
+            'price': transfer.price,
+            'dealer_price': transfer.dealer_price,
+            'received': transfer.received,
+            'declined': transfer.declined,
+            'over_less': transfer.over_less,
+            'action_by': transfer.action_by.username if transfer.action_by else None,
+            'quantity_track': transfer.quantity_track,
+            'description': transfer.description,
+            'over_less_description': transfer.over_less_description,
+            'received_by': transfer.received_by.username if transfer.received_by else None,
+            'received_quantity': transfer.received_quantity,
+            'cost': transfer.cost
+        }
+        for transfer in transfer_items
+    ]
+
     
     if q:
         transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
@@ -923,9 +902,9 @@ def inventory_transfer_data(request):
     )
 
     response_data = {
-        'transfers': list(transfers.values()),
+        'transfers': data,
         'search_query': q, 
-        'transfer_items': list(transfer_items.values()),
+        'transfer_items': transfer_items_data,
         'transferred_value': total_transferred_value,
         'received_value': total_received_value,
         'totals': list(transfer_summary),

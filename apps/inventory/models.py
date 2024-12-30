@@ -319,7 +319,7 @@ class TransferItems(models.Model):
     over_less_description = models.CharField(max_length=255, null=True, blank=True)
     received_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
     description = models.TextField(null=True)
-    receieved_quantity = models.IntegerField(default=0)
+    received_quantity = models.IntegerField(default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     # def __str__(self):
