@@ -6,10 +6,10 @@ app_name = 'finance'
 
 router = DefaultRouter()
 router.register(r'api/v1/customers_list', CustomersViewset, basename='customers_list')
-router.register(r'customers', CustomerCrud,  basename='customers')
-router.register(r'currency', CurrencyViewset, basename= 'currency_crud')
-router.register(r'Cashwithrawals', CashWithdrawalsViewset, basename= 'cash_withrawals')
-router.register(r'quotation', QuatationCrud, basename= 'quotation')
+router.register(r'api/v1/customers', CustomersViewset,  basename='api_customers_viewset')
+router.register(r'api/v1/currency', CurrencyViewset, basename= 'api_currency_viewset')
+router.register(r'api/v1/cashwithdrawals', CashWithdrawalsViewset, basename= 'api_cash_withdrawals')
+router.register(r'api/v1/quotation', QuatationCrud, basename= 'api_quotation')
 
 urlpatterns = [
     path('', Finance.as_view(), name='finance'),

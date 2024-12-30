@@ -2988,35 +2988,35 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from .serializers import *
 
-class CustomerCrud(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    queryset = Customer.objects.all()
-    serializer_class = CustomerSerializer
+# class CustomerCrud(viewsets.ModelViewSet):
+#     permission_classes = [IsAuthenticated]
+#     queryset = Customer.objects.all()
+#     serializer_class = CustomerSerializer
 
-    def create(self, request):
-        data = request.data
+#     def create(self, request):
+#         data = request.data
         
-        validation_errors = validate_customer_data(data)
-        if validation_errors:
-            return Response(validation_errors, status= status.HTTP_406_NOT_ACCEPTABLE)
-        if Customer.objects.filter(phone_number=data['phonenumber']).exists():
-            return Response('Customer exists', status= status.HTTP_409_CONFLICT)
-        else:
-            customer = Customer.objects.create(
-                name=data['name'],
-                email=data['email'],
-                address=data['address'],
-                phone_number=data['phonenumber'],
-                branch=request.user.branch
-            )
-            account = CustomerAccount.objects.create(customer=customer)
+#         validation_errors = validate_customer_data(data)
+#         if validation_errors:
+#             return Response(validation_errors, status= status.HTTP_406_NOT_ACCEPTABLE)
+#         if Customer.objects.filter(phone_number=data['phonenumber']).exists():
+#             return Response('Customer exists', status= status.HTTP_409_CONFLICT)
+#         else:
+#             customer = Customer.objects.create(
+#                 name=data['name'],
+#                 email=data['email'],
+#                 address=data['address'],
+#                 phone_number=data['phonenumber'],
+#                 branch=request.user.branch
+#             )
+#             account = CustomerAccount.objects.create(customer=customer)
 
-        balances_to_create = [
-            CustomerAccountBalances(account=account, currency=currency, balance=0) 
-            for currency in Currency.objects.all()
-        ]
-        CustomerAccountBalances.objects.bulk_create(balances_to_create)
-        return JsonResponse(status.HTTP_201_CREATED)
+#         balances_to_create = [
+#             CustomerAccountBalances(account=account, currency=currency, balance=0) 
+#             for currency in Currency.objects.all()
+#         ]
+#         CustomerAccountBalances.objects.bulk_create(balances_to_create)
+#         return JsonResponse(status.HTTP_201_CREATED)
 
 class CustomersViewset(ModelViewSet):
     queryset = Customer.objects.all()
@@ -3094,9 +3094,9 @@ class CustomerAccountView(views.APIView):
         },status.HTTP_200_OK)
     
 class CustomerPaymentsJsonView(views.APIView):
-    def get(self, request, customer_id):
+    def post(self, request, customer_id):
         customer_id = customer_id
-        transaction_type = request.GET.get('type')
+        transaction_type = request.data.get('type')
 
         customer = get_object_or_404(Customer, id=customer_id)
 
@@ -3116,8 +3116,7 @@ class CustomerPaymentsJsonView(views.APIView):
                 'amount_paid', 
                 'amount_due'
             )
-            invoice_payment_serializer = PaymentSerializer(invoice_payments)
-            return Response(invoice_payment_serializer.data,status.HTTP_200_OK)
+            return Response(invoice_payments,status.HTTP_200_OK)
         else:
             return Response(status.HTTP_400_BAD_REQUEST)
 
@@ -3192,9 +3191,9 @@ class CustomerAccountJson(views.APIView):
         return Response(account, status.HTTP_200_OK)
 
 class CustomerAccountTransactionsJson(views.APIView):
-    def get(self, request, id):
+    def post(self, request, id):
         customer_id = id
-        transaction_type = request.GET.get('type')
+        transaction_type = request.data.get('type')
 
         customer = get_object_or_404(Customer, id=customer_id)  
 
@@ -3289,7 +3288,7 @@ class PrintAccountStatement(views.APIView):
             ).values()
         except:
             #messages.warning(request, 'Error in processing the request')
-            return redirect('finance:customer')
+            return Response({'message':'Error in processing the request'}, status.HTTP_400_BAD_REQUEST)
 
         invoice_payments = Payment.objects.select_related('invoice', 'invoice__currency', 'user').filter(
             invoice__branch=request.user.branch, 
@@ -3334,7 +3333,7 @@ class DepositList(views.APIView):
         deposits = CustomerDeposits.objects.filter(branch=request.user.branch).order_by('-date_created').values()
         return Response({
             'deposits':deposits,
-            'total_deposits': deposits.data.aggregate(Sum('amount'))['amount__sum'] or 0,
+            'total_deposits': deposits.aggregate(Sum('amount'))['amount__sum'] or 0,
         }, status.HTTP_200_OK)
 
 class CashTransfer(views.APIView):
@@ -3388,8 +3387,8 @@ class CashTransfer(views.APIView):
             return Response({'message':'Invalid form data. Please correct the errors.'}, status.HTTP_400_BAD_REQUEST)
 
 class CashTransferList(views.APIView):
-    def get(self, request):
-        search_query = request.GET.get('q', '')
+    def post(self, request):
+        search_query = request.data.get('q', '')
         transfers = CashTransfers.objects.filter(to=request.user.branch.id).values()
 
         if search_query:
@@ -3449,6 +3448,16 @@ class FinanceNotification(views.APIView):
 class CurrencyViewset(viewsets.ModelViewSet):
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
+    def retrieve(self, request, pk):
+        logger.info(pk)
+        data = Currency.objects.get(id = pk)
+        info = {
+            'code': data.code,
+            'name': data.name,
+            'symbol': data.symbol,
+            'exchange rate': data.exchange_rate
+        }
+        return Response(info, status.HTTP_200_OK)
     def list(self, request):
         data = self.queryset.values()
         logger.info(data)
@@ -3461,9 +3470,6 @@ class CurrencyViewset(viewsets.ModelViewSet):
             'symbol': con_data.get('symbol'),
             'exchange_rate': con_data.get('exchange_rate')
         }
-        # serializer = CurrencySerializer(data = data)
-        # if not serializer.is_valid():
-        #     serializer.save()
         if not Currency.objects.filter(name = con_data.get('name')):
             Currency.objects.create(
                 code = data.get('code'),
@@ -3479,18 +3485,35 @@ class CurrencyViewset(viewsets.ModelViewSet):
                 'symbol': data_saved.symbol,
                 'exchange_rate': data_saved.exchange_rate
             }
-            serializer = CurrencySerializer(data_saved)
             return Response(data_returned,status.HTTP_201_CREATED)
         return Response(status.HTTP_400_BAD_REQUEST)
+    def update(self, request, pk):
+        logger.info(pk)
+        data = request.data
+        change_data = Currency.objects.get(id = pk)
+        change_data.code = data.get('code')
+        change_data.name = data.get('name')
+        change_data.symbol = data.get('symbol')
+        change_data.exchange_rate = data.get('exchange rate')
+
+        change_data.save()
+        updated_data = Currency.objects.get(id = pk)
+
+        data_returned = {
+                'code': updated_data.code,
+                'name': updated_data.name,
+                'symbol': updated_data.symbol,
+                'exchange_rate': updated_data.exchange_rate
+        }
+        return Response(data_returned, status.HTTP_200_OK)
 
 class CashWithdrawalsViewset(viewsets.ModelViewSet):
     queryset = CashWithdrawals.objects.all()
     serializer_class = CashWithdrawalSerializer
 
 class EndOfDay(views.APIView):
-    def end_of_day(request):
+    def get(self, request):
         today = timezone.now().date()
-        
         user_timezone_str = request.user.timezone if hasattr(request.user, 'timezone') else 'UTC'
         user_timezone = pytz_timezone(user_timezone_str)  
 
@@ -3534,99 +3557,105 @@ class EndOfDay(views.APIView):
 
         logger.info(f'Sold Inventory: {sold_inventory}')
         
-        if request.method == 'GET':
-            all_inventory = Inventory.objects.filter(branch=request.user.branch, status=True).values(
-                'id', 'name', 'quantity'
+        all_inventory = Inventory.objects.filter(branch=request.user.branch, status=True).values(
+            'id', 'name', 'quantity'
+        )
+
+        inventory_data = []
+        for item in sold_inventory:
+            logger.info(item)
+            sold_info = next((inv for inv in all_inventory if item['inventory__id'] == inv['id']), None)
+            
+            if sold_info:
+                inventory_data.append({
+                    'id': item['inventory__id'],
+                    'name': item['inventory__name'],
+                    'initial_quantity': item['quantity_sold'] + sold_info['quantity'] if sold_info else 0,
+                    'quantity_sold':  item['quantity_sold'],
+                    'remaining_quantity':sold_info['quantity'] if sold_info else 0,
+                    'physical_count': None
+                })
+        logger.info(inventory_data)
+        logger.info(total_cash_amounts)
+        return Response({'inventory': inventory_data, 'total_cash_amounts':total_cash_amounts}, status.HTTP_200_OK)    
+    def post(self, request):
+        try:
+            today = timezone.now().date()
+            data = request.data
+            inventory_data = []
+            
+            sold_inventory = (
+            ActivityLog.objects
+            .filter(invoice__branch=request.user.branch, timestamp__date= today, action='Sale')
+            .values('inventory__id', 'inventory__name')
+            .annotate(quantity_sold=Sum('quantity'))
             )
 
-            inventory_data = []
-            for item in sold_inventory:
-                logger.info(item)
-                sold_info = next((inv for inv in all_inventory if item['inventory__id'] == inv['id']), None)
-                
-                if sold_info:
+            logger.info(f'Sold Inventory: {sold_inventory}')
+
+            for item in data:
+                try:
+                    inventory = Inventory.objects.get(id=item.get('item_id'), branch=request.user.branch, status=True)
+                    inventory.physical_count = item.get('physical_count')
+                    inventory.save()
+
+                    sold_info = next((i for i in sold_inventory if i['inventory__id'] == inventory.id), None)
                     inventory_data.append({
-                        'id': item['inventory__id'],
-                        'name': item['inventory__name'],
-                        'initial_quantity': item['quantity_sold'] + sold_info['quantity'] if sold_info else 0,
-                        'quantity_sold':  item['quantity_sold'],
-                        'remaining_quantity':sold_info['quantity'] if sold_info else 0,
-                        'physical_count': None
+                        'id': inventory.id,
+                        'name': inventory.name,
+                        'initial_quantity': inventory.quantity,
+                        'quantity_sold': sold_info['quantity_sold'] if sold_info else 0,
+                        'remaining_quantity': inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0),
+                        'physical_count': inventory.physical_count,
+                        'difference': inventory.physical_count - (inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0))
                     })
+                except Inventory.DoesNotExist:
+                    return Response({'error': f'Inventory item with id {item["inventory_id"]} does not exist.'}, status.HTTP_404_NOT_FOUND)
+
+            today_min = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            today_max = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
             
-            return JsonResponse({'inventory': inventory_data, 'total_cash_amounts':total_cash_amounts})
+            # Invoice data
+            invoices = Invoice.objects.filter(branch=request.user.branch, issue_date__range=(today_min, today_max))
+            partial_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PARTIAL)
+            paid_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PAID, branch=request.user.branch)
         
-        elif request.method == 'POST':
-            try:
-                data = json.loads(request.body)
-                inventory_data = []
-                
-                for item in data:
-                    try:
-                        inventory = Inventory.objects.get(id=item['item_id'], branch=request.user.branch, status=True)
-                        inventory.physical_count = item['physical_count']
-                        inventory.save()
-
-                        sold_info = next((i for i in sold_inventory if i['inventory__id'] == inventory.id), None)
-                        inventory_data.append({
-                            'id': inventory.id,
-                            'name': inventory.name,
-                            'initial_quantity': inventory.quantity,
-                            'quantity_sold': sold_info['quantity_sold'] if sold_info else 0,
-                            'remaining_quantity': inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0),
-                            'physical_count': inventory.physical_count,
-                            'difference': inventory.physical_count - (inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0))
-                        })
-                    except Inventory.DoesNotExist:
-                        return JsonResponse({'success': False, 'error': f'Inventory item with id {item["inventory_id"]} does not exist.'})
-
-                today_min = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-                today_max = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
-                
-                # Invoice data
-                invoices = Invoice.objects.filter(branch=request.user.branch, issue_date__range=(today_min, today_max))
-                partial_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PARTIAL)
-                paid_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PAID, branch=request.user.branch)
+            # Expenses
+            expenses = Expense.objects.filter(branch=request.user.branch, date=today)
+            confirmed_expenses = expenses.filter(status=True)
+            unconfirmed_expenses = expenses.filter(status=False)
             
-                # Expenses
-                expenses = Expense.objects.filter(branch=request.user.branch, date=today)
-                confirmed_expenses = expenses.filter(status=True)
-                unconfirmed_expenses = expenses.filter(status=False)
-                
-                # Accounts
-                account_balances = AccountBalance.objects.filter(branch=request.user.branch)
+            # Accounts
+            account_balances = AccountBalance.objects.filter(branch=request.user.branch)
 
-                html_string = render_to_string('day_report.html', {
-                    'request':request,
-                    'invoices':invoices,
-                    'expenses':expenses,
-                    'date': today,
-                    'inventory_data': inventory_data,
-                    'total_sales': paid_invoices.aggregatea,
-                    'partial_payments': partial_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
-                    'total_paid_invoices': paid_invoices.count(),
-                    'total_partial_invoices': partial_invoices.count(),
-                    'total_expenses': confirmed_expenses.aggregate(Sum('amount'))['amount__sum'] or 0,
-                    'confirmed_expenses': confirmed_expenses,
-                    'unconfirmed_expenses': unconfirmed_expenses,
-                    'account_balances': account_balances,
-                })
-                
-                pdf_buffer = BytesIO()
-                pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
-                if not pisa_status.err:
-                    filename = f"{request.user.branch.name}_today_report_{today}.pdf"
-                    return JsonResponse({"success": True})
-                else:
-                    return JsonResponse({"success": False, "error": "Error generating PDF."})
-            except json.JSONDecodeError:
-                return JsonResponse({'success': False, 'error': 'Invalid JSON data.'})
-            except Exception as e:
-                logger.exception(f"Error processing request: {e}")
-                return JsonResponse({'success': False, 'error': str(e)})
-        
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
+            html_string = render_to_string('day_report.html', {
+                'request':request,
+                'invoices':invoices,
+                'expenses':expenses,
+                'date': today,
+                'inventory_data': inventory_data,
+                'total_sales': paid_invoices.aggregatea,
+                'partial_payments': partial_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
+                'total_paid_invoices': paid_invoices.count(),
+                'total_partial_invoices': partial_invoices.count(),
+                'total_expenses': confirmed_expenses.aggregate(Sum('amount'))['amount__sum'] or 0,
+                'confirmed_expenses': confirmed_expenses,
+                'unconfirmed_expenses': unconfirmed_expenses,
+                'account_balances': account_balances,
+            })
+            
+            pdf_buffer = BytesIO()
+            pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
+            if not pisa_status.err:
+                filename = f"{request.user.branch.name}_today_report_{today}.pdf"
+                return Response(status.HTTP_200_OK)
+            else:
+                return Response({"success": False, "error": "Error generating PDF."})
+        except json.JSONDecodeError:
+            return Response({'error': 'Invalid JSON data.'}, status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.exception(f"Error processing request: {e}")
+            return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
 class QuatationCrud(viewsets.ModelViewSet):
     queryset = Qoutation.objects.all()
     serializer_class = QuotationSerializer
@@ -3809,7 +3838,7 @@ class AddOrEditExpense(views.APIView):
                     return Response({str(e)}, status.HTTP_400_BAD_REQUEST)
             return Response({'message': message}, status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({str(e)}, status=400)
+            return Response({str(e)}, status.HTTP_400_BAD_REQUEST)
 
 class DeleteExpense(views.APIView):
     def delete(self, request, expense_id):
