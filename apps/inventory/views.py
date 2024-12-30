@@ -815,15 +815,14 @@ def inventory_transfers(request):
             Q(from_branch=request.user.branch) |
             Q(to_branch=request.user.branch),
             transfer__delete=False
+        ).annotate(
+            total_amount=F('quantity') * F('product__cost')
         )
-
-# .annotate(
-#             total_amount=F('quantity') * F('product__cost')
-#         )
-    # transfer_summary = transfer_items.values('transfer__id').annotate(
-    #     total_cost=Sum(F('quantity') * F('product__cost')),
-    #     total_quantity=Sum('quantity')
-    # )
+        
+    transfer_summary = transfer_items.values('transfer__id').annotate(
+        total_cost=Sum(F('quantity') * F('product__cost')),
+        total_quantity=Sum('quantity')
+    )
     
     transfers = Transfer.objects.filter(
         Q(branch=request.user.branch) |
@@ -843,15 +842,15 @@ def inventory_transfers(request):
     if branch_id: 
         transfers = transfers.filter(transfer_to__id=branch_id)
 
-    # total_transferred_value = (
-    # transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-    #     .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    # )
+    total_transferred_value = (
+    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    )
 
-    # total_received_value = (
-    # transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-    #     .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    # )
+    total_received_value = (
+    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    )
 
     # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
         
