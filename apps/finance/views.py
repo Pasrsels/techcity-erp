@@ -3650,7 +3650,7 @@ class EndOfDay(views.APIView):
                 filename = f"{request.user.branch.name}_today_report_{today}.pdf"
                 return Response(status.HTTP_200_OK)
             else:
-                return Response({"success": False, "error": "Error generating PDF."})
+                return Response({"error": "Error generating PDF."})
         except json.JSONDecodeError:
             return Response({'error': 'Invalid JSON data.'}, status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -3785,7 +3785,7 @@ class ExpenseView(views.APIView):
         }
         return Response(data, status.HTTP_200_OK)
     
-class ExpenseCategory(views.APIView):
+class AddExpenseCategory(views.APIView):
     def post(self, request):
         categories = ExpenseCategory.objects.all().values()
         data = request.data
@@ -3800,7 +3800,7 @@ class ExpenseCategory(views.APIView):
         )
         return Response(categories, status.HTTP_201_CREATED)
     
-class AddOrEditExpense(views.APIView):
+class EditExpense(views.APIView):
     def post(self, request, id):
         try:
             data = request.data
@@ -4220,7 +4220,7 @@ class InvoiceDelete(views.APIView):
             return Response({'message': f"{e}"}, status.HTTP_400_BAD_REQUEST)
         
 class InvoiceUpdate(views.APIView):
-    def update(self, request, invoice_id):
+    def put(self, request, invoice_id):
         invoice = get_object_or_404(Invoice, id=invoice_id)
         customer_account = get_object_or_404(CustomerAccount, customer=invoice.customer)
         customer_account_balance = get_object_or_404(
@@ -4330,7 +4330,7 @@ class InvoicePreview(views.APIView):
         invoice = Invoice.objects.get(id=invoice_id)
         invoice_serializer = InvoiceSerializer(invoice)
         invoice_items = InvoiceItem.objects.filter(invoice=invoice).values()
-        return Response({'invoice_id':invoice_id, 'invoice':invoice_serializer, 'invoice_items':invoice_items}, status.HTTP_200_OK)
+        return Response({'invoice_id':invoice_id, 'invoice':invoice_serializer.data, 'invoice_items':invoice_items}, status.HTTP_200_OK)
 
 class InvoicePreviewJson(views.APIView):
     def get(self, request, invoice_id):
@@ -4338,7 +4338,7 @@ class InvoicePreviewJson(views.APIView):
             invoice = Invoice.objects.get(id=invoice_id)
 
         except Invoice.DoesNotExist:
-            return JsonResponse({"error": "Invoice not found"}, status=404) 
+            return Response({"error": "Invoice not found"}, status.HTTP_400_BAD_REQUEST) 
         
         dates = {}
         if invoice.payment_terms == 'layby':
@@ -4381,11 +4381,10 @@ class InvoicePreviewJson(views.APIView):
         return Response(invoice_data, status.HTTP_200_OK)
 
 class HeldInvoiceView(views.APIView):
-    def get(request):
-        invoices = Invoice.objects.filter(branch=request.user.branch, status=True, hold_status =True).order_by('-invoice_number')
+    def get(self, request):
+        invoices = Invoice.objects.filter(branch=request.user.branch, status=True, hold_status =True).order_by('-invoice_number').values()
         logger.info(f'Held invoices: {invoices}')
-        invoice_serializer = InvoiceSerializer(invoices)
-        return Response(invoice_serializer.data, status.HTTP_200_OK)
+        return Response(invoices, status.HTTP_200_OK)
     
 class ExpenseReport(views.APIView):
     def post(self, request):
@@ -4422,14 +4421,14 @@ class ExpenseReport(views.APIView):
         if category_id:
             expenses = expenses.filter(category__id=category_id)
         
-        return Response(generate_pdf,
+        return Response(
             {
                 'title': 'Expenses', 
                 'date_range': f"{start_date} to {end_date}", 
                 'report_date': datetime.date.today(),
                 'total_expenses':calculate_expenses_totals(expenses),
                 'expenses':expenses
-            }
+            },status.HTTP_200_OK
         )
 
 class SendEmails(views.APIView):
@@ -4464,7 +4463,7 @@ class SendEmails(views.APIView):
         response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename=invoice_{invoice.invoice_number}.pdf'
         
-        return Response(response)
+        return Response(response, status.HTTP_200_OK)
 
 class SendWhatsapp(views.APIView):
     def post(self, request, invoice_id):
@@ -4547,7 +4546,7 @@ class CashbookView(views.APIView):
             start_date = now - timedelta(days=now.weekday())
             end_date = now
 
-        entries = Cashbook.objects.filter(issue_date__gte=start_date, issue_date__lte=end_date, branch=request.user.branch).order_by('issue_date')
+        entries = Cashbook.objects.filter(issue_date__gte=start_date, issue_date__lte=end_date, branch=request.user.branch).order_by('issue_date').values()
         
         total_debit = entries.filter(debit=True, cancelled=False).aggregate(Sum('amount'))['amount__sum'] or 0
         total_credit = entries.filter(credit=True, cancelled=False).aggregate(Sum('amount'))['amount__sum'] or 0
@@ -4562,7 +4561,7 @@ class CashbookView(views.APIView):
 
         total_balance = total_debit - total_credit
         logger.info(total_balance)
-        invoice_items = InvoiceItem.objects.all()
+        invoice_items = InvoiceItem.objects.all().values()
 
         return Response({
             'filter_option': filter_option,
@@ -4623,7 +4622,7 @@ class CashbookReport(views.APIView):
             start_date = now - timedelta(days=now.weekday())
             end_date = now
 
-        entries = Cashbook.objects.filter(date__gte=start_date, date__lte=end_date, branch=request.user.branch).order_by('date')
+        entries = Cashbook.objects.filter(issue_date__gte=start_date, issue_date__lte=end_date, branch=request.user.branch).order_by('issue_date')
 
         # Create a CSV response
         response = HttpResponse(content_type='text/csv')
@@ -4650,7 +4649,7 @@ class CashbookReport(views.APIView):
                 entry.director
             ])
 
-        return Response(response)
+        return Response(response, status.HTTP_200_OK)
 
 class CancelTransaction(views.APIView):
     def post(self, request):
@@ -4757,7 +4756,7 @@ class DaysData(views.APIView):
         return Response(data, status.HTTP_200_OK)
 
 class VAT(views.APIView):
-    def get(request):
+    def get(self, request):
         filter_option = request.GET.get('filter', 'today')
         download = request.GET.get('download')
         
@@ -4844,7 +4843,7 @@ class VAT(views.APIView):
 
 class PLOverview(views.APIView):
     def get(self, request):
-        filter_option = request.GET.get('filter')
+        filter_option = request.data.get('filter', 'today')
         today = datetime.date.today()
         previous_month = get_previous_month()
         current_year = today.year
@@ -4871,7 +4870,7 @@ class PLOverview(views.APIView):
         if filter_option == 'today':
             current_month_sales = sales.filter(date=date_filter).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
             current_month_expenses = expenses.filter(issue_date=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
-            cogs_total = cogs.objects.filter(date=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
+            cogs_total = cogs.filter(date=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
         elif filter_option == 'last_week':
             current_month_sales = sales.filter(date__range=date_filter).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
             current_month_expenses = expenses.filter(issue_date__range=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
@@ -4920,7 +4919,7 @@ class PLOverview(views.APIView):
         return Response(data, status.HTTP_200_OK)
 
 class IncomeJson(views.APIView):
-    def get(request):
+    def get(self, request):
         current_month = get_current_month()
         today = datetime.date.today()
         
@@ -4938,7 +4937,7 @@ class IncomeJson(views.APIView):
     
 
 class ExpenseJson(views.APIView):
-    def get(request):
+    def get(self, request):
         current_month = get_current_month()
         today = datetime.date.today()
         

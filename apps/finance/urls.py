@@ -148,8 +148,8 @@ urlpatterns = [
 
     #Expense
     path('api/v1/expense/<int:expense_id>/', ExpenseView.as_view(), name='api_expense'),
-    path('api/v1/expense_category/', ExpenseCategory.as_view(), name='api_expense_category'),
-    path('api/v1/add-or-edit-expense/<int:id>/', AddOrEditExpense.as_view(), name='api_add_edit_expense'),
+    path('api/v1/expense_category/', AddExpenseCategory.as_view(), name='api_expense_category'),
+    path('api/v1/add-or-edit-expense/<int:id>/', EditExpense.as_view(), name='api_add_edit_expense'),
     path('api/v1/delete-expense/', DeleteExpense.as_view(), name='api_delete_expense'),
     path('api/v1/update-expense-status/<int:id>/', UpdateExpenseStatus.as_view(), name='api_update_expense_status'),
 
