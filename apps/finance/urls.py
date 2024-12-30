@@ -6,10 +6,10 @@ app_name = 'finance'
 
 router = DefaultRouter()
 router.register(r'api/v1/customers_list', CustomersViewset, basename='customers_list')
-router.register(r'customers', CustomerCrud,  basename='customers')
-router.register(r'currency', CurrencyViewset, basename= 'currency_crud')
-router.register(r'Cashwithrawals', CashWithdrawalsViewset, basename= 'cash_withrawals')
-router.register(r'quotation', QuatationCrud, basename= 'quotation')
+router.register(r'api/v1/customers', CustomersViewset,  basename='api_customers_viewset')
+router.register(r'api/v1/currency', CurrencyViewset, basename= 'api_currency_viewset')
+router.register(r'api/v1/cashwithdrawals', CashWithdrawalsViewset, basename= 'api_cash_withdrawals')
+router.register(r'api/v1/quotation', QuatationCrud, basename= 'api_quotation')
 
 urlpatterns = [
     path('', Finance.as_view(), name='finance'),
@@ -127,7 +127,7 @@ urlpatterns = [
     path('api/v1/customer-account-transaction-json/<int:id>/', CustomerAccountTransactionsJson.as_view(), name='api_customer_account_transaction_json'),
     path('api/v1/customer-refund-deposit/<int:deposit_id>/', RefundCustomerDeposit.as_view(), name='api_customer_account_refund'),
     path('api/v1/print-account-statement/<int:customer_id>/', PrintAccountStatement.as_view(), name='api_print_account_statement'),
-    path('api/v1/customer-deposits/<int:id>/', CustomerDeposits.as_view(), name='api_customer_deposits'),
+    path('api/v1/customer-deposits/<int:id>/', CustomerDepositsView.as_view(), name='api_customer_deposits'),
 
     #Deposits
     path('api/v1/deposits-list/', DepositList.as_view(), name='api_deposits_list'),
@@ -148,8 +148,8 @@ urlpatterns = [
 
     #Expense
     path('api/v1/expense/<int:expense_id>/', ExpenseView.as_view(), name='api_expense'),
-    path('api/v1/expense_category/', ExpenseCategory.as_view(), name='api_expense_category'),
-    path('api/v1/add-or-edit-expense/<int:id>/', AddOrEditExpense.as_view(), name='api_add_edit_expense'),
+    path('api/v1/expense_category/', AddExpenseCategory.as_view(), name='api_expense_category'),
+    path('api/v1/add-or-edit-expense/<int:id>/', EditExpense.as_view(), name='api_add_edit_expense'),
     path('api/v1/delete-expense/', DeleteExpense.as_view(), name='api_delete_expense'),
     path('api/v1/update-expense-status/<int:id>/', UpdateExpenseStatus.as_view(), name='api_update_expense_status'),
 
