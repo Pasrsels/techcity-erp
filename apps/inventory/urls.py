@@ -79,7 +79,8 @@ urlpatterns = [
     path('confirm-purchase-order/<int:po_id>/', confirm_purchase_order_items, name='confirm_purchase_order'),
 
     # transfers
-    path('transfers', inventory_transfers, name='transfers'),
+    path('transfers', inventory_transfer_index, name='transfers'),
+    path('inventory_transfer_data/', inventory_transfer_data, name='inventory_transfer_data'),
     path('print/transfer/<int:transfer_id>/', print_transfer, name='print_transfer'),
     path('receive/transfer/', receive_inventory, name='receive_inventory'),
     path('receive/transfer/json/', receive_inventory_json, name='receive_inventory_json'),
