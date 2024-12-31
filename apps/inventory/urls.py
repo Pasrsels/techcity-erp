@@ -131,6 +131,8 @@ urlpatterns = [
 
     #Stock Take
     path('api/v1/stocktake-view-and-edit', StockTakeViewEdit.as_view(), name = 'api_stock_take'),
+    path('api/v1/process-stocktake-item', ProcessStockTakeItem.as_view(), name = 'api_process_stock_take'),
+    path('api/v1/stocktake-details', StockTakeDetail.as_view(), name = 'api_stock_take_detail'),
 
     #Branch
     path('api/v1/branch-view-and-add', BranchCode.as_view(), name = 'api_branch_code'),
