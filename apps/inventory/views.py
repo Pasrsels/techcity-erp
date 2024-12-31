@@ -5186,19 +5186,19 @@ class InventoryTransfer(views.APIView):
         """
             transfers index. Shows transfers in and out of the branch and the total cost of items transfered in/out
         """
-        q = request.GET.get('q', '') 
-        branch_id = request.GET.get('branch', '')
+        # q = request.GET.get('q', '') 
+        # branch_id = request.GET.get('branch', '')
 
-        transfer_items = TransferItems.objects.filter(
-            Q(from_branch=request.user.branch) |
-            Q(to_branch = request.user.branch),
-            transfer__delete=False
-        ).annotate(
-            total_amount = ExpressionWrapper(
-                Sum(F('quantity') * F('product__cost')),
-                output_field=FloatField()
-            )
-        )
+        # transfer_items = TransferItems.objects.filter(
+        #     Q(from_branch=request.user.branch) |
+        #     Q(to_branch = request.user.branch),
+        #     transfer__delete=False
+        # ).annotate(
+        #     total_amount = ExpressionWrapper(
+        #         Sum(F('quantity') * F('product__cost')),
+        #         output_field=FloatField()
+        #     )
+        # )
         
         transfers = Transfer.objects.filter(
             Q(branch=request.user.branch) |
@@ -5214,36 +5214,36 @@ class InventoryTransfer(views.APIView):
 
         logger.info(f'transfers: {transfers}')
         
-        if q:
-            transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
+        # if q:
+        #     transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
             
-        if branch_id: 
-            transfers = transfers.filter(transfer_to__id=branch_id)
+        # if branch_id: 
+        #     transfers = transfers.filter(transfer_to__id=branch_id)
 
-        total_transferred_value = (
-        transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-            .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-        )
+        # total_transferred_value = (
+        # transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+        #     .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+        # )
 
-        total_received_value = (
-        transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-            .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-        )
+        # total_received_value = (
+        # transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+        #     .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+        # )
 
         # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
             
-        return Response({
-            'transfers': transfers,
-            'search_query': q, 
-            'transfer_items':transfer_items,
-            'transferred_value':total_transferred_value,
-            'received_value':total_received_value,
-            'hold_transfers_count':Transfer.objects.filter(
-                    Q(branch=request.user.branch) |
-                    Q(transfer_to__in=[request.user.branch]),
-                    delete=False, 
-                    hold=True
-                ).count()
+        return render(request, 'transfers.html', {
+            'transfers': transfers
+            # 'search_query': q, 
+            # 'transfer_items':transfer_items,
+            # 'transferred_value':total_transferred_value,
+            # 'received_value':total_received_value,
+            # 'hold_transfers_count':Transfer.objects.filter(
+            #         Q(branch=request.user.branch) |
+            #         Q(transfer_to__in=[request.user.branch]),
+            #         delete=False, 
+            #         hold=True
+            #     ).count()
             }
         )
 
