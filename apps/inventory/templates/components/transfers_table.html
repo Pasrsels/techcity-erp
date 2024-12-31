@@ -7,12 +7,10 @@
         <thead class="table-dark sticky-top">
             <tr>
                 <th>Transfer</th>
-                <th>Product List</th> 
                 <th>Trans Qnty | Amnt trans</th>
                 <th class='text-center'>Status</th>
                 <th>User</th>
                 <th>Discrepancy</th>
-                <th>Reference</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -94,73 +92,9 @@
                             <button onclick="cancel({{ transfer.id }})" class="btn border btn-outline-dark bx bx-trash"></button>
                         </td>
                     </tr>
-                    <tbody>
-                        {% for item in transfer_items %}
-                            {% if transfer.id == item.transfer.id %}
-                                <tr id="id_items" class="hidden items" data-transfer-id="{{ transfer.id }}">
-                                    <td></td>
-                                    <td><small>{{ item.product.name }}</small></td>
-                                    <td><small class="d-flex justify-content-between">
-                                        {% if not request.user.role == 'sales' %}
-                                            <span>
-                                                {{ item.quantity }}  @ {{ item.product.cost }}
-                                            </span>
-                                            <span class="text-primary">
-                                                ${{ item.total_amount|floatformat:2 }}
-                                            </span>
-                                        {% endif %}
-                                    </small></td>
-                                    <td class="text-center">
-                                        <small>
-                                            <span>
-                                                {% if item.declined %}
-                                                    <small class='bg-danger text-center rounded w-100 p-2'>Declined</small>
-                                                {% elif item.received %}
-                                                    {% if item.receieved_quantity == 0 %}
-                                                        <small class='bg-danger text-center rounded w-100 p-2'>{{ item.receieved_quantity }} / {{ item.quantity }} </small>
-                                                    {% elif item.receieved_quantity == item.quantity %}
-                                                        <small class='bg-success text-center rounded w-100 p-2'>{{ item.receieved_quantity }} / {{ item.quantity }} </small>
-                                                    {% else %}
-                                                        <small class='bg-warning text-center rounded w-100 p-2'>{{ item.receieved_quantity }} / {{ item.quantity }} </small>
-                                                    {% endif %}
-                                                {% else %}
-                                                    <small>Not yet received</small>
-                                                {% endif %}
-                                            </span>
-                                        </small>
-                                    </td>
-                                    <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
-                                    <td ></td>
-                                    <td><small>{{ request.user.branch }} - {{ item.to_branch }}</small></td>
-                                    <td colspan="2"></td>
-                                </tr>
-                            {% endif %}
-                        {% endfor %}
-                    </tbody>
                 {% endfor %}
             </tbody>
     </table>
-    <div class="modal fade" id="transferItemsModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <h5>Transfered Products</h5>
-                    <table class='table table-striped border rounded p-2'>
-                        <tr>
-                            <thead>
-                                <th>Name</th>
-                                <th>Price</th>
-                                <th>Quantity</th>
-                                <th>Destination</th>
-                                <th>Status</th>
-                            </thead>
-                        </tr>
-                        <tbody id='itemsTransfersTable'></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
     
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
@@ -172,21 +106,11 @@
             </div>
         </div>
     </div>
-
-    <div class="modal fade" id="successDeleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body text-center">
-                    <h5>Transfer Successfully Deleted</h5>
-                </div>
-            </div>
-        </div>
-    </div>
+</div>
 
 <script>
     let transfer_id = ''
     const transferBtn = document.querySelectorAll('.transfer-btn');
-    const tranferItemsModal = new bootstrap.Modal(document.getElementById('transferItemsModal'));
 
     const expandBtn = document.querySelector('#id_expand')
     const itemsEl = document.querySelectorAll('#id_items')
