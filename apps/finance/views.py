@@ -3094,6 +3094,7 @@ class CustomerAccountView(views.APIView):
         },status.HTTP_200_OK)
     
 class CustomerPaymentsJsonView(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request, customer_id):
         customer_id = customer_id
         transaction_type = request.data.get('type')
@@ -3121,6 +3122,7 @@ class CustomerPaymentsJsonView(views.APIView):
             return Response(status.HTTP_400_BAD_REQUEST)
 
 class EditCustomerDeposit(views.APIView):
+    permission_classes = [IsAuthenticated]
     def put(self, request, deposit_id):
         try:
             deposit = CustomerDeposits.objects.get(id=deposit_id)
@@ -3184,6 +3186,7 @@ class EditCustomerDeposit(views.APIView):
             return Response({deposit.customer_account.account.customer.id}, status.HTTP_200_OK)
 
 class CustomerAccountJson(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, customer_id):
         account = CustomerAccountBalances.objects.filter(account__customer__id=customer_id).values(
             'currency__symbol', 'balance'
@@ -3191,6 +3194,7 @@ class CustomerAccountJson(views.APIView):
         return Response(account, status.HTTP_200_OK)
 
 class CustomerAccountTransactionsJson(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request, id):
         customer_id = id
         transaction_type = request.data.get('type')
@@ -3217,6 +3221,7 @@ class CustomerAccountTransactionsJson(views.APIView):
             return Response({'message': 'Invalid transaction type.'}, status.HTTP_400_BAD_REQUEST)
 
 class RefundCustomerDeposit(views.APIView):
+    permission_classes = [IsAuthenticated]
     def put(self, request, deposit_id):
         try:
             deposit = CustomerDeposits.objects.get(id=deposit_id)
@@ -3275,6 +3280,7 @@ class RefundCustomerDeposit(views.APIView):
         return Response(status.HTTP_200_OK)
 
 class PrintAccountStatement(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, customer_id):
         try:
             customer = get_object_or_404(Customer, id=customer_id)
@@ -3305,6 +3311,7 @@ class PrintAccountStatement(views.APIView):
         }, status.HTTP_200_OK)
 
 class CustomerDepositsView(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, id): 
         customer_id = id
         
@@ -3329,6 +3336,7 @@ class CustomerDepositsView(views.APIView):
             }, status.HTTP_400_BAD_REQUEST)
 
 class DepositList(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         deposits = CustomerDeposits.objects.filter(branch=request.user.branch).order_by('-date_created').values()
         return Response({
@@ -3337,6 +3345,7 @@ class DepositList(views.APIView):
         }, status.HTTP_200_OK)
 
 class CashTransfer(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         transfers = CashTransfers.objects.filter(branch=request.user.branch)
         
@@ -3387,6 +3396,7 @@ class CashTransfer(views.APIView):
             return Response({'message':'Invalid form data. Please correct the errors.'}, status.HTTP_400_BAD_REQUEST)
 
 class CashTransferList(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         search_query = request.data.get('q', '')
         transfers = CashTransfers.objects.filter(to=request.user.branch.id).values()
@@ -3396,6 +3406,7 @@ class CashTransferList(views.APIView):
         return Response({'transfers':transfers, 'search_query':search_query}, status.HTTP_200_OK)
 
 class ReceiveMoneyTransfer(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request, transfer_id):
         if transfer_id:
             transfer = get_object_or_404(CashTransfers, id=transfer_id)
@@ -3431,6 +3442,7 @@ class ReceiveMoneyTransfer(views.APIView):
         return Response({'message':"Transfer ID is needed"}, status.HTTP_400_BAD_REQUEST)  
 
 class FinanceNotification(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         notifications = FinanceNotifications.objects.filter(status=True).values(
             'transfer__id', 
@@ -3446,6 +3458,7 @@ class FinanceNotification(views.APIView):
         return Response(notifications, status.HTTP_200_OK)
 
 class CurrencyViewset(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
     def retrieve(self, request, pk):
@@ -3508,10 +3521,12 @@ class CurrencyViewset(viewsets.ModelViewSet):
         return Response(data_returned, status.HTTP_200_OK)
 
 class CashWithdrawalsViewset(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = CashWithdrawals.objects.all()
     serializer_class = CashWithdrawalSerializer
 
 class EndOfDay(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         today = timezone.now().date()
         user_timezone_str = request.user.timezone if hasattr(request.user, 'timezone') else 'UTC'
@@ -3657,6 +3672,7 @@ class EndOfDay(views.APIView):
             logger.exception(f"Error processing request: {e}")
             return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
 class QuatationCrud(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Qoutation.objects.all()
     serializer_class = QuotationSerializer
     def create(self, request):
@@ -3691,6 +3707,7 @@ class QuatationCrud(viewsets.ModelViewSet):
         return Response({'qoute_id': qoute.id}, status.HTTP_200_OK)
     
 class QuotationList(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         search_query = request.GET.get('q', '')
         qoutations = Qoutation.objects.filter(branch=request.user.branch).order_by('-date').values()
@@ -3705,12 +3722,14 @@ class QuotationList(views.APIView):
         return Response(qoutations, status.HTTP_200_OK)
 
 class QuotationDelete(views.APIView):
+    permission_classes = [IsAuthenticated]
     def delete(request, qoutation_id):
         qoute = get_object_or_404(Qoutation, id=qoutation_id)
         qoute.delete()
         return Response(status.HTTP_202_ACCEPTED)
 
 class QuotationView(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(request, qoutation_id):
         qoute = Qoutation.objects.get(id=qoutation_id)
         quote_serializer = QuotationSerializer(qoute)
@@ -3718,6 +3737,7 @@ class QuotationView(views.APIView):
         return Response({quote_serializer.data, qoute_items}, status.HTTP_200_OK)
 
 class InvoiceList(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         invoices = Invoice.objects.filter(branch=request.user.branch, status=True).order_by('-invoice_number').values()
 
@@ -3775,6 +3795,7 @@ class InvoiceList(views.APIView):
         },status.HTTP_200_OK)
 
 class ExpenseView(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, expense_id):
         expense = get_object_or_404(Expense, id=expense_id)
         data = {
@@ -3786,6 +3807,7 @@ class ExpenseView(views.APIView):
         return Response(data, status.HTTP_200_OK)
     
 class AddExpenseCategory(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         categories = ExpenseCategory.objects.all().values()
         data = request.data
@@ -3801,6 +3823,7 @@ class AddExpenseCategory(views.APIView):
         return Response(categories, status.HTTP_201_CREATED)
     
 class EditExpense(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request, id):
         try:
             data = request.data
@@ -3841,6 +3864,7 @@ class EditExpense(views.APIView):
             return Response({str(e)}, status.HTTP_400_BAD_REQUEST)
 
 class DeleteExpense(views.APIView):
+    permission_classes = [IsAuthenticated]
     def delete(self, request, expense_id):
         try:
             expense = get_object_or_404(Expense, id=expense_id)
@@ -3858,6 +3882,7 @@ class DeleteExpense(views.APIView):
             return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
 
 class UpdateExpenseStatus(views.APIView):
+    permission_classes = [IsAuthenticated]
     def put(self, request, id):
         try:
             data = request.data
@@ -3872,22 +3897,23 @@ class UpdateExpenseStatus(views.APIView):
         except Exception as e:
             return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
 
-class InvoicePDF(views.APIView):     
-    def retrive(request, id):
+class InvoicePDF(views.APIView):  
+    permission_classes = [IsAuthenticated]   
+    def get(request, id):
         invoice_id = id
-        if invoice_id:
-            try:
-                invoice = get_object_or_404(Invoice, pk=invoice_id)
+        # if invoice_id:
+        #     try:
+        #         invoice = get_object_or_404(Invoice, pk=invoice_id)
 
-                invoice_items = InvoiceItem.objects.filter(invoice=invoice).values()
+        #         invoice_items = InvoiceItem.objects.filter(invoice=invoice).values()
                 
-            except Invoice.DoesNotExist:
-                return Response("Invoice not found",status.HTTP_404_NOT_FOUND)
-        else:
-            return Response("Invoice ID is required",status.HTTP_404_NOT_FOUND)
+        #     except Invoice.DoesNotExist:
+        #         return Response("Invoice not found",status.HTTP_404_NOT_FOUND)
+        # else:
+        #     return Response("Invoice ID is required",status.HTTP_404_NOT_FOUND)
         
-        invoice_serializer = InvoiceSerializer(invoice)
-        return Response(invoice_items, invoice_serializer.data, status.HTTP_200_OK)
+        # invoice_serializer = InvoiceSerializer(invoice)
+        return Response({'https://web-production-86a7.up.railway.app/finance/invoice/pdf/'}, status.HTTP_200_OK)
         # return generate_pdf(
         #     None,
         #     {
@@ -3900,6 +3926,7 @@ class InvoicePDF(views.APIView):
 
 
 class CreateInvoice(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         try:
             data = request.data
@@ -4149,6 +4176,7 @@ class CreateInvoice(views.APIView):
             return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
         
 class InvoicePaymentTrack(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, invoice_id):
         invoice_id = invoice_id
         
@@ -4159,6 +4187,7 @@ class InvoicePaymentTrack(views.APIView):
         return Response(payments, status.HTTP_200_OK)
     
 class InvoiceDelete(views.APIView):
+    permission_classes = [IsAuthenticated]
     def delete(self, request, invoice_id):
         try:
             invoice = get_object_or_404(Invoice, id=invoice_id)
@@ -4220,6 +4249,7 @@ class InvoiceDelete(views.APIView):
             return Response({'message': f"{e}"}, status.HTTP_400_BAD_REQUEST)
         
 class InvoiceUpdate(views.APIView):
+    permission_classes = [IsAuthenticated]
     def put(self, request, invoice_id):
         invoice = get_object_or_404(Invoice, id=invoice_id)
         customer_account = get_object_or_404(CustomerAccount, customer=invoice.customer)
@@ -4314,6 +4344,7 @@ class InvoiceUpdate(views.APIView):
         return Response(status.HTTP_202_ACCEPTED)
     
 class InvoiceDetails(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, invoice_id):
         invoice = Invoice.objects.filter(id=invoice_id, branch=request.user.branch).values(
             'invoice_number',
@@ -4326,6 +4357,7 @@ class InvoiceDetails(views.APIView):
         return Response(invoice, status.HTTP_200_OK)
     
 class InvoicePreview(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, invoice_id):
         invoice = Invoice.objects.get(id=invoice_id)
         invoice_serializer = InvoiceSerializer(invoice)
@@ -4333,6 +4365,7 @@ class InvoicePreview(views.APIView):
         return Response({'invoice_id':invoice_id, 'invoice':invoice_serializer.data, 'invoice_items':invoice_items}, status.HTTP_200_OK)
 
 class InvoicePreviewJson(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, invoice_id):
         try:
             invoice = Invoice.objects.get(id=invoice_id)
@@ -4381,12 +4414,14 @@ class InvoicePreviewJson(views.APIView):
         return Response(invoice_data, status.HTTP_200_OK)
 
 class HeldInvoiceView(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         invoices = Invoice.objects.filter(branch=request.user.branch, status=True, hold_status =True).order_by('-invoice_number').values()
         logger.info(f'Held invoices: {invoices}')
         return Response(invoices, status.HTTP_200_OK)
     
 class ExpenseReport(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         search = request.data.get('search', '')
         start_date_str = request.data.get('startDate', '')
@@ -4432,94 +4467,98 @@ class ExpenseReport(views.APIView):
         )
 
 class SendEmails(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
-        data = request.data
-        invoice_id = data['invoice_id']
-        invoice = Invoice.objects.get(id=invoice_id)
-        invoice_items = InvoiceItem.objects.filter(invoice=invoice)
-        account = CustomerAccount.objects.get(customer__id = invoice.customer.id)
+        # data = request.data
+        # invoice_id = data['invoice_id']
+        # invoice = Invoice.objects.get(id=invoice_id)
+        # invoice_items = InvoiceItem.objects.filter(invoice=invoice)
+        # account = CustomerAccount.objects.get(customer__id = invoice.customer.id)
         
-        html_string = render_to_string('Pos/receipt.html', {'invoice': invoice, 'invoice_items':invoice_items, 'account':account})
-        buffer = BytesIO()
+        # html_string = render_to_string('Pos/receipt.html', {'invoice': invoice, 'invoice_items':invoice_items, 'account':account})
+        # buffer = BytesIO()
 
-        pisa.CreatePDF(html_string, dest=buffer) 
+        # pisa.CreatePDF(html_string, dest=buffer) 
 
-        email = EmailMessage(
-            'Your Invoice',
-            'Please find your invoice attached.',
-            'your_email@example.com',
-            ['recipient_email@example.com'],
-        )
+        # email = EmailMessage(
+        #     'Your Invoice',
+        #     'Please find your invoice attached.',
+        #     'your_email@example.com',
+        #     ['recipient_email@example.com'],
+        # )
         
-        buffer.seek(0)
-        email.attach(f'invoice_{invoice.invoice_number}.pdf', buffer.getvalue(), 'application/pdf')
+        # buffer.seek(0)
+        # email.attach(f'invoice_{invoice.invoice_number}.pdf', buffer.getvalue(), 'application/pdf')
 
-        # Send the email
-        email.send()
+        # # Send the email
+        # email.send()
 
-        task = send_invoice_email_task.delay(data['invoice_id']) 
-        task_id = task.id 
-        buffer.seek(0)
-        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename=invoice_{invoice.invoice_number}.pdf'
+        # task = send_invoice_email_task.delay(data['invoice_id']) 
+        # task_id = task.id 
+        # buffer.seek(0)
+        # response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        # response['Content-Disposition'] = f'attachment; filename=invoice_{invoice.invoice_number}.pdf'
         
-        return Response(response, status.HTTP_200_OK)
+        return Response({'https://web-production-86a7.up.railway.app/finance/invoice/send/email/'}, status.HTTP_200_OK)
 
 class SendWhatsapp(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request, invoice_id):
         try:
             
-            invoice = Invoice.objects.get(pk=invoice_id)
-            invoice_items = InvoiceItem.objects.filter(invoice=invoice)
-            img = settings.STATIC_URL + "/assets/logo.png"
+        #     invoice = Invoice.objects.get(pk=invoice_id)
+        #     invoice_items = InvoiceItem.objects.filter(invoice=invoice)
+        #     img = settings.STATIC_URL + "/assets/logo.png"
         
-            html_string = render_to_string('Pos/invoice_template.html', {'invoice': invoice, 'request':request, 'invoice_items':invoice_items, 'img':img})
-            pdf_buffer = BytesIO()
-            pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
-            if not pisa_status.err:
+        #     html_string = render_to_string('Pos/invoice_template.html', {'invoice': invoice, 'request':request, 'invoice_items':invoice_items, 'img':img})
+        #     pdf_buffer = BytesIO()
+        #     pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
+        #     if not pisa_status.err:
             
-                s3 = boto3.client(
-                    "s3",
-                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                    region_name=settings.AWS_S3_REGION_NAME,
-                )
-                invoice_filename = f"invoice_{invoice.invoice_number}.pdf"
-                s3.put_object(
-                    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-                    Key=f"invoices/{invoice_filename}",
-                    Body=pdf_buffer.getvalue(),
-                    ContentType="application/pdf",
-                    ACL="public-read",
-                )
-                s3_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/invoices/{invoice_filename}"
+        #         s3 = boto3.client(
+        #             "s3",
+        #             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        #             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        #             region_name=settings.AWS_S3_REGION_NAME,
+        #         )
+        #         invoice_filename = f"invoice_{invoice.invoice_number}.pdf"
+        #         s3.put_object(
+        #             Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+        #             Key=f"invoices/{invoice_filename}",
+        #             Body=pdf_buffer.getvalue(),
+        #             ContentType="application/pdf",
+        #             ACL="public-read",
+        #         )
+        #         s3_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/invoices/{invoice_filename}"
 
-                account_sid = 'AC6890aa7c095ce1315c4a3a86f13bb403'
-                auth_token = '897e02139a624574c5bd175aa7aaf628'
-                client = Client(account_sid, auth_token)
-                from_whatsapp_number = 'whatsapp:' + '+14155238886'
-                to_whatsapp_number = 'whatsapp:' + '+263778587612'
+        #         account_sid = 'AC6890aa7c095ce1315c4a3a86f13bb403'
+        #         auth_token = '897e02139a624574c5bd175aa7aaf628'
+        #         client = Client(account_sid, auth_token)
+        #         from_whatsapp_number = 'whatsapp:' + '+14155238886'
+        #         to_whatsapp_number = 'whatsapp:' + '+263778587612'
 
-                message = client.messages.create(
-                    from_=from_whatsapp_number,
-                    body="Your invoice is attached.",
-                    to=to_whatsapp_number,
-                    media_url=s3_url
-                )
-                logger.info(f"WhatsApp message SID: {message.sid}")
-                return Response({"message_sid": message.sid}, status.HTTP_200_OK)
-            else:
-                logger.error(f"PDF generation error for Invoice ID: {invoice_id}")
-                return Response({"error": "PDF generation failed"}, status.HTTP_400_BAD_REQUEST)
-        except Invoice.DoesNotExist:
-            logger.error(f"Invoice not found with ID: {invoice_id}")
-            return Response({"error": "Invoice not found"}, status.HTTP_400_BAD_REQUEST)
+        #         message = client.messages.create(
+        #             from_=from_whatsapp_number,
+        #             body="Your invoice is attached.",
+        #             to=to_whatsapp_number,
+        #             media_url=s3_url
+        #         )
+        #         logger.info(f"WhatsApp message SID: {message.sid}")
+        #         return Response({"message_sid": message.sid}, status.HTTP_200_OK)
+        #     else:
+        #         logger.error(f"PDF generation error for Invoice ID: {invoice_id}")
+        #         return Response({"error": "PDF generation failed"}, status.HTTP_400_BAD_REQUEST)
+        # except Invoice.DoesNotExist:
+        #     logger.error(f"Invoice not found with ID: {invoice_id}")
+        #     return Response({"error": "Invoice not found"}, status.HTTP_400_BAD_REQUEST)
+            return Response({f'https://web-production-86a7.up.railway.app/finance/send_invoice_whatsapp/{invoice_id}/'}, status.HTTP_200_OK)
         except Exception as e:
             logger.exception(f"Error sending invoice via WhatsApp: {e}")
             return Response({"error": "Error sending invoice via WhatsApp"}, status.HTTP_400_BAD_REQUEST)
         
 
 class CashbookView(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         filter_option = request.data.get('filter', 'today')
         now = datetime.datetime.now()
@@ -4576,6 +4615,7 @@ class CashbookView(views.APIView):
         }, status.HTTP_200_OK)
     
 class CashbookNote(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         #payload
         """
@@ -4596,6 +4636,7 @@ class CashbookNote(views.APIView):
         return Response({'message':'Note successfully saved.'}, status.HTTP_201_CREATED)
     
 class CashbookReport(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         filter_option = request.data.get('filter', 'this_week')
         now = datetime.datetime.now()
@@ -4682,6 +4723,7 @@ class CancelTransaction(views.APIView):
             return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
         
 class CashbookNoteView(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, entry_id):
         entry = get_object_or_404(Cashbook, id=entry_id)
     
@@ -4703,6 +4745,7 @@ class CashbookNoteView(views.APIView):
             return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
 
 class UpdateTransactionStatus(views.APIView):    
+    permission_classes = [IsAuthenticated]
     def post(self, request, pk):
         entry = get_object_or_404(Cashbook, pk=pk)
         data = request.data
@@ -4721,6 +4764,7 @@ class UpdateTransactionStatus(views.APIView):
         return Response(status.HTTP_400_BAD_REQUEST)   
     
 class DaysData(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         current_month = get_current_month()
 
@@ -4756,6 +4800,7 @@ class DaysData(views.APIView):
         return Response(data, status.HTTP_200_OK)
 
 class VAT(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         filter_option = request.GET.get('filter', 'today')
         download = request.GET.get('download')
@@ -4842,6 +4887,7 @@ class VAT(views.APIView):
         return Response({'message':'VAT successfully paid'}, status.HTTP_200_OK)
 
 class PLOverview(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         filter_option = request.data.get('filter', 'today')
         today = datetime.date.today()
@@ -4919,6 +4965,7 @@ class PLOverview(views.APIView):
         return Response(data, status.HTTP_200_OK)
 
 class IncomeJson(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         current_month = get_current_month()
         today = datetime.date.today()
@@ -4937,6 +4984,7 @@ class IncomeJson(views.APIView):
     
 
 class ExpenseJson(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         current_month = get_current_month()
         today = datetime.date.today()
