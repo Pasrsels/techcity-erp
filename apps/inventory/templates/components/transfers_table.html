@@ -42,9 +42,9 @@
                             <small class="d-flex justify-content-between">
                                 {% for qt in totals %}
                                     {% if qt.transfer__id == transfer.id %}
-                                        <span>{{ qt.total_quantity }}</span>
+                                        <span class="border p-1">{{ qt.total_received_quantity }} / {{ qt.total_transfered_quantity}} </span>
                                         {% if not request.user.role == 'sales' %}
-                                            <span class="text-primary text-bold">${{ qt.total_cost|floatformat:2 }}</span>
+                                            <span class="text-primary text-bold">${{ qt.total_cost_received_quantity|floatformat:2 }} / {{ qt.total_cost_all_quantity|floatformat:2 }}</span>
                                         {% endif %}
                                     {% endif %}
                                 {% endfor %}
@@ -112,12 +112,17 @@
             <div class="modal-content">
                 <div class="modal-body">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5>Transfer: {{ transfer.transfer_ref }} Products</h5>
+                        <div class="d-flex align-items-center">
+                            <h5>Transfer: {{ transfer.transfer_ref }} Products</h5>
+                            <span class="p-2 mx-2 bg-light border rounded">Received Quantity: <span id="received_quantity"></span> / <span id="id_total_quantity"></span></span>
+                            <span class="p-2 bg-light border rounded">Received Cost: <span id="received_cost"></span> / <span id="id_total_cost"></span></span>
+                        </div>
                         <button class="btn btn-sm btn-close"></button>
-                    </div>
+                    </div> 
+                    
                     <div class="mt-3 table-responsive">
                         <table class="table table-hover table-stripped">
-                            <thead class="table-dark stick-top">
+                            <thead class="table-dark sticky-top">
                                 <th></th>
                                 <th>Product</th>
                                 <th>Total Cost</th>
@@ -140,6 +145,11 @@
 
 <script>
     let transfer_id = ''
+    let total_quantity = 0;
+    let total_cost = 0;
+    let products_total_cost = 0;
+    let products_total_qauntity = 0;
+
     const transferBtn = document.querySelectorAll('.transfer-btn');
 
     const expandBtn = document.querySelector('#id_expand')
@@ -152,6 +162,16 @@
     const hooverProduct = document.querySelectorAll('#id_hover_product');
 
     const itemModal = new bootstrap.Modal(document.getElementById('itemsModal'));
+
+    const rQuantity = document.getElementById('received_quantity');
+    const tQuantity = document.getElementById('id_total_quantity');
+
+    const rCost = document.getElementById('received_cost');
+    const tCost = document.getElementById('id_total_cost');
+
+    // initialize the total quantity and total cost
+    rQuantity.textContent = total_quantity || 0;
+
 
     document.querySelector('.btn-close').addEventListener('click', ()=>{
         itemModal.hide()
@@ -182,6 +202,7 @@
                 return response.json();
             })
             .then(data => {
+                console.log(data)
                 populateTable(data);
             })
             .catch(error => {
@@ -191,6 +212,27 @@
 
             function populateTable(items) {
                 tbody.innerHTML = '';
+                
+                total_quantity = 0;
+                products_total_qauntity=0
+
+                products_total_cost=0
+                products_total_cost=0
+
+                // initialize total Quantiy with received quantity
+                items.forEach(item => {
+                    total_quantity += item.received_quantity;
+                    products_total_qauntity += item.quantity;
+
+                    total_cost += item.received_quantity * item.cost;
+                    products_total_cost += item.quantity * item.cost;
+                });
+
+                rQuantity.textContent = total_quantity || 0;
+                tQuantity.textContent = products_total_qauntity || 0;
+
+                rCost.textContent = total_cost.toFixed(2) || 0;
+                tCost.textContent = (products_total_cost).toFixed(2) || 0;
 
                 items.forEach((item, index) => {
                     const isQuantityMatch = item.received_quantity === item.quantity;
@@ -216,7 +258,7 @@
                     row.innerHTML = `
                         <td><small class="border p-2 rounded ${badgeClass}">${item.received_quantity}</small></td>
                         <td><small>${item.product__name}</small></td>
-                        <td><small>${item.total_amount || 'N/A'}</small></td>
+                        <td><small>${(item.quantity * item.cost).toFixed(2) || 'N/A'}</small></td>
                         <td><small>${item.quantity}</small></td>
                         <td>${receivedContent}</td>
                         <td><small>${item.received_by || 'Not received'}</small></td>
@@ -248,7 +290,17 @@
             function submitReceivedQuantity(input, currentIndex) {
                 const itemId = input.dataset.itemId;
                 const value = input.value;
+                let ExistingrQuantity = rQuantity.textContent || 0;
+                let ExistingrCost = rCost.textContent || 0;
 
+                if (!value) {
+                    return;
+                }
+
+                total_quantity += value;
+                // rQuantity.textContent = total_quantity + ExistingrQuantity;
+                // total_cost += +value * items[currentIndex].cost;
+                
                 fetch('/inventory/receive/transfer/', {
                     method: 'POST',
                     headers: {
@@ -355,16 +407,22 @@
                 })
                     .then(response => response.json())
                     .then(data => {
-                        Swal.close();
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: 'Product(s) cancelled successfully',
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => {
-                            window.location.href = '{% url "inventory:transfers" %}';
-                        })
+                       if(data.success){
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'Transfer cancelled successfully',
+                            });
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
+                       }else{
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: data.message
+                            });
+                       }
                     })
                     .catch((error) => {
                         console.error("Error:", error);

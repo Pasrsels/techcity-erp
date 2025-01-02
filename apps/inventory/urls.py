@@ -98,7 +98,7 @@ urlpatterns = [
     path('transfers-report', transfers_report, name='transfers_report'),
     
     #websocket
-    path('ws/inventory/<int:branchId>/',InventoryConsumer.as_asgi()),
+    path('ws/inventory/<int:branchId>/', InventoryConsumer.as_asgi()),
 
     #accessories
     path('accessory_view/<int:product_id>/', accessory_view, name='accessory_view'),

@@ -477,6 +477,8 @@ def delete_transfer(request, transfer_id):
             transfer.delete = True
             transfer.save()
 
+            logger.info('done')
+
         return JsonResponse({'success':True})
     except Exception as e:
         return JsonResponse({'success':False, 'message':f'{e}'})
@@ -823,8 +825,13 @@ def inventory_transfer_index(request):
     )
 
     transfer_summary = transfer_items.values('transfer__id').annotate(
-        total_cost=Sum(F('quantity') * F('cost')), 
-        total_quantity=Sum('quantity') 
+        # total cost of all quantity transfered and received
+        total_cost_all_quantity=Sum(F('quantity') * F('cost')),
+        total_cost_received_quantity=Sum(F('received_quantity') * F('cost')), 
+        
+        # total quantity transfered and received
+        total_received_quantity=Sum('received_quantity'),
+        total_transfer_quantity=Sum('quantity'),
     )
     
     transfers = Transfer.objects.filter(
@@ -887,11 +894,27 @@ def inventory_transfer_item_data(request, id):
     ).annotate(
         total_amount=F('quantity') * F('product__cost')
     ).values(
-        'id', 'quantity', 'over_less_quantity', 'price', 'dealer_price', 
-        'received', 'declined', 'over_less', 'quantity_track', 
-        'description', 'over_less_description', 'received_quantity', 
-        'cost', 'date', 'date_received', 'transfer__id', 'from_branch__name',
-        'product__name', 'to_branch__name', 'action_by__username', 'received_by__username'
+        'id',
+        'quantity', 
+        'over_less_quantity', 
+        'price', 
+        'dealer_price', 
+        'received', 
+        'declined', 
+        'over_less', 
+        'quantity_track', 
+        'description', 
+        'over_less_description', 
+        'received_quantity', 
+        'cost', 
+        'date', 
+        'date_received', 
+        'transfer__id',
+        'from_branch__name',
+        'product__name', 
+        'to_branch__name', 
+        'action_by__username', 
+        'received_by__username'
     )
 
     return JsonResponse(list(transfer_items), safe=False)
@@ -999,6 +1022,10 @@ def receive_inventory(request):
                     branch_transfer.over_less_quantity = branch_transfer.quantity - quantity_received
                     branch_transfer.over_less = True
                     branch_transfer.save()
+
+                # validation for more quantity received
+                if quantity_received > branch_transfer.quantity:
+                    return JsonResponse({'success': False, 'message': 'Quantity received cannot be more than quantity transferred'}, status=400)
 
                 product, created = Inventory.objects.get_or_create(
                     name=branch_transfer.product.name,
