@@ -72,3 +72,8 @@ class LayByDatesSerializer(serializers.Serializer):
     class Meta:
         model = laybyDates
         fields = '__all__'
+
+class TransferSerializer(serializers.Serializer):
+    class Meta:
+        model = CashTransfers
+        exclude = ['user', 'from_branch', 'branch', 'received_status']
