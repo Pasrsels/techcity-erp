@@ -1123,7 +1123,7 @@ def over_less_list_stock(request):
     form = DefectiveForm()
     search_query = request.GET.get('search_query', '')
     
-    transfers =  TransferItems.objects.filter(to_branch=request.user.branch)
+    transfers =  TransferItems.objects.filter(to_branch=request.user.branch).prefetch_related('product', 'transfer').order_by('-date')
 
     if search_query:
         transfers = transfers.filter(
@@ -1143,124 +1143,126 @@ def over_less_list_stock(request):
             product_transfer=branch_transfer,
             description=description
         )
-        logger.info(f'Activvity log: {activity}')
+        logger.info(f'Activity log: {activity}')
     
     if request.method == 'POST':
-        data = json.loads(request.body)
-        
-        action = data['action']
-        transfer_id = data['transfer_id']
-        reason = data['reason']
-        status = data['status']
-        branch_loss = data['branch_loss']
-        quantity= data['quantity']
-  
-        branch_transfer = get_object_or_404(transfers, id=transfer_id)
-
-        logger.info(f'to branch transfer: {branch_transfer}')
-        transfer = get_object_or_404(Transfer, id=branch_transfer.transfer.id)
-        logger.info(f'to branch transfer: {transfer}')
-        logger.info(f'Product is: {branch_transfer.product}')
-        product = Inventory.objects.get(id=branch_transfer.product.id)
-       
-        if int(branch_transfer.over_less_quantity) > 0:
-            if action == 'write_off':    
-                product.quantity += branch_transfer.over_less_quantity 
-                product.save()
-                
-                description='write_off'
-                
-                activity_log('Stock in', product, branch_transfer)
-                
-                DefectiveProduct.objects.create(
-                    product = product,
-                    branch = request.user.branch,
-                    quantity = quantity,
-                    reason = reason,
-                    status = status,
-                    branch_loss = get_object_or_404(Branch, id=branch_loss),
-                )
-                
-                product.quantity -= branch_transfer.over_less_quantity 
-                branch_transfer.over_less_description = description
-                branch_transfer.action_by = request.user
-                branch_transfer.over_less = False
-                
-                transfer.defective_status = True
-                
-                transfer.save()
-                branch_transfer.save()
-                product.save()
-                
-                activity_log('write off', product, branch_transfer )
-                
-                messages.success(request, f'{product.product.name} write-off successfull')        
-
-                return JsonResponse({'success':True}, status=200)
+        try:
+            data = json.loads(request.body)
             
-            if action == 'accept':
-                """
-                    accepting back / sending back to the source branch
-                """
-                product.quantity += branch_transfer.over_less_quantity 
-                product.save()
-                
-                branch_transfer.over_less = False
-                branch_transfer.over_less_description = 'returned back to source'
-                branch_transfer.save()
+            action = data.get('action')
+            transfer_id = data.get('transfer_id')
+            quantity = int(data.get('quantity', 0))
+            branch = data.get('branch')
+            reason = data.get('reason', '')
 
-                activity = ActivityLog.objects.create(
-                    branch = branch_transfer.to_branch,
-                    user=request.user,
-                    action= 'stock in',
-                    inventory=product,
-                    quantity=branch_transfer.over_less_quantity,
-                    total_quantity=product.quantity,
-                    product_transfer=branch_transfer,
-                    description=f'Transfer return {transfer.transfer_ref}'
-                )
-
-                logger.info(f'Activvity log: {activity}')
-                
-                messages.success(request, f'{product.name} accepted back successfully') 
-
-                return JsonResponse({'success':True}, status=200)
+            logger.info(f'Action: {action}, transfer_id: {transfer_id}, quantity: {quantity}, branch: {branch}, reason: {reason}')
             
-            if action == 'back':
+            branch_transfer = TransferItems.objects.filter(id=transfer_id).first()
+            transfer = branch_transfer.transfer
 
-                """
-                    creating a new transfer
-                """
+            product = Inventory.objects.get(id=branch_transfer.product.id)
+            logger.info(branch_transfer.over_less_quantity)
+            with transaction.atomic():
+                if int(branch_transfer.received_quantity) != int(branch_transfer.quantity):
+                    
+                    if action == 'write_off':    
+                        product.quantity += branch_transfer.over_less_quantity 
+                        product.save()
+                        
+                        description='write_off'
+                        
+                        activity_log('Stock in', product, branch_transfer)
+                        
+                        DefectiveProduct.objects.create(
+                            product = product,
+                            branch = request.user.branch,
+                            quantity = quantity,
+                            reason = reason,
+                            status = status,
+                            branch_loss = get_object_or_404(Branch, id=branch),
+                        )
+                        
+                        product.quantity -= branch_transfer.over_less_quantity 
+                        branch_transfer.over_less_description = description
+                        branch_transfer.action_by = request.user
+                        branch_transfer.over_less = False
+                        
+                        transfer.defective_status = True
+                        
+                        transfer.save()
+                        branch_transfer.save()
+                        product.save()
+                        
+                        activity_log('write off', product, branch_transfer )
+                        
+                        messages.success(request, f'{product.product.name} write-off successfull')        
 
-                transfer_new_obj = Transfer.objects.create(
-                    branch = transfer.branch,
-                    user = request.user,
-                    transfer_ref = f'{transfer.transfer_ref} #2',
-                    description = f'Transfer resend from transfer ref {transfer.transfer_ref}'
-                )
+                        return JsonResponse({'success':True}, status=200)
+                    
+                    if action == 'receive':
+                        """
+                            receiving the transfer on the current branch
+                        """
 
-                transfer_item = TransferItems.objects.create(
-                    transfer = transfer_new_obj,
-                    product = product,
-                    from_branch = transfer.branch,
-                    to_branch = branch_transfer.to_branch,
-                    quantity = branch_transfer.over_less_quantity,
-                    cost = product.cost,
-                    price = product.price,
-                    dealer_price = product.dealer_price,
-                    description = f'Transfer resend from transfer ref {transfer.transfer_ref}'
-                )
-                
-                branch_transfer.over_less = False
-                branch_transfer.quantity -= branch_transfer.over_less_quantity
-                branch_transfer.save()
-                 
-                return JsonResponse({'success':True}, status=200)
-            
-            return JsonResponse({'success':False, 'messsage':'Invalid form'}, status=400)
-            
-        return JsonResponse({'success':False, 'messsage':'Invalid form'}, status=400)
-                  
+                        logger.info(f'Processing receiving for product: {product.name}')
+
+                        product.quantity += quantity
+                        product.save()
+                        
+                        branch_transfer.received_quantity += quantity
+                        print(branch_transfer.received_quantity)
+                        branch_transfer.over_less = False
+                        branch_transfer.over_less_description = 'received'
+                        branch_transfer.save()
+
+                        ActivityLog.objects.create(
+                            branch = branch_transfer.to_branch,
+                            user=request.user,
+                            action= 'stock in',
+                            inventory=product,
+                            quantity=quantity,
+                            total_quantity=product.quantity,
+                            product_transfer=branch_transfer,
+                            description=f'Received from {transfer.transfer_ref}'
+                        )
+
+                        logger.info(f'Product received: {product.name}')
+
+                        return JsonResponse({'success':True}, status=200)
+                    
+                    if action == 'back':
+
+                        """
+                            creating a new transfer
+                        """
+
+                        transfer_new_obj = Transfer.objects.create(
+                            branch = transfer.branch,
+                            user = request.user,
+                            transfer_ref = f'{transfer.transfer_ref} #2',
+                            description = f'Transfer resend from transfer ref {transfer.transfer_ref}'
+                        )
+
+                        transfer_item = TransferItems.objects.create(
+                            transfer = transfer_new_obj,
+                            product = product,
+                            from_branch = transfer.branch,
+                            to_branch = branch_transfer.to_branch,
+                            quantity = branch_transfer.over_less_quantity,
+                            cost = product.cost,
+                            price = product.price,
+                            dealer_price = product.dealer_price,
+                            description = f'Transfer resend from transfer ref {transfer.transfer_ref}'
+                        )
+                        
+                        branch_transfer.over_less = False
+                        branch_transfer.quantity -= branch_transfer.over_less_quantity
+                        branch_transfer.save()
+                    
+                    return JsonResponse({'success':True}, status=200)
+        except Exception as e:
+            return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
+
     return render(request, 'over_less_transfers.html', {'over_less_transfers':transfers, 'form':form})
 
 @login_required

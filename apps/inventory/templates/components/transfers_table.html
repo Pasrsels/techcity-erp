@@ -1,3 +1,28 @@
+<!-- 
+
+This template renders a table displaying transfer records in the inventory system. It includes the following sections:
+
+1. Loader: A loading spinner displayed while data is being fetched.
+2. Table: A table with transfer details including transfer ID, quantity, status, user, reference, discrepancy, and actions.
+3. Modals:
+    - Delete Modal: A modal for confirming the deletion of a transfer.
+    - Items Modal: A modal displaying detailed information about the products in a transfer.
+    - Action Modal: A modal for performing actions on stock discrepancies.
+
+Table Columns:
+- Transfer: Displays the transfer time and status icons.
+- Trans Qnty | Amnt trans: Shows the transferred and received quantities and amounts.
+- Status: Indicates the status of the transfer (defective, all received, partial, not yet received).
+- User: The username of the person who initiated the transfer.
+- Reference: The reference ID of the transfer.
+- Discrepancy: Placeholder for discrepancy information.
+- Action: Buttons for printing, processing, or canceling the transfer.
+
+JavaScript:
+- Handles modal display and data fetching for transfer items.
+- Manages actions such as receiving quantities and canceling transfers.
+- Updates the UI based on user interactions and fetched data.
+-->
 {% load static%}
 {% block content %}
 <div class="table transfers-table mt-2">
@@ -42,7 +67,7 @@
                             <small class="d-flex justify-content-between">
                                 {% for qt in totals %}
                                     {% if qt.transfer__id == transfer.id %}
-                                        <span class="border p-1">{{ qt.total_received_quantity }} / {{ qt.total_transfered_quantity}} </span>
+                                        <span class="border p-1">{{ qt.total_received_quantity }} / {{ qt.total_transfer_quantity}} </span>
                                         {% if not request.user.role == 'sales' %}
                                             <span class="text-primary text-bold">${{ qt.total_cost_received_quantity|floatformat:2 }} / {{ qt.total_cost_all_quantity|floatformat:2 }}</span>
                                         {% endif %}
@@ -130,11 +155,57 @@
                                 <th>Quanity Received</th>
                                 <th>Receieved_by</th>
                                 <th>Details</th>
+                                <th>Action</th>
                             </thead>
-                            <tbody>
-
-                            </tbody>
+                            <tbody></tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="ActionModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <h5 id="product-name"></h5>
+                        </div>
+                        <!-- <button class="btn btn-sm btn-close"></button> -->
+                    </div> 
+                    
+                    <div>
+                        <form id="actionForm" class="d-flex flex-column">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="actionSelect" class="form-label">Action</label>
+                                <select id="actionSelect" class="form-select">
+                                    <option value="">-- Select an action --</option>
+                                    <option value="send_back">Send Back to Source</option>
+                                    <option value="receive">Receive</option>
+                                    <option value="defective">Defective Product</option>
+                                </select>
+                            </div>
+                        
+                            <div class="mb-3 d-none" id="branchSelectWrapper">
+                                <label for="branchSelect" class="form-label">Select Branch</label>
+                                <select id="branchSelect" class="form-select">
+                                    {% for branch in branches %}
+                                        <option value="{{ branch.id }}">{{ branch.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                    
+                            <div class="mb-3 d-none" id="quantityWrapper">
+                                <label for="quantity" class="form-label">Quantity</label>
+                                <input type="number" id="quantity" class="form-control" min="1" placeholder="Enter quantity">
+                            </div>
+                        
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
+                        
                     </div>
                 </div>
             </div>
@@ -169,13 +240,47 @@
     const rCost = document.getElementById('received_cost');
     const tCost = document.getElementById('id_total_cost');
 
+    const actionModal = document.getElementById('ActionModal');
+    const actModal = new bootstrap.Modal(document.getElementById('ActionModal'));
+
+    actionModal.addEventListener('hidden.bs.modal', () => {
+        itemModal.show();
+    });
+
     // initialize the total quantity and total cost
     rQuantity.textContent = total_quantity || 0;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const actionSelect = document.getElementById('actionSelect');
+        const branchSelectWrapper = document.getElementById('branchSelectWrapper');
+        const quantityWrapper = document.getElementById('quantityWrapper');
+
+        actionSelect.addEventListener('change', () => {
+            const selectedAction = actionSelect.value;
+
+            if (selectedAction === 'receive') {
+                branchSelectWrapper.classList.add('d-none');
+            } else {
+                branchSelectWrapper.classList.remove('d-none');
+            }
+            quantityWrapper.classList.remove('d-none');
+        });
+    });
+
 
 
     document.querySelector('.btn-close').addEventListener('click', ()=>{
         itemModal.hide()
     })
+
+    document.querySelector('.btn-close').addEventListener('click', ()=>{
+        actionModal.show()
+    })
+
+    const showActionModal = (id) => {
+        transfer_id = id;
+        actModal.show();
+    }
 
     const showFetch = (transfer_id) => {
         const modal = document.getElementById('itemsModal');
@@ -237,9 +342,6 @@
                 items.forEach((item, index) => {
                     const isQuantityMatch = item.received_quantity === item.quantity;
                     const isUserBranch = item.to_branch__name === '{{ request.user.branch }}';
-
-                    console.log(isUserBranch, item.to_branch__name, '{{ request.user.branch }}');
-
                     const badgeClass = isQuantityMatch ? 'bg-success' : 'bg-danger';
                     const receivedContent = isQuantityMatch || !isUserBranch
                         ? `<small>${item.received_quantity || 0}</small>`
@@ -251,9 +353,16 @@
                                 data-index="${index}" 
                                 placeholder="Enter received qty">
                         `;
+                    console.log(item.to_branch__name)
+                    const isQuantityReceiveMatch = item.received_quantity < item.quantity;
+                    const actionContent =isQuantityMatch
+                        ?`All Received`
+                        :`
+                            <button class="btn btn-sm btn-primary" id='action-modal' onclick="showActionModal(${item.id})">
+                                Action
+                            </button>
+                        `;
                     
-                        console.log('Received content:', receivedContent);
-
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td><small class="border p-2 rounded ${badgeClass}">${item.received_quantity}</small></td>
@@ -261,8 +370,9 @@
                         <td><small>${(item.quantity * item.cost).toFixed(2) || 'N/A'}</small></td>
                         <td><small>${item.quantity}</small></td>
                         <td>${receivedContent}</td>
-                        <td><small>${item.received_by || 'Not received'}</small></td>
+                        <td><small>${item.received_by__username || 'Not received'}</small></td>
                         <td><small>${item.description || 'No details'}</small></td>
+                        <td><small>${actionContent}</small></td>
                     `;
 
                     tbody.appendChild(row);
@@ -353,25 +463,6 @@
         });
     });
 
-    // hover to show products
-    // hooverProduct.forEach((el) => {
-    //     el.addEventListener('mouseover', () => {
-    //         if (el.classList.contains('hidden')){
-    //             el.classList.remove('hidden')
-    //         }else{
-    //             el.classList.add('hidden')
-    //         }
-    //     });
-
-    //     el.addEventListener('mouseout', () => {
-    //         if (el.classList.contains('hidden')){
-    //             el.classList.remove('hidden')
-    //         }else{
-    //             el.classList.add('hidden')
-    //         }
-    //     });
-    // });
-    
     expandBtn.addEventListener('click', ()=>{
         itemsEl.forEach((el)=>{
             if (el.classList.contains('hidden')){
@@ -431,5 +522,89 @@
             }
         });
     }
+
+    const form = document.getElementById('actionForm');
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const action = document.getElementById('actionSelect').value;
+        const branch = document.getElementById('branchSelect').value;
+        const quantity = document.getElementById('quantity').value;
+
+        if (!action) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Please select an action',
+            });
+            return;
+        }
+
+        if (action === 'send_back' && !branch) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Please select a branch',
+            });
+            return;
+        }
+
+        if (action === 'receive' && !quantity) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Please enter a quantity',
+            });
+            return;
+        }
+
+        if (action === 'defective' && !quantity) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Please enter a quantity',
+            });
+            return;
+        }
+
+        console.log(transfer_id);
+    
+        const formData = new FormData();
+        formData.append('action', action);
+        formData.append('branch', branch);
+        formData.append('quantity', quantity);
+        formData.append('transfer_id', transfer_id);
+        console.log('Form data:', formData);
+
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`, 'data');
+        }
+
+        fetch('/inventory/over_less_list/', {
+            method: 'POST',
+            body: JSON.stringify(Object.fromEntries(formData)),
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Action performed successfully',
+                });
+            }else{
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: data.message
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    })
 </script>
 {% endblock content %}
