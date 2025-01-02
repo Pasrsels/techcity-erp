@@ -4468,7 +4468,7 @@ class ExpenseReport(views.APIView):
 
 class SendEmails(views.APIView):
     permission_classes = [IsAuthenticated]
-    def post(self, request):
+    def get(self, request):
         # data = request.data
         # invoice_id = data['invoice_id']
         # invoice = Invoice.objects.get(id=invoice_id)
@@ -4503,7 +4503,7 @@ class SendEmails(views.APIView):
 
 class SendWhatsapp(views.APIView):
     permission_classes = [IsAuthenticated]
-    def post(self, request, invoice_id):
+    def get(self, request, invoice_id):
         try:
             
         #     invoice = Invoice.objects.get(pk=invoice_id)
@@ -4638,61 +4638,61 @@ class CashbookNote(views.APIView):
 class CashbookReport(views.APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
-        filter_option = request.data.get('filter', 'this_week')
-        now = datetime.datetime.now()
-        end_date = now
+        # filter_option = request.data.get('filter', 'this_week')
+        # now = datetime.datetime.now()
+        # end_date = now
         
-        if filter_option == 'today':
-            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        elif filter_option == 'this_week':
-            start_date = now - timedelta(days=now.weekday())
-        elif filter_option == 'yesterday':
-            start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-        elif filter_option == 'this_month':
-            start_date = now.replace(day=1)
-        elif filter_option == 'last_month':
-            start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
-        elif filter_option == 'this_year':
-            start_date = now.replace(month=1, day=1)
-        elif filter_option == 'custom':
-            start_date = request.data.get('start_date')
-            end_date = request.data.get('end_date')
-            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-        else:
-            start_date = now - timedelta(days=now.weekday())
-            end_date = now
+        # if filter_option == 'today':
+        #     start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        # elif filter_option == 'this_week':
+        #     start_date = now - timedelta(days=now.weekday())
+        # elif filter_option == 'yesterday':
+        #     start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        # elif filter_option == 'this_month':
+        #     start_date = now.replace(day=1)
+        # elif filter_option == 'last_month':
+        #     start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
+        # elif filter_option == 'this_year':
+        #     start_date = now.replace(month=1, day=1)
+        # elif filter_option == 'custom':
+        #     start_date = request.data.get('start_date')
+        #     end_date = request.data.get('end_date')
+        #     start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        #     end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        # else:
+        #     start_date = now - timedelta(days=now.weekday())
+        #     end_date = now
 
-        entries = Cashbook.objects.filter(issue_date__gte=start_date, issue_date__lte=end_date, branch=request.user.branch).order_by('issue_date')
+        # entries = Cashbook.objects.filter(issue_date__gte=start_date, issue_date__lte=end_date, branch=request.user.branch).order_by('issue_date')
 
-        # Create a CSV response
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="cashbook_report_{filter_option}.csv"'
+        # # Create a CSV response
+        # response = HttpResponse(content_type='text/csv')
+        # response['Content-Disposition'] = f'attachment; filename="cashbook_report_{filter_option}.csv"'
 
-        writer = csv.writer(response)
-        writer.writerow(['Date', 'Description', 'Expenses', 'Income', 'Balance'])
+        # writer = csv.writer(response)
+        # writer.writerow(['Date', 'Description', 'Expenses', 'Income', 'Balance'])
 
-        balance = 0  
-        for entry in entries:
-            if entry.debit:
-                balance += entry.amount
-            elif entry.credit:
-                balance -= entry.amount
+        # balance = 0  
+        # for entry in entries:
+        #     if entry.debit:
+        #         balance += entry.amount
+        #     elif entry.credit:
+        #         balance -= entry.amount
 
-            writer.writerow([
-                entry.issue_date,
-                entry.description,
-                entry.amount if entry.debit else '',
-                entry.amount if entry.credit else '',
-                balance,
-                entry.accountant,
-                entry.manager,
-                entry.director
-            ])
-
-        return Response(response, status.HTTP_200_OK)
+        #     writer.writerow([
+        #         entry.issue_date,
+        #         entry.description,
+        #         entry.amount if entry.debit else '',
+        #         entry.amount if entry.credit else '',
+        #         balance,
+        #         entry.accountant,
+        #         entry.manager,
+        #         entry.director
+        #     ])
+        return Response({'https://web-production-86a7.up.railway.app/finance/report/'}, status.HTTP_200_OK)
 
 class CancelTransaction(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         #payload
         """
@@ -4746,7 +4746,7 @@ class CashbookNoteView(views.APIView):
 
 class UpdateTransactionStatus(views.APIView):    
     permission_classes = [IsAuthenticated]
-    def post(self, request, pk):
+    def put(self, request, pk):
         entry = get_object_or_404(Cashbook, pk=pk)
         data = request.data
         
@@ -4768,11 +4768,13 @@ class DaysData(views.APIView):
     def get(self, request):
         current_month = get_current_month()
 
-        sales = Sale.objects.filter(date__month=current_month)
-        cogs = COGSItems.objects.filter(date__month=current_month)
-
-        first_day = min(sales.first().date, cogs.first().date)
-        
+        sales = Sale.objects.filter(date__month=current_month).values()
+        cogs = COGSItems.objects.filter(date__month=current_month).values()
+        if sales or cogs:
+            first_day = min(sales.first().date, cogs.first().date)
+        else:
+            return Response({'Empty':{ 'sales':sales, 'COGS':cogs}}, status.HTTP_200_OK)
+        logger.info(first_day)
         def get_week_data(queryset, start_date, end_date, amount_field):
             week_data = queryset.filter(date__gte=start_date, date__lt=end_date).values(amount_field, 'date')
             logger.info(week_data)
@@ -4802,7 +4804,7 @@ class DaysData(views.APIView):
 class VAT(views.APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        filter_option = request.GET.get('filter', 'today')
+        filter_option = request.GET.get('filter', 'this_week')
         download = request.GET.get('download')
         
         now = datetime.datetime.now()
@@ -4832,30 +4834,29 @@ class VAT(views.APIView):
         vat_transactions = VATTransaction.objects.filter(date__gte=start_date, date__lte=end_date).values().order_by('-date')
         
         if download:
-            response = HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = f'attachment; filename="vat_report_{filter_option}.csv"'
+            # response = HttpResponse(content_type='text/csv')
+            # response['Content-Disposition'] = f'attachment; filename="vat_report_{filter_option}.csv"'
 
-            writer = csv.writer(response)
-            writer.writerow(['Date', 'Description', 'Status', 'Input', 'Output'])
+            # writer = csv.writer(response)
+            # writer.writerow(['Date', 'Description', 'Status', 'Input', 'Output'])
 
-            balance = 0
-            for transaction in vat_transactions:
+            # balance = 0
+            # for transaction in vat_transactions:
 
-                if transaction.vat_type == 'Input':
-                    balance += transaction.tax_amount
-                else:
-                    balance -= transaction.tax_amount
+            #     if transaction.vat_type == 'Input':
+            #         balance += transaction.tax_amount
+            #     else:
+            #         balance -= transaction.tax_amount
 
-                writer.writerow([
-                    transaction.date,
-                    transaction.invoice.invoice_number if transaction.invoice else transaction.purchase_order.order_number,
-                    transaction.tax_amount if transaction.vat_type == 'Input' else  '',
-                    transaction.tax_amount if transaction.vat_type == 'Output' else  ''
-                ])
+            #     writer.writerow([
+            #         transaction.date,
+            #         transaction.invoice.invoice_number if transaction.invoice else transaction.purchase_order.order_number,
+            #         transaction.tax_amount if transaction.vat_type == 'Input' else  '',
+            #         transaction.tax_amount if transaction.vat_type == 'Output' else  ''
+            #     ])
 
-            writer.writerow(['Total', '', '', balance])
-            
-            return Response(response, status.HTTP_200_OK)
+            # writer.writerow(['Total', '', '', balance])
+            return Response({'https://web-production-86a7.up.railway.app/finance/vat/'}, status.HTTP_200_OK)
         return Response( 
             {
                 'filter_option':filter_option,
@@ -4970,12 +4971,12 @@ class IncomeJson(views.APIView):
         current_month = get_current_month()
         today = datetime.date.today()
         
-        month = request.GET.get('month', current_month)
-        day = request.GET.get('day', today.day)
+        month = request.data.get('month', current_month)
+        day = request.data.get('day', today.day)
 
-        sales = Sale.objects.filter(transaction__branch=request.user.branch)
+        sales = Sale.objects.filter(transaction__branch=request.user.branch).values()
         
-        if request.GET.get('filter') == 'today':
+        if request.data.get('filter') == 'today':
             sales_total = sales.filter(date=today).aggregate(Sum('total_amount'))
         else:
             sales_total = sales.filter(date__month=month).aggregate(Sum('total_amount'))
@@ -4989,12 +4990,12 @@ class ExpenseJson(views.APIView):
         current_month = get_current_month()
         today = datetime.date.today()
         
-        month = request.GET.get('month', current_month)
-        day = request.GET.get('day', today.day)
+        month = request.data.get('month', current_month)
+        day = request.data.get('day', today.day)
 
-        expenses = Expense.objects.filter(branch=request.user.branch)
+        expenses = Expense.objects.filter(branch=request.user.branch).values()
         
-        if request.GET.get('filter') == 'today':
+        if request.data.get('filter') == 'today':
             expense_total = expenses.filter(issue_date=today, status=False).aggregate(Sum('amount'))
         else:
             expense_total = expenses.filter(issue_date__month=month, status=False).aggregate(Sum('amount'))
