@@ -2195,11 +2195,11 @@ def purchase_order_detail(request, order_id):
     products = Inventory.objects.filter(branch=request.user.branch).values(
         'dealer_price', 
         'price', 
-        'product__name'
+        'name'
     )
 
     # Convert products queryset to a dictionary for easy lookup by product ID
-    product_prices = {product['product__name']: product for product in products}
+    product_prices = {product['name']: product for product in products}
 
     for item in items:
         product_name = item.product  
@@ -2266,13 +2266,13 @@ def sales_price_list_pdf(request, order_id):
     products = Inventory.objects.filter(branch=request.user.branch).values(
         'dealer_price', 
         'price', 
-        'product__name',
-        'product__description',
+        'name',
+        'description',
         'quantity'
     )
 
     # Convert products queryset to a dictionary for easy lookup by product ID
-    product_prices = {product['product__name']: product for product in products}
+    product_prices = {product['name']: product for product in products}
    
     for item in items:
         product_name = item.product
@@ -2281,7 +2281,7 @@ def sales_price_list_pdf(request, order_id):
         description = ''
 
         if product_data:
-            description = item.description = product_data['product__description'] 
+            description = item.description = product_data['description'] 
 
         if product_data:
             item.dealer_price = product_data['dealer_price']
