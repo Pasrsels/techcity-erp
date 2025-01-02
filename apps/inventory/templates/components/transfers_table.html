@@ -38,7 +38,7 @@
                                 {% endif %}
                             {% endif %}
                         </td>
-                        <td style="background: #ecedee !important;">
+                        <td style="background: #ecedee !important;" onclick="showFetch ({{ transfer.id }})">
                             <small class="d-flex justify-content-between">
                                 {% for qt in totals %}
                                     {% if qt.transfer__id == transfer.id %}
@@ -97,7 +97,7 @@
     </table>
     
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-body">
                     <h5>Delete Transfer</h5>
@@ -106,6 +106,36 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="itemsModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5>Transfer: {{ transfer.transfer_ref }} Products</h5>
+                        <button class="btn btn-sm btn-close"></button>
+                    </div>
+                    <div class="mt-3 table-responsive">
+                        <table class="table table-hover table-stripped">
+                            <thead class="table-dark stick-top">
+                                <th></th>
+                                <th>Product</th>
+                                <th>Total Cost</th>
+                                <th>Quantity</th>
+                                <th>Quanity Received</th>
+                                <th>Receieved_by</th>
+                                <th>Details</th>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -121,7 +151,138 @@
     const transferRows = document.querySelectorAll('.transfer-btn');
     const hooverProduct = document.querySelectorAll('#id_hover_product');
 
-    // search functionality of the table -> js
+    const itemModal = new bootstrap.Modal(document.getElementById('itemsModal'));
+
+    document.querySelector('.btn-close').addEventListener('click', ()=>{
+        itemModal.hide()
+    })
+
+    const showFetch = (transfer_id) => {
+        const modal = document.getElementById('itemsModal');
+        const tbody = modal.querySelector('tbody');
+        const loader = document.createElement('div');
+        const transferId = transfer_id; 
+
+        loader.className = 'spinner-border text-primary d-flex justify-content-center align-items-center';
+        loader.setAttribute('role', 'status');
+        loader.innerHTML = `<span class="visually-hidden">Loading...</span>`;
+
+        itemModal.show();
+
+        tbody.innerHTML = '';
+        tbody.appendChild(loader);
+
+        fetch(`/inventory/transfer_items_data/${transferId}/`, {
+                method:'GET'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch transfer items.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                populateTable(data);
+            })
+            .catch(error => {
+                console.error(error);
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Failed to load data</td></tr>';
+            });
+
+            function populateTable(items) {
+                tbody.innerHTML = '';
+
+                items.forEach((item, index) => {
+                    const isQuantityMatch = item.received_quantity === item.quantity;
+                    const isUserBranch = item.to_branch__name === '{{ request.user.branch }}';
+
+                    console.log(isUserBranch, item.to_branch__name, '{{ request.user.branch }}');
+
+                    const badgeClass = isQuantityMatch ? 'bg-success' : 'bg-danger';
+                    const receivedContent = isQuantityMatch || !isUserBranch
+                        ? `<small>${item.received_quantity || 0}</small>`
+                        : `
+                            <input type="number" 
+                                class="form-control form-control-sm clearable-input" 
+                                value="${item.received_quantity || item.quantity}" 
+                                data-item-id="${item.id}" 
+                                data-index="${index}" 
+                                placeholder="Enter received qty">
+                        `;
+                    
+                        console.log('Received content:', receivedContent);
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><small class="border p-2 rounded ${badgeClass}">${item.received_quantity}</small></td>
+                        <td><small>${item.product__name}</small></td>
+                        <td><small>${item.total_amount || 'N/A'}</small></td>
+                        <td><small>${item.quantity}</small></td>
+                        <td>${receivedContent}</td>
+                        <td><small>${item.received_by || 'Not received'}</small></td>
+                        <td><small>${item.description || 'No details'}</small></td>
+                    `;
+
+                    tbody.appendChild(row);
+
+                    const input = row.querySelector('.clearable-input');
+                    if (input) {
+                        input.addEventListener('dblclick', () => {
+                            if (input.disabled) {
+                                input.disabled = false; 
+                            } else {
+                                input.value = ''; 
+                            }
+                        });
+
+                        input.addEventListener('keypress', (event) => {
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                submitReceivedQuantity(input, index);
+                            }
+                        });
+                    }
+                });
+            }
+
+            function submitReceivedQuantity(input, currentIndex) {
+                const itemId = input.dataset.itemId;
+                const value = input.value;
+
+                fetch('/inventory/receive/transfer/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: JSON.stringify({ item_id: itemId, received_quantity: value }),
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to submit data.');
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Updated successfully:', data);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Data submitted successfully',
+                    })
+
+                    input.disabled = true;
+
+                    const nextInput = document.querySelector(`input[data-index="${+currentIndex + 1}"]`);
+                    if (nextInput) {
+                        nextInput.focus();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error submitting data:', error);
+                });
+            }
+    }
+
 
     setTimeout(()=>{
         loader.classList.add('hidden');

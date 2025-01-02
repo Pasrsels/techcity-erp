@@ -49,7 +49,7 @@ from . forms import (
     AddSupplierForm,
     CreateOrderForm,
     noteStatusForm,
-    PurchaseOrderStatus,
+    PurchaseOrderStatusForm,
     ReorderSettingsForm,
     EditSupplierForm,
     StockTakeForm
@@ -874,139 +874,28 @@ def inventory_transfer_index(request):
     )
 
 
-@login_required    
-def inventory_transfer_data(request): 
+@login_required
+def inventory_transfer_item_data(request, id):
     """
-        transfers index. Shows transfers in and out of the branch and the total cost of items transfered in/out
+    Transfer items of the parent transfer
     """
-    q = request.GET.get('q', '') 
-    branch_id = request.GET.get('branch', '')
-
     transfer_items = TransferItems.objects.filter(
-            Q(from_branch=request.user.branch) |
-            Q(to_branch=request.user.branch),
-            transfer__delete=False
-        ).annotate(
-            total_amount=F('quantity') * F('product__cost')
-        )
-        
-    transfer_summary = transfer_items.values('transfer__id').annotate(
-        total_cost=Sum(F('quantity') * F('product__cost')),
-        total_quantity=Sum('quantity')
-    )
-    
-    transfers = Transfer.objects.filter(
-        Q(branch=request.user.branch) |
-        Q(transfer_to__in=[request.user.branch]),
-        delete=False
+        transfer__id=id,
+        transfer__delete=False
+    ).select_related(
+        'product', 'from_branch', 'to_branch', 'action_by', 'received_by', 'transfer'
     ).annotate(
-        total_quantity=Sum('transferitems__quantity'),
-        total_amount=ExpressionWrapper(
-            Sum(F('transferitems__quantity') * F('transferitems__cost')),
-            output_field=FloatField()
-        )
-    ).prefetch_related('transfer_to').order_by('-time').distinct()
-
-
-    data = [
-        {
-            'id':transfer.id,
-            'transfer_ref': transfer.transfer_ref,
-            'branch': transfer.branch.name,
-            'transfer_to': [branch.name for branch in transfer.transfer_to.all()],
-            'description': transfer.description,
-            'date': transfer.date.strftime('%Y-%m-%d'),
-            'total_quantity': transfer.total_quantity,
-            'total_amount': transfer.total_amount,
-            'username': transfer.user.username
-        }
-        for transfer in transfers
-    ]
-
-    transfer_items_data = [
-        {
-            'transfer_id':transfer.transfer.id,
-            'product_name': transfer.product.name,
-            'product_cost': transfer.product.cost,
-            'date': transfer.date,
-            'date_received': transfer.date_received,
-            'transfer_id': transfer.id,
-            'from_branch': transfer.from_branch.name,
-            'to_branch': transfer.to_branch.name,
-            'quantity': transfer.quantity,
-            'over_less_quantity': transfer.over_less_quantity,
-            'price': transfer.price,
-            'dealer_price': transfer.dealer_price,
-            'received': transfer.received,
-            'declined': transfer.declined,
-            'over_less': transfer.over_less,
-            'action_by': transfer.action_by.username if transfer.action_by else None,
-            'quantity_track': transfer.quantity_track,
-            'description': transfer.description,
-            'over_less_description': transfer.over_less_description,
-            'received_by': transfer.received_by.username if transfer.received_by else None,
-            'received_quantity': transfer.received_quantity,
-            'cost': transfer.cost
-        }
-        for transfer in transfer_items
-    ]
-
-    
-    if q:
-        transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
-        
-    if branch_id: 
-        transfers = transfers.filter(transfer_to__id=branch_id)
-
-    total_transferred_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+        total_amount=F('quantity') * F('product__cost')
+    ).values(
+        'id', 'quantity', 'over_less_quantity', 'price', 'dealer_price', 
+        'received', 'declined', 'over_less', 'quantity_track', 
+        'description', 'over_less_description', 'received_quantity', 
+        'cost', 'date', 'date_received', 'transfer__id', 'from_branch__name',
+        'product__name', 'to_branch__name', 'action_by__username', 'received_by__username'
     )
 
-    total_received_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
+    return JsonResponse(list(transfer_items), safe=False)
 
-    # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
-        
-    return render(request, 'transfers.html', {
-        'transfers': transfers,
-        'search_query': q, 
-        'transfer_items':transfer_items,
-        'transferred_value':0,
-        'received_value':0,
-        'totals':[],
-        'hold_transfers_count':Transfer.objects.filter(
-                Q(branch=request.user.branch) |
-                Q(transfer_to__in=[request.user.branch]),
-                delete=False, 
-                hold=True
-            ).count()
-        }
-    )
-
-    total_received_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
-
-    response_data = {
-        'transfers': data,
-        'search_query': q, 
-        'transfer_items': transfer_items_data,
-        'transferred_value': total_transferred_value,
-        'received_value': total_received_value,
-        'totals': list(transfer_summary),
-        'hold_transfers_count': Transfer.objects.filter(
-            Q(branch=request.user.branch) |
-            Q(transfer_to__in=[request.user.branch]),
-            delete=False, 
-            hold=True
-        ).count()
-    }
-    
-    return JsonResponse(response_data, safe=False)
 
 @login_required
 def held_transfer_json(request, transfer_id):
@@ -1086,19 +975,26 @@ def print_transfer(request, transfer_id):
 def receive_inventory(request):
     if request.method == 'POST':
         try:  
-            transfer_id = request.POST['id']
-            quantity_received = int(request.POST['quantity'])
-            received = request.POST['received']
+            data = json.loads(request.body)
+            logger.info(data)
+            transfer_id = data.get('item_id')
+            quantity_received = int(data.get('received_quantity'))
+            # received = request.POST['received']
+            received = True
 
             logger.info(f'transfer item data {received}')
 
             branch_transfer = get_object_or_404(TransferItems, id=transfer_id, to_branch=request.user.branch)
+
+            logger.info(branch_transfer)
             transfer_obj = get_object_or_404(Transfer, id=branch_transfer.transfer.id, transfer_to=request.user.branch)
+            logger.info(transfer_obj)
 
             if quantity_received > branch_transfer.quantity:
                 return JsonResponse({'success': 'false', 'message': 'Quantity received cannot be more than quantity transferred'}, status=400)
 
             if received:
+                logger.info(received)
                 if quantity_received != branch_transfer.quantity:
                     branch_transfer.over_less_quantity = branch_transfer.quantity - quantity_received
                     branch_transfer.over_less = True
@@ -1148,7 +1044,7 @@ def receive_inventory(request):
                 logger.info('product received')
 
             branch_transfer.quantity_track = branch_transfer.quantity - quantity_received
-            branch_transfer.receieved_quantity += quantity_received
+            branch_transfer.received_quantity += quantity_received
             branch_transfer.received_by = request.user
             branch_transfer.received = True
             branch_transfer.description = f'received {quantity_received} out of {branch_transfer.quantity}'
@@ -1160,6 +1056,8 @@ def receive_inventory(request):
             if not transfer_obj.receive_status:
                 transfer_obj.receive_status = True
                 transfer_obj.save()
+            
+            logger.info('done')
 
             return JsonResponse({'success': True, 'message': 'Product received successfully'}, status=200)
 
@@ -1802,7 +1700,7 @@ def add_reorder_quantity(request):
 @login_required
 def purchase_orders(request):
     form = CreateOrderForm()
-    status_form = PurchaseOrderStatus()
+    status_form = PurchaseOrderStatusForm()
     orders = PurchaseOrder.objects.filter(branch = request.user.branch).order_by('-order_date')
 
     items = PurchaseOrderItem.objects.filter(purchase_order__id=5)
