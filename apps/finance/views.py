@@ -3027,14 +3027,14 @@ class CustomersViewset(ModelViewSet):
         data = request.data
         branch = request.user.branch
 
-        if Customer.objects.filter(Q(phone_number=data['phone_number']) | Q(email=data['email'])).exists():
+        if Customer.objects.filter(Q(phone_number=data.get('phonenumber')) | Q(email=data.get('email'))).exists():
             return Response({'error': 'Customer with this phone number or email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
         customer = Customer.objects.create(
-            name=data['name'],
-            email=data['email'],
-            address=data['address'],
-            phone_number=data['phonenumber'],
+            name=data.get('name'),
+            email=data.get('email'),
+            address=data.get('address'),
+            phone_number=data.get('phonenumber'),
             branch=branch
         )
         account = CustomerAccount.objects.create(customer=customer)
