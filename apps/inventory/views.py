@@ -1232,12 +1232,19 @@ def over_less_list_stock(request):
                         """
                             receiving the transfer on the current branch
                         """
+
+                        product = Inventory.objects.get(
+                            Q(name__icontains = branch_transfer.product.name), 
+                            branch=request.user.branch
+                        )
+
                         logger.info(f'Processing receiving for product: {product.name}')
 
                         product.quantity += int(quantity)
                         product.save()
                         
                         branch_transfer.received_quantity += quantity
+                        branch_transfer.description = f'Received {branch_transfer.received_quantity} x {branch_transfer.quantity}'
                         branch_transfer.over_less = False
                         branch_transfer.over_less_description = 'received'
                         branch_transfer.save()
