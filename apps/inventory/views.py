@@ -71,6 +71,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from apps.inventory.utils import best_price
 from collections import defaultdict
 from django.core.cache import cache
+from django.core.paginator import Paginator
 
 @login_required
 def notifications_json(request):
@@ -808,23 +809,17 @@ def get_stock_account_data(logs):
 @login_required
 def inventory_transfer_index(request):
     """
-        transfers index. Shows transfers in and out of the branch and the total cost of items transfered in/out
+    Transfers index. Shows transfers in and out of the branch and the total cost of items transferred in/out.
     """
     q = request.GET.get('q', '') 
     branch_id = request.GET.get('branch', '')
+    page_number = request.GET.get('page', 1)  
 
-    if q:
-        transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
-        
-    if branch_id: 
-        transfers = transfers.filter(transfer_to__id=branch_id)
-
-        
     transfers = Transfer.objects.filter(
         Q(branch=request.user.branch) | Q(transfer_to=request.user.branch),
         delete=False
     ).select_related(
-        'branch',
+        'branch'
     ).prefetch_related(
         'transfer_to'
     ).annotate(
@@ -836,23 +831,19 @@ def inventory_transfer_index(request):
             output_field=FloatField()
         )
     ).order_by('-time')
-        
-    return render(request, 'transfers.html', {
-        'transfers': transfers,
-        'search_query': q, 
-        # 'transfer_items':transfer_items,
-        # 'transferred_value':total_transferred_value,
-        # 'received_value':total_received_value,
-        # 'totals':transfer_summary,
-        'hold_transfers_count':Transfer.objects.filter(
-                Q(branch=request.user.branch) |
-                Q(transfer_to__in=[request.user.branch]),
-                delete=False, 
-                hold=True
-            ).count()
-        }
-    )
 
+    if q:
+        transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q))
+    if branch_id:
+        transfers = transfers.filter(transfer_to__id=branch_id)
+
+    paginator = Paginator(transfers, 10)
+    paginated_transfers = paginator.get_page(page_number)
+
+    return render(request, 'transfers.html', {
+        'transfers': paginated_transfers,
+        'search_query': q,
+    })
 
 @login_required
 def inventory_transfer_item_data(request, id):
