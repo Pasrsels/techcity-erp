@@ -118,7 +118,7 @@ JavaScript:
                             <button class="btn btn-sm btn-outline-dark" onclick="showFetch ({{ transfer.id }})">Receive</button>
                         </td>
                     </tr>
-                    <tbody>
+                    <!-- <tbody>
                         {% for item in transfer_items %}
                             {% if transfer.id == item.transfer.id %}
                                 <tr id="id_items" class="hidden items" data-transfer-id="{{ transfer.id }}">
@@ -160,7 +160,7 @@ JavaScript:
                                 </tr>
                             {% endif %}
                         {% endfor %}
-                    </tbody>
+                    </tbody> -->
         {% endfor %}
         </tbody>
     </table>
@@ -302,6 +302,10 @@ JavaScript:
     let total_cost = 0;
     let products_total_cost = 0;
     let products_total_qauntity = 0;
+
+    new DataTable("#transfers", {
+        // paging:true
+    })
 
     const transferBtn = document.querySelectorAll('.transfer-btn');
 
