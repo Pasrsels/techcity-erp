@@ -997,12 +997,13 @@ def print_transfer(request, transfer_id):
 @transaction.atomic
 def receive_inventory(request):
     if request.method == 'POST':
-        try:  
+        try: 
             data = json.loads(request.body)
             logger.info(data)
+
             transfer_id = data.get('item_id')
             quantity_received = int(data.get('received_quantity'))
-            # received = request.POST['received']
+            serial_numbers = data.get('serial_numbers', [])
             received = True
 
             logger.info(f'transfer item data {received}')
@@ -1050,6 +1051,18 @@ def receive_inventory(request):
                     product.save()
 
                 logger.info('created')
+
+                # for serial_number in serial_numbers:
+                #     print(serial_number)
+                #     serial_obj, _ = SerialNumber.objects.get_or_create(
+                #         serial_number=serial_number,
+                #         defaults={
+                #             'status':True
+                #         }
+                #     )
+                #     print(serial_obj, _)
+                #     product.serial_numbers.add(serial_obj)
+                #     logger.info('saved')
 
                 ActivityLog.objects.create(
                     branch=request.user.branch,

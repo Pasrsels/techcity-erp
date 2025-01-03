@@ -257,16 +257,45 @@ JavaScript:
         </div>
     </div>
 
+    <!-- receive quantity transfer _item modal -->
+    <div class="modal fade" id="receiveModal" tabindex="-1" aria-labelledby="receiveModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="receiveModalLabel">Receive Inventory</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="receiveForm" method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="item_id" class="form-label">Item ID:</label>
+                            <input type="number" class="form-control" id="item_id" name="item_id" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="received_quantity" class="form-label">Quantity Received:</label>
+                            <input type="number" class="form-control" id="r_quantity" name="received_quantity" required>
+                        </div>
+                        <div id="serialNumbersSection" class="mb-3">
+                            <label for="serial_numbers" class="form-label">Serial Numbers:</label>
+                            <div id="serialInputs">
+                                <!-- Serial number inputs will be added dynamically here -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" form="receiveForm" class="btn btn-primary btn-sm" onclick="submitReceivedQuantity()">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 </div>
 
 <script>
-
-function toggleChildren(row) {
-    const childRow = row.nextElementSibling;
-    if (childRow && childRow.classList.contains('child-row')) {
-        childRow.classList.toggle('d-none');
-    }
-}
     let transferId = '';
     let transfer_id = ''
     let total_quantity = 0;
@@ -295,6 +324,7 @@ function toggleChildren(row) {
 
     const actionModal = document.getElementById('ActionModal');
     const actModal = new bootstrap.Modal(document.getElementById('ActionModal'));
+    const receiveModal = new bootstrap.Modal(document.getElementById('receiveModal'));
 
     actionModal.addEventListener('hidden.bs.modal', () => {
         itemModal.show();
@@ -303,6 +333,28 @@ function toggleChildren(row) {
     
     // initialize the total quantity and total cost
     rQuantity.textContent = total_quantity || 0;
+
+
+    document.getElementById('r_quantity').addEventListener('input', function () {
+        const quantity = parseInt(this.value) || 0;
+        const serialInputs = document.getElementById('serialInputs');
+        serialInputs.innerHTML = ''; 
+
+        for (let i = 0; i < quantity; i++) {
+            const inputGroup = document.createElement('div');
+            inputGroup.className = 'input-group mb-2';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'serial_number';
+            input.className = 'form-control';
+            input.placeholder = `Serial Number ${i + 1}`;
+            input.required = true;
+
+            inputGroup.appendChild(input);
+            serialInputs.appendChild(inputGroup);
+        }
+    });
 
     document.addEventListener('DOMContentLoaded', () => {
         const actionSelect = document.getElementById('actionSelect');
@@ -334,6 +386,12 @@ function toggleChildren(row) {
     const showActionModal = (id) => {
         transfer_id = id;
         actModal.show();
+    }
+
+    const showReceive = (id, name) =>{
+        document.getElementById('item_id').value=id;
+        document.getElementById('receiveModalLabel').innerText=name;
+        receiveModal.show()
     }
 
     const showFetch = (transfer_id) => {
@@ -404,24 +462,25 @@ function toggleChildren(row) {
                     const receivedContent = isQuantityMatch || !isUserBranch || isReceived
                         ? `<small>${item.received_quantity || 0}</small>`
                         : `
-                            <input type="number" 
-                                class="form-control form-control-sm clearable-input" 
-                                value="${item.received_quantity || item.quantity}" 
-                                data-item-id="${item.id}" 
-                                data-index="${index}" 
-                                placeholder="Enter received qty">
+                            <small>${item.received_quantity || item.quantity }</small>
                         `;
                     
                     const isQuantityReceiveMatch = item.received_quantity < item.quantity;
                     console.log(isQuantityReceiveMatch)
                     const actionContent = isQuantityMatch
-                        ?`All Received`
-                        :`
-                            <button class="btn btn-sm btn-primary" id='action-modal' onclick="showActionModal(${item.id})">
-                                Action
-                            </button>
-                        `;
-                    
+                        ? `<span>All Received</span>`
+                        : !item.received
+                            ? `
+                                <button type="button" class="btn btn-primary btn-sm" id='receive-btn' onclick='showReceive(${item.id}, "${item.product__name}")'>
+                                    Receive Inventory
+                                </button>
+                            `
+                            : `
+                                <button class="btn btn-sm btn-primary" id="action-modal" onclick="showActionModal(${item.id})">
+                                    Action
+                                </button>
+                            `;
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td><small  class="border p-2 rounded ${badgeClass}">${item.received_quantity}</small></td>
@@ -456,52 +515,65 @@ function toggleChildren(row) {
                 });
             }
 
-            function submitReceivedQuantity(input, currentIndex) {
-                const itemId = input.dataset.itemId;
-                const value = input.value;
-                let ExistingrQuantity = rQuantity.textContent || 0;
-                let ExistingrCost = rCost.textContent || 0;
+    }
 
-                if (!value) {
-                    return;
+    function submitReceivedQuantity() {
+        console.log('her')
+        const itemId = document.getElementById('item_id').value;
+        const value = document.getElementById('r_quantity').value;
+        const serialNumbers = Array.from(document.querySelectorAll('input[name="serial_number"]'))
+            .map(input => input.value);
+
+        let ExistingrQuantity = rQuantity.textContent || 0;
+        let ExistingrCost = rCost.textContent || 0;
+
+        if (!value) {
+            return;
+        }
+
+        console.log(serialNumbers)
+        total_quantity += value;
+        // rQuantity.textContent = total_quantity + ExistingrQuantity;
+        // total_cost += +value * items[currentIndex].cost;
+        
+        fetch('/inventory/receive/transfer/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify(
+                { 
+                    item_id: itemId, 
+                    received_quantity: value,  
+                    serial_numbers:serialNumbers
                 }
-
-                total_quantity += value;
-                // rQuantity.textContent = total_quantity + ExistingrQuantity;
-                // total_cost += +value * items[currentIndex].cost;
-                
-                fetch('/inventory/receive/transfer/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}',
-                    },
-                    body: JSON.stringify({ item_id: itemId, received_quantity: value }),
+            ),
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to submit data.');
+            return response.json();
+        })
+        .then(data => {
+            console.log('Updated successfully:', data);
+            if(data.success){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: data.message,
                 })
-                .then(response => {
-                    if (!response.ok) throw new Error('Failed to submit data.');
-                    return response.json();
+                showFetch(transferId)
+            }else{
+                Swal.fire({
+                    icon: 'error',
+                    title: 'error!',
+                    text: data.message,
                 })
-                .then(data => {
-                    console.log('Updated successfully:', data);
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: 'Data submitted successfully',
-                    })
-
-                    input.disabled = true;
-
-                    const nextInput = document.querySelector(`input[data-index="${+currentIndex + 1}"]`);
-                    if (nextInput) {
-                        nextInput.focus();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error submitting data:', error);
-                });
             }
+        })
+        .catch(error => {
+            console.error('Error submitting data:', error);
+        });
     }
 
 

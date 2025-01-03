@@ -91,6 +91,14 @@ class Product(models.Model):
     def __str__(self):
         return self.name 
 
+class SerialNumber(models.Model):
+    serial_number = models.CharField(max_length=255, unique=True)
+    status = models.BooleanField(default=True)  # True for active/available, False for used/inactive
+    added_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.serial_number
+
 class Inventory(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, null=True)
@@ -112,6 +120,7 @@ class Inventory(models.Model):
     service = models.BooleanField(default=False, null=True)
     image = models.ImageField(upload_to='product_images/', default='placeholder.png', null=True)
     disable = models.BooleanField(default=False)
+    serial_numbers = models.ManyToManyField('SerialNumber', related_name='inventories') 
 
     class Meta:
         unique_together = ('id', 'branch') 
