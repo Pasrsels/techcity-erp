@@ -117,8 +117,8 @@ JavaScript:
                             <button onclick="cancel({{ transfer.id }})" class="btn border btn-outline-dark bx bx-trash"></button>
                         </td>
                     </tr>
-                {% endfor %}
-            </tbody>
+        {% endfor %}
+        </tbody>
     </table>
     
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
@@ -184,7 +184,9 @@ JavaScript:
                                 <select id="actionSelect" class="form-select">
                                     <option value="">-- Select an action --</option>
                                     <option value="send_back">Send Back to Source</option>
-                                    <option value="receive">Receive</option>
+                                    <option value="receive">Receive</option>\
+                                    <option value="write-off">Write off</option>
+                                    <option value="stolen">Stolen</option>
                                     <option value="defective">Defective Product</option>
                                 </select>
                             </div>
@@ -205,7 +207,6 @@ JavaScript:
                         
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </form>
-                        
                     </div>
                 </div>
             </div>
@@ -215,6 +216,14 @@ JavaScript:
 </div>
 
 <script>
+
+function toggleChildren(row) {
+    const childRow = row.nextElementSibling;
+    if (childRow && childRow.classList.contains('child-row')) {
+        childRow.classList.toggle('d-none');
+    }
+}
+    let transferId = '';
     let transfer_id = ''
     let total_quantity = 0;
     let total_cost = 0;
@@ -247,6 +256,7 @@ JavaScript:
         itemModal.show();
     });
 
+    
     // initialize the total quantity and total cost
     rQuantity.textContent = total_quantity || 0;
 
@@ -286,7 +296,7 @@ JavaScript:
         const modal = document.getElementById('itemsModal');
         const tbody = modal.querySelector('tbody');
         const loader = document.createElement('div');
-        const transferId = transfer_id; 
+        transferId = transfer_id; 
 
         loader.className = 'spinner-border text-primary d-flex justify-content-center align-items-center';
         loader.setAttribute('role', 'status');
@@ -342,8 +352,12 @@ JavaScript:
                 items.forEach((item, index) => {
                     const isQuantityMatch = item.received_quantity === item.quantity;
                     const isUserBranch = item.to_branch__name === '{{ request.user.branch }}';
+                    const isReceived = item.received
+
+                    console.log(isReceived)
+
                     const badgeClass = isQuantityMatch ? 'bg-success' : 'bg-danger';
-                    const receivedContent = isQuantityMatch || !isUserBranch
+                    const receivedContent = isQuantityMatch || !isUserBranch || isReceived
                         ? `<small>${item.received_quantity || 0}</small>`
                         : `
                             <input type="number" 
@@ -353,9 +367,10 @@ JavaScript:
                                 data-index="${index}" 
                                 placeholder="Enter received qty">
                         `;
-                    console.log(item.to_branch__name)
+                    
                     const isQuantityReceiveMatch = item.received_quantity < item.quantity;
-                    const actionContent =isQuantityMatch
+                    console.log(isQuantityReceiveMatch)
+                    const actionContent = isQuantityMatch
                         ?`All Received`
                         :`
                             <button class="btn btn-sm btn-primary" id='action-modal' onclick="showActionModal(${item.id})">
@@ -365,13 +380,13 @@ JavaScript:
                     
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td><small class="border p-2 rounded ${badgeClass}">${item.received_quantity}</small></td>
+                        <td><small  class="border p-2 rounded ${badgeClass}">${item.received_quantity}</small></td>
                         <td><small>${item.product__name}</small></td>
                         <td><small>${(item.quantity * item.cost).toFixed(2) || 'N/A'}</small></td>
                         <td><small>${item.quantity}</small></td>
                         <td>${receivedContent}</td>
                         <td><small>${item.received_by__username || 'Not received'}</small></td>
-                        <td><small>${item.description || 'No details'}</small></td>
+                        <td><small id='item_${item.id}'>${item.description || 'No details'}</small></td>
                         <td><small>${actionContent}</small></td>
                     `;
 
@@ -593,7 +608,11 @@ JavaScript:
                     icon: 'success',
                     title: 'Success!',
                     text: 'Action performed successfully',
-                });
+                }).then(()=>{
+                    showFetch(transfer_id)
+                    actModal.hide()
+                    itemModal.show()
+                })
             }else{
                 Swal.fire({
                     icon: 'error',

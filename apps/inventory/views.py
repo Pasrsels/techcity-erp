@@ -1160,29 +1160,52 @@ def over_less_list_stock(request):
             branch_transfer = TransferItems.objects.filter(id=transfer_id).first()
             transfer = branch_transfer.transfer
 
-            product = Inventory.objects.get(id=branch_transfer.product.id)
             logger.info(branch_transfer.over_less_quantity)
             with transaction.atomic():
                 if int(branch_transfer.received_quantity) != int(branch_transfer.quantity):
                     
-                    if action == 'write_off':    
-                        product.quantity += branch_transfer.over_less_quantity 
+                    if action in ['write-off', 'stolen', 'defective']:   
+
+                        if not branch:
+                            return JsonResponse({'succes':False, 'meesage': 'Select branch'})
+                        
+                        branch = Branch.objects.get(id=branch)
+                        
+                        product = Inventory.objects.get(
+                            Q(name__icontains = branch_transfer.product.name), 
+                            branch=branch
+                        )
+
+                        logger.info(product)
+
+                        def createDefectiveProduct():
+                            DefectiveProduct.objects.create(
+                                product = product,
+                                branch = request.user.branch,
+                                quantity = quantity,
+                                reason = action,
+                                status = True,
+                                branch_loss = branch,
+                            )
+
+                        if branch_transfer.from_branch == branch or branch_transfer.to_branch == branch:
+                            createDefectiveProduct()
+                        else:
+                            product.quantity -= quantity
+                            createDefectiveProduct()
+                        
                         product.save()
                         
-                        description='write_off'
+                        description= f'{action} x {quantity} items transfered to defects branch: {branch}'
                         
-                        activity_log('Stock in', product, branch_transfer)
+                        if branch_transfer.received > 0:
+                            branch_transfer.received_quantity -= int(quantity)
                         
-                        DefectiveProduct.objects.create(
-                            product = product,
-                            branch = request.user.branch,
-                            quantity = quantity,
-                            reason = reason,
-                            status = status,
-                            branch_loss = get_object_or_404(Branch, id=branch),
-                        )
-                        
+                        if branch_transfer.received_quantity == 0:
+                            branch_transfer.received = True
+
                         product.quantity -= branch_transfer.over_less_quantity 
+                        branch_transfer.description = description
                         branch_transfer.over_less_description = description
                         branch_transfer.action_by = request.user
                         branch_transfer.over_less = False
@@ -1191,26 +1214,30 @@ def over_less_list_stock(request):
                         
                         transfer.save()
                         branch_transfer.save()
-                        product.save()
                         
-                        activity_log('write off', product, branch_transfer )
+                        ActivityLog.objects.create(
+                            branch = branch,
+                            user=request.user,
+                            action= action,
+                            inventory=product,
+                            quantity=quantity,
+                            total_quantity=product.quantity,
+                            product_transfer=branch_transfer,
+                            description=description
+                        )
                         
-                        messages.success(request, f'{product.product.name} write-off successfull')        
-
                         return JsonResponse({'success':True}, status=200)
                     
                     if action == 'receive':
                         """
                             receiving the transfer on the current branch
                         """
-
                         logger.info(f'Processing receiving for product: {product.name}')
 
-                        product.quantity += quantity
+                        product.quantity += int(quantity)
                         product.save()
                         
                         branch_transfer.received_quantity += quantity
-                        print(branch_transfer.received_quantity)
                         branch_transfer.over_less = False
                         branch_transfer.over_less_description = 'received'
                         branch_transfer.save()
@@ -1230,36 +1257,51 @@ def over_less_list_stock(request):
 
                         return JsonResponse({'success':True}, status=200)
                     
-                    if action == 'back':
+                    if action == 'send_back':
 
                         """
-                            creating a new transfer
+                            adjusting the goods transfered to the source and 
                         """
 
-                        transfer_new_obj = Transfer.objects.create(
-                            branch = transfer.branch,
-                            user = request.user,
-                            transfer_ref = f'{transfer.transfer_ref} #2',
-                            description = f'Transfer resend from transfer ref {transfer.transfer_ref}'
+                        source_product = Inventory.objects.get(
+                            id=branch_transfer.product.id, 
+                            branch=branch_transfer.from_branch
                         )
 
-                        transfer_item = TransferItems.objects.create(
-                            transfer = transfer_new_obj,
-                            product = product,
-                            from_branch = transfer.branch,
-                            to_branch = branch_transfer.to_branch,
-                            quantity = branch_transfer.over_less_quantity,
-                            cost = product.cost,
-                            price = product.price,
-                            dealer_price = product.dealer_price,
-                            description = f'Transfer resend from transfer ref {transfer.transfer_ref}'
+                        logger.info(source_product)
+
+                        source_product.quantity += int(quantity)
+                        source_product.save()
+
+                        ActivityLog.objects.create(
+                            branch = branch_transfer.from_branch,
+                            user=request.user,
+                            action= 'stock in',
+                            inventory=source_product,
+                            quantity=quantity,
+                            total_quantity=source_product.quantity,
+                            product_transfer=branch_transfer,
+                            description=f'transfer return from {branch_transfer.to_branch}'
                         )
-                        
+
+                        branch_transfer.quantity = branch_transfer.received_quantity
+                        branch_transfer.received = True
+                        branch_transfer.description = f'transfered x { quantity } items back to {branch_transfer.from_branch} '
                         branch_transfer.over_less = False
                         branch_transfer.quantity -= branch_transfer.over_less_quantity
                         branch_transfer.save()
+
+                        data = [
+                            {
+                                'transfer_id':branch_transfer.id,
+                                'description':branch_transfer.description,
+                                'status':branch_transfer.received 
+                            }
+                        ]
+
+                        logger.info(f'Product {source_product.name} successfully transfered back')
                     
-                    return JsonResponse({'success':True}, status=200)
+                        return JsonResponse({'success':True, 'data':data}, status=200)
         except Exception as e:
             return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
 
