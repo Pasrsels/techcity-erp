@@ -25,11 +25,16 @@ JavaScript:
 -->
 {% load static%}
 {% block content %}
+<style>
+    .child-rows td {
+    background: #f9f9f9;
+}
+</style>
 <div class="table transfers-table mt-2">
     {% include 'components/loader.html' %}
     <div class='table-scroll'>
     <table class='table table-bordered border table-hover rounded hidden p-2' id='transfers' style="width: 100%;">
-        <thead class="table-dark sticky-top">
+        <thead class="table-dark sticky-top d-none">
             <tr>
                 <th>Transfer</th>
                 <th>Trans Qnty | Amnt trans</th>
@@ -42,7 +47,7 @@ JavaScript:
         </thead>
             <tbody>
                 {% for transfer in transfers %}
-                    <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %}">
+                    <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %} parent-row" data-id="{{ transfer.id }}">
                         <td style="background: #ecedee !important;">
                             {% if transfer.hold %}
                                 <small class="d-flex align-items-center">
@@ -115,52 +120,29 @@ JavaScript:
                                 </a>
                             {% endif %}
                             <button onclick="cancel({{ transfer.id }})" class="btn border btn-outline-dark bx bx-trash"></button>
-                            <button class="btn btn-sm btn-outline-dark" onclick="showFetch ({{ transfer.id }})">Receive</button>
+                            <!-- <button class="btn btn-sm btn-outline-dark" onclick="showFetch ({{ transfer.id }})">Receive</button> -->
                         </td>
                     </tr>
-                    <!-- <tbody>
-                        {% for item in transfer_items %}
-                            {% if transfer.id == item.transfer.id %}
-                                <tr id="id_items" class="hidden items" data-transfer-id="{{ transfer.id }}">
-                                    <td><small>{{ item.product.name }}</small></td>
-                                    <td>
-                                        <small class="d-flex justify-content-between">
-                                            {% if not request.user.role == 'sales' %}
-                                                <span>
-                                                    {{ item.quantity }}  @ {{ item.product.cost }}
-                                                </span>
-                                                <span class="text-primary">
-                                                    ${{ item.total_amount|floatformat:2 }}
-                                                </span>
-                                            {% endif %}
-                                        </small>
-                                    </td>
-                                    <td class="text-center">
-                                        <small>
-                                            <span>
-                                                {% if item.declined %}
-                                                    <small class='bg-danger text-center rounded w-100 p-2'>Declined</small>
-                                                {% elif item.received %}
-                                                    {% if item.received_quantity == 0 %}
-                                                        <small class='bg-danger text-center rounded w-100 p-2'>{{ item.received_quantity }} / {{ item.quantity }} </small>
-                                                    {% elif item.received_quantity == item.quantity %}
-                                                        <small class='bg-success text-center rounded w-100 p-2'>{{ item.received_quantity }} / {{ item.quantity }} </small>
-                                                    {% else %}
-                                                        <small class='bg-warning text-center rounded w-100 p-2'>{{ item.received_quantity }} / {{ item.quantity }} </small>
-                                                    {% endif %}
-                                                {% else %}
-                                                    <small>Not yet received</small>
-                                                {% endif %}
-                                            </span>
-                                        </small>
-                                    </td>
-                                    <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
-                                    <td><small>{{ item.from_branch }} - {{ item.to_branch }}</small></td>
-                                    <td colspan="2"><small>{{ item.description }}</small></td>
-                                </tr>
-                            {% endif %}
-                        {% endfor %}
-                    </tbody> -->
+                    <tbody>
+                    <tr class="child-rows d-none" data-parent-id="{{ transfer.id }}">
+                        <td colspan="8">
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Received Qty</th>
+                                        <th>Cost</th>
+                                        <th>Transfered Qnty</th>
+                                        <th>Quantity Received</th>
+                                        <th>Received By</th>
+                                        <th>Description</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    </tbody>
         {% endfor %}
         </tbody>
     </table>
@@ -192,7 +174,7 @@ JavaScript:
                     <div class="mt-3 table-responsive">
                         <table class="table table-hover table-stripped">
                             <thead class="table-dark sticky-top">
-                                <th></th>
+                                <th>Product</th>
                                 <th>Product</th>
                                 <th>Total Cost</th>
                                 <th>Quantity</th>
@@ -331,9 +313,49 @@ JavaScript:
         itemModal.show();
     });
 
-    
-    // initialize the total quantity and total cost
     rQuantity.textContent = total_quantity || 0;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.parent-row').forEach(parentRow => {
+            parentRow.addEventListener('click', function () {
+                const transferId = this.getAttribute('data-id');
+                const childRow = document.querySelector(`.child-rows[data-parent-id="${transferId}"]`);
+                const tbody = childRow.querySelector('tbody');
+
+                if (childRow.classList.contains('d-none')) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>`;
+                    childRow.classList.remove('d-none');
+                    
+                    showFetch(transferId, tbody)
+                } else {
+                    childRow.classList.toggle('d-none');
+                }
+            });
+        });
+
+        function populateChildTable(tbody, items) {
+            tbody.innerHTML = ''; 
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.received_quantity}</td>
+                    <td>${item.product__name}</td>
+                    <td>${(item.quantity * item.cost).toFixed(2)}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.received_by__username || 'Not received'}</td>
+                    <td>${item.description || 'No details'}</td>
+                    <td>
+                        ${item.received 
+                            ? `<button class="btn btn-primary btn-sm" onclick="showActionModal(${item.id})">Action</button>`
+                            : `<button class="btn btn-primary btn-sm" onclick="showReceive(${item.id}, '${item.product__name}')">Receive Inventory</button>`
+                        }
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    });
+
 
 
     document.getElementById('r_quantity').addEventListener('input', function () {
@@ -395,9 +417,9 @@ JavaScript:
         receiveModal.show()
     }
 
-    const showFetch = (transfer_id) => {
+    const showFetch = (transfer_id, tbody) => {
         const modal = document.getElementById('itemsModal');
-        const tbody = modal.querySelector('tbody');
+        // const tbody = modal.querySelector('tbody');
         const loader = document.createElement('div');
         transferId = transfer_id; 
 
@@ -405,7 +427,7 @@ JavaScript:
         loader.setAttribute('role', 'status');
         loader.innerHTML = `<span class="visually-hidden">Loading...</span>`;
 
-        itemModal.show();
+        // itemModal.show();
 
         tbody.innerHTML = '';
         tbody.appendChild(loader);
@@ -463,7 +485,7 @@ JavaScript:
                     const receivedContent = isQuantityMatch || !isUserBranch || isReceived
                         ? `<small>${item.received_quantity || 0}</small>`
                         : `
-                            <small>${item.received_quantity || item.quantity }</small>
+                            <small>${item.received_quantity || 0 }</small>
                         `;
                     
                     const isQuantityReceiveMatch = item.received_quantity < item.quantity;
@@ -484,13 +506,16 @@ JavaScript:
 
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td><small  class="border p-2 rounded ${badgeClass}">${item.received_quantity}</small></td>
-                        <td><small>${item.product__name}</small></td>
-                        <td><small>${(item.quantity * item.cost).toFixed(2) || 'N/A'}</small></td>
+                        <td><small  class="border p-1 rounded ${badgeClass}">${item.received_quantity}</small>  <small>${item.product__name}</small></td>
+                        <td>
+                            <span class='d-flex justify-content-between'>
+                                <small>${(item.quantity * item.cost).toFixed(2)}</small>
+                            </span>
+                        </td>
                         <td><small>${item.quantity}</small></td>
                         <td>${receivedContent}</td>
                         <td><small>${item.received_by__username || 'Not received'}</small></td>
-                        <td><small id='item_${item.id}'>${item.description || 'No details'}</small></td>
+                        <td colspan=''><small id='item_${item.id}'>${item.description || 'No details'}</small></td>
                         <td><small>${actionContent}</small></td>
                     `;
 
