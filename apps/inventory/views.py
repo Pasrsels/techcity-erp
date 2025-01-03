@@ -813,26 +813,26 @@ def inventory_transfer_index(request):
     q = request.GET.get('q', '') 
     branch_id = request.GET.get('branch', '')
 
-    transfer_items = TransferItems.objects.filter(
-        Q(from_branch=request.user.branch) |
-        Q(to_branch = request.user.branch),
-        transfer__delete=False
-    ).annotate(
-        total_amount = ExpressionWrapper(
-            Sum(F('quantity') * F('product__cost')),
-            output_field=FloatField()
-        )
-    )
+    # transfer_items = TransferItems.objects.filter(
+    #     Q(from_branch=request.user.branch) |
+    #     Q(to_branch = request.user.branch),
+    #     transfer__delete=False
+    # ).annotate(
+    #     total_amount = ExpressionWrapper(
+    #         Sum(F('quantity') * F('product__cost')),
+    #         output_field=FloatField()
+    #     )
+    # )
 
-    transfer_summary = transfer_items.values('transfer__id').annotate(
-        # total cost of all quantity transfered and received
-        total_cost_all_quantity=Sum(F('quantity') * F('cost')),
-        total_cost_received_quantity=Sum(F('received_quantity') * F('cost')), 
+    # transfer_summary = transfer_items.values('transfer__id').annotate(
+    #     # total cost of all quantity transfered and received
+    #     total_cost_all_quantity=Sum(F('quantity') * F('cost')),
+    #     total_cost_received_quantity=Sum(F('received_quantity') * F('cost')), 
         
-        # total quantity transfered and received
-        total_received_quantity=Sum('received_quantity'),
-        total_transfer_quantity=Sum('quantity'),
-    )
+    #     # total quantity transfered and received
+    #     total_received_quantity=Sum('received_quantity'),
+    #     total_transfer_quantity=Sum('quantity'),
+    # )
     
     transfers = Transfer.objects.filter(
         Q(branch=request.user.branch) |
@@ -852,25 +852,25 @@ def inventory_transfer_index(request):
     if branch_id: 
         transfers = transfers.filter(transfer_to__id=branch_id)
 
-    total_transferred_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
+    # total_transferred_value = (
+    # transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+    #     .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    # )
 
-    total_received_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
+    # total_received_value = (
+    # transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+    #     .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    # )
 
     # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
         
     return render(request, 'transfers.html', {
         'transfers': transfers,
         'search_query': q, 
-        'transfer_items':transfer_items,
-        'transferred_value':total_transferred_value,
-        'received_value':total_received_value,
-        'totals':transfer_summary,
+        # 'transfer_items':transfer_items,
+        # 'transferred_value':total_transferred_value,
+        # 'received_value':total_received_value,
+        # 'totals':transfer_summary,
         'hold_transfers_count':Transfer.objects.filter(
                 Q(branch=request.user.branch) |
                 Q(transfer_to__in=[request.user.branch]),
@@ -1144,19 +1144,6 @@ def over_less_list_stock(request):
             Q(transfer__transfer_ref__icontains=search_query)|
             Q(date__icontains=search_query)
         )
-        
-    def activity_log(action, inventory, branch_transfer, description=None):
-        activity = ActivityLog.objects.create(
-            branch = branch_transfer.from_branch,
-            user=request.user,
-            action= action,
-            inventory=inventory,
-            quantity=branch_transfer.over_less_quantity,
-            total_quantity=inventory.quantity,
-            product_transfer=branch_transfer,
-            description=description
-        )
-        logger.info(f'Activity log: {activity}')
     
     if request.method == 'POST':
         try:
