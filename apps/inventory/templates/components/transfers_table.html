@@ -70,14 +70,10 @@ JavaScript:
                         </td>
                         <td style="background: #ecedee !important;">
                             <small class="d-flex justify-content-between">
-                                {% for qt in totals %}
-                                    {% if qt.transfer__id == transfer.id %}
-                                        <span class="border p-1">{{ qt.total_received_quantity }} / {{ qt.total_transfer_quantity}} </span>
-                                        {% if not request.user.role == 'sales' %}
-                                            <span class="text-primary text-bold">${{ qt.total_cost_received_quantity|floatformat:2 }} / ${{ qt.total_cost_all_quantity|floatformat:2 }}</span>
-                                        {% endif %}
-                                    {% endif %}
-                                {% endfor %}
+                                <span class="border p-1">{{ transfer.total_received_qnt }} / {{ transfer.total_quantity}} </span>
+                                {% if not request.user.role == 'sales' %}
+                                    <span class="text-primary text-bold border p-1">${{ transfer.total_received_amount|floatformat:2 }} / ${{ transfer.total_amount|floatformat:2 }}</span>
+                                {% endif %}
                             </small>
                         </td>
                         <td style="background: #ecedee !important;" class='transfer-btn text-center' data-id="{{ transfer.id }}">
@@ -130,8 +126,8 @@ JavaScript:
                                 <thead>
                                     <tr>
                                         <th>Received Qty</th>
-                                        <th>Cost</th>
                                         <th>Transfered Qnty</th>
+                                        <th>Cost</th>
                                         <th>Quantity Received</th>
                                         <th>Received By</th>
                                         <th>Description</th>
@@ -507,12 +503,12 @@ JavaScript:
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td><small  class="border p-1 rounded ${badgeClass}">${item.received_quantity}</small>  <small>${item.product__name}</small></td>
+                        <td><small>${item.quantity}</small></td>
                         <td>
                             <span class='d-flex justify-content-between'>
                                 <small>${(item.quantity * item.cost).toFixed(2)}</small>
                             </span>
                         </td>
-                        <td><small>${item.quantity}</small></td>
                         <td>${receivedContent}</td>
                         <td><small>${item.received_by__username || 'Not received'}</small></td>
                         <td colspan=''><small id='item_${item.id}'>${item.description || 'No details'}</small></td>

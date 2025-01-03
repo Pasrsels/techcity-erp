@@ -70,7 +70,7 @@ from django.template.loader import get_template
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from apps.inventory.utils import best_price
 from collections import defaultdict
-
+from django.core.cache import cache
 
 @login_required
 def notifications_json(request):
@@ -813,56 +813,29 @@ def inventory_transfer_index(request):
     q = request.GET.get('q', '') 
     branch_id = request.GET.get('branch', '')
 
-    # transfer_items = TransferItems.objects.filter(
-    #     Q(from_branch=request.user.branch) |
-    #     Q(to_branch = request.user.branch),
-    #     transfer__delete=False
-    # ).annotate(
-    #     total_amount = ExpressionWrapper(
-    #         Sum(F('quantity') * F('product__cost')),
-    #         output_field=FloatField()
-    #     )
-    # )
-
-    # transfer_summary = transfer_items.values('transfer__id').annotate(
-    #     # total cost of all quantity transfered and received
-    #     total_cost_all_quantity=Sum(F('quantity') * F('cost')),
-    #     total_cost_received_quantity=Sum(F('received_quantity') * F('cost')), 
-        
-    #     # total quantity transfered and received
-    #     total_received_quantity=Sum('received_quantity'),
-    #     total_transfer_quantity=Sum('quantity'),
-    # )
-    
-    transfers = Transfer.objects.filter(
-        Q(branch=request.user.branch) |
-        Q(transfer_to__in=[request.user.branch]),
-        delete=False
-    ).annotate(
-        total_quantity=Sum('transferitems__quantity'),
-        total_amount=ExpressionWrapper(
-            Sum(F('transferitems__quantity') * F('transferitems__cost')),
-            output_field=FloatField()
-        )
-    ).order_by('-time').distinct()
-    
     if q:
         transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
         
     if branch_id: 
         transfers = transfers.filter(transfer_to__id=branch_id)
 
-    # total_transferred_value = (
-    # transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-    #     .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    # )
-
-    # total_received_value = (
-    # transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-    #     .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    # )
-
-    # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
+        
+    transfers = Transfer.objects.filter(
+        Q(branch=request.user.branch) | Q(transfer_to=request.user.branch),
+        delete=False
+    ).select_related(
+        'branch',
+    ).prefetch_related(
+        'transfer_to'
+    ).annotate(
+        total_quantity=Sum('transferitems__quantity'),
+        total_received_qnt=Sum('transferitems__received_quantity'),
+        total_received_amount=Sum(F('transferitems__received_quantity') * F('transferitems__cost')),
+        total_amount=ExpressionWrapper(
+            Sum(F('transferitems__quantity') * F('transferitems__cost')),
+            output_field=FloatField()
+        )
+    ).order_by('-time')
         
     return render(request, 'transfers.html', {
         'transfers': transfers,
