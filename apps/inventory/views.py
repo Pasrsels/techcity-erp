@@ -851,8 +851,9 @@ def inventory_transfer_item_data(request, id):
     Transfer items of the parent transfer
     """
     transfer_items = TransferItems.objects.filter(
+        Q(to_branch=request.user.branch) | Q(from_branch=request.user.branch),
         transfer__id=id,
-        transfer__delete=False
+        transfer__delete=False,
     ).select_related(
         'product', 'from_branch', 'to_branch', 'action_by', 'received_by', 'transfer'
     ).annotate(
@@ -970,16 +971,15 @@ def receive_inventory(request):
             serial_numbers = data.get('serial_numbers', [])
             received = True
 
-            logger.info(f'transfer item data {received}')
-
-            branch_transfer = get_object_or_404(TransferItems, id=transfer_id, to_branch=request.user.branch)
-
+            branch_transfer = get_object_or_404(TransferItems, id=transfer_id)
             logger.info(branch_transfer)
-            transfer_obj = get_object_or_404(Transfer, id=branch_transfer.transfer.id, transfer_to=request.user.branch)
+            transfer_obj = get_object_or_404(Transfer, id=branch_transfer.transfer.id)
             logger.info(transfer_obj)
 
-            if quantity_received > branch_transfer.quantity:
-                return JsonResponse({'success': 'false', 'message': 'Quantity received cannot be more than quantity transferred'}, status=400)
+            # if quantity_received > branch_transfer.quantity:
+            #     return JsonResponse({'success': False, 'message': 'Quantity received cannot be more than quantity transferred'}, status=400)
+
+            logger.info(branch_transfer)
 
             if received:
                 logger.info(received)
@@ -987,65 +987,68 @@ def receive_inventory(request):
                     branch_transfer.over_less_quantity = branch_transfer.quantity - quantity_received
                     branch_transfer.over_less = True
                     branch_transfer.save()
+                
+                logger.info(branch_transfer)
 
-                # validation for more quantity received
-                if quantity_received > branch_transfer.quantity:
-                    return JsonResponse({'success': False, 'message': 'Quantity received cannot be more than quantity transferred'}, status=400)
+                # # validation for more quantity received
+                # if quantity_received > branch_transfer.quantity:
+                #     return JsonResponse({'success': False, 'message': 'Quantity received cannot be more than quantity transferred'}, status=400)
 
-                product, created = Inventory.objects.get_or_create(
-                    name=branch_transfer.product.name,
-                    branch=request.user.branch,
-                    defaults={
-                        'cost': branch_transfer.cost,
-                        'price': branch_transfer.price,
-                        'quantity': quantity_received,
-                        'dealer_price': branch_transfer.dealer_price,
-                        'description': branch_transfer.product.description or '',
-                        'category': branch_transfer.product.category,
-                        'tax_type': branch_transfer.product.tax_type,
-                        'stock_level_threshold': branch_transfer.product.stock_level_threshold,
-                    }
-                )
+                
+                with transaction.atomic():
+                    product, created = Inventory.objects.get_or_create(
+                        name=branch_transfer.product.name,
+                        branch=request.user.branch,
+                        defaults={
+                            'cost': branch_transfer.cost,
+                            'price': branch_transfer.price,
+                            'quantity': quantity_received,
+                            'dealer_price': branch_transfer.dealer_price,
+                            'description': branch_transfer.product.description or '',
+                            'category': branch_transfer.product.category,
+                            'tax_type': branch_transfer.product.tax_type,
+                            'stock_level_threshold': branch_transfer.product.stock_level_threshold,
+                        }
+                    )
 
-                if not created:
-                    product.quantity += quantity_received
-                    product.price = branch_transfer.price
-                    product.cost = branch_transfer.cost
-                    product.dealer_price = branch_transfer.dealer_price
+                    if not created:
+                        product.quantity += quantity_received
+                        product.price = branch_transfer.price
+                        product.cost = branch_transfer.cost
+                        product.dealer_price = branch_transfer.dealer_price
+                        product.save()
+
+                    logger.info('created')
+
+                    # for serial_number in serial_numbers:
+                    #     print(serial_number)
+                    #     serial_obj, _ = SerialNumber.objects.get_or_create(
+                    #         serial_number=serial_number,
+                    #         defaults={
+                    #             'status':True
+                    #         }
+                    #     )
+                    #     print(serial_obj, _)
+                    #     product.serial_numbers.add(serial_obj)
+                    #     logger.info('saved')
+
+                    ActivityLog.objects.create(
+                        branch=request.user.branch,
+                        user=request.user,
+                        action='stock in',
+                        inventory=product,
+                        dealer_price=product.dealer_price,
+                        selling_price=product.price,
+                        system_quantity=product.quantity,
+                        quantity=quantity_received,
+                        total_quantity=product.quantity,
+                        product_transfer=branch_transfer,
+                        description=f'received {quantity_received} out of {branch_transfer.quantity}'
+                    )
+
+                    product.batch += f'{branch_transfer.product.batch}, '
                     product.save()
-
-                logger.info('created')
-
-                # for serial_number in serial_numbers:
-                #     print(serial_number)
-                #     serial_obj, _ = SerialNumber.objects.get_or_create(
-                #         serial_number=serial_number,
-                #         defaults={
-                #             'status':True
-                #         }
-                #     )
-                #     print(serial_obj, _)
-                #     product.serial_numbers.add(serial_obj)
-                #     logger.info('saved')
-
-                ActivityLog.objects.create(
-                    branch=request.user.branch,
-                    user=request.user,
-                    action='stock in',
-                    inventory=product,
-                    dealer_price=product.dealer_price,
-                    selling_price=product.price,
-                    system_quantity=product.quantity,
-                    quantity=quantity_received,
-                    total_quantity=product.quantity,
-                    product_transfer=branch_transfer,
-                    description=f'received {quantity_received} out of {branch_transfer.quantity}'
-                )
-
-                product.batch += f'{branch_transfer.product.batch}, '
-                logger.info(f'Product batch numbers: {product.batch}')
-                product.save()
-                logger.info('product received')
+                    logger.info('product received')
 
             branch_transfer.quantity_track = branch_transfer.quantity - quantity_received
             branch_transfer.received_quantity += quantity_received
@@ -1064,17 +1067,13 @@ def receive_inventory(request):
             logger.info('done')
 
             return JsonResponse({'success': True, 'message': 'Product received successfully'}, status=200)
-
         except TransferItems.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Invalid transfer ID'}, status=400)
         except Transfer.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Transfer object not found'}, status=400)
         except Exception as e:
+            logger.info(e)
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
-
-    transfers = TransferItems.objects.filter(to_branch=request.user.branch).order_by('-date')
-    all_transfers = Transfer.objects.filter(transfer_to=request.user.branch, delete=False).order_by('-time')
-    return render(request, 'receive_inventory.html', {'r_transfers': transfers, 'transfers': all_transfers})
 
 
 @login_required
@@ -1129,6 +1128,7 @@ def over_less_list_stock(request):
                 if int(branch_transfer.received_quantity) != int(branch_transfer.quantity):
                     
                     if action in ['write-off', 'stolen', 'defective']:   
+                        return JsonResponse({'success':False, 'message':'Sorry Action not availabe'})
 
                         if not branch:
                             return JsonResponse({'succes':False, 'meesage': 'Select branch'})
@@ -1231,36 +1231,38 @@ def over_less_list_stock(request):
                     if action == 'send_back':
 
                         """
-                            adjusting the goods transfered to the source and 
+                            creation of a new transfer to the source branch with a product returned and
+                            deduction of a the quantity transfered on the current transfer
                         """
 
-                        source_product = Inventory.objects.get(
-                            id=branch_transfer.product.id, 
-                            branch=branch_transfer.from_branch
-                        )
-
-                        logger.info(source_product)
-
-                        source_product.quantity += int(quantity)
-                        source_product.save()
-
-                        ActivityLog.objects.create(
-                            branch = branch_transfer.from_branch,
-                            user=request.user,
-                            action= 'stock in',
-                            inventory=source_product,
-                            quantity=quantity,
-                            total_quantity=source_product.quantity,
-                            product_transfer=branch_transfer,
-                            description=f'transfer return from {branch_transfer.to_branch}'
-                        )
-
+                        # _adjust the transfer quantity of the currrent branch
 
                         branch_transfer.quantity -= int(quantity)
+                        branch_transfer.description = f'Received {branch_transfer.quantity} and returned back {quantity}'
                         branch_transfer.received = True
-                        branch_transfer.description = f'transfered x { quantity } items back to {branch_transfer.from_branch} '
-                        branch_transfer.over_less = False
-                        branch_transfer.quantity -= branch_transfer.over_less_quantity
+
+                        # _create new transfer
+
+                        new_transfer = Transfer.objects.create(
+                            branch=branch_transfer.from_branch,
+                            user=request.user,
+                            transfer_ref=Transfer.generate_transfer_ref(branch_transfer.to_branch.name, [branch_transfer.from_branch.name]),
+                            description=f'Return of {quantity} items from {branch_transfer.to_branch} to {branch_transfer.from_branch}'
+                        )
+
+                        new_transfer.transfer_to.add(request.user.branch.id)
+
+                        TransferItems.objects.create(
+                            transfer=new_transfer,
+                            product=branch_transfer.product,
+                            cost=branch_transfer.cost,
+                            price=branch_transfer.price,
+                            dealer_price=branch_transfer.dealer_price,
+                            quantity=quantity,
+                            from_branch=branch_transfer.to_branch,
+                            to_branch=branch_transfer.from_branch,
+                            description=f'Return of {quantity} items from {branch_transfer.to_branch} to {branch_transfer.from_branch}'
+                        )
                         branch_transfer.save()
 
                         data = [
@@ -1270,8 +1272,6 @@ def over_less_list_stock(request):
                                 'status':branch_transfer.received 
                             }
                         ]
-
-                        logger.info(f'Product {source_product.name} successfully transfered back')
                     
                         return JsonResponse({'success':True, 'data':data}, status=200)
         except Exception as e:

@@ -283,7 +283,7 @@ JavaScript:
                 <div class="modal-body">
                     <form id="receiveForm" method="post">
                         {% csrf_token %}
-                        <div class="mb-3">
+                        <div class="mb-3 d-none">
                             <label for="item_id" class="form-label">Item ID:</label>
                             <input type="number" class="form-control" id="item_id" name="item_id" required>
                         </div>
@@ -317,7 +317,7 @@ JavaScript:
     let total_cost = 0;
     let products_total_cost = 0;
     let products_total_qauntity = 0
-   
+    let tableBody = null;
 
     const transferBtn = document.querySelectorAll('.transfer-btn');
 
@@ -344,12 +344,18 @@ JavaScript:
 
     rQuantity.textContent = total_quantity || 0;
 
+    const showActionModal = (id) =>{
+        transfer_id=id
+        actModal.show()
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.parent-row').forEach(parentRow => {
             parentRow.addEventListener('click', function () {
                 const transferId = this.getAttribute('data-id');
                 const childRow = document.querySelector(`.child-rows[data-parent-id="${transferId}"]`);
                 const tbody = childRow.querySelector('tbody');
+                tableBody = tbody
 
                 if (childRow.classList.contains('d-none')) {
                     tbody.innerHTML = `<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>`;
@@ -498,8 +504,6 @@ JavaScript:
                     const isUserBranch = item.to_branch__name === '{{ request.user.branch }}';
                     const isReceived = item.received
 
-                    console.log(isReceived)
-
                     const badgeClass = isQuantityMatch ? 'bg-success' : 'bg-danger';
                     const receivedContent = isQuantityMatch || !isUserBranch || isReceived
                         ? `<small>${item.received_quantity || 0}</small>`
@@ -508,7 +512,9 @@ JavaScript:
                         `;
                     
                     const isQuantityReceiveMatch = item.received_quantity < item.quantity;
-                    console.log(isQuantityReceiveMatch)
+                    // console.log(isQuantityReceiveMatch)4
+
+                    const isBranch = item.from_branch == "{{ request.user.branch }}"
                     const actionContent = isQuantityMatch
                         ? `<span>All Received</span>`
                         : !item.received
@@ -553,11 +559,9 @@ JavaScript:
                     }
                 });
             }
-
     }
 
     function submitReceivedQuantity() {
-        console.log('her')
         const itemId = document.getElementById('item_id').value;
         const value = document.getElementById('r_quantity').value;
         const serialNumbers = Array.from(document.querySelectorAll('input[name="serial_number"]'))
@@ -570,11 +574,19 @@ JavaScript:
             return;
         }
 
-        console.log(serialNumbers)
         total_quantity += value;
-        // rQuantity.textContent = total_quantity + ExistingrQuantity;
-        // total_cost += +value * items[currentIndex].cost;
-        
+
+        Swal.fire({
+            title: 'Processing...',
+            text: 'Please wait while your request is being processed.',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         fetch('/inventory/receive/transfer/', {
             method: 'POST',
             headers: {
@@ -585,7 +597,7 @@ JavaScript:
                 { 
                     item_id: itemId, 
                     received_quantity: value,  
-                    serial_numbers:serialNumbers
+                    serial_numbers: serialNumbers
                 }
             ),
         })
@@ -595,23 +607,34 @@ JavaScript:
         })
         .then(data => {
             console.log('Updated successfully:', data);
-            if(data.success){
+
+            Swal.close();
+
+            if (data.success) {
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
                     text: data.message,
-                })
-                showFetch(transferId)
-            }else{
+                });
+                showFetch(transferId, tableBody);
+            } else {
                 Swal.fire({
                     icon: 'error',
-                    title: 'error!',
+                    title: 'Error!',
                     text: data.message,
-                })
+                });
             }
         })
         .catch(error => {
             console.error('Error submitting data:', error);
+
+            Swal.close();
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops!',
+                text: 'Something went wrong. Please try again.',
+            });
         });
     }
 
@@ -735,15 +758,12 @@ JavaScript:
             });
             return;
         }
-
-        console.log(transfer_id);
     
         const formData = new FormData();
         formData.append('action', action);
         formData.append('branch', branch);
         formData.append('quantity', quantity);
         formData.append('transfer_id', transfer_id);
-        console.log('Form data:', formData);
 
         for (let [key, value] of formData.entries()) {
             console.log(`${key}: ${value}`, 'data');
@@ -763,11 +783,10 @@ JavaScript:
                     icon: 'success',
                     title: 'Success!',
                     text: 'Action performed successfully',
-                }).then(()=>{
-                    showFetch(transfer_id)
-                    actModal.hide()
-                    itemModal.show()
                 })
+                showFetch(transfer_id, tableBody)
+                actModal.hide()
+                console.log('run')
             }else{
                 Swal.fire({
                     icon: 'error',
