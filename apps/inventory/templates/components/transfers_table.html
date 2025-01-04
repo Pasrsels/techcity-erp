@@ -38,7 +38,6 @@ JavaScript:
             <tr>
                 <th>Transfer</th>
                 <th>Trans Qnty | Amnt trans</th>
-                <th class='text-center'>Status</th>
                 <th>User</th>
                 <th>Reference</th>
                 <th>Discrepancy</th>
@@ -51,17 +50,80 @@ JavaScript:
                         <td style="background: #ecedee !important;">
                             {% if transfer.hold %}
                                 <small class="d-flex align-items-center">
+                                    <small>
+                                        {% if transfer.defective_status %}
+                                            <span class='hint--bottom' aria-label='Defective'>
+                                                <i class='bx bxs-circle fs-3 text-defective'></i>
+                                            </span>
+                                        {% else %}
+                                            {% if transfer.quantity == 0 %}
+                                                <span class='hint--bottom' aria-label='All received'>
+                                                    <i class='bx bxs-circle text-received fs-3'></i>
+                                                </span>
+                                            {% elif transfer.total_quantity_track < transfer.quantity and transfer.quantity > 0 %}
+                                                <span class='hint--bottom' aria-label='Partial'>
+                                                    <i class='bx bxs-circle text-warning fs-3'></i>
+                                                </span>
+                                            {% elif transfer.quantity == transfer.total_quantity_track %}
+                                                <span class='hint--bottom' aria-label='Not yet received'>
+                                                    <i class='bx bxs-circle text-danger fs-3'></i>
+                                                </span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </small>
                                     <i class='bx bx-pause fs-2' style='color:#007bff'></i>
                                     <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
                                 </small>
                             {% else %}
                                 {% if request.user.branch in transfer.transfer_to.all %}
                                     <small class="d-flex align-items-center">
+                                        <small>
+                                            {% if transfer.defective_status %}
+                                                <span class='hint--bottom' aria-label='Defective'>
+                                                    <i class='bx bxs-circle fs-3 text-defective'></i>
+                                                </span>
+                                            {% else %}
+                                                {% if transfer.quantity == 0 %}
+                                                    <span class='hint--bottom' aria-label='All received'>
+                                                        <i class='bx bxs-circle text-received fs-3'></i>
+                                                    </span>
+                                                {% elif transfer.total_quantity_track < transfer.quantity and transfer.quantity > 0 %}
+                                                    <span class='hint--bottom' aria-label='Partial'>
+                                                        <i class='bx bxs-circle text-warning fs-3'></i>
+                                                    </span>
+                                                {% elif transfer.quantity == transfer.total_quantity_track %}
+                                                    <span class='hint--bottom' aria-label='Not yet received'>
+                                                        <i class='bx bxs-circle text-danger fs-3'></i>
+                                                    </span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </small>
                                         <i class='bx bxs-right-arrow-alt text-success' style="font-size: 35px;"></i>
                                         <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
                                     </small>
                                 {% else %}
                                     <small class="d-flex align-items-center">
+                                        <small>
+                                            {% if transfer.defective_status %}
+                                                <span class='hint--bottom' aria-label='Defective'>
+                                                    <i class='bx bxs-circle fs-3 text-defective'></i>
+                                                </span>
+                                            {% else %}
+                                                {% if transfer.quantity == 0 %}
+                                                    <span class='hint--bottom' aria-label='All received'>
+                                                        <i class='bx bxs-circle text-received fs-3'></i>
+                                                    </span>
+                                                {% elif transfer.total_quantity_track < transfer.quantity and transfer.quantity > 0 %}
+                                                    <span class='hint--bottom' aria-label='Partial'>
+                                                        <i class='bx bxs-circle text-warning fs-3'></i>
+                                                    </span>
+                                                {% elif transfer.quantity == transfer.total_quantity_track %}
+                                                    <span class='hint--bottom' aria-label='Not yet received'>
+                                                        <i class='bx bxs-circle text-danger fs-3'></i>
+                                                    </span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </small>
                                         <i class='bx bxs-left-arrow-alt' style="color: #dc3545eb; font-size: 35px;"></i>
                                         <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
                                     </small>
@@ -73,29 +135,6 @@ JavaScript:
                                 <span class="border p-1">{{ transfer.total_received_qnt }} / {{ transfer.total_quantity}} </span>
                                 {% if not request.user.role == 'sales' %}
                                     <span class="text-primary text-bold border p-1">${{ transfer.total_received_amount|floatformat:2 }} / ${{ transfer.total_amount|floatformat:2 }}</span>
-                                {% endif %}
-                            </small>
-                        </td>
-                        <td style="background: #ecedee !important;" class='transfer-btn text-center' data-id="{{ transfer.id }}">
-                            <small>
-                                {% if transfer.defective_status %}
-                                    <span class='hint--bottom' aria-label='Defective'>
-                                        <i class='bx bxs-circle fs-3 text-defective'></i>
-                                    </span>
-                                {% else %}
-                                    {% if transfer.quantity == 0 %}
-                                        <span class='hint--bottom' aria-label='All received'>
-                                            <i class='bx bxs-circle text-received fs-3'></i>
-                                        </span>
-                                    {% elif transfer.total_quantity_track < transfer.quantity and transfer.quantity > 0 %}
-                                        <span class='hint--bottom' aria-label='Partial'>
-                                            <i class='bx bxs-circle text-warning fs-3'></i>
-                                        </span>
-                                    {% elif transfer.quantity == transfer.total_quantity_track %}
-                                        <span class='hint--bottom' aria-label='Not yet received'>
-                                            <i class='bx bxs-circle text-danger fs-3'></i>
-                                        </span>
-                                    {% endif %}
                                 {% endif %}
                             </small>
                         </td>
@@ -126,9 +165,7 @@ JavaScript:
                                 <thead>
                                     <tr>
                                         <th>Product</th>
-                                        <th>Transfered Qnty</th>
-                                        <th>Cost</th>
-                                        <th>Quantity Received</th>
+                                        <th>status</th>
                                         <th>Received By</th>
                                         <th>Description</th>
                                         <th>Actions</th>
@@ -206,7 +243,7 @@ JavaScript:
                                 <select id="actionSelect" class="form-select">
                                     <option value="">-- Select an action --</option>
                                     <option value="send_back">Send Back to Source</option>
-                                    <option value="receive">Receive</option>\
+                                    <option value="receive">Receive</option>
                                     <option value="write-off">Write off</option>
                                     <option value="stolen">Stolen</option>
                                     <option value="defective">Defective Product</option>
@@ -305,10 +342,6 @@ JavaScript:
     const actModal = new bootstrap.Modal(document.getElementById('ActionModal'));
     const receiveModal = new bootstrap.Modal(document.getElementById('receiveModal'));
 
-    actionModal.addEventListener('hidden.bs.modal', () => {
-        itemModal.show();
-    });
-
     rQuantity.textContent = total_quantity || 0;
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -393,19 +426,9 @@ JavaScript:
     });
 
 
-
-    document.querySelector('.btn-close').addEventListener('click', ()=>{
-        itemModal.hide()
-    })
-
     // document.querySelector('.btn-close').addEventListener('click', ()=>{
     //     actionModal.show()
     // })
-
-    const showActionModal = (id) => {
-        transfer_id = id;
-        actModal.show();
-    }
 
     const showReceive = (id, name) =>{
         document.getElementById('item_id').value=id;
@@ -502,14 +525,8 @@ JavaScript:
 
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td><small  class="border p-1 rounded ${badgeClass}">${item.received_quantity}</small>  <small>${item.product__name}</small></td>
-                        <td><small>${item.quantity}</small></td>
-                        <td>
-                            <span class='d-flex justify-content-between'>
-                                <small>${(item.quantity * item.cost).toFixed(2)}</small>
-                            </span>
-                        </td>
-                        <td>${receivedContent}</td>
+                        <td><small>${item.product__name} [${(item.quantity * item.cost).toFixed(2)}]</small></td>
+                        <td class="border p-1 rounded text-center ${badgeClass}" style='width:50px !important;' >${receivedContent}<small>/${item.quantity}</small></td>
                         <td><small>${item.received_by__username || 'Not received'}</small></td>
                         <td colspan=''><small id='item_${item.id}'>${item.description || 'No details'}</small></td>
                         <td><small>${actionContent}</small></td>

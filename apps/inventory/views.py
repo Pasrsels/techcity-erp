@@ -1255,7 +1255,8 @@ def over_less_list_stock(request):
                             description=f'transfer return from {branch_transfer.to_branch}'
                         )
 
-                        branch_transfer.quantity = branch_transfer.received_quantity
+
+                        branch_transfer.quantity -= int(quantity)
                         branch_transfer.received = True
                         branch_transfer.description = f'transfered x { quantity } items back to {branch_transfer.from_branch} '
                         branch_transfer.over_less = False
