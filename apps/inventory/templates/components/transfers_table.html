@@ -56,15 +56,11 @@ JavaScript:
                                                 <i class='bx bxs-circle fs-3 text-defective'></i>
                                             </span>
                                         {% else %}
-                                            {% if transfer.quantity == 0 %}
+                                            {% if transfer.check_all_received == 0 %}
                                                 <span class='hint--bottom' aria-label='All received'>
                                                     <i class='bx bxs-circle text-received fs-3'></i>
                                                 </span>
-                                            {% elif transfer.total_quantity_track < transfer.quantity and transfer.quantity > 0 %}
-                                                <span class='hint--bottom' aria-label='Partial'>
-                                                    <i class='bx bxs-circle text-warning fs-3'></i>
-                                                </span>
-                                            {% elif transfer.quantity == transfer.total_quantity_track %}
+                                            {% else %}
                                                 <span class='hint--bottom' aria-label='Not yet received'>
                                                     <i class='bx bxs-circle text-danger fs-3'></i>
                                                 </span>
@@ -532,7 +528,7 @@ JavaScript:
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td><small>${item.product__name} [${(item.quantity * item.cost).toFixed(2)}]</small></td>
-                        <td class="border p-1 rounded text-center ${badgeClass}" style='width:50px !important;' >${receivedContent}<small>/${item.quantity}</small></td>
+                        <td class="border p-1 rounded text-center" >${receivedContent}<small>/${item.quantity}</small></td>
                         <td><small>${item.received_by__username || 'Not received'}</small></td>
                         <td colspan=''><small id='item_${item.id}'>${item.description || 'No details'}</small></td>
                         <td><small>${actionContent}</small></td>
