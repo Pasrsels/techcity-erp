@@ -144,7 +144,7 @@ urlpatterns = [
     path('api/v1/end-of-day/', EndOfDay.as_view(), name='api_end_of_day'),
 
     #Quotation
-    path('api/v1/quotation-list/', QuotationList.as_view(), name='api_quotation_list'),
+    # path('api/v1/quotation-list/', QuotationList.as_view(), name='api_quotation_list'),
 
     #Expense
     path('api/v1/expense/<int:expense_id>/', ExpenseView.as_view(), name='api_expense'),

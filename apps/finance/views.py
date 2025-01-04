@@ -3677,7 +3677,7 @@ class QuatationCrud(viewsets.ModelViewSet):
     serializer_class = QuotationSerializer
     def create(self, request):
         data = request.data
-        qoute_id = data.get('id'),
+        qoute_id = int(data.get('id'))
         qoute_subtotal = data.get('subtotal')
         qoute_currency_id = data.get('currency_id')
         items_data = data.get('items')
@@ -3693,9 +3693,12 @@ class QuatationCrud(viewsets.ModelViewSet):
             qoute_reference = Qoutation.generate_qoute_number(request.user.branch.name),
             products = ', '.join([f'{item['product_name']} x {item['quantity']}' for item in items_data])
         )
-        
+        logger.info(data)
+        logger.info(items_data)
         for item_data in items_data:
-            item = Inventory.objects.get(pk=item_data['inventory_id'])
+            pk_id = item_data['inventory_id']
+            logger.info(pk_id)
+            item = Inventory.objects.get(pk=pk_id)
             
             QoutationItems.objects.create(
                 qoute=qoute,
@@ -3704,11 +3707,8 @@ class QuatationCrud(viewsets.ModelViewSet):
                 quantity=item_data['quantity'],
                 total_amount= item.price * item_data['quantity'],
             )
-        return Response({'qoute_id': qoute.id}, status.HTTP_200_OK)
-    
-class QuotationList(views.APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
+        return Response({'qoute_id': qoute.id}, status.HTTP_201_CREATED)
+    def list(self, request, *args, **kwargs):
         search_query = request.GET.get('q', '')
         qoutations = Qoutation.objects.filter(branch=request.user.branch).order_by('-date').values()
     
@@ -3720,6 +3720,33 @@ class QuotationList(views.APIView):
                 Q(qoute_reference__icontains=search_query)
             )
         return Response(qoutations, status.HTTP_200_OK)
+    def retrieve(self, request, pk):
+        search_query = request.GET.get('q', '')
+        qoutations = Qoutation.objects.filter(id = pk, branch=request.user.branch).order_by('-date').values()
+    
+        if search_query:
+            qoutations = qoutations.filter(
+                Q(customer__name__icontains=search_query)|
+                Q(products__icontains=search_query)|
+                Q(date__icontains=search_query)|
+                Q(qoute_reference__icontains=search_query)
+            )
+        return Response(qoutations, status.HTTP_200_OK)
+    
+# class QuotationList(views.APIView):
+#     permission_classes = [IsAuthenticated]
+#     def get(self, request):
+#         search_query = request.GET.get('q', '')
+#         qoutations = Qoutation.objects.filter(branch=request.user.branch).order_by('-date').values()
+    
+#         if search_query:
+#             qoutations = qoutations.filter(
+#                 Q(customer__name__icontains=search_query)|
+#                 Q(products__icontains=search_query)|
+#                 Q(date__icontains=search_query)|
+#                 Q(qoute_reference__icontains=search_query)
+#             )
+#         return Response(qoutations, status.HTTP_200_OK)
 
 class QuotationDelete(views.APIView):
     permission_classes = [IsAuthenticated]
