@@ -2985,6 +2985,7 @@ def vat(request):
 from rest_framework import status, views, viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.viewsets import ModelViewSet
 from .serializers import *
 
 class CustomerCrud(viewsets.ModelViewSet):
@@ -3017,98 +3018,38 @@ class CustomerCrud(viewsets.ModelViewSet):
         CustomerAccountBalances.objects.bulk_create(balances_to_create)
         return JsonResponse(status.HTTP_201_CREATED)
 
-# """ Finance API views """
-# class CustomerViewset(ModelViewSet):
-#     """
-#         viewset customer crud
-#     """
-#     serializer_class = CustomerSerializer
-#     queryset = Customer.objects.all()
+class CustomersViewset(ModelViewSet):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+    permission_classes = [IsAuthenticated]
 
-#     def create(self, request, *args, **kwargs):
-#         request.data['branch'] = self.request.user.branch or Branch.objects.get(id=i) # to  be removed just for testsing
-  
-#         serializer = self.get_serializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         self.perform_create(serializer)
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        branch = request.user.branch
 
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if Customer.objects.filter(Q(phone_number=data['phone_number']) | Q(email=data['email'])).exists():
+            return Response({'error': 'Customer with this phone number or email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
-#     def perform_create(self, serializer):
-#         logger.info(f"Creating a new customer with data: {serializer.validated_data}")
-      
-#         serializer.save()
+        customer = Customer.objects.create(
+            name=data['name'],
+            email=data['email'],
+            address=data['address'],
+            phone_number=data['phonenumber'],
+            branch=branch
+        )
+        account = CustomerAccount.objects.create(customer=customer)
 
-#         logger.info(f"Customer created successfully: {serializer.instance.id}")
-# class CustomerList(views.APIView):   
-#     def get(self, request):
-#         search_query = request.GET.get('q', '')
-        
-#         customers = Customer.objects.filter(branch=request.user.branch)
-#         accounts = CustomerAccountBalances.objects.all()
-        
-#         total_balances_per_currency = CustomerAccountBalances.objects.filter(account__customer__branch=request.user.branch).values('currency__name').annotate(
-#             total_balance=Sum('balance')
-#         )
-        
-#         if search_query:
-#             customers = CustomerAccount.objects.filter(Q(customer__name__icontains=search_query))
-            
-#         if 'receivable' in request.GET:
-#             negative_balances_per_currency = CustomerAccountBalances.objects.filter(account__customer__branch=request.user.branch, balance__lt=0) \
-#                 .values('currency') \
-#                 .annotate(total_balance=Sum('balance'))
+        balances_to_create = [
+            CustomerAccountBalances(account=account, currency=currency, balance=0) 
+            for currency in Currency.objects.all()
+        ]
+        CustomerAccountBalances.objects.bulk_create(balances_to_create)
 
-#             customers = Customer.objects.filter(
-#                 id__in=negative_balances_per_currency.values('account__customer_id'),
-#             ).distinct()
-            
-#             total_balances_per_currency = negative_balances_per_currency.values('currency__name').annotate(
-#                 total_balance=Sum('balance')
-#             )
-            
-#             logger.info(f'Customers:{total_balances_per_currency.values}')
+        customer_serializer = self.get_serializer(customer)
+        return Response(customer_serializer.data, status=status.HTTP_201_CREATED)
+    
 
-#         if 'download' in request.GET: 
-#             customers = Customer.objects.all() 
-#             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-#             response['Content-Disposition'] = 'attachment; filename=customers.xlsx'
-
-#             workbook = openpyxl.Workbook()
-#             worksheet = workbook.active
-            
-#             header_font = Font(bold=True)
-#             header_alignment = Alignment(horizontal='center')
-#             for col_num, header_title in enumerate(['Customer Name', 'Phone Number', 'Email', 'Account Balance'], start=1):
-#                 cell = worksheet.cell(row=1, column=col_num)
-#                 cell.value = header_title
-#                 cell.font = header_font
-#                 cell.alignment = header_alignment
-                
-#                 column_letter = openpyxl.utils.get_column_letter(col_num)
-#                 worksheet.column_dimensions[column_letter].width = max(len(header_title), 20)
-
-#             customer_accounts = CustomerAccountBalances.objects.all()
-#             for customer in customer_accounts:
-#                 worksheet.append(
-#                     [
-#                         customer.account.customer.name, 
-#                         customer.account.customer.phone_number, 
-#                         customer.account.customer.email, 
-#                         customer.balance if customer.balance else 0,
-#                     ]
-#                 )  
-                
-#             workbook.save(response)
-#             return response
-            
-#         return Response({
-#             'customers':customers, 
-#             'accounts':accounts,
-#             'total_balances_per_currency':total_balances_per_currency,
-#         },status= status.HTTP_200_OK)
-
-class CustomerAccount(views.APIView):
+class CustomerAccountView(views.APIView):
     def get(self, request, customer_id):
         customer = get_object_or_404(Customer, id=customer_id)
         customer_serializer = CustomerSerializer(customer)
@@ -3154,7 +3095,7 @@ class CustomerAccount(views.APIView):
             'due': due_invoice, 
         },status.HTTP_200_OK)
     
-class customer_account_payments_json(views.APIView):
+class CustomerPaymentsJsonView(views.APIView):
     def get(self, request, customer_id):
         customer_id = customer_id
         transaction_type = request.GET.get('type')
@@ -3705,24 +3646,6 @@ class EndOfDay(views.APIView):
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class QuatationCrud(viewsets.ModelViewSet):
     queryset = Qoutation.objects.all()
     serializer_class = QuotationSerializer
@@ -3845,7 +3768,7 @@ class InvoiceList(views.APIView):
             'total_amount': total_amount,
         },status.HTTP_200_OK)
 
-class Expense(views.APIView):
+class ExpenseView(views.APIView):
     def get(self, request, expense_id):
         expense = get_object_or_404(Expense, id=expense_id)
         data = {

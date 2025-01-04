@@ -112,7 +112,7 @@ class noteStatusForm(forms.ModelForm):
         self.initial['batch'] = f'Batch {batch_number}'
 
 
-class PurchaseOrderStatus(forms.ModelForm):
+class PurchaseOrderStatusForm(forms.ModelForm):
     class Meta:
         model = PurchaseOrder
         fields = ['status']

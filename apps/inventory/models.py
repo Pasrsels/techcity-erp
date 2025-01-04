@@ -91,6 +91,14 @@ class Product(models.Model):
     def __str__(self):
         return self.name 
 
+class SerialNumber(models.Model):
+    serial_number = models.CharField(max_length=255, unique=True)
+    status = models.BooleanField(default=True)  # True for active/available, False for used/inactive
+    added_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.serial_number
+
 class Inventory(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, null=True)
@@ -112,6 +120,7 @@ class Inventory(models.Model):
     service = models.BooleanField(default=False, null=True)
     image = models.ImageField(upload_to='product_images/', default='placeholder.png', null=True)
     disable = models.BooleanField(default=False)
+    serial_numbers = models.ManyToManyField('SerialNumber', related_name='inventories') 
 
     class Meta:
         unique_together = ('id', 'branch') 
@@ -126,7 +135,7 @@ class Inventory(models.Model):
 class Accessory(models.Model):
     main_product = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='main_product')
     accessory_product = models.ManyToManyField(Inventory)
-    quantity = models.IntegerField()
+    # quantity = models.IntegerField()
 
     def __str__(self):
         return self.main_product.name
@@ -191,9 +200,8 @@ class PurchaseOrderItem(models.Model):
     expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     dealer_expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, default=1)
-    # cost =  models.DecimalField(max_digits=10, decimal_places=2)
-    #price = models.DecimalField(max_digits=10, decimal_places=2)
-    #wholesale_price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    wholesale_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def receive_items(self, quantity):
     
@@ -272,6 +280,15 @@ class Transfer(models.Model):
     receive_status = models.BooleanField(default=False, null=True)
     hold = models.BooleanField(default=False)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['branch']),
+            models.Index(fields=['transfer_ref']),
+            models.Index(fields=['date']),
+            models.Index(fields=['delete']),
+            models.Index(fields=['hold']),
+        ]
+
     @classmethod
     def generate_transfer_ref(self, branch, branches):
         formatted_branches = ', '.join([f"T{b[0].upper()}" for b in branches])
@@ -310,7 +327,7 @@ class TransferItems(models.Model):
     over_less_description = models.CharField(max_length=255, null=True, blank=True)
     received_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
     description = models.TextField(null=True)
-    receieved_quantity = models.IntegerField(default=0)
+    received_quantity = models.IntegerField(default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     # def __str__(self):

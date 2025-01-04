@@ -49,7 +49,7 @@ from . forms import (
     AddSupplierForm,
     CreateOrderForm,
     noteStatusForm,
-    PurchaseOrderStatus,
+    PurchaseOrderStatusForm,
     ReorderSettingsForm,
     EditSupplierForm,
     StockTakeForm
@@ -70,7 +70,8 @@ from django.template.loader import get_template
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from apps.inventory.utils import best_price
 from collections import defaultdict
-
+from django.core.cache import cache
+from django.core.paginator import Paginator
 
 @login_required
 def notifications_json(request):
@@ -477,6 +478,8 @@ def delete_transfer(request, transfer_id):
             transfer.delete = True
             transfer.save()
 
+            logger.info('done')
+
         return JsonResponse({'success':True})
     except Exception as e:
         return JsonResponse({'success':False, 'message':f'{e}'})
@@ -511,53 +514,8 @@ def inventory_index(request):
     
     services = Service.objects.all().order_by('-name')
     accessories = Accessory.objects.all()
-    inventory = Inventory.objects.filter(branch=request.user.branch, status=True).order_by('name')
+    inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name')
 
-    # # Step 1: Get the inventory products with quantity 0 and not logged in ActivityLog
-    # products_with_zero_quantity = Inventory.objects.filter(
-    #     branch=request.user.branch, 
-    #     status=True, 
-    #     quantity=0
-    # ).exclude(
-    #     id__in=ActivityLog.objects.values('inventory_id') 
-    # )
-
-    # print(products_with_zero_quantity)
-    # print(products_with_zero_quantity)
-
-    # # Step 2: Find duplicate products based on name
-    # duplicates = products_with_zero_quantity.values('name').annotate(
-    #     count=Count('name')
-    # ).filter(count__gt=1)  # Only consider products with more than 1 instance
-    # # Step 2: Find duplicate products based on name
-    # duplicates = products_with_zero_quantity.values('name').annotate(
-    #     count=Count('name')
-    # ).filter(count__gt=1)  # Only consider products with more than 1 instance
-
-    # # Step 3: For each group of duplicates, delete all but the first product
-    # for product in duplicates:
-    #     # Get all products with the same name
-    #     product_group = products_with_zero_quantity.filter(name=product['name'])
-    # # Step 3: For each group of duplicates, delete all but the first product
-    # for product in duplicates:
-    #     # Get all products with the same name
-    #     product_group = products_with_zero_quantity.filter(name=product['name'])
-        
-    #     # Keep the first product and delete the rest
-    #     first_product = product_group.first()  # Get the first product
-    #     product_group.exclude(id=first_product.id).delete() 
-    #     logger.info(f'{first_product}, deleted') # 
-    #     # Keep the first product and delete the rest
-    #     first_product = product_group.first()  # Get the first product
-    #     product_group.exclude(id=first_product.id).delete() 
-    #     logger.info(f'{first_product}, deleted') # 
-
-    # if category:
-    #     if category == 'inactive':
-    #         inventory = Inventory.objects.filter(branch=request.user.branch, status=False)
-    #     else:
-    #         inventory = inventory.filter(category__name=category)
-                
     if 'download' and 'excel' in request.GET:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = f'attachment; filename={request.user.branch.name} stock.xlsx'
@@ -603,10 +561,10 @@ def inventory_index(request):
 
         workbook.save(response)
         return response
+
+    logs = ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
     
-    all_branches_inventory = Inventory.objects.filter(branch=request.user.branch)
-    
-    totals = calculate_inventory_totals(all_branches_inventory.filter(status=True))
+    # totals = calculate_inventory_totals(inventory)
   
     return render(request, 'inventory.html', {
         'form': form,
@@ -614,10 +572,10 @@ def inventory_index(request):
         'inventory': inventory,
         'search_query': q,
         'category':category,
-        'total_price': totals[1],
-        'total_cost':totals[0],
+        'total_price': 0,
+        'total_cost':0,
         'accessories':accessories,
-        'logs':ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
+        'logs':[]
     })
 
 @login_required
@@ -848,79 +806,83 @@ def get_stock_account_data(logs):
     
     return stock_account
 
-
-@login_required    
-def inventory_transfers(request): 
+@login_required
+def inventory_transfer_index(request):
     """
-        transfers index. Shows transfers in and out of the branch and the total cost of items transfered in/out
+    Transfers index. Shows transfers in and out of the branch and the total cost of items transferred in/out.
     """
     q = request.GET.get('q', '') 
     branch_id = request.GET.get('branch', '')
+    page_number = request.GET.get('page', 1)  
 
-    transfer_items = TransferItems.objects.filter(
-        Q(from_branch=request.user.branch) |
-        Q(to_branch = request.user.branch),
-        transfer__delete=False
-    ).annotate(
-        total_amount = ExpressionWrapper(
-            Sum(F('quantity') * F('product__cost')),
-            output_field=FloatField()
-        )
-    )
-
-    transfer_summary = transfer_items.values('transfer__id').annotate(
-        total_cost=Sum(F('quantity') * F('cost')), 
-        total_quantity=Sum('quantity') 
-    )
-
-    for item in transfer_summary:
-        print(f"Transfer ID: {item['transfer__id']}, Total Cost: {item['total_cost']}")
-    
     transfers = Transfer.objects.filter(
-        Q(branch=request.user.branch) |
-        Q(transfer_to__in=[request.user.branch]),
+        Q(branch=request.user.branch) | Q(transfer_to=request.user.branch),
         delete=False
+    ).select_related(
+        'branch'
+    ).prefetch_related(
+        'transfer_to'
     ).annotate(
         total_quantity=Sum('transferitems__quantity'),
+        total_received_qnt=Sum('transferitems__received_quantity'),
+        total_received_amount=Sum(F('transferitems__received_quantity') * F('transferitems__cost')),
         total_amount=ExpressionWrapper(
             Sum(F('transferitems__quantity') * F('transferitems__cost')),
             output_field=FloatField()
         )
-    ).order_by('-time').distinct()
-    
+    ).order_by('-time')
+
     if q:
-        transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
-        
-    if branch_id: 
+        transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q))
+    if branch_id:
         transfers = transfers.filter(transfer_to__id=branch_id)
 
-    total_transferred_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
+    paginator = Paginator(transfers, 10)
+    paginated_transfers = paginator.get_page(page_number)
 
-    total_received_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
-
-    logger.info(f'value: {total_transferred_value}, received {total_received_value}')
-        
     return render(request, 'transfers.html', {
-        'transfers': transfers,
-        'search_query': q, 
-        'transfer_items':transfer_items,
-        'transferred_value':total_transferred_value,
-        'received_value':total_received_value,
-        'totals':transfer_summary,
-        'hold_transfers_count':Transfer.objects.filter(
-                Q(branch=request.user.branch) |
-                Q(transfer_to__in=[request.user.branch]),
-                delete=False, 
-                hold=True
-            ).count()
-        }
+        'transfers': paginated_transfers,
+        'search_query': q,
+    })
+
+@login_required
+def inventory_transfer_item_data(request, id):
+    """
+    Transfer items of the parent transfer
+    """
+    transfer_items = TransferItems.objects.filter(
+        transfer__id=id,
+        transfer__delete=False
+    ).select_related(
+        'product', 'from_branch', 'to_branch', 'action_by', 'received_by', 'transfer'
+    ).annotate(
+        total_amount=F('quantity') * F('product__cost')
+    ).values(
+        'id',
+        'quantity', 
+        'over_less_quantity', 
+        'price', 
+        'dealer_price', 
+        'received', 
+        'declined', 
+        'over_less', 
+        'quantity_track', 
+        'description', 
+        'over_less_description', 
+        'received_quantity', 
+        'cost', 
+        'date', 
+        'date_received', 
+        'transfer__id',
+        'from_branch__name',
+        'product__name', 
+        'to_branch__name', 
+        'action_by__username', 
+        'received_by__username'
     )
+
+    return JsonResponse(list(transfer_items), safe=False)
+
 
 @login_required
 def held_transfer_json(request, transfer_id):
@@ -999,24 +961,36 @@ def print_transfer(request, transfer_id):
 @transaction.atomic
 def receive_inventory(request):
     if request.method == 'POST':
-        try:  
-            transfer_id = request.POST['id']
-            quantity_received = int(request.POST['quantity'])
-            received = request.POST['received']
+        try: 
+            data = json.loads(request.body)
+            logger.info(data)
+
+            transfer_id = data.get('item_id')
+            quantity_received = int(data.get('received_quantity'))
+            serial_numbers = data.get('serial_numbers', [])
+            received = True
 
             logger.info(f'transfer item data {received}')
 
             branch_transfer = get_object_or_404(TransferItems, id=transfer_id, to_branch=request.user.branch)
+
+            logger.info(branch_transfer)
             transfer_obj = get_object_or_404(Transfer, id=branch_transfer.transfer.id, transfer_to=request.user.branch)
+            logger.info(transfer_obj)
 
             if quantity_received > branch_transfer.quantity:
                 return JsonResponse({'success': 'false', 'message': 'Quantity received cannot be more than quantity transferred'}, status=400)
 
             if received:
+                logger.info(received)
                 if quantity_received != branch_transfer.quantity:
                     branch_transfer.over_less_quantity = branch_transfer.quantity - quantity_received
                     branch_transfer.over_less = True
                     branch_transfer.save()
+
+                # validation for more quantity received
+                if quantity_received > branch_transfer.quantity:
+                    return JsonResponse({'success': False, 'message': 'Quantity received cannot be more than quantity transferred'}, status=400)
 
                 product, created = Inventory.objects.get_or_create(
                     name=branch_transfer.product.name,
@@ -1042,6 +1016,18 @@ def receive_inventory(request):
 
                 logger.info('created')
 
+                # for serial_number in serial_numbers:
+                #     print(serial_number)
+                #     serial_obj, _ = SerialNumber.objects.get_or_create(
+                #         serial_number=serial_number,
+                #         defaults={
+                #             'status':True
+                #         }
+                #     )
+                #     print(serial_obj, _)
+                #     product.serial_numbers.add(serial_obj)
+                #     logger.info('saved')
+
                 ActivityLog.objects.create(
                     branch=request.user.branch,
                     user=request.user,
@@ -1062,7 +1048,7 @@ def receive_inventory(request):
                 logger.info('product received')
 
             branch_transfer.quantity_track = branch_transfer.quantity - quantity_received
-            branch_transfer.receieved_quantity += quantity_received
+            branch_transfer.received_quantity += quantity_received
             branch_transfer.received_by = request.user
             branch_transfer.received = True
             branch_transfer.description = f'received {quantity_received} out of {branch_transfer.quantity}'
@@ -1074,6 +1060,8 @@ def receive_inventory(request):
             if not transfer_obj.receive_status:
                 transfer_obj.receive_status = True
                 transfer_obj.save()
+            
+            logger.info('done')
 
             return JsonResponse({'success': True, 'message': 'Product received successfully'}, status=200)
 
@@ -1112,7 +1100,7 @@ def over_less_list_stock(request):
     form = DefectiveForm()
     search_query = request.GET.get('search_query', '')
     
-    transfers =  TransferItems.objects.filter(to_branch=request.user.branch)
+    transfers =  TransferItems.objects.filter(to_branch=request.user.branch).prefetch_related('product', 'transfer').order_by('-date')
 
     if search_query:
         transfers = transfers.filter(
@@ -1120,136 +1108,175 @@ def over_less_list_stock(request):
             Q(transfer__transfer_ref__icontains=search_query)|
             Q(date__icontains=search_query)
         )
-        
-    def activity_log(action, inventory, branch_transfer, description=None):
-        activity = ActivityLog.objects.create(
-            branch = branch_transfer.from_branch,
-            user=request.user,
-            action= action,
-            inventory=inventory,
-            quantity=branch_transfer.over_less_quantity,
-            total_quantity=inventory.quantity,
-            product_transfer=branch_transfer,
-            description=description
-        )
-        logger.info(f'Activvity log: {activity}')
     
     if request.method == 'POST':
-        data = json.loads(request.body)
-        
-        action = data['action']
-        transfer_id = data['transfer_id']
-        reason = data['reason']
-        status = data['status']
-        branch_loss = data['branch_loss']
-        quantity= data['quantity']
-  
-        branch_transfer = get_object_or_404(transfers, id=transfer_id)
-
-        logger.info(f'to branch transfer: {branch_transfer}')
-        transfer = get_object_or_404(Transfer, id=branch_transfer.transfer.id)
-        logger.info(f'to branch transfer: {transfer}')
-        logger.info(f'Product is: {branch_transfer.product}')
-        product = Inventory.objects.get(id=branch_transfer.product.id)
-       
-        if int(branch_transfer.over_less_quantity) > 0:
-            if action == 'write_off':    
-                product.quantity += branch_transfer.over_less_quantity 
-                product.save()
-                
-                description='write_off'
-                
-                activity_log('Stock in', product, branch_transfer)
-                
-                DefectiveProduct.objects.create(
-                    product = product,
-                    branch = request.user.branch,
-                    quantity = quantity,
-                    reason = reason,
-                    status = status,
-                    branch_loss = get_object_or_404(Branch, id=branch_loss),
-                )
-                
-                product.quantity -= branch_transfer.over_less_quantity 
-                branch_transfer.over_less_description = description
-                branch_transfer.action_by = request.user
-                branch_transfer.over_less = False
-                
-                transfer.defective_status = True
-                
-                transfer.save()
-                branch_transfer.save()
-                product.save()
-                
-                activity_log('write off', product, branch_transfer )
-                
-                messages.success(request, f'{product.product.name} write-off successfull')        
-
-                return JsonResponse({'success':True}, status=200)
+        try:
+            data = json.loads(request.body)
             
-            if action == 'accept':
-                """
-                    accepting back / sending back to the source branch
-                """
-                product.quantity += branch_transfer.over_less_quantity 
-                product.save()
-                
-                branch_transfer.over_less = False
-                branch_transfer.over_less_description = 'returned back to source'
-                branch_transfer.save()
+            action = data.get('action')
+            transfer_id = data.get('transfer_id')
+            quantity = int(data.get('quantity', 0))
+            branch = data.get('branch')
+            reason = data.get('reason', '')
 
-                activity = ActivityLog.objects.create(
-                    branch = branch_transfer.to_branch,
-                    user=request.user,
-                    action= 'stock in',
-                    inventory=product,
-                    quantity=branch_transfer.over_less_quantity,
-                    total_quantity=product.quantity,
-                    product_transfer=branch_transfer,
-                    description=f'Transfer return {transfer.transfer_ref}'
-                )
-
-                logger.info(f'Activvity log: {activity}')
-                
-                messages.success(request, f'{product.name} accepted back successfully') 
-
-                return JsonResponse({'success':True}, status=200)
+            logger.info(f'Action: {action}, transfer_id: {transfer_id}, quantity: {quantity}, branch: {branch}, reason: {reason}')
             
-            if action == 'back':
+            branch_transfer = TransferItems.objects.filter(id=transfer_id).first()
+            transfer = branch_transfer.transfer
 
-                """
-                    creating a new transfer
-                """
+            logger.info(branch_transfer.over_less_quantity)
+            with transaction.atomic():
+                if int(branch_transfer.received_quantity) != int(branch_transfer.quantity):
+                    
+                    if action in ['write-off', 'stolen', 'defective']:   
 
-                transfer_new_obj = Transfer.objects.create(
-                    branch = transfer.branch,
-                    user = request.user,
-                    transfer_ref = f'{transfer.transfer_ref} #2',
-                    description = f'Transfer resend from transfer ref {transfer.transfer_ref}'
-                )
+                        if not branch:
+                            return JsonResponse({'succes':False, 'meesage': 'Select branch'})
+                        
+                        branch = Branch.objects.get(id=branch)
+                        
+                        product = Inventory.objects.get(
+                            Q(name__icontains = branch_transfer.product.name), 
+                            branch=branch
+                        )
 
-                transfer_item = TransferItems.objects.create(
-                    transfer = transfer_new_obj,
-                    product = product,
-                    from_branch = transfer.branch,
-                    to_branch = branch_transfer.to_branch,
-                    quantity = branch_transfer.over_less_quantity,
-                    cost = product.cost,
-                    price = product.price,
-                    dealer_price = product.dealer_price,
-                    description = f'Transfer resend from transfer ref {transfer.transfer_ref}'
-                )
-                
-                branch_transfer.over_less = False
-                branch_transfer.quantity -= branch_transfer.over_less_quantity
-                branch_transfer.save()
-                 
-                return JsonResponse({'success':True}, status=200)
-            
-            return JsonResponse({'success':False, 'messsage':'Invalid form'}, status=400)
-            
-        return JsonResponse({'success':False, 'messsage':'Invalid form'}, status=400)
-                  
+                        logger.info(product)
+
+                        def createDefectiveProduct():
+                            DefectiveProduct.objects.create(
+                                product = product,
+                                branch = request.user.branch,
+                                quantity = quantity,
+                                reason = action,
+                                status = True,
+                                branch_loss = branch,
+                            )
+
+                        if branch_transfer.from_branch == branch or branch_transfer.to_branch == branch:
+                            createDefectiveProduct()
+                        else:
+                            product.quantity -= quantity
+                            createDefectiveProduct()
+                        
+                        product.save()
+                        
+                        description= f'{action} x {quantity} items transfered to defects branch: {branch}'
+                        
+                        if branch_transfer.received > 0:
+                            branch_transfer.received_quantity -= int(quantity)
+                        
+                        if branch_transfer.received_quantity == 0:
+                            branch_transfer.received = True
+
+                        product.quantity -= branch_transfer.over_less_quantity 
+                        branch_transfer.description = description
+                        branch_transfer.over_less_description = description
+                        branch_transfer.action_by = request.user
+                        branch_transfer.over_less = False
+                        
+                        transfer.defective_status = True
+                        
+                        transfer.save()
+                        branch_transfer.save()
+                        
+                        ActivityLog.objects.create(
+                            branch = branch,
+                            user=request.user,
+                            action= action,
+                            inventory=product,
+                            quantity=quantity,
+                            total_quantity=product.quantity,
+                            product_transfer=branch_transfer,
+                            description=description
+                        )
+                        
+                        return JsonResponse({'success':True}, status=200)
+                    
+                    if action == 'receive':
+                        """
+                            receiving the transfer on the current branch
+                        """
+
+                        product = Inventory.objects.get(
+                            Q(name__icontains = branch_transfer.product.name), 
+                            branch=request.user.branch
+                        )
+
+                        logger.info(f'Processing receiving for product: {product.name}')
+
+                        product.quantity += int(quantity)
+                        product.save()
+                        
+                        branch_transfer.received_quantity += quantity
+                        branch_transfer.description = f'Received {branch_transfer.received_quantity} x {branch_transfer.quantity}'
+                        branch_transfer.over_less = False
+                        branch_transfer.over_less_description = 'received'
+                        branch_transfer.save()
+
+                        ActivityLog.objects.create(
+                            branch = branch_transfer.to_branch,
+                            user=request.user,
+                            action= 'stock in',
+                            inventory=product,
+                            quantity=quantity,
+                            total_quantity=product.quantity,
+                            product_transfer=branch_transfer,
+                            description=f'Received from {transfer.transfer_ref}'
+                        )
+
+                        logger.info(f'Product received: {product.name}')
+
+                        return JsonResponse({'success':True}, status=200)
+                    
+                    if action == 'send_back':
+
+                        """
+                            adjusting the goods transfered to the source and 
+                        """
+
+                        source_product = Inventory.objects.get(
+                            id=branch_transfer.product.id, 
+                            branch=branch_transfer.from_branch
+                        )
+
+                        logger.info(source_product)
+
+                        source_product.quantity += int(quantity)
+                        source_product.save()
+
+                        ActivityLog.objects.create(
+                            branch = branch_transfer.from_branch,
+                            user=request.user,
+                            action= 'stock in',
+                            inventory=source_product,
+                            quantity=quantity,
+                            total_quantity=source_product.quantity,
+                            product_transfer=branch_transfer,
+                            description=f'transfer return from {branch_transfer.to_branch}'
+                        )
+
+
+                        branch_transfer.quantity -= int(quantity)
+                        branch_transfer.received = True
+                        branch_transfer.description = f'transfered x { quantity } items back to {branch_transfer.from_branch} '
+                        branch_transfer.over_less = False
+                        branch_transfer.quantity -= branch_transfer.over_less_quantity
+                        branch_transfer.save()
+
+                        data = [
+                            {
+                                'transfer_id':branch_transfer.id,
+                                'description':branch_transfer.description,
+                                'status':branch_transfer.received 
+                            }
+                        ]
+
+                        logger.info(f'Product {source_product.name} successfully transfered back')
+                    
+                        return JsonResponse({'success':True, 'data':data}, status=200)
+        except Exception as e:
+            return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
+
     return render(request, 'over_less_transfers.html', {'over_less_transfers':transfers, 'form':form})
 
 @login_required
@@ -1716,7 +1743,7 @@ def add_reorder_quantity(request):
 @login_required
 def purchase_orders(request):
     form = CreateOrderForm()
-    status_form = PurchaseOrderStatus()
+    status_form = PurchaseOrderStatusForm()
     orders = PurchaseOrder.objects.filter(branch = request.user.branch).order_by('-order_date')
 
     items = PurchaseOrderItem.objects.filter(purchase_order__id=5)
@@ -2211,11 +2238,11 @@ def purchase_order_detail(request, order_id):
     products = Inventory.objects.filter(branch=request.user.branch).values(
         'dealer_price', 
         'price', 
-        'product__name'
+        'name'
     )
 
     # Convert products queryset to a dictionary for easy lookup by product ID
-    product_prices = {product['product__name']: product for product in products}
+    product_prices = {product['name']: product for product in products}
 
     for item in items:
         product_name = item.product  
@@ -2282,13 +2309,13 @@ def sales_price_list_pdf(request, order_id):
     products = Inventory.objects.filter(branch=request.user.branch).values(
         'dealer_price', 
         'price', 
-        'product__name',
-        'product__description',
+        'name',
+        'description',
         'quantity'
     )
 
     # Convert products queryset to a dictionary for easy lookup by product ID
-    product_prices = {product['product__name']: product for product in products}
+    product_prices = {product['name']: product for product in products}
    
     for item in items:
         product_name = item.product
@@ -2297,7 +2324,7 @@ def sales_price_list_pdf(request, order_id):
         description = ''
 
         if product_data:
-            description = item.description = product_data['product__description'] 
+            description = item.description = product_data['description'] 
 
         if product_data:
             item.dealer_price = product_data['dealer_price']
@@ -3429,7 +3456,7 @@ def payments(request):
 @login_required
 def accessory_view(request, product_id):
     if request.method == 'GET':
-        accessories = Accessory.objects.filter(product__id=product_id).values('id', 'product__name')
+        accessories = Accessory.objects.filter(main_product__id=product_id).values('id', 'product__name')
         return JsonResponse({'success': True, 'data': list(accessories)}, status=200)
 
     if request.method == 'POST':
@@ -3490,22 +3517,21 @@ def vue_view(request):
 
 #API
 ##########################################################################################################
-<<<<<<< HEAD
-from rest_framework.viewsets import ModelViewSet
-from .serializers import ProductsSerializers
-
-class InventoryViewset(ModelViewSet):
-    serializer_class = ProductsSerializers
-
-    def get_queryset(self):
-        user = self.request.user
-        return Inventory.objects.filter(disable=False)
-=======
 from rest_framework import views, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .serializers import *
+from rest_framework.viewsets import ModelViewSet
+from .serializers import *
+
+class InventoryViewset(ModelViewSet):
+    serializer_class = InventorySerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Inventory.objects.filter(disable=False)
+
 
 class CategoriesList(views.APIView):
     def get(self, request): 
@@ -3531,13 +3557,17 @@ class AddCategories(views.APIView):
 
 class Products(views.APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         products = Inventory.objects.filter(branch = request.user.branch, status=True, disable=False).values(
             'id',
             'name',
-            'quantity'
+            'quantity', 
+            'price',
+            'dealer_price',
+            'category__name'
         ).order_by('name')  
-        logger.info(products)         
+      
         return Response(products, status.HTTP_200_OK)
 
 class AddProducts(views.APIView):
@@ -5048,19 +5078,19 @@ class InventoryTransfer(views.APIView):
         """
             transfers index. Shows transfers in and out of the branch and the total cost of items transfered in/out
         """
-        q = request.GET.get('q', '') 
-        branch_id = request.GET.get('branch', '')
+        # q = request.GET.get('q', '') 
+        # branch_id = request.GET.get('branch', '')
 
-        transfer_items = TransferItems.objects.filter(
-            Q(from_branch=request.user.branch) |
-            Q(to_branch = request.user.branch),
-            transfer__delete=False
-        ).annotate(
-            total_amount = ExpressionWrapper(
-                Sum(F('quantity') * F('product__cost')),
-                output_field=FloatField()
-            )
-        )
+        # transfer_items = TransferItems.objects.filter(
+        #     Q(from_branch=request.user.branch) |
+        #     Q(to_branch = request.user.branch),
+        #     transfer__delete=False
+        # ).annotate(
+        #     total_amount = ExpressionWrapper(
+        #         Sum(F('quantity') * F('product__cost')),
+        #         output_field=FloatField()
+        #     )
+        # )
         
         transfers = Transfer.objects.filter(
             Q(branch=request.user.branch) |
@@ -5076,36 +5106,36 @@ class InventoryTransfer(views.APIView):
 
         logger.info(f'transfers: {transfers}')
         
-        if q:
-            transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
+        # if q:
+        #     transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
             
-        if branch_id: 
-            transfers = transfers.filter(transfer_to__id=branch_id)
+        # if branch_id: 
+        #     transfers = transfers.filter(transfer_to__id=branch_id)
 
-        total_transferred_value = (
-        transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-            .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-        )
+        # total_transferred_value = (
+        # transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+        #     .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+        # )
 
-        total_received_value = (
-        transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-            .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-        )
+        # total_received_value = (
+        # transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+        #     .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+        # )
 
-        logger.info(f'value: {total_transferred_value}, received {total_received_value}')
+        # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
             
         return render(request, 'transfers.html', {
-            'transfers': transfers,
-            'search_query': q, 
-            'transfer_items':transfer_items,
-            'transferred_value':total_transferred_value,
-            'received_value':total_received_value,
-            'hold_transfers_count':Transfer.objects.filter(
-                    Q(branch=request.user.branch) |
-                    Q(transfer_to__in=[request.user.branch]),
-                    delete=False, 
-                    hold=True
-                ).count()
+            'transfers': transfers
+            # 'search_query': q, 
+            # 'transfer_items':transfer_items,
+            # 'transferred_value':total_transferred_value,
+            # 'received_value':total_received_value,
+            # 'hold_transfers_count':Transfer.objects.filter(
+            #         Q(branch=request.user.branch) |
+            #         Q(transfer_to__in=[request.user.branch]),
+            #         delete=False, 
+            #         hold=True
+            #     ).count()
             }
         )
 
@@ -5558,4 +5588,3 @@ class AccessoriesView(views.APIView):
     def get(self, request, product_id):
         accessories = Accessory.objects.filter(product__id=product_id).values('id', 'product__name')
         return Response({'data': accessories}, status.HTTP_200_OK)
->>>>>>> 4e458560178051856fe1d1650fc899090671a1ab

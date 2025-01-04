@@ -30,16 +30,16 @@
 </style>
 <div class="inventory">
     <div class="inventory-navbar" onscroll="adjust()">
-        <nav class="d-flex justify-content-between align-items-center bg-dark text-light rounded mb-2 p-2">
+        <nav class="d-flex justify-content-between align-items-center shadow rounded mb-2 p-2">
             <div class="d-flex">
                 <div>
                     <h4 class='mt-1 fw-bold'>{{ purchase_order.batch|lower }}: <small class='px-1 fw-bold fx-6'>Order Detail</small></h4>
                 </div>
             </div>
             <div>
-                <a href="?download=csv" class="btn text-light border bx bx-download mx-1"></a>
+                <a href="?download=csv" class="btn btn-outline-dark btn-sm bx bx-download mx-1"></a>
                 <div class="dropdown d-inline-block">
-                    <a href="javascript:void(0)" class="btn text-light border " id="shareDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a href="javascript:void(0)" class="btn btn-outline-dark btn-sm " id="shareDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class='bx bx-share-alt'></i>
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="shareDropdown">

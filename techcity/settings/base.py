@@ -24,7 +24,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = "django-insecure-rb&d1ur&gv!uedx9&nym9zthkk(32-kdvh1x_b0+c+&^hny!o9"
 
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = []
 # Application definition
 
@@ -139,18 +139,18 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 DATABASES = {
 
-    # 'default': dj_database_url.config(
-    #     default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
-    # )
+    'default': dj_database_url.config(
+        default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
+    )
 
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME':  'techcoty',
-        'USER': 'postgres',
-        'PASSWORD': 'neverfail',
-        'HOST': 'localhost',
-        'PORT': '5432'
-    }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME':  'techcoty',
+    #     'USER': 'postgres',
+    #     'PASSWORD': 'neverfail',
+    #     'HOST': 'localhost',
+    #     'PORT': '5432'
+    # }
 
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

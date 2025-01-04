@@ -46,19 +46,19 @@
                             Transfer
                         </a>
                     </div>
-                    <div class="mx-2">
+                    <!-- <div class="mx-2">
                         <a href='{% url 'inventory:receive_inventory' %}'  class="btn btn-outline-dark btn-sm">
                             Receive Stock
                             <span class="badge badge-dark text-light circle-rounded lick">{{transfers_count}}</span>
                         </a>
-                    </div>
-                    <div>
+                    </div> -->
+                    <div class="mx-2">
                         <a href='{% url 'inventory:over_less_list_stock' %}'  class="btn btn-outline-dark btn-sm flick">
                             Over/Less Received Stocks
                         </a>
                     </div>
                 </div>
-                <div class="mx-2">
+                <div>
                     <button type="button" class='pdf-gen btn btn-secondary btn-sm'>
                         Transfers Report
                         <i class='bx bx-file text-light'></i>
@@ -73,6 +73,68 @@
             </div>
             {% include "components/transfers_table.html" %}
         </div>
+        
+        <!-- pagination -->
+        <div class="d-flex justify-content-end">
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {% if transfers.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}" aria-label="First">
+                                <i class='bx bx-chevrons-left'></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ transfers.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" aria-label="Previous">
+                                <i class='bx bx-chevron-left'></i>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                <i class='bx bx-chevrons-left'></i>
+                            </span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                <i class='bx bx-chevron-left'></i>
+                            </span>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            Page {{ transfers.number }} of {{ transfers.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if transfers.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ transfers.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" aria-label="Next">
+                                <i class='bx bx-chevron-right'></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ transfers.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}" aria-label="Last">
+                                <i class='bx bx-chevrons-right'></i>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                <i class='bx bx-chevron-right'></i>
+                            </span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                <i class='bx bx-chevrons-right'></i>
+                            </span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+
         
         <!-- transfers pdf modal -->
 

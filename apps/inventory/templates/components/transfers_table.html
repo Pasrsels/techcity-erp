@@ -1,84 +1,147 @@
+<!-- 
+
+This template renders a table displaying transfer records in the inventory system. It includes the following sections:
+
+1. Loader: A loading spinner displayed while data is being fetched.
+2. Table: A table with transfer details including transfer ID, quantity, status, user, reference, discrepancy, and actions.
+3. Modals:
+    - Delete Modal: A modal for confirming the deletion of a transfer.
+    - Items Modal: A modal displaying detailed information about the products in a transfer.
+    - Action Modal: A modal for performing actions on stock discrepancies.
+
+Table Columns:
+- Transfer: Displays the transfer time and status icons.
+- Trans Qnty | Amnt trans: Shows the transferred and received quantities and amounts.
+- Status: Indicates the status of the transfer (defective, all received, partial, not yet received).
+- User: The username of the person who initiated the transfer.
+- Reference: The reference ID of the transfer.
+- Discrepancy: Placeholder for discrepancy information.
+- Action: Buttons for printing, processing, or canceling the transfer.
+
+JavaScript:
+- Handles modal display and data fetching for transfer items.
+- Manages actions such as receiving quantities and canceling transfers.
+- Updates the UI based on user interactions and fetched data.
+-->
 {% load static%}
 {% block content %}
+<style>
+    .child-rows td {
+    background: #f9f9f9;
+}
+</style>
 <div class="table transfers-table mt-2">
     {% include 'components/loader.html' %}
     <div class='table-scroll'>
-    <table class='table table-bordered border table-hover rounded hidden table-striped p-2' id='transfers' style="width: 100%;">
-        <thead class="table-dark sticky-top">
+    <table class='table table-bordered border table-hover rounded hidden p-2' id='transfers' style="width: 100%;">
+        <thead class="table-dark sticky-top d-none">
             <tr>
                 <th>Transfer</th>
-                <th>Product List</th> 
                 <th>Trans Qnty | Amnt trans</th>
-                <th class='text-center'>Status</th>
                 <th>User</th>
-                <th>Discrepancy</th>
                 <th>Reference</th>
+                <th>Discrepancy</th>
                 <th>Action</th>
             </tr>
         </thead>
             <tbody>
                 {% for transfer in transfers %}
-                    <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %}">
-                        <td style="background: #ccd2d7f5 !important;">
+                    <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %} parent-row" data-id="{{ transfer.id }}">
+                        <td style="background: #ecedee !important;">
                             {% if transfer.hold %}
                                 <small class="d-flex align-items-center">
+                                    <small>
+                                        {% if transfer.defective_status %}
+                                            <span class='hint--bottom' aria-label='Defective'>
+                                                <i class='bx bxs-circle fs-3 text-defective'></i>
+                                            </span>
+                                        {% else %}
+                                            {% if transfer.quantity == 0 %}
+                                                <span class='hint--bottom' aria-label='All received'>
+                                                    <i class='bx bxs-circle text-received fs-3'></i>
+                                                </span>
+                                            {% elif transfer.total_quantity_track < transfer.quantity and transfer.quantity > 0 %}
+                                                <span class='hint--bottom' aria-label='Partial'>
+                                                    <i class='bx bxs-circle text-warning fs-3'></i>
+                                                </span>
+                                            {% elif transfer.quantity == transfer.total_quantity_track %}
+                                                <span class='hint--bottom' aria-label='Not yet received'>
+                                                    <i class='bx bxs-circle text-danger fs-3'></i>
+                                                </span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </small>
                                     <i class='bx bx-pause fs-2' style='color:#007bff'></i>
                                     <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
                                 </small>
                             {% else %}
                                 {% if request.user.branch in transfer.transfer_to.all %}
                                     <small class="d-flex align-items-center">
+                                        <small>
+                                            {% if transfer.defective_status %}
+                                                <span class='hint--bottom' aria-label='Defective'>
+                                                    <i class='bx bxs-circle fs-3 text-defective'></i>
+                                                </span>
+                                            {% else %}
+                                                {% if transfer.quantity == 0 %}
+                                                    <span class='hint--bottom' aria-label='All received'>
+                                                        <i class='bx bxs-circle text-received fs-3'></i>
+                                                    </span>
+                                                {% elif transfer.total_quantity_track < transfer.quantity and transfer.quantity > 0 %}
+                                                    <span class='hint--bottom' aria-label='Partial'>
+                                                        <i class='bx bxs-circle text-warning fs-3'></i>
+                                                    </span>
+                                                {% elif transfer.quantity == transfer.total_quantity_track %}
+                                                    <span class='hint--bottom' aria-label='Not yet received'>
+                                                        <i class='bx bxs-circle text-danger fs-3'></i>
+                                                    </span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </small>
                                         <i class='bx bxs-right-arrow-alt text-success' style="font-size: 35px;"></i>
                                         <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
                                     </small>
                                 {% else %}
                                     <small class="d-flex align-items-center">
+                                        <small>
+                                            {% if transfer.defective_status %}
+                                                <span class='hint--bottom' aria-label='Defective'>
+                                                    <i class='bx bxs-circle fs-3 text-defective'></i>
+                                                </span>
+                                            {% else %}
+                                                {% if transfer.quantity == 0 %}
+                                                    <span class='hint--bottom' aria-label='All received'>
+                                                        <i class='bx bxs-circle text-received fs-3'></i>
+                                                    </span>
+                                                {% elif transfer.total_quantity_track < transfer.quantity and transfer.quantity > 0 %}
+                                                    <span class='hint--bottom' aria-label='Partial'>
+                                                        <i class='bx bxs-circle text-warning fs-3'></i>
+                                                    </span>
+                                                {% elif transfer.quantity == transfer.total_quantity_track %}
+                                                    <span class='hint--bottom' aria-label='Not yet received'>
+                                                        <i class='bx bxs-circle text-danger fs-3'></i>
+                                                    </span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </small>
                                         <i class='bx bxs-left-arrow-alt' style="color: #dc3545eb; font-size: 35px;"></i>
                                         <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
                                     </small>
                                 {% endif %}
                             {% endif %}
                         </td>
-                        <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small class="d-flex align-items-center justify-content-center"><i class='bx bx-box'></i></small></td>
-                        <td style="background: #ccd2d7f5 !important;">
+                        <td style="background: #ecedee !important;">
                             <small class="d-flex justify-content-between">
-                                {% for qt in totals %}
-                                    {% if qt.transfer__id == transfer.id %}
-                                        <span>{{ qt.total_quantity }}</span>
-                                        {% if not request.user.role == 'sales' %}
-                                            <span class="text-primary text-bold">${{ qt.total_cost|floatformat:2 }}</span>
-                                        {% endif %}
-                                    {% endif %}
-                                {% endfor %}
-                            </small>
-                        </td>
-                        <td style="background: #ccd2d7f5 !important;" class='transfer-btn text-center' data-id="{{ transfer.id }}">
-                            <small  class='hint--bottom' aria-label='Defective'>
-                                {% if transfer.defective_status %}
-                                    <span class='hint--bottom' aria-label='Defective'>
-                                        <i class='bx bxs-circle fs-3 text-defective'></i>
-                                    </span>
-                                {% else %}
-                                    {% if transfer.quantity == 0 %}
-                                        <span class='hint--bottom' aria-label='All received'>
-                                            <i class='bx bxs-circle text-received fs-3'></i>
-                                        </span>
-                                    {% elif transfer.total_quantity_track < transfer.quantity and transfer.quantity > 0 %}
-                                        <span class='hint--bottom' aria-label='Partial'>
-                                            <i class='bx bxs-circle text-warning fs-3'></i>
-                                        </span>
-                                    {% elif transfer.quantity == transfer.total_quantity_track %}
-                                        <span class='hint--bottom' aria-label='Not yet received'>
-                                            <i class='bx bxs-circle text-danger fs-3'></i>
-                                        </span>
-                                    {% endif %}
+                                <span class="border p-1">{{ transfer.total_received_qnt }} / {{ transfer.total_quantity}} </span>
+                                {% if not request.user.role == 'sales' %}
+                                    <span class="text-primary text-bold border p-1">${{ transfer.total_received_amount|floatformat:2 }} / ${{ transfer.total_amount|floatformat:2 }}</span>
                                 {% endif %}
                             </small>
                         </td>
-                        <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
-                        <td style="background: #ccd2d7f5 !important;"></td>
-                        <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_ref }}</small></td>
-                        <td style="background: #ccd2d7f5 !important;" class='transfer-btn' data-id="{{ transfer.id }}">
+                        <td style="background: #ecedee !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
+                        <td style="background: #ecedee !important;" class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.transfer_ref }}</small></td>
+                        <td style="background: #ecedee !important;"></td>
+                        <td style="background: #ecedee !important;" class='transfer-btn'>
                             <a href="{% url 'inventory:print_transfer' transfer.id %}" class="btn border btn-sm">
                                 <i class='bx bx-printer '></i>
                             </a>
@@ -92,78 +155,33 @@
                                 </a>
                             {% endif %}
                             <button onclick="cancel({{ transfer.id }})" class="btn border btn-outline-dark bx bx-trash"></button>
+                            <!-- <button class="btn btn-sm btn-outline-dark" onclick="showFetch ({{ transfer.id }})">Receive</button> -->
                         </td>
                     </tr>
                     <tbody>
-                        {% for item in transfer_items %}
-                            {% if transfer.id == item.transfer.id %}
-                                <tr id="id_items" class="hidden items" data-transfer-id="{{ transfer.id }}">
-                                    <td></td>
-                                    <td><small>{{ item.product.name }}</small></td>
-                                    <td><small class="d-flex justify-content-between">
-                                        {% if not request.user.role == 'sales' %}
-                                            <span>
-                                                {{ item.quantity }}  @ {{ item.product.cost }}
-                                            </span>
-                                            <span class="text-primary">
-                                                ${{ item.total_amount|floatformat:2 }}
-                                            </span>
-                                        {% endif %}
-                                    </small></td>
-                                    <td class="text-center">
-                                        <small>
-                                            <span>
-                                                {% if item.declined %}
-                                                    <small class='bg-danger text-center rounded w-100 p-2'>Declined</small>
-                                                {% elif item.received %}
-                                                    {% if item.receieved_quantity == 0 %}
-                                                        <small class='bg-danger text-center rounded w-100 p-2'>{{ item.receieved_quantity }} / {{ item.quantity }} </small>
-                                                    {% elif item.receieved_quantity == item.quantity %}
-                                                        <small class='bg-success text-center rounded w-100 p-2'>{{ item.receieved_quantity }} / {{ item.quantity }} </small>
-                                                    {% else %}
-                                                        <small class='bg-warning text-center rounded w-100 p-2'>{{ item.receieved_quantity }} / {{ item.quantity }} </small>
-                                                    {% endif %}
-                                                {% else %}
-                                                    <small>Not yet received</small>
-                                                {% endif %}
-                                            </span>
-                                        </small>
-                                    </td>
-                                    <td class='transfer-btn' data-id="{{ transfer.id }}"><small>{{ transfer.user.username }}</small></td>
-                                    <td ></td>
-                                    <td><small>{{ request.user.branch }} - {{ item.to_branch }}</small></td>
-                                    <td colspan="2"></td>
-                                </tr>
-                            {% endif %}
-                        {% endfor %}
+                    <tr class="child-rows d-none" data-parent-id="{{ transfer.id }}">
+                        <td colspan="8">
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>status</th>
+                                        <th>Received By</th>
+                                        <th>Description</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </td>
+                    </tr>
                     </tbody>
-                {% endfor %}
-            </tbody>
+        {% endfor %}
+        </tbody>
     </table>
-    <div class="modal fade" id="transferItemsModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <h5>Transfered Products</h5>
-                    <table class='table table-striped border rounded p-2'>
-                        <tr>
-                            <thead>
-                                <th>Name</th>
-                                <th>Price</th>
-                                <th>Quantity</th>
-                                <th>Destination</th>
-                                <th>Status</th>
-                            </thead>
-                        </tr>
-                        <tbody id='itemsTransfersTable'></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
     
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-body">
                     <h5>Delete Transfer</h5>
@@ -173,20 +191,135 @@
         </div>
     </div>
 
-    <div class="modal fade" id="successDeleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
+    <div class="modal fade" id="itemsModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-fullscreen">
             <div class="modal-content">
-                <div class="modal-body text-center">
-                    <h5>Transfer Successfully Deleted</h5>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <h5>Transfer: {{ transfer.transfer_ref }} Products</h5>
+                            <span class="p-2 mx-2 bg-light border rounded">Received Quantity: <span id="received_quantity"></span> / <span id="id_total_quantity"></span></span>
+                            <span class="p-2 bg-light border rounded">Received Cost: <span id="received_cost"></span> / <span id="id_total_cost"></span></span>
+                        </div>
+                        <button class="btn btn-sm btn-close"></button>
+                    </div> 
+                    
+                    <div class="mt-3 table-responsive">
+                        <table class="table table-hover table-stripped">
+                            <thead class="table-dark sticky-top">
+                                <th>Product</th>
+                                <th>Product</th>
+                                <th>Total Cost</th>
+                                <th>Quantity</th>
+                                <th>Quanity Received</th>
+                                <th>Receieved_by</th>
+                                <th>Details</th>
+                                <th>Action</th>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <div class="modal fade" id="ActionModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <h5 id="product-name"></h5>
+                        </div>
+                        <!-- <button class="btn btn-sm btn-close"></button> -->
+                    </div> 
+                    
+                    <div>
+                        <form id="actionForm" class="d-flex flex-column">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="actionSelect" class="form-label">Action</label>
+                                <select id="actionSelect" class="form-select">
+                                    <option value="">-- Select an action --</option>
+                                    <option value="send_back">Send Back to Source</option>
+                                    <option value="receive">Receive</option>
+                                    <option value="write-off">Write off</option>
+                                    <option value="stolen">Stolen</option>
+                                    <option value="defective">Defective Product</option>
+                                </select>
+                            </div>
+                        
+                            <div class="mb-3 d-none" id="branchSelectWrapper">
+                                <label for="branchSelect" class="form-label">Select Branch</label>
+                                <select id="branchSelect" class="form-select">
+                                    {% for branch in branches %}
+                                        <option value="{{ branch.id }}">{{ branch.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                    
+                            <div class="mb-3 d-none" id="quantityWrapper">
+                                <label for="quantity" class="form-label">Quantity</label>
+                                <input type="number" id="quantity" class="form-control" min="1" placeholder="Enter quantity">
+                            </div>
+                        
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- receive quantity transfer _item modal -->
+    <div class="modal fade" id="receiveModal" tabindex="-1" aria-labelledby="receiveModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="receiveModalLabel">Receive Inventory</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="receiveForm" method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="item_id" class="form-label">Item ID:</label>
+                            <input type="number" class="form-control" id="item_id" name="item_id" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="received_quantity" class="form-label">Quantity Received:</label>
+                            <input type="number" class="form-control" id="r_quantity" name="received_quantity" required>
+                        </div>
+                        <div id="serialNumbersSection" class="mb-3">
+                            <label for="serial_numbers" class="form-label">Serial Numbers:</label>
+                            <div id="serialInputs">
+                                <!-- Serial number inputs will be added dynamically here -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" form="receiveForm" class="btn btn-primary btn-sm" onclick="submitReceivedQuantity()">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
 <script>
+    let transferId = '';
     let transfer_id = ''
+    let total_quantity = 0;
+    let total_cost = 0;
+    let products_total_cost = 0;
+    let products_total_qauntity = 0
+   
+
     const transferBtn = document.querySelectorAll('.transfer-btn');
-    const tranferItemsModal = new bootstrap.Modal(document.getElementById('transferItemsModal'));
 
     const expandBtn = document.querySelector('#id_expand')
     const itemsEl = document.querySelectorAll('#id_items')
@@ -197,7 +330,291 @@
     const transferRows = document.querySelectorAll('.transfer-btn');
     const hooverProduct = document.querySelectorAll('#id_hover_product');
 
-    // search functionality of the table -> js
+    const itemModal = new bootstrap.Modal(document.getElementById('itemsModal'));
+
+    const rQuantity = document.getElementById('received_quantity');
+    const tQuantity = document.getElementById('id_total_quantity');
+
+    const rCost = document.getElementById('received_cost');
+    const tCost = document.getElementById('id_total_cost');
+
+    const actionModal = document.getElementById('ActionModal');
+    const actModal = new bootstrap.Modal(document.getElementById('ActionModal'));
+    const receiveModal = new bootstrap.Modal(document.getElementById('receiveModal'));
+
+    rQuantity.textContent = total_quantity || 0;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.parent-row').forEach(parentRow => {
+            parentRow.addEventListener('click', function () {
+                const transferId = this.getAttribute('data-id');
+                const childRow = document.querySelector(`.child-rows[data-parent-id="${transferId}"]`);
+                const tbody = childRow.querySelector('tbody');
+
+                if (childRow.classList.contains('d-none')) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>`;
+                    childRow.classList.remove('d-none');
+                    
+                    showFetch(transferId, tbody)
+                } else {
+                    childRow.classList.toggle('d-none');
+                }
+            });
+        });
+
+        function populateChildTable(tbody, items) {
+            tbody.innerHTML = ''; 
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.received_quantity}</td>
+                    <td>${item.product__name}</td>
+                    <td>${(item.quantity * item.cost).toFixed(2)}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.received_by__username || 'Not received'}</td>
+                    <td>${item.description || 'No details'}</td>
+                    <td>
+                        ${item.received 
+                            ? `<button class="btn btn-primary btn-sm" onclick="showActionModal(${item.id})">Action</button>`
+                            : `<button class="btn btn-primary btn-sm" onclick="showReceive(${item.id}, '${item.product__name}')">Receive Inventory</button>`
+                        }
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    });
+
+
+
+    document.getElementById('r_quantity').addEventListener('input', function () {
+        const quantity = parseInt(this.value) || 0;
+        const serialInputs = document.getElementById('serialInputs');
+        serialInputs.innerHTML = ''; 
+
+        for (let i = 0; i < quantity; i++) {
+            const inputGroup = document.createElement('div');
+            inputGroup.className = 'input-group mb-2';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'serial_number';
+            input.className = 'form-control';
+            input.placeholder = `Serial Number ${i + 1}`;
+            input.required = true;
+
+            inputGroup.appendChild(input);
+            serialInputs.appendChild(inputGroup);
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const actionSelect = document.getElementById('actionSelect');
+        const branchSelectWrapper = document.getElementById('branchSelectWrapper');
+        const quantityWrapper = document.getElementById('quantityWrapper');
+
+        actionSelect.addEventListener('change', () => {
+            const selectedAction = actionSelect.value;
+
+            if (selectedAction === 'receive') {
+                branchSelectWrapper.classList.add('d-none');
+            } else {
+                branchSelectWrapper.classList.remove('d-none');
+            }
+            quantityWrapper.classList.remove('d-none');
+        });
+    });
+
+
+    // document.querySelector('.btn-close').addEventListener('click', ()=>{
+    //     actionModal.show()
+    // })
+
+    const showReceive = (id, name) =>{
+        document.getElementById('item_id').value=id;
+        document.getElementById('receiveModalLabel').innerText=name;
+        receiveModal.show()
+    }
+
+    const showFetch = (transfer_id, tbody) => {
+        const modal = document.getElementById('itemsModal');
+        // const tbody = modal.querySelector('tbody');
+        const loader = document.createElement('div');
+        transferId = transfer_id; 
+
+        loader.className = 'spinner-border text-primary d-flex justify-content-center align-items-center';
+        loader.setAttribute('role', 'status');
+        loader.innerHTML = `<span class="visually-hidden">Loading...</span>`;
+
+        // itemModal.show();
+
+        tbody.innerHTML = '';
+        tbody.appendChild(loader);
+
+        fetch(`/inventory/transfer_items_data/${transferId}/`, {
+                method:'GET'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch transfer items.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data)
+                populateTable(data);
+            })
+            .catch(error => {
+                console.error(error);
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Failed to load data</td></tr>';
+            });
+
+            function populateTable(items) {
+                tbody.innerHTML = '';
+                
+                total_quantity = 0;
+                products_total_qauntity=0
+
+                products_total_cost=0
+                products_total_cost=0
+
+                // initialize total Quantiy with received quantity
+                items.forEach(item => {
+                    total_quantity += item.received_quantity;
+                    products_total_qauntity += item.quantity;
+
+                    total_cost += item.received_quantity * item.cost;
+                    products_total_cost += item.quantity * item.cost;
+                });
+
+                rQuantity.textContent = total_quantity || 0;
+                tQuantity.textContent = products_total_qauntity || 0;
+
+                rCost.textContent = total_cost.toFixed(2) || 0;
+                tCost.textContent = (products_total_cost).toFixed(2) || 0;
+
+                items.forEach((item, index) => {
+                    const isQuantityMatch = item.received_quantity === item.quantity;
+                    const isUserBranch = item.to_branch__name === '{{ request.user.branch }}';
+                    const isReceived = item.received
+
+                    console.log(isReceived)
+
+                    const badgeClass = isQuantityMatch ? 'bg-success' : 'bg-danger';
+                    const receivedContent = isQuantityMatch || !isUserBranch || isReceived
+                        ? `<small>${item.received_quantity || 0}</small>`
+                        : `
+                            <small>${item.received_quantity || 0 }</small>
+                        `;
+                    
+                    const isQuantityReceiveMatch = item.received_quantity < item.quantity;
+                    console.log(isQuantityReceiveMatch)
+                    const actionContent = isQuantityMatch
+                        ? `<span>All Received</span>`
+                        : !item.received
+                            ? `
+                                <button type="button" class="btn btn-primary btn-sm" id='receive-btn' onclick='showReceive(${item.id}, "${item.product__name}")'>
+                                    Receive Inventory
+                                </button>
+                            `
+                            : `
+                                <button class="btn btn-sm btn-primary" id="action-modal" onclick="showActionModal(${item.id})">
+                                    Action
+                                </button>
+                            `;
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><small>${item.product__name} [${(item.quantity * item.cost).toFixed(2)}]</small></td>
+                        <td class="border p-1 rounded text-center ${badgeClass}" style='width:50px !important;' >${receivedContent}<small>/${item.quantity}</small></td>
+                        <td><small>${item.received_by__username || 'Not received'}</small></td>
+                        <td colspan=''><small id='item_${item.id}'>${item.description || 'No details'}</small></td>
+                        <td><small>${actionContent}</small></td>
+                    `;
+
+                    tbody.appendChild(row);
+
+                    const input = row.querySelector('.clearable-input');
+                    if (input) {
+                        input.addEventListener('dblclick', () => {
+                            if (input.disabled) {
+                                input.disabled = false; 
+                            } else {
+                                input.value = ''; 
+                            }
+                        });
+
+                        input.addEventListener('keypress', (event) => {
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                submitReceivedQuantity(input, index);
+                            }
+                        });
+                    }
+                });
+            }
+
+    }
+
+    function submitReceivedQuantity() {
+        console.log('her')
+        const itemId = document.getElementById('item_id').value;
+        const value = document.getElementById('r_quantity').value;
+        const serialNumbers = Array.from(document.querySelectorAll('input[name="serial_number"]'))
+            .map(input => input.value);
+
+        let ExistingrQuantity = rQuantity.textContent || 0;
+        let ExistingrCost = rCost.textContent || 0;
+
+        if (!value) {
+            return;
+        }
+
+        console.log(serialNumbers)
+        total_quantity += value;
+        // rQuantity.textContent = total_quantity + ExistingrQuantity;
+        // total_cost += +value * items[currentIndex].cost;
+        
+        fetch('/inventory/receive/transfer/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify(
+                { 
+                    item_id: itemId, 
+                    received_quantity: value,  
+                    serial_numbers:serialNumbers
+                }
+            ),
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to submit data.');
+            return response.json();
+        })
+        .then(data => {
+            console.log('Updated successfully:', data);
+            if(data.success){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: data.message,
+                })
+                showFetch(transferId)
+            }else{
+                Swal.fire({
+                    icon: 'error',
+                    title: 'error!',
+                    text: data.message,
+                })
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting data:', error);
+        });
+    }
+
 
     setTimeout(()=>{
         loader.classList.add('hidden');
@@ -216,25 +633,6 @@
         });
     });
 
-    // hover to show products
-    // hooverProduct.forEach((el) => {
-    //     el.addEventListener('mouseover', () => {
-    //         if (el.classList.contains('hidden')){
-    //             el.classList.remove('hidden')
-    //         }else{
-    //             el.classList.add('hidden')
-    //         }
-    //     });
-
-    //     el.addEventListener('mouseout', () => {
-    //         if (el.classList.contains('hidden')){
-    //             el.classList.remove('hidden')
-    //         }else{
-    //             el.classList.add('hidden')
-    //         }
-    //     });
-    // });
-    
     expandBtn.addEventListener('click', ()=>{
         itemsEl.forEach((el)=>{
             if (el.classList.contains('hidden')){
@@ -270,16 +668,22 @@
                 })
                     .then(response => response.json())
                     .then(data => {
-                        Swal.close();
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: 'Product(s) cancelled successfully',
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => {
-                            window.location.href = '{% url "inventory:transfers" %}';
-                        })
+                       if(data.success){
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'Transfer cancelled successfully',
+                            });
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
+                       }else{
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: data.message
+                            });
+                       }
                     })
                     .catch((error) => {
                         console.error("Error:", error);
@@ -288,5 +692,93 @@
             }
         });
     }
+
+    const form = document.getElementById('actionForm');
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const action = document.getElementById('actionSelect').value;
+        const branch = document.getElementById('branchSelect').value;
+        const quantity = document.getElementById('quantity').value;
+
+        if (!action) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Please select an action',
+            });
+            return;
+        }
+
+        if (action === 'send_back' && !branch) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Please select a branch',
+            });
+            return;
+        }
+
+        if (action === 'receive' && !quantity) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Please enter a quantity',
+            });
+            return;
+        }
+
+        if (action === 'defective' && !quantity) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Please enter a quantity',
+            });
+            return;
+        }
+
+        console.log(transfer_id);
+    
+        const formData = new FormData();
+        formData.append('action', action);
+        formData.append('branch', branch);
+        formData.append('quantity', quantity);
+        formData.append('transfer_id', transfer_id);
+        console.log('Form data:', formData);
+
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`, 'data');
+        }
+
+        fetch('/inventory/over_less_list/', {
+            method: 'POST',
+            body: JSON.stringify(Object.fromEntries(formData)),
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Action performed successfully',
+                }).then(()=>{
+                    showFetch(transfer_id)
+                    actModal.hide()
+                    itemModal.show()
+                })
+            }else{
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: data.message
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    })
 </script>
 {% endblock content %}

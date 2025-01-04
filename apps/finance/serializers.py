@@ -4,7 +4,7 @@ from rest_framework import serializers
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
-        exclude = ['branch']
+        exclude = ['branch', 'id_number']
 
 class CustomerAccountBalancesSerializer(serializers.ModelSerializer):
     class Meta:
