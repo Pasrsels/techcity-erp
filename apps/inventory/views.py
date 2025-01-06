@@ -2591,8 +2591,6 @@ def edit_purchase_order(request, po_id):
 
                 # preload the logs with previous received stock
                 logs = ActivityLog.objects.filter(purchase_order=last_purchase_order)
-                logger.info(f'logs {purchase_order_items_data}')
-                logger.info(f'cist {cost_allocations}')
 
                 for item_data in purchase_order_items_data:
                     product_id = item_data['product_id']
