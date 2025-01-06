@@ -244,13 +244,18 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         try:
             with transaction.atomic():
                 data = json.loads(request.body)
+                print(data)
                 action = data['action']
                 branches = data['branches_to']
                 transfer_id = data.get('transfer_id', '')
 
-                logger.info(f'branches: {branches}')
-                
-                # create list of branch objects
+                products = Inventory.objects.filter(branch=request.user.branch).select_related('branch')
+                suppliers = Supplier.objects.all()
+
+                products_dict = {product.id: product for product in products}
+
+                logger.info(products_dict)
+
                 branch_obj_list = []
                 branch_names = []
                 for branch in branches:
@@ -261,63 +266,43 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                         branch_obj_list.append(Branch.objects.get(name=branch['name']))
                         
                 
-                # check for hold or new transfer
                 if not transfer_id:
                     transfer = Transfer.objects.create(
                         branch = request.user.branch,
                         user = request.user,
                         transfer_ref = Transfer.generate_transfer_ref(request.user.branch.name, branch_names),
-                        description = 'transfer' #to be actioned
+                        description = 'transfer' 
                     )
                 else:
-                    logger.info('here')
                     transfer = Transfer.objects.get(id=transfer_id)
                 
-                #assign many2many objects to transfer branch
                 transfer.transfer_to.set(branch_obj_list)
 
                 if action == 'process':
-                    logger.info(f'branches: {branch_obj_list}')
 
                     product_quantities_dict = defaultdict(int)
 
-                    # new
-
                     for item in data['cart']:
-                        logger.info(f'quantity: {item['quantity']}')
                         product_id = item['product_id']
                         quantity = item['quantity']
 
                         if product_quantities_dict[product_id]:
-                            logger.info('New')
                             product_quantities_dict[product_id] += quantity
                         else:
-                            logger.info('Existing')
                             product_quantities_dict[product_id] = quantity
-                            
-                    logger.info(f'product quantities {product_quantities_dict}')
 
                     for item in data['cart']:
-                        product = Inventory.objects.get(id=item['product_id'], branch=request.user.branch)
-                        if product_quantities_dict[f'{product.id}'] > product.quantity:
-                            logger.info('The product has more quantity')
-                            return JsonResponse({'success': False, 'message': f'Insufficient stock to process product: {product.name}.', 'id': product.id})
+                        logger.info('here')
+                        product = products_dict.get(int(item['product_id']))
+                        logger.info(product)
 
+                        if product_quantities_dict[f'{product.id}'] > product.quantity:
+                            return JsonResponse({'success': False, 'message': f'Insufficient stock to process product: {product.name}.', 'id': product.id})
 
                     for branch_obj in branch_obj_list:
                         for item in data['cart']:
-                            logger.info(f'Cart Item: {item}')
-                            
-                            product = Inventory.objects.get(id=item['product_id'], branch=request.user.branch)
-
-                            total_requested_quantity = product_quantities_dict[f'{product_id}']
-
-                            logger.info(f'Total requested quantity for {product.name}: {total_requested_quantity} product quantity {product.quantity}')
-                            logger.info(total_requested_quantity == product.quantity)
-                          
-                            logger.info(f'Transfered product: {product.name}')
+                            product = products_dict.get(int(item['product_id']))
                             branch_name = item['branch_name']
-                            logger.info(f'branch name: {branch_name}')
 
                             if branch_name == branch_obj.name:
                                 transfer_item = TransferItems(
@@ -333,18 +318,12 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                                 ) 
 
                                 transfer_item.save()
-
-                                logger.info(f'Transfered product: product saved')
                                 
                                 self.deduct_inventory(transfer_item)
                                 self.transfer_update_quantity(transfer_item, transfer) 
             
                                 # send email for transfer alert
                                 # transaction.on_commit(lambda: send_transfer_email(request.user.email, transfer.id, transfer.transfer_to.id))
-
-                                # held transfer items 
-                                transfer_items = Holdtransfer.objects.filter(transfer__id=transfer.id)
-                                transfer_items.delete()
 
                                 # save the transfer
                                 transfer.hold = False
@@ -356,10 +335,6 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
             return JsonResponse({'success': False, 'data': str(e)})
         
     def hold_transfer(self, branch_obj_list, data, transfer, request):
-        logger.info('Processing Hoding Transfers ------')
-        logger.info(f'branches: {branch_obj_list}')
-        logger.info(f'data: {data}')
-        logger.info(f'transfer: {transfer}')
 
         with transaction.atomic():
             for branch_obj in branch_obj_list:
@@ -368,10 +343,6 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
                     branch_name = item['branch_name']
 
-                    logger.info(f'branch name: {branch_name}')
-                    logger.info(f'branch obj {branch_obj.name}')
-                    logger.info(f'cost: {item['cost']}')
-                    logger.info(f'Product {product}')
                     try:
                         if branch_name == branch_obj.name:
                             transfer_item = Holdtransfer.objects.create(
@@ -385,15 +356,12 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                                 to_branch= branch_obj,
                                 description=f'from {request.user.branch} to {branch_obj}'
                             ) 
-                            logger.info('here')
                             transfer.hold = True
                             transfer.save()         
-                            logger.info('Transfer has been hold')
                     except Exception as e:
                         return JsonResponse({'success':False, 'message':f'{e}'})
 
     def deduct_inventory(self, transfer_item):
-        logger.info(f'from branch -> {transfer_item.from_branch}')
         branch_inventory = Inventory.objects.get(id=transfer_item.product.id, branch__name=transfer_item.from_branch)
         
         branch_inventory.quantity -= int(transfer_item.quantity)
@@ -407,7 +375,6 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         transfer.save()
        
     def activity_log(self,  action, inventory, transfer_item):
-        logger.info(f'selling_price transfered {transfer_item.dealer_price}: {transfer_item.price}')
         ActivityLog.objects.create(
             invoice = None,
             product_transfer = transfer_item,
@@ -3505,7 +3472,20 @@ def vue_view(request):
 # Loss management
 @login_required
 def loss_management(request):
-    return render(request, 'loss_management/loss_management.html')
+    """
+        to put caching later
+    """
+    write_off_totals = WriteOff.objects.aggregate(total=Sum('amount'))['total'] or 0
+    defective_totals = DefectiveItem.objects.aggregate(total=Sum('amount'))['total'] or 0
+    shrinkage_totals = InventoryShrinkage.objects.aggregate(total=Sum('amount'))['total'] or 0
+
+    context = {
+        'write-off':write_off_totals,
+        'defective':defective_totals,
+        'shrinkage':shrinkage_totals
+    }
+
+    return render(request, 'loss_management/loss_management.html', context)
 
 @login_required
 def loss_management_accounts(request, account_name):
