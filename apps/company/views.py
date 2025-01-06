@@ -160,7 +160,7 @@ def create_tax_methods():
 def branch_list(request):
     """ list all the branches in the system """
     form = BranchForm
-    branches = Branch.objects.all()
+    branches = Branch.objects.filter(disable=False)
     return render(request, 'branches.html', {
         'branches': branches,
         'form':form
@@ -216,6 +216,18 @@ def edit_branch(request, branch_id):
             'branch': branch
         }
     )
+
+@login_required
+def delete_branch(request, branch_id):
+    try:
+        branch = Branch.objects.get(id=branch_id)
+        logger.info(branch)
+        branch.disable=True
+        branch.save()
+        return redirect('company:branch_list')
+    except Exception as e:
+        messages(request, f'{e}')
+    return redirect('company:branch_list')
 
 #API
 ###########################################################################################################
@@ -282,6 +294,7 @@ class BranchEditandDelete(views.APIView):
                 return Response(status.HTTP_404_NOT_FOUND)
         else:
             return Response({'message': 'Empty!'}, status.HTTP_400_BAD_REQUEST)
+        
     def delete(self, request, branch_id):
         branch_instance = Branch.objects.get(id = branch_id)
         branch_instance.delete()

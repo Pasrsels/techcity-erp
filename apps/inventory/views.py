@@ -522,8 +522,8 @@ def inventory_index(request):
                     row_offset += 2
 
                 for product in products.filter(branch__name=branch):
-                    if category == product.product.category.name:
-                        worksheet.append([product.product.name, product.cost, product.price, product.quantity])
+                    if category == product.category.name:
+                        worksheet.append([product.name, product.cost, product.price, product.quantity])
                         row_offset += 1
 
         workbook.save(response)
