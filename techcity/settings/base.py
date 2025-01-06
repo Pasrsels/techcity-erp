@@ -151,8 +151,8 @@ DATABASES = {
     #     'HOST': 'localhost',
     #     'PORT': '5432'
     # }
-
 }
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # AUTH_USER_MODEL = "users.User"

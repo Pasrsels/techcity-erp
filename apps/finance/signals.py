@@ -19,35 +19,35 @@ from django.core.mail import EmailMessage
 
 logger = logging.getLogger(__name__)
 
-@receiver(post_save, sender=CashTransfers)
-def cash_transfer_notification(sender, instance, **kwargs):
+# @receiver(post_save, sender=CashTransfers)
+# def cash_transfer_notification(sender, instance, **kwargs):
     
-    if instance.received_status==False:
-        FinanceNotifications.objects.create(
-            transfer=instance,
-            notification=f'Receive {instance.currency.symbol} {instance.amount} send from {instance.from_branch}',
-            status=True,
-            notification_type='Transfer'
-        )
+#     if instance.received_status==False:
+#         FinanceNotifications.objects.create(
+#             transfer=instance,
+#             notification=f'Receive {instance.currency.symbol} {instance.amount} send from {instance.from_branch}',
+#             status=True,
+#             notification_type='Transfer'
+#         )
         
-        notification = FinanceNotifications.objects.get(transfer=instance)
-        notification = FinanceNotifications.objects.get(pk=notification.id)
-        # subject = 'Cash Transfer Notification'
-        # message = notification.notification
-        # from_email = 'admin@techcity.co.zw'
-        # to_email = 'cassymyo@gmail.com'
-        # email = EmailMessage(subject, message, from_email, [to_email])
-        # email.send()
-        send_email_notification.delay(notification.id)
-    elif instance.received_status==True:
-        notification = FinanceNotifications.objects.get(
-            transfer=instance, 
-            status=True,
-            notification_type='Expense'
-        )
+#         notification = FinanceNotifications.objects.get(transfer=instance)
+#         notification = FinanceNotifications.objects.get(pk=notification.id)
+#         # subject = 'Cash Transfer Notification'
+#         # message = notification.notification
+#         # from_email = 'admin@techcity.co.zw'
+#         # to_email = 'cassymyo@gmail.com'
+#         # email = EmailMessage(subject, message, from_email, [to_email])
+#         # email.send()
+#         # send_email_notification.delay(notification.id)
+#     elif instance.received_status==True:
+#         notification = FinanceNotifications.objects.get(
+#             transfer=instance, 
+#             status=True,
+#             notification_type='Expense'
+#         )
         
-        notification.status=False
-        notification.save()
+#         notification.status=False
+#         notification.save()
         
 @receiver(post_save, sender=Expense)
 def expense_confirmation_notificatioin(sender, instance, **kwargs):
@@ -99,28 +99,28 @@ def create_expense_cashbook_entry(sender, instance, **kwargs):
     if instance.status == True:
         create_cashbook_entry(instance, instance.description, debit=False, credit=True)
 
-@receiver(post_save, sender=CashTransfers)
-def create_cash_transfer_cashbook_entry(sender, instance, **kwargs):
-    create_cashbook_entry(instance, f'Cash Transfer of {instance.amount} from {instance.from_branch.name}', debit=True, credit=False)
-    # from branch credit
-    Cashbook.objects.create(
-        issue_date=instance.date_created,
-        description=f'Cash Transfer of {instance.amount} from {instance.from_branch.name}',
-        debit=True,
-        credit=False,
-        amount=instance.amount,
-        currency=instance.currency,
-        branch=instance.from_branch
-    )
+# @receiver(post_save, sender=CashTransfers)
+# def create_cash_transfer_cashbook_entry(sender, instance, **kwargs):
+
+#     # from branch credit
+#     Cashbook.objects.create(
+#         issue_date=instance.date_created,
+#         description=f'Cash Transfer of {instance.amount} from {instance.from_branch.name}',
+#         debit=True,
+#         credit=False,
+#         amount=instance.amount,
+#         currency=instance.currency,
+#         branch=instance.from_branch
+#     )
     
-    # to branch debit
-    Cashbook.objects.create(
-        issue_date=instance.date_created,
-        description=f'Cash Transfer of {instance.amount} from {instance.from_branch.name}',
-        debit=True,
-        credit=False,
-        amount=instance.amount,
-        currency=instance.currency,
-        branch=instance.to_branch
-    )
+#     # to branch debit
+#     Cashbook.objects.create(
+#         issue_date=instance.date_created,
+#         description=f'Cash Transfer of {instance.amount} from {instance.from_branch.name}',
+#         debit=True,
+#         credit=False,
+#         amount=instance.amount,
+#         currency=instance.currency,
+#         branch=instance.to_branch
+#     )
     
