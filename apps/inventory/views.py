@@ -514,7 +514,20 @@ def inventory_index(request):
     
     services = Service.objects.all().order_by('-name')
     accessories = Accessory.objects.all()
-    inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name')
+    inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).select_related(
+        'category',
+        'branch'
+    ).order_by('name')
+
+    totals = inventory.aggregate(
+        total_cost=Sum(F('quantity') * F('cost'), output_field=FloatField()),
+        total_price=Sum(F('quantity') * F('price'), output_field=FloatField())
+    )
+
+    logger.info(totals)
+
+    total_cost = totals.get('total_cost') or 0
+    total_price = totals.get('total_price') or 0
 
     if 'download' and 'excel' in request.GET:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -564,10 +577,12 @@ def inventory_index(request):
 
     logs = ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
     
-    # totals = calculate_inventory_totals(inventory)
+    totals = calculate_inventory_totals(inventory)
   
     return render(request, 'inventory.html', {
         'form': form,
+        'total_cost':total_cost,
+        'total_price':total_price,
         'services':services,
         'inventory': inventory,
         'search_query': q,
@@ -5296,7 +5311,10 @@ class OverListStock(views.APIView):
         product = Inventory.objects.get(id=branch_transfer.product.id, branch=request.user.branch)
     
         if int(branch_transfer.over_less_quantity) > 0:
-            if action == 'write_off':    
+            if action == 'write_off':   
+                if request.user.branch == branch_transfer.to_branch:
+                    return JsonResponse({'success': False,  'message':'Cant perfom this operation'})
+                
                 product.quantity += branch_transfer.over_less_quantity 
                 product.save()
                 
@@ -5341,6 +5359,9 @@ class OverListStock(views.APIView):
                 return JsonResponse({f'{product.product.name} accepted back successfully'}, status.HTTP_200_OK)
             
             if action == 'back':
+                if request.user.branch == branch_transfer.to_branch:
+                    return JsonResponse({'success': False,  'message':'Cant perfom this operation'})
+                
                 description=f'transfered to {branch_transfer.to_branch}'
                 product.quantity += branch_transfer.over_less_quantity 
                 product.save()

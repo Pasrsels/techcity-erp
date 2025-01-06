@@ -3,7 +3,7 @@
    <div class="table-responsive mt-2" style="height: 70vh; overflow-y: auto;">
         <!-- inventory table -->
         {% include 'components/loader.html' %}
-        <div class='product'>
+        <div class='product p-1 rounded' style="background: #fff;">
             <table class='table border table-bordered table-striped table-hover table-responsive table-sm rounded p-2 w-100 ' style="width:100%" id='inventory'>
                 <thead class="table-dark">
                     <th>#</th>
@@ -210,6 +210,10 @@
     
 <script src="{% static 'js/jquery.js'%}"></script>
 <script>
+    new DataTable('#inventory', {
+        paging:false
+    })
+
     let product_id = '';
     const inventoryData = [];
     const modal = new bootstrap.Modal(document.querySelector('#deleteModal'));

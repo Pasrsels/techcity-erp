@@ -11,7 +11,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from loguru import logger
 from .models import NotificationsSettings, Printer, TaxSettings
-
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 
 @login_required
 def settings(request):
@@ -39,11 +40,6 @@ def settings(request):
         'tax_settings':tax_settings,
         'notifications': notifications_settings
     })
-
-
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Notifications settings >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
