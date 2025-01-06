@@ -148,7 +148,7 @@ DATABASES = {
     #     'NAME':  'techcoty',
     #     'USER': 'postgres',
     #     'PASSWORD': 'neverfail',
-        # 'HOST': 'localhost',
+    #     'HOST': 'localhost',
     #     'PORT': '5432'
     # }
 }

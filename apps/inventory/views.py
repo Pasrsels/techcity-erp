@@ -503,9 +503,6 @@ def inventory(request):
             filter(id=product_id, branch=request.user.branch, status=True).values()), safe=False)
     return JsonResponse({'error':'product doesnt exists'})
 
-from django.db.models import Count
-
-
 @login_required
 def inventory_index(request):
     form = ServiceForm()
@@ -528,6 +525,8 @@ def inventory_index(request):
 
     total_cost = totals.get('total_cost') or 0
     total_price = totals.get('total_price') or 0
+
+    logger.info(total_cost)
 
     if 'download' and 'excel' in request.GET:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -575,22 +574,20 @@ def inventory_index(request):
         workbook.save(response)
         return response
 
-    logs = ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
-    
-    totals = calculate_inventory_totals(inventory)
+    # logs = ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
   
     return render(request, 'inventory.html', {
-        'form': form,
-        'total_cost':total_cost,
-        'total_price':total_price,
-        'services':services,
-        'inventory': inventory,
-        'search_query': q,
-        'category':category,
-        'total_price': 0,
-        'total_cost':0,
-        'accessories':accessories,
-        'logs':[]
+        # 'form': form,
+        # 'total_cost':total_cost,
+        # 'total_price':total_price,
+        # # 'services':services,
+        # # 'inventory': inventory,
+        # 'search_query': q,
+        # 'category':category,
+        # 'total_price': 0,
+        # 'total_cost':0,
+        # 'accessories':accessories,
+        # 'logs':[]
     })
 
 @login_required
@@ -2626,7 +2623,7 @@ def edit_purchase_order(request, po_id):
                         PurchaseOrderItem(
                             purchase_order=purchase_order,
                             product=product,
-                            quantity= 0 if not quantity else quantity,
+                            quantity=quantity,
                             unit_cost=unit_cost,
                             actual_unit_cost=actual_unit_cost,
                             received_quantity= 0 if not log_quantity else log_quantity[0]['quantity'],
