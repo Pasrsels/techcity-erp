@@ -2681,6 +2681,7 @@ def edit_purchase_order(request, po_id):
                 remove_purchase_order(po_id, request)
                 
         except Exception as e:
+            logger.info(e)
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
         return JsonResponse({'success': True, 'message': 'Purchase order created successfully'})
