@@ -516,18 +516,6 @@ def inventory_index(request):
         'branch'
     ).order_by('name')
 
-    totals = inventory.aggregate(
-        total_cost=Sum(F('quantity') * F('cost'), output_field=FloatField()),
-        total_price=Sum(F('quantity') * F('price'), output_field=FloatField())
-    )
-
-    logger.info(totals)
-
-    total_cost = totals.get('total_cost') or 0
-    total_price = totals.get('total_price') or 0
-
-    logger.info(total_cost)
-
     if 'download' and 'excel' in request.GET:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = f'attachment; filename={request.user.branch.name} stock.xlsx'
@@ -575,20 +563,20 @@ def inventory_index(request):
         return response
 
     # logs = ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
-  
-    return render(request, 'inventory.html', {
-        # 'form': form,
-        # 'total_cost':total_cost,
-        # 'total_price':total_price,
-        # # 'services':services,
-        # # 'inventory': inventory,
-        # 'search_query': q,
-        # 'category':category,
-        # 'total_price': 0,
-        # 'total_cost':0,
-        # 'accessories':accessories,
-        # 'logs':[]
-    })
+
+    context = {
+        'form': form,
+        'total_cost': inventory.aggregate(total_cost=Sum(F('quantity') * F('cost')))['total_cost'] or 0,
+        'total_price': inventory.aggregate(total_price=Sum(F('quantity') * F('price')))['total_price'] or 0,
+        'search_query': q,
+        'category': category,
+        'accessories': accessories,
+        'logs': [],
+    }
+
+
+    logger.info(context)
+    return render(request, 'inventory.html', context)
 
 @login_required
 def edit_service(request, service_id):
@@ -1140,11 +1128,13 @@ def over_less_list_stock(request):
             with transaction.atomic():
                 if int(branch_transfer.received_quantity) != int(branch_transfer.quantity):
                     
-                    if action in ['write-off', 'stolen', 'defective']:   
-                        return JsonResponse({'success':False, 'message':'Sorry Action not availabe'})
-
+                    if action in ['write-off', 'stolen', 'defective']: 
+            
                         if not branch:
                             return JsonResponse({'succes':False, 'meesage': 'Select branch'})
+                          
+                        if request.user.branch == branch_transfer.to_branch:
+                            return JsonResponse({'success':False, 'message':'Sorry Action not availabe'})
                         
                         branch = Branch.objects.get(id=branch)
                         
@@ -1152,8 +1142,6 @@ def over_less_list_stock(request):
                             Q(name__icontains = branch_transfer.product.name), 
                             branch=branch
                         )
-
-                        logger.info(product)
 
                         def createDefectiveProduct():
                             DefectiveProduct.objects.create(
@@ -2587,48 +2575,37 @@ def edit_purchase_order(request, po_id):
                 )
                 purchase_order.save()
                 
+
+                products = Inventory.objects.filter(branch=request.user.branch).select_related('branch')
+                suppliers = Supplier.objects.all()
+                logs = ActivityLog.objects.filter(purchase_order=last_purchase_order).select_related('inventory')
+
+                products_dict = {product.id: product for product in products}
+                suppliers_dict = {supplier.id: supplier for supplier in suppliers}
+                logs_dict = {log.inventory_id: log.quantity for log in logs}
+
                 purchase_order_items_bulk = []
-
-                # preload the logs with previous received stock
-                logs = ActivityLog.objects.filter(purchase_order=last_purchase_order)
-
                 for item_data in purchase_order_items_data:
-                    product_id = item_data['product_id']
-                    product_name = item_data['product']
-                    quantity = int(item_data['quantity'])
-                    unit_cost = Decimal(item_data['price'])
-                    actual_unit_cost = Decimal(item_data['actualPrice'])
-                    supplier_id = item_data.get('supplier', [])
+                    product = products_dict.get(item_data['product_id'])
+                    supplier = suppliers_dict.get(item_data.get('supplier'))
+                    log_quantity = logs_dict.get(product.id, 0)
 
-                    logger.info(f'quantity: {quantity}')
+                    if not product or not supplier:
+                        return JsonResponse({'success': False, 'message': 'Invalid product or supplier'}, status=400)
 
-                    if not all([product_name, quantity, unit_cost]):
-                        transaction.set_rollback(True)
-                        return JsonResponse({'success': False, 'message': 'Missing fields in item data'}, status=400)
-
-                    try:
-                        product = Inventory.objects.get(id=product_id, branch=request.user.branch)
-                    except Inventory.DoesNotExist:
-                        transaction.set_rollback(True)
-                        return JsonResponse({'success': False, 'message': f'Product with Name {product_name} not found'}, status=404)
-
-                    supplier = Supplier.objects.get(id=supplier_id)
-
-                    # get the log with the quantity received for replacing po_item quantity 
-                    log_quantity = logs.filter(inventory = product).values('quantity')
-                    logger.info(log_quantity)
                     purchase_order_items_bulk.append(
                         PurchaseOrderItem(
                             purchase_order=purchase_order,
                             product=product,
-                            quantity=quantity,
-                            unit_cost=unit_cost,
-                            actual_unit_cost=actual_unit_cost,
-                            received_quantity= 0 if not log_quantity else log_quantity[0]['quantity'],
+                            quantity=item_data['quantity'],
+                            unit_cost=item_data['price'],
+                            actual_unit_cost=item_data['actualPrice'],
+                            received_quantity=log_quantity,
+                            supplier=supplier,
+                            wholesale_price = 0,
                             received=False,
-                            supplier = supplier,
                             price=0,
-                            wholesale_price=0
+
                         )
                     )
 
@@ -2653,7 +2630,6 @@ def edit_purchase_order(request, po_id):
                 costs_list = []
                 
                 for cost in cost_allocations:
-                    #logger.info(f'editted quantity: {cost['quantity']}
                     costs_list.append(
                         costAllocationPurchaseOrder(
                             purchase_order = purchase_order,
@@ -2669,7 +2645,6 @@ def edit_purchase_order(request, po_id):
                     )
                 costAllocationPurchaseOrder.objects.bulk_create(costs_list)
                     
-                # update finance accounts (vat, cashbook, expense, account_transaction_log)
                 if purchase_order.status in ['Received', 'received']:
                     if_purchase_order_is_received(
                         request, 
@@ -3526,6 +3501,74 @@ def accessory_view(request, product_id):
 
 def vue_view(request):
     return render(request, 'vue.html')
+
+# Loss management
+@login_required
+def loss_management(request):
+    return render(request, 'loss_management/loss_management.html')
+
+@login_required
+def loss_management_accounts(request, account_name):
+    try:
+        data = json.loads(request.body)
+        account_name = data.get('account_name', '')
+
+        if account_name == 'write-off':
+            write_off_data = WriteOff.objects.all().select_related(
+                'inventory_item', 
+                'created_by'
+            ).values(
+                'id',
+                'inventory_item__id',
+                'inventoty_item__name',
+                'inventory_item__cost',
+                'quantity',
+                'reason',
+                'created_by',
+                'created_at'
+            ).annotate(
+                total_cost = Sum(F('quantity') * F('inventory_item__cost'))
+            )
+
+        if account_name == 'defective':
+            write_off_data = WriteOff.objects.all().select_related(
+                'inventory_item', 
+                'created_by'
+            ).values(
+                'id',
+                'inventory_item__id',
+                'inventoty_item__name',
+                'inventory_item__cost',
+                'quantity',
+                'defective_description',
+                'action_taken',
+                'created_by',
+                'created_at'
+            ).annotate(
+                total_cost = Sum(F('quantity') * F('inventory_item__cost'))
+            )
+        
+        if account_name == '':
+            write_off_data = WriteOff.objects.all().select_related(
+                'inventory_item', 
+                'created_by'
+            ).values(
+                'id',
+                'inventory_item__id',
+                'inventoty_item__name',
+                'inventory_item__cost',
+                'quantity',
+                'reason',
+                'created_by',
+                'created_at'
+            ).annotate(
+                total_cost = Sum(F('quantity') * F('inventory_item__cost'))
+            )
+
+            return JsonResponse(list(write_off_data), safe=False)
+
+    except Exception as e:
+        return JsonResponse({'success':False, 'message':f'{e}'}, status=200)
 
 #API
 ##########################################################################################################

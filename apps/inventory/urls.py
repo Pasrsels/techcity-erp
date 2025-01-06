@@ -105,6 +105,9 @@ urlpatterns = [
 
     path('vue_view/', vue_view, name='vue'),
 
+    #loss management
+    path('loss_management/', loss_management, name='loss_management'),
+
 
     #API ENDPOINTS
     ################################################################################################

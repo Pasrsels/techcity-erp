@@ -500,3 +500,50 @@ class StocktakeItem(models.Model):
 
     def __str__(self):
         return self.product.name
+
+
+# Inventory loss models
+
+class WriteOff(models.Model):
+    inventory_item = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='write_offs')
+    quantity = models.PositiveIntegerField()
+    reason = models.TextField()
+    created_by = models.ForeignKey('users.user', on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Write-off: {self.inventory_item.name} ({self.quantity})"
+
+class DefectiveItem(models.Model):
+    inventory_item = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='defective_items')
+    quantity = models.PositiveIntegerField()
+    defect_description = models.TextField()
+    action_taken = models.CharField(max_length=255, choices=[
+        ('return_to_supplier', 'Return to Supplier'),
+        ('write_off', 'Write Off'),
+        ('repair', 'Repair'),
+    ], default='write_off')
+    created_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Defective: {self.inventory_item.name} ({self.quantity})"
+    
+class InventoryShrinkage(models.Model):
+    inventory_item = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='shrinkages')
+    quantity = models.PositiveIntegerField()
+    date_discovered = models.DateTimeField()
+    reason = models.CharField(max_length=255, choices=[
+        ('theft', 'Theft'),
+        ('damage', 'Damage'),
+        ('miscount', 'Miscount'),
+        ('other', 'Other'),
+    ])
+    additional_details = models.TextField(blank=True, null=True)
+    recorded_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Shrinkage: {self.inventory_item.name} ({self.quantity})"
+
+

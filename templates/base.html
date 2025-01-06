@@ -43,6 +43,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+
+    
     <title>
         {% block title %}Techcity{% endblock title %}
     </title>
@@ -267,7 +271,7 @@
         const tableWrapper = document.querySelector('#detailTable_wrapper')
 
         document.addEventListener('DOMContentLoaded', function() {
-            fetchNotifications();
+            // fetchNotifications();
         });
 
         function toggleSpan(button) {
@@ -380,42 +384,42 @@
             notisModal.show()
         })
 
-        $.ajax({
-            url: '{% url "finance:finance_notifications_json" %}',
-            type: 'GET',
-            }).done(function(response) {
-                const data = response;
-                displayFinanceNotifications(data)
-            })
+        // // $.ajax({
+        // //     url: '{% url "finance:finance_notifications_json" %}',
+        // //     type: 'GET',
+        // //     }).done(function(response) {
+        // //         const data = response;
+        // //         displayFinanceNotifications(data)
+        // //     })
         
-        function displayFinanceNotifications(data) {
-            const ul = document.querySelector('#finance_notifications');
-            const notificationTypes = {};
+        // // function displayFinanceNotifications(data) {
+        // //     const ul = document.querySelector('#finance_notifications');
+        // //     const notificationTypes = {};
             
-            data.forEach((notification) => {
-                if (!notificationTypes[notification.notification_type]) {
-                notificationTypes[notification.notification_type] = [];
-                }
-                notificationTypes[notification.notification_type].push(notification);
-            });
+        // //     data.forEach((notification) => {
+        // //         if (!notificationTypes[notification.notification_type]) {
+        // //         notificationTypes[notification.notification_type] = [];
+        // //         }
+        // //         notificationTypes[notification.notification_type].push(notification);
+        // //     });
             
-            Object.keys(notificationTypes).forEach((type) => {
+        // //     Object.keys(notificationTypes).forEach((type) => {
                 
-                notificationTypes[type].forEach((notification) => {
-                const li = document.createElement('li');
-                if(notification.transfer__to === {{request.user.branch.id}}){
-                    li.innerHTML = `<small><a href='{% url "finance:cash_transfer_list" %}'>${notification.notification}</a></small>`;
-                }
-                if(notification.expense__branch === {{request.user.branch.id}}){
-                    li.innerHTML = `<small><a>${notification.notification}</a></small>`;
-                }
-                if(notification.invoice__branch === {{request.user.branch.id}}){
-                    li.innerHTML = `<small><a>${notification.notification}</a></small>`;
-                }
-                ul.appendChild(li);
-                });
-            });
-        }
+        // //         notificationTypes[type].forEach((notification) => {
+        // //         const li = document.createElement('li');
+        // //         if(notification.transfer__to === {{request.user.branch.id}}){
+        // //             li.innerHTML = `<small><a href='{% url "finance:cash_transfer_list" %}'>${notification.notification}</a></small>`;
+        // //         }
+        // //         if(notification.expense__branch === {{request.user.branch.id}}){
+        // //             li.innerHTML = `<small><a>${notification.notification}</a></small>`;
+        // //         }
+        // //         if(notification.invoice__branch === {{request.user.branch.id}}){
+        // //             li.innerHTML = `<small><a>${notification.notification}</a></small>`;
+        // //         }
+        // //         ul.appendChild(li);
+        // //         });
+        // //     });
+        // }
 
         const apiUrl =''//update endpoint
         async function fetchCustomerData() {
