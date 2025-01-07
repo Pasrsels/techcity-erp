@@ -289,27 +289,47 @@ JavaScript:
                                 <label for="actionSelect" class="form-label">Action</label>
                                 <select id="actionSelect" class="form-select" id="action-select">
                                     <option value="">-- Select an action --</option>
-                                    <option value="send_back">Send Back to Source</option>
-                                    <option value="receive">Receive</option>
+                                    <!-- <option value="send_back">Send Back to Source</option> -->
+                                    <option value="receive">Receive Back</option>
                                     <option value="write-off">Write off</option>
-                                    <option value="stolen">Stolen</option>
+                                    <option value="shrinkage">Shrinkage</option>
                                     <option value="defective">Defective Product</option>
                                 </select>
                             </div>
-                        
-                            <div class="mb-3 d-none" id="branchSelectWrapper">
-                                <label for="branchSelect" class="form-label">Select Branch</label>
-                                <select id="branchSelect" class="form-select">
-                                    {% for branch in branches %}
-                                        <option value="{{ branch.id }}">{{ branch.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                    
+
                             <div class="mb-3 d-none" id="quantityWrapper">
                                 <label for="quantity" class="form-label">Quantity</label>
                                 <input type="number" id="quantity" class="form-control" min="1" placeholder="Enter quantity">
                             </div>
+
+                            <div class="mb-3 d-none" id="branchSelectWrapper">
+
+                                <div class="mb-3">
+                                    <label for="branchSelect" class="form-label">Select Branch</label>
+                                    <select id="branchSelect mb-3" class="form-select">
+                                        {% for branch in branches %}
+                                            <option value="{{ branch.id }}">{{ branch.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <select id="reasonSelect" class="form-select mb-3">
+                                    <option value="">-- Select a reason (optional) --</option>
+                                    <option value="return_to_supplier">Return to Supplier</option>
+                                    <option value="write_off">Write Off</option>
+                                    <option value="repair">Repair</option>
+                                    <option value="theft">Theft</option>
+                                    <option value="damage">Damage</option>
+                                    <option value="miscount">Miscount</option>
+                                    <option value="other">Other</option>
+                                </select>
+
+                                <div class="mb-3">
+                                    <label for="reason" class="form-label">Details</label>
+                                    <textarea id="reason" class="form-control" rows="3" placeholder="Enter detail"></textarea>
+                                </div>
+                            </div>
+                    
                         
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </form>
@@ -810,6 +830,9 @@ JavaScript:
         const action = document.getElementById('actionSelect').value;
         const branch = document.getElementById('branchSelect').value;
         const quantity = document.getElementById('quantity').value;
+        const reason = document.getElementById('reason').value;
+        const action_taken = document.getElementById('reasonSelect')
+        const detail = document.getElementById('')
 
         if (!action) {
             Swal.fire({
@@ -852,6 +875,8 @@ JavaScript:
         formData.append('branch', branch);
         formData.append('quantity', quantity);
         formData.append('transfer_id', transfer_id);
+        formData.append('reason', reason);
+        formData.append('action_taken', action_taken)
 
         for (let [key, value] of formData.entries()) {
             console.log(`${key}: ${value}`, 'data');

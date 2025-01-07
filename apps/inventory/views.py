@@ -1101,81 +1101,94 @@ def over_less_list_stock(request):
             quantity = int(data.get('quantity', 0))
             branch = data.get('branch')
             reason = data.get('reason', '')
+            action_taken = data.get('action_taken')
 
             logger.info(f'Action: {action}, transfer_id: {transfer_id}, quantity: {quantity}, branch: {branch}, reason: {reason}')
             
             branch_transfer = TransferItems.objects.filter(id=transfer_id).first()
             transfer = branch_transfer.transfer
 
-            logger.info(branch_transfer.over_less_quantity)
             with transaction.atomic():
                 if int(branch_transfer.received_quantity) != int(branch_transfer.quantity):
                     
-                    if action in ['write-off', 'stolen', 'defective']: 
-            
+                    if action in ['write-off', 'defective', 'shrinkage']:
                         if not branch:
-                            return JsonResponse({'succes':False, 'meesage': 'Select branch'})
-                          
+                            return JsonResponse({'success': False, 'message': 'Select branch'})
+
                         if request.user.branch == branch_transfer.to_branch:
-                            return JsonResponse({'success':False, 'message':'Sorry Action not availabe'})
-                        
+                            return JsonResponse({'success': False, 'message': 'Sorry, action not available'})
+
                         branch = Branch.objects.get(id=branch)
-                        
+
                         product = Inventory.objects.get(
-                            Q(name__icontains = branch_transfer.product.name), 
+                            Q(name__icontains=branch_transfer.product.name),
                             branch=branch
                         )
 
-                        def createDefectiveProduct():
-                            DefectiveProduct.objects.create(
-                                product = product,
-                                branch = request.user.branch,
-                                quantity = quantity,
-                                reason = action,
-                                status = True,
-                                branch_loss = branch,
+                        if action == 'write-off':
+                            WriteOff.objects.create(
+                                inventory_item=product,
+                                quantity=quantity,
+                                reason=reason,
+                                created_by=request.user
+                            )
+                        elif action == 'defective':
+                            DefectiveItem.objects.create(
+                                inventory_item=product,
+                                quantity=quantity,
+                                defect_description=reason,
+                                action_taken=action_taken,
+                                created_by=request.user
+                            )
+                        elif action == 'shrinkage':
+                            InventoryShrinkage.objects.create(
+                                inventory_item=product,
+                                quantity=quantity,
+                                reason=action_taken,
+                                created_by=request.user
                             )
 
-                        if branch_transfer.from_branch == branch or branch_transfer.to_branch == branch:
-                            createDefectiveProduct()
-                        else:
-                            product.quantity -= quantity
-                            createDefectiveProduct()
-                        
+                        product.quantity += quantity
                         product.save()
-                        
-                        description= f'{action} x {quantity} items transfered to defects branch: {branch}'
-                        
-                        if branch_transfer.received > 0:
-                            branch_transfer.received_quantity -= int(quantity)
-                        
-                        if branch_transfer.received_quantity == 0:
-                            branch_transfer.received = True
 
-                        product.quantity -= branch_transfer.over_less_quantity 
+                        ActivityLog.objects.create(
+                            branch = request.user.branch,
+                            user=request.user,
+                            action= 'stock in',
+                            inventory=product,
+                            quantity=quantity,
+                            total_quantity=product.quantity,
+                            product_transfer=branch_transfer,
+                            description=f'Received from {transfer.transfer_ref}'
+                        )
+
+                        product.quantity -= quantity
+                        product.save()
+
+                        description = f'{quantity} items transferred to {action}'
+                        branch_transfer.received_quantity -= int(quantity)
                         branch_transfer.description = description
                         branch_transfer.over_less_description = description
                         branch_transfer.action_by = request.user
                         branch_transfer.over_less = False
-                        
-                        transfer.defective_status = True
-                        
-                        transfer.save()
                         branch_transfer.save()
-                        
+
+                        transfer.defective_status = True
+                        transfer.save()
+
                         ActivityLog.objects.create(
-                            branch = branch,
+                            branch=branch,
                             user=request.user,
-                            action= action,
+                            action=action,
                             inventory=product,
                             quantity=quantity,
                             total_quantity=product.quantity,
                             product_transfer=branch_transfer,
                             description=description
                         )
-                        
-                        return JsonResponse({'success':True}, status=200)
-                    
+
+                        return JsonResponse({'success': True}, status=200)
+
                     if action == 'receive':
                         """
                             receiving the transfer on the current branch
@@ -1187,6 +1200,10 @@ def over_less_list_stock(request):
                         )
 
                         logger.info(f'Processing receiving for product: {product.name}')
+
+                        if (branch_transfer.quantity - branch_transfer.received_quantity) < int(quantity):
+                            return JsonResponse({'success':False, 'message':f'Cant received more quantity left'})
+                            
 
                         product.quantity += int(quantity)
                         product.save()
@@ -1225,28 +1242,11 @@ def over_less_list_stock(request):
                         branch_transfer.description = f'Received {branch_transfer.quantity} and returned back {quantity}'
                         branch_transfer.received = True
 
-                        # _create new transfer
+                        receive_poduct = Inventory.objects.get(id=branch_transfer.product.id, branch=request.user.branch)
 
-                        new_transfer = Transfer.objects.create(
-                            branch=branch_transfer.from_branch,
-                            user=request.user,
-                            transfer_ref=Transfer.generate_transfer_ref(branch_transfer.to_branch.name, [branch_transfer.from_branch.name]),
-                            description=f'Return of {quantity} items from {branch_transfer.to_branch} to {branch_transfer.from_branch}'
-                        )
+                        receive_poduct.quantity += int(quantity)
 
-                        new_transfer.transfer_to.add(request.user.branch.id)
-
-                        TransferItems.objects.create(
-                            transfer=new_transfer,
-                            product=branch_transfer.product,
-                            cost=branch_transfer.cost,
-                            price=branch_transfer.price,
-                            dealer_price=branch_transfer.dealer_price,
-                            quantity=quantity,
-                            from_branch=branch_transfer.to_branch,
-                            to_branch=branch_transfer.from_branch,
-                            description=f'Return of {quantity} items from {branch_transfer.to_branch} to {branch_transfer.from_branch}'
-                        )
+                        receive_poduct.save()
                         branch_transfer.save()
 
                         data = [
