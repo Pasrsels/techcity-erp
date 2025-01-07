@@ -200,13 +200,16 @@
                 <div class="modal-dialog modal-dialog-centered modal-dialog-right">
                     <div class="modal-content">
                         <div class="modal-body">
-                            <div class="">
+                            <div>
                                 <p class='fw-bold'>Choose Branch</p>
                             </div>
-                            <div class="row flex-row">
+                            <div class="row row-cols-3 g-3"> 
                                 {% for branch in branches %}
-                                    <div class="col m-2">
-                                        <a class="btn btn-primary btn-sm" href="{% url 'company:switch_branch' branch.id %}" class="px-3 text-dark">{{ branch.name }}</a>
+                                    <div class="col">
+                                        <a class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center" 
+                                           href="{% url 'company:switch_branch' branch.id %}">
+                                            {{ branch.name }}
+                                        </a>
                                     </div>
                                 {% endfor %}
                             </div>
@@ -214,6 +217,7 @@
                     </div>
                 </div>
             </div>
+            
         </div>
 
         <!-- Modal -->
