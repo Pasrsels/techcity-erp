@@ -861,7 +861,8 @@ def inventory_transfer_item_data(request, id):
         'product__name', 
         'to_branch__name', 
         'action_by__username', 
-        'received_by__username'
+        'received_by__username',
+        'received_back_quantity'
     )
 
     return JsonResponse(list(transfer_items), safe=False)
@@ -1268,7 +1269,8 @@ def over_less_list_stock(request):
                         product.quantity += int(quantity)
                         product.save()
                         
-                        branch_transfer.received_quantity += quantity
+                        branch_transfer.received_back_quantity += quantity
+                        branch_transfer.quantity -= quantity
                         branch_transfer.description = f'Received {branch_transfer.received_quantity} x {branch_transfer.quantity}'
                         branch_transfer.over_less = False
                         branch_transfer.over_less_description = 'received'

@@ -593,6 +593,7 @@ JavaScript:
                     const isQuantityMatch = item.received_quantity === item.quantity;
                     const isUserBranch = item.to_branch__name === '{{ request.user.branch }}';
                     const isReceived = item.received
+                    
 
                     const badgeClass = isQuantityMatch ? 'bg-success' : 'bg-danger';
                     const receivedContent = isQuantityMatch || !isUserBranch || isReceived
@@ -602,14 +603,18 @@ JavaScript:
                         `;
                     
                     const isQuantityReceiveMatch = item.received_quantity < item.quantity;
-
-                    // Usage:
                     const actionContent = renderActionButton(item, "{{ request.user.branch }}");
-                    console.log(actionContent)
+
+                    const isReceivedBackQuantity = item.received_back_quantity > 0;
+                    let iconContent = isReceivedBackQuantity 
+                        ? `<i class='bx bx-transfer mx-1'></i>`
+                        : ``;
+
+                    console.log(isReceivedBackQuantity, item.received_back_quantity, iconContent)
 
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td><small>${item.product__name} [${(item.quantity * item.cost).toFixed(2)}]</small></td>
+                        <td><small>${iconContent} ${item.product__name} [${(item.quantity * item.cost).toFixed(2)}]</small></td>
                         <td class="border p-1 rounded text-center" >${receivedContent}<small>/${item.quantity}</small></td>
                         <td><small>${item.received_by__username || 'Not received'}</small></td>
                         <td><small>${item.from_branch__name}</small><//td>
