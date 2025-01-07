@@ -326,7 +326,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         for product_id, total_quantity in product_quantities.items():
             product = products.get(int(product_id))
             if total_quantity > product.quantity:
-                raise ValidationError(f'Insufficient stock to process product: {product.name}')
+                return JsonResponse({'success':False, 'message':f'Insufficient stock to process product: {product.name}'})
 
     def _process_transfer(self, cart: List[Dict], products: Dict[int, Any], branch_obj_list: List[Any], transfer: Any, request) -> None:
         """Process the transfer cart items."""
