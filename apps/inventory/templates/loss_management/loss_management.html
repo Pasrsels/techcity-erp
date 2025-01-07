@@ -1,45 +1,319 @@
 {% extends "base.html" %}
-{% load static%}
-{% block title%} Loss management {% endblock%}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %} Loss Management {% endblock %}
 {% block content %}
+<style>
+    .card {
+        border: none;
+        cursor: pointer;
+    }
+
+    .card:hover {
+        background: #333;
+        color: #fff;
+    }
+
+    .loader {
+        display: none;
+        text-align: center;
+    }
+
+    .loader span {
+        font-size: 24px;
+        color: #333;
+    }
+
+</style>
+
 <div class="loss-management">
     <nav class="d-flex justify-content-between align-items-center shadow rounded p-2">
         <div class="d-flex align-items-center">
-                <div class=''>
-                    <span class='h5'>Loss management</span>
-                </div>
+            <div class="">
+                <span class="h5">Loss Management</span>
+            </div>
         </div>
     </nav>
 
-    <div class="row">
-        <p>Accounts</p>
-        
-            <div class="col-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5>Shrinkage</h5>
-                        <p>{{ write-off }}</p>
-                    </div>
+    <div class="row mt-4">
+        <div class="col-4">
+            <div class="card shadow">
+                <div class="card-body" data-category="shrinkage">
+                    <h5>Shrinkage</h5>
+                    <p>{{ shrinkage }}</p>
                 </div>
             </div>
+        </div>
 
-            <div class="col-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5>Defective</h5>
-                        <p>{{ defective }}</p>
-                    </div>
+        <div class="col-4">
+            <div class="card shadow" data-category="defective">
+                <div class="card-body">
+                    <h5>Defective</h5>
+                    <p>{{ defective }}</p>
                 </div>
             </div>
+        </div>
 
-            <div class="col-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5>Write Off</h5>
-                        <p>{{ write-off }}</p>
-                    </div>
+        <div class="col-4">
+            <div class="card shadow" data-category="write-off">
+                <div class="card-body">
+                    <h5>Write Off</h5>
+                    <p>{{ write_off }}</p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="col-12 w-100">
+        <nav class="d-flex justify-content-between align-items-center border rounded p-2 mt-4">
+            <div class="d-flex align-items-center">
+                <span class="h6">Accounts Detail</span>
+            </div>
+            <div>
+                <button class="btn btn-sm btn btn-outline-dark" onclick="openAddModal()">Add</button>
+            </div>
+        </nav>
+
+        <div class="loader mt-4">
+            <span>Loading...</span>
+        </div>
+    
+        <div class="row" id="account-details" style="display: none;">
+            <div class="col-12 w-100">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Quantity</th>
+                            <th>Cost</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="details-body">
+                        <!-- Fetched data will be appended here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    
     </div>
 </div>
+
+<!-- Add Modal -->
+<div class="modal fade" id="addDModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModalLabel">Add Defect Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="">
+                    {% csrf_token %}
+                    {{ defective_form | crispy }}
+                    <div class="d-flex justify-content-end">
+                        <button class="btn-primary btn-sm btn">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addSModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="d_title">Create Shrinkage</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="">
+                    {% csrf_token %}
+                    {{ shrinkage_form | crispy }}
+                    <div class="d-flex justify-content-end">
+                        <button class="btn-primary btn-sm btn">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addWModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="w_title">Create Product Write Off</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="">
+                    {% csrf_token %}
+                    {{ write_off_form | crispy }}
+                    <div class="d-flex justify-content-end">
+                        <button class="btn-primary btn-sm btn">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let categoryName = null;
+    const addDModal = new bootstrap.Modal(document.getElementById('addDModal'));
+    const addSModal = new bootstrap.Modal(document.getElementById('addSModal'));
+    const addWModal = new bootstrap.Modal(document.getElementById('addWModal'));
+    
+    const openAddModal = () =>{
+
+        if (!categoryName){
+            Swal.fire({
+                icon:"error",
+                text:"Please select an Account First",
+                title:"error"
+            })
+            return;
+        }
+
+        if(categoryName == 'defective'){
+            addDModal.show()
+        }else if (categoryName == 'shrinkage'){
+            addSModal.show()
+        }else{
+            addWModal.show()
+        }
+    }
+
+    const postData = (url, data) => {
+        return fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken")
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .catch(error => console.error("Error:", error));
+    };
+
+    document.querySelectorAll(".modal form").forEach(form => {
+        form.addEventListener("submit", event => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            let url = "";
+
+            if (categoryName === "defective") {
+                url = "/inventory/add_defective/";
+            } else if (categoryName === "shrinkage") {
+                url = "/inventory/add_shrinkage/";
+            } else if (categoryName === "write-off") {
+                url = "/inventory/add_write_off/";
+            }
+
+            postData(url, data).then(response => {
+                if (response.success) {
+                    Swal.fire({
+                        icon: "success",
+                        text: "Data added successfully",
+                        title: "Success"
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        text: response.message,
+                        title: "Error"
+                    });
+                }
+            });
+        });
+    });
+    
+    document.addEventListener("DOMContentLoaded", () => {
+        const cards = document.querySelectorAll(".card");
+        const loader = document.querySelector(".loader");
+        const accountDetails = document.getElementById("account-details");
+        const detailsBody = document.getElementById("details-body");
+
+        cards.forEach(card => {
+            card.addEventListener("click", () => {
+                const category = card.getAttribute("data-category");
+                loader.style.display = "block";
+                accountDetails.style.display = "none";
+                detailsBody.innerHTML = ""; 
+
+                categoryName = category
+
+                fetch(`/inventory/loss_management_accounts/${category}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data)
+                        loader.style.display = "none";
+                        accountDetails.style.display = "block";
+
+                        if(data){
+                            
+                            data.forEach((item, index) => {
+                                let content = '';
+
+                                if (item.reason){
+                                    content=item.rason
+                                }else{
+                                    content = item.defect_description
+                                }
+
+                                const row = `
+                                    <tr>
+                                        <td><small>${index + 1}</small></td>
+                                        <td><small>${new Date(item.created_at).toLocaleDateString()}</small></td>
+                                        <td><small>${item.inventory_item__name}</small></td>
+                                        <td><small>${item.quantity}</small></td>
+                                        <td>
+                                            <small>
+                                                ${item.inventory_item__cost}
+                                            </small>
+                                        </td>
+                                        <td><small>${content}</small></td>
+                                        <td>${item.amount}</td>
+                                    </tr>
+                                `;
+                                detailsBody.insertAdjacentHTML("beforeend", row);
+                            });
+                        }else{
+                            const row = `
+                                <tr class='text-center'>
+                                    <td>No data</td>
+                                </tr>
+                            `;
+                            detailsBody.insertAdjacentHTML("beforeend", row);
+                        }
+                    })
+                    .catch(error => {
+                        loader.style.display = "none";
+                        alert("Error fetching data!");
+                    });
+            });
+        });
+    });
+    const getCookie = (name) => {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";").map(cookie => cookie.trim());
+            for (let cookie of cookies) {
+                if (cookie.substring(0, name.length + 1) === name + "=") {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    };
+</script>
 {% endblock content %}

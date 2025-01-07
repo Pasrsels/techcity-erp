@@ -107,7 +107,10 @@ urlpatterns = [
 
     #loss management
     path('loss_management/', loss_management, name='loss_management'),
-
+    path('loss_management_accounts/<str:account_name>/', loss_management_accounts, name='loss_management_accounts'),
+    path('shrinkage/', create_shrinkage, name='create_shrinkage'),
+    path('defective/', create_defective, name='create_defective'),
+    path('write_off/', create_write_off, name='create_write_off'),
 
     #API ENDPOINTS
     ################################################################################################
