@@ -217,7 +217,7 @@ JavaScript:
                                         <th class="transfer-status">Product Status</th>
                                         <th class="transfer-quantity">Quantity Details</th>
                                         <th class="transfer-user">Received By</th>
-                                        <th class="transfer-reference">Product Info</th>
+                                        <th class="transfer-reference">From</th>
                                         <th class="transfer-description">Description</th>
                                         <th class="transfer-actions">Actions</th>
                                     </tr>
@@ -429,6 +429,7 @@ JavaScript:
                     <td>${(item.quantity * item.cost).toFixed(2)}</td>
                     <td>${item.quantity}</td>
                     <td>${item.received_by__username || 'Not received'}</td>
+                    <td></td>
                     <td>${item.description || 'No details'}</td>
                     <td>
                         ${item.received 
@@ -575,6 +576,7 @@ JavaScript:
                         <td><small>${item.product__name} [${(item.quantity * item.cost).toFixed(2)}]</small></td>
                         <td class="border p-1 rounded text-center" >${receivedContent}<small>/${item.quantity}</small></td>
                         <td><small>${item.received_by__username || 'Not received'}</small></td>
+                        <td><small>${item.from_branch__name}</small><//td>
                         <td colspan=''><small id='item_${item.id}'>${item.description || 'No details'}</small></td>
                         <td><small>${actionContent}</small></td>
                     `;
