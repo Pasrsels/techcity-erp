@@ -238,154 +238,175 @@ class AddProductView(LoginRequiredMixin, View):
             total_quantity=inventory.quantity + inv.quantity if action == 'update' else inventory.quantity
         )
 
+from typing import List, Dict, Any
+from collections import defaultdict
+from django.views import View
+from django.http import JsonResponse
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
+from django.core.exceptions import ValidationError
+import json
+import logging
+import datetime
+
+logger = logging.getLogger(__name__)
+
 class ProcessTransferCartView(LoginRequiredMixin, View):
-    def post(self, request, *args, **kwargs):
-        """it have two main functions to create a held transfer and to create a new transfer"""
+    """Handle product transfers between branches."""
+
+    def post(self, request, *args, **kwargs) -> JsonResponse:
+        """
+        Process a transfer request or create a held transfer.
+        Returns JSON response indicating success or failure.
+        """
         try:
             with transaction.atomic():
                 data = json.loads(request.body)
-                print(data)
                 action = data['action']
-                branches = data['branches_to']
+                branches_data = data['branches_to']
                 transfer_id = data.get('transfer_id', '')
 
-                products = Inventory.objects.filter(branch=request.user.branch).select_related('branch')
-                suppliers = Supplier.objects.all()
-
-                products_dict = {product.id: product for product in products}
-
-                logger.info(products_dict)
-
-                branch_obj_list = []
-                branch_names = []
-                for branch in branches:
-                    branch_names.append(f'{branch['name']}')
-                    if branch.get('value'):
-                        branch_obj_list.append(Branch.objects.get(id=branch['value']))
-                    else:
-                        branch_obj_list.append(Branch.objects.get(name=branch['name']))
-                        
+                # Fetch all required data in bulk
+                products = self._get_products(request.user.branch)
+                branch_obj_list = self._get_branch_objects(branches_data)
                 
-                if not transfer_id:
-                    transfer = Transfer.objects.create(
-                        branch = request.user.branch,
-                        user = request.user,
-                        transfer_ref = Transfer.generate_transfer_ref(request.user.branch.name, branch_names),
-                        description = 'transfer' 
-                    )
-                else:
-                    transfer = Transfer.objects.get(id=transfer_id)
-                
-                transfer.transfer_to.set(branch_obj_list)
+                # Create or get transfer object
+                transfer = self._get_or_create_transfer(
+                    request.user,
+                    transfer_id,
+                    branch_obj_list,
+                    self._get_branch_names(branches_data)
+                )
 
                 if action == 'process':
+                    self._process_transfer(data['cart'], products, branch_obj_list, transfer, request)
+                else:
+                    self._hold_transfer(branch_obj_list, data, transfer, request)
 
-                    product_quantities_dict = defaultdict(int)
+                return JsonResponse({'success': True})
 
-                    for item in data['cart']:
-                        product_id = item['product_id']
-                        quantity = item['quantity']
-
-                        if product_quantities_dict[product_id]:
-                            product_quantities_dict[product_id] += quantity
-                        else:
-                            product_quantities_dict[product_id] = quantity
-
-                    for item in data['cart']:
-                        logger.info('here')
-                        product = products_dict.get(int(item['product_id']))
-                        logger.info(product)
-
-                        if product_quantities_dict[f'{product.id}'] > product.quantity:
-                            return JsonResponse({'success': False, 'message': f'Insufficient stock to process product: {product.name}.', 'id': product.id})
-
-                    for branch_obj in branch_obj_list:
-                        for item in data['cart']:
-                            product = products_dict.get(int(item['product_id']))
-                            branch_name = item['branch_name']
-
-                            if branch_name == branch_obj.name:
-                                transfer_item = TransferItems(
-                                    transfer=transfer,
-                                    product = product,
-                                    cost = item['cost'],
-                                    price=item['price'],
-                                    dealer_price = item['dealer_price'],
-                                    quantity=item['quantity'],
-                                    from_branch= request.user.branch,
-                                    to_branch= branch_obj,
-                                    description=f'from {request.user.branch} to {branch_obj} '
-                                ) 
-
-                                transfer_item.save()
-                                
-                                self.deduct_inventory(transfer_item)
-                                self.transfer_update_quantity(transfer_item, transfer) 
-            
-                                # send email for transfer alert
-                                # transaction.on_commit(lambda: send_transfer_email(request.user.email, transfer.id, transfer.transfer_to.id))
-
-                                # save the transfer
-                                transfer.hold = False
-                                transfer.date = datetime.datetime.now()
-                                transfer.save()  
-            return JsonResponse({'success': True})     
+        except ValidationError as e:
+            logger.error(f"Validation error in transfer processing: {e}")
+            return JsonResponse({'success': False, 'message': str(e)})
         except Exception as e:
-            logger.info(e)
+            logger.error(f"Unexpected error in transfer processing: {e}", exc_info=True)
             return JsonResponse({'success': False, 'data': str(e)})
+
+    def _get_products(self, branch) -> Dict[int, Any]:
+        """Fetch and index products by ID for the given branch."""
+        products = Inventory.objects.filter(branch=branch).select_related('branch')
+        return {product.id: product for product in products}
+
+    def _get_branch_objects(self, branches_data: List[Dict]) -> List[Any]:
+        """Convert branch data to Branch objects."""
+        branch_objects = []
+        for branch in branches_data:
+            if branch.get('value'):
+                branch_obj = Branch.objects.get(id=branch['value'])
+            else:
+                branch_obj = Branch.objects.get(name=branch['name'])
+            branch_objects.append(branch_obj)
+        return branch_objects
+
+    def _get_branch_names(self, branches_data: List[Dict]) -> List[str]:
+        """Extract branch names from branch data."""
+        return [branch['name'] for branch in branches_data]
+
+    def _get_or_create_transfer(self, user, transfer_id: str, branch_obj_list: List[Any], branch_names: List[str]) -> Any:
+        """Get existing transfer or create new one."""
+        if not transfer_id:
+            transfer = Transfer.objects.create(
+                branch=user.branch,
+                user=user,
+                transfer_ref=Transfer.generate_transfer_ref(user.branch.name, branch_names),
+                description='transfer'
+            )
+        else:
+            transfer = Transfer.objects.get(id=transfer_id)
         
-    def hold_transfer(self, branch_obj_list, data, transfer, request):
+        transfer.transfer_to.set(branch_obj_list)
+        return transfer
 
-        with transaction.atomic():
-            for branch_obj in branch_obj_list:
-                for item in data['cart']:
-                    product = Inventory.objects.get(id=item['product_id'], branch=request.user.branch)
+    def _validate_quantities(self, cart: List[Dict], products: Dict[int, Any]) -> None:
+        """Validate that requested quantities are available."""
+        product_quantities = defaultdict(int)
+        for item in cart:
+            product_quantities[item['product_id']] += item['quantity']
 
-                    branch_name = item['branch_name']
+        for product_id, total_quantity in product_quantities.items():
+            product = products.get(int(product_id))
+            if total_quantity > product.quantity:
+                raise ValidationError(f'Insufficient stock to process product: {product.name}')
 
-                    try:
-                        if branch_name == branch_obj.name:
-                            transfer_item = Holdtransfer.objects.create(
-                                transfer=transfer,
-                                product = product,
-                                cost = item['cost'],
-                                price=item['price'],
-                                dealer_price = item['dealer_price'],
-                                quantity=item['quantity'],
-                                from_branch= request.user.branch,
-                                to_branch= branch_obj,
-                                description=f'from {request.user.branch} to {branch_obj}'
-                            ) 
-                            transfer.hold = True
-                            transfer.save()         
-                    except Exception as e:
-                        return JsonResponse({'success':False, 'message':f'{e}'})
+    def _process_transfer(self, cart: List[Dict], products: Dict[int, Any], branch_obj_list: List[Any], transfer: Any, request) -> None:
+        """Process the transfer cart items."""
+        self._validate_quantities(cart, products)
 
-    def deduct_inventory(self, transfer_item):
-        branch_inventory = Inventory.objects.get(id=transfer_item.product.id, branch__name=transfer_item.from_branch)
-        
-        branch_inventory.quantity -= int(transfer_item.quantity)
-        branch_inventory.save()
-        self.activity_log('transfer out', branch_inventory, transfer_item)
-        
-    def transfer_update_quantity(self, transfer_item, transfer):
-        transfer = Transfer.objects.get(id=transfer.id)
-        logger.info(f'Transfer quantity: {transfer_item.quantity}')
-        transfer.quantity += transfer_item.quantity
+        transfer_items = []
+        for branch_obj in branch_obj_list:
+            for item in cart:
+                if item['branch_name'] == branch_obj.name:
+                    product = products.get(int(item['product_id']))
+                    transfer_item = self._create_transfer_item(item, product, branch_obj, transfer, request)
+                    transfer_items.append(transfer_item)
+
+        # Bulk create transfer items
+        TransferItems.objects.bulk_create(transfer_items)
+
+        # Process inventory updates and logging
+        for transfer_item in transfer_items:
+            self._update_inventory(transfer_item, transfer)
+
+        # Update transfer status
+        transfer.hold = False
+        transfer.date = datetime.datetime.now()
         transfer.save()
-       
-    def activity_log(self,  action, inventory, transfer_item):
+
+    def _create_transfer_item(self, item: Dict, product: Any, branch_obj: Any, transfer: Any, request) -> Any:
+        """Create a transfer item instance."""
+        return TransferItems(
+            transfer=transfer,
+            product=product,
+            cost=item['cost'],
+            price=item['price'],
+            dealer_price=item['dealer_price'],
+            quantity=item['quantity'],
+            from_branch=request.user.branch,
+            to_branch=branch_obj,
+            description=f'from {request.user.branch} to {branch_obj}'
+        )
+
+    def _update_inventory(self, transfer_item: Any, transfer: Any) -> None:
+        """Update inventory and create activity log for a transfer item."""
+        with transaction.atomic():
+            # Update inventory
+            inventory = Inventory.objects.select_for_update().get(
+                id=transfer_item.product.id,
+                branch__name=transfer_item.from_branch
+            )
+            inventory.quantity -= int(transfer_item.quantity)
+            inventory.save()
+
+            # Create activity log
+            self._create_activity_log(transfer_item, inventory)
+
+            # Update transfer quantity
+            transfer.quantity += transfer_item.quantity
+            transfer.save()
+
+    def _create_activity_log(self, transfer_item: Any, inventory: Any) -> None:
+        """Create activity log entry for transfer."""
         ActivityLog.objects.create(
-            invoice = None,
-            product_transfer = transfer_item,
-            branch = self.request.user.branch,
+            invoice=None,
+            product_transfer=transfer_item,
+            branch=self.request.user.branch,
             user=self.request.user,
-            action= action,
-            dealer_price = transfer_item.dealer_price,
-            selling_price = transfer_item.price,
+            action='transfer out',
+            dealer_price=transfer_item.dealer_price,
+            selling_price=transfer_item.price,
             inventory=inventory,
-            system_quantity = inventory.quantity,
-            quantity = -transfer_item.quantity,
+            system_quantity=inventory.quantity,
+            quantity=-transfer_item.quantity,
             total_quantity=inventory.quantity,
             description=f'to {transfer_item.to_branch}'
         )

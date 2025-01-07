@@ -1,7 +1,48 @@
 from django.db import models
+from cryptography.fernet import Fernet
+from django.conf import settings
 
 
-# A list of system notifications settings for a user.
+# encryption_key =Fernet.generate_key()
+# cipher_suite = Fernet(encryption_key)
+
+# class APISettings(models.Model):
+#     name = models.CharField(max_length=100, unique=True)
+#     aoi_key_encryped = models.TextField()
+#     cert_encrypted = models.TextField()
+#     private_key_encrypted = models.TextField()
+#     updated_at = models.DateTimeField(auto_now=True)
+
+
+#     @property
+#     def api_key(self):
+#         return cipher_suite.decrypt(self.api_key_encryted.encode()).decode()
+    
+#     @api_key.setter
+#     def api_key(self, value):
+#         self.api_key_encrypted = cipher_suite.encrypt(value.encode()).decode()
+
+#     @property
+#     def cert(self):
+#         return cipher_suite.decrypt(self.cert_encrypted.encode()).decode()
+
+#     @cert.setter
+#     def cert(self, value):
+#         self.cert_encrypted = cipher_suite.encrypt(value.encode()).decode()
+
+#     @property
+#     def private_key(self):
+#         return cipher_suite.decrypt(self.private_key_encrypted.encode()).decode()
+
+#     @private_key.setter
+#     def private_key(self, value):
+#         self.private_key_encrypted = cipher_suite.encrypt(value.encode()).decode()
+
+#     def __str__(self):
+#         return self.name
+
+    
+
 class NotificationsSettings(models.Model):
     # products settings
     product_creation = models.BooleanField(default=True)

@@ -13,6 +13,8 @@ from loguru import logger
 from .models import NotificationsSettings, Printer, TaxSettings
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from . models import *
+from . forms import *
 
 @login_required
 def settings(request):
@@ -370,3 +372,16 @@ def update_tax_method(request):
             return JsonResponse({'error': 'Invalid method'}, status=400)
     except Exception as e:
         return JsonResponse({'success': False, }, status=400)
+    
+
+# @login_required
+# def update_api_settings(request):
+#     setting = APISettings.objects.get(name="FDMS")
+#     if request.method == "POST":
+#         form = APISettingsForm(request.POST, instance=setting)
+#         if form.is_valid():
+#             form.save()
+#             return JsonResponse({'success':True}) 
+#     else:
+#         form = APISettingsForm(instance=setting)
+#     return render(request, "update_api_settings.html", {"form": form})
