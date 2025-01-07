@@ -92,6 +92,7 @@ urlpatterns = [
     path('held_transfer_json/<int:transfer_id>/', held_transfer_json, name='held_transfer'),
     path('held/transfers/', held_transfers, name='h_transfers'),
     path('process/held/transfer/<int:transfer_id>/', process_held_transfer, name='process_held'),
+    path('edit_transfer_item/<int:transfer_item_id>/', edit_transfer_item, name='edit_transfer_item'),
     
     #reporting
     path('inventory-pdf', inventory_pdf, name='inventory_pdf'),

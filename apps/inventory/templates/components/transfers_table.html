@@ -304,15 +304,6 @@ JavaScript:
 
                             <div class="mb-3 d-none" id="branchSelectWrapper">
 
-                                <div class="mb-3">
-                                    <label for="branchSelect" class="form-label">Select Branch</label>
-                                    <select id="branchSelect mb-3" class="form-select">
-                                        {% for branch in branches %}
-                                            <option value="{{ branch.id }}">{{ branch.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
                                 <select id="reasonSelect" class="form-select mb-3">
                                     <option value="">-- Select a reason (optional) --</option>
                                     <option value="return_to_supplier">Return to Supplier</option>
@@ -374,6 +365,30 @@ JavaScript:
         </div>
     </div>
 
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="receiveModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Edit Transfer Quantity</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm" method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="received_quantity" class="form-label">Quantity:</label>
+                            <input type="number" class="form-control" id="e_quantity" name="edit_quantity" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" form="editForm" class="btn btn-primary btn-sm" onclick="submitEditedQuantity()">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 </div>
 
@@ -385,6 +400,7 @@ JavaScript:
     let products_total_cost = 0;
     let products_total_qauntity = 0
     let tableBody = null;
+    let editItemId = '';
 
     const transferBtn = document.querySelectorAll('.transfer-btn');
 
@@ -408,12 +424,18 @@ JavaScript:
     const actionModal = document.getElementById('ActionModal');
     const actModal = new bootstrap.Modal(document.getElementById('ActionModal'));
     const receiveModal = new bootstrap.Modal(document.getElementById('receiveModal'));
+    const editModal = new bootstrap.Modal(document.getElementById('editModal'));
 
     rQuantity.textContent = total_quantity || 0;
 
     const showActionModal = (id) =>{
         transfer_id=id
         actModal.show()
+    }
+
+    const showEditModal = (id) =>{
+        editItemId=id
+        editModal.show()
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -458,8 +480,6 @@ JavaScript:
             });
         }
     });
-
-
 
     document.getElementById('r_quantity').addEventListener('input', function () {
         const quantity = parseInt(this.value) || 0;
@@ -629,13 +649,14 @@ JavaScript:
         const isFullyReceived = item.quantity === item.received_quantity;
         
         // If not receiving branch, don't show any buttons
-        if (!isReceivingBranch) {
+        if (!isReceivingBranch && !item.received) {
             return  `
                 <button type="button"
-                        class="btn btn-primary btn-sm"
-                        id="action-modal-${item.id}"
-                        onclick="showActionModal(${item.id})">
-                    Action
+                    class="btn btn-primary btn-sm"
+                    id="edit-modal-${item.id}"
+                    onclick="showEditModal(${item.id})"
+                >
+                    Edit
                 </button>
             `;;
         }
@@ -828,7 +849,7 @@ JavaScript:
     form.addEventListener('submit', function (event) {
         event.preventDefault();
         const action = document.getElementById('actionSelect').value;
-        const branch = document.getElementById('branchSelect').value;
+        // const branch = document.getElementById('branchSelect').value;
         const quantity = document.getElementById('quantity').value;
         const reason = document.getElementById('reason').value;
         const action_taken = document.getElementById('reasonSelect')
@@ -872,7 +893,7 @@ JavaScript:
     
         const formData = new FormData();
         formData.append('action', action);
-        formData.append('branch', branch);
+        // formData.append('branch', branch);
         formData.append('quantity', quantity);
         formData.append('transfer_id', transfer_id);
         formData.append('reason', reason);
@@ -912,5 +933,74 @@ JavaScript:
             console.error('Error:', error);
         });
     })
+
+    function submitEditedQuantity() {
+        const editQuantity = document.getElementById('e_quantity').value;
+
+        if (!editQuantity) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Please enter a quantity',
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Processing...',
+            text: 'Please wait while your request is being processed.',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch(`/inventory/edit_transfer_item/${editItemId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({
+                edit_quantity: editQuantity
+            }),
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to submit data.');
+            return response.json();
+        })
+        .then(data => {
+            Swal.close();
+
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: data.message,
+                });
+                showFetch(transferId, tableBody);
+                editModal.hide();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: data.message,
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting data:', error);
+
+            Swal.close();
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops!',
+                text: 'Something went wrong. Please try again.',
+            });
+        });
+    }
 </script>
 {% endblock content %}

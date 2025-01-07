@@ -1059,6 +1059,69 @@ def receive_inventory(request):
             logger.info(e)
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
+@login_required
+def edit_transfer_item(request, transfer_item_id):
+    try:
+        transfer_item = TransferItems.objects.get(id=transfer_item_id)
+        logger.info(transfer_item)
+    except TransferItems.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Transfer item not found'}, status=404)
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            logger.info(data)
+            new_quantity = int(data.get('edit_quantity'))
+
+            logger.info(new_quantity)
+
+            if transfer_item.received:
+                return JsonResponse({'success':False, 'message':f'{transfer_item.product.name}, is already received.'})
+
+            if new_quantity is None:
+                return JsonResponse({'success': False, 'message': 'Quantity is required'}, status=400)
+
+            if new_quantity < 0:
+                return JsonResponse({'success': False, 'message': 'Quantity cannot be negative'}, status=400)
+
+            logger.info('-------')
+            with transaction.atomic():
+                old_quantity = transfer_item.quantity
+                transfer_item.quantity = new_quantity
+                transfer_item.save()
+
+                logger.info(transfer_item)
+
+                # Update inventory
+                inventory = Inventory.objects.select_for_update().get(
+                    id=transfer_item.product.id,
+                    branch__name=transfer_item.from_branch
+                )
+                
+                if inventory.quantity < new_quantity:
+                    return JsonResponse({'success': False, 'message': 'Insufficient stock to update transfer item quantity'}, status=400)
+                
+                inventory.quantity += old_quantity - new_quantity
+                inventory.save()
+
+                logger.info(inventory)
+
+                # Log the activity
+                ActivityLog.objects.create(
+                    branch=request.user.branch,
+                    user=request.user,
+                    action='edit transfer item',
+                    inventory=inventory,
+                    quantity=new_quantity - old_quantity,
+                    total_quantity=inventory.quantity,
+                    description=f'Edited transfer item quantity from {old_quantity} to {new_quantity}'
+                )
+
+            return JsonResponse({'success': True, 'message': 'Transfer item updated successfully'}, status=200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
 
 @login_required
 def receive_inventory_json(request):
@@ -1112,17 +1175,13 @@ def over_less_list_stock(request):
                 if int(branch_transfer.received_quantity) != int(branch_transfer.quantity):
                     
                     if action in ['write-off', 'defective', 'shrinkage']:
-                        if not branch:
-                            return JsonResponse({'success': False, 'message': 'Select branch'})
 
                         if request.user.branch == branch_transfer.to_branch:
                             return JsonResponse({'success': False, 'message': 'Sorry, action not available'})
 
-                        branch = Branch.objects.get(id=branch)
-
-                        product = Inventory.objects.get(
-                            Q(name__icontains=branch_transfer.product.name),
-                            branch=branch
+                        product = Inventory.objects.get(        
+                            id=branch_transfer.product.id,
+                            branch=request.user.branch
                         )
 
                         if action == 'write-off':
@@ -1164,9 +1223,10 @@ def over_less_list_stock(request):
 
                         product.quantity -= quantity
                         product.save()
-
-                        description = f'{quantity} items transferred to {action}'
-                        branch_transfer.received_quantity -= int(quantity)
+                        
+                        branch_transfer.defect_quantity =+ quantity
+                        description = f'{branch_transfer.defect_quantity} item(s) transferred to {action} account.'
+                        branch_transfer.quantity -= int(quantity)
                         branch_transfer.description = description
                         branch_transfer.over_less_description = description
                         branch_transfer.action_by = request.user
@@ -1177,11 +1237,11 @@ def over_less_list_stock(request):
                         transfer.save()
 
                         ActivityLog.objects.create(
-                            branch=branch,
+                            branch=request.user.branch,
                             user=request.user,
                             action=action,
                             inventory=product,
-                            quantity=quantity,
+                            quantity=-quantity,
                             total_quantity=product.quantity,
                             product_transfer=branch_transfer,
                             description=description

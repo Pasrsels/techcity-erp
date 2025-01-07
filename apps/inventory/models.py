@@ -330,6 +330,8 @@ class TransferItems(models.Model):
     description = models.TextField(null=True)
     received_quantity = models.IntegerField(default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    defect_quantity = models.IntegerField(default=0)
+    received_back_quantity = models.IntegerField(default=0)
 
     # def __str__(self):
     #     return f'{self.product.name} to {self.to_branch}'
