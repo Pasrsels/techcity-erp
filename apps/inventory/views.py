@@ -72,6 +72,7 @@ from apps.inventory.utils import best_price
 from collections import defaultdict
 from django.core.cache import cache
 from django.core.paginator import Paginator
+from typing import List, Dict, Any
 
 @login_required
 def notifications_json(request):
@@ -238,19 +239,6 @@ class AddProductView(LoginRequiredMixin, View):
             total_quantity=inventory.quantity + inv.quantity if action == 'update' else inventory.quantity
         )
 
-from typing import List, Dict, Any
-from collections import defaultdict
-from django.views import View
-from django.http import JsonResponse
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import transaction
-from django.core.exceptions import ValidationError
-import json
-import logging
-import datetime
-
-logger = logging.getLogger(__name__)
-
 class ProcessTransferCartView(LoginRequiredMixin, View):
     """Handle product transfers between branches."""
 
@@ -342,6 +330,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         """Process the transfer cart items."""
         self._validate_quantities(cart, products)
 
+        track_quantity = 0
         transfer_items = []
         for branch_obj in branch_obj_list:
             for item in cart:
@@ -349,6 +338,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                     product = products.get(int(item['product_id']))
                     transfer_item = self._create_transfer_item(item, product, branch_obj, transfer, request)
                     transfer_items.append(transfer_item)
+                    track_quantity += item['quantity']
 
         # Bulk create transfer items
         TransferItems.objects.bulk_create(transfer_items)
@@ -358,6 +348,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
             self._update_inventory(transfer_item, transfer)
 
         # Update transfer status
+        transfer.total_quantity_track = track_quantity
         transfer.hold = False
         transfer.date = datetime.datetime.now()
         transfer.save()
@@ -1045,6 +1036,8 @@ def receive_inventory(request):
             branch_transfer.received = True
             branch_transfer.description = f'received {quantity_received} out of {branch_transfer.quantity}'
             branch_transfer.save()
+
+            logger.info(transfer_obj.total_quantity_track)
 
             transfer_obj.total_quantity_track -= quantity_received
             transfer_obj.save()
