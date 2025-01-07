@@ -489,6 +489,8 @@ JavaScript:
                     products_total_cost += item.quantity * item.cost;
                 });
 
+                
+
                 rQuantity.textContent = total_quantity || 0;
                 tQuantity.textContent = products_total_qauntity || 0;
 
@@ -508,22 +510,10 @@ JavaScript:
                         `;
                     
                     const isQuantityReceiveMatch = item.received_quantity < item.quantity;
-                    // console.log(isQuantityReceiveMatch)4
 
-                    const isBranch = item.from_branch == "{{ request.user.branch }}"
-                    const actionContent = isQuantityMatch
-                        ? `<span>All Received</span>`
-                        : !item.received
-                            ? `
-                                <button type="button" class="btn btn-primary btn-sm" id='receive-btn' onclick='showReceive(${item.id}, "${item.product__name}")'>
-                                    Receive Inventory
-                                </button>
-                            `
-                            : `
-                                <button class="btn btn-sm btn-primary" id="action-modal" onclick="showActionModal(${item.id})">
-                                    Action
-                                </button>
-                            `;
+                    // Usage:
+                    const actionContent = renderActionButton(item, "{{ request.user.branch }}");
+                    console.log(actionContent)
 
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -556,6 +546,55 @@ JavaScript:
                 });
             }
     }
+
+    const renderActionButton = (item, userBranch) => {
+        // Check if user is from receiving branch and item is not from their branch
+        const isReceivingBranch = item.from_branch__name !== userBranch;
+        console.log(isReceivingBranch, item.from_branch, userBranch)
+        
+        // Check if quantities match (fully received)
+        const isFullyReceived = item.quantity === item.received_quantity;
+        
+        // If not receiving branch, don't show any buttons
+        if (!isReceivingBranch) {
+            return  `
+                <button type="button"
+                        class="btn btn-primary btn-sm"
+                        id="action-modal-${item.id}"
+                        onclick="showActionModal(${item.id})">
+                    Action
+                </button>
+            `;;
+        }
+        
+        // If fully received, only show status
+        if (isFullyReceived) {
+            return `<span class="badge bg-success">Fully Received</span>`;
+        }
+        
+        // If not received at all
+        if (!item.received) {
+            return `
+                <button type="button" 
+                        class="btn btn-primary btn-sm" 
+                        id="receive-btn-${item.id}" 
+                        onclick="showReceive(${item.id}, '${item.product__name}')">
+                    Receive Inventory
+                </button>
+            `;
+        }
+        
+        // If partially received, show action button
+        return `
+            <button type="button"
+                    class="btn btn-primary btn-sm"
+                    id="action-modal-${item.id}"
+                    onclick="showActionModal(${item.id})">
+                Action
+            </button>
+        `;
+    };
+
 
     function submitReceivedQuantity() {
         const itemId = document.getElementById('item_id').value;
