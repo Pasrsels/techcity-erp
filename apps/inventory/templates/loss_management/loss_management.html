@@ -78,17 +78,18 @@
             <span>Loading...</span>
         </div>
     
-        <div class="row" id="account-details" style="display: none;">
+        <div class="row mt-4" id="account-details" style="display: none;">
             <div class="col-12 w-100">
                 <table class="table table-bordered">
                     <thead>
                         <tr>
                             <th>#</th>
                             <th>Name</th>
+                            <th>Product</th>
                             <th>Quantity</th>
                             <th>Cost</th>
+                            <th>Total Amount</th>
                             <th>Description</th>
-                            <th>Amount</th>
                         </tr>
                     </thead>
                     <tbody id="details-body">
@@ -264,9 +265,9 @@
                                 let content = '';
 
                                 if (item.reason){
-                                    content=item.rason
+                                    content=item.reason;
                                 }else{
-                                    content = item.defect_description
+                                    content = item.defect_description;
                                 }
 
                                 const row = `
@@ -280,8 +281,12 @@
                                                 ${item.inventory_item__cost}
                                             </small>
                                         </td>
+                                        <td>
+                                            <small>
+                                                ${(item.inventory_item__cost * item.quantity).toFixed(2)}
+                                            </small>
+                                        </td>
                                         <td><small>${content}</small></td>
-                                        <td>${item.amount}</td>
                                     </tr>
                                 `;
                                 detailsBody.insertAdjacentHTML("beforeend", row);

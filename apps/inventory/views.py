@@ -1169,7 +1169,7 @@ def over_less_list_stock(request):
 
             logger.info(f'Action: {action}, transfer_id: {transfer_id}, quantity: {quantity}, branch: {branch}, reason: {reason}')
             
-            branch_transfer = TransferItems.objects.filter(id=transfer_id).first()
+            branch_transfer = TransferItems.objects.filter(id=transfer_id).select_related('transfer').first()
             transfer = branch_transfer.transfer
 
             with transaction.atomic():
@@ -1189,14 +1189,14 @@ def over_less_list_stock(request):
                             WriteOff.objects.create(
                                 inventory_item=product,
                                 quantity=quantity,
-                                reason=reason,
+                                reason=f'{reason} (transfer number: {branch_transfer.transfer.transfer_ref})',
                                 created_by=request.user
                             )
                         elif action == 'defective':
                             DefectiveItem.objects.create(
                                 inventory_item=product,
                                 quantity=quantity,
-                                defect_description=reason,
+                                defect_description=f'{reason} (transfer number: {branch_transfer.transfer.transfer_ref})',
                                 action_taken=action_taken,
                                 created_by=request.user
                             )
