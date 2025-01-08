@@ -1097,7 +1097,6 @@ def edit_transfer_item(request, transfer_item_id):
                 if inventory.quantity < new_quantity:
                     return JsonResponse({'success': False, 'message': 'Insufficient stock to update transfer item quantity'}, status=400)
                 
-                
                 inventory.quantity += old_quantity - new_quantity
                 inventory.save()
 

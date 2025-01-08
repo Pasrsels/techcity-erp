@@ -78,7 +78,7 @@ JavaScript:
         margin-right: 0.5rem;
     }
 </style>
-<div class="table transfers-table mt-2">
+<div class="transfers-table mt-3">
     {% include 'components/loader.html' %}
     <div class='table-scroll'>
         <table class='table table-bordered table-transfer' id='transfers'>
@@ -403,8 +403,6 @@ JavaScript:
     let editItemId = '';
 
     const transferBtn = document.querySelectorAll('.transfer-btn');
-
-    const expandBtn = document.querySelector('#id_expand')
     const itemsEl = document.querySelectorAll('#id_items')
 
     const loader = document.querySelector('#loader');
@@ -772,7 +770,6 @@ JavaScript:
         });
     }
 
-
     setTimeout(()=>{
         loader.classList.add('hidden');
         loader.classList.remove('d-flex')
@@ -789,16 +786,6 @@ JavaScript:
             });
         });
     });
-
-    expandBtn.addEventListener('click', ()=>{
-        itemsEl.forEach((el)=>{
-            if (el.classList.contains('hidden')){
-                el.classList.remove('hidden')
-            }else{
-                el.classList.add('hidden')
-            }
-        })
-    })
 
     const cancel = (transferId) => {
         Swal.fire({
