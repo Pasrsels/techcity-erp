@@ -1249,7 +1249,12 @@ def over_less_list_stock(request):
                     if action == 'receive':
                         """
                             receiving the transfer on the current branch
+
+                            to put validation
                         """
+
+                        if request.user.branch != branch_transfer.from_branch:
+                            return JsonResponse({'success': False, 'message': 'Sorry, action not available'}, status=400)
 
                         product = Inventory.objects.get(
                             Q(name__icontains = branch_transfer.product.name), 
@@ -1272,7 +1277,7 @@ def over_less_list_stock(request):
                         branch_transfer.save()
 
                         ActivityLog.objects.create(
-                            branch = branch_transfer.to_branch,
+                            branch = request.user.branch,
                             user=request.user,
                             action= 'stock in',
                             inventory=product,

@@ -1365,6 +1365,146 @@ async function displayReceipt(invoiceId) {
     }
 }
 
+    function generateReceipt(data) {
+        const { invoice, invoice_items: invoiceItems, lay_dates: dates } = data;
+        const {
+            invoice_number: invoiceNumber,
+            amount: invoiceTotal,
+            delivery_charge: deliveryCharge,
+            discount_amount: discountAmount,
+            vat: vatAmount,
+            subtotal: subTotal,
+            currency_symbol: currencySymbol,
+            amount_paid: amountPaid,
+            payment_terms: payment_terms
+        } = invoice;
+
+        let prvDue = parseFloat(document.getElementById('tpreviousDue').textContent.split('')[1]);
+        let availabeB = invoiceTotal - amountPaid + prvDue;
+
+        const receiptHTML = `
+            <style>
+                .receipt {
+                    padding: 10px;
+                    background-color: white;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }
+                .header { display: flex; justify-content: space-between; align-items: center; }
+                .logo img { height: 50px; margin-right: 10px; }
+                .receipt-info { text-align: right; }
+                .payment-details, .customer-info, .totals { font-size: 0.9em; margin-bottom: 20px; }
+                .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                .items-table th, .items-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                .items-table th { background-color: #f4f4f4; }
+                .totals { text-align: right; }
+            </style>
+
+            <div class="receipt">
+                <div class="header">
+                    <div class="logo">
+                        <img src="{% static 'assets/logo.png' %}" alt="Company Logo">
+                        <div class="company-info">
+                            <p>Tin No:20012500</p>
+                            <p>Vat: 2001278367</p>
+                            <p>65 Speke, Speke Avenue</p>
+                        </div>
+                    </div>
+                    <div class="receipt-info">
+                        <h3>Receipt <span id="invoiceNumber">${invoiceNumber}</span></h3>
+                        <p>Date: <span id="date">${new Date().toLocaleDateString()}</span></p>
+                        <p>Time: <span id="time">${new Date().toLocaleTimeString()}</span></p>
+                    </div>
+                </div>
+                <hr>
+                <div class="payment-details">
+                    <p><strong>Payment:</strong> <span id="rcp-payment">${currencySymbol} ${invoiceTotal}</span></p>
+                    <p><strong>Currency:</strong> <span id="rcp-currency">${currencySymbol}</span></p>
+                    <p><strong>Cashier:</strong> {{ request.user.first_name }}</p>
+                </div>
+                <hr>
+                <div class="customer-info">
+                    <div class="company">
+                        <p><strong>Company:</strong> {{ request.user.company.name }}</p>
+                        <p><strong>Name:</strong> <span id="customerName"></span></p>
+                        <p><strong>Cell:</strong> <span id="customerPhone"></span></p>
+                        <p><strong>Email:</strong> <span id="customerEmail"></span></p>
+                        <p><strong>Address:</strong> <span id="customerAddress"></span></p>
+                    </div>
+                </div>
+                <hr>
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>NAME</th>
+                            <th>DESCRIPTION</th>
+                            <th>QNTY</th>
+                            <th>UNIT PRICE</th>
+                            <th>TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="receipt">
+                        ${invoiceItems.map(({ quantity, item__name, unit_price, item__description }) => `
+                            <tr>
+                                <td>${item__name}</td>
+                                <td>(${item__description})</td>
+                                <td>${quantity}</td>
+                                <td>${unit_price}</td>
+                                <td>${(quantity * unit_price).toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <hr>
+                <div class="totals">
+                    <p><strong>Subtotal:</strong> <span id="subTotalAmount">${currencySymbol} ${subTotal}</span></p>
+                    <p><strong>VAT 15%:</strong> <span id="vatAmount">${currencySymbol} ${vatAmount}</span></p>
+                    <p><strong>Total:</strong> <span id='total_amount'>${currencySymbol} ${invoiceTotal}</span></p>
+                </div>
+                <hr>
+                <p style="text-align: center;">Thank you for your purchase!</p>
+            </div>
+        `;
+
+    }
+    function printReceiptSilently(content) {
+        console.log(content)
+        let printFrame = document.getElementById("print-frame");
+
+        if (!printFrame) {
+            printFrame = document.createElement("iframe");
+            printFrame.id = "print-frame";
+            printFrame.style.display = "none"
+            document.body.appendChild(printFrame);
+        }
+        const frameDoc = printFrame.contentWindow || 
+                        printFrame.contentDocument.document || 
+                        printFrame.contentDocument;
+
+        frameDoc.document.open();
+        frameDoc.document.write(`
+            <html>
+            <head>
+                <title>Receipt</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        font-size: 13.5px;
+                        margin: 0;
+                        padding: 2px;
+                    }
+                </style>
+            </head>
+            <body>
+                ${content}
+            </body>
+            </html>
+        `);
+        frameDoc.document.close();
+        setTimeout(() => {
+            printFrame.contentWindow.print(false);
+        }, 100);
+    }
+
   
 // customer get and post
 function submitClient() {
@@ -1511,23 +1651,23 @@ function setCustomer(customerId){
    
     }
 
-    const getLastInvoiceNumber = async (customerId) => {
-        try {
-            const response = await fetch(`/pos/last_due_invoice/${customerId}/`);
+    // const getLastInvoiceNumber = async (customerId) => {
+    //     try {
+    //         const response = await fetch(`/pos/last_due_invoice/${customerId}/`);
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok.');
-        }
-        const lastInvoice = await response.json();
+    //     if (!response.ok) {
+    //         throw new Error('Network response was not ok.');
+    //     }
+    //     const lastInvoice = await response.json();
 
-        // set the last invoice
-        //document.getElementById('id_last_invoice').textContent = lastInvoice[0].invoice_number;
+    //     // set the last invoice
+    //     //document.getElementById('id_last_invoice').textContent = lastInvoice[0].invoice_number;
 
-        } catch (error) {
-            console.error('Error fetching Last Invoice Number:', error);
+    //     } catch (error) {
+    //         console.error('Error fetching Last Invoice Number:', error);
         
-        }
-    }
+    //     }
+    // }
 
     function customerAccount() {
         $.ajax({

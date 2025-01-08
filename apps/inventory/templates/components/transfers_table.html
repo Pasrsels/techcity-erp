@@ -175,9 +175,17 @@ JavaScript:
                         </td>
                         <td class="transfer-quantity">
                             <small class="d-flex justify-content-between">
-                                <span class="border p-1">{{ transfer.total_received_qnt }} / {{ transfer.total_quantity}}</span>
+                                <span class="border p-1 rounded" style="width: 70px; display: block; position: relative;">
+                                    <span style="float: left;">{{ transfer.total_received_qnt }}</span>
+                                    <span style="position: absolute; left: 50%; transform: translateX(-50%);">/</span>
+                                    <span style="float: right;">{{ transfer.total_quantity }}</span>
+                                </span>
                                 {% if not request.user.role == 'sales' %}
-                                    <span class="text-primary text-bold border p-1">${{ transfer.total_received_amount|floatformat:2 }} / ${{ transfer.total_amount|floatformat:2 }}</span>
+                                <span class="text-primary text-bold border p-1 rounded" style="width: 135px; text-align: center;">
+                                    <span style="float: left;">${{ transfer.total_received_amount|floatformat:2 }}</span>
+                                    <span>/</span>
+                                    <span style="float: right;">${{ transfer.total_amount|floatformat:2 }}</span>
+                                </span>
                                 {% endif %}
                             </small>
                         </td>
@@ -335,7 +343,7 @@ JavaScript:
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="receiveModalLabel">Receive Inventory</h5>
+                    <h5 class="modal-title" id="receiveModalLabel">Receive Inventory <span id="r_q"></span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -369,7 +377,7 @@ JavaScript:
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">Edit Transfer Quantity</h5>
+                    <h5 class="modal-title" id="editModalLabel">Edit Transfer Quantity: <span id="e_q"></span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -401,6 +409,7 @@ JavaScript:
     let products_total_qauntity = 0
     let tableBody = null;
     let editItemId = '';
+    let received = '';
 
     const transferBtn = document.querySelectorAll('.transfer-btn');
     const itemsEl = document.querySelectorAll('#id_items')
@@ -426,13 +435,16 @@ JavaScript:
 
     rQuantity.textContent = total_quantity || 0;
 
-    const showActionModal = (id) =>{
+    const showActionModal = (id, quantity) =>{
         transfer_id=id
         actModal.show()
     }
 
-    const showEditModal = (id) =>{
-        editItemId=id
+    const showEditModal = (id, quantity) =>{
+        console.log(quantity)
+        editItemId=id;
+        document.getElementById('e_q').textContent=quantity;
+
         editModal.show()
     }
 
@@ -469,8 +481,8 @@ JavaScript:
                     <td>${item.description || 'No details'}</td>
                     <td>
                         ${item.received 
-                            ? `<button class="btn btn-primary btn-sm" onclick="showActionModal(${item.id})">Action</button>`
-                            : `<button class="btn btn-primary btn-sm" onclick="showReceive(${item.id}, '${item.product__name}')">Receive Inventory</button>`
+                            ? `<button class="btn btn-primary btn-sm" onclick="showActionModal(${item.id}, ${item.quantity})">Action</button>`
+                            : `<button class="btn btn-primary btn-sm" onclick="showReceive(${item.id}, '${item.product__name}, ${item.quantity}')">Receive Inventory</button>`
                         }
                     </td>
                 `;
@@ -522,9 +534,9 @@ JavaScript:
     //     actionModal.show()
     // })
 
-    const showReceive = (id, name) =>{
+    const showReceive = (id, name, quantity) =>{
         document.getElementById('item_id').value=id;
-        document.getElementById('receiveModalLabel').innerText=name;
+        document.getElementById('receiveModalLabel').innerText=`${name} x ${quantity}`;
         receiveModal.show()
     }
 
@@ -644,20 +656,17 @@ JavaScript:
     }
 
     const renderActionButton = (item, userBranch) => {
-        // Check if user is from receiving branch and item is not from their branch
         const isReceivingBranch = item.from_branch__name !== userBranch;
         console.log(isReceivingBranch, item.from_branch, userBranch)
-        
-        // Check if quantities match (fully received)
+
         const isFullyReceived = item.quantity === item.received_quantity;
         
-        // If not receiving branch, don't show any buttons
         if (!isReceivingBranch && !item.received) {
             return  `
                 <button type="button"
                     class="btn btn-primary btn-sm"
                     id="edit-modal-${item.id}"
-                    onclick="showEditModal(${item.id})"
+                    onclick="showEditModal(${item.id}, ${item.quantity})"
                 >
                     Edit
                 </button>
@@ -675,7 +684,7 @@ JavaScript:
                 <button type="button" 
                         class="btn btn-primary btn-sm" 
                         id="receive-btn-${item.id}" 
-                        onclick="showReceive(${item.id}, '${item.product__name}')">
+                        onclick="showReceive(${item.id}, '${item.product__name}', ${item.quantity})">
                     Receive Inventory
                 </button>
             `;
@@ -686,7 +695,7 @@ JavaScript:
             <button type="button"
                     class="btn btn-primary btn-sm"
                     id="action-modal-${item.id}"
-                    onclick="showActionModal(${item.id})">
+                    onclick="showActionModal(${item.id}, ${item.quantity})">
                 Action
             </button>
         `;
@@ -778,7 +787,6 @@ JavaScript:
     
     transferRows.forEach(row => {
         row.addEventListener('click', function() {
-
             const transferId = this.dataset.id;
             const relatedRows = document.querySelectorAll(`#id_items[data-transfer-id="${transferId}"]`);
             relatedRows.forEach(relatedRow => {
