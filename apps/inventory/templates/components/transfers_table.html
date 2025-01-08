@@ -41,7 +41,7 @@ JavaScript:
     }
     
     .parent-row td {
-        background: #ecedee !important;
+        background: ;
         vertical-align: middle;
     }
 
@@ -81,7 +81,7 @@ JavaScript:
 <div class="transfers-table mt-3">
     {% include 'components/loader.html' %}
     <div class='table-scroll'>
-        <table class='table table-bordered table-transfer' id='transfers'>
+        <table class='table table-bordered  rounded' id='transfers'>
             <!-- <thead class="table-dark sticky-top">
                 <tr>
                     <th class="transfer-status">Transfer Status</th>
@@ -215,7 +215,7 @@ JavaScript:
                     <!-- Child Row -->
                     <tr class="child-rows d-none" data-parent-id="{{ transfer.id }}">
                         <td colspan="6" class="p-0">
-                            <table class="table table-sm table-transfer child-table mb-0">
+                            <table class="table table-sm table-transfer table-stripped child-table mb-0">
                                 <thead class="table-dark">
                                     <tr>
                                         <th class="transfer-status">Product Status</th>
@@ -455,6 +455,14 @@ JavaScript:
                 const childRow = document.querySelector(`.child-rows[data-parent-id="${transferId}"]`);
                 const tbody = childRow.querySelector('tbody');
                 tableBody = tbody
+                
+                let tds = parentRow.getElementsByTagName('td');
+
+                // Loop through all <td> elements and apply the background color with !important
+                for (let td of tds) {
+                    td.style.setProperty('background', '#5897fb29', 'important');
+                }
+
 
                 if (childRow.classList.contains('d-none')) {
                     tbody.innerHTML = `<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>`;
@@ -463,6 +471,9 @@ JavaScript:
                     showFetch(transferId, tbody)
                 } else {
                     childRow.classList.toggle('d-none');
+                    for (let td of tds) {
+                    td.style.setProperty('background', '#fff', 'important');
+                }
                 }
             });
         });
