@@ -175,17 +175,17 @@ JavaScript:
                         </td>
                         <td class="transfer-quantity">
                             <small class="d-flex justify-content-between">
-                                <span class="border p-1 rounded" style="width: 70px; display: block; position: relative;">
+                                <span class="" style="width: 70px; display: block; position: relative;">
                                     <span style="float: left;">{{ transfer.total_received_qnt }}</span>
-                                    <span style="position: absolute; left: 50%; transform: translateX(-50%);">/</span>
+                                    <span>/</span>
                                     <span style="float: right;">{{ transfer.total_quantity }}</span>
                                 </span>
                                 {% if not request.user.role == 'sales' %}
-                                <span class="text-primary text-bold border p-1 rounded" style="width: 135px; text-align: center;">
-                                    <span style="float: left;">${{ transfer.total_received_amount|floatformat:2 }}</span>
-                                    <span>/</span>
-                                    <span style="float: right;">${{ transfer.total_amount|floatformat:2 }}</span>
-                                </span>
+                                    <span class="text-primary rounded" style="width: 140px; text-align: center;">
+                                        <span style="float: left;">${{ transfer.total_received_amount|floatformat:2 }}</span>
+                                        <span>/</span>
+                                        <span style="float: right;">${{ transfer.total_amount|floatformat:2 }}</span>
+                                    </span>
                                 {% endif %}
                             </small>
                         </td>
