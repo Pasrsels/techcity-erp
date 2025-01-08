@@ -1023,7 +1023,7 @@ def receive_inventory(request):
                         quantity=quantity_received,
                         total_quantity=product.quantity,
                         product_transfer=branch_transfer,
-                        description=f'received {quantity_received} out of {branch_transfer.quantity}'
+                        description=f'Received {quantity_received} from branch  out of {branch_transfer.quantity}'
                     )
 
                     product.batch += f'{branch_transfer.product.batch}, '
@@ -1167,6 +1167,56 @@ def over_less_list_stock(request):
 
             with transaction.atomic():
                 if int(branch_transfer.received_quantity) != int(branch_transfer.quantity):
+
+                    if action == 'send_to':
+                        if quantity > branch_transfer.quantity:
+                            return JsonResponse({'success': False, 'message': 'Quantity cannot be more than the transfer quantity'}, status=400)
+
+                        new_branch = Branch.objects.get(id=branch)
+                        
+                        product = Inventory.objects.get(name=branch_transfer.product.name, branch=new_branch)
+
+                        logger.info(product)
+                        
+                        product.quantity += quantity
+                        product.save()
+
+                        ActivityLog.objects.create(
+                            branch=request.user.branch,
+                            user=request.user,
+                            action='stock in',
+                            inventory=product,
+                            quantity=quantity,
+                            total_quantity=product.quantity,
+                            product_transfer=branch_transfer,
+                            description=f'Received {quantity} from {branch_transfer.from_branch}'
+                        )
+
+                        branch_transfer.quantity -= quantity
+                        branch_transfer.save()
+
+                        send_to_branch_transfer_item = TransferItems.objects.get(transfer__id=transfer.id, product__name=product.name, to_branch=new_branch)
+
+                        logger.info(send_to_branch_transfer_item)
+
+                        send_to_branch_transfer_item.quantity += quantity
+                        send_to_branch_transfer_item.save()
+    
+                        product.quantity -= quantity
+                        product.save()
+
+                        ActivityLog.objects.create(
+                            branch=request.user.branch,
+                            user=request.user,
+                            action='transfer out',
+                            inventory=product,
+                            quantity=-quantity,
+                            total_quantity=product.quantity,
+                            product_transfer=branch_transfer,
+                            description=f'Transferred {quantity} to {new_branch}'
+                        )
+
+                        return JsonResponse({'success': True, 'message': 'Quantity successfully transferred to another branch'}, status=200)
                     
                     if action in ['write-off', 'defective', 'shrinkage']:
 
@@ -1249,8 +1299,6 @@ def over_less_list_stock(request):
                     if action == 'receive':
                         """
                             receiving the transfer on the current branch
-
-                            to put validation
                         """
 
                         if request.user.branch != branch_transfer.from_branch:
