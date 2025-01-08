@@ -342,14 +342,11 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                     transfer_items.append(transfer_item)
                     track_quantity += item['quantity']
 
-        # Bulk create transfer items
         TransferItems.objects.bulk_create(transfer_items)
 
-        # Process inventory updates and logging
         for transfer_item in transfer_items:
             self._update_inventory(transfer_item, transfer)
 
-        # Update transfer status
         transfer.total_quantity_track = track_quantity
         transfer.hold = False
         transfer.date = datetime.datetime.now()
@@ -1064,7 +1061,6 @@ def receive_inventory(request):
 def edit_transfer_item(request, transfer_item_id):
     try:
         transfer_item = TransferItems.objects.get(id=transfer_item_id)
-        logger.info(transfer_item)
     except TransferItems.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Transfer item not found'}, status=404)
 
@@ -1085,7 +1081,6 @@ def edit_transfer_item(request, transfer_item_id):
             if new_quantity < 0:
                 return JsonResponse({'success': False, 'message': 'Quantity cannot be negative'}, status=400)
 
-            logger.info('-------')
             with transaction.atomic():
                 old_quantity = transfer_item.quantity
                 transfer_item.quantity = new_quantity
@@ -1102,6 +1097,7 @@ def edit_transfer_item(request, transfer_item_id):
                 if inventory.quantity < new_quantity:
                     return JsonResponse({'success': False, 'message': 'Insufficient stock to update transfer item quantity'}, status=400)
                 
+                
                 inventory.quantity += old_quantity - new_quantity
                 inventory.save()
 
@@ -1113,7 +1109,7 @@ def edit_transfer_item(request, transfer_item_id):
                     user=request.user,
                     action='edit transfer item',
                     inventory=inventory,
-                    quantity=new_quantity - old_quantity,
+                    quantity=inventory.quantity,
                     total_quantity=inventory.quantity,
                     description=f'Edited transfer item quantity from {old_quantity} to {new_quantity}'
                 )
@@ -1166,8 +1162,6 @@ def over_less_list_stock(request):
             branch = data.get('branch')
             reason = data.get('reason', '')
             action_taken = data.get('action_taken')
-
-            logger.info(f'Action: {action}, transfer_id: {transfer_id}, quantity: {quantity}, branch: {branch}, reason: {reason}')
             
             branch_transfer = TransferItems.objects.filter(id=transfer_id).select_related('transfer').first()
             transfer = branch_transfer.transfer
@@ -1178,12 +1172,15 @@ def over_less_list_stock(request):
                     if action in ['write-off', 'defective', 'shrinkage']:
 
                         if request.user.branch == branch_transfer.to_branch:
-                            return JsonResponse({'success': False, 'message': 'Sorry, action not available'})
+                            return JsonResponse({'success': False, 'message': 'Sorry, action not available'}, status=400)
 
                         product = Inventory.objects.get(        
                             id=branch_transfer.product.id,
                             branch=request.user.branch
                         )
+
+                        if quantity > branch_transfer.quantity:
+                            return JsonResponse({'success': False, 'message': 'Quantity cannot be more than the transfer quantity'}, status=400)
 
                         if action == 'write-off':
                             WriteOff.objects.create(
@@ -1263,9 +1260,8 @@ def over_less_list_stock(request):
                         logger.info(f'Processing receiving for product: {product.name}')
 
                         if (branch_transfer.quantity - branch_transfer.received_quantity) < int(quantity):
-                            return JsonResponse({'success':False, 'message':f'Cant received more quantity left'})
+                            return JsonResponse({'success':False, 'message':f'Cant receive more quantity'})
                             
-
                         product.quantity += int(quantity)
                         product.save()
                         

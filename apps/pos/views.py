@@ -34,60 +34,6 @@ def last_due_invoice(request, customer_id):
     logger.info(invoice)
     return JsonResponse(list(invoice), safe=False)
 
-# import json
-# import base64
-# from .models import OfflineReceipt
-
-# def submit_offline_receipts():
-#     receipts = OfflineReceipt.objects.filter(submitted=False)
-
-#     if not receipts.exists():
-#         print("No receipts to submit.")
-#         return
-
-#     receipt_list = [receipt.receipt_data for receipt in receipts]
-#     file_data = {
-#         "header": {
-#             "deviceID": 123456,
-#             "fiscalDayNo": 1,
-#             "fiscalDayOpened": "2025-01-06T08:00:00",
-#             "fileSequence": 1
-#         },
-#         "content": {"receipts": receipt_list},
-#         "footer": {
-#             "fiscalDayClosed": "2025-01-06T20:00:00",
-#             "fiscalCounters": [
-#                 {
-#                     "fiscalCounterType": "SaleByTax",
-#                     "fiscalCounterCurrency": "USD",
-#                     "fiscalCounterValue": sum(r["receiptTotal"] for r in receipt_list)
-#                 }
-#             ]
-#         }
-#     }
-
-#     encoded_file = base64.b64encode(json.dumps(file_data).encode()).decode()
-
-#     try:
-#         response = submit_file_to_zimra(encoded_file)
-#         if response.get("status") == "success":
-#             receipts.update(submitted=True)
-#             logger.info("Receipts submitted successfully.")
-#         else:
-#             logger.info(f"Submission failed: {response}")
-#     except Exception as e:
-#         logger.info(f"Error submitting receipts: {e}")
-
-
-# def submit_file_to_zimra(encoded_file):
-#     # url = "https://fdmsapi.zimra.co.zw/submitFile"
-#     # headers = {"Authorization": f"Bearer {api_key}"}
-#     # payload = {"deviceID": 123456, "file": encoded_file}
-
-#     # response = requests.post(url, json=payload, cert=(cert_path, key_path), headers=headers)
-#     pass
-#     # return response.json()
-
 
 #API EndPoint
 ################################################################################################################

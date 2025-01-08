@@ -60,6 +60,7 @@ from reportlab.lib.units import inch
 from django.http import FileResponse
 import io
 from collections import defaultdict
+from apps.pos.utils.submit_receipt_offline import save_receipt_offline
 
 def get_previous_month():
     first_day_of_current_month = datetime.datetime.now().replace(day=1)
@@ -552,6 +553,7 @@ def create_invoice(request):
             invoice_data = data['data'][0]  
             items_data = data['items']
             layby_dates = data.get('layby_dates')
+            logger.info(data)
            
             # get currency
             currency = Currency.objects.get(id=invoice_data['currency'])
@@ -783,6 +785,8 @@ def create_invoice(request):
                 # Update customer balance
                 account_balance.balance = Decimal(invoice_data['payable']) + Decimal(account_balance.balance)
                 account_balance.save()
+
+                save_receipt_offline(data, request.user.first_name)
 
                 # try:
                 #     return create_invoice_pdf(invoice)
