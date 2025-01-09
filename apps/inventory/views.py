@@ -552,8 +552,6 @@ def inventory_index(request):
         'logs': [],
     }
 
-
-    logger.info(context)
     return render(request, 'inventory.html', context)
 
 @login_required
