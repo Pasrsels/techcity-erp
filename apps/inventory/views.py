@@ -808,7 +808,7 @@ def inventory_transfer_index(request):
             Sum(F('transferitems__quantity') * F('transferitems__cost')),
             output_field=FloatField()
         ),
-        check_all_received=Sum(F('transferitems__quantity') - F('transferitems__received_quantity'))
+        check_all_received=Sum(F('transferitems__quantity') - F('transferitems__received_quantity')),
     ).order_by('-time')
 
     if q:

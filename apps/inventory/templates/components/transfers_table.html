@@ -102,17 +102,17 @@ JavaScript:
                                     <small class="d-flex align-items-center">
                                         <small>
                                             {% if transfer.defective_status %}
-                                                <span class='hint--bottom' aria-label='Defective'>
-                                                    <i class='bx bxs-circle fs-3 text-defective status-icon'></i>
+                                                <span class='hint--bottom bx bxs-circle text-light' aria-label='Defective'>
+                                                 {{ transfer.total_received_qnt }}
                                                 </span>
                                             {% else %}
                                                 {% if transfer.check_all_received == 0 %}
-                                                    <span class='hint--bottom' aria-label='All received'>
-                                                        <i class='bx bxs-circle text-received fs-3 status-icon'></i>
+                                                    <span class='hint--bottom bx bxs-circle text-light' aria-label='All received'>
+                                                        {{ transfer.total_received_qnt }} 
                                                     </span>
                                                 {% else %}
-                                                    <span class='hint--bottom' aria-label='Not yet received'>
-                                                        <i class='bx bxs-circle text-danger fs-3 status-icon'></i>
+                                                    <span class='hint--bottom bx bxs-circle text-light ' aria-label='Not yet received'>
+                                                        {{ transfer.total_received_qnt }}
                                                     </span>
                                                 {% endif %}
                                             {% endif %}
@@ -260,7 +260,7 @@ JavaScript:
                     </div> 
                     
                     <div class="mt-3 table-responsive">
-                        <table class="table table-hover table-stripped">
+                        <table class="table table-hover table-stripped" id="table-child">
                             <thead class="table-dark sticky-top">
                                 <th>Product</th>
                                 <th>Product</th>
@@ -880,92 +880,92 @@ JavaScript:
     }
 
     const form = document.getElementById('actionForm');
-    form.addEventListener('submit', function (event) {
-        event.preventDefault();
-        const action = document.getElementById('actionSelect').value;
-        const branch = document.getElementById('branchSelect').value;
-        const quantity = document.getElementById('quantity').value;
-        const reason = document.getElementById('reason').value;
-        const action_taken = document.getElementById('reasonSelect')
-        const detail = document.getElementById('')
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const action = document.getElementById('actionSelect').value;
+            const branch = document.getElementById('branchSelect').value;
+            const quantity = document.getElementById('quantity').value;
+            const reason = document.getElementById('reason').value;
+            const action_taken = document.getElementById('reasonSelect')
+            const detail = document.getElementById('')
 
-        if (!action) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: 'Please select an action',
-            });
-            return;
-        }
-
-        if (action === 'send_back' && !branch) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: 'Please select a branch',
-            });
-            return;
-        }
-
-        if (action === 'receive' && !quantity) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: 'Please enter a quantity',
-            });
-            return;
-        }
-
-        if (action === 'defective' && !quantity) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: 'Please enter a quantity',
-            });
-            return;
-        }
-    
-        const formData = new FormData();
-        formData.append('action', action);
-        formData.append('branch', branch);
-        formData.append('quantity', quantity);
-        formData.append('transfer_id', transfer_id);
-        formData.append('reason', reason);
-        formData.append('action_taken', action_taken)
-
-        for (let [key, value] of formData.entries()) {
-            console.log(`${key}: ${value}`, 'data');
-        }
-
-        fetch('/inventory/over_less_list/', {
-            method: 'POST',
-            body: JSON.stringify(Object.fromEntries(formData)),
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if(data.success){
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: 'Action performed successfully',
-                })
-                showFetch(transfer_id, tableBody)
-                actModal.hide()
-                console.log('run')
-            }else{
+            if (!action) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error!',
-                    text: data.message
+                    text: 'Please select an action',
                 });
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+
+            if (action === 'send_back' && !branch) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Please select a branch',
+                });
+                return;
+            }
+
+            if (action === 'receive' && !quantity) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Please enter a quantity',
+                });
+                return;
+            }
+
+            if (action === 'defective' && !quantity) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Please enter a quantity',
+                });
+                return;
+            }
+        
+            const formData = new FormData();
+            formData.append('action', action);
+            formData.append('branch', branch);
+            formData.append('quantity', quantity);
+            formData.append('transfer_id', transfer_id);
+            formData.append('reason', reason);
+            formData.append('action_taken', action_taken)
+
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`, 'data');
+            }
+
+            fetch('/inventory/over_less_list/', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success){
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Action performed successfully',
+                    })
+                    showFetch(transfer_id, tableBody)
+                    actModal.hide()
+                    console.log('run')
+                }else{
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: data.message
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
     })
 
     function submitEditedQuantity() {
@@ -1016,6 +1016,8 @@ JavaScript:
                 });
                 showFetch(transferId, tableBody);
                 editModal.hide();
+
+                showNextEditableModal();
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -1036,5 +1038,32 @@ JavaScript:
             });
         });
     }
+
+    let currentRowIndex = -1; 
+
+    function showNextEditableModal() {
+        const rows = Array.from(document.querySelectorAll('#table-child tbody tr'));
+        console.log(rows)
+        currentRowIndex += 1;
+
+        for (let i = currentRowIndex; i < rows.length; i++) {
+            const editButton = rows[i].querySelector('button[id^="edit-modal-"]');
+            if (editButton) {
+                currentRowIndex = i; 
+                const itemId = editButton.getAttribute('onclick').match(/\d+/)[0];
+                const quantity = editButton.getAttribute('onclick').match(/, (\d+)\)/)[1];
+
+                showEditModal(itemId, quantity);
+                return;
+            }
+        }
+
+        Swal.fire({
+            icon: 'info',
+            title: 'Completed!',
+            text: 'All items have been processed.',
+        });
+    }
+
 </script>
 {% endblock content %}
