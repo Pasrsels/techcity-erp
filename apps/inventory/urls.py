@@ -93,6 +93,7 @@ urlpatterns = [
     path('held/transfers/', held_transfers, name='h_transfers'),
     path('process/held/transfer/<int:transfer_id>/', process_held_transfer, name='process_held'),
     path('edit_transfer_item/<int:transfer_item_id>/', edit_transfer_item, name='edit_transfer_item'),
+    path('add_transfer_item/<int:transfer_id>/', add_transfer_item, name='add_transfer_item'),
     
     #reporting
     path('inventory-pdf', inventory_pdf, name='inventory_pdf'),

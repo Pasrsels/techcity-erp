@@ -800,7 +800,8 @@ def inventory_transfer_index(request):
         'transfer_to'
     ).annotate(
         total_quantity=Sum('transferitems__quantity'),
-        total_received_qnt=Sum('transferitems__received_quantity'),
+        total_received_qnt=Sum(('transferitems__received_quantity')),
+        total_r_difference = (F('transferitems__quantity')) - Sum(F('transferitems__received_quantity')),
         total_received_amount=Sum(F('transferitems__received_quantity') * F('transferitems__cost')),
         total_amount=ExpressionWrapper(
             Sum(F('transferitems__quantity') * F('transferitems__cost')),
@@ -808,6 +809,8 @@ def inventory_transfer_index(request):
         ),
         check_all_received=Sum(F('transferitems__quantity') - F('transferitems__received_quantity')),
     ).order_by('-time')
+
+    logger.info(transfers[:1].values())
 
     if q:
         transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q))
@@ -862,7 +865,41 @@ def inventory_transfer_item_data(request, id):
 
     return JsonResponse(list(transfer_items), safe=False)
 
+@login_required
+def add_transfer_item(request, transfer_id):
+    if request.method == 'GET':
+        try:
+            transfer = Transfer.objects.get(id=transfer_id)
+            return render(request, 'add_transfer_item.html', {
+                'transfer': transfer,
+            })
+        except Transfer.DoesNotExist:
+            messages.warning(request, f'Transfer with ID {transfer_id} does not exist.')
+            return redirect('inventory:transfers')
 
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            items = data.get('items', [])
+            branches_data = data['branches_to']
+            transfer_id = data.get('transfer_id', '')
+
+            # Fetch all required data in bulk
+            products = ProcessTransferCartView._get_products(request.user.branch)
+            branch_obj_list = ProcessTransferCartView._get_branch_objects(branches_data)
+
+            transfer = Transfer.objects.get(id=transfer_id)
+
+            ProcessTransferCartView._process_transfer(data['cart'], products, branch_obj_list, transfer, request)
+            
+            return JsonResponse({'success': True, 'message': 'Items added to transfer successfully'}, status=200)
+
+        except Transfer.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Transfer not found'}, status=404)
+        except Exception as e:
+            logger.error(f"Error adding items to transfer: {e}")
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+        
 @login_required
 def held_transfer_json(request, transfer_id):
     transfer_items = Holdtransfer.objects.filter(transfer__id=transfer_id).values(

@@ -41,7 +41,6 @@ JavaScript:
     }
     
     .parent-row td {
-        background: ;
         vertical-align: middle;
     }
 
@@ -67,6 +66,9 @@ JavaScript:
     
     .transfer-actions {
         width: 15%;
+    }
+    .transfer-none{
+        width: 6.2%;
     }
 
     .table-scroll {
@@ -96,80 +98,44 @@ JavaScript:
                 {% for transfer in transfers %}
                     <!-- Parent Row -->
                     <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %} parent-row" data-id="{{ transfer.id }}">
+                        <td class="transfer-status" style="width: 50px;">
+                            {% if request.user.branch in transfer.transfer_to.all %}
+                                {% if  transfer.total_r_difference == 0 %}
+                                <small>
+                                    <img src="{% static 'assets/check.png' %}" width="30px">
+                                </small>
+                                {% else %}
+                                    <small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
+                                        <span class="text-light">{{ transfer.total_r_difference }}</span>
+                                    </small>
+                                {% endif %}
+                            {% else %}
+                                {% if  transfer.total_r_difference == 0 %}
+                                <small>
+                                    <img src="{% static 'assets/checkout.png' %}" width="30px">
+                                </small>
+                                {% else %}
+                                    <small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
+                                        <span class="text-light">{{ transfer.total_r_difference }}</span>
+                                    </small>
+                                    <!-- <i class='bx bxs-left-arrow-alt' style="color: #dc3545eb; font-size: 35px;"></i> -->
+                                {% endif %}
+                            {% endif %}
+                        </td>
                         <td class="transfer-status">
                             <div class="d-flex align-items-center">
-                                {% if transfer.hold %}
-                                    <small class="d-flex align-items-center">
-                                        <small>
-                                            {% if transfer.defective_status %}
-                                                <span class='hint--bottom bx bxs-circle text-light' aria-label='Defective'>
-                                                 {{ transfer.total_received_qnt }}
-                                                </span>
-                                            {% else %}
-                                                {% if transfer.check_all_received == 0 %}
-                                                    <span class='hint--bottom bx bxs-circle text-light' aria-label='All received'>
-                                                        {{ transfer.total_received_qnt }} 
-                                                    </span>
-                                                {% else %}
-                                                    <span class='hint--bottom bx bxs-circle text-light ' aria-label='Not yet received'>
-                                                        {{ transfer.total_received_qnt }}
-                                                    </span>
-                                                {% endif %}
-                                            {% endif %}
-                                        </small>
-                                        <i class='bx bx-pause fs-2' style='color:#007bff'></i>
+                                {% if request.user.branch in transfer.transfer_to.all %}
+                                    <small class='d-flex justify-content-center align-items-center'>
+                                        <i class='bx bxs-right-arrow-alt text-success' style="font-size: 35px;"></i>
                                         <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
                                     </small>
-                                {% else %}
-                                    {% if request.user.branch in transfer.transfer_to.all %}
-                                        <!-- <small class="d-flex align-items-center">
-                                            <small>
-                                                {% if transfer.defective_status %}
-                                                    <span class='hint--bottom' aria-label='Defective'>
-                                                        <i class='bx bxs-circle fs-3 text-defective status-icon'></i>
-                                                    </span>
-                                                {% else %}
-                                                    {% if transfer.quantity == 0 %}
-                                                        <span class='hint--bottom' aria-label='All received'>
-                                                            <i class='bx bxs-circle text-received fs-3 status-icon'></i>
-                                                        </span>
-                                                    {% elif transfer.total_quantity_track < transfer.quantity and transfer.quantity > 0 %}
-                                                        <span class='hint--bottom' aria-label='Partial'>
-                                                            <i class='bx bxs-circle text-warning fs-3 status-icon'></i>
-                                                        </span>
-                                                    {% elif transfer.quantity == transfer.total_quantity_track %}
-                                                        <span class='hint--bottom' aria-label='Not yet received'>
-                                                            <i class='bx bxs-circle text-danger fs-3 status-icon'></i>
-                                                        </span>
-                                                    {% endif %}
-                                                {% endif %}
-                                            </small> -->
-                                            <i class='bx bxs-right-arrow-alt text-success' style="font-size: 35px;"></i>
-                                            <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
-                                        </small>
                                     {% else %}
-                                        <small class="d-flex align-items-center">
-                                            <small>
-                                                {% if transfer.defective_status %}
-                                                    <span class='hint--bottom' aria-label='Defective'>
-                                                        <i class='bx bxs-circle fs-3 text-defective status-icon'></i>
-                                                    </span>
-                                                {% else %}
-                                                    {% if transfer.total_quantity_track == 0 %}
-                                                        <span class='hint--bottom' aria-label='All received'>
-                                                            <i class='bx bxs-circle text-received fs-3 status-icon'></i>
-                                                        </span>
-                                                    {% elif transfer.total_quantity_track > 0 %}
-                                                        <span class='hint--bottom' aria-label='Not yet received'>
-                                                            <i class='bx bxs-circle text-danger fs-3 status-icon'></i>
-                                                        </span>
-                                                    {% endif %}
-                                                {% endif %}
-                                            </small>
+                                    <small>
+                                        <span class='d-flex justify-content-center align-items-center'>
                                             <i class='bx bxs-left-arrow-alt' style="color: #dc3545eb; font-size: 35px;"></i>
                                             <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
-                                        </small>
-                                    {% endif %}
+                                        </span>
+                                    </small>
                                 {% endif %}
                             </div>
                         </td>
@@ -197,18 +163,12 @@ JavaScript:
                                 <a href="{% url 'inventory:print_transfer' transfer.id %}" class="btn border btn-sm">
                                     <i class='bx bx-printer'></i>
                                 </a>
-                                {% if transfer.hold %}
-                                    <a href="{% url 'inventory:process_held' transfer.id %}" class="btn border btn-outline-dark btn-sm hint-bottom" aria-label="process transfer">
-                                        <i class='bx bx-play'></i>
-                                    </a>
-                                {% else %}
-                                    <a href="#" class="btn border btn-outline-dark btn-sm">
-                                        <i class='bx bx-stop'></i>
-                                    </a>
-                                {% endif %}
-                                <button onclick="cancel({{ transfer.id }})" class="btn border btn-outline-dark btn-sm">
+                                <button onclick="cancel({{ transfer.id }})" class="btn border mx-2 btn-outline-dark btn-sm">
                                     <i class='bx bx-trash'></i>
                                 </button>
+                                <a href="{% url 'inventory:add_transfer_item' transfer.id %}" class="btn border btn-sm">
+                                    <i class='bx bx-plus'></i>
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -218,10 +178,11 @@ JavaScript:
                             <table class="table table-sm table-transfer table-hover table-striped child-table mb-0">
                                 <thead class="table-dark">
                                     <tr>
+                                        <th class="transfer-none"></th>
                                         <th class="transfer-status">Product Status</th>
                                         <th class="transfer-quantity">Quantity Details</th>
                                         <th class="transfer-user">Received By</th>
-                                        <th class="transfer-reference">From</th>
+                                        <th class="transfer-reference">From - To</th>
                                         <th class="transfer-description">Description</th>
                                         <th class="transfer-actions">Actions</th>
                                     </tr>
@@ -262,6 +223,7 @@ JavaScript:
                     <div class="mt-3 table-responsive">
                         <table class="table table-hover table-stripped" id="table-child">
                             <thead class="table-dark sticky-top">
+                                <th></th>
                                 <th>Product</th>
                                 <th>Product</th>
                                 <th>Total Cost</th>
@@ -321,7 +283,6 @@ JavaScript:
                                     {% endfor %}
                                 </select>
                             </div>
-
                             <div class="mb-3 d-none" id="branchSelectWrapper">
                                 <select id="reasonSelect" class="form-select mb-3">
                                     <option value="">-- Select a reason (optional) --</option>
@@ -338,8 +299,6 @@ JavaScript:
                                     <textarea id="reason" class="form-control" rows="3" placeholder="Enter detail"></textarea>
                                 </div>
                             </div>
-                    
-                        
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </form>
                     </div>
@@ -469,7 +428,7 @@ JavaScript:
 
                 // Loop through all <td> elements and apply the background color with !important
                 for (let td of tds) {
-                    td.style.setProperty('background', '#5897fb29', 'important');
+                    td.style.setProperty('background', '#5897fb59', 'important');
                 }
 
 
@@ -492,6 +451,7 @@ JavaScript:
             items.forEach(item => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
+                    <td stlye='width:50px'></td>
                     <td>${item.received_quantity}</td>
                     <td>${item.product__name}</td>
                     <td>${(item.quantity * item.cost).toFixed(2)}</td>
@@ -538,8 +498,6 @@ JavaScript:
         const quantityWrapper = document.getElementById('quantityWrapper');
         const sendToBranches = document.getElementById('sendToBranches');
         const branchSelect = document.getElementById('branchSelect');
-
-        
 
         actionSelect.addEventListener('change', () => {
             const selectedAction = actionSelect.value;
@@ -654,14 +612,15 @@ JavaScript:
                         ? `<i class='bx bx-transfer mx-1'></i>`
                         : ``;
 
-                    console.log(isReceivedBackQuantity, item.received_back_quantity, iconContent)
+                    // console.log(isReceivedBackQuantity, item.received_back_quantity, iconContent)
 
                     const row = document.createElement('tr');
                     row.innerHTML = `
+                        <td stlye='width:50px'></td>
                         <td><small>${iconContent} ${item.product__name} [${(item.quantity * item.cost).toFixed(2)}]</small></td>
                         <td class="border p-1 rounded text-center" >${receivedContent}<small>/${item.quantity}</small></td>
                         <td><small>${item.received_by__username || 'Not received'}</small></td>
-                        <td><small>${item.from_branch__name}</small><//td>
+                        <td><small>${item.from_branch__name} - ${item.to_branch__name}</small><//td>
                         <td colspan=''><small id='item_${item.id}'>${item.description || 'No details'}</small></td>
                         <td><small>${actionContent}</small></td>
                     `;
