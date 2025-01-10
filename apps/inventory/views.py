@@ -270,6 +270,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
                 if action == 'process':
                     self._process_transfer(data['cart'], products, branch_obj_list, transfer, request)
+                    # self._get_accessory(self, products)
                 else:
                     self._hold_transfer(branch_obj_list, data, transfer, request)
 
@@ -281,6 +282,18 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         except Exception as e:
             logger.error(f"Unexpected error in transfer processing: {e}", exc_info=True)
             return JsonResponse({'success': False, 'data': str(e)})
+    
+    def _get_accessory(self, products):
+        accessory_ids = [product.id for product in products.values()]
+        accessories = Accessory.objects.filter(main_product_id__in=accessory_ids)
+
+        for accessory in accessories:
+            accessory_product = accessory.accessory_product
+            if accessory_product.id in products:
+                accessory_quantity = products[accessory_product.id].quantity
+            if accessory_quantity > 0:
+                accessory_product.quantity -= accessory_quantity
+                accessory_product.save()
 
     def _get_products(self, branch) -> Dict[int, Any]:
         """Fetch and index products by ID for the given branch."""
@@ -334,6 +347,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
         track_quantity = 0
         transfer_items = []
+        accessory_updates = []
         for branch_obj in branch_obj_list:
             for item in cart:
                 if item['branch_name'] == branch_obj.name:
@@ -342,7 +356,15 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                     transfer_items.append(transfer_item)
                     track_quantity += item['quantity']
 
+                    # # Update accessories for the user's branch
+                    # accessory_ids = [acc.id for acc in product.accessory_product.all()]
+                    # accessories = Inventory.objects.filter(id__in=accessory_ids, branch=request.user.branch)
+                    # for accessory in accessories:
+                    #     accessory.quantity -= item['quantity']
+                    #     accessory_updates.append(accessory)
+
         TransferItems.objects.bulk_create(transfer_items)
+        Inventory.objects.bulk_update(accessory_updates, ['quantity'])
 
         for transfer_item in transfer_items:
             self._update_inventory(transfer_item, transfer)
@@ -1203,13 +1225,54 @@ def over_less_list_stock(request):
             with transaction.atomic():
                 if int(branch_transfer.received_quantity) != int(branch_transfer.quantity):
 
+                    if action == 's_receive':
+                        if quantity > branch_transfer.quantity:
+                            return JsonResponse({'success': False, 'message': 'Quantity cannot be more than the transfer quantity'}, status=400)
+
+                        product = Inventory.objects.get(name=branch_transfer.product.name, branch=request.user.branch)
+
+                        product.quantity += quantity
+                        product.save()
+
+                        branch_transfer.description = f'Received {branch_transfer.received_quantity} from {branch_transfer.from_branch}'
+                        branch_transfer.received_quantity += quantity
+                        branch_transfer.save()
+
+                        ActivityLog.objects.create(
+                            branch=request.user.branch,
+                            user=request.user,
+                            action='stock in',
+                            inventory=product,
+                            quantity=quantity,
+                            total_quantity=product.quantity,
+                            product_transfer=branch_transfer,
+                            description=f'Received {quantity} from {branch_transfer.from_branch}'
+                        )
+
+                        return JsonResponse({'success': True, 'message': 'Quantity successfully transferred to another branch'}, status=200)
+
                     if action == 'send_to':
                         if quantity > branch_transfer.quantity:
                             return JsonResponse({'success': False, 'message': 'Quantity cannot be more than the transfer quantity'}, status=400)
 
                         new_branch = Branch.objects.get(id=branch)
                         
-                        product = Inventory.objects.get(name=branch_transfer.product.name, branch=new_branch)
+                        try:
+                            product = Inventory.objects.get(name=branch_transfer.product.name, branch=new_branch)
+                        except Exception as e:
+                            product = Inventory.objects.create(
+                                name=branch_transfer.product.name,
+                                branch=new_branch,
+                                cost=branch_transfer.cost,
+                                price=branch_transfer.price,
+                                quantity=quantity,
+                                dealer_price=branch_transfer.dealer_price,
+                                description=branch_transfer.product.description or '',
+                                category=branch_transfer.product.category,
+                                tax_type=branch_transfer.product.tax_type,
+                                stock_level_threshold=branch_transfer.product.stock_level_threshold,
+                            )
+
 
                         logger.info(product)
                         
@@ -1230,7 +1293,22 @@ def over_less_list_stock(request):
                         branch_transfer.quantity -= quantity
                         branch_transfer.save()
 
-                        send_to_branch_transfer_item = TransferItems.objects.get(transfer__id=transfer.id, product__name=product.name, to_branch=new_branch)
+                        branch_transfer.transfer.transfer_to.add(new_branch.id)
+                        
+                        try:
+                            send_to_branch_transfer_item = TransferItems.objects.get(transfer__id=transfer.id, product__name=product.name, to_branch=new_branch)
+                        except Exception as e:
+                            send_to_branch_transfer_item = TransferItems.objects.create(
+                                transfer=branch_transfer.transfer,
+                                product=product,
+                                cost=branch_transfer.cost,
+                                price=branch_transfer.price,
+                                dealer_price=branch_transfer.dealer_price,
+                                quantity=quantity,
+                                from_branch=branch_transfer.from_branch,
+                                to_branch=new_branch,
+                                description=f'Transferred {quantity} to {new_branch} from {branch_transfer.from_branch}'
+                            )
 
                         logger.info(send_to_branch_transfer_item)
 
@@ -3570,26 +3648,26 @@ def payments(request):
 # @csrf_exempt
 @login_required
 def accessory_view(request, product_id):
-    if request.method == 'GET':
-        accessories = Accessory.objects.filter(main_product__id=product_id).values('id', 'product__name')
-        return JsonResponse({'success': True, 'data': list(accessories)}, status=200)
-
     if request.method == 'POST':
+        logger.info('here')
         try:
             data = json.loads(request.body)
             logger.info(f'Accessories: {data}')
-            accessory_ids = data.get('accessories', [])
+            product_id = data.get('product_id')
+            accessory_data = data.get('accessories', [])  # List of dicts with id and quantity
 
-            logger.info(accessory_ids)
+            logger.info(accessory_data)
 
             product = Inventory.objects.get(id=product_id)
-            current_accessories = Accessory.objects.filter(main_product=product).values('accessory_product')
-            current_ids = set(current_accessories.values_list('id', flat=True))
+            logger.info(product)
+            current_accessories = Accessory.objects.filter(main_product=product).values('accessory_product', 'quantity')
+            current_ids = set(current_accessories.values_list('accessory_product', flat=True))
 
             logger.info(f'current ids: {current_ids}')
 
-            input_ids = {acc['id'] for acc in accessory_ids}
-            
+            input_data = {acc['id']: acc['quantity'] for acc in accessory_data}
+            input_ids = set(input_data.keys())
+
             accessories_to_add = input_ids - current_ids
             accessories_to_remove = current_ids - input_ids
 
@@ -3598,34 +3676,52 @@ def accessory_view(request, product_id):
             if Accessory.objects.filter(main_product=product).exists():
                 acc = Accessory.objects.get(main_product=product)
             else:
-                acc = Accessory.objects.create(main_product = product)
+                acc = Accessory.objects.create(main_product=product)
 
+            # Adding new accessories
             if accessories_to_add:
                 accessories_to_add_objs = Inventory.objects.filter(id__in=accessories_to_add)
 
                 logger.info(f'Accessories to add: {accessories_to_add_objs}')
 
                 for accessory in accessories_to_add_objs:
+                    quantity = input_data[accessory.id]  # Get the quantity from input
                     acc.accessory_product.add(accessory)
+                    acc.quantity = quantity  # Update quantity
                     acc.save()
 
+            # Removing accessories
             if accessories_to_remove:
                 accessories_to_remove_objs = Inventory.objects.filter(id__in=accessories_to_remove)
 
-                logger.info(f'Accessories to add: {accessories_to_remove_objs}')
+                logger.info(f'Accessories to remove: {accessories_to_remove_objs}')
 
                 for accessory in accessories_to_remove_objs:
                     acc.accessory_product.remove(accessory)
                     acc.save()
 
-            updated_accessories = Accessory.objects.filter(main_product=product).values('id', 'main_product__name', 'accessory_product__name')
+            # Update quantities for existing accessories
+            for accessory_id in input_ids.intersection(current_ids):
+                quantity = input_data[accessory_id]
+                acc_instance = Accessory.objects.filter(main_product=product, accessory_product_id=accessory_id).first()
+                if acc_instance:
+                    acc_instance.quantity = quantity
+                    acc_instance.save()
+
+            updated_accessories = Accessory.objects.filter(main_product=product).values(
+                'id', 'main_product__name', 'accessory_product__name', 'quantity'
+            )
             return JsonResponse({'success': True, 'data': list(updated_accessories)}, status=200)
-        
+
         except Inventory.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Product not found.'}, status=404)
         except Exception as e:
             logger.info(e)
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
+        
+    # if request.method == 'GET':
+    #     accessories = Accessory.objects.filter(main_product__id=product_id).values('id', 'product__name')
+    #     return JsonResponse({'success': True, 'data': list(accessories)}, status=200)
 
 def vue_view(request):
     return render(request, 'vue.html')
@@ -3654,8 +3750,6 @@ def loss_management(request):
 @login_required
 def loss_management_accounts(request, account_name):
     try:
-        logger.info(f'Account name: {account_name}')
-
         if account_name == 'shrinkage':
             shrinkage = InventoryShrinkage.objects.all().select_related(
                 'inventory_item', 
@@ -3667,12 +3761,11 @@ def loss_management_accounts(request, account_name):
                 'inventory_item__cost',
                 'quantity',
                 'reason',
-                'created_by',
+                'recorded_by',
                 'created_at'
             ).annotate(
                 total_cost = Sum(F('quantity') * F('inventory_item__cost'))
             )
-
             return JsonResponse(list(shrinkage), safe=False)
 
         if account_name == 'defective':
@@ -3715,6 +3808,7 @@ def loss_management_accounts(request, account_name):
             return JsonResponse(list(write_off_data), safe=False)
 
     except Exception as e:
+        logger.info(e)
         return JsonResponse({'success':False, 'message':f'{e}'}, status=200)
     
 @login_required
