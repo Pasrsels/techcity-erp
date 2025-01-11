@@ -187,7 +187,7 @@ JavaScript:
                                         <th class="transfer-actions">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody></tbody>
+                                <tbody id="child-table-body"></tbody>
                             </table>
                         </td>
                     </tr>
@@ -233,7 +233,7 @@ JavaScript:
                                 <th>Details</th>
                                 <th>Action</th>
                             </thead>
-                            <tbody></tbody>
+                            <tbody class=""></tbody>
                         </table>
                     </div>
                 </div>
@@ -260,7 +260,7 @@ JavaScript:
                                 <select id="actionSelect" class="form-select" id="action-select">
                                     <option value="">-- Select an action --</option>
                                     <option value="s_receive">Receive</option>
-                                    <option value="receive">Receive Back</option>
+                                    <option value="receive">Return Products</option>
                                     <option value="send_to">send to</option>
                                     <option value="write-off">Write off</option>
                                     <option value="shrinkage">Shrinkage</option>
@@ -371,7 +371,7 @@ JavaScript:
 
 <script>
     let transferId = '';
-    let transfer_id = ''
+    let transfer_id = '';
     let total_quantity = 0;
     let total_cost = 0;
     let products_total_cost = 0;
@@ -650,7 +650,6 @@ JavaScript:
 
     const renderActionButton = (item, userBranch) => {
         const isReceivingBranch = item.from_branch__name !== userBranch;
-        console.log(isReceivingBranch, item.from_branch, userBranch)
 
         const isFullyReceived = item.quantity === item.received_quantity;
         
@@ -929,6 +928,21 @@ JavaScript:
 
     function submitEditedQuantity() {
         const editQuantity = document.getElementById('e_quantity').value;
+
+        const childTable = document.getElementById('child-table-body');
+
+        const rows = Array.from(childTable.querySelectorAll('tr'));
+
+        rows.forEach((row, rowIndex) => {
+            console.log(row)
+            const cells = Array.from(row.querySelectorAll('td'));
+            console.log(`Row ${rowIndex + 1}:`);
+            cells.forEach((cell, cellIndex) => {
+                console.log(`  Cell ${cellIndex + 1}: ${cell.textContent.trim()}`);
+            });
+        });
+
+        return;
 
         if (!editQuantity) {
             Swal.fire({

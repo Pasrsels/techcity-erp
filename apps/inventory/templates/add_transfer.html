@@ -425,8 +425,6 @@
         });
     };
     
-
-
     const calculateQuantityDifference = (quantity, productQuantity, branchName) => {
         
         let exist = trackQuantity.find(branch => branch.name === branchName) 
@@ -437,11 +435,8 @@
 
         if(exist){
             let difference = quantity - exist.value;
-            console.log('difference: ', difference)
-            console.log('before: ', exist.value)
             exist.value = quantity
-            console.log('after: ', exist.value)
-            if(difference < 0){ // 3- 2 = 1
+            if(difference < 0){ 
                 trackProductQuantity -= difference
                 console.log('after: ', trackProductQuantity)
                 branches.forEach((b)=>{
@@ -450,7 +445,6 @@
                 return;
             }else if (difference > 0){
                 trackProductQuantity += difference
-                console.log('greater than difference:',difference, 'trackprod',trackProductQuantity)
             }else{
                 trackProductQuantity = trackProductQuantity
                 return;
@@ -466,7 +460,7 @@
         if (trackProductQuantity !== 0){
             trackProductQuantity -= quantity
         }else{
-            let updatedQuantity  = productQuantity - quantity; // 10 -1 = 9 
+            let updatedQuantity  = productQuantity - quantity; 
             trackProductQuantity = updatedQuantity;
         }
         
@@ -502,16 +496,16 @@
                 }
             }
         
-            if (insufficientQnt){
-                Swal.fire({
-                    icon: 'error',
-                    title: 'error',
-                    text: 'Insufficient quantity!.',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-                return
-            }else{
+        if (insufficientQnt){
+            Swal.fire({
+                icon: 'error',
+                title: 'error',
+                text: 'Insufficient quantity!.',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            return;
+        }else{
 
         for (let i = 0; i < branchElements.length; i++) {
             const branch = branchElements[i]; 
@@ -568,12 +562,8 @@
                 cart.push(newItem);
                 productAdded = true; 
             }
-
-            // dataToSend.push(newItem);
             
             console.log(cart, 'cart');
-
-            // calutate the total cost of goods transfered for each branch
             
         }
             trackProductQuantity = 0;
@@ -669,9 +659,6 @@
                 
                 let isEditing = false;
 
-                console.log('Quantitty: ', prodQauntity)
-                console.log(branchesList.length);
-
                 function toggleEdit() {
                     isEditing = !isEditing;
                     updateRowContent();
@@ -686,7 +673,6 @@
                         currentColor = currentColor === "#ebeced" ? "white" : "#ebeced"; 
                     }
 
-                    console.log(item.cost)
                     const row = document.createElement("tr");
                     row.style.backgroundColor = currentColor; 
 

@@ -818,8 +818,6 @@ def inventory_transfer_index(request):
         delete=False
     ).select_related(
         'branch'
-    ).prefetch_related(
-        'transfer_to'
     ).annotate(
         total_quantity=Sum('transferitems__quantity'),
         total_received_qnt=Sum(('transferitems__received_quantity')),
@@ -830,9 +828,9 @@ def inventory_transfer_index(request):
             output_field=FloatField()
         ),
         check_all_received=Sum(F('transferitems__quantity') - F('transferitems__received_quantity')),
-    ).order_by('-time')
+    ).order_by('-time').distinct()
 
-    logger.info(transfers[:1].values())
+    logger.info(transfers[:5])
 
     if q:
         transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q))
