@@ -828,7 +828,7 @@ def inventory_transfer_index(request):
             output_field=FloatField()
         ),
         check_all_received=Sum(F('transferitems__quantity') - F('transferitems__received_quantity')),
-    ).order_by('-time').distinct()
+    ).order_by('-time')
 
     logger.info(transfers[:5])
 
@@ -837,11 +837,21 @@ def inventory_transfer_index(request):
     if branch_id:
         transfers = transfers.filter(transfer_to__id=branch_id)
 
-    paginator = Paginator(transfers, 10)
+    paginator = Paginator(transfers, 5)
     paginated_transfers = paginator.get_page(page_number)
 
+    from django.core.serializers import serialize
+
+     # Check if the request is AJAX
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        transfers_data = serialize('json', paginated_transfers, use_natural_primary_keys=True)
+        return JsonResponse({
+            'transfers': transfers_data,
+            'has_next': paginated_transfers.has_next()
+        })
+
     return render(request, 'transfers.html', {
-        'transfers': paginated_transfers,
+        'transfers': transfers,
         'search_query': q,
     })
 
