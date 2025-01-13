@@ -385,7 +385,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
             quantity=item['quantity'],
             from_branch=request.user.branch,
             to_branch=branch_obj,
-            description=f'from {request.user.branch} to {branch_obj}'
+            description=f'from {request.user.branch} to {branch_obj.name}'
         )
 
     def _update_inventory(self, transfer_item: Any, transfer: Any) -> None:
@@ -806,9 +806,6 @@ def get_stock_account_data(logs):
 
 @login_required
 def inventory_transfer_index(request):
-    """
-    Transfers index. Shows transfers in and out of the branch and the total cost of items transferred in/out.
-    """
     q = request.GET.get('q', '') 
     branch_id = request.GET.get('branch', '')
     page_number = request.GET.get('page', 1)  
@@ -816,12 +813,10 @@ def inventory_transfer_index(request):
     transfers = Transfer.objects.filter(
         Q(branch=request.user.branch) | Q(transfer_to=request.user.branch),
         delete=False
-    ).select_related(
-        'branch'
     ).annotate(
         total_quantity=Sum('transferitems__quantity'),
-        total_received_qnt=Sum(('transferitems__received_quantity')),
-        total_r_difference = (F('transferitems__quantity')) - Sum(F('transferitems__received_quantity')),
+        total_received_qnt=Sum('transferitems__received_quantity'),
+        total_r_difference=(F('transferitems__quantity')) - Sum(F('transferitems__received_quantity')),
         total_received_amount=Sum(F('transferitems__received_quantity') * F('transferitems__cost')),
         total_amount=ExpressionWrapper(
             Sum(F('transferitems__quantity') * F('transferitems__cost')),
@@ -830,31 +825,49 @@ def inventory_transfer_index(request):
         check_all_received=Sum(F('transferitems__quantity') - F('transferitems__received_quantity')),
     ).order_by('-time')
 
-    logger.info(transfers[:5])
-
     if q:
         transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q))
     if branch_id:
         transfers = transfers.filter(transfer_to__id=branch_id)
 
-    paginator = Paginator(transfers, 5)
+    transfers_list = list(transfers)
+    unique_transfers = list({t.id: t for t in transfers_list}.values())
+    unique_transfers.sort(key=lambda x: x.time, reverse=True)  
+
+    logger.info([{'id': t.id, 'ref': t.transfer_ref} for t in unique_transfers[:5]])
+
+    paginator = Paginator(unique_transfers, 20)
     paginated_transfers = paginator.get_page(page_number)
 
-    from django.core.serializers import serialize
+    transfers_data = [
+        {
+            'id': transfer.id,
+            'transfer_ref': transfer.transfer_ref,
+            'branch': transfer.branch.name,
+            'transfer_to': [branch.id for branch in transfer.transfer_to.all()],
+            'total_quantity': transfer.total_quantity,
+            'total_received_qnt': transfer.total_received_qnt,
+            'total_r_difference': transfer.total_r_difference,
+            'total_received_amount': transfer.total_received_amount,
+            'total_amount': transfer.total_amount,
+            'check_all_received': transfer.check_all_received,
+            'time': transfer.time.strftime('%Y-%m-%d %H:%M:%S'),
+            'username': transfer.user.username,
+            'description': transfer.description 
+        }
+        for transfer in paginated_transfers
+    ]
 
-     # Check if the request is AJAX
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        transfers_data = serialize('json', paginated_transfers, use_natural_primary_keys=True)
         return JsonResponse({
             'transfers': transfers_data,
-            'has_next': paginated_transfers.has_next()
+            'has_next': paginated_transfers.has_next(),
         })
 
     return render(request, 'transfers.html', {
-        'transfers': transfers,
+        'transfers': paginated_transfers,
         'search_query': q,
     })
-
 @login_required
 def inventory_transfer_item_data(request, id):
     """
@@ -1088,7 +1101,7 @@ def receive_inventory(request):
                         quantity=quantity_received,
                         total_quantity=product.quantity,
                         product_transfer=branch_transfer,
-                        description=f'Received {quantity_received} from branch  out of {branch_transfer.quantity}'
+                        description=f'From {branch_transfer.from_branch}, received: {branch_transfer.received_quantity} x {branch_transfer.quantity}'
                     )
 
                     product.batch += f'{branch_transfer.product.batch}, '
