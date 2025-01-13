@@ -270,7 +270,6 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
                 if action == 'process':
                     self._process_transfer(data['cart'], products, branch_obj_list, transfer, request)
-                    # self._get_accessory(self, products)
                 else:
                     self._hold_transfer(branch_obj_list, data, transfer, request)
 
@@ -282,18 +281,6 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         except Exception as e:
             logger.error(f"Unexpected error in transfer processing: {e}", exc_info=True)
             return JsonResponse({'success': False, 'data': str(e)})
-    
-    def _get_accessory(self, products):
-        accessory_ids = [product.id for product in products.values()]
-        accessories = Accessory.objects.filter(main_product_id__in=accessory_ids)
-
-        for accessory in accessories:
-            accessory_product = accessory.accessory_product
-            if accessory_product.id in products:
-                accessory_quantity = products[accessory_product.id].quantity
-            if accessory_quantity > 0:
-                accessory_product.quantity -= accessory_quantity
-                accessory_product.save()
 
     def _get_products(self, branch) -> Dict[int, Any]:
         """Fetch and index products by ID for the given branch."""
@@ -347,24 +334,15 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
         track_quantity = 0
         transfer_items = []
-        accessory_updates = []
         for branch_obj in branch_obj_list:
             for item in cart:
                 if item['branch_name'] == branch_obj.name:
-                    product = products.get(item['product_id'])
+                    product = products.get(int(item['product_id']))
                     transfer_item = self._create_transfer_item(item, product, branch_obj, transfer, request)
                     transfer_items.append(transfer_item)
                     track_quantity += item['quantity']
 
-                    # # Update accessories for the user's branch
-                    # accessory_ids = [acc.id for acc in product.accessory_product.all()]
-                    # accessories = Inventory.objects.filter(id__in=accessory_ids, branch=request.user.branch)
-                    # for accessory in accessories:
-                    #     accessory.quantity -= item['quantity']
-                    #     accessory_updates.append(accessory)
-
         TransferItems.objects.bulk_create(transfer_items)
-        Inventory.objects.bulk_update(accessory_updates, ['quantity'])
 
         for transfer_item in transfer_items:
             self._update_inventory(transfer_item, transfer)
@@ -385,7 +363,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
             quantity=item['quantity'],
             from_branch=request.user.branch,
             to_branch=branch_obj,
-            description=f'from {request.user.branch} to {branch_obj.name}'
+            description=f'from {request.user.branch} to {branch_obj}'
         )
 
     def _update_inventory(self, transfer_item: Any, transfer: Any) -> None:

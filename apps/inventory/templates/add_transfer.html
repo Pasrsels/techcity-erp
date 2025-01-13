@@ -523,7 +523,7 @@
             let product_id = pElement.value;
 
             product = product.split(' [')[0];
-            pSelectedQnty = product.split(/\[(\d+)\]/);
+            console.debug('product name:', product)
                 
             const existingItem = cart.find((item) => item.product === product && item.branch_name === branchName);
             console.log(existingItem, 'existing item');
@@ -543,8 +543,6 @@
                 prodName = product
                 break; 
             }
-
-            console.log(quantity)
 
             if (quantity){
                 const newItem = {
