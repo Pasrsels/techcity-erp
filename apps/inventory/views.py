@@ -351,7 +351,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         for branch_obj in branch_obj_list:
             for item in cart:
                 if item['branch_name'] == branch_obj.name:
-                    product = products.get(int(item['product_id']))
+                    product = products.get(item['product_id'])
                     transfer_item = self._create_transfer_item(item, product, branch_obj, transfer, request)
                     transfer_items.append(transfer_item)
                     track_quantity += item['quantity']
@@ -786,11 +786,9 @@ def get_stock_account_data(logs):
         else:
             continue  
         
-        # Calculate cost (ensure inventory cost is handled correctly)
         inventory_cost = getattr(log.inventory, 'cost', Decimal('0.00'))
         cost = log.quantity * inventory_cost
         
-        # Append entry to stock account
         stock_account.append({
             'type': entry_type,
             'description': log.action,
@@ -927,7 +925,6 @@ def add_transfer_item(request, transfer_id):
             branches_data = data['branches_to']
             transfer_id = data.get('transfer_id', '')
 
-            # Fetch all required data in bulk
             products = ProcessTransferCartView._get_products(request.user.branch)
             branch_obj_list = ProcessTransferCartView._get_branch_objects(branches_data)
 
@@ -1293,9 +1290,6 @@ def over_less_list_stock(request):
                                 tax_type=branch_transfer.product.tax_type,
                                 stock_level_threshold=branch_transfer.product.stock_level_threshold,
                             )
-
-
-                        logger.info(product)
                         
                         product.quantity += quantity
                         product.save()
@@ -1330,8 +1324,6 @@ def over_less_list_stock(request):
                                 to_branch=new_branch,
                                 description=f'Transferred {quantity} to {new_branch} from {branch_transfer.from_branch}'
                             )
-
-                        logger.info(send_to_branch_transfer_item)
 
                         send_to_branch_transfer_item.quantity += quantity
                         send_to_branch_transfer_item.save()
@@ -3675,7 +3667,7 @@ def accessory_view(request, product_id):
             data = json.loads(request.body)
             logger.info(f'Accessories: {data}')
             product_id = data.get('product_id')
-            accessory_data = data.get('accessories', [])  # List of dicts with id and quantity
+            accessory_data = data.get('accessories', [])  
 
             logger.info(accessory_data)
 
@@ -3697,21 +3689,24 @@ def accessory_view(request, product_id):
             if Accessory.objects.filter(main_product=product).exists():
                 acc = Accessory.objects.get(main_product=product)
             else:
-                acc = Accessory.objects.create(main_product=product)
+                acc = Accessory.objects.create(main_product=product, quantity=0)
 
-            # Adding new accessories
             if accessories_to_add:
                 accessories_to_add_objs = Inventory.objects.filter(id__in=accessories_to_add)
 
                 logger.info(f'Accessories to add: {accessories_to_add_objs}')
 
                 for accessory in accessories_to_add_objs:
-                    quantity = input_data[accessory.id]  # Get the quantity from input
-                    acc.accessory_product.add(accessory)
-                    acc.quantity = quantity  # Update quantity
+                    logger.info(f'{accessory.id}')
+                    logger.info(input_data)
+                    quantity = input_data[f'{accessory.id}']  
+                    logger.info(quantity)
+                    acc.accessory_product.add(int(accessory.id))
+                    logger.info('accessory')
+                    acc.quantity = quantity  
                     acc.save()
+                    logger.info('done')
 
-            # Removing accessories
             if accessories_to_remove:
                 accessories_to_remove_objs = Inventory.objects.filter(id__in=accessories_to_remove)
 
@@ -3720,8 +3715,9 @@ def accessory_view(request, product_id):
                 for accessory in accessories_to_remove_objs:
                     acc.accessory_product.remove(accessory)
                     acc.save()
+                
+                logger.info('done')
 
-            # Update quantities for existing accessories
             for accessory_id in input_ids.intersection(current_ids):
                 quantity = input_data[accessory_id]
                 acc_instance = Accessory.objects.filter(main_product=product, accessory_product_id=accessory_id).first()
@@ -3732,14 +3728,14 @@ def accessory_view(request, product_id):
             updated_accessories = Accessory.objects.filter(main_product=product).values(
                 'id', 'main_product__name', 'accessory_product__name', 'quantity'
             )
+
             return JsonResponse({'success': True, 'data': list(updated_accessories)}, status=200)
 
         except Inventory.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Product not found.'}, status=404)
         except Exception as e:
             logger.info(e)
-            return JsonResponse({'success': False, 'message': str(e)}, status=400)
-        
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)       
     # if request.method == 'GET':
     #     accessories = Accessory.objects.filter(main_product__id=product_id).values('id', 'product__name')
     #     return JsonResponse({'success': True, 'data': list(accessories)}, status=200)
