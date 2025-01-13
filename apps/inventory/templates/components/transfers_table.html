@@ -420,196 +420,196 @@ JavaScript:
         editModal.show()
     }
 
-    let page = 1;
-    let loading = false;
+    // let page = 1;
+    // let loading = false;
 
-    window.addEventListener('scroll', async () => {
-        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 1000 && !loading) {
-            loading = true;
-            page++;
+    // window.addEventListener('scroll', async () => {
+    //     if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 1000 && !loading) {
+    //         loading = true;
+    //         page++;
 
-            try {
-                const response = await fetch(`/inventory/transfers?page=${page}`, {
-                    headers: { 'x-requested-with': 'XMLHttpRequest' },
-                });
+    //         try {
+    //             const response = await fetch(`/inventory/transfers?page=${page}`, {
+    //                 headers: { 'x-requested-with': 'XMLHttpRequest' },
+    //             });
                 
-                const data = await response.json();
-                console.log(data)
-                if (data.transfers) {
+    //             const data = await response.json();
+    //             console.log(data)
+    //             if (data.transfers) {
                     
-                    const transfers = data.transfers
-                    const tbody = document.querySelector('#transfers tbody'); 
-                    const userBranch = Number("{{ request.user.branch.id }}");
-                    const userRole = String({{request.user.branch.role}});
+    //                 const transfers = data.transfers
+    //                 const tbody = document.querySelector('#transfers tbody'); 
+    //                 const userBranch = Number("{{ request.user.branch.id }}");
+    //                 const userRole = String({{request.user.branch.role}});
 
-                    const loader = document.querySelector('#loader');
-                    loader.style.display = 'block';
+    //                 const loader = document.querySelector('#loader');
+    //                 loader.style.display = 'block';
 
-                    console.log(transfers)
+    //                 console.log(transfers)
                     
-                    transfers.forEach(transfer => {
-                        const row = document.createElement('tr');
-                        let branch = false;
-                        let change = transfer.transfer_to.includes({{request.user.branch.id}}) ? 'bg-success' : 'transfer-btn parent-row';
-                        row.dataset.id = transfer.id;
+    //                 transfers.forEach(transfer => {
+    //                     const row = document.createElement('tr');
+    //                     let branch = false;
+    //                     let change = transfer.transfer_to.includes({{request.user.branch.id}}) ? 'bg-success' : 'transfer-btn parent-row';
+    //                     row.dataset.id = transfer.id;
                         
 
-                        if (Array.isArray(transfer.transfer_to) && transfer.transfer_to.includes(userBranch)) {
-                            branch = true;
-                        } else {
-                            branch = false;
-                        }
-                        row.innerHTML = `
-                        <tr class="change" data-id='${transfer.id}' onclick="showChild(this)">
-                            <td class="transfer-status" style="width: 50px;" data-id='${transfer.id}' onclick="showChild(this)">
-                                ${transfer.total_r_difference === 0 ? 
-                                    `<small><img src="{% static 'assets/check.png' %}" width="30px"></small>` : 
-                                    `<small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
-                                        <span class="text-light">${transfer.total_r_difference}</span>
-                                    </small>`}
-                            </td>
-                            <td class="transfer-status" data-id='${transfer.id}'>
-                                <div class="d-flex align-items-center">
-                                    <small class='d-flex justify-content-center align-items-center'>
-                                        <i class='bx bxs-${ branch ? 'right' : 'left'}-arrow-alt ${ branch  ? 'text-success' : ''}' style="font-size: 35px;"></i>
-                                        <span class="ml-1">${new Date(transfer.time).toLocaleString()}</span>
-                                    </small>
-                                </div>
-                            </td>
-                            <td class="transfer-quantity" data-id='${transfer.id}'>
-                                <small class="d-flex justify-content-between">
-                                    <span class="" style="width: 70px; display: block; position: relative;">
-                                        <span style="float: left;">${transfer.total_received_qnt}</span>
-                                        <span>/</span>
-                                        <span style="float: right;">${transfer.total_quantity}</span>
-                                    </span>
-                                    ${userRole !== 'sales' ? 
-                                        `<span class="text-primary rounded" style="width: 140px; text-align: center;">
-                                            <span style="float: left;">$${transfer.total_received_amount}</span>
-                                            <span>/</span>
-                                            <span style="float: right;">$${transfer.total_amount}</span>
-                                        </span>` : ''}
-                                </small>
-                            </td>
-                            <td class="transfer-user" data-id='${transfer.id}'><small>${transfer.username}</small></td>
-                            <td class="transfer-reference" data-id='${transfer.id}'><small>${transfer.transfer_ref}</small></td>
-                            <td class="transfer-description" data-id='${transfer.id}'><small>${transfer.description || "No description"}</small></td>
-                            <td class="transfer-actions" data-id='${transfer.id}'>
-                                <div class="btn-group">
-                                    <a href="" class="btn border btn-sm">
-                                        <i class='bx bx-printer'></i>
-                                    </a>
-                                    <button class="btn border mx-2 btn-outline-dark btn-sm">
-                                        <i class='bx bx-trash'></i>
-                                    </button>
-                                    <a href="" class="btn border btn-sm">
-                                        <i class='bx bx-plus'></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </td>
-                        `;
-
-                        tbody.appendChild(row);
-                
-                        if (!data.has_next) {
-                            // Disable further requests if no more pages
-                            window.removeEventListener('scroll', arguments.callee);
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('Failed to fetch data:', error);
-            } finally {
-                loading = false;
-                // Hide loader after data is loaded
-                loader.style.display = 'none';
-            }
-        }
-    });
-
-    const showChild = (el) => {
-        const transferId = el.getAttribute('data-id');
-        const childRow = document.querySelector(`.child-rows[data-parent-id="${transferId}"]`);
-        const tbody = childRow.querySelector('tbody');
-        tableBody = tbody
-        
-        let tds = parentRow.getElementsByTagName('td');
-
-        // Loop through all <td> elements and apply the background color with !important
-        for (let td of tds) {
-            td.style.setProperty('background', '#5897fb59', 'important');
-        }
-
-
-        if (childRow.classList.contains('d-none')) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>`;
-            childRow.classList.remove('d-none');
-            
-            showFetch(transferId, tbody)
-        } else {
-            childRow.classList.toggle('d-none');
-            for (let td of tds) {
-            td.style.setProperty('background', '#fff', 'important');
-        }
-        }
-    }
-
-
-    // document.addEventListener('DOMContentLoaded', () => {
-    //     document.querySelectorAll('.parent-row').forEach(parentRow => {
-    //         parentRow.addEventListener('click', function () {
-    //             const transferId = this.getAttribute('data-id');
-    //             const childRow = document.querySelector(`.child-rows[data-parent-id="${transferId}"]`);
-    //             const tbody = childRow.querySelector('tbody');
-    //             tableBody = tbody
-                
-    //             let tds = parentRow.getElementsByTagName('td');
-
-    //             // Loop through all <td> elements and apply the background color with !important
-    //             for (let td of tds) {
-    //                 td.style.setProperty('background', '#5897fb59', 'important');
-    //             }
-
-
-    //             if (childRow.classList.contains('d-none')) {
-    //                 tbody.innerHTML = `<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>`;
-    //                 childRow.classList.remove('d-none');
-                    
-    //                 showFetch(transferId, tbody)
-    //             } else {
-    //                 childRow.classList.toggle('d-none');
-    //                 for (let td of tds) {
-    //                 td.style.setProperty('background', '#fff', 'important');
-    //             }
-    //             }
-    //         });
-    //     });
-
-    //     function populateChildTable(tbody, items) {
-    //         tbody.innerHTML = ''; 
-    //         items.forEach(item => {
-    //             const row = document.createElement('tr');
-    //             row.innerHTML = `
-    //                 <td stlye='width:50px'></td>
-    //                 <td>${item.received_quantity}</td>
-    //                 <td>${item.product__name}</td>
-    //                 <td>${(item.quantity * item.cost).toFixed(2)}</td>
-    //                 <td>${item.quantity}</td>
-    //                 <td>${item.received_by__username || 'Not received'}</td>
-    //                 <td></td>
-    //                 <td>${item.description || 'No details'}</td>
-    //                 <td>
-    //                     ${item.received 
-    //                         ? `<button class="btn btn-primary btn-sm" onclick="showActionModal(${item.id}, ${item.quantity})">Action</button>`
-    //                         : `<button class="btn btn-primary btn-sm" onclick="showReceive(${item.id}, '${item.product__name}, ${item.quantity}')">Receive Inventory</button>`
+    //                     if (Array.isArray(transfer.transfer_to) && transfer.transfer_to.includes(userBranch)) {
+    //                         branch = true;
+    //                     } else {
+    //                         branch = false;
     //                     }
-    //                 </td>
-    //             `;
-    //             tbody.appendChild(row);
-    //         });
+    //                     row.innerHTML = `
+    //                     <tr class="change" data-id='${transfer.id}' onclick="showChild(this)">
+    //                         <td class="transfer-status" style="width: 50px;" data-id='${transfer.id}' onclick="showChild(this)">
+    //                             ${transfer.total_r_difference === 0 ? 
+    //                                 `<small><img src="{% static 'assets/check.png' %}" width="30px"></small>` : 
+    //                                 `<small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
+    //                                     <span class="text-light">${transfer.total_r_difference}</span>
+    //                                 </small>`}
+    //                         </td>
+    //                         <td class="transfer-status" data-id='${transfer.id}'>
+    //                             <div class="d-flex align-items-center">
+    //                                 <small class='d-flex justify-content-center align-items-center'>
+    //                                     <i class='bx bxs-${ branch ? 'right' : 'left'}-arrow-alt ${ branch  ? 'text-success' : ''}' style="font-size: 35px;"></i>
+    //                                     <span class="ml-1">${new Date(transfer.time).toLocaleString()}</span>
+    //                                 </small>
+    //                             </div>
+    //                         </td>
+    //                         <td class="transfer-quantity" data-id='${transfer.id}'>
+    //                             <small class="d-flex justify-content-between">
+    //                                 <span class="" style="width: 70px; display: block; position: relative;">
+    //                                     <span style="float: left;">${transfer.total_received_qnt}</span>
+    //                                     <span>/</span>
+    //                                     <span style="float: right;">${transfer.total_quantity}</span>
+    //                                 </span>
+    //                                 ${userRole !== 'sales' ? 
+    //                                     `<span class="text-primary rounded" style="width: 140px; text-align: center;">
+    //                                         <span style="float: left;">$${transfer.total_received_amount}</span>
+    //                                         <span>/</span>
+    //                                         <span style="float: right;">$${transfer.total_amount}</span>
+    //                                     </span>` : ''}
+    //                             </small>
+    //                         </td>
+    //                         <td class="transfer-user" data-id='${transfer.id}'><small>${transfer.username}</small></td>
+    //                         <td class="transfer-reference" data-id='${transfer.id}'><small>${transfer.transfer_ref}</small></td>
+    //                         <td class="transfer-description" data-id='${transfer.id}'><small>${transfer.description || "No description"}</small></td>
+    //                         <td class="transfer-actions" data-id='${transfer.id}'>
+    //                             <div class="btn-group">
+    //                                 <a href="" class="btn border btn-sm">
+    //                                     <i class='bx bx-printer'></i>
+    //                                 </a>
+    //                                 <button class="btn border mx-2 btn-outline-dark btn-sm">
+    //                                     <i class='bx bx-trash'></i>
+    //                                 </button>
+    //                                 <a href="" class="btn border btn-sm">
+    //                                     <i class='bx bx-plus'></i>
+    //                                 </a>
+    //                             </div>
+    //                         </td>
+    //                     </td>
+    //                     `;
+
+    //                     tbody.appendChild(row);
+                
+    //                     if (!data.has_next) {
+    //                         // Disable further requests if no more pages
+    //                         window.removeEventListener('scroll', arguments.callee);
+    //                     }
+    //                 });
+    //             }
+    //         } catch (error) {
+    //             console.error('Failed to fetch data:', error);
+    //         } finally {
+    //             loading = false;
+    //             // Hide loader after data is loaded
+    //             loader.style.display = 'none';
+    //         }
     //     }
     // });
+
+    // const showChild = (el) => {
+    //     const transferId = el.getAttribute('data-id');
+    //     const childRow = document.querySelector(`.child-rows[data-parent-id="${transferId}"]`);
+    //     const tbody = childRow.querySelector('tbody');
+    //     tableBody = tbody
+        
+    //     let tds = parentRow.getElementsByTagName('td');
+
+    //     // Loop through all <td> elements and apply the background color with !important
+    //     for (let td of tds) {
+    //         td.style.setProperty('background', '#5897fb59', 'important');
+    //     }
+
+
+    //     if (childRow.classList.contains('d-none')) {
+    //         tbody.innerHTML = `<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>`;
+    //         childRow.classList.remove('d-none');
+            
+    //         showFetch(transferId, tbody)
+    //     } else {
+    //         childRow.classList.toggle('d-none');
+    //         for (let td of tds) {
+    //         td.style.setProperty('background', '#fff', 'important');
+    //     }
+    //     }
+    // }
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.parent-row').forEach(parentRow => {
+            parentRow.addEventListener('click', function () {
+                const transferId = this.getAttribute('data-id');
+                const childRow = document.querySelector(`.child-rows[data-parent-id="${transferId}"]`);
+                const tbody = childRow.querySelector('tbody');
+                tableBody = tbody
+                
+                let tds = parentRow.getElementsByTagName('td');
+
+                // Loop through all <td> elements and apply the background color with !important
+                for (let td of tds) {
+                    td.style.setProperty('background', '#5897fb59', 'important');
+                }
+
+
+                if (childRow.classList.contains('d-none')) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>`;
+                    childRow.classList.remove('d-none');
+                    
+                    showFetch(transferId, tbody)
+                } else {
+                    childRow.classList.toggle('d-none');
+                    for (let td of tds) {
+                    td.style.setProperty('background', '#fff', 'important');
+                }
+                }
+            });
+        });
+
+        function populateChildTable(tbody, items) {
+            tbody.innerHTML = ''; 
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td stlye='width:50px'></td>
+                    <td>${item.received_quantity}</td>
+                    <td>${item.product__name}</td>
+                    <td>${(item.quantity * item.cost).toFixed(2)}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.received_by__username || 'Not received'}</td>
+                    <td></td>
+                    <td>${item.description || 'No details'}</td>
+                    <td>
+                        ${item.received 
+                            ? `<button class="btn btn-primary btn-sm" onclick="showActionModal(${item.id}, ${item.quantity})">Action</button>`
+                            : `<button class="btn btn-primary btn-sm" onclick="showReceive(${item.id}, '${item.product__name}, ${item.quantity}')">Receive Inventory</button>`
+                        }
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    });
 
     document.getElementById('r_quantity').addEventListener('input', function () {
         const quantity = parseInt(this.value) || 0;
@@ -751,8 +751,6 @@ JavaScript:
                     let iconContent = isReceivedBackQuantity 
                         ? `<i class='bx bx-transfer mx-1'></i>`
                         : ``;
-
-                    // console.log(isReceivedBackQuantity, item.received_back_quantity, iconContent)
 
                     const row = document.createElement('tr');
                     row.innerHTML = `
