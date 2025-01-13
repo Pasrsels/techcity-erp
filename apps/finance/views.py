@@ -3023,7 +3023,7 @@ class CustomersViewset(ModelViewSet):
     serializer_class = CustomerSerializer
     permission_classes = [IsAuthenticated]
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request):
         data = request.data
         branch = request.user.branch
 
