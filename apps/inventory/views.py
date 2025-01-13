@@ -337,7 +337,10 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         for branch_obj in branch_obj_list:
             for item in cart:
                 if item['branch_name'] == branch_obj.name:
-                    logger.info(f'{int(item['product_id'])}')
+                    
+                    product_id = str(item['product_id']).strip('[]').strip()
+                    logger.info(f"Processing product ID: {product_id}")
+
                     product = products.get(int(item['product_id']))
                     transfer_item = self._create_transfer_item(item, product, branch_obj, transfer, request)
                     transfer_items.append(transfer_item)
