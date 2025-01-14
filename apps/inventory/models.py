@@ -295,13 +295,13 @@ class Transfer(models.Model):
         formatted_branches = ', '.join([f"T{b[0].upper()}" for b in branches])
 
         last_transfer = Transfer.objects.filter(branch__name=branch, delete=False).order_by('-id').first()
-
+        logger.info(f'last transfer reference: {last_transfer}')
         if last_transfer:
             last_reference = int(last_transfer.transfer_ref.split('#')[-1]) if '#' in last_transfer.transfer_ref else 1
             new_reference = f'{branch} - {formatted_branches} #{last_reference + 1:03d}'
             return new_reference
         else:
-            return f'{branch}: {formatted_branches} #001]'
+            return f'{branch}: {formatted_branches} #001'
 
 
     def __str__(self):

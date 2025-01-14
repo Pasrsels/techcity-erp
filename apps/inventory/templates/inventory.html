@@ -22,19 +22,13 @@
                     <!-- Static buttons for large screens -->
                     <div class="d-none d-lg-flex">
                         {% if request.user.role == 'admin' %}
-                            <div>
+                            <div class="mx-2">
                                 <a href='{% url 'inventory:create_purchase_order' %}' class="btn btn-outline-dark btn-sm">
                                     <i class='bx bx-plus'></i> 
                                     Product
                                 </a>
                             </div>
                         {% endif %}
-        
-                        <div class='px-2'>
-                            <a href='{% url 'inventory:defective_product_list' %}' class="btn btn-outline-dark btn-sm">
-                                Defective Products
-                            </a>
-                        </div>
                         <div> 
                             <a href='{% url 'inventory:reorder_list' %}' class="btn btn-outline-dark btn-sm">
                                 Reorder List

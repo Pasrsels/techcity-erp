@@ -18,7 +18,7 @@
         </div>
         <div>
             <div class="mt-3 w-100">
-                <table class='table border table-rounded p-2' id='order_table' style="width: 100%;">
+                <table class='table border table-striped table-bordered table-rounded p-2' id='order_table' style="width: 100%;">
                     <thead class="table-dark">
                         <tr>
                             <th>#</th>
@@ -47,10 +47,10 @@
                                     <a href="{% url 'inventory:purchase_order_detail' order.id %}" class="btn bx bx-show"></a>
                                     <a href="{% url 'inventory:print_purchase_order' order.id %}" class="btn bx bx-printer mx-1"></a>
                                     {% if order.status != 'received' %}
-                                    <button class="btn btn-sm btn-light" data-id={{ order.id }} onclick="status(this)">Change Status</button>
+                                        <button class="btn btn-sm btn-light" data-id={{ order.id }} onclick="status(this)">Change Status</button>
                                     {% else %}
                                     {% if order.received %}
-                                    <small class="bg-success fw-bold text-light p-2 rounded text-center w-100">Received</small>
+                                        <small class="bg-success fw-bold text-light p-2 rounded text-center w-100">Received</small>
                                     {% else %}
                                     <a href="{% url 'inventory:receive_order' order.id %}" class="btn btn-sm btn-outline-dark">
                                         <small>Receive Order Items</small>
@@ -59,7 +59,7 @@
                                     {% endif %}
                                     <a href="{% url 'inventory:edit_po' order.id %}" class="btn btn-outline-dark btn-sm bx bx-edit"></a>
                                     <button class="btn bx bx-trash btn-outline-dark btn-sm" onclick="confirmDeletePurchaseOrder({{ order.id }})"></button>
-                                    <button class="btn btn-outline-primary btn-sm bx bx-user" onclick="showSupplierDetails({{ order.id }})"></button> <!-- New button -->
+                                    <button class="btn btn-outline-primary btn-sm bx bx-user" onclick="showSupplierDetails({{ order.id }})"></button>
                                 </td>
                             </tr>
                         {% endfor %}

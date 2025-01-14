@@ -256,17 +256,25 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                 branches_data = data['branches_to']
                 transfer_id = data.get('transfer_id', '')
 
+                logger.info(data)
+
                 # Fetch all required data in bulk
                 products = self._get_products(request.user.branch)
                 branch_obj_list = self._get_branch_objects(branches_data)
                 
+
+                logger.info(f'products: {products}')
+                logger.info(f'branch: {branch_obj_list}')
+
                 # Create or get transfer object
                 transfer = self._get_or_create_transfer(
                     request.user,
                     transfer_id,
                     branch_obj_list,
                     self._get_branch_names(branches_data)
-                )
+                ),
+
+                logger.info(f'transfer obj: {transfer}')
 
                 if action == 'process':
                     self._process_transfer(data['cart'], products, branch_obj_list, transfer, request)
@@ -304,6 +312,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
     def _get_or_create_transfer(self, user, transfer_id: str, branch_obj_list: List[Any], branch_names: List[str]) -> Any:
         """Get existing transfer or create new one."""
+        logger.info(f'Branch objects: {branch_obj_list}')
         if not transfer_id:
             transfer = Transfer.objects.create(
                 branch=user.branch,
@@ -337,7 +346,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         for branch_obj in branch_obj_list:
             for item in cart:
                 if item['branch_name'] == branch_obj.name:
-                    
+
                     product_id = str(item['product_id']).strip('[]').strip()
                     logger.info(f"Processing product ID: {product_id}")
 
@@ -477,10 +486,7 @@ def transfer_details(request, transfer_id):
 @login_required
 def inventory(request):
     product_id = request.GET.get('id', '')
-    logger.info(f'product id: {product_id}')
     if product_id:
-        logger.info(list(Inventory.objects.\
-            filter(id=product_id, branch=request.user.branch, status=True).values()))
         return JsonResponse(list(Inventory.objects.\
             filter(id=product_id, branch=request.user.branch, status=True).values()), safe=False)
     return JsonResponse({'error':'product doesnt exists'})
@@ -610,48 +616,81 @@ def activate_inventory(request, product_id):
 
 @login_required
 def edit_inventory(request, product_id):
-    inv_product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+    """
+    Edit inventory product details with proper concurrency handling and validation.
+    Uses select_for_update to prevent race conditions during updates.
+    """
+    try:
+        with transaction.atomic():
+            inv_product = (
+                Inventory.objects
+                .select_for_update()
+                .get(id=product_id, branch=request.user.branch)
+            )
 
-    if request.method == 'POST':
-        end_of_day = request.POST.get('end_of_day')
+            logger.info(inv_product.category)
 
-        if end_of_day:
-            inv_product.end_of_day = True
-        
-        selling_price = Decimal(request.POST['price'])
-        dealer_price = Decimal(request.POST['dealer_price'])
-        
-        # think through
-        quantity = inv_product.quantity
-        inv_product.name=request.POST['name']
-        # inv_product.batch=request.POST['batch_code']
-        inv_product.description=request.POST['description']
-        
-        inv_product.price = Decimal(request.POST['price'])
-        inv_product.cost = Decimal(request.POST['cost'])
-        inv_product.dealer_price = Decimal(request.POST['dealer_price'])
-        inv_product.stock_level_threshold = request.POST['min_stock_level']
-        inv_product.dealer_price = dealer_price
-        inv_product.quantity = request.POST['quantity']
-        
-        inv_product.save()
-        
-        ActivityLog.objects.create(
-            branch = request.user.branch,
-            user=request.user,
-            action= 'Edit',
-            inventory=inv_product,
-            quantity=quantity,
-            total_quantity=inv_product.quantity,
-            dealer_price = dealer_price,
-            selling_price = selling_price
-        )
-        
-        messages.success(request, f'{inv_product.name} update succesfully')
+            if request.method == 'POST':
+                original_quantity = inv_product.quantity
+                
+                try:
+                    selling_price = Decimal(request.POST.get('price', 0))
+                    dealer_price = Decimal(request.POST.get('dealer_price', 0))
+                    cost = Decimal(request.POST.get('cost', 0))
+                    quantity = int(request.POST.get('quantity', 0))
+                    stock_level_threshold = int(request.POST.get('min_stock_level', 0))
+
+                    category = ProductCategory.objects.get(id=int(request.POST.get('category')))
+
+                    if selling_price < cost:
+                        messages.warning(request, "Selling price cannot be less than cost")
+                    if quantity < 0:
+                        messages.warning(request, "Quantity cannot be negative")
+
+                    inv_product.name = request.POST.get('name')
+                    inv_product.description = request.POST.get('description')
+                    inv_product.price = selling_price
+                    inv_product.cost = cost
+                    inv_product.dealer_price = dealer_price
+                    inv_product.stock_level_threshold = stock_level_threshold
+                    inv_product.quantity = quantity
+                    inv_product.category = category
+                    inv_product.end_of_day = request.POST.get('end_of_day') == 'on'
+
+                    inv_product.save()
+
+                    ActivityLog.objects.create(
+                        branch=request.user.branch,
+                        user=request.user,
+                        action='Edit',
+                        inventory=inv_product,
+                        quantity=original_quantity,
+                        total_quantity=quantity,
+                        dealer_price=dealer_price,
+                        selling_price=selling_price
+                    )
+
+                    logger.info(inv_product.category)
+
+                    messages.success(request, f'{inv_product.name} updated successfully')
+                    return redirect('inventory:inventory')
+
+                except Exception as e:
+                    messages.error(request, f'Invalid input: {str(e)}')
+                    return render(request, 'inventory_form.html', {
+                        'product': inv_product,
+                        'title': f'Edit >>> {inv_product.name}',
+                        'error': str(e)
+                    })
+
+    except Inventory.DoesNotExist:
+        messages.error(request, 'Inventory item not found')
         return redirect('inventory:inventory')
-    return render(request, 'inventory_form.html', {'product':inv_product, 'title':f'Edit >>> {inv_product.name}'})
 
-from django.db.models.functions import Extract
+    return render(request, 'inventory_form.html', {
+        'product': inv_product,
+        'title': f'Edit >>> {inv_product.name}'
+    })
 
 @login_required
 def inventory_detail(request, id):
@@ -2672,7 +2711,7 @@ def process_received_order(request):
 
 def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expected_profit, dealer_expected_profit, quantity, request):
     try:
-        po_item = PurchaseOrderItem.objects.get(id=order_item_id)
+        po_item = PurchaseOrderItem.objects.select_for_update().get(id=order_item_id)
 
         po_item.price = selling_price
         po_item.wholesale_price = dealer_price
@@ -2681,9 +2720,7 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
         po_item.received_quantity = quantity
         po_item.save()
 
-        logger.info('done')
         return JsonResponse({'success': True, 'message': 'Purchase Order Item updated successfully'}, status=200)
-    
     except PurchaseOrderItem.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Purchase Order Item not found'}, status=404)
     except Product.DoesNotExist:
@@ -2692,12 +2729,29 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
 
 @login_required
 def mark_purchase_order_done(request, po_id):
-    purchase_order = PurchaseOrder.objects.get(id=po_id)
-    purchase_order.received = True
-    purchase_order.save()
-
-    messages.info(request, 'Purchase order done')
-    return redirect('inventory:purchase_orders')
+    if po_id:
+        try:
+            with transaction.atomic():
+                purchase_order = PurchaseOrder.objects.select_for_update().get(id=po_id)
+                logger.info(purchase_order)
+                
+                if purchase_order.received:
+                    return JsonResponse({'succes':False, 'message':'Purchase order already marked as received'})
+                
+                purchase_order.received = True
+                logger.info('here')
+                purchase_order.save()
+                logger.info('saved')
+                
+                return JsonResponse({'success':True, 'messages':'Purchase order has been successfully confirmed!'})
+        
+        except PurchaseOrder.DoesNotExist:
+            return JsonResponse({'success':False, 'message': f'Purchase order with ID {po_id} not found'})
+        except Exception as e:
+            logger.error(f'Error processing purchase order {po_id}: {str(e)}')
+            return JsonResponse({'success':False, 'message':'An error occurred while processing the purchase order'})
+    else:
+        return JsonResponse({'success':False, 'message':'Purchase order ID is required'})
 
 @login_required
 def edit_purchase_order(request, po_id):
