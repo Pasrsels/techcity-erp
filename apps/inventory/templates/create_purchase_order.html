@@ -1520,11 +1520,8 @@
       
     const removeItem = (el) => {
         const id = el.dataset.id
-        console.log(cart)
         cart = cart.filter((item) => item.id !== id);
-        console.log(cart)
         localStorage.setItem('cart', JSON.stringify(cart))
-        console.log(localStorage.getItem(cart))
         updateCartDisplay();
         calculateTotals();
     }

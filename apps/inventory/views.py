@@ -274,10 +274,10 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                     self._get_branch_names(branches_data)
                 ),
 
-                logger.info(f'transfer obj: {transfer}')
+                logger.info(f'transfer obj: {transfer[0]}')
 
                 if action == 'process':
-                    self._process_transfer(data['cart'], products, branch_obj_list, transfer, request)
+                    self._process_transfer(data['cart'], products, branch_obj_list, transfer[0], request)
                 else:
                     self._hold_transfer(branch_obj_list, data, transfer, request)
 
