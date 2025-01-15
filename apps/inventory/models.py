@@ -292,6 +292,9 @@ class Transfer(models.Model):
 
     @classmethod
     def generate_transfer_ref(self, branch, branches):
+
+        """revisit on 03d"""
+        
         formatted_branches = ', '.join([f"T{b[0].upper()}" for b in branches])
 
         last_transfer = Transfer.objects.filter(branch__name=branch, delete=False).order_by('-id').first()
