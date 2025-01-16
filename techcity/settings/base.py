@@ -82,7 +82,8 @@ MIDDLEWARE = [
     
     # custom middlewares
     'inventory.middleware.RequestMiddleware',
-    'company.middleware.CompanySetupMiddleware'
+    'company.middleware.CompanySetupMiddleware',
+    'users.middleware.LoginRequiredMiddleware',
     
 ]
 
@@ -130,7 +131,7 @@ ASGI_APPLICATION = 'techcity.wsgi.application'
 AUTH_USER_MODEL = 'users.User'
 
 SESSION_AUTH = True
-SESSION_COOKIE_AGE = 36000  # Session expires after 10 hours (in seconds)
+SESSION_COOKIE_AGE = 36000  #
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
@@ -159,6 +160,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
 # LOGIN_REDIRECT_URL = "dashboard:dashboard"
 # # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
+
 LOGIN_URL = "users:login"
 
 # PASSWORDS
@@ -287,3 +289,16 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # to be changeed
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
+
+
+#Verificatioin retries
+VERIFICATION_TOKEN_EXPIRY_HOURS = 24
+MAX_VERIFICATION_ATTEMPTS = 5
+MAX_VERIFICATION_ATTEMPTS_PER_IP = 10
+MAX_EMAIL_VERIFICATION_ATTEMPTS_PER_DAY = 3
+
+# Default from Email
+DEFAULT_FROM_EMAIL = 'admin@techcity.co.zw' #to be dynamically
+
+# settings.py
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

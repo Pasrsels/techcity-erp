@@ -7,6 +7,7 @@ This module manages user models and related functionality, including:
 * **Code Generation:** Implements logic to generate random unique codes for each user. 
 """
 
+import uuid
 import random, string
 from django.db import models
 from django.apps import apps
@@ -15,6 +16,8 @@ from django.db.models.signals import post_migrate, post_save
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils import timezone
+from django.conf import settings
 
 ADMIN_GROUP_NAME = 'Admin'
 ACCOUNTANT_GROUP_NAME = 'Accountant'
@@ -113,6 +116,24 @@ class User(AbstractUser):
         return self.username
 
     objects = CustomUserManager()
+
+
+class EmailVerificationToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.UUIDField(default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    attempts = models.IntegerField(default=0) 
+
+    def is_valid(self):
+        return (
+            timezone.now() <= self.expires_at,
+            self.attempts < settings.MAX_VERIFICATION_ATTEMPTS
+        )
+
+    def increment_attempts(self):
+        self.attempts += 1
+        self.save()
 
 
 def assign_admin_group(sender, instance, created, **kwargs):

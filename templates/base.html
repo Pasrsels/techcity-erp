@@ -170,7 +170,13 @@
                                 </div>
                             {% endfor %}
                         {% endif %}
-                        {% block content %}{% endblock %}
+                        <!-- <div id="loader" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white" style="z-index: 1050;">
+                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div> -->
+                        {% block content %}
+                        {% endblock %}
                     </div>
                 </div>
             </div>
@@ -273,6 +279,11 @@
         const branchButton = document.querySelector('#branchButton')
 
         const tableWrapper = document.querySelector('#detailTable_wrapper')
+
+        // document.addEventListener("DOMContentLoaded", function () {
+        //     const loader = document.getElementById("loader");
+        //     loader.style.display = "none"; // Hide the loader after the page loads
+        // });
 
         document.addEventListener('DOMContentLoaded', function() {
             // fetchNotifications();
