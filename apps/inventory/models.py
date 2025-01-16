@@ -203,6 +203,9 @@ class PurchaseOrderItem(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     wholesale_price = models.DecimalField(max_digits=10, decimal_places=2)
 
+    class Meta:
+        models.Index(fields=['product', 'supplier'])
+
     def receive_items(self, quantity):
     
         self.received_quantity += quantity

@@ -3365,7 +3365,6 @@ def supplier_prices(request, product_id):
     """
     try:
         best_three_prices = best_price(product_id)
-        logger.info(best_three_prices)
         return JsonResponse({'success': True, 'suppliers': best_three_prices})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
@@ -3388,7 +3387,8 @@ def product(request):
         try:
             data = json.loads(request.body)
             product_id = data.get('id', '')
-            logger.info(product_id)
+
+            logger.info(f'product ID: {product_id}')
             
         except Exception as e:
             return JsonResponse({'success':False, 'message':'Invalid data'})
