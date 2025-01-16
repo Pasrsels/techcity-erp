@@ -3410,8 +3410,8 @@ def product(request):
         
         if product_id:
             """editing the product"""
-            logger.info(f'Editing product ')
-            product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+            product = Inventory.objects.select_for_update().get(id=product_id, branch=request.user.branch)
+            logger.info(f'Editing product: {product.name} ')
             product.name = data['name']
             product.price = data.get('price', 0)
             product.cost = data.get('cost', 0)    
@@ -3424,13 +3424,14 @@ def product(request):
             product.service = True if data.get('service') else False
             product.image=product.image
             product.batch = product.batch
+            
         else:
             """creating a new product"""
             
             # validation for existance
             if Inventory.objects.filter(name=data['name']).exists():
                 return JsonResponse({'success':False, 'message':f'Product {data['name']} exists'})
-            logger.info(f'Creating ')
+            logger.info(f'Creating product: {data['name']}')
             product = Inventory.objects.create(
                 batch = '',
                 name = data['name'],
@@ -3457,8 +3458,7 @@ def product(request):
             'id',
             'name',
             'quantity'
-        ).order_by('name')  
-        logger.info(products)         
+        ).order_by('name')          
         return JsonResponse(list(products), safe=False)
     
     return JsonResponse({'success':False, 'message':'Invalid request'}, status=400)
