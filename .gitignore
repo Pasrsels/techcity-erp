@@ -2,7 +2,7 @@
 /node_modules/
 /migrations/
 */migrations/*
-.env
+.venv
 *.pyc
 *~zz 
 *.swp
