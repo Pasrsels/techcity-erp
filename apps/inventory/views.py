@@ -3410,21 +3410,23 @@ def product(request):
         
         if product_id:
             """editing the product"""
-            product = Inventory.objects.select_for_update().get(id=product_id, branch=request.user.branch)
-            logger.info(f'Editing product: {product.name} ')
-            product.name = data['name']
-            product.price = data.get('price', 0)
-            product.cost = data.get('cost', 0)    
-            product.quantity = data.get('quantity', 0)  
-            product.category = category  
-            product.tax_type = data['tax_type']
-            product.stock_level_threshold = data['min_stock_level']
-            product.description = data['description']
-            product.end_of_day = True if data.get('end_of_day') else False
-            product.service = True if data.get('service') else False
-            product.image=product.image
-            product.batch = product.batch
-            
+            with transaction.atomic():
+                product = Inventory.objects.select_for_update().get(id=product_id, branch=request.user.branch)
+                logger.info(f'Editing product: {product.name} ')
+                product.name = data['name']
+                product.price = data.get('price', 0)
+                product.cost = data.get('cost', 0)    
+                product.quantity = data.get('quantity', 0)  
+                product.category = category  
+                product.tax_type = data['tax_type']
+                product.stock_level_threshold = data['min_stock_level']
+                product.description = data['description']
+                product.end_of_day = True if data.get('end_of_day') else False
+                product.service = True if data.get('service') else False
+                product.image=product.image
+                product.batch = product.batch
+                product.save()
+
         else:
             """creating a new product"""
             
@@ -3448,7 +3450,7 @@ def product(request):
                 # image = image,
                 status = True
             )
-        product.save()
+        
         
         return JsonResponse({'success':True}, status=200)
 
