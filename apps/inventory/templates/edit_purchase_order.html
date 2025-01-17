@@ -713,6 +713,16 @@
       supplierFormModal.show()
     };
 
+    function clearForm() {
+      document.getElementById('id_name').value = '';
+      document.getElementById('id_min_stock_level').value = '';
+      document.getElementById('id_description').value = '';
+      document.getElementById('id_p_quantity').value = '';
+      document.getElementById('id_image').textContent = '';
+      document.getElementById('title').innerHTML = '';
+      productID = ''
+    }
+
     const deleteProduct = async () => {
         Swal.fire({
             title: "Are you sure?",
@@ -1036,13 +1046,26 @@
               if (data.success) {
                 supplierFormModal.hide();
                 fetchProducts();
-                Swal.fire({
-                  icon: 'success',
-                  title: 'Product Added',
-                  text: 'The product has been successfully added!',
-                  timer: 2000,
-                  showConfirmButton: false
-                });
+                if(productID){
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Product successfully edited or deleted',
+                    text: 'Success!',
+                    timer: 2000,
+                    showConfirmButton: false
+                  });
+                
+                }else{
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Product Added',
+                    text: 'The product has been successfully added!',
+                    timer: 2000,
+                    showConfirmButton: false
+                  });
+                }
+                clearForm()
+                prodData = []
               } else {
                 Swal.fire({
                   icon: 'error',
@@ -1091,6 +1114,7 @@
     fetchProducts()
 
     supplierBtn.addEventListener('click', ()=>{
+        clearForm()
         supplierFormModal.show()
     })
 

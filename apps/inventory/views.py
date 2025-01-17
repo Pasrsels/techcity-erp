@@ -853,29 +853,30 @@ def inventory_transfer_index(request):
     unique_transfers = list({t.id: t for t in transfers_list}.values())
     unique_transfers.sort(key=lambda x: x.time, reverse=True)  
 
-    logger.info([{'id': t.id, 'ref': t.transfer_ref} for t in unique_transfers[:5]])
-
     paginator = Paginator(unique_transfers, 20)
     paginated_transfers = paginator.get_page(page_number)
 
-    transfers_data = [
-        {
-            'id': transfer.id,
-            'transfer_ref': transfer.transfer_ref,
-            'branch': transfer.branch.name,
-            'transfer_to': [branch.id for branch in transfer.transfer_to.all()],
-            'total_quantity': transfer.total_quantity,
-            'total_received_qnt': transfer.total_received_qnt,
-            'total_r_difference': transfer.total_r_difference,
-            'total_received_amount': transfer.total_received_amount,
-            'total_amount': transfer.total_amount,
-            'check_all_received': transfer.check_all_received,
-            'time': transfer.time.strftime('%Y-%m-%d %H:%M:%S'),
-            'username': transfer.user.username,
-            'description': transfer.description 
-        }
-        for transfer in paginated_transfers
-    ]
+    if paginated_transfers:
+        transfers_data = [
+            {
+                'id': transfer.id,
+                'transfer_ref': transfer.transfer_ref,
+                'branch': transfer.branch.name,
+                'transfer_to': [branch.id for branch in transfer.transfer_to.all()],
+                'total_quantity': transfer.total_quantity,
+                'total_received_qnt': transfer.total_received_qnt,
+                'total_r_difference': transfer.total_r_difference,
+                'total_received_amount': transfer.total_received_amount,
+                'total_amount': transfer.total_amount,
+                'check_all_received': transfer.check_all_received,
+                'time': transfer.time.strftime('%Y-%m-%d %H:%M:%S'),
+                'username': transfer.user.username,
+                'description': transfer.description 
+            }
+            for transfer in paginated_transfers
+        ]
+    else:
+        transfers_data = []
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({
@@ -887,6 +888,7 @@ def inventory_transfer_index(request):
         'transfers': paginated_transfers,
         'search_query': q,
     })
+
 @login_required
 def inventory_transfer_item_data(request, id):
     """
@@ -2784,6 +2786,9 @@ def edit_purchase_order(request, po_id):
             expenses = data.get('expenses', [])
             cost_allocations = data.get('cost_allocations', [])
 
+            for item in purchase_order_items_data:
+                print(item)
+
             # remove duplicates
             unique_expenses = []
             seen = set()
@@ -2831,7 +2836,7 @@ def edit_purchase_order(request, po_id):
                 purchase_order.save()
                 
 
-                products = Inventory.objects.filter(branch=request.user.branch).select_related('branch')
+                products = Inventory.objects.filter(branch=request.user.branch)
                 suppliers = Supplier.objects.all()
                 logs = ActivityLog.objects.filter(purchase_order=last_purchase_order).select_related('inventory')
 
@@ -2839,14 +2844,19 @@ def edit_purchase_order(request, po_id):
                 suppliers_dict = {supplier.id: supplier for supplier in suppliers}
                 logs_dict = {log.inventory_id: log.quantity for log in logs}
 
+                supplier = Supplier.objects.get(name='dubai')
+
                 purchase_order_items_bulk = []
                 for item_data in purchase_order_items_data:
-                    product = products_dict.get(item_data['product_id'])
+                    product = products_dict.get(int(item_data['product_id']))
                     supplier = suppliers_dict.get(item_data.get('supplier'))
                     log_quantity = logs_dict.get(product.id, 0)
 
                     if not product or not supplier:
-                        return JsonResponse({'success': False, 'message': 'Invalid product or supplier'}, status=400)
+                        return JsonResponse({'success': False, 'message': 'Invalid product'}, status=400)
+                    
+                    if not supplier:
+                        return JsonResponse({'success': False, 'message': 'Invalid supplier'}, status=400)
 
                     purchase_order_items_bulk.append(
                         PurchaseOrderItem(
@@ -2860,7 +2870,6 @@ def edit_purchase_order(request, po_id):
                             wholesale_price = 0,
                             received=False,
                             price=0,
-
                         )
                     )
 
@@ -3221,7 +3230,7 @@ def supplier_view(request):
             if list_orders.get(items.supplier.id):
                 
                 supplier = list_orders.get(items.supplier.id)
-                logger.info(f'quantity: {supplier}')
+                # logger.info(f'quantity: {supplier}')
                 supplier['quantity'] += items.quantity
                 supplier['received_quantity'] += items.received_quantity
                 supplier['returned'] += (items.quantity - items.received_quantity)
@@ -3369,8 +3378,8 @@ def supplier_prices(request, product_id):
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
 
-#product   
 @login_required
+@transaction.atomic
 def product(request):
     if request.method == 'POST':
         # payload
@@ -3394,6 +3403,7 @@ def product(request):
             return JsonResponse({'success':False, 'message':'Invalid data'})
 
         image_data = data.get('image')
+
         if image_data:
             try:
                 format, imgstr = image_data.split(';base64,') 
@@ -3696,11 +3706,11 @@ def payments(request):
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
 
-# @csrf_exempt
+
 @login_required
 def accessory_view(request, product_id):
     if request.method == 'POST':
-        logger.info('here')
+       
         try:
             data = json.loads(request.body)
             logger.info(f'Accessories: {data}')
@@ -3774,9 +3784,35 @@ def accessory_view(request, product_id):
         except Exception as e:
             logger.info(e)
             return JsonResponse({'success': False, 'message': str(e)}, status=400)       
-    # if request.method == 'GET':
-    #     accessories = Accessory.objects.filter(main_product__id=product_id).values('id', 'product__name')
-    #     return JsonResponse({'success': True, 'data': list(accessories)}, status=200)
+
+@login_required
+def get_accessory(request, product_id):
+    """
+    Get accessory data including related product information for a given main product.
+    """
+    if product_id:
+        accessory = Accessory.objects.filter(
+            main_product__id=product_id
+        ).prefetch_related(
+            'accessory_product'
+        ).values(
+            'id',
+            'main_product__name',
+            'quantity',
+            'accessory_product__id',
+            'accessory_product__name',
+            'accessory_product__price',
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'data': list(accessory)
+        })
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Product ID is required'
+    }, status=400)
 
 def vue_view(request):
     return render(request, 'vue.html')
