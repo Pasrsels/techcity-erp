@@ -2852,7 +2852,7 @@ def edit_purchase_order(request, po_id):
                     supplier = suppliers_dict.get(item_data.get('supplier'))
                     log_quantity = logs_dict.get(product.id, 0)
 
-                    if not product or not supplier:
+                    if not product:
                         return JsonResponse({'success': False, 'message': 'Invalid product'}, status=400)
                     
                     if not supplier:
