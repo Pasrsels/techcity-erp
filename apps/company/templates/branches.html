@@ -37,11 +37,8 @@
             <td><small>{{ branch.phonenumber }}</small></td>
             <td><small>{{ branch.email }}</small></td>
             <td>
-              <a class="text-dark mx-2" href="{% url 'company:edit_branch' branch.id %}">
+              <a class="text-dark" href="{% url 'company:edit_branch' branch.id %}">
                 <i class="bx bx-edit"></i>
-              </a>
-              <a class="text-dark" href="{% url 'company:delete_branch' branch.id %}">
-                <i class="bx bx-trash"></i>
               </a>
             </td>
           </tr>

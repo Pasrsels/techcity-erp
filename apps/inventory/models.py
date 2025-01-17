@@ -91,14 +91,6 @@ class Product(models.Model):
     def __str__(self):
         return self.name 
 
-class SerialNumber(models.Model):
-    serial_number = models.CharField(max_length=255, unique=True)
-    status = models.BooleanField(default=True)  # True for active/available, False for used/inactive
-    added_date = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.serial_number
-
 class Inventory(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, null=True)
@@ -120,7 +112,6 @@ class Inventory(models.Model):
     service = models.BooleanField(default=False, null=True)
     image = models.ImageField(upload_to='product_images/', default='placeholder.png', null=True)
     disable = models.BooleanField(default=False)
-    serial_numbers = models.ManyToManyField('SerialNumber', related_name='inventories') 
 
     class Meta:
         unique_together = ('id', 'branch') 
@@ -135,6 +126,7 @@ class Inventory(models.Model):
 class Accessory(models.Model):
     main_product = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='main_product')
     accessory_product = models.ManyToManyField(Inventory)
+    # quantity = models.IntegerField()
     #quantity = models.IntegerField()
 
     def __str__(self):
@@ -200,11 +192,9 @@ class PurchaseOrderItem(models.Model):
     expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     dealer_expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, default=1)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    wholesale_price = models.DecimalField(max_digits=10, decimal_places=2)
-
-    class Meta:
-        models.Index(fields=['product', 'supplier'])
+    # cost =  models.DecimalField(max_digits=10, decimal_places=2)
+    #price = models.DecimalField(max_digits=10, decimal_places=2)
+    #wholesale_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def receive_items(self, quantity):
     
@@ -291,23 +281,19 @@ class Transfer(models.Model):
             models.Index(fields=['delete']),
             models.Index(fields=['hold']),
         ]
-        
 
     @classmethod
     def generate_transfer_ref(self, branch, branches):
-
-        """revisit on 03d"""
-        
         formatted_branches = ', '.join([f"T{b[0].upper()}" for b in branches])
 
         last_transfer = Transfer.objects.filter(branch__name=branch, delete=False).order_by('-id').first()
-        logger.info(f'last transfer reference: {last_transfer}')
+
         if last_transfer:
             last_reference = int(last_transfer.transfer_ref.split('#')[-1]) if '#' in last_transfer.transfer_ref else 1
             new_reference = f'{branch} - {formatted_branches} #{last_reference + 1:03d}'
             return new_reference
         else:
-            return f'{branch}: {formatted_branches} #001'
+            return f'{branch}: {formatted_branches} #001]'
 
 
     def __str__(self):
@@ -336,9 +322,6 @@ class TransferItems(models.Model):
     description = models.TextField(null=True)
     received_quantity = models.IntegerField(default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    defect_quantity = models.IntegerField(default=0, null=True)
-    received_back_quantity = models.IntegerField(default=0, null=True)
-    done = models.BooleanField(default=False, null=True)
 
     # def __str__(self):
     #     return f'{self.product.name} to {self.to_branch}'
@@ -510,50 +493,3 @@ class StocktakeItem(models.Model):
 
     def __str__(self):
         return self.product.name
-
-
-# Inventory loss models
-
-class WriteOff(models.Model):
-    inventory_item = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='write_offs')
-    quantity = models.PositiveIntegerField()
-    reason = models.TextField()
-    created_by = models.ForeignKey('users.user', on_delete=models.SET_NULL, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Write-off: {self.inventory_item.name} ({self.quantity})"
-
-class DefectiveItem(models.Model):
-    inventory_item = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='defective_items')
-    quantity = models.PositiveIntegerField()
-    defect_description = models.TextField()
-    action_taken = models.CharField(max_length=255, choices=[
-        ('return_to_supplier', 'Return to Supplier'),
-        ('write_off', 'Write Off'),
-        ('repair', 'Repair'),
-    ], default='write_off')
-    created_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Defective: {self.inventory_item.name} ({self.quantity})"
-    
-class InventoryShrinkage(models.Model):
-    inventory_item = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='shrinkages')
-    quantity = models.PositiveIntegerField()
-    date_discovered = models.DateTimeField()
-    reason = models.CharField(max_length=255, choices=[
-        ('theft', 'Theft'),
-        ('damage', 'Damage'),
-        ('miscount', 'Miscount'),
-        ('other', 'Other'),
-    ])
-    additional_details = models.TextField(blank=True, null=True)
-    recorded_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Shrinkage: {self.inventory_item.name} ({self.quantity})"
-
-

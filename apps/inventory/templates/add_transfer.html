@@ -36,23 +36,6 @@
         }
     }
 
-    @media (max-width: 576px) { 
-        .row {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .col-5 {
-            order: 1;
-            width: 100%;
-        }
-
-        .col-7 {
-            order: 2;
-            width: 100%;
-        }
-    }
-
     .branches-container {
         margin-bottom: 16px; 
     }
@@ -90,25 +73,23 @@
                     <div class="mb-2 mt-2">
                         <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search products..." oninput="searchTable()">
                     </div>
-                    <div class="table-responsive">
-                        <table class="table border rounded p-2" id="cart-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Product</th>
-                                    <th>Qnty</th>
-                                    {% if request.user.role != 'sales' %}
-                                        <th>Cost</th>
-                                        <th>Price</th>
-                                        <th>W Price</th>
-                                    {% endif %}
-                                    <th>Destination</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cart-items"></tbody>
-                        </table>
-                    </div>
+                    <table class="table border rounded p-2" id="cart-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th>Qnty</th>
+                                {% if request.user.role != 'sales' %}
+                                    <th>Cost</th>
+                                    <th>Price</th>
+                                    <th>W Price</th>
+                                {% endif %}
+                                <th>Destination</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-items"></tbody>
+                    </table>
                     <div class="d-flex justify-content-end">
                         <button type="button" class="btn btn-outline-dark mx-2 btn-sm" onclick="clearCart()">
                             clear
@@ -425,6 +406,8 @@
         });
     };
     
+
+
     const calculateQuantityDifference = (quantity, productQuantity, branchName) => {
         
         let exist = trackQuantity.find(branch => branch.name === branchName) 
@@ -435,8 +418,11 @@
 
         if(exist){
             let difference = quantity - exist.value;
+            console.log('difference: ', difference)
+            console.log('before: ', exist.value)
             exist.value = quantity
-            if(difference < 0){ 
+            console.log('after: ', exist.value)
+            if(difference < 0){ // 3- 2 = 1
                 trackProductQuantity -= difference
                 console.log('after: ', trackProductQuantity)
                 branches.forEach((b)=>{
@@ -445,6 +431,7 @@
                 return;
             }else if (difference > 0){
                 trackProductQuantity += difference
+                console.log('greater than difference:',difference, 'trackprod',trackProductQuantity)
             }else{
                 trackProductQuantity = trackProductQuantity
                 return;
@@ -460,7 +447,7 @@
         if (trackProductQuantity !== 0){
             trackProductQuantity -= quantity
         }else{
-            let updatedQuantity  = productQuantity - quantity; 
+            let updatedQuantity  = productQuantity - quantity; // 10 -1 = 9 
             trackProductQuantity = updatedQuantity;
         }
         
@@ -496,16 +483,16 @@
                 }
             }
         
-        if (insufficientQnt){
-            Swal.fire({
-                icon: 'error',
-                title: 'error',
-                text: 'Insufficient quantity!.',
-                showConfirmButton: false,
-                timer: 1500
-            });
-            return;
-        }else{
+            if (insufficientQnt){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'error',
+                    text: 'Insufficient quantity!.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                return
+            }else{
 
         for (let i = 0; i < branchElements.length; i++) {
             const branch = branchElements[i]; 
@@ -523,7 +510,7 @@
             let product_id = pElement.value;
 
             product = product.split(' [')[0];
-            console.debug('product name:', product)
+            pSelectedQnty = product.split(/\[(\d+)\]/);
                 
             const existingItem = cart.find((item) => item.product === product && item.branch_name === branchName);
             console.log(existingItem, 'existing item');
@@ -544,9 +531,11 @@
                 break; 
             }
 
+            console.log(quantity)
+
             if (quantity){
                 const newItem = {
-                    product_id:parseInt(product_id),
+                    product_id:product_id,
                     count: itemCount,
                     id: generateUniqueId(),
                     product: product,
@@ -560,8 +549,12 @@
                 cart.push(newItem);
                 productAdded = true; 
             }
+
+            // dataToSend.push(newItem);
             
             console.log(cart, 'cart');
+
+            // calutate the total cost of goods transfered for each branch
             
         }
             trackProductQuantity = 0;
@@ -657,6 +650,9 @@
                 
                 let isEditing = false;
 
+                console.log('Quantitty: ', prodQauntity)
+                console.log(branchesList.length);
+
                 function toggleEdit() {
                     isEditing = !isEditing;
                     updateRowContent();
@@ -671,6 +667,7 @@
                         currentColor = currentColor === "#ebeced" ? "white" : "#ebeced"; 
                     }
 
+                    console.log(item.cost)
                     const row = document.createElement("tr");
                     row.style.backgroundColor = currentColor; 
 
@@ -832,7 +829,7 @@
           'branches_to': branches
       };
 
-      console.log('data: ', data)
+      console.log(cart)
 
       Swal.fire({
           title: 'Processing Transfer',

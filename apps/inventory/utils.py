@@ -38,7 +38,7 @@ def average_inventory_cost(product_id, new_cost, new_units, branch_id):
 
 def best_price(id):
     """ utility for calculating the best 3 suppliers per product"""
-    purchase_orders = PurchaseOrderItem.objects.filter(product_id=id).select_related('supplier')
+    purchase_orders = PurchaseOrderItem.objects.filter(product_id=id)
 
     supplier_prices = []
     for item in purchase_orders:

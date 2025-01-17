@@ -8,16 +8,13 @@ from django.contrib.auth.forms import UserCreationForm
 class UserRegistrationForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
     company = forms.ModelChoiceField(queryset=Company.objects.all(), required=True)
-    branch = forms.ModelMultipleChoiceField(
-        queryset=Branch.objects.all(),
-        widget=forms.CheckboxSelectMultiple,
-        required=False
-    )
+    branch = forms.ModelChoiceField(queryset=Branch.objects.none(), required=True)
 
     class Meta:
         model = User
         fields = [
             'first_name',
+            'last_name',
             'username',
             'email',
             'phonenumber',

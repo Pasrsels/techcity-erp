@@ -49,12 +49,10 @@ from . forms import (
     AddSupplierForm,
     CreateOrderForm,
     noteStatusForm,
-    PurchaseOrderStatusForm,
+    PurchaseOrderStatus,
     ReorderSettingsForm,
     EditSupplierForm,
-    StockTakeForm,
-    AddShrinkageForm,
-    AddWriteOffForm
+    StockTakeForm
 )
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
@@ -72,9 +70,7 @@ from django.template.loader import get_template
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from apps.inventory.utils import best_price
 from collections import defaultdict
-from django.core.cache import cache
-from django.core.paginator import Paginator
-from typing import List, Dict, Any
+
 
 @login_required
 def notifications_json(request):
@@ -242,174 +238,186 @@ class AddProductView(LoginRequiredMixin, View):
         )
 
 class ProcessTransferCartView(LoginRequiredMixin, View):
-    """Handle product transfers between branches."""
-
-    def post(self, request, *args, **kwargs) -> JsonResponse:
-        """
-        Process a transfer request or create a held transfer.
-        Returns JSON response indicating success or failure.
-        """
+    def post(self, request, *args, **kwargs):
+        """it have two main functions to create a held transfer and to create a new transfer"""
         try:
             with transaction.atomic():
                 data = json.loads(request.body)
                 action = data['action']
-                branches_data = data['branches_to']
+                branches = data['branches_to']
                 transfer_id = data.get('transfer_id', '')
 
-                logger.info(data)
-
-                # Fetch all required data in bulk
-                products = self._get_products(request.user.branch)
-                branch_obj_list = self._get_branch_objects(branches_data)
+                logger.info(f'branches: {branches}')
                 
-
-                logger.info(f'products: {products}')
-                logger.info(f'branch: {branch_obj_list}')
-
-                # Create or get transfer object
-                transfer = self._get_or_create_transfer(
-                    request.user,
-                    transfer_id,
-                    branch_obj_list,
-                    self._get_branch_names(branches_data)
-                ),
-
-                logger.info(f'transfer obj: {transfer[0]}')
+                # create list of branch objects
+                branch_obj_list = []
+                branch_names = []
+                for branch in branches:
+                    branch_names.append(f'{branch['name']}')
+                    if branch.get('value'):
+                        branch_obj_list.append(Branch.objects.get(id=branch['value']))
+                    else:
+                        branch_obj_list.append(Branch.objects.get(name=branch['name']))
+                        
+                
+                # check for hold or new transfer
+                if not transfer_id:
+                    transfer = Transfer.objects.create(
+                        branch = request.user.branch,
+                        user = request.user,
+                        transfer_ref = Transfer.generate_transfer_ref(request.user.branch.name, branch_names),
+                        description = 'transfer' #to be actioned
+                    )
+                else:
+                    logger.info('here')
+                    transfer = Transfer.objects.get(id=transfer_id)
+                
+                #assign many2many objects to transfer branch
+                transfer.transfer_to.set(branch_obj_list)
 
                 if action == 'process':
-                    self._process_transfer(data['cart'], products, branch_obj_list, transfer[0], request)
-                else:
-                    self._hold_transfer(branch_obj_list, data, transfer, request)
+                    logger.info(f'branches: {branch_obj_list}')
 
-                return JsonResponse({'success': True})
+                    product_quantities_dict = defaultdict(int)
 
+                    # new
+
+                    for item in data['cart']:
+                        logger.info(f'quantity: {item['quantity']}')
+                        product_id = item['product_id']
+                        quantity = item['quantity']
+
+                        if product_quantities_dict[product_id]:
+                            logger.info('New')
+                            product_quantities_dict[product_id] += quantity
+                        else:
+                            logger.info('Existing')
+                            product_quantities_dict[product_id] = quantity
+                            
+                    logger.info(f'product quantities {product_quantities_dict}')
+
+                    for item in data['cart']:
+                        product = Inventory.objects.get(id=item['product_id'], branch=request.user.branch)
+                        if product_quantities_dict[f'{product.id}'] > product.quantity:
+                            logger.info('The product has more quantity')
+                            return JsonResponse({'success': False, 'message': f'Insufficient stock to process product: {product.name}.', 'id': product.id})
+
+
+                    for branch_obj in branch_obj_list:
+                        for item in data['cart']:
+                            logger.info(f'Cart Item: {item}')
+                            
+                            product = Inventory.objects.get(id=item['product_id'], branch=request.user.branch)
+
+                            total_requested_quantity = product_quantities_dict[f'{product_id}']
+
+                            logger.info(f'Total requested quantity for {product.name}: {total_requested_quantity} product quantity {product.quantity}')
+                            logger.info(total_requested_quantity == product.quantity)
+                          
+                            logger.info(f'Transfered product: {product.name}')
+                            branch_name = item['branch_name']
+                            logger.info(f'branch name: {branch_name}')
+
+                            if branch_name == branch_obj.name:
+                                transfer_item = TransferItems(
+                                    transfer=transfer,
+                                    product = product,
+                                    cost = item['cost'],
+                                    price=item['price'],
+                                    dealer_price = item['dealer_price'],
+                                    quantity=item['quantity'],
+                                    from_branch= request.user.branch,
+                                    to_branch= branch_obj,
+                                    description=f'from {request.user.branch} to {branch_obj} '
+                                ) 
+
+                                transfer_item.save()
+
+                                logger.info(f'Transfered product: product saved')
+                                
+                                self.deduct_inventory(transfer_item)
+                                self.transfer_update_quantity(transfer_item, transfer) 
+            
+                                # send email for transfer alert
+                                # transaction.on_commit(lambda: send_transfer_email(request.user.email, transfer.id, transfer.transfer_to.id))
+
+                                # held transfer items 
+                                transfer_items = Holdtransfer.objects.filter(transfer__id=transfer.id)
+                                transfer_items.delete()
+
+                                # save the transfer
+                                transfer.hold = False
+                                transfer.date = datetime.datetime.now()
+                                transfer.save()  
+            return JsonResponse({'success': True})     
         except Exception as e:
-            logger.error(f"Validation error in transfer processing: {e}")
-            return JsonResponse({'success': False, 'message': str(e)})
-        except Exception as e:
-            logger.error(f"Unexpected error in transfer processing: {e}", exc_info=True)
+            logger.info(e)
             return JsonResponse({'success': False, 'data': str(e)})
-
-    def _get_products(self, branch) -> Dict[int, Any]:
-        """Fetch and index products by ID for the given branch."""
-        products = Inventory.objects.filter(branch=branch).select_related('branch')
-        return {product.id: product for product in products}
-
-    def _get_branch_objects(self, branches_data: List[Dict]) -> List[Any]:
-        """Convert branch data to Branch objects."""
-        branch_objects = []
-        for branch in branches_data:
-            if branch.get('value'):
-                branch_obj = Branch.objects.get(id=branch['value'])
-            else:
-                branch_obj = Branch.objects.get(name=branch['name'])
-            branch_objects.append(branch_obj)
-        return branch_objects
-
-    def _get_branch_names(self, branches_data: List[Dict]) -> List[str]:
-        """Extract branch names from branch data."""
-        return [branch['name'] for branch in branches_data]
-
-    def _get_or_create_transfer(self, user, transfer_id: str, branch_obj_list: List[Any], branch_names: List[str]) -> Any:
-        """Get existing transfer or create new one."""
-        logger.info(f'Branch objects: {branch_obj_list}')
-        if not transfer_id:
-            transfer = Transfer.objects.create(
-                branch=user.branch,
-                user=user,
-                transfer_ref=Transfer.generate_transfer_ref(user.branch.name, branch_names),
-                description='transfer'
-            )
-        else:
-            transfer = Transfer.objects.get(id=transfer_id)
         
-        transfer.transfer_to.set(branch_obj_list)
-        return transfer
+    def hold_transfer(self, branch_obj_list, data, transfer, request):
+        logger.info('Processing Hoding Transfers ------')
+        logger.info(f'branches: {branch_obj_list}')
+        logger.info(f'data: {data}')
+        logger.info(f'transfer: {transfer}')
 
-    def _validate_quantities(self, cart: List[Dict], products: Dict[int, Any]) -> None:
-        """Validate that requested quantities are available."""
-        product_quantities = defaultdict(int)
-        for item in cart:
-            product_quantities[item['product_id']] += item['quantity']
-
-        for product_id, total_quantity in product_quantities.items():
-            product = products.get(int(product_id))
-            if total_quantity > product.quantity:
-                return JsonResponse({'success':False, 'message':f'Insufficient stock to process product: {product.name}'})
-
-    def _process_transfer(self, cart: List[Dict], products: Dict[int, Any], branch_obj_list: List[Any], transfer: Any, request) -> None:
-        """Process the transfer cart items."""
-        self._validate_quantities(cart, products)
-
-        track_quantity = 0
-        transfer_items = []
-        for branch_obj in branch_obj_list:
-            for item in cart:
-                if item['branch_name'] == branch_obj.name:
-
-                    product_id = str(item['product_id']).strip('[]').strip()
-                    logger.info(f"Processing product ID: {product_id}")
-
-                    product = products.get(int(item['product_id']))
-                    transfer_item = self._create_transfer_item(item, product, branch_obj, transfer, request)
-                    transfer_items.append(transfer_item)
-                    track_quantity += item['quantity']
-
-        TransferItems.objects.bulk_create(transfer_items)
-
-        for transfer_item in transfer_items:
-            self._update_inventory(transfer_item, transfer)
-
-        transfer.total_quantity_track = track_quantity
-        transfer.hold = False
-        transfer.date = datetime.datetime.now()
-        transfer.save()
-
-    def _create_transfer_item(self, item: Dict, product: Any, branch_obj: Any, transfer: Any, request) -> Any:
-        """Create a transfer item instance."""
-        return TransferItems(
-            transfer=transfer,
-            product=product,
-            cost=item['cost'],
-            price=item['price'],
-            dealer_price=item['dealer_price'],
-            quantity=item['quantity'],
-            from_branch=request.user.branch,
-            to_branch=branch_obj,
-            description=f'from {request.user.branch} to {branch_obj}'
-        )
-
-    def _update_inventory(self, transfer_item: Any, transfer: Any) -> None:
-        """Update inventory and create activity log for a transfer item."""
         with transaction.atomic():
-            # Update inventory
-            inventory = Inventory.objects.select_for_update().get(
-                id=transfer_item.product.id,
-                branch__name=transfer_item.from_branch
-            )
-            inventory.quantity -= int(transfer_item.quantity)
-            inventory.save()
+            for branch_obj in branch_obj_list:
+                for item in data['cart']:
+                    product = Inventory.objects.get(id=item['product_id'], branch=request.user.branch)
 
-            # Create activity log
-            self._create_activity_log(transfer_item, inventory)
+                    branch_name = item['branch_name']
 
-            # Update transfer quantity
-            transfer.quantity += transfer_item.quantity
-            transfer.save()
+                    logger.info(f'branch name: {branch_name}')
+                    logger.info(f'branch obj {branch_obj.name}')
+                    logger.info(f'cost: {item['cost']}')
+                    logger.info(f'Product {product}')
+                    try:
+                        if branch_name == branch_obj.name:
+                            transfer_item = Holdtransfer.objects.create(
+                                transfer=transfer,
+                                product = product,
+                                cost = item['cost'],
+                                price=item['price'],
+                                dealer_price = item['dealer_price'],
+                                quantity=item['quantity'],
+                                from_branch= request.user.branch,
+                                to_branch= branch_obj,
+                                description=f'from {request.user.branch} to {branch_obj}'
+                            ) 
+                            logger.info('here')
+                            transfer.hold = True
+                            transfer.save()         
+                            logger.info('Transfer has been hold')
+                    except Exception as e:
+                        return JsonResponse({'success':False, 'message':f'{e}'})
 
-    def _create_activity_log(self, transfer_item: Any, inventory: Any) -> None:
-        """Create activity log entry for transfer."""
+    def deduct_inventory(self, transfer_item):
+        logger.info(f'from branch -> {transfer_item.from_branch}')
+        branch_inventory = Inventory.objects.get(id=transfer_item.product.id, branch__name=transfer_item.from_branch)
+        
+        branch_inventory.quantity -= int(transfer_item.quantity)
+        branch_inventory.save()
+        self.activity_log('transfer out', branch_inventory, transfer_item)
+        
+    def transfer_update_quantity(self, transfer_item, transfer):
+        transfer = Transfer.objects.get(id=transfer.id)
+        logger.info(f'Transfer quantity: {transfer_item.quantity}')
+        transfer.quantity += transfer_item.quantity
+        transfer.save()
+       
+    def activity_log(self,  action, inventory, transfer_item):
+        logger.info(f'selling_price transfered {transfer_item.dealer_price}: {transfer_item.price}')
         ActivityLog.objects.create(
-            invoice=None,
-            product_transfer=transfer_item,
-            branch=self.request.user.branch,
+            invoice = None,
+            product_transfer = transfer_item,
+            branch = self.request.user.branch,
             user=self.request.user,
-            action='transfer out',
-            dealer_price=transfer_item.dealer_price,
-            selling_price=transfer_item.price,
+            action= action,
+            dealer_price = transfer_item.dealer_price,
+            selling_price = transfer_item.price,
             inventory=inventory,
-            system_quantity=inventory.quantity,
-            quantity=-transfer_item.quantity,
+            system_quantity = inventory.quantity,
+            quantity = -transfer_item.quantity,
             total_quantity=inventory.quantity,
             description=f'to {transfer_item.to_branch}'
         )
@@ -469,8 +477,6 @@ def delete_transfer(request, transfer_id):
             transfer.delete = True
             transfer.save()
 
-            logger.info('done')
-
         return JsonResponse({'success':True})
     except Exception as e:
         return JsonResponse({'success':False, 'message':f'{e}'})
@@ -486,10 +492,16 @@ def transfer_details(request, transfer_id):
 @login_required
 def inventory(request):
     product_id = request.GET.get('id', '')
+    logger.info(f'product id: {product_id}')
     if product_id:
+        logger.info(list(Inventory.objects.\
+            filter(id=product_id, branch=request.user.branch, status=True).values()))
         return JsonResponse(list(Inventory.objects.\
             filter(id=product_id, branch=request.user.branch, status=True).values()), safe=False)
     return JsonResponse({'error':'product doesnt exists'})
+
+from django.db.models import Count
+
 
 @login_required
 def inventory_index(request):
@@ -499,10 +511,7 @@ def inventory_index(request):
     
     services = Service.objects.all().order_by('-name')
     accessories = Accessory.objects.all()
-    inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).select_related(
-        'category',
-        'branch'
-    ).order_by('name')
+    inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name')
 
     if 'download' and 'excel' in request.GET:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -543,26 +552,28 @@ def inventory_index(request):
                     row_offset += 2
 
                 for product in products.filter(branch__name=branch):
-                    if category == product.category.name:
-                        worksheet.append([product.name, product.cost, product.price, product.quantity])
+                    if category == product.product.category.name:
+                        worksheet.append([product.product.name, product.cost, product.price, product.quantity])
                         row_offset += 1
 
         workbook.save(response)
         return response
 
-    # logs = ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
-
-    context = {
+    logs = ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
+    
+    # totals = calculate_inventory_totals(inventory)
+  
+    return render(request, 'inventory.html', {
         'form': form,
-        'total_cost': inventory.aggregate(total_cost=Sum(F('quantity') * F('cost')))['total_cost'] or 0,
-        'total_price': inventory.aggregate(total_price=Sum(F('quantity') * F('price')))['total_price'] or 0,
+        'services':services,
+        'inventory': inventory,
         'search_query': q,
-        'category': category,
-        'accessories': accessories,
-        'logs': [],
-    }
-
-    return render(request, 'inventory.html', context)
+        'category':category,
+        'total_price': 0,
+        'total_cost':0,
+        'accessories':accessories,
+        'logs':[]
+    })
 
 @login_required
 def edit_service(request, service_id):
@@ -616,81 +627,48 @@ def activate_inventory(request, product_id):
 
 @login_required
 def edit_inventory(request, product_id):
-    """
-    Edit inventory product details with proper concurrency handling and validation.
-    Uses select_for_update to prevent race conditions during updates.
-    """
-    try:
-        with transaction.atomic():
-            inv_product = (
-                Inventory.objects
-                .select_for_update()
-                .get(id=product_id, branch=request.user.branch)
-            )
+    inv_product = Inventory.objects.get(id=product_id, branch=request.user.branch)
 
-            logger.info(inv_product.category)
+    if request.method == 'POST':
+        end_of_day = request.POST.get('end_of_day')
 
-            if request.method == 'POST':
-                original_quantity = inv_product.quantity
-                
-                try:
-                    selling_price = Decimal(request.POST.get('price', 0))
-                    dealer_price = Decimal(request.POST.get('dealer_price', 0))
-                    cost = Decimal(request.POST.get('cost', 0))
-                    quantity = int(request.POST.get('quantity', 0))
-                    stock_level_threshold = int(request.POST.get('min_stock_level', 0))
-
-                    category = ProductCategory.objects.get(id=int(request.POST.get('category')))
-
-                    if selling_price < cost:
-                        messages.warning(request, "Selling price cannot be less than cost")
-                    if quantity < 0:
-                        messages.warning(request, "Quantity cannot be negative")
-
-                    inv_product.name = request.POST.get('name')
-                    inv_product.description = request.POST.get('description')
-                    inv_product.price = selling_price
-                    inv_product.cost = cost
-                    inv_product.dealer_price = dealer_price
-                    inv_product.stock_level_threshold = stock_level_threshold
-                    inv_product.quantity = quantity
-                    inv_product.category = category
-                    inv_product.end_of_day = request.POST.get('end_of_day') == 'on'
-
-                    inv_product.save()
-
-                    ActivityLog.objects.create(
-                        branch=request.user.branch,
-                        user=request.user,
-                        action='Edit',
-                        inventory=inv_product,
-                        quantity=original_quantity,
-                        total_quantity=quantity,
-                        dealer_price=dealer_price,
-                        selling_price=selling_price
-                    )
-
-                    logger.info(inv_product.category)
-
-                    messages.success(request, f'{inv_product.name} updated successfully')
-                    return redirect('inventory:inventory')
-
-                except Exception as e:
-                    messages.error(request, f'Invalid input: {str(e)}')
-                    return render(request, 'inventory_form.html', {
-                        'product': inv_product,
-                        'title': f'Edit >>> {inv_product.name}',
-                        'error': str(e)
-                    })
-
-    except Inventory.DoesNotExist:
-        messages.error(request, 'Inventory item not found')
+        if end_of_day:
+            inv_product.end_of_day = True
+        
+        selling_price = Decimal(request.POST['price'])
+        dealer_price = Decimal(request.POST['dealer_price'])
+        
+        # think through
+        quantity = inv_product.quantity
+        inv_product.name=request.POST['name']
+        # inv_product.batch=request.POST['batch_code']
+        inv_product.description=request.POST['description']
+        
+        inv_product.price = Decimal(request.POST['price'])
+        inv_product.cost = Decimal(request.POST['cost'])
+        inv_product.dealer_price = Decimal(request.POST['dealer_price'])
+        inv_product.stock_level_threshold = request.POST['min_stock_level']
+        inv_product.dealer_price = dealer_price
+        inv_product.quantity = request.POST['quantity']
+        
+        inv_product.save()
+        
+        ActivityLog.objects.create(
+            branch = request.user.branch,
+            user=request.user,
+            action= 'Edit',
+            inventory=inv_product,
+            quantity=quantity,
+            total_quantity=inv_product.quantity,
+            dealer_price = dealer_price,
+            selling_price = selling_price
+        )
+        
+        messages.success(request, f'{inv_product.name} update succesfully')
         return redirect('inventory:inventory')
+    return render(request, 'inventory_form.html', {'product':inv_product, 'title':f'Edit >>> {inv_product.name}'})
 
-    return render(request, 'inventory_form.html', {
-        'product': inv_product,
-        'title': f'Edit >>> {inv_product.name}'
-    })
+from django.db.models.functions import Extract
 
 @login_required
 def inventory_detail(request, id):
@@ -807,9 +785,11 @@ def get_stock_account_data(logs):
         else:
             continue  
         
+        # Calculate cost (ensure inventory cost is handled correctly)
         inventory_cost = getattr(log.inventory, 'cost', Decimal('0.00'))
         cost = log.quantity * inventory_cost
         
+        # Append entry to stock account
         stock_account.append({
             'type': entry_type,
             'description': log.action,
@@ -825,142 +805,209 @@ def get_stock_account_data(logs):
 
 @login_required
 def inventory_transfer_index(request):
+    """
+        transfers index. Shows transfers in and out of the branch and the total cost of items transfered in/out
+    """
     q = request.GET.get('q', '') 
     branch_id = request.GET.get('branch', '')
-    page_number = request.GET.get('page', 1)  
 
+    transfer_items = TransferItems.objects.filter(
+        Q(from_branch=request.user.branch) |
+        Q(to_branch = request.user.branch),
+        transfer__delete=False
+    ).annotate(
+        total_amount = ExpressionWrapper(
+            Sum(F('quantity') * F('product__cost')),
+            output_field=FloatField()
+        )
+    )
+
+    transfer_summary = transfer_items.values('transfer__id').annotate(
+        total_cost=Sum(F('quantity') * F('cost')), 
+        total_quantity=Sum('quantity') 
+    )
+    
     transfers = Transfer.objects.filter(
-        Q(branch=request.user.branch) | Q(transfer_to=request.user.branch),
+        Q(branch=request.user.branch) |
+        Q(transfer_to__in=[request.user.branch]),
         delete=False
     ).annotate(
         total_quantity=Sum('transferitems__quantity'),
-        total_received_qnt=Sum('transferitems__received_quantity'),
-        total_r_difference=(F('transferitems__quantity')) - Sum(F('transferitems__received_quantity')),
-        total_received_amount=Sum(F('transferitems__received_quantity') * F('transferitems__cost')),
         total_amount=ExpressionWrapper(
             Sum(F('transferitems__quantity') * F('transferitems__cost')),
             output_field=FloatField()
-        ),
-        check_all_received=Sum(F('transferitems__quantity') - F('transferitems__received_quantity')),
-    ).order_by('-time')
-
+        )
+    ).order_by('-time').distinct()
+    
     if q:
-        transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q))
-    if branch_id:
+        transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
+        
+    if branch_id: 
         transfers = transfers.filter(transfer_to__id=branch_id)
 
-    transfers_list = list(transfers)
-    unique_transfers = list({t.id: t for t in transfers_list}.values())
-    unique_transfers.sort(key=lambda x: x.time, reverse=True)  
-
-    logger.info([{'id': t.id, 'ref': t.transfer_ref} for t in unique_transfers[:5]])
-
-    paginator = Paginator(unique_transfers, 20)
-    paginated_transfers = paginator.get_page(page_number)
-
-    transfers_data = [
-        {
-            'id': transfer.id,
-            'transfer_ref': transfer.transfer_ref,
-            'branch': transfer.branch.name,
-            'transfer_to': [branch.id for branch in transfer.transfer_to.all()],
-            'total_quantity': transfer.total_quantity,
-            'total_received_qnt': transfer.total_received_qnt,
-            'total_r_difference': transfer.total_r_difference,
-            'total_received_amount': transfer.total_received_amount,
-            'total_amount': transfer.total_amount,
-            'check_all_received': transfer.check_all_received,
-            'time': transfer.time.strftime('%Y-%m-%d %H:%M:%S'),
-            'username': transfer.user.username,
-            'description': transfer.description 
-        }
-        for transfer in paginated_transfers
-    ]
-
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({
-            'transfers': transfers_data,
-            'has_next': paginated_transfers.has_next(),
-        })
-
-    return render(request, 'transfers.html', {
-        'transfers': paginated_transfers,
-        'search_query': q,
-    })
-@login_required
-def inventory_transfer_item_data(request, id):
-    """
-    Transfer items of the parent transfer
-    """
-    transfer_items = TransferItems.objects.filter(
-        Q(to_branch=request.user.branch) | Q(from_branch=request.user.branch),
-        transfer__id=id,
-        transfer__delete=False,
-    ).select_related(
-        'product', 'from_branch', 'to_branch', 'action_by', 'received_by', 'transfer'
-    ).annotate(
-        total_amount=F('quantity') * F('product__cost')
-    ).values(
-        'id',
-        'quantity', 
-        'over_less_quantity', 
-        'price', 
-        'dealer_price', 
-        'received', 
-        'declined', 
-        'over_less', 
-        'quantity_track', 
-        'description', 
-        'over_less_description', 
-        'received_quantity', 
-        'cost', 
-        'date', 
-        'date_received', 
-        'transfer__id',
-        'from_branch__name',
-        'product__name', 
-        'to_branch__name', 
-        'action_by__username', 
-        'received_by__username',
-        'received_back_quantity'
+    total_transferred_value = (
+    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
     )
 
-    return JsonResponse(list(transfer_items), safe=False)
+    total_received_value = (
+    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    )
 
-@login_required
-def add_transfer_item(request, transfer_id):
-    if request.method == 'GET':
-        try:
-            transfer = Transfer.objects.get(id=transfer_id)
-            return render(request, 'add_transfer_item.html', {
-                'transfer': transfer,
-            })
-        except Transfer.DoesNotExist:
-            messages.warning(request, f'Transfer with ID {transfer_id} does not exist.')
-            return redirect('inventory:transfers')
-
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            items = data.get('items', [])
-            branches_data = data['branches_to']
-            transfer_id = data.get('transfer_id', '')
-
-            products = ProcessTransferCartView._get_products(request.user.branch)
-            branch_obj_list = ProcessTransferCartView._get_branch_objects(branches_data)
-
-            transfer = Transfer.objects.get(id=transfer_id)
-
-            ProcessTransferCartView._process_transfer(data['cart'], products, branch_obj_list, transfer, request)
-            
-            return JsonResponse({'success': True, 'message': 'Items added to transfer successfully'}, status=200)
-
-        except Transfer.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Transfer not found'}, status=404)
-        except Exception as e:
-            logger.error(f"Error adding items to transfer: {e}")
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
         
+    return render(request, 'transfers.html', {
+        'transfers': transfers,
+        'search_query': q, 
+        'transfer_items':transfer_items,
+        'transferred_value':total_transferred_value,
+        'received_value':total_received_value,
+        'totals':transfer_summary,
+        'hold_transfers_count':Transfer.objects.filter(
+                Q(branch=request.user.branch) |
+                Q(transfer_to__in=[request.user.branch]),
+                delete=False, 
+                hold=True
+            ).count()
+        }
+    )
+
+
+@login_required    
+def inventory_transfer_data(request): 
+    """
+        transfers index. Shows transfers in and out of the branch and the total cost of items transfered in/out
+    """
+    q = request.GET.get('q', '') 
+    branch_id = request.GET.get('branch', '')
+
+    transfer_items = TransferItems.objects.filter(
+            Q(from_branch=request.user.branch) |
+            Q(to_branch=request.user.branch),
+            transfer__delete=False
+        ).annotate(
+            total_amount=F('quantity') * F('product__cost')
+        )
+        
+    transfer_summary = transfer_items.values('transfer__id').annotate(
+        total_cost=Sum(F('quantity') * F('product__cost')),
+        total_quantity=Sum('quantity')
+    )
+    
+    transfers = Transfer.objects.filter(
+        Q(branch=request.user.branch) |
+        Q(transfer_to__in=[request.user.branch]),
+        delete=False
+    ).annotate(
+        total_quantity=Sum('transferitems__quantity'),
+        total_amount=ExpressionWrapper(
+            Sum(F('transferitems__quantity') * F('transferitems__cost')),
+            output_field=FloatField()
+        )
+    ).prefetch_related('transfer_to').order_by('-time').distinct()
+
+
+    data = [
+        {
+            'id':transfer.id,
+            'transfer_ref': transfer.transfer_ref,
+            'branch': transfer.branch.name,
+            'transfer_to': [branch.name for branch in transfer.transfer_to.all()],
+            'description': transfer.description,
+            'date': transfer.date.strftime('%Y-%m-%d'),
+            'total_quantity': transfer.total_quantity,
+            'total_amount': transfer.total_amount,
+            'username': transfer.user.username
+        }
+        for transfer in transfers
+    ]
+
+    transfer_items_data = [
+        {
+            'transfer_id':transfer.transfer.id,
+            'product_name': transfer.product.name,
+            'product_cost': transfer.product.cost,
+            'date': transfer.date,
+            'date_received': transfer.date_received,
+            'transfer_id': transfer.id,
+            'from_branch': transfer.from_branch.name,
+            'to_branch': transfer.to_branch.name,
+            'quantity': transfer.quantity,
+            'over_less_quantity': transfer.over_less_quantity,
+            'price': transfer.price,
+            'dealer_price': transfer.dealer_price,
+            'received': transfer.received,
+            'declined': transfer.declined,
+            'over_less': transfer.over_less,
+            'action_by': transfer.action_by.username if transfer.action_by else None,
+            'quantity_track': transfer.quantity_track,
+            'description': transfer.description,
+            'over_less_description': transfer.over_less_description,
+            'received_by': transfer.received_by.username if transfer.received_by else None,
+            'received_quantity': transfer.received_quantity,
+            'cost': transfer.cost
+        }
+        for transfer in transfer_items
+    ]
+
+    
+    if q:
+        transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
+        
+    if branch_id: 
+        transfers = transfers.filter(transfer_to__id=branch_id)
+
+    total_transferred_value = (
+    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    )
+
+    total_received_value = (
+    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    )
+
+    # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
+        
+    return render(request, 'transfers.html', {
+        'transfers': transfers,
+        'search_query': q, 
+        'transfer_items':transfer_items,
+        'transferred_value':0,
+        'received_value':0,
+        'totals':[],
+        'hold_transfers_count':Transfer.objects.filter(
+                Q(branch=request.user.branch) |
+                Q(transfer_to__in=[request.user.branch]),
+                delete=False, 
+                hold=True
+            ).count()
+        }
+    )
+
+    total_received_value = (
+    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
+        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
+    )
+
+    response_data = {
+        'transfers': data,
+        'search_query': q, 
+        'transfer_items': transfer_items_data,
+        'transferred_value': total_transferred_value,
+        'received_value': total_received_value,
+        'totals': list(transfer_summary),
+        'hold_transfers_count': Transfer.objects.filter(
+            Q(branch=request.user.branch) |
+            Q(transfer_to__in=[request.user.branch]),
+            delete=False, 
+            hold=True
+        ).count()
+    }
+    
+    return JsonResponse(response_data, safe=False)
+
 @login_required
 def held_transfer_json(request, transfer_id):
     transfer_items = Holdtransfer.objects.filter(transfer__id=transfer_id).values(
@@ -1038,102 +1085,74 @@ def print_transfer(request, transfer_id):
 @transaction.atomic
 def receive_inventory(request):
     if request.method == 'POST':
-        try: 
-            data = json.loads(request.body)
-            logger.info(data)
+        try:  
+            transfer_id = request.POST['id']
+            quantity_received = int(request.POST['quantity'])
+            received = request.POST['received']
 
-            transfer_id = data.get('item_id')
-            quantity_received = int(data.get('received_quantity'))
-            serial_numbers = data.get('serial_numbers', [])
-            received = True
+            logger.info(f'transfer item data {received}')
 
-            branch_transfer = get_object_or_404(TransferItems, id=transfer_id)
-            logger.info(branch_transfer)
-            transfer_obj = get_object_or_404(Transfer, id=branch_transfer.transfer.id)
-            logger.info(transfer_obj)
+            branch_transfer = get_object_or_404(TransferItems, id=transfer_id, to_branch=request.user.branch)
+            transfer_obj = get_object_or_404(Transfer, id=branch_transfer.transfer.id, transfer_to=request.user.branch)
 
-            # if quantity_received > branch_transfer.quantity:
-            #     return JsonResponse({'success': False, 'message': 'Quantity received cannot be more than quantity transferred'}, status=400)
-
-            logger.info(branch_transfer)
+            if quantity_received > branch_transfer.quantity:
+                return JsonResponse({'success': 'false', 'message': 'Quantity received cannot be more than quantity transferred'}, status=400)
 
             if received:
-                logger.info(received)
                 if quantity_received != branch_transfer.quantity:
                     branch_transfer.over_less_quantity = branch_transfer.quantity - quantity_received
                     branch_transfer.over_less = True
                     branch_transfer.save()
-                
-                logger.info(branch_transfer)
 
-                # # validation for more quantity received
-                # if quantity_received > branch_transfer.quantity:
-                #     return JsonResponse({'success': False, 'message': 'Quantity received cannot be more than quantity transferred'}, status=400)
+                product, created = Inventory.objects.get_or_create(
+                    name=branch_transfer.product.name,
+                    branch=request.user.branch,
+                    defaults={
+                        'cost': branch_transfer.cost,
+                        'price': branch_transfer.price,
+                        'quantity': quantity_received,
+                        'dealer_price': branch_transfer.dealer_price,
+                        'description': branch_transfer.product.description or '',
+                        'category': branch_transfer.product.category,
+                        'tax_type': branch_transfer.product.tax_type,
+                        'stock_level_threshold': branch_transfer.product.stock_level_threshold,
+                    }
+                )
 
-                
-                with transaction.atomic():
-                    product, created = Inventory.objects.get_or_create(
-                        name=branch_transfer.product.name,
-                        branch=request.user.branch,
-                        defaults={
-                            'cost': branch_transfer.cost,
-                            'price': branch_transfer.price,
-                            'quantity': quantity_received,
-                            'dealer_price': branch_transfer.dealer_price,
-                            'description': branch_transfer.product.description or '',
-                            'category': branch_transfer.product.category,
-                            'tax_type': branch_transfer.product.tax_type,
-                            'stock_level_threshold': branch_transfer.product.stock_level_threshold,
-                        }
-                    )
-
-                    if not created:
-                        product.quantity += quantity_received
-                        product.price = branch_transfer.price
-                        product.cost = branch_transfer.cost
-                        product.dealer_price = branch_transfer.dealer_price
-                        product.save()
-
-                    logger.info('created')
-
-                    # for serial_number in serial_numbers:
-                    #     print(serial_number)
-                    #     serial_obj, _ = SerialNumber.objects.get_or_create(
-                    #         serial_number=serial_number,
-                    #         defaults={
-                    #             'status':True
-                    #         }
-                    #     )
-                    #     print(serial_obj, _)
-                    #     product.serial_numbers.add(serial_obj)
-                    #     logger.info('saved')
-
-                    ActivityLog.objects.create(
-                        branch=request.user.branch,
-                        user=request.user,
-                        action='stock in',
-                        inventory=product,
-                        dealer_price=product.dealer_price,
-                        selling_price=product.price,
-                        system_quantity=product.quantity,
-                        quantity=quantity_received,
-                        total_quantity=product.quantity,
-                        product_transfer=branch_transfer,
-                        description=f'From {branch_transfer.from_branch}, received: {branch_transfer.received_quantity} x {branch_transfer.quantity}'
-                    )
-
-                    product.batch += f'{branch_transfer.product.batch}, '
+                if not created:
+                    product.quantity += quantity_received
+                    product.price = branch_transfer.price
+                    product.cost = branch_transfer.cost
+                    product.dealer_price = branch_transfer.dealer_price
                     product.save()
-                    logger.info('product received')
+
+                logger.info('created')
+
+                ActivityLog.objects.create(
+                    branch=request.user.branch,
+                    user=request.user,
+                    action='stock in',
+                    inventory=product,
+                    dealer_price=product.dealer_price,
+                    selling_price=product.price,
+                    system_quantity=product.quantity,
+                    quantity=quantity_received,
+                    total_quantity=product.quantity,
+                    product_transfer=branch_transfer,
+                    description=f'received {quantity_received} out of {branch_transfer.quantity}'
+                )
+
+                product.batch += f'{branch_transfer.product.batch}, '
+                logger.info(f'Product batch numbers: {product.batch}')
+                product.save()
+                logger.info('product received')
 
             branch_transfer.quantity_track = branch_transfer.quantity - quantity_received
-            branch_transfer.received_quantity += quantity_received
+            branch_transfer.receieved_quantity += quantity_received
             branch_transfer.received_by = request.user
             branch_transfer.received = True
             branch_transfer.description = f'received {quantity_received} out of {branch_transfer.quantity}'
             branch_transfer.save()
-
-            logger.info(transfer_obj.total_quantity_track)
 
             transfer_obj.total_quantity_track -= quantity_received
             transfer_obj.save()
@@ -1141,79 +1160,20 @@ def receive_inventory(request):
             if not transfer_obj.receive_status:
                 transfer_obj.receive_status = True
                 transfer_obj.save()
-            
-            logger.info('done')
 
             return JsonResponse({'success': True, 'message': 'Product received successfully'}, status=200)
+
         except TransferItems.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Invalid transfer ID'}, status=400)
         except Transfer.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Transfer object not found'}, status=400)
         except Exception as e:
-            logger.info(e)
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
-@login_required
-def edit_transfer_item(request, transfer_item_id):
-    try:
-        transfer_item = TransferItems.objects.get(id=transfer_item_id)
-    except TransferItems.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Transfer item not found'}, status=404)
+    transfers = TransferItems.objects.filter(to_branch=request.user.branch).order_by('-date')
+    all_transfers = Transfer.objects.filter(transfer_to=request.user.branch, delete=False).order_by('-time')
+    return render(request, 'receive_inventory.html', {'r_transfers': transfers, 'transfers': all_transfers})
 
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            logger.info(data)
-            new_quantity = int(data.get('edit_quantity'))
-
-            logger.info(new_quantity)
-
-            if transfer_item.received:
-                return JsonResponse({'success':False, 'message':f'{transfer_item.product.name}, is already received.'})
-
-            if new_quantity is None:
-                return JsonResponse({'success': False, 'message': 'Quantity is required'}, status=400)
-
-            if new_quantity < 0:
-                return JsonResponse({'success': False, 'message': 'Quantity cannot be negative'}, status=400)
-
-            with transaction.atomic():
-                old_quantity = transfer_item.quantity
-                transfer_item.quantity = new_quantity
-                transfer_item.save()
-
-                logger.info(transfer_item)
-
-                # Update inventory
-                inventory = Inventory.objects.select_for_update().get(
-                    id=transfer_item.product.id,
-                    branch__name=transfer_item.from_branch
-                )
-                
-                if inventory.quantity < new_quantity:
-                    return JsonResponse({'success': False, 'message': 'Insufficient stock to update transfer item quantity'}, status=400)
-                
-                inventory.quantity += old_quantity - new_quantity
-                inventory.save()
-
-                logger.info(inventory)
-
-                # Log the activity
-                ActivityLog.objects.create(
-                    branch=request.user.branch,
-                    user=request.user,
-                    action='edit transfer item',
-                    inventory=inventory,
-                    quantity=inventory.quantity,
-                    total_quantity=inventory.quantity,
-                    description=f'Edited transfer item quantity from {old_quantity} to {new_quantity}'
-                )
-
-            return JsonResponse({'success': True, 'message': 'Transfer item updated successfully'}, status=200)
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
-
-    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
 
 @login_required
 def receive_inventory_json(request):
@@ -1238,7 +1198,7 @@ def over_less_list_stock(request):
     form = DefectiveForm()
     search_query = request.GET.get('search_query', '')
     
-    transfers =  TransferItems.objects.filter(to_branch=request.user.branch).prefetch_related('product', 'transfer').order_by('-date')
+    transfers =  TransferItems.objects.filter(to_branch=request.user.branch)
 
     if search_query:
         transfers = transfers.filter(
@@ -1246,278 +1206,136 @@ def over_less_list_stock(request):
             Q(transfer__transfer_ref__icontains=search_query)|
             Q(date__icontains=search_query)
         )
+        
+    def activity_log(action, inventory, branch_transfer, description=None):
+        activity = ActivityLog.objects.create(
+            branch = branch_transfer.from_branch,
+            user=request.user,
+            action= action,
+            inventory=inventory,
+            quantity=branch_transfer.over_less_quantity,
+            total_quantity=inventory.quantity,
+            product_transfer=branch_transfer,
+            description=description
+        )
+        logger.info(f'Activvity log: {activity}')
     
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
+        data = json.loads(request.body)
+        
+        action = data['action']
+        transfer_id = data['transfer_id']
+        reason = data['reason']
+        status = data['status']
+        branch_loss = data['branch_loss']
+        quantity= data['quantity']
+  
+        branch_transfer = get_object_or_404(transfers, id=transfer_id)
+
+        logger.info(f'to branch transfer: {branch_transfer}')
+        transfer = get_object_or_404(Transfer, id=branch_transfer.transfer.id)
+        logger.info(f'to branch transfer: {transfer}')
+        logger.info(f'Product is: {branch_transfer.product}')
+        product = Inventory.objects.get(id=branch_transfer.product.id)
+       
+        if int(branch_transfer.over_less_quantity) > 0:
+            if action == 'write_off':    
+                product.quantity += branch_transfer.over_less_quantity 
+                product.save()
+                
+                description='write_off'
+                
+                activity_log('Stock in', product, branch_transfer)
+                
+                DefectiveProduct.objects.create(
+                    product = product,
+                    branch = request.user.branch,
+                    quantity = quantity,
+                    reason = reason,
+                    status = status,
+                    branch_loss = get_object_or_404(Branch, id=branch_loss),
+                )
+                
+                product.quantity -= branch_transfer.over_less_quantity 
+                branch_transfer.over_less_description = description
+                branch_transfer.action_by = request.user
+                branch_transfer.over_less = False
+                
+                transfer.defective_status = True
+                
+                transfer.save()
+                branch_transfer.save()
+                product.save()
+                
+                activity_log('write off', product, branch_transfer )
+                
+                messages.success(request, f'{product.product.name} write-off successfull')        
+
+                return JsonResponse({'success':True}, status=200)
             
-            action = data.get('action')
-            transfer_id = data.get('transfer_id')
-            quantity = int(data.get('quantity', 0))
-            branch = data.get('branch')
-            reason = data.get('reason', '')
-            action_taken = data.get('action_taken')
+            if action == 'accept':
+                """
+                    accepting back / sending back to the source branch
+                """
+                product.quantity += branch_transfer.over_less_quantity 
+                product.save()
+                
+                branch_transfer.over_less = False
+                branch_transfer.over_less_description = 'returned back to source'
+                branch_transfer.save()
+
+                activity = ActivityLog.objects.create(
+                    branch = branch_transfer.to_branch,
+                    user=request.user,
+                    action= 'stock in',
+                    inventory=product,
+                    quantity=branch_transfer.over_less_quantity,
+                    total_quantity=product.quantity,
+                    product_transfer=branch_transfer,
+                    description=f'Transfer return {transfer.transfer_ref}'
+                )
+
+                logger.info(f'Activvity log: {activity}')
+                
+                messages.success(request, f'{product.name} accepted back successfully') 
+
+                return JsonResponse({'success':True}, status=200)
             
-            branch_transfer = TransferItems.objects.filter(id=transfer_id).select_related('transfer').first()
-            transfer = branch_transfer.transfer
+            if action == 'back':
 
-            with transaction.atomic():
-                if int(branch_transfer.received_quantity) != int(branch_transfer.quantity):
+                """
+                    creating a new transfer
+                """
 
-                    if action == 's_receive':
-                        if quantity > branch_transfer.quantity:
-                            return JsonResponse({'success': False, 'message': 'Quantity cannot be more than the transfer quantity'}, status=400)
+                transfer_new_obj = Transfer.objects.create(
+                    branch = transfer.branch,
+                    user = request.user,
+                    transfer_ref = f'{transfer.transfer_ref} #2',
+                    description = f'Transfer resend from transfer ref {transfer.transfer_ref}'
+                )
 
-                        product = Inventory.objects.get(name=branch_transfer.product.name, branch=request.user.branch)
-
-                        product.quantity += quantity
-                        product.save()
-
-                        branch_transfer.description = f'Received {branch_transfer.received_quantity} from {branch_transfer.from_branch}'
-                        branch_transfer.received_quantity += quantity
-                        branch_transfer.save()
-
-                        ActivityLog.objects.create(
-                            branch=request.user.branch,
-                            user=request.user,
-                            action='stock in',
-                            inventory=product,
-                            quantity=quantity,
-                            total_quantity=product.quantity,
-                            product_transfer=branch_transfer,
-                            description=f'Received {quantity} from {branch_transfer.from_branch}'
-                        )
-
-                        return JsonResponse({'success': True, 'message': 'Quantity successfully transferred to another branch'}, status=200)
-
-                    if action == 'send_to':
-                        if quantity > branch_transfer.quantity:
-                            return JsonResponse({'success': False, 'message': 'Quantity cannot be more than the transfer quantity'}, status=400)
-
-                        new_branch = Branch.objects.get(id=branch)
-                        
-                        try:
-                            product = Inventory.objects.get(name=branch_transfer.product.name, branch=new_branch)
-                        except Exception as e:
-                            product = Inventory.objects.create(
-                                name=branch_transfer.product.name,
-                                branch=new_branch,
-                                cost=branch_transfer.cost,
-                                price=branch_transfer.price,
-                                quantity=quantity,
-                                dealer_price=branch_transfer.dealer_price,
-                                description=branch_transfer.product.description or '',
-                                category=branch_transfer.product.category,
-                                tax_type=branch_transfer.product.tax_type,
-                                stock_level_threshold=branch_transfer.product.stock_level_threshold,
-                            )
-                        
-                        product.quantity += quantity
-                        product.save()
-
-                        ActivityLog.objects.create(
-                            branch=request.user.branch,
-                            user=request.user,
-                            action='stock in',
-                            inventory=product,
-                            quantity=quantity,
-                            total_quantity=product.quantity,
-                            product_transfer=branch_transfer,
-                            description=f'Received {quantity} from {branch_transfer.from_branch}'
-                        )
-
-                        branch_transfer.quantity -= quantity
-                        branch_transfer.save()
-
-                        branch_transfer.transfer.transfer_to.add(new_branch.id)
-                        
-                        try:
-                            send_to_branch_transfer_item = TransferItems.objects.get(transfer__id=transfer.id, product__name=product.name, to_branch=new_branch)
-                        except Exception as e:
-                            send_to_branch_transfer_item = TransferItems.objects.create(
-                                transfer=branch_transfer.transfer,
-                                product=product,
-                                cost=branch_transfer.cost,
-                                price=branch_transfer.price,
-                                dealer_price=branch_transfer.dealer_price,
-                                quantity=quantity,
-                                from_branch=branch_transfer.from_branch,
-                                to_branch=new_branch,
-                                description=f'Transferred {quantity} to {new_branch} from {branch_transfer.from_branch}'
-                            )
-
-                        send_to_branch_transfer_item.quantity += quantity
-                        send_to_branch_transfer_item.save()
-    
-                        product.quantity -= quantity
-                        product.save()
-
-                        ActivityLog.objects.create(
-                            branch=request.user.branch,
-                            user=request.user,
-                            action='transfer out',
-                            inventory=product,
-                            quantity=-quantity,
-                            total_quantity=product.quantity,
-                            product_transfer=branch_transfer,
-                            description=f'Transferred {quantity} to {new_branch}'
-                        )
-
-                        return JsonResponse({'success': True, 'message': 'Quantity successfully transferred to another branch'}, status=200)
-                    
-                    if action in ['write-off', 'defective', 'shrinkage']:
-
-                        if request.user.branch == branch_transfer.to_branch:
-                            return JsonResponse({'success': False, 'message': 'Sorry, action not available'}, status=400)
-
-                        product = Inventory.objects.get(        
-                            id=branch_transfer.product.id,
-                            branch=request.user.branch
-                        )
-
-                        if quantity > branch_transfer.quantity:
-                            return JsonResponse({'success': False, 'message': 'Quantity cannot be more than the transfer quantity'}, status=400)
-
-                        if action == 'write-off':
-                            WriteOff.objects.create(
-                                inventory_item=product,
-                                quantity=quantity,
-                                reason=f'{reason} (transfer number: {branch_transfer.transfer.transfer_ref})',
-                                created_by=request.user
-                            )
-                        elif action == 'defective':
-                            DefectiveItem.objects.create(
-                                inventory_item=product,
-                                quantity=quantity,
-                                defect_description=f'{reason} (transfer number: {branch_transfer.transfer.transfer_ref})',
-                                action_taken=action_taken,
-                                created_by=request.user
-                            )
-                        elif action == 'shrinkage':
-                            InventoryShrinkage.objects.create(
-                                inventory_item=product,
-                                quantity=quantity,
-                                reason=action_taken,
-                                created_by=request.user
-                            )
-
-                        product.quantity += quantity
-                        product.save()
-
-                        ActivityLog.objects.create(
-                            branch = request.user.branch,
-                            user=request.user,
-                            action= 'stock in',
-                            inventory=product,
-                            quantity=quantity,
-                            total_quantity=product.quantity,
-                            product_transfer=branch_transfer,
-                            description=f'Received from {transfer.transfer_ref}'
-                        )
-
-                        product.quantity -= quantity
-                        product.save()
-                        
-                        branch_transfer.defect_quantity =+ quantity
-                        description = f'{branch_transfer.defect_quantity} item(s) transferred to {action} account.'
-                        branch_transfer.quantity -= int(quantity)
-                        branch_transfer.description = description
-                        branch_transfer.over_less_description = description
-                        branch_transfer.action_by = request.user
-                        branch_transfer.over_less = False
-                        branch_transfer.save()
-
-                        transfer.defective_status = True
-                        transfer.save()
-
-                        ActivityLog.objects.create(
-                            branch=request.user.branch,
-                            user=request.user,
-                            action=action,
-                            inventory=product,
-                            quantity=-quantity,
-                            total_quantity=product.quantity,
-                            product_transfer=branch_transfer,
-                            description=description
-                        )
-
-                        return JsonResponse({'success': True}, status=200)
-
-                    if action == 'receive':
-                        """
-                            receiving the transfer on the current branch
-                        """
-
-                        if request.user.branch != branch_transfer.from_branch:
-                            return JsonResponse({'success': False, 'message': 'Sorry, action not available'}, status=400)
-
-                        product = Inventory.objects.get(
-                            Q(name__icontains = branch_transfer.product.name), 
-                            branch=request.user.branch
-                        )
-
-                        logger.info(f'Processing receiving for product: {product.name}')
-
-                        if (branch_transfer.quantity - branch_transfer.received_quantity) < int(quantity):
-                            return JsonResponse({'success':False, 'message':f'Cant receive more quantity'})
-                            
-                        product.quantity += int(quantity)
-                        product.save()
-                        
-                        branch_transfer.received_back_quantity += quantity
-                        branch_transfer.quantity -= quantity
-                        branch_transfer.description = f'Received {branch_transfer.received_quantity} x {branch_transfer.quantity}'
-                        branch_transfer.over_less = False
-                        branch_transfer.over_less_description = 'received'
-                        branch_transfer.save()
-
-                        ActivityLog.objects.create(
-                            branch = request.user.branch,
-                            user=request.user,
-                            action= 'stock in',
-                            inventory=product,
-                            quantity=quantity,
-                            total_quantity=product.quantity,
-                            product_transfer=branch_transfer,
-                            description=f'Received from {transfer.transfer_ref}'
-                        )
-
-                        logger.info(f'Product received: {product.name}')
-
-                        return JsonResponse({'success':True}, status=200)
-                    
-                    if action == 'send_back':
-
-                        """
-                            creation of a new transfer to the source branch with a product returned and
-                            deduction of a the quantity transfered on the current transfer
-                        """
-
-                        # _adjust the transfer quantity of the currrent branch
-
-                        branch_transfer.quantity -= int(quantity)
-                        branch_transfer.description = f'Received {branch_transfer.quantity} and returned back {quantity}'
-                        branch_transfer.received = True
-
-                        receive_poduct = Inventory.objects.get(id=branch_transfer.product.id, branch=request.user.branch)
-
-                        receive_poduct.quantity += int(quantity)
-
-                        receive_poduct.save()
-                        branch_transfer.save()
-
-                        data = [
-                            {
-                                'transfer_id':branch_transfer.id,
-                                'description':branch_transfer.description,
-                                'status':branch_transfer.received 
-                            }
-                        ]
-                    
-                        return JsonResponse({'success':True, 'data':data}, status=200)
-        except Exception as e:
-            return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
-
+                transfer_item = TransferItems.objects.create(
+                    transfer = transfer_new_obj,
+                    product = product,
+                    from_branch = transfer.branch,
+                    to_branch = branch_transfer.to_branch,
+                    quantity = branch_transfer.over_less_quantity,
+                    cost = product.cost,
+                    price = product.price,
+                    dealer_price = product.dealer_price,
+                    description = f'Transfer resend from transfer ref {transfer.transfer_ref}'
+                )
+                
+                branch_transfer.over_less = False
+                branch_transfer.quantity -= branch_transfer.over_less_quantity
+                branch_transfer.save()
+                 
+                return JsonResponse({'success':True}, status=200)
+            
+            return JsonResponse({'success':False, 'messsage':'Invalid form'}, status=400)
+            
+        return JsonResponse({'success':False, 'messsage':'Invalid form'}, status=400)
+                  
     return render(request, 'over_less_transfers.html', {'over_less_transfers':transfers, 'form':form})
 
 @login_required
@@ -1984,7 +1802,7 @@ def add_reorder_quantity(request):
 @login_required
 def purchase_orders(request):
     form = CreateOrderForm()
-    status_form = PurchaseOrderStatusForm()
+    status_form = PurchaseOrderStatus()
     orders = PurchaseOrder.objects.filter(branch = request.user.branch).order_by('-order_date')
 
     items = PurchaseOrderItem.objects.filter(purchase_order__id=5)
@@ -2479,11 +2297,11 @@ def purchase_order_detail(request, order_id):
     products = Inventory.objects.filter(branch=request.user.branch).values(
         'dealer_price', 
         'price', 
-        'name'
+        'product__name'
     )
 
     # Convert products queryset to a dictionary for easy lookup by product ID
-    product_prices = {product['name']: product for product in products}
+    product_prices = {product['product__name']: product for product in products}
 
     for item in items:
         product_name = item.product  
@@ -2550,13 +2368,13 @@ def sales_price_list_pdf(request, order_id):
     products = Inventory.objects.filter(branch=request.user.branch).values(
         'dealer_price', 
         'price', 
-        'name',
-        'description',
+        'product__name',
+        'product__description',
         'quantity'
     )
 
     # Convert products queryset to a dictionary for easy lookup by product ID
-    product_prices = {product['name']: product for product in products}
+    product_prices = {product['product__name']: product for product in products}
    
     for item in items:
         product_name = item.product
@@ -2565,7 +2383,7 @@ def sales_price_list_pdf(request, order_id):
         description = ''
 
         if product_data:
-            description = item.description = product_data['description'] 
+            description = item.description = product_data['product__description'] 
 
         if product_data:
             item.dealer_price = product_data['dealer_price']
@@ -2711,7 +2529,7 @@ def process_received_order(request):
 
 def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expected_profit, dealer_expected_profit, quantity, request):
     try:
-        po_item = PurchaseOrderItem.objects.select_for_update().get(id=order_item_id)
+        po_item = PurchaseOrderItem.objects.get(id=order_item_id)
 
         po_item.price = selling_price
         po_item.wholesale_price = dealer_price
@@ -2720,7 +2538,9 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
         po_item.received_quantity = quantity
         po_item.save()
 
+        logger.info('done')
         return JsonResponse({'success': True, 'message': 'Purchase Order Item updated successfully'}, status=200)
+    
     except PurchaseOrderItem.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Purchase Order Item not found'}, status=404)
     except Product.DoesNotExist:
@@ -2729,29 +2549,12 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
 
 @login_required
 def mark_purchase_order_done(request, po_id):
-    if po_id:
-        try:
-            with transaction.atomic():
-                purchase_order = PurchaseOrder.objects.select_for_update().get(id=po_id)
-                logger.info(purchase_order)
-                
-                if purchase_order.received:
-                    return JsonResponse({'succes':False, 'message':'Purchase order already marked as received'})
-                
-                purchase_order.received = True
-                logger.info('here')
-                purchase_order.save()
-                logger.info('saved')
-                
-                return JsonResponse({'success':True, 'messages':'Purchase order has been successfully confirmed!'})
-        
-        except PurchaseOrder.DoesNotExist:
-            return JsonResponse({'success':False, 'message': f'Purchase order with ID {po_id} not found'})
-        except Exception as e:
-            logger.error(f'Error processing purchase order {po_id}: {str(e)}')
-            return JsonResponse({'success':False, 'message':'An error occurred while processing the purchase order'})
-    else:
-        return JsonResponse({'success':False, 'message':'Purchase order ID is required'})
+    purchase_order = PurchaseOrder.objects.get(id=po_id)
+    purchase_order.received = True
+    purchase_order.save()
+
+    messages.info(request, 'Purchase order done')
+    return redirect('inventory:purchase_orders')
 
 @login_required
 def edit_purchase_order(request, po_id):
@@ -2830,37 +2633,50 @@ def edit_purchase_order(request, po_id):
                 )
                 purchase_order.save()
                 
-
-                products = Inventory.objects.filter(branch=request.user.branch).select_related('branch')
-                suppliers = Supplier.objects.all()
-                logs = ActivityLog.objects.filter(purchase_order=last_purchase_order).select_related('inventory')
-
-                products_dict = {product.id: product for product in products}
-                suppliers_dict = {supplier.id: supplier for supplier in suppliers}
-                logs_dict = {log.inventory_id: log.quantity for log in logs}
-
                 purchase_order_items_bulk = []
+
+                # preload the logs with previous received stock
+                logs = ActivityLog.objects.filter(purchase_order=last_purchase_order)
+                logger.info(f'logs {purchase_order_items_data}')
+                logger.info(f'cist {cost_allocations}')
+
                 for item_data in purchase_order_items_data:
-                    product = products_dict.get(item_data['product_id'])
-                    supplier = suppliers_dict.get(item_data.get('supplier'))
-                    log_quantity = logs_dict.get(product.id, 0)
+                    product_id = item_data['product_id']
+                    product_name = item_data['product']
+                    quantity = int(item_data['quantity'])
+                    unit_cost = Decimal(item_data['price'])
+                    actual_unit_cost = Decimal(item_data['actualPrice'])
+                    supplier_id = item_data.get('supplier', [])
 
-                    if not product or not supplier:
-                        return JsonResponse({'success': False, 'message': 'Invalid product or supplier'}, status=400)
+                    logger.info(f'quantity: {quantity}')
 
+                    if not all([product_name, quantity, unit_cost]):
+                        transaction.set_rollback(True)
+                        return JsonResponse({'success': False, 'message': 'Missing fields in item data'}, status=400)
+
+                    try:
+                        product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+                    except Inventory.DoesNotExist:
+                        transaction.set_rollback(True)
+                        return JsonResponse({'success': False, 'message': f'Product with Name {product_name} not found'}, status=404)
+
+                    supplier = Supplier.objects.get(id=supplier_id)
+
+                    # get the log with the quantity received for replacing po_item quantity 
+                    log_quantity = logs.filter(inventory = product).values('quantity')
+                    logger.info(log_quantity)
                     purchase_order_items_bulk.append(
                         PurchaseOrderItem(
                             purchase_order=purchase_order,
                             product=product,
-                            quantity=item_data['quantity'],
-                            unit_cost=item_data['price'],
-                            actual_unit_cost=item_data['actualPrice'],
-                            received_quantity=log_quantity,
-                            supplier=supplier,
-                            wholesale_price = 0,
+                            quantity= 0 if not quantity else quantity,
+                            unit_cost=unit_cost,
+                            actual_unit_cost=actual_unit_cost,
+                            received_quantity= 0 if not log_quantity else log_quantity[0]['quantity'],
                             received=False,
+                            supplier = supplier,
                             price=0,
-
+                            wholesale_price=0
                         )
                     )
 
@@ -2885,6 +2701,7 @@ def edit_purchase_order(request, po_id):
                 costs_list = []
                 
                 for cost in cost_allocations:
+                    #logger.info(f'editted quantity: {cost['quantity']}
                     costs_list.append(
                         costAllocationPurchaseOrder(
                             purchase_order = purchase_order,
@@ -2900,6 +2717,7 @@ def edit_purchase_order(request, po_id):
                     )
                 costAllocationPurchaseOrder.objects.bulk_create(costs_list)
                     
+                # update finance accounts (vat, cashbook, expense, account_transaction_log)
                 if purchase_order.status in ['Received', 'received']:
                     if_purchase_order_is_received(
                         request, 
@@ -2911,7 +2729,6 @@ def edit_purchase_order(request, po_id):
                 remove_purchase_order(po_id, request)
                 
         except Exception as e:
-            logger.info(e)
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
         return JsonResponse({'success': True, 'message': 'Purchase order created successfully'})
@@ -3365,6 +3182,7 @@ def supplier_prices(request, product_id):
     """
     try:
         best_three_prices = best_price(product_id)
+        logger.info(best_three_prices)
         return JsonResponse({'success': True, 'suppliers': best_three_prices})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
@@ -3387,8 +3205,7 @@ def product(request):
         try:
             data = json.loads(request.body)
             product_id = data.get('id', '')
-
-            logger.info(f'product ID: {product_id}')
+            logger.info(product_id)
             
         except Exception as e:
             return JsonResponse({'success':False, 'message':'Invalid data'})
@@ -3410,30 +3227,27 @@ def product(request):
         
         if product_id:
             """editing the product"""
-            with transaction.atomic():
-                product = Inventory.objects.select_for_update().get(id=product_id, branch=request.user.branch)
-                logger.info(f'Editing product: {product.name} ')
-                product.name = data['name']
-                product.price = data.get('price', 0)
-                product.cost = data.get('cost', 0)    
-                product.quantity = data.get('quantity', 0)  
-                product.category = category  
-                product.tax_type = data['tax_type']
-                product.stock_level_threshold = data['min_stock_level']
-                product.description = data['description']
-                product.end_of_day = True if data.get('end_of_day') else False
-                product.service = True if data.get('service') else False
-                product.image=product.image
-                product.batch = product.batch
-                product.save()
-
+            logger.info(f'Editing product ')
+            product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+            product.name = data['name']
+            product.price = data.get('price', 0)
+            product.cost = data.get('cost', 0)    
+            product.quantity = data.get('quantity', 0)  
+            product.category = category  
+            product.tax_type = data['tax_type']
+            product.stock_level_threshold = data['min_stock_level']
+            product.description = data['description']
+            product.end_of_day = True if data.get('end_of_day') else False
+            product.service = True if data.get('service') else False
+            product.image=product.image
+            product.batch = product.batch
         else:
             """creating a new product"""
             
             # validation for existance
             if Inventory.objects.filter(name=data['name']).exists():
                 return JsonResponse({'success':False, 'message':f'Product {data['name']} exists'})
-            logger.info(f'Creating product: {data['name']}')
+            logger.info(f'Creating ')
             product = Inventory.objects.create(
                 batch = '',
                 name = data['name'],
@@ -3450,7 +3264,7 @@ def product(request):
                 # image = image,
                 status = True
             )
-        
+        product.save()
         
         return JsonResponse({'success':True}, status=200)
 
@@ -3460,7 +3274,8 @@ def product(request):
             'id',
             'name',
             'quantity'
-        ).order_by('name')          
+        ).order_by('name')  
+        logger.info(products)         
         return JsonResponse(list(products), safe=False)
     
     return JsonResponse({'success':False, 'message':'Invalid request'}, status=400)
@@ -3699,26 +3514,26 @@ def payments(request):
 # @csrf_exempt
 @login_required
 def accessory_view(request, product_id):
+    if request.method == 'GET':
+        accessories = Accessory.objects.filter(main_product__id=product_id).values('id', 'product__name')
+        return JsonResponse({'success': True, 'data': list(accessories)}, status=200)
+
     if request.method == 'POST':
-        logger.info('here')
         try:
             data = json.loads(request.body)
             logger.info(f'Accessories: {data}')
-            product_id = data.get('product_id')
-            accessory_data = data.get('accessories', [])  
+            accessory_ids = data.get('accessories', [])
 
-            logger.info(accessory_data)
+            logger.info(accessory_ids)
 
             product = Inventory.objects.get(id=product_id)
-            logger.info(product)
-            current_accessories = Accessory.objects.filter(main_product=product).values('accessory_product', 'quantity')
-            current_ids = set(current_accessories.values_list('accessory_product', flat=True))
+            current_accessories = Accessory.objects.filter(main_product=product).values('accessory_product')
+            current_ids = set(current_accessories.values_list('id', flat=True))
 
             logger.info(f'current ids: {current_ids}')
 
-            input_data = {acc['id']: acc['quantity'] for acc in accessory_data}
-            input_ids = set(input_data.keys())
-
+            input_ids = {acc['id'] for acc in accessory_ids}
+            
             accessories_to_add = input_ids - current_ids
             accessories_to_remove = current_ids - input_ids
 
@@ -3727,7 +3542,7 @@ def accessory_view(request, product_id):
             if Accessory.objects.filter(main_product=product).exists():
                 acc = Accessory.objects.get(main_product=product)
             else:
-                acc = Accessory.objects.create(main_product=product, quantity=0)
+                acc = Accessory.objects.create(main_product = product)
 
             if accessories_to_add:
                 accessories_to_add_objs = Inventory.objects.filter(id__in=accessories_to_add)
@@ -3735,255 +3550,29 @@ def accessory_view(request, product_id):
                 logger.info(f'Accessories to add: {accessories_to_add_objs}')
 
                 for accessory in accessories_to_add_objs:
-                    logger.info(f'{accessory.id}')
-                    logger.info(input_data)
-                    quantity = input_data[f'{accessory.id}']  
-                    logger.info(quantity)
-                    acc.accessory_product.add(int(accessory.id))
-                    logger.info('accessory')
-                    acc.quantity = quantity  
+                    acc.accessory_product.add(accessory)
                     acc.save()
-                    logger.info('done')
 
             if accessories_to_remove:
                 accessories_to_remove_objs = Inventory.objects.filter(id__in=accessories_to_remove)
 
-                logger.info(f'Accessories to remove: {accessories_to_remove_objs}')
+                logger.info(f'Accessories to add: {accessories_to_remove_objs}')
 
                 for accessory in accessories_to_remove_objs:
                     acc.accessory_product.remove(accessory)
                     acc.save()
-                
-                logger.info('done')
 
-            for accessory_id in input_ids.intersection(current_ids):
-                quantity = input_data[accessory_id]
-                acc_instance = Accessory.objects.filter(main_product=product, accessory_product_id=accessory_id).first()
-                if acc_instance:
-                    acc_instance.quantity = quantity
-                    acc_instance.save()
-
-            updated_accessories = Accessory.objects.filter(main_product=product).values(
-                'id', 'main_product__name', 'accessory_product__name', 'quantity'
-            )
-
+            updated_accessories = Accessory.objects.filter(main_product=product).values('id', 'main_product__name', 'accessory_product__name')
             return JsonResponse({'success': True, 'data': list(updated_accessories)}, status=200)
-
+        
         except Inventory.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Product not found.'}, status=404)
         except Exception as e:
             logger.info(e)
-            return JsonResponse({'success': False, 'message': str(e)}, status=400)       
-    # if request.method == 'GET':
-    #     accessories = Accessory.objects.filter(main_product__id=product_id).values('id', 'product__name')
-    #     return JsonResponse({'success': True, 'data': list(accessories)}, status=200)
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 def vue_view(request):
     return render(request, 'vue.html')
-
-# Loss management
-@login_required
-def loss_management(request):
-    """
-        to put caching later
-    """
-    write_off_totals = WriteOff.objects.aggregate(total=Sum(F('quantity') * F('inventory_item__cost')))['total'] or 0
-    defective_totals = DefectiveItem.objects.aggregate(total=Sum(F('quantity') * F('inventory_item__cost')))['total'] or 0
-    shrinkage_totals = InventoryShrinkage.objects.aggregate(total=Sum(F('quantity') * F('inventory_item__cost')))['total'] or 0
-
-    context = {
-        'defective_form':AddDefectiveForm(),
-        'shrinkage_form':AddShrinkageForm(),
-        'write_off_form':AddWriteOffForm(),
-        'write_off':write_off_totals,
-        'defective':defective_totals,
-        'shrinkage':shrinkage_totals
-    }
-
-    return render(request, 'loss_management/loss_management.html', context)
-
-@login_required
-def loss_management_accounts(request, account_name):
-    try:
-        if account_name == 'shrinkage':
-            shrinkage = InventoryShrinkage.objects.all().select_related(
-                'inventory_item', 
-                'created_by'
-            ).values(
-                'id',
-                'inventory_item__id',
-                'inventory_item__name',
-                'inventory_item__cost',
-                'quantity',
-                'reason',
-                'recorded_by',
-                'created_at'
-            ).annotate(
-                total_cost = Sum(F('quantity') * F('inventory_item__cost'))
-            )
-            return JsonResponse(list(shrinkage), safe=False)
-
-        if account_name == 'defective':
-            defective = DefectiveItem.objects.all().select_related(
-                'inventory_item', 
-                'created_by'
-            ).values(
-                'id',
-                'inventory_item__id',
-                'inventory_item__name',
-                'inventory_item__cost',
-                'quantity',
-                'defect_description',
-                'action_taken',
-                'created_by',
-                'created_at'
-            ).annotate(
-                total_cost = Sum(F('quantity') * F('inventory_item__cost'))
-            )
-
-            return JsonResponse(list(defective), safe=False)
-        
-        if account_name == 'write-off':
-            write_off_data = WriteOff.objects.all().select_related(
-                'inventory_item', 
-                'created_by'
-            ).values(
-                'id',
-                'inventory_item__id',
-                'inventory_item__name',
-                'inventory_item__cost',
-                'quantity',
-                'reason',
-                'created_by',
-                'created_at'
-            ).annotate(
-                total_cost = Sum(F('quantity') * F('inventory_item__cost'))
-            )
-
-            return JsonResponse(list(write_off_data), safe=False)
-
-    except Exception as e:
-        logger.info(e)
-        return JsonResponse({'success':False, 'message':f'{e}'}, status=200)
-    
-@login_required
-@transaction.atomic
-def create_defective(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            product_id = data.get('product_id')
-            quantity = data.get('quantity')
-            defect_description = data.get('defect_description')
-            action_taken = data.get('action_taken')
-
-            product = Inventory.objects.get(id=product_id, branch=request.user.branch)
-
-            if quantity > product.quantity:
-                return JsonResponse({'success': False, 'message': 'Defective quantity cannot be more than the product quantity'}, status=400)
-
-            defective_item = DefectiveItem.objects.create(
-                inventory_item=product,
-                quantity=quantity,
-                defect_description=defect_description,
-                action_taken=action_taken,
-                created_by=request.user
-            )
-
-            product.quantity -= quantity
-            product.save()
-
-            ActivityLog.objects.create(
-                branch=request.user.branch,
-                user=request.user,
-                action='defective',
-                inventory=product,
-                quantity=quantity,
-                total_quantity=product.quantity,
-                description=f'Defective: {defect_description}'
-            )
-
-            return JsonResponse({'success': True, 'message': 'Defective item created successfully'}, status=201)
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=400)
-
-@login_required
-@transaction.atomic
-def create_shrinkage(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            product_id = data.get('product_id')
-            quantity = data.get('quantity')
-            reason = data.get('reason')
-
-            product = Inventory.objects.get(id=product_id, branch=request.user.branch)
-
-            if quantity > product.quantity:
-                return JsonResponse({'success': False, 'message': 'Shrinkage quantity cannot be more than the product quantity'}, status=400)
-
-            shrinkage_item = InventoryShrinkage.objects.create(
-                inventory_item=product,
-                quantity=quantity,
-                reason=reason,
-                created_by=request.user
-            )
-
-            product.quantity -= quantity
-            product.save()
-
-            ActivityLog.objects.create(
-                branch=request.user.branch,
-                user=request.user,
-                action='shrinkage',
-                inventory=product,
-                quantity=quantity,
-                total_quantity=product.quantity,
-                description=f'Shrinkage: {reason}'
-            )
-
-            return JsonResponse({'success': True, 'message': 'Shrinkage item created successfully'}, status=201)
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=400)
-
-@login_required
-@transaction.atomic
-def create_write_off(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            product_id = data.get('product_id')
-            quantity = data.get('quantity')
-            reason = data.get('reason')
-
-            product = Inventory.objects.get(id=product_id, branch=request.user.branch)
-
-            if quantity > product.quantity:
-                return JsonResponse({'success': False, 'message': 'Write-off quantity cannot be more than the product quantity'}, status=400)
-
-            write_off_item = WriteOff.objects.create(
-                inventory_item=product,
-                quantity=quantity,
-                reason=reason,
-                created_by=request.user
-            )
-
-            product.quantity -= quantity
-            product.save()
-
-            ActivityLog.objects.create(
-                branch=request.user.branch,
-                user=request.user,
-                action='write-off',
-                inventory=product,
-                quantity=quantity,
-                total_quantity=product.quantity,
-                description=f'Write-off: {reason}'
-            )
-
-            return JsonResponse({'success': True, 'message': 'Write-off item created successfully'}, status=201)
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 #API
 ##########################################################################################################
@@ -5817,10 +5406,7 @@ class OverListStock(views.APIView):
         product = Inventory.objects.get(id=branch_transfer.product.id, branch=request.user.branch)
     
         if int(branch_transfer.over_less_quantity) > 0:
-            if action == 'write_off':   
-                if request.user.branch == branch_transfer.to_branch:
-                    return JsonResponse({'success': False,  'message':'Cant perfom this operation'})
-                
+            if action == 'write_off':    
                 product.quantity += branch_transfer.over_less_quantity 
                 product.save()
                 
@@ -5865,9 +5451,6 @@ class OverListStock(views.APIView):
                 return Response({f'{product.name} accepted back successfully'}, status.HTTP_200_OK)
             
             if action == 'back':
-                if request.user.branch == branch_transfer.to_branch:
-                    return JsonResponse({'success': False,  'message':'Cant perfom this operation'})
-                
                 description=f'transfered to {branch_transfer.to_branch}'
                 product.quantity += branch_transfer.over_less_quantity 
                 product.save()
