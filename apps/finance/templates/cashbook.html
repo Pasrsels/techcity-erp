@@ -66,10 +66,10 @@
                                 <td class="{% if entry.credit %}text-dange{% endif %}">
                                     <span class="hint--bottom {% if entry.cancelled %}text-decoration-line-through text-danger{% endif %}" aria-label="
                                         {% if entry.debit %}
-                                            {{ entry.invoice.products_purchased}}
+                                            {{ entry.invoice.products_purchased }}
                                         {% endif %}
                                     ">
-                                    {% if entry.invoice %}
+                                    <!-- {% if entry.invoice %}
                                         <a href=''>{{ entry.description }}</a>
                                     {% elif entry.expense %}
                                         {% if entry.expense.purchase_order %}
@@ -77,7 +77,8 @@
                                         {% else %}
                                             <a href=''>{{ entry.description }}</a>
                                         {% endif %}
-                                    {% endif %}
+                                    {% endif %} -->
+                                    <a href=''>{{ entry.description }}</a>
                                     </span>
                                 </td>
                                 <td class="{% if entry.credit %}text-dange{% endif %}">

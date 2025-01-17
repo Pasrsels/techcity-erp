@@ -60,7 +60,7 @@
 
 </style>
 <div class="inventory-navbar">
-    <nav class="d-flex justify-content-between align-items-center text-light rounded mb-2 p-2" style="background:#373f4c !important;">
+    <nav class="d-flex justify-content-between align-items-center shadow rounded mb-2 p-2">
         <div class="d-flex">
             <div>
                 <h4 class='mt-1 fw-bold'><small class='px-1 fw-bold fx-6'>Receive Purchase Order: </small>{{ purchase_order.batch|lower }}</h4>
@@ -164,14 +164,14 @@
                     <span class="d-flex">
                         <button class="btn btn-outline-dark btn-sm" id="submit_{{ item.id }}" style="display:none;" onclick="submitItem('{{ item.id }}')">Submit</button>
                         <button class="bx bx-edit border btn mx-1" id="editBtn_{{ item.id }}" style="display:none;" onclick="edit({{ item.id }}, {{ item.product.price }}, {{ item.product.dealer_price }}, {{ item.quantity }}, {{ item.actual_unit_cost }})"></button>
-                        <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}" onclick="cancel('{{ item.id }}', {{ item.product.price }}, {{ item.product.dealer_price }})" style="display:none;">cancel</button>
+                        <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}" onclick="cancel('{{ item.id }}', {{ item.product.price }}, {{ item.product.dealer_price|default_if_none:0 }}" style="display:none;">cancel</button>
                         <button class="btn btn-outline-dark btn-sm" onclick="submitItem('{{ item.id }}')">Submit</button>
                     </span>
                     {% else %}
                     <span class="d-flex">
                         <button class="btn btn-success text-light btn-sm" id="submitted_{{ item.id }}">Submitted</button>
                         <button class="btn btn-outline-dark btn-sm" id="submit_{{ item.id }}" style="display:none;" onclick="submitItem('{{ item.id }}')">Submit</button>
-                        <button class="bx bx-edit border btn mx-1" onclick="edit({{ item.id }}, {{ item.product.price }}, {{ item.product.dealer_price }}, {{ item.quantity }}, {{ item.actual_unit_cost }})"></button>
+                        <button class="bx bx-edit border btn mx-1" onclick="edit({{ item.id }}, {{ item.product.price }}, {{ item.product.dealer_price|default_if_none:0 }}, {{ item.quantity }}, {{ item.actual_unit_cost }})"></button>
                         <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}" onclick="cancel('{{ item.id }}', {{ item.product.price }}, {{ item.product.dealer_price }})" style="display:none;">cancel</button>
                     </span>
                     {% endif %}
@@ -249,7 +249,7 @@
         });
 
         
-        fetch('/inventory/confirm-purchase-order/{{purchase_order.id }}/', {
+        fetch('/inventory/mark_purchase_order_done/{{purchase_order.id }}/', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -314,6 +314,7 @@
     }
 
     function edit(itemId, sPrice, dPrice, quantity, acp) {
+        let dealerPrice = dPrice || 0.00;
 
         editStatus = true;
 
@@ -370,7 +371,7 @@
                placeholder="Enter Dealer Selling Price"
                min="1"
                class='form-control'
-               value="${ dPrice }"
+               value="${ delearPrice }"
                onclick="clearInput(this)"
                oninput="expectedProfit(
                     '${ itemId }',

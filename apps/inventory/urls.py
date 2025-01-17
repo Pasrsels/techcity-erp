@@ -80,7 +80,7 @@ urlpatterns = [
 
     # transfers
     path('transfers', inventory_transfer_index, name='transfers'),
-    path('inventory_transfer_data/', inventory_transfer_data, name='inventory_transfer_data'),
+    path('transfer_items_data/<int:id>/', inventory_transfer_item_data, name='inventory_transfer_data'),
     path('print/transfer/<int:transfer_id>/', print_transfer, name='print_transfer'),
     path('receive/transfer/', receive_inventory, name='receive_inventory'),
     path('receive/transfer/json/', receive_inventory_json, name='receive_inventory_json'),
@@ -92,19 +92,27 @@ urlpatterns = [
     path('held_transfer_json/<int:transfer_id>/', held_transfer_json, name='held_transfer'),
     path('held/transfers/', held_transfers, name='h_transfers'),
     path('process/held/transfer/<int:transfer_id>/', process_held_transfer, name='process_held'),
+    path('edit_transfer_item/<int:transfer_item_id>/', edit_transfer_item, name='edit_transfer_item'),
+    path('add_transfer_item/<int:transfer_id>/', add_transfer_item, name='add_transfer_item'),
     
     #reporting
     path('inventory-pdf', inventory_pdf, name='inventory_pdf'),
     path('transfers-report', transfers_report, name='transfers_report'),
     
     #websocket
-    path('ws/inventory/<int:branchId>/',InventoryConsumer.as_asgi()),
+    path('ws/inventory/<int:branchId>/', InventoryConsumer.as_asgi()),
 
     #accessories
     path('accessory_view/<int:product_id>/', accessory_view, name='accessory_view'),
 
     path('vue_view/', vue_view, name='vue'),
 
+    #loss management
+    path('loss_management/', loss_management, name='loss_management'),
+    path('loss_management_accounts/<str:account_name>/', loss_management_accounts, name='loss_management_accounts'),
+    path('shrinkage/', create_shrinkage, name='create_shrinkage'),
+    path('defective/', create_defective, name='create_defective'),
+    path('write_off/', create_write_off, name='create_write_off'),
 
     #API ENDPOINTS
     ################################################################################################

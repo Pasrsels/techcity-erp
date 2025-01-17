@@ -5,7 +5,6 @@ class InventoryConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.branch_id = self.scope['url_route']['kwargs']['branch_id']
         self.group_name = f'branch_{self.branch_id}'
-        print(self.branch_id)
 
         await self.channel_layer.group_add(
             self.group_name,

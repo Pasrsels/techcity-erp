@@ -35,12 +35,6 @@ def last_due_invoice(request, customer_id):
     return JsonResponse(list(invoice), safe=False)
 
 
-def upload_file():
-    file = request.files['file']
-    file_path = os.path.join('uploads', file.filename)
-    file.save(file_path)
-    return JsonResponse({"status": "success", "file_path": file_path}), 200
-
 #API EndPoint
 ################################################################################################################
 from rest_framework import views, status

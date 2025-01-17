@@ -726,16 +726,29 @@
 
     // edit product modal call
     const editModal = () => {
-      document.getElementById('title').textContent = `Edit Product: ${prodData[0][0].name.toUpperCase()}`;
-      document.getElementById('id_name').value = prodData[0][0].name;
-      document.getElementById('id_min_stock_level').value = prodData[0][0].min_stock_level;
-      document.getElementById('id_description').value = prodData[0][0].description;
-      document.getElementById('id_tax_type').value = prodData[0][0].tax_type;
-      document.getElementById('id_category').value = prodData[0][0].category_id; 
-      document.getElementById('id_image').value = ''; 
-
+      console.log(prodData)
+      if (prodData.length > 0 && prodData[0].length > 0){
+        console.log('here');
+        document.getElementById('title').textContent = `Edit Product: ${prodData[0][0].name.toUpperCase()}`;
+        document.getElementById('id_name').value = prodData[0][0].name;
+        document.getElementById('id_min_stock_level').value = prodData[0][0].min_stock_level;
+        document.getElementById('id_description').value = prodData[0][0].description;
+        document.getElementById('id_tax_type').value = prodData[0][0].tax_type;
+        document.getElementById('id_category').value = prodData[0][0].category_id; 
+        document.getElementById('id_image').value = ''; 
+      }
       supplierFormModal.show()
     };
+
+    function clearForm() {
+      document.getElementById('id_name').value = '';
+      document.getElementById('id_min_stock_level').value = '';
+      document.getElementById('id_description').value = '';
+      document.getElementById('id_p_quantity').value = '';
+      document.getElementById('id_image').textContent = '';
+      document.getElementById('title').innerHTML = '';
+      productID = ''
+    }
 
     // delete product 
     const deleteProduct = async () => {
@@ -853,6 +866,7 @@
         .then(data => {
           productID = data[0].id;
           console.log(productID, 'product id');
+          prodData=[]
           prodData.push(data);
         })
         .catch(error => console.error('Error:', error));
@@ -1216,6 +1230,7 @@
                 timer: 2000,
                 showConfirmButton: false
               });
+             
             }else{
               Swal.fire({
                 icon: 'success',
@@ -1225,6 +1240,8 @@
                 showConfirmButton: false
               });
             }
+            clearForm()
+            prodData = []
           } else {
             Swal.fire({
               icon: 'error',
@@ -1280,13 +1297,14 @@
     fetchProducts()
     
     supplierBtn.addEventListener('click', ()=>{
+        clearForm()
         supplierFormModal.show()
     })
 
     document.addEventListener('DOMContentLoaded', function() {
 
       $('#id_supplier').select2({
-            placeholder: 'Select Product',
+            placeholder: 'Select Supplier',
             width: 'resolve'  
         });
 
@@ -1522,7 +1540,8 @@
         const id = el.dataset.id
         cart = cart.filter((item) => item.id !== id);
         localStorage.setItem('cart', JSON.stringify(cart))
-        console.log(localStorage.getItem(cart, 'delete'))
+        updateCartDisplay();
+        calculateTotals();
     }
     
     function processCart() {

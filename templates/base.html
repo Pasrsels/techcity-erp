@@ -43,6 +43,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+
+    
     <title>
         {% block title %}Techcity{% endblock title %}
     </title>
@@ -166,7 +170,13 @@
                                 </div>
                             {% endfor %}
                         {% endif %}
-                        {% block content %}{% endblock %}
+                        <!-- <div id="loader" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white" style="z-index: 1050;">
+                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div> -->
+                        {% block content %}
+                        {% endblock %}
                     </div>
                 </div>
             </div>
@@ -196,13 +206,16 @@
                 <div class="modal-dialog modal-dialog-centered modal-dialog-right">
                     <div class="modal-content">
                         <div class="modal-body">
-                            <div class="">
+                            <div>
                                 <p class='fw-bold'>Choose Branch</p>
                             </div>
-                            <div class="row flex-row">
+                            <div class="row row-cols-3 g-3"> 
                                 {% for branch in branches %}
-                                    <div class="col m-2">
-                                        <a class="btn btn-primary btn-sm" href="{% url 'company:switch_branch' branch.id %}" class="px-3 text-dark">{{ branch.name }}</a>
+                                    <div class="col">
+                                        <a class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center" 
+                                           href="{% url 'company:switch_branch' branch.id %}">
+                                            {{ branch.name }}
+                                        </a>
                                     </div>
                                 {% endfor %}
                             </div>
@@ -210,6 +223,7 @@
                     </div>
                 </div>
             </div>
+            
         </div>
 
         <!-- Modal -->
@@ -266,8 +280,13 @@
 
         const tableWrapper = document.querySelector('#detailTable_wrapper')
 
+        // document.addEventListener("DOMContentLoaded", function () {
+        //     const loader = document.getElementById("loader");
+        //     loader.style.display = "none"; // Hide the loader after the page loads
+        // });
+
         document.addEventListener('DOMContentLoaded', function() {
-            fetchNotifications();
+            // fetchNotifications();
         });
 
         function toggleSpan(button) {
@@ -380,42 +399,42 @@
             notisModal.show()
         })
 
-        $.ajax({
-            url: '{% url "finance:finance_notifications_json" %}',
-            type: 'GET',
-            }).done(function(response) {
-                const data = response;
-                displayFinanceNotifications(data)
-            })
+        // // $.ajax({
+        // //     url: '{% url "finance:finance_notifications_json" %}',
+        // //     type: 'GET',
+        // //     }).done(function(response) {
+        // //         const data = response;
+        // //         displayFinanceNotifications(data)
+        // //     })
         
-        function displayFinanceNotifications(data) {
-            const ul = document.querySelector('#finance_notifications');
-            const notificationTypes = {};
+        // // function displayFinanceNotifications(data) {
+        // //     const ul = document.querySelector('#finance_notifications');
+        // //     const notificationTypes = {};
             
-            data.forEach((notification) => {
-                if (!notificationTypes[notification.notification_type]) {
-                notificationTypes[notification.notification_type] = [];
-                }
-                notificationTypes[notification.notification_type].push(notification);
-            });
+        // //     data.forEach((notification) => {
+        // //         if (!notificationTypes[notification.notification_type]) {
+        // //         notificationTypes[notification.notification_type] = [];
+        // //         }
+        // //         notificationTypes[notification.notification_type].push(notification);
+        // //     });
             
-            Object.keys(notificationTypes).forEach((type) => {
+        // //     Object.keys(notificationTypes).forEach((type) => {
                 
-                notificationTypes[type].forEach((notification) => {
-                const li = document.createElement('li');
-                if(notification.transfer__to === {{request.user.branch.id}}){
-                    li.innerHTML = `<small><a href='{% url "finance:cash_transfer_list" %}'>${notification.notification}</a></small>`;
-                }
-                if(notification.expense__branch === {{request.user.branch.id}}){
-                    li.innerHTML = `<small><a>${notification.notification}</a></small>`;
-                }
-                if(notification.invoice__branch === {{request.user.branch.id}}){
-                    li.innerHTML = `<small><a>${notification.notification}</a></small>`;
-                }
-                ul.appendChild(li);
-                });
-            });
-        }
+        // //         notificationTypes[type].forEach((notification) => {
+        // //         const li = document.createElement('li');
+        // //         if(notification.transfer__to === {{request.user.branch.id}}){
+        // //             li.innerHTML = `<small><a href='{% url "finance:cash_transfer_list" %}'>${notification.notification}</a></small>`;
+        // //         }
+        // //         if(notification.expense__branch === {{request.user.branch.id}}){
+        // //             li.innerHTML = `<small><a>${notification.notification}</a></small>`;
+        // //         }
+        // //         if(notification.invoice__branch === {{request.user.branch.id}}){
+        // //             li.innerHTML = `<small><a>${notification.notification}</a></small>`;
+        // //         }
+        // //         ul.appendChild(li);
+        // //         });
+        // //     });
+        // }
 
         const apiUrl =''//update endpoint
         async function fetchCustomerData() {

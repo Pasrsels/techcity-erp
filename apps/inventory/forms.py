@@ -9,7 +9,10 @@ from . models import (
     PurchaseOrder,
     BatchCode, 
     reorderSettings,
-    StockTake
+    StockTake,
+    DefectiveItem,
+    InventoryShrinkage,
+    WriteOff
 )
 from datetime import date
 from loguru import logger
@@ -44,11 +47,6 @@ class DefectiveForm(forms.ModelForm):
     class Meta:
         model = DefectiveProduct
         fields = ['id', 'quantity', 'reason', 'status', 'branch_loss']
-
-class AddDefectiveForm(forms.ModelForm):
-    class Meta:
-        model = DefectiveProduct
-        fields = ['product', 'quantity', 'reason', 'status',]
 
         
 class RestockForm(forms.ModelForm):
@@ -112,7 +110,7 @@ class noteStatusForm(forms.ModelForm):
         self.initial['batch'] = f'Batch {batch_number}'
 
 
-class PurchaseOrderStatus(forms.ModelForm):
+class PurchaseOrderStatusForm(forms.ModelForm):
     class Meta:
         model = PurchaseOrder
         fields = ['status']
@@ -127,3 +125,47 @@ class StockTakeForm(forms.ModelForm):
     class Meta:
         model = StockTake
         exclude = ['branch', 's_t_number']
+
+
+class AddDefectiveForm(forms.ModelForm):
+    class Meta:
+        model = DefectiveItem
+        fields = ['inventory_item', 'quantity', 'action_taken', 'defect_description']
+        widgets = {
+            'inventory_item': forms.Select(attrs={'class': 'form-control product'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super(AddDefectiveForm, self).__init__(*args, **kwargs)
+        if self.request:
+            self.fields['inventory_item'].queryset = Inventory.objects.filter(branch=self.request.user.branch)
+
+class AddWriteOffForm(forms.ModelForm):
+    class Meta:
+        model = WriteOff
+        fields = ['inventory_item', 'quantity', 'reason']
+        widgets = {
+            'inventory_item': forms.Select(attrs={'class': 'form-control product'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super(AddWriteOffForm, self).__init__(*args, **kwargs)
+        if self.request:
+            self.fields['inventory_item'].queryset = Inventory.objects.filter(branch=self.request.user.branch)
+
+
+class AddShrinkageForm(forms.ModelForm):
+    class Meta:
+        model = InventoryShrinkage
+        fields = ['inventory_item', 'quantity', 'reason', 'additional_details']
+        widgets = {
+            'inventory_item': forms.Select(attrs={'class': 'form-control product'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super(AddShrinkageForm, self).__init__(*args, **kwargs)
+        if self.request:
+            self.fields['inventory_item'].queryset = Inventory.objects.filter(branch=self.request.user.branch)

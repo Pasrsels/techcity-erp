@@ -3,7 +3,7 @@
    <div class="table-responsive mt-2" style="height: 70vh; overflow-y: auto;">
         <!-- inventory table -->
         {% include 'components/loader.html' %}
-        <div class='product'>
+        <div class='product p-1 rounded' style="background: #fff;">
             <table class='table border table-bordered table-striped table-hover table-responsive table-sm rounded p-2 w-100 ' style="width:100%" id='inventory'>
                 <thead class="table-dark">
                     <th>#</th>
@@ -19,68 +19,68 @@
                 </thead>
                 <tbody id='inventory_table' >
                     {% for product in inventory %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td><small><span class='hint--bottom' aria-label='{{ product.description }}'>
-                            {% if product.image %}
-                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" width="20px" class="rounded-3">
-                                {% else %}
-                                    <img src="{% static 'placeholder.png'%}" alt="{{ product.name }}" width="20px" class="rounded-3">
-                            {% endif %}
-                            {{ product.name }}</span></small></td>
-                        <td><small>{{ product.description }}</small></td>
-                        <td>
-                            <small>
-                                {% for accessory in accessories %}
-                                    {% if accessory.main_product ==  product %}
-                                        <ul class="list-unstyled">
-                                            {% for acc in accessory.accessory_product.all %}
-                                                <li>{{ acc.name }}</li>
-                                            {% endfor %}
-                                        </ul>
-                                    {% endif %}
-                                {% endfor %}
-                            </small>
-                        </td>
-                        <td></td>
-                        <td><small>{{ product.quantity }}</small></td>
-                        <td><small>{{ product.cost }}</small></td>
-                        <td><small>{{ product.price }}</small></td>
-                        <td><small>{{ product.dealer_price }}</small></td>
-                        <td>
-                            <small>  
-                                <span>
-                                    <a href="{% url 'inventory:inventory_detail' product.id %}" class='text-dark'>
-                                        <i class='bx bx-show'></i>
-                                    </a>
-                                </span>
-                       
-                                <span class='px-2'>
-                                    <a href="{% url 'inventory:edit_inventory' product.id %}" class="text-dark">
-                                        <i class='bx bx-edit-alt'></i>
-                                    </a>
-                                </span>
-                                
-                                <span>
-                                    <span id='delete' data-id="{{ product.id }}" onclick="productId(this)" class="text-dark">
-                                        <i class='bx bx-trash-alt'></i>
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><small><span class='hint--bottom' aria-label='{{ product.description }}'>
+                                {% if product.image %}
+                                        <img src="{{ product.image.url }}" alt="{{ product.name }}" width="20px" class="rounded-3">
+                                    {% else %}
+                                        <img src="{% static 'placeholder.png'%}" alt="{{ product.name }}" width="20px" class="rounded-3">
+                                {% endif %}
+                                {{ product.name }}</span></small></td>
+                            <td><small>{{ product.description }}</small></td>
+                            <td>
+                                <small>
+                                    {% for accessory in accessories %}
+                                        {% if accessory.main_product ==  product %}
+                                            <ul class="list-unstyled">
+                                                {% for acc in accessory.accessory_product.all %}
+                                                    <li>{{ acc.name }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% endif %}
+                                    {% endfor %}
+                                </small>
+                            </td>
+                            <td></td>
+                            <td><small>{{ product.quantity }}</small></td>
+                            <td><small>{{ product.cost }}</small></td>
+                            <td><small>{{ product.price }}</small></td>
+                            <td><small>{{ product.dealer_price }}</small></td>
+                            <td>
+                                <small>  
+                                    <span>
+                                        <a href="{% url 'inventory:inventory_detail' product.id %}" class='text-dark'>
+                                            <i class='bx bx-show'></i>
+                                        </a>
                                     </span>
-                                </span>
+                        
+                                    <span class='px-2'>
+                                        <a href="{% url 'inventory:edit_inventory' product.id %}" class="text-dark">
+                                            <i class='bx bx-edit-alt'></i>
+                                        </a>
+                                    </span>
+                                    
+                                    <span>
+                                        <span id='delete' data-id="{{ product.id }}" onclick="productId(this)" class="text-dark">
+                                            <i class='bx bx-trash-alt'></i>
+                                        </span>
+                                    </span>
 
-                                <span>
-                                    {%if product.status == False %}
-                                    <a href='{% url "inventory:activate_inventory" product.id %}' class="btn btn-sm text-primary">
-                                        activate product
-                                    </a>
-                                    {% endif %}
-                                </span>
+                                    <span>
+                                        {%if product.status == False %}
+                                        <a href='{% url "inventory:activate_inventory" product.id %}' class="btn btn-sm text-primary">
+                                            activate product
+                                        </a>
+                                        {% endif %}
+                                    </span>
 
-                                <span class="px-2">
-                                    <button class="btn btn-sm btn-secondary btn-sm bx bx-cart-add" data-bs-toggle="modal" data-bs-target="#accessoriesModal" onclick="setProductForAccessories({{ product.id }},'{{ product.name }}')"></button>
-                                </span>
-                            </small>
-                        </td>
-                    </tr>
+                                    <span class="px-2">
+                                        <button class="btn btn-sm btn-secondary btn-sm bx bx-cart-add" data-bs-toggle="modal" data-bs-target="#accessoriesModal" onclick="setProductForAccessories({{ product.id }},'{{ product.name }}')"></button>
+                                    </span>
+                                </small>
+                            </td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -164,16 +164,18 @@
                                         <option value="{{ product.id }}">{{ product.name }}</option>
                                     {% endfor %}
                                 </select>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="addAccessory()">
+                                <input type="number" id="accessory_qnty" class="mx-2 form-control form-control-sm" placeholder="Quantity">
+                                <button class="btn btn-outline-secondary w-100 btn-sm" onclick="addAccessory()">
                                     Add
                                 </button>
                             </div>
                         </div>
         
-                        <div id="accessoriesList" class="mb-3 mt-3 px-2">
-                            <!-- Wrapper for Remove Dropdown and Accessories Container -->
+                        <div id="accessoryList" class="mt-3 mb-3">
+                            <ul id="list" class="list-group"></ul>
                         </div>
-                        <div class="d-flex justify-content-end">
+
+                        <div class="d-flex justify-content-end ">
                             <div>
                                 <button type="button" class="btn btn-secondary btn-sm bx bx-save" onclick="saveAccessories()"></button>
                             </div>
@@ -210,7 +212,12 @@
     
 <script src="{% static 'js/jquery.js'%}"></script>
 <script>
-    let product_id = '';
+    new DataTable('#inventory', {
+        paging:false
+    })
+
+    let product_id = ''
+    let accessory = [];
     const inventoryData = [];
     const modal = new bootstrap.Modal(document.querySelector('#deleteModal'));
     const successModal = new bootstrap.Modal(document.querySelector('#successModal'));
@@ -224,7 +231,6 @@
     const products = $('.products')
     const services = $('.services')
     const navButtons = document.querySelectorAll('.nav-item');
-    // const example = new UseBootstrapSelect(document.getElementById('id_accessories')); 
 
     loader.classList.add('hidden');
     loader.classList.remove('d-flex')
@@ -242,6 +248,54 @@
             }
         )
     })
+
+    
+
+    function addAccessory() {
+        const accessorySelect = document.getElementById("accessorries");
+        const accessoryQnty = document.getElementById("accessory_qnty");
+
+        const id = accessorySelect.value;
+        const name = accessorySelect.options[accessorySelect.selectedIndex]?.text;
+        const quantity = parseInt(accessoryQnty.value);
+
+        if (!id || !quantity || quantity <= 0) {
+            alert("Please select a valid accessory and quantity.");
+            return;
+        }
+
+        const acc = { id, name, quantity };
+        accessory.push(acc);
+
+        accessorySelect.value = "";
+        accessoryQnty.value = "";
+
+        displayAccessoryList();
+    }
+
+    function displayAccessoryList() {
+        const list = document.getElementById("list");
+
+        console.log(list)
+        list.innerHTML = ""; 
+
+        accessory.forEach((acc, index) => {
+            const listItem = document.createElement("li");
+            listItem.className = "list-group-item d-flex justify-content-between align-items-center";
+
+            listItem.innerHTML = `
+                ${acc.name} (Quantity: ${acc.quantity})
+                <button class="btn btn-sm btn-danger" onclick="removeAccessory(${index})">Remove</button>
+            `;
+
+            list.appendChild(listItem);
+        });
+    }
+
+    function removeAccessory(index) {
+        accessories.splice(index, 1);
+        displayAccessoryList();
+    }
 
     function show(name) {
         products.addClass('hidden');
@@ -291,36 +345,33 @@
     //     }
     // )
 
-    let accessories = []; // List of added accessories
-    let availableAccessories = []; // List of available accessories fetched from the API
-    let prodId = ''
+    // let accessories = []; // List of added accessories
+    // let availableAccessories = []; // List of available accessories fetched from the API
+    // let prodId = ''
     function setProductForAccessories(id, productName) {
-        prodId = id
-        console.log(id, 'id')
+        product_id = id;
         document.getElementById('product-name').textContent = `for product ${productName}` || "PRODUCT";
-        fetchAccessories(id);
     }
-        // Fetch available accessories via GET API
-    async function fetchAccessories(id) {
-        try {
-            const response = await fetch(`/inventory/accessory_view/${id}/`, {
-                method: "GET",
-            });
-            const data = await response.json();
-            console.log(data, 'data')
-            if (data.success) {
+    
+    // async function fetchAccessories(id) {
+    //     try {
+    //         const response = await fetch(`/inventory/accessory_view/${id}/`, {
+    //             method: "GET",
+    //         });
+    //         const data = await response.json();
+    //         console.log(data, 'data')
+    //         if (data.success) {
                 
-                availableAccessories = data.accessories;
-                populateDropdown("accessoryDropdown", availableAccessories);
-            } else {
-                showError("Failed to fetch accessories.");
-            }
-        } catch (error) {
-            console.log(error)
-        }
-    }
+    //             availableAccessories = data.accessories;
+    //             populateDropdown("accessoryDropdown", availableAccessories);
+    //         } else {
+    //             showError("Failed to fetch accessories.");
+    //         }
+    //     } catch (error) {
+    //         console.log(error)
+    //     }
+    // }
 
-    // Populate dropdown with options
     function populateDropdown(dropdownId, options) {
         const dropdown = document.getElementById(dropdownId);
         dropdown.innerHTML = `<option value="" disabled selected>Select an accessory</option>`;
@@ -332,63 +383,13 @@
         });
     }
 
-    // Add accessory to the list
-    function addAccessory() {
-        const dropdown = document.getElementById("accessorries");
-        const selectedOption = dropdown.options[dropdown.selectedIndex];
-        const selectedAccessoryId = selectedOption.value;
-        const selectedAccessoryName = selectedOption.text;
-
-        const isDuplicate = accessories.some(acc => acc.id === selectedAccessoryId);
-
-        if (isDuplicate) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Duplicate Accessory',
-                text: 'This accessory has already been added.',
-                confirmButtonText: 'OK'
-            });
-        } else {
-            accessories.push({
-                id: selectedAccessoryId,
-                name: selectedAccessoryName
-            });
-            
-            displayAccessories();
-}
-    }
-
-    // Display accessories in rows
-    function displayAccessories() {
-        const container = document.getElementById("accessoriesList");
-        container.innerHTML = "";
-        
-        console.log(accessories, 'acc')
-
-        accessories.forEach(accessory => {
-            console.log(accessory.name)
-            const row = document.createElement("div");
-            row.innerHTML = `
-                                <div class='d-flex justify-content-between align-items-center mb-2'>
-                                    <span>${accessory.name}</span>
-                                    <button class='btn btn-sm border bx bx-minus' onclick="removeAccessory(${accessory.id})"></button>
-                                </div>
-                            `
-            container.appendChild(row);
-        });
-    }
-
-    // Remove selected accessory
-    function removeAccessory(accessoryId) {
-        accessories = accessories.filter(acc => acc.id != accessoryId);
-        displayAccessories();
-    }
-
     async function saveAccessories() {
-        if (accessories.length === 0) {
+        if (accessory.length === 0) {
             showError("No accessories selected.");
             return;
         }
+
+        
 
         try {
             Swal.fire({
@@ -403,16 +404,17 @@
             });
 
             const csrfToken = getCookie('csrftoken');
-            console.log(csrfToken)
-            const response = await fetch(`/inventory/accessory_view/${prodId}/`, {
+            const acc_data = {
+                'product_id':product_id,
+                'accessories': accessory
+            }
+            const response = await fetch(`/inventory/accessory_view/${product_id}/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken  // Include CSRF token in headers
+                    "X-CSRFToken": csrfToken  
                 },
-                body: JSON.stringify({
-                    'accessories': accessories
-                }),
+                body: JSON.stringify(acc_data),
             });
 
             const data = await response.json();
