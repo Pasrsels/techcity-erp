@@ -127,7 +127,6 @@ class Accessory(models.Model):
     main_product = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='main_product')
     accessory_product = models.ManyToManyField(Inventory)
     # quantity = models.IntegerField()
-    #quantity = models.IntegerField()
 
     def __str__(self):
         return self.main_product.name
