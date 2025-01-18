@@ -21,3 +21,4 @@ urlpatterns = [
     path('api/company-list/', CompanyList.as_view(), name='api_company_crud'),
     path('api/company-register/', RegisterCompany.as_view(), name='api_register_company'),
 ]
+
