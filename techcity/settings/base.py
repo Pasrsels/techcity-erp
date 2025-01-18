@@ -83,7 +83,7 @@ MIDDLEWARE = [
     # custom middlewares
     'inventory.middleware.RequestMiddleware',
     'company.middleware.CompanySetupMiddleware',
-    'users.middleware.LoginRequiredMiddleware',
+    # 'users.middleware.LoginRequiredMiddleware',
     
 ]
 
