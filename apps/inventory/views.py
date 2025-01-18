@@ -845,169 +845,120 @@ def inventory_transfer_index(request):
     if branch_id: 
         transfers = transfers.filter(transfer_to__id=branch_id)
 
-    total_transferred_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
+    transfers_list = list(transfers)
+    unique_transfers = list({t.id: t for t in transfers_list}.values())
+    unique_transfers.sort(key=lambda x: x.time, reverse=True)  
 
-    total_received_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
+    paginator = Paginator(unique_transfers, 20)
+    paginated_transfers = paginator.get_page(page_number)
 
-    # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
-        
+    if paginated_transfers:
+        transfers_data = [
+            {
+                'id': transfer.id,
+                'transfer_ref': transfer.transfer_ref,
+                'branch': transfer.branch.name,
+                'transfer_to': [branch.id for branch in transfer.transfer_to.all()],
+                'total_quantity': transfer.total_quantity,
+                'total_received_qnt': transfer.total_received_qnt,
+                'total_r_difference': transfer.total_r_difference,
+                'total_received_amount': transfer.total_received_amount,
+                'total_amount': transfer.total_amount,
+                'check_all_received': transfer.check_all_received,
+                'time': transfer.time.strftime('%Y-%m-%d %H:%M:%S'),
+                'username': transfer.user.username,
+                'description': transfer.description 
+            }
+            for transfer in paginated_transfers
+        ]
+    else:
+        transfers_data = []
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'transfers': transfers_data,
+            'has_next': paginated_transfers.has_next(),
+        })
+
     return render(request, 'transfers.html', {
-        'transfers': transfers,
-        'search_query': q, 
-        'transfer_items':transfer_items,
-        'transferred_value':total_transferred_value,
-        'received_value':total_received_value,
-        'totals':transfer_summary,
-        'hold_transfers_count':Transfer.objects.filter(
-                Q(branch=request.user.branch) |
-                Q(transfer_to__in=[request.user.branch]),
-                delete=False, 
-                hold=True
-            ).count()
-        }
-    )
+        'transfers': paginated_transfers,
+        'search_query': q,
+    })
 
-
-@login_required    
-def inventory_transfer_data(request): 
+@login_required
+def inventory_transfer_item_data(request, id):
     """
-        transfers index. Shows transfers in and out of the branch and the total cost of items transfered in/out
+    Transfer items of the parent transfer
     """
-    q = request.GET.get('q', '') 
-    branch_id = request.GET.get('branch', '')
-
     transfer_items = TransferItems.objects.filter(
-            Q(from_branch=request.user.branch) |
-            Q(to_branch=request.user.branch),
-            transfer__delete=False
-        ).annotate(
-            total_amount=F('quantity') * F('product__cost')
-        )
-        
-    transfer_summary = transfer_items.values('transfer__id').annotate(
-        total_cost=Sum(F('quantity') * F('product__cost')),
-        total_quantity=Sum('quantity')
-    )
-    
-    transfers = Transfer.objects.filter(
-        Q(branch=request.user.branch) |
-        Q(transfer_to__in=[request.user.branch]),
-        delete=False
+        Q(to_branch=request.user.branch) | Q(from_branch=request.user.branch),
+        transfer__id=id,
+        transfer__delete=False,
+    ).select_related(
+        'product', 'from_branch', 'to_branch', 'action_by', 'received_by', 'transfer'
     ).annotate(
-        total_quantity=Sum('transferitems__quantity'),
-        total_amount=ExpressionWrapper(
-            Sum(F('transferitems__quantity') * F('transferitems__cost')),
-            output_field=FloatField()
-        )
-    ).prefetch_related('transfer_to').order_by('-time').distinct()
+        total_amount=F('quantity') * F('product__cost')
+    ).values(
+        'id',
+        'quantity', 
+        'over_less_quantity', 
+        'price', 
+        'dealer_price', 
+        'received', 
+        'declined', 
+        'over_less', 
+        'quantity_track', 
+        'description', 
+        'over_less_description', 
+        'received_quantity', 
+        'cost', 
+        'date', 
+        'date_received', 
+        'transfer__id',
+        'from_branch__name',
+        'product__name', 
+        'to_branch__name', 
+        'action_by__username', 
+        'received_by__username',
+        'received_back_quantity'
+    )
 
+    return JsonResponse(list(transfer_items), safe=False)
 
-    data = [
-        {
-            'id':transfer.id,
-            'transfer_ref': transfer.transfer_ref,
-            'branch': transfer.branch.name,
-            'transfer_to': [branch.name for branch in transfer.transfer_to.all()],
-            'description': transfer.description,
-            'date': transfer.date.strftime('%Y-%m-%d'),
-            'total_quantity': transfer.total_quantity,
-            'total_amount': transfer.total_amount,
-            'username': transfer.user.username
-        }
-        for transfer in transfers
-    ]
+@login_required
+def add_transfer_item(request, transfer_id):
+    if request.method == 'GET':
+        try:
+            transfer = Transfer.objects.get(id=transfer_id)
+            return render(request, 'add_transfer_item.html', {
+                'transfer': transfer,
+            })
+        except Transfer.DoesNotExist:
+            messages.warning(request, f'Transfer with ID {transfer_id} does not exist.')
+            return redirect('inventory:transfers')
 
-    transfer_items_data = [
-        {
-            'transfer_id':transfer.transfer.id,
-            'product_name': transfer.product.name,
-            'product_cost': transfer.product.cost,
-            'date': transfer.date,
-            'date_received': transfer.date_received,
-            'transfer_id': transfer.id,
-            'from_branch': transfer.from_branch.name,
-            'to_branch': transfer.to_branch.name,
-            'quantity': transfer.quantity,
-            'over_less_quantity': transfer.over_less_quantity,
-            'price': transfer.price,
-            'dealer_price': transfer.dealer_price,
-            'received': transfer.received,
-            'declined': transfer.declined,
-            'over_less': transfer.over_less,
-            'action_by': transfer.action_by.username if transfer.action_by else None,
-            'quantity_track': transfer.quantity_track,
-            'description': transfer.description,
-            'over_less_description': transfer.over_less_description,
-            'received_by': transfer.received_by.username if transfer.received_by else None,
-            'received_quantity': transfer.received_quantity,
-            'cost': transfer.cost
-        }
-        for transfer in transfer_items
-    ]
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            items = data.get('items', [])
+            branches_data = data['branches_to']
+            transfer_id = data.get('transfer_id', '')
 
-    
-    if q:
-        transfers = transfers.filter(Q(transfer_ref__icontains=q) | Q(date__icontains=q) )
+            products = ProcessTransferCartView._get_products(request.user.branch)
+            branch_obj_list = ProcessTransferCartView._get_branch_objects(branches_data)
+
+            transfer = Transfer.objects.get(id=transfer_id)
+
+            ProcessTransferCartView._process_transfer(data['cart'], products, branch_obj_list, transfer, request)
+            
+            return JsonResponse({'success': True, 'message': 'Items added to transfer successfully'}, status=200)
+
+        except Transfer.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Transfer not found'}, status=404)
+        except Exception as e:
+            logger.error(f"Error adding items to transfer: {e}")
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
         
-    if branch_id: 
-        transfers = transfers.filter(transfer_to__id=branch_id)
-
-    total_transferred_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
-
-    total_received_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
-
-    # logger.info(f'value: {total_transferred_value}, received {total_received_value}')
-        
-    return render(request, 'transfers.html', {
-        'transfers': transfers,
-        'search_query': q, 
-        'transfer_items':transfer_items,
-        'transferred_value':0,
-        'received_value':0,
-        'totals':[],
-        'hold_transfers_count':Transfer.objects.filter(
-                Q(branch=request.user.branch) |
-                Q(transfer_to__in=[request.user.branch]),
-                delete=False, 
-                hold=True
-            ).count()
-        }
-    )
-
-    total_received_value = (
-    transfer_items.annotate(total_value=F('quantity') * F('cost'))\
-        .aggregate(total_sum=Sum('total_value'))['total_sum'] or 0
-    )
-
-    response_data = {
-        'transfers': data,
-        'search_query': q, 
-        'transfer_items': transfer_items_data,
-        'transferred_value': total_transferred_value,
-        'received_value': total_received_value,
-        'totals': list(transfer_summary),
-        'hold_transfers_count': Transfer.objects.filter(
-            Q(branch=request.user.branch) |
-            Q(transfer_to__in=[request.user.branch]),
-            delete=False, 
-            hold=True
-        ).count()
-    }
-    
-    return JsonResponse(response_data, safe=False)
-
 @login_required
 def held_transfer_json(request, transfer_id):
     transfer_items = Holdtransfer.objects.filter(transfer__id=transfer_id).values(
@@ -2587,6 +2538,9 @@ def edit_purchase_order(request, po_id):
             expenses = data.get('expenses', [])
             cost_allocations = data.get('cost_allocations', [])
 
+            for item in purchase_order_items_data:
+                print(item)
+
             # remove duplicates
             unique_expenses = []
             seen = set()
@@ -2633,38 +2587,29 @@ def edit_purchase_order(request, po_id):
                 )
                 purchase_order.save()
                 
+
+                products = Inventory.objects.filter(branch=request.user.branch)
+                suppliers = Supplier.objects.all()
+                logs = ActivityLog.objects.filter(purchase_order=last_purchase_order).select_related('inventory')
+
+                products_dict = {product.id: product for product in products}
+                suppliers_dict = {supplier.id: supplier for supplier in suppliers}
+                logs_dict = {log.inventory_id: log.quantity for log in logs}
+
+                supplier = Supplier.objects.get(name='dubai')
+
                 purchase_order_items_bulk = []
-
-                # preload the logs with previous received stock
-                logs = ActivityLog.objects.filter(purchase_order=last_purchase_order)
-                logger.info(f'logs {purchase_order_items_data}')
-                logger.info(f'cist {cost_allocations}')
-
                 for item_data in purchase_order_items_data:
-                    product_id = item_data['product_id']
-                    product_name = item_data['product']
-                    quantity = int(item_data['quantity'])
-                    unit_cost = Decimal(item_data['price'])
-                    actual_unit_cost = Decimal(item_data['actualPrice'])
-                    supplier_id = item_data.get('supplier', [])
+                    product = products_dict.get(int(item_data['product_id']))
+                    supplier = suppliers_dict.get(item_data.get('supplier'))
+                    log_quantity = logs_dict.get(product.id, 0)
 
-                    logger.info(f'quantity: {quantity}')
+                    if not product:
+                        return JsonResponse({'success': False, 'message': 'Invalid product'}, status=400)
+                    
+                    if not supplier:
+                        return JsonResponse({'success': False, 'message': 'Invalid supplier'}, status=400)
 
-                    if not all([product_name, quantity, unit_cost]):
-                        transaction.set_rollback(True)
-                        return JsonResponse({'success': False, 'message': 'Missing fields in item data'}, status=400)
-
-                    try:
-                        product = Inventory.objects.get(id=product_id, branch=request.user.branch)
-                    except Inventory.DoesNotExist:
-                        transaction.set_rollback(True)
-                        return JsonResponse({'success': False, 'message': f'Product with Name {product_name} not found'}, status=404)
-
-                    supplier = Supplier.objects.get(id=supplier_id)
-
-                    # get the log with the quantity received for replacing po_item quantity 
-                    log_quantity = logs.filter(inventory = product).values('quantity')
-                    logger.info(log_quantity)
                     purchase_order_items_bulk.append(
                         PurchaseOrderItem(
                             purchase_order=purchase_order,
@@ -2676,7 +2621,6 @@ def edit_purchase_order(request, po_id):
                             received=False,
                             supplier = supplier,
                             price=0,
-                            wholesale_price=0
                         )
                     )
 
@@ -3038,7 +2982,7 @@ def supplier_view(request):
             if list_orders.get(items.supplier.id):
                 
                 supplier = list_orders.get(items.supplier.id)
-                logger.info(f'quantity: {supplier}')
+                # logger.info(f'quantity: {supplier}')
                 supplier['quantity'] += items.quantity
                 supplier['received_quantity'] += items.received_quantity
                 supplier['returned'] += (items.quantity - items.received_quantity)
@@ -3187,8 +3131,8 @@ def supplier_prices(request, product_id):
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
 
-#product   
 @login_required
+@transaction.atomic
 def product(request):
     if request.method == 'POST':
         # payload
@@ -3211,6 +3155,7 @@ def product(request):
             return JsonResponse({'success':False, 'message':'Invalid data'})
 
         image_data = data.get('image')
+
         if image_data:
             try:
                 format, imgstr = image_data.split(';base64,') 
@@ -3511,7 +3456,7 @@ def payments(request):
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
 
-# @csrf_exempt
+
 @login_required
 def accessory_view(request, product_id):
     if request.method == 'GET':
@@ -3519,6 +3464,7 @@ def accessory_view(request, product_id):
         return JsonResponse({'success': True, 'data': list(accessories)}, status=200)
 
     if request.method == 'POST':
+       
         try:
             data = json.loads(request.body)
             logger.info(f'Accessories: {data}')
@@ -3569,10 +3515,243 @@ def accessory_view(request, product_id):
             return JsonResponse({'success': False, 'message': 'Product not found.'}, status=404)
         except Exception as e:
             logger.info(e)
-            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)       
+
+@login_required
+def get_accessory(request, product_id):
+    """
+    Get accessory data including related product information for a given main product.
+    """
+    if product_id:
+        accessory = Accessory.objects.filter(
+            main_product__id=product_id
+        ).prefetch_related(
+            'accessory_product'
+        ).values(
+            'id',
+            'main_product__name',
+            'quantity',
+            'accessory_product__id',
+            'accessory_product__name',
+            'accessory_product__price',
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'data': list(accessory)
+        })
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Product ID is required'
+    }, status=400)
 
 def vue_view(request):
     return render(request, 'vue.html')
+
+# Loss management
+@login_required
+def loss_management(request):
+    """
+        to put caching later
+    """
+    write_off_totals = WriteOff.objects.aggregate(total=Sum(F('quantity') * F('inventory_item__cost')))['total'] or 0
+    defective_totals = DefectiveItem.objects.aggregate(total=Sum(F('quantity') * F('inventory_item__cost')))['total'] or 0
+    shrinkage_totals = InventoryShrinkage.objects.aggregate(total=Sum(F('quantity') * F('inventory_item__cost')))['total'] or 0
+
+    context = {
+        'defective_form':AddDefectiveForm(),
+        'shrinkage_form':AddShrinkageForm(),
+        'write_off_form':AddWriteOffForm(),
+        'write_off':write_off_totals,
+        'defective':defective_totals,
+        'shrinkage':shrinkage_totals
+    }
+
+    return render(request, 'loss_management/loss_management.html', context)
+
+@login_required
+def loss_management_accounts(request, account_name):
+    try:
+        if account_name == 'shrinkage':
+            shrinkage = InventoryShrinkage.objects.all().select_related(
+                'inventory_item', 
+                'created_by'
+            ).values(
+                'id',
+                'inventory_item__id',
+                'inventory_item__name',
+                'inventory_item__cost',
+                'quantity',
+                'reason',
+                'recorded_by',
+                'created_at'
+            ).annotate(
+                total_cost = Sum(F('quantity') * F('inventory_item__cost'))
+            )
+            return JsonResponse(list(shrinkage), safe=False)
+
+        if account_name == 'defective':
+            defective = DefectiveItem.objects.all().select_related(
+                'inventory_item', 
+                'created_by'
+            ).values(
+                'id',
+                'inventory_item__id',
+                'inventory_item__name',
+                'inventory_item__cost',
+                'quantity',
+                'defect_description',
+                'action_taken',
+                'created_by',
+                'created_at'
+            ).annotate(
+                total_cost = Sum(F('quantity') * F('inventory_item__cost'))
+            )
+
+            return JsonResponse(list(defective), safe=False)
+        
+        if account_name == 'write-off':
+            write_off_data = WriteOff.objects.all().select_related(
+                'inventory_item', 
+                'created_by'
+            ).values(
+                'id',
+                'inventory_item__id',
+                'inventory_item__name',
+                'inventory_item__cost',
+                'quantity',
+                'reason',
+                'created_by',
+                'created_at'
+            ).annotate(
+                total_cost = Sum(F('quantity') * F('inventory_item__cost'))
+            )
+
+            return JsonResponse(list(write_off_data), safe=False)
+
+    except Exception as e:
+        logger.info(e)
+        return JsonResponse({'success':False, 'message':f'{e}'}, status=200)
+    
+@login_required
+@transaction.atomic
+def create_defective(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            product_id = data.get('product_id')
+            quantity = data.get('quantity')
+            defect_description = data.get('defect_description')
+            action_taken = data.get('action_taken')
+
+            product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+
+            if quantity > product.quantity:
+                return JsonResponse({'success': False, 'message': 'Defective quantity cannot be more than the product quantity'}, status=400)
+
+            defective_item = DefectiveItem.objects.create(
+                inventory_item=product,
+                quantity=quantity,
+                defect_description=defect_description,
+                action_taken=action_taken,
+                created_by=request.user
+            )
+
+            product.quantity -= quantity
+            product.save()
+
+            ActivityLog.objects.create(
+                branch=request.user.branch,
+                user=request.user,
+                action='defective',
+                inventory=product,
+                quantity=quantity,
+                total_quantity=product.quantity,
+                description=f'Defective: {defect_description}'
+            )
+
+            return JsonResponse({'success': True, 'message': 'Defective item created successfully'}, status=201)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+@login_required
+@transaction.atomic
+def create_shrinkage(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            product_id = data.get('product_id')
+            quantity = data.get('quantity')
+            reason = data.get('reason')
+
+            product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+
+            if quantity > product.quantity:
+                return JsonResponse({'success': False, 'message': 'Shrinkage quantity cannot be more than the product quantity'}, status=400)
+
+            shrinkage_item = InventoryShrinkage.objects.create(
+                inventory_item=product,
+                quantity=quantity,
+                reason=reason,
+                created_by=request.user
+            )
+
+            product.quantity -= quantity
+            product.save()
+
+            ActivityLog.objects.create(
+                branch=request.user.branch,
+                user=request.user,
+                action='shrinkage',
+                inventory=product,
+                quantity=quantity,
+                total_quantity=product.quantity,
+                description=f'Shrinkage: {reason}'
+            )
+
+            return JsonResponse({'success': True, 'message': 'Shrinkage item created successfully'}, status=201)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+@login_required
+@transaction.atomic
+def create_write_off(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            product_id = data.get('product_id')
+            quantity = data.get('quantity')
+            reason = data.get('reason')
+
+            product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+
+            if quantity > product.quantity:
+                return JsonResponse({'success': False, 'message': 'Write-off quantity cannot be more than the product quantity'}, status=400)
+
+            write_off_item = WriteOff.objects.create(
+                inventory_item=product,
+                quantity=quantity,
+                reason=reason,
+                created_by=request.user
+            )
+
+            product.quantity -= quantity
+            product.save()
+
+            ActivityLog.objects.create(
+                branch=request.user.branch,
+                user=request.user,
+                action='write-off',
+                inventory=product,
+                quantity=quantity,
+                total_quantity=product.quantity,
+                description=f'Write-off: {reason}'
+            )
+
+            return JsonResponse({'success': True, 'message': 'Write-off item created successfully'}, status=201)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 #API
 ##########################################################################################################

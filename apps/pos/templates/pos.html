@@ -51,7 +51,6 @@
         overflow-y: auto; 
         padding: 20px;
         position: relative;
-    
     }
 
     .modal-overlay {
@@ -60,7 +59,6 @@
         left: 0;
         width: 100%;
         height: 100%;
-/*        background-color: rgba(0, 0, 0, 0.5);*/
         display: none; 
         z-index: 1;
     }
@@ -83,32 +81,32 @@
         <div class="top-bar">
             <div class="nav-bar"> {% include "pos_navbar.html" %} </div>
         </div>
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-            {{ message }}
-            <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"></button>
-        </div>
-        {% endfor %}
-        {% endif %}
         <div class='row'>
-            <div class="aside-bar col-2 text-light"> {% include "base/aside.html" %} </div>
-            <div class='col-7'>
+            <div class="aside-bar col-1 text-light"> {% include "base/aside.html" %} </div>
+            <div class='col-8'>
                 <div class='mt-2 main-pos-area  px-2'>
                     <div class="l-p ">
                         <button class="btn btn-secondary"data-bs-toggle="modal" data-bs-target="#laybyModal">L</button>
                         <button class="btn mt-2 btn-secondary"data-bs-toggle="modal" data-bs-target="#PaylaterModal">P</button>
                     </div>
                     <div class="d-flex align-content-center justify-content-between w-100">
+                        {% if messages %}
+                            {% for message in messages %}
+                            <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                                {{ message }}
+                                <button type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="alert"
+                                        aria-label="Close"></button>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
                         <div class="d-flex align-items-center product-search">
                             <div class='list-toggle'>
                                 <button id="menu-type" class="btn border bx bx-menu"></button>
                             </div>
                             <div class="px-1"><i class="bx bx-search"></i></div>
-                            <div><input type="search" name="q" class="form-control" id='id_search' placeholder="search..." /></div>
+                            <div><input type="search" name="q" class="form-control form-control-sm border" id='id_search' placeholder="search..." /></div>
                             <div class="">
                                 <button class="btn btn-light btn-sm border" id="out_of_stock">Out of Stock</button>
                             </div>
@@ -371,6 +369,8 @@
 <script>   
 let cart = [];
 let data = [];
+let accesoryCart = [];
+
 let respData = [];
 let currencyData = [];
 const customersData = [];
@@ -444,6 +444,15 @@ function setReceiptItems(){
             newRow.insertCell().textContent = `${price}`
             newRow.insertCell().textContent = `${quantity * price}`;
         });
+    
+    accesoryCart.forEach(({ quantity, accessory_name, accessory_price, }) => {
+    const newRow = receiptTableBody.insertRow();
+        newRow.insertCell().textContent = `${product_name}`
+        newRow.insertCell().textContent = ``;
+        newRow.insertCell().textContent = quantity;
+        newRow.insertCell().textContent = `0.00`
+        newRow.insertCell().textContent = `0.00`;
+    });
 }
 
 const laybyButton = document.getElementById("layby");
@@ -663,10 +672,10 @@ document.addEventListener("DOMContentLoaded", function() {
     })
 });
   
-setTimeout(()=>{
-    loaderSpin.classList.add('hidden');
-    loaderSpin.classList.remove('d-flex')
-}, 300)
+// setTimeout(()=>{
+//     loaderSpin.classList.add('hidden');
+//     loaderSpin.classList.remove('d-flex')
+// }, 300)
 
 $(document).ready(function() {
     $('#search-input').select2(
@@ -813,6 +822,8 @@ async function fetchData (param){
         console.error('Error fetching products:', error);
         productListContainer.innerHTML = '<p class="error-message">Error loading products. Please try again later.</p>';
     } finally {
+        loaderSpin.classList.add('hidden');
+        loaderSpin.classList.remove('d-flex');
     }
 }
 
@@ -918,6 +929,8 @@ async function fetchProductData (product){
             addItem(product, value);
             addedToCartProduct = [];
             addedToCartProduct.push(product);
+
+            fetchAccessory(id)
             
         } catch (error) {
             console.error('Error fetching products:', error);
@@ -938,7 +951,6 @@ function generateUniqueId() {
 
 function addItem(product, value) {
     const existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
-    console.log(value, 'value')
     let priceType = ''
     if(value === 'wp'){
         price = product[0].dealer_price
@@ -964,6 +976,7 @@ function addItem(product, value) {
     updateCartDisplay(); 
     cartButton()
     totals()
+    updateAccessoryCartDisplay();
 }
 
 function totals(){
@@ -1109,6 +1122,7 @@ function updateCartTotal() {
         updateCartDisplay();
         cartButton();
         totals();
+        updateAccessoryCartDisplay()
     }
     console.log('updated value', cart)
 }
@@ -1145,11 +1159,13 @@ function updateReceiptFooter(symbol, totalBalanceDue, totalDueAmount, payable){
 }
 
 const removeItem = (el) => {
+    console.log(el)
     const id = el.dataset.id
     cart = cart.filter((item) => item.id !== id);
     updateCartDisplay();
     cartButton()
     totals()
+    updateAccessoryCartDisplay()
 }
 
 // payment methods
@@ -1653,6 +1669,178 @@ function setCustomer(customerId){
         }
 
         document.getElementById('PaylaterModal').addEventListener('shown.bs.modal', fetchCustomerData);
+
+
+// fetch accessory
+const fetchAccessory = (id) => {
+    console.log(`Fetching accessory with ID: ${id}`); 
+    
+    try {
+        fetch(`/inventory/get_accessory/${id}/`)
+            .then(response => {
+                console.debug('Response received:', response.status); 
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    console.info('Successfully fetched accessory data:', data.data); 
+                    accessory = data.data;
+
+                    if(accessory){
+                        accessory.forEach((acc)=>{
+                            const newAccessory = {
+                                    id:generateUniqueId(),
+                                    product:acc.main_product__name,
+                                    accessory_id:acc.id, 
+                                    accessory_product_id:acc.accessory_product__id,
+                                    accessory_name: acc.accessory_product__name,
+                                    quantity:acc.quantity,
+                                    accessory_price:0 // they are not charged on the invoice
+                                };
+                            accesoryCart.push(newAccessory)
+                            updateCartDisplay()
+                            updateAccessoryCartDisplay()
+                        })
+                    }
+                        
+                    console.log('Added accessory to cart'); 
+                } else {
+                    console.warn('Failed to fetch accessory:', data.message); 
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Fetch operation failed:', error); 
+            });
+    } catch (error) {
+        console.error('Critical error in fetchAccessory:', error); 
+    }
+};
+
+const updateAccessoryCartDisplay = () => {
+
+    try {
+        const cartItemsList = document.getElementById("cart_items");
+        if (!cartItemsList) {
+            console.error('Cart items list element not found');
+            return;
+        }
+
+        accesoryCart.forEach(item => {
+            console.debug('Processing accessory item:', item);
+            
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>
+                    <small class='d-flex align-items-center'>
+                        <small>
+                            <input 
+                                class='form-control form-control-sm' 
+                                type='number' 
+                                data-id=${item.accessory_id}
+                                value='${item.quantity}' 
+                                oninput='updateAccessoryQuantity(this);' 
+                                style='width:4rem;'
+                            />
+                        </small>
+                    </small>
+                </td>
+                <td style='text-align:left !important;'>
+                    <small>${item.accessory_name} (accessory - ${item.product})</small>
+                </td>
+                <td>
+                    <small>
+                        <input 
+                            class='form-control form-control-sm' 
+                            type='number'  
+                            step='0.01' 
+                            data-id=${item.id} 
+                            value='${parseFloat(item.accessory_price).toFixed(2)}' 
+                            oninput='updateAccessoryPrice(this);' 
+                            style='width:7rem;'
+                        />
+                    </small>
+                </td>
+                <td>
+                    <small id="accessory-total-${item.id}">
+                        ${currencyData[0][0].symbol + ' ' + 
+                        (parseInt(item.quantity) * parseFloat(item.accessory_price)).toFixed(2)}
+                    </small>
+                    <small 
+                        class='bx bx-trash-alt text-danger' 
+                        data-id=${item.id} 
+                        onclick="removeAccessoryItem(this);"
+                    ></small>
+                </td>
+            `;
+            
+            console.debug('Adding row to cart display');
+            cartItemsList.appendChild(row);
+        });
+
+        console.info('Successfully updated accessory cart display');
+    } catch (error) {
+        console.error('Error updating accessory cart display:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to update accessory cart display'
+        });
+    }
+};
+
+const removeAccessoryItem = (element) => {
+    console.log('Starting removal of accessory item');
+    
+    try {
+        const itemId = element.dataset.id;
+        console.log(`Attempting to remove accessory with ID: ${itemId}`);
+
+        const itemIndex = accessoryCart.findIndex(item => item.id === itemId);
+        
+        if (itemIndex !== -1) {
+            accessoryCart.splice(itemIndex, 1);
+            console.info(`Successfully removed accessory from cart array at index ${itemIndex}`);
+
+            const row = element.closest('tr');
+            if (row) {
+                row.remove();
+                console.info('Successfully removed accessory row from display');
+            }
+
+            updateCartTotals();
+            
+            saveCartToLocalStorage();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Item removed from cart',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } else {
+            console.warn(`Item with ID ${itemId} not found in cart`);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Item not found in cart'
+            });
+        }
+
+    } catch (error) {
+        console.error('Error removing accessory item:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to remove item from cart'
+        });
+    }
+};
 
 
 

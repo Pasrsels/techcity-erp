@@ -101,6 +101,7 @@ urlpatterns = [
     path('ws/inventory/<int:branchId>/',InventoryConsumer.as_asgi()),
 
     #accessories
+    path('get_accessory/<int:product_id>/', get_accessory, name='accessory_detail'),
     path('accessory_view/<int:product_id>/', accessory_view, name='accessory_view'),
 
     path('vue_view/', vue_view, name='vue'),

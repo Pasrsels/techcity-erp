@@ -730,7 +730,7 @@ def create_invoice(request):
                             defaults={'cogs': cogs, 'product': Inventory.objects.get(id=acc['accessory_product'], branch=request.user.branch)}
                         )
                         prod_acc = Inventory.objects.get(id = acc['accessory_product'] )
-                        prod_acc.quantity -= 1
+                        prod_acc.quantity -= acc.quantity
 
                         logger.info(f'accessory quantity: {acc['accessory_product__quantity']}')
 

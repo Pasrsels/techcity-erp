@@ -96,7 +96,11 @@ def users(request):
         if form.is_valid():
 
             user = form.save(commit=False)
-
+            
+            # branches = form.cleaned_data['branches']
+            # user.branch.set(branches)
+            
+            # hash the user password
             user.password = make_password(form.cleaned_data['password'])
             user.save()
 
@@ -149,19 +153,26 @@ def login_view(request):
         return render(request, 'auth/login.html')
 
 
+@login_required
+@transaction.atomic
 def user_edit(request, user_id):
-    user = User.objects.get(id=user_id)
-    logger.info(f'User details: {user.first_name + " " + user.email}')
-    if request.method == 'POST':
-        form = UserDetailsForm2(request.POST, instance=user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'User details updated successfully')
-            return redirect('users:user_detail', user_id=user.id)
-        else:
+
+    with transaction.atomic:
+        user = User.objects.select_for_update().get(id=user_id)
+
+        logger.info(f'User details: {user.first_name + " " + user.email}')
+
+        if request.method == 'POST':
+            form = UserDetailsForm2(request.POST, instance=user)
+
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'User details updated successfully')
+                return redirect('users:user_detail', user_id=user.id)
+            
             messages.error(request, 'Invalid form data')
-    else:
-        form = UserDetailsForm2(instance=user)
+            form = UserDetailsForm2(instance=user)
+
     return render(request, 'auth/users.html', {'user': user, 'form': form})
 
 

@@ -8,11 +8,11 @@ from dotenv import load_dotenv
 from django.apps import apps
 from datetime import timedelta
 from datetime import timedelta
+import sys
 
 env = environ.Env()   
 load_dotenv()
 
-import sys
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env(
