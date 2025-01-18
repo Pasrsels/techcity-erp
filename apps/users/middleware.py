@@ -11,6 +11,7 @@ class LoginRequiredMiddleware:
             exempt_urls = [
                 reverse('users:login'),
                 reverse('users:logout'),
+                reverse('users:api_login')
             ]
             
             if request.path not in exempt_urls:
