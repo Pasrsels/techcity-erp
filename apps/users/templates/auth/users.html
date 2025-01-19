@@ -51,9 +51,25 @@
                             {% endif %}
                         </div>
                         <!-- Name and Email -->
-                        <div>
-                            <h6 class="card-title mb-1">{{ user.get_full_name|default:user.username }}</h6>
-                            <p class="text-muted mb-0"><small>{{ user.email }}</small></p>
+                        <div class="d-flex justify-content-between align-items-center w-100">
+                            <div>
+                                <h6 class="card-title mb-1">{{ user.get_full_name|default:user.username }}</h6>
+                                <p class="text-muted mb-0"><small>{{ user.email }}</small></p>
+                            </div>
+                            <div>
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <th>{{ request.user.company }}</th>
+                                        <th>Account</th>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><small>$500.00</small></td>
+                                            <td><small>-$500.00</small></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                     <!-- Role -->

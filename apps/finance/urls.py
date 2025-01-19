@@ -112,6 +112,11 @@ urlpatterns = [
     path('income_json/', income_json, name='income_json'),
     path('expense_json/', expense_json, name='expense_json'),
 
+    # cash_flows
+
+    path('cash_flow', cash_flow, name='cash_flow'),
+    path('branch_cash_up/<int:branch_id>/', get_branch_data, name='branch_cash_up'),
+
     # vat
     path('vat/', vat, name='vat'),
 
@@ -148,7 +153,7 @@ urlpatterns = [
 
     #Expense
     path('api/v1/expense/<int:expense_id>/', ExpenseView.as_view(), name='api_expense'),
-    path('api/v1/expense_category/', ExpenseCategory.as_view(), name='api_expense_category'),
+    path('api/v1/expense_category/', ExpensesCategory.as_view(), name='api_expense_category'),
     path('api/v1/add-or-edit-expense/<int:id>/', AddOrEditExpense.as_view(), name='api_add_edit_expense'),
     path('api/v1/delete-expense/', DeleteExpense.as_view(), name='api_delete_expense'),
     path('api/v1/update-expense-status/<int:id>/', UpdateExpenseStatus.as_view(), name='api_update_expense_status'),
