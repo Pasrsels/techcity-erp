@@ -314,6 +314,7 @@
     }
 
     function edit(itemId, sPrice, dPrice, quantity, acp) {
+        console.log(dPrice)
         let dealerPrice = dPrice || 0.00;
 
         editStatus = true;
@@ -371,7 +372,7 @@
                placeholder="Enter Dealer Selling Price"
                min="1"
                class='form-control'
-               value="${ delearPrice }"
+               value="${ dPrice }"
                onclick="clearInput(this)"
                oninput="expectedProfit(
                     '${ itemId }',

@@ -4,14 +4,14 @@
 {% block content %}
 <div>
     <nav class="d-flex justify-content-between align-items-center rounded mb-2 py-2">
-        <div>
+        <div class="d-flex justify-content-between align-items-center w-100">
             <div>
                 <a href='{% url "finance:finance"%}' class='border btn bx bx-arrow-back fs-5'></a>
                 <a href='/' class='bx bx-home btn border fs-5 mx-2'></a>
                 <span class='mt-2 fs-5'>CashFlow: <span class='fw-bold'>${{ cashFlows_total }}</span></span>
             </div>
             <div>
-                <span class='mt-2 fs-5'>Not yet cashed: <span class='fw-bold'>${{ cash_flow_item }}</span></span>
+                <span class='mt-2 fs-5'>Receivables: <span class='fw-bold'>${{ cash_flow_item }}</span></span>
             </div>
         </div>
         <div class="d-none">
@@ -177,11 +177,11 @@
                     if (data) {
                         tableBody.innerHTML = '';
                         
-                        data.categories.forEach(category => {
+                        data.cashup.forEach(category => {
                             if (category.product !== 'SUMMARY'){
                                 const row = `
                                     <tr>
-                                        <td class='text-right'>${category.product}</td>
+                                        <td class='text-right'>${category.date}</td>
                                         <td class='text-right'>${category.expense.toFixed(2)}</td>
                                         <td class='text-right'>${category.income.toFixed(2)}</td>
                                         <td class='text-right'>${category.total.toFixed(2)}</td>
