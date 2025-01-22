@@ -40,8 +40,8 @@
         <div class="col-8">
             <div class="table-responsive">
                 <div class="d-flex justify-content-between mb-3 border rounded p-1">
-                    <button class="btn btn-outline-dark btn-sm border" id="add-income">+ income</button>
-                    <button class="btn btn-outline-dark btn-sm border" id="add-expense">+ expense</button>
+                    <button class="btn btn-outline-dark border" id="add-income">+ income</button>
+                    <button class="btn btn-outline-dark border" id="add-expense">+ expense</button>
                 </div>
                 <div class="border rounded p-1">
                     <table class="table">
@@ -73,7 +73,7 @@
         </div>
 
         <div class="col-4">
-            <ul class="nav nav-tabs" id="branchTabs" role="tablist">
+            <!-- <ul class="nav nav-tabs" id="branchTabs" role="tablist">
                 {% for branch in cashups %}
                     <li class="nav-item" role="presentation">
                          <button class="nav-link {% if forloop.first %}active{% endif %}" 
@@ -89,57 +89,248 @@
                         </button>
                     </li>
                 {% endfor %}
-            </ul>
+            </ul> -->
     
             <div class="card">
                 <div class="card-body">
-                   
                     <div id="loadingSpinner" class="text-center d-none">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
                     </div>
-    
+            
                     <div id="noDataMessage" class="text-center d-none">
                         <p class="text-muted">No cash ups available</p>
                     </div>
-    
-                    <table class="table table-striped table-bordered table-hover" id="branchTable">
+            
+                    <table class="table table-striped table-bordered table-hover">
                         <thead class="table-dark">
                             <tr>
-                                <th>Product</th>
-                                <th>Expense</th>
-                                <th>Income</th>
-                                <th>Total</th>
+                                <th>Branch</th>
+                                <th>Expected Amount</th>
+                                <th>Amount received</th>
+                                <th>Created By</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="branch_id"></tbody>
-                        <tfoot>
-                            <tr>
-                                <td>Expected Cash</td>
-                                <td colspan="2"></td>
-                                <td>
-                                    <span id="expected-cash"></span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Amount received</td>
-                                <td colspan="2"></td>
-                                <td>
-                                    <input type='number' id='amount-received' class="form-control form-control-sm" style="width: 80px;">
-                                </td>
-                            </tr>
-                        </tfoot>
+                        <tbody id="cash_up_table">
+                            <!-- Data will be populated here -->
+                        </tbody>
                     </table>
-                    <div class="confirm-button">
-                        <button class="btn btn-primary btn-sm w-100" onclick="createCashFlow()">confirm</button>
+            
+                    <!-- Your existing branch table -->
+                    <table class="table table-striped table-bordered table-hover" id="branchTable">
+                        <!-- Rest of your existing table -->
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="modal fade" id="receiveModal" tabindex="-1" aria-labelledby="receiveModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="receiveModalLabel">Receive Cash</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="receiveAmount" class="form-label">Amount Received</label>
+                            <input type="number" class="form-control" id="amount-received" placeholder="Enter amount">
+                        </div>
+                        <div class="mb-3">
+                            <select id="incomeCategory" name="" form="form-select w-100">
+                                {% for cat in Categories %}
+                                    <option value="{{ cat.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <!-- <p>Expected Amount: $<span id="amount-received">0.00</span></p>
+                            <p>Branch: <span id="modalBranchName"></span></p> -->
+                        </div>
+                    </div>
+                    <div class="modal-body" id="errorMessage" style="color: red; display: none;">
+                        Please enter an amount
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary btn-primary-sm" onclick="createCashFlow()">Confirm</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Income Modal -->
+    <div class="modal fade" id="incomeModal" tabindex="-1" aria-labelledby="incomeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="incomeModalLabel">Record Income</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="incomeAmount" class="form-label">Amount</label>
+                        <input type="number" class="form-control" id="incomeAmount" placeholder="Enter income amount">
+                        
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="recordIncome()">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div class="modal fade" id="expenseModal" tabindex="-1" aria-labelledby="expenseModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="expenseModalLabel">Record Expense</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="expenseAmount" class="form-label">Amount</label>
+                        <input type="number" class="form-control" id="expenseAmount" placeholder="Enter expense amount">
+                    </div>
+                </div>
+                <div class="mb-3 d-flex justify-content-between">
+                    <select id="expensesCategory" name="">
+                        {% for cat in exp_categories %}
+                            <option value="{{ cat.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-outline-dark btn-sm border" id="add-expense-category" data-bs-toggle="modal" data-bs-target="#expenseCategoryModal">
+                        <i class="bx bx-plus"></i>
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="recordExpense()">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     
     <script>
+        let cash_up_id = 0;
+
+        document.getElementById('add-income').addEventListener('click', function() {
+            const incomeModal = new bootstrap.Modal(document.getElementById('incomeModal'));
+            incomeModal.show();
+        });
+
+        document.getElementById('add-expense').addEventListener('click', function() {
+            const expenseModal = new bootstrap.Modal(document.getElementById('expenseModal'));
+            expenseModal.show();
+        });
+
+        function recordIncome() {
+            const incomeAmount = document.getElementById('incomeAmount').value;
+
+            if (!incomeAmount) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Please enter the income amount',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            const data = {
+                amount: incomeAmount,
+                type: 'income'
+            };
+
+            fetch('/finance/record_transaction/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(response => {
+                if (response.success) {
+                    Swal.fire({
+                        title: 'Success',
+                        text: 'Income recorded successfully',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: response.message,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        }
+
+        function recordExpense() {
+            const expenseAmount = document.getElementById('expenseAmount').value;
+
+            if (!expenseAmount) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Please enter the expense amount',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            const data = {
+                amount: expenseAmount,
+                type: 'expense'
+            };
+
+            fetch('/finance/record_transaction/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(response => {
+                if (response.success) {
+                    Swal.fire({
+                        title: 'Success',
+                        text: 'Expense recorded successfully',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: response.message,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        }
+
+
+
         document.addEventListener('DOMContentLoaded', function() {
             const tabs = document.querySelectorAll('#branchTabs button');
             const loadingSpinner = document.getElementById('loadingSpinner');
@@ -226,6 +417,72 @@
             }
         });
 
+        const receiveModal = new bootstrap.Modal(document.getElementById('receiveModal'))
+
+        const receive = (id) =>{
+            cash_up_id = id;
+            receiveModal.show()
+        }
+    
+        function populateCashUpTable() {
+            const tableBody = document.getElementById('cash_up_table');
+            
+            tableBody.innerHTML = '';
+
+            fetch('/finance/cash_up_list/') 
+                .then(response => response.json())
+                .then(response => {
+                    if (!response.success) return;
+
+                    const groupedData = {};
+                    response.data.forEach(cashup => {
+                        const date = cashup.created_at.split(' ')[0];  
+                        if (!groupedData[date]) {
+                            groupedData[date] = [];
+                        }
+                        groupedData[date].push(cashup);
+                    });
+
+                    const dates = Object.keys(groupedData).sort().reverse();
+
+                    dates.forEach(date => {
+                        const dateRow = document.createElement('tr');
+                        dateRow.className = 'table-secondary';
+                        dateRow.innerHTML = `
+                            <td colspan="5" class="fw-bold">
+                                ${new Date(date).toLocaleDateString()}
+                            </td>
+                        `;
+                        tableBody.appendChild(dateRow);
+
+                        groupedData[date].forEach(cashup => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td><small>${cashup.branch__name}</small></td>
+                                <td><small>$${cashup.expected_cash}</small></td>
+                                <td><small>${cashup.created_by__username}</small></td>
+                                <td><small>$${cashup.received_amount}</small></td>
+                                <td><small><button class='btn btn-sm btn-primary' onclick='receive(${cashup.id});'>Record</button></small></td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="text-center text-danger py-2">
+                                Error loading data. Please try again.
+                            </td>
+                        </tr>
+                    `;
+                });
+        }
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', populateCashUpTable);
+
 
     const createCashFlow = () =>{
         amount = document.getElementById('amount-received').value;
@@ -239,8 +496,7 @@
             })
             return
         }
-        
-        cash_up_id = document.querySelector('#branchTabs button.active').getAttribute('data-cashup-id');
+    
 
         data = {
             amount:amount,

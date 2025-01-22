@@ -2699,7 +2699,7 @@ def process_received_order(request):
 
             # Update or create inventory
             try:
-                inventory = Inventory.objects.get(id=order_item.product.id, branch=request.user.branch)
+                inventory = Inventory.objects.get(name=order_item.product.name, branch=request.user.branch)
             except Product.DoesNotExist:
                 return JsonResponse({'success': False, 'message': f'Product with ID: {order_item.product.id} does not exist'}, status=404)
 

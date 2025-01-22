@@ -62,6 +62,11 @@ import io
 from collections import defaultdict
 from apps.pos.utils.submit_receipt_offline import save_receipt_offline
 from django.db.models.functions import Coalesce
+from django.db.models import Count
+from django.db.models.functions import TruncDate
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+
 
 
 def get_previous_month():
@@ -3066,7 +3071,7 @@ def vat(request):
             return JsonResponse({'success':False, 'message':f'{e}'}, status = 400)
         return JsonResponse({'success':False, 'message':'VAT successfully paid'}, status = 200)
     
-
+@login_required
 def cash_flow(request):
     cashflows = Cashflow.objects.all().order_by('-date')
     cashups = CashUp.objects.select_related('branch').filter(status=False)
@@ -3084,6 +3089,38 @@ def cash_flow(request):
     }
     return render(request, 'cashflow.html', context)
 
+@login_required
+def cash_up_list(request):
+    cashups = (
+        CashUp.objects
+        .select_related('branch', 'created_by')
+        .filter(status=False)
+        .values(
+            'id',
+            'branch__name',
+            'expected_cash',
+            'created_by__username',
+            'created_at',
+            'received_amount'
+        )
+        .order_by('-created_at')
+    )
+
+    logger.info(cashups)
+    
+    data = []
+    for cashup in cashups:
+        cashup_dict = dict(cashup)
+        cashup_dict['created_at'] = cashup['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+        data.append(cashup_dict)
+
+    logger.info(data)
+
+    return JsonResponse({
+        'success': True,
+        'data': data
+    })
+
 
 @login_required
 @transaction.atomic
@@ -3093,6 +3130,8 @@ def cashflow_create(request):
             data = json.loads(request.body)
             amount = data.get('amount')
             cash_up_id = data.get('cash_up_id')
+
+            logger.info(amount)
 
             with transaction.atomic():
                 cash_up = CashUp.objects.get(id=cash_up_id)
@@ -3159,6 +3198,61 @@ def cashflow_create(request):
 
         except Exception as e:
             return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
+
+@login_required
+@transaction.atomic
+def income_cashflow_create(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            amount = data.get('amount')
+
+            with transaction.atomic():
+                income_category, _ = CashFlowCategory.objects.get_or_create(name='Income')
+
+                Cashflow.objects.create(
+                    branch=request.user.branch,
+                    total=amount,
+                    date=datetime.datetime.now(),
+                    status=False,
+                    income=amount,
+                    category=income_category,
+                    created_by=request.user
+                )
+
+                return JsonResponse({'success': True, 'message': 'Income cashflow successfully created'}, status=201)
+
+        except Exception as e:
+            logger.error(f"Error creating income cashflow: {e}")
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+
+@login_required
+@transaction.atomic
+def expense_cashflow_create(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            amount = data.get('amount')
+
+            with transaction.atomic():
+                expense_category, _ = CashFlowCategory.objects.get_or_create(name='Expense')
+
+                Cashflow.objects.create(
+                    branch=request.user.branch,
+                    total=amount,
+                    date=datetime.datetime.now(),
+                    status=False,
+                    income=amount,
+                    category=expense_category,
+                    created_by=request.user
+                )
+
+                return JsonResponse({'success': True, 'message': 'Expense cashflow successfully created'}, status=201)
+
+        except Exception as e:
+            logger.error(f"Error creating expense cashflow: {e}")
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 
 @login_required

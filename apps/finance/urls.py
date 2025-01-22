@@ -117,6 +117,10 @@ urlpatterns = [
     path('cash_flow', cash_flow, name='cash_flow'),
     path('branch_cash_up/<int:branch_id>/', get_branch_data, name='branch_cash_up'),
     path('create_cash_flow/', cashflow_create, name='create_cash_flow'),
+    path('cash_up_list/', cash_up_list, name='cash_up_list'),
+    path('create_income_cashflow/', income_cashflow_create, name='create_income_cashflow'),
+    path('create_expense_cashflow/', expense_cashflow_create, name='create_expense_cashflow'),
+
 
     # user accounts
     path('user_accounts/', user_accounts, name='user_accounts'),
