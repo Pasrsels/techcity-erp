@@ -10,7 +10,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from apps.company.models import Branch
 from apps.users.models import User
-from django.db.models import Sum, F
+from django.db.models import Sum
+from django.utils.timezone import localdate
+
+today = localdate()
+
 
 class PaymentMethod(models.Model):
     name = models.CharField(max_length=255)
@@ -545,15 +549,16 @@ class CashFlowCategory(models.Model):
 class Cashflow(models.Model):
     date = models.DateField()
     category = models.ForeignKey(CashFlowCategory, on_delete=models.CASCADE)
-    income = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    expense = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    income = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    expense = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
-    sales = models.ManyToManyField(Sale, blank=True)
+    # sales = models.ManyToManyField(Sale, blank=True)
     status = models.BooleanField(default=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_cashflows')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    cash_up = models.ForeignKey('finance.CashUp', on_delete=models.CASCADE, null=True)
 
     def save(self, *args, **kwargs):
         # Calculate total (income - expense)
@@ -562,9 +567,6 @@ class Cashflow(models.Model):
 
     def __str__(self):
         return f"{self.branch} - {self.date} - {self.total}"
-
-from django.utils.timezone import localdate
-today = localdate()
 
 class CashUp(models.Model):
     date = models.DateField()
@@ -599,3 +601,21 @@ class CashUp(models.Model):
 
     class Meta:
         verbose_name_plural = "Cash Ups"
+
+class UserAccount(models.Model):
+    user = models.ForeignKey(User, related_name='accounts', on_delete=models.CASCADE)
+    account_type = models.CharField(max_length=50)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_credits = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_debits = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    last_transaction_date = models.DateTimeField(null=True, blank=True)
+
+class UserTransaction(models.Model):
+    account = models.ForeignKey(UserAccount, related_name='transactions', on_delete=models.CASCADE)
+    transaction_type = models.CharField(max_length=10) 
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField()
+    date = models.DateTimeField(auto_now_add=True)
+    debit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    credit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    received_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_transactions')

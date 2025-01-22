@@ -8,15 +8,15 @@ class BranchForm(forms.ModelForm):
         label="Merge From Branch",
         widget=forms.Select(attrs={'class': 'form-control'}),
     )
-    options = forms.MultipleChoiceField(
-        choices=[
-            ('products', 'Products'),
-            ('suppliers', 'Suppliers'),
-        ],
-        widget=forms.CheckboxSelectMultiple(),
-        required=False,
-        label="Merge Options",
-    )
+    # options = forms.MultipleChoiceField(
+    #     choices=[
+    #         ('products', 'Products'),
+    #         ('suppliers', 'Suppliers'),
+    #     ],
+    #     widget=forms.CheckboxSelectMultiple(),
+    #     required=False,
+    #     label="Merge Options",
+    # )
 
     class Meta:
         model = Branch

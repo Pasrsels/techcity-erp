@@ -116,6 +116,10 @@ urlpatterns = [
 
     path('cash_flow', cash_flow, name='cash_flow'),
     path('branch_cash_up/<int:branch_id>/', get_branch_data, name='branch_cash_up'),
+    path('create_cash_flow/', cashflow_create, name='create_cash_flow'),
+
+    # user accounts
+    path('user_accounts/', user_accounts, name='user_accounts'),
 
     # vat
     path('vat/', vat, name='vat'),

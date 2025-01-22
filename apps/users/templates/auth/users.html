@@ -144,7 +144,7 @@
                             <select name="company" id="id_company" class="form-select" required>
                                 <option value="" selected disabled>Choose company</option>
                                 {% for company in form.fields.company.queryset %}
-                                <option value="{{ company.id }}">{{ company.name }}</option>
+                                    <option value="{{ company.id }}">{{ company.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -152,12 +152,11 @@
                         <!-- branch -->
                         <div class="mb-3">
                             <label for="id_branch" class="form-label">Branch</label>
-                            <div id="id_branch" class="form-check-group">
-                                {% for branch in form.fields.branch.queryset %}
-                                <div class="form-check">
-                                    <input type="checkbox" name="branch" id="branch_{{ branch.id }}" value="{{ branch.id }}" class="form-check-input">
-                                    <label for="branch_{{ branch.id }}" class="form-check-label">{{ branch.name }}</label>
-                                </div>
+                            <div class="form-check-group">
+                                {% for branch in branches %}
+                                    <select name="" id="id_branch" class="form-select">
+                                        <option value="{{ branch.id }}">{{ branch.name }}</option>
+                                    </select>
                                 {% endfor %}
                             </div>
                         </div>

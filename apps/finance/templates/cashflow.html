@@ -5,9 +5,14 @@
 <div>
     <nav class="d-flex justify-content-between align-items-center rounded mb-2 py-2">
         <div>
-            <a href='{% url "finance:finance"%}' class='border btn bx bx-arrow-back fs-5'></a>
-            <a href='/' class='bx bx-home btn border fs-5 mx-2'></a>
-            <span class='mt-2 fs-5'>CashFlow: <span class='fw-bold'>$0.00</span></span>
+            <div>
+                <a href='{% url "finance:finance"%}' class='border btn bx bx-arrow-back fs-5'></a>
+                <a href='/' class='bx bx-home btn border fs-5 mx-2'></a>
+                <span class='mt-2 fs-5'>CashFlow: <span class='fw-bold'>${{ cashFlows_total }}</span></span>
+            </div>
+            <div>
+                <span class='mt-2 fs-5'>Not yet cashed: <span class='fw-bold'>${{ cash_flow_item }}</span></span>
+            </div>
         </div>
         <div class="d-none">
             <div class="d-flex justify-content-between mt-1">
@@ -56,8 +61,9 @@
                                     <td><small>{{ cashflow.category }}</small></td>
                                     <td><small>{{ cashflow.income }}</small></td>
                                     <td><small>{{ cashflow.expense }}</small></td>
+                                    <td><small>{{ cashflow.total }}</small></td>
                                     <td><small>{{ cashflow.branch.name }}</small></td>
-                                    <td><small>{{ cashflow.user}}</small></td>
+                                    <td><small>{{ cashflow.created_by }}</small></td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -65,13 +71,15 @@
                 </div>
             </div>
         </div>
+
         <div class="col-4">
             <ul class="nav nav-tabs" id="branchTabs" role="tablist">
                 {% for branch in cashups %}
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link {% if forloop.first %}active{% endif %}" 
+                         <button class="nav-link {% if forloop.first %}active{% endif %}" 
                                 id="tab-{{ branch.branch.id }}" 
                                 data-bs-toggle="tab"
+                                data-cashup-id="{{ branch.id }}"
                                 data-branch-id="{{ branch.branch.id }}"
                                 data-branch-name="{{ branch.branch.name }}"
                                 type="button"
@@ -96,7 +104,7 @@
                         <p class="text-muted">No cash ups available</p>
                     </div>
     
-                    <table class="table table-striped table-hover" id="branchTable">
+                    <table class="table table-striped table-bordered table-hover" id="branchTable">
                         <thead class="table-dark">
                             <tr>
                                 <th>Product</th>
@@ -118,13 +126,13 @@
                                 <td>Amount received</td>
                                 <td colspan="2"></td>
                                 <td>
-                                    <input type='number' id='amount-received' class=" form-control-sm">
+                                    <input type='number' id='amount-received' class="form-control form-control-sm" style="width: 80px;">
                                 </td>
                             </tr>
                         </tfoot>
                     </table>
                     <div class="confirm-button">
-                        <button class="btn btn-primary btn-sm w-100">confirm</button>
+                        <button class="btn btn-primary btn-sm w-100" onclick="createCashFlow()">confirm</button>
                     </div>
                 </div>
             </div>
@@ -164,30 +172,26 @@
 
                     const response = await fetch(`/finance/branch_cash_up/${branchId}`);
                     const data = await response.json();
-                    let expectedCash = document.getElementById('expected-cash')
+                    const expectedCashElement = document.getElementById('expected-cash')
                     console.info(data)
                     if (data) {
                         tableBody.innerHTML = '';
                         
                         data.categories.forEach(category => {
-                            const row = `
-                                <tr>
-                                    <td>${category.product}</td>
-                                    <td>${category.expense.toFixed(2)}</td>
-                                    <td>${category.income.toFixed(2)}</td>
-                                    <td>${category.total.toFixed(2)}</td>
-                                </tr>
-                            `;
-                            tableBody.innerHTML += row;
+                            if (category.product !== 'SUMMARY'){
+                                const row = `
+                                    <tr>
+                                        <td class='text-right'>${category.product}</td>
+                                        <td class='text-right'>${category.expense.toFixed(2)}</td>
+                                        <td class='text-right'>${category.income.toFixed(2)}</td>
+                                        <td class='text-right'>${category.total.toFixed(2)}</td>
+                                    </tr>
+                                `;
+                                tableBody.innerHTML += row;
+                            }
                         });
 
-                        expectedCash = '';
-                        expectedCash.textContent = data.cashup_details.expected_cash || 0.00;
-                        console.info(expectedCash)
-                        console.info('expeceted cash: ', data.cashup_details.expected_cash)
-                           
-                        console.info(document.getElementById('expected-cash'))
-                        
+                        expectedCashElement.textContent = (data.cashup_details.expected_cash || 0.00).toFixed(2);
                         showData();
                     } else {
                         showNoData();
@@ -221,6 +225,60 @@
                 showNoData();
             }
         });
+
+
+    const createCashFlow = () =>{
+        amount = document.getElementById('amount-received').value;
+
+        if(amount == ''){
+            Swal.fire({
+                title: 'Error',
+                text: 'Please enter the amount received',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            })
+            return
+        }
+        
+        cash_up_id = document.querySelector('#branchTabs button.active').getAttribute('data-cashup-id');
+
+        data = {
+            amount:amount,
+            cash_up_id:cash_up_id
+        }
+
+        console.info(data)
+
+        fetch('/finance/create_cash_flow/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            if(data.success){
+                Swal.fire({
+                    title: 'Success',
+                    text: 'Cash flow created successfully',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(()=>{
+                    location.reload();
+                })
+            }else{
+                Swal.fire({
+                    title: 'Error',
+                    text: data.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                })
+            }
+        })
+    }
     </script>
 </div>
 {% endblock %}

@@ -182,16 +182,17 @@ def add_branch(request):
     if request.method == 'POST':
         form = BranchForm(request.POST)
         merge_from_branch = request.POST.get('from_branch')
-        if form.is_valid():
-            """ take data for merging data"""
-            merge_from_branch = form.cleaned_data.get('from_branch')
-            selected_options = form.cleaned_data.get('options')
-            
-            logger.info(f'product option {selected_options}')
-            form.save()
-            return JsonResponse({'success': True, 'message': 'Branch added successfully!'})
-        else:
-            return JsonResponse({'success': False, 'message': 'Form submission failed. Please check the inputs.'})
+        try:
+            if form.is_valid():
+                """ take data for merging data"""
+                # merge_from_branch = form.cleaned_data.get('from_branch')
+                # selected_options = form.cleaned_data.get('options')
+                
+                # logger.info(f'product option {selected_options}')
+                form.save()
+                return JsonResponse({'success': True, 'message': 'Branch added successfully!'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'{e}'})
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
 
 

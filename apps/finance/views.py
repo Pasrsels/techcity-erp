@@ -61,6 +61,8 @@ from django.http import FileResponse
 import io
 from collections import defaultdict
 from apps.pos.utils.submit_receipt_offline import save_receipt_offline
+from django.db.models.functions import Coalesce
+
 
 def get_previous_month():
     first_day_of_current_month = datetime.datetime.now().replace(day=1)
@@ -2045,6 +2047,8 @@ def end_of_day(request):
             total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
 
             expected_cash = total_sales - total_expenses
+
+            logger.info(expected_cash)
             
             # Create CashUp entry
             cashup = CashUp.objects.create(
@@ -2062,6 +2066,35 @@ def end_of_day(request):
             items = InvoiceItem.objects.filter(invoice__issue_date__range=(today_min, today_max))
             cashup.sales.set(items)
             cashup.expenses.set(expenses)
+
+            # Create UserAccount object
+            user_account, _ = UserAccount.objects.get_or_create(
+                user=request.user,
+                defaults={
+                    'balance': Decimal('0.00'),
+                    'total_credits': Decimal('0.00'),
+                    'total_debits': Decimal('0.00'),
+                    'last_transaction_date': timezone.now()
+                }
+            )
+
+            
+            # Create UserTransaction object
+            user_transaction = UserTransaction.objects.create(
+                account=user_account,
+                transaction_type='Cash',
+                amount=total_cash_amounts[0]['total_invoices_amount'] - total_cash_amounts[0]['total_withdrawals_amount'],
+                description='End of day transaction',
+                debit = expected_cash,
+                credit = 0,
+            )
+
+            # Update UserAccount balance
+            user_account.balance += user_transaction.amount
+            user_account.total_debits += user_transaction.amount
+            user_account.last_transaction_date = timezone.now()
+            user_account.save()
+
 
             # # Generate PDF report
             # html_string = render_to_string('day_report.html', {
@@ -3036,124 +3069,103 @@ def vat(request):
 
 def cash_flow(request):
     cashflows = Cashflow.objects.all().order_by('-date')
-    cashups = CashUp.objects.select_related('branch').all()
+    cashups = CashUp.objects.select_related('branch').filter(status=False)
+
+    cashFlows_total = cashflows.aggregate(total=Sum('total'))['total'] or 0
+    cash_flow_items = CashUp.objects.filter(status=False).aggregate(total=Sum('expected_cash'))['total'] or 0
+
+    logger.info(cash_flow_items)
     
     context = {
         'cashflows': cashflows,
         'cashups': cashups,
+        'cashFlows_total': cashFlows_total,
+        'cash_flow_items': cash_flow_items
     }
     return render(request, 'cashflow.html', context)
 
 
 @login_required
+@transaction.atomic
 def cashflow_create(request):
     if request.method == 'POST':
-        form = CashflowForm(request.POST)
-        if form.is_valid():
-            cashflow = form.save(commit=False)
-            cashflow.created_by = request.user
-            cashflow.save()
-            # Save many-to-many relationships
-            form.save_m2m()
-            return redirect('cashflow_list')
-    else:
-        form = CashflowForm()
-    
-    context = {
-        'form': form,
-        'title': 'Create Cashflow',
-    }
-    return render(request, 'cashflow/cashflow_form.html', context)
+        try:
+            data = json.loads(request.body)
+            amount = data.get('amount')
+            cash_up_id = data.get('cash_up_id')
 
-@login_required
-def cashflow_update(request, pk):
-    cashflow = get_object_or_404(Cashflow, pk=pk)
-    
-    if request.method == 'POST':
-        form = CashflowForm(request.POST, instance=cashflow)
-        if form.is_valid():
-            form.save()
-            return redirect('cashflow_list')
-    else:
-        form = CashflowForm(instance=cashflow)
-    
-    context = {
-        'form': form,
-        'title': 'Update Cashflow',
-        'cashflow': cashflow,
-    }
-    return render(request, 'cashflow/cashflow_form.html', context)
+            with transaction.atomic():
+                cash_up = CashUp.objects.get(id=cash_up_id)
+                cash_up.received_amount = Decimal(amount)
+                cash_up.status = True
+                cash_up.save()
 
-@login_required
-def cashflow_detail(request, pk):
-    cashflow = get_object_or_404(Cashflow, pk=pk)
-    context = {
-        'cashflow': cashflow,
-    }
-    return render(request, 'cashflow/cashflow_detail.html', context)
+                total_income = sum(sale.unit_price * sale.quantity for sale in cash_up.sales.all())
+                total_expenses = sum(expense.amount for expense in cash_up.expenses.all())
 
-@login_required
-def cashup_list(request):
-    cashups = CashUp.objects.all().order_by('-date')
-    context = {
-        'cashups': cashups,
-    }
-    return render(request, 'cashup/cashup_list.html', context)
+                expense_category, _ = CashFlowCategory.objects.get_or_create(name='Expense')
+                income_category, _ = CashFlowCategory.objects.get_or_create(name='Income')
+                
+                # for income
+                Cashflow.objects.create(
+                    branch=cash_up.branch,
+                    total=amount,
+                    date=datetime.datetime.now(),
+                    status=False,
+                    cash_up=cash_up,
+                    income = total_income,
+                    category=income_category,
+                    created_by=request.user
+                )
 
-@login_required
-def cashup_create(request):
-    if request.method == 'POST':
-        form = CashUpForm(request.POST)
-        if form.is_valid():
-            cashup = form.save(commit=False)
-            cashup.created_by = request.user
-            cashup.save()
-            # Save many-to-many relationships
-            form.save_m2m()
-            return redirect('cashup_list')
-    else:
-        form = CashUpForm()
-    
-    context = {
-        'form': form,
-        'title': 'Create Cash Up',
-    }
-    return render(request, 'cashup/cashup_form.html', context)
+                # for expense
+                Cashflow.objects.create(
+                    branch=cash_up.branch,
+                    total=amount,
+                    date=datetime.datetime.now(),
+                    status=False,
+                    cash_up=cash_up,
+                    expense = total_expenses,
+                    category = expense_category,
+                    created_by=request.user
+                )
 
-@login_required
-def cashup_update(request, pk):
-    cashup = get_object_or_404(CashUp, pk=pk)
-    
-    if request.method == 'POST':
-        form = CashUpForm(request.POST, instance=cashup)
-        if form.is_valid():
-            form.save()
-            return redirect('cashup_list')
-    else:
-        form = CashUpForm(instance=cashup)
-    
-    context = {
-        'form': form,
-        'title': 'Update Cash Up',
-        'cashup': cashup,
-    }
-    return render(request, 'cashup/cashup_form.html', context)
+                # if amount > total_income - total_expenses:
+                #     user_account, _ = UserAccount.objects.get_or_create(
+                #         user=request.user, 
+                #         defaults={
+                #             'balance': Decimal('0.00'),
+                #             'total_credits': Decimal('0.00'),
+                #             'total_debits': Decimal('0.00'),
+                #             'last_transaction_date':datetime.datetime.now()
+                #         }
+                #     )
 
-@login_required
-def cashup_detail(request, pk):
-    cashup = get_object_or_404(CashUp, pk=pk)
-    context = {
-        'cashup': cashup,
-    }
-    return render(request, 'cashup/cashup_detail.html', context)
+                #     transaction = UserTransaction.objects.create(
+                #         account=user_account,
+                #         branch=cash_up.branch,
+                #         amount=amount - total_income + total_expenses,
+                #         transaction_type=UserTransaction.TransactionType.CASH,
+                #         description='Cashup deficit',
+                #         created_by=request.user
+                #     )
+
+                #     user_account.balance += transaction.amount
+                #     user_account.total_credits = 0
+                #     user_account.total_debits = transaction.amount
+
+
+                return JsonResponse({'success':True, 'message':'Cashflow successfully created'}, status=201)
+
+        except Exception as e:
+            return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
+
 
 @login_required
 def get_branch_data(request, branch_id):
     branch = get_object_or_404(Branch, id=branch_id)
     
     cashup = CashUp.objects.filter(branch=branch).order_by('-date').first()
-
-    logger.info(cashup.expected_cash)
     
     if cashup:
         categories = {}
@@ -3219,7 +3231,6 @@ def get_branch_data(request, branch_id):
         'cashup_details': None
     })
 
-# Additional utility functions
 @login_required
 def daily_summary(request, date=None):
     """View to show daily summary of all cashflows and cashups"""
@@ -3261,6 +3272,50 @@ def branch_summary(request, branch_id):
         'total_expense': branch_cashflows.aggregate(Sum('expense'))['expense__sum'] or 0,
     }
     return render(request, 'cashflow/branch_summary.html', context)
+
+from django.db.models import Max
+@login_required
+def user_accounts(request):
+    # Get all users with their accounts
+    users = User.objects.filter(is_active=True).prefetch_related('accounts')
+    
+    users_with_accounts = []
+    for user in users:
+        accounts = user.accounts.all()
+        
+        total_balance = accounts.aggregate(
+            total=Coalesce(Sum('balance', output_field=DecimalField()), Decimal('0.00'))
+        )['total']
+        
+        total_credits = accounts.aggregate(
+            total=Coalesce(Sum('total_credits', output_field=DecimalField()), Decimal('0.00'))
+        )['total']
+        
+        total_debits = accounts.aggregate(
+            total=Coalesce(Sum('total_debits', output_field=DecimalField()), Decimal('0.00'))
+        )['total']
+
+        last_activity = accounts.aggregate(
+            last_date=Max('last_transaction_date')
+        )['last_date']
+        
+        last_activity = accounts.aggregate(
+            last_date=Max('last_transaction_date')
+        )['last_date']
+        
+        users_with_accounts.append({
+            'user': user,
+            'accounts': accounts,
+            'total_balance': total_balance,
+            'total_credits': total_credits,
+            'total_debits': total_debits,
+            'last_activity': last_activity
+        })
+
+    context = {
+        'users_with_accounts': users_with_accounts
+    }
+    return render(request, 'user_accounts/user_accounts.html', context)
     
 
 #API 
@@ -3270,6 +3325,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from .serializers import *
+
 
 class CustomerCrud(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]

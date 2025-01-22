@@ -184,15 +184,15 @@ def login_view(request):
                 logger.info(f'User: {user.first_name + " " + user.email} logged in')
                 logger.info(f'User role: {user.role}')
 
-                next_url = request.POST.get('next') or request.GET.get('next') or request.session.get('next_url')
+                # next_url = request.POST.get('next') or request.GET.get('next') or request.session.get('next_url')
                 
-                if 'next_url' in request.session:
-                    del request.session['next_url']
+                # if 'next_url' in request.session:
+                #     del request.session['next_url']
                 
-                if next_url:
-                    # Validate the URL to prevent open redirect vulnerability
-                    if is_safe_url(next_url, allowed_hosts={request.get_host()}):
-                        return redirect(next_url)
+                # if next_url:
+                #     # Validate the URL to prevent open redirect vulnerability
+                #     if is_safe_url(next_url, allowed_hosts={request.get_host()}):
+                #         return redirect(next_url)
                     
                 return redirect('pos:pos')
             else:
@@ -270,24 +270,24 @@ def register(request):
                     user.save()
 
                     # Send verification email
-                    try:
-                        send_verification_email(user, request)
-                        messages.success(
-                            request, 
-                            f'Account created successfully. Please notify {user.first_name} to check their email to verify their account.'
-                        )
-                    except EmailRateLimitExceeded:
-                        messages.error(
-                            request,
-                            'Too many verification emails sent. Please try again tomorrow.'
-                        )
-                    except Exception as e:
-                        logger.error(f"Error in registration process: {str(e)}")
-                        messages.error(
-                            request,
-                            'An error occurred during registration. Please try again.'
-                        )
-                        raise
+                    # try:
+                    #     send_verification_email(user, request)
+                    #     messages.success(
+                    #         request, 
+                    #         f'Account created successfully. Please notify {user.first_name} to check their email to verify their account.'
+                    #     )
+                    # except EmailRateLimitExceeded:
+                    #     messages.error(
+                    #         request,
+                    #         'Too many verification emails sent. Please try again tomorrow.'
+                    #     )
+                    # except Exception as e:
+                    #     logger.error(f"Error in registration process: {str(e)}")
+                    #     messages.error(
+                    #         request,
+                    #         'An error occurred during registration. Please try again.'
+                    #     )
+                    #     raise
             
             except Exception as e:
                 logger.error(f"Registration failed: {str(e)}")
