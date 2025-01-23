@@ -2638,7 +2638,6 @@ def receive_order(request, order_id):
         if(item.product):
             product_name = item.product.name  
             product_data = product_prices.get(product_name)
-            logger.info(product_name)
             if product_data:
                 item.dealer_price = product_data['dealer_price']
                 item.selling_price = product_data['price']
@@ -2647,7 +2646,6 @@ def receive_order(request, order_id):
                 item.selling_price = 0 
             new_po_items.append(item)
 
-    logger.info(f'Purchase order items: {new_po_items}')
     
     return render(request, 'receive_order.html', 
         {
@@ -2699,7 +2697,7 @@ def process_received_order(request):
 
             # Update or create inventory
             try:
-                inventory = Inventory.objects.get(name=order_item.product.name, branch=request.user.branch)
+                inventory = Inventory.objects.get(id=order_item.product.id, branch=request.user.branch)
             except Product.DoesNotExist:
                 return JsonResponse({'success': False, 'message': f'Product with ID: {order_item.product.id} does not exist'}, status=404)
 
