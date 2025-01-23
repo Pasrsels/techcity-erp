@@ -2678,7 +2678,7 @@ def process_received_order(request):
             order_item = PurchaseOrderItem.objects.get(id=order_item_id)
 
             logger.info(order_item)
-            order = PurchaseOrder.objects.get(id=order_item.purchase_order.id)
+            order = PurchaseOrder.objects.get(name=order_item.purchase_order.name)
 
             # Update expected profit and check quantity
             cost = order_item.actual_unit_cost
