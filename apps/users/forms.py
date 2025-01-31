@@ -30,16 +30,16 @@ class UserRegistrationForm(forms.ModelForm):
         if 'company' in self.data:
             try:
                 company_id = int(self.data.get('company'))
-                self.fields['branch'].queryset = Branch.objects.filter(company_id=company_id).order_by('name')
+                self.fields['branch'].queryset = Branch.objects.filter(company_id=company_id)
             except (ValueError, TypeError):
                 pass
         elif self.instance.pk:
-            self.fields['branch'].queryset = self.instance.company.branch_set.order_by('name')
+            self.fields['branch'].queryset = self.instance.company.branch
 
 
 class UserDetailsForm(forms.ModelForm):
     company = forms.ModelChoiceField(queryset=Company.objects.all(), required=True)
-    branch = forms.ModelChoiceField(queryset=Branch.objects.none(), required=True)
+    branch = forms.ModelChoiceField(queryset=Branch.objects.all(), required=True)
 
     class Meta:
         model = User
@@ -61,12 +61,12 @@ class UserDetailsForm(forms.ModelForm):
             try:
                 logger.info(f'Company: {self.data.get("company")}')
                 company_id = int(self.data.get('company'))
-                self.fields['branch'].queryset = Branch.objects.filter(company_id=company_id).order_by('name')
+                self.fields['branch'].queryset = Branch.objects.filter(company_id=company_id)
                 logger.info(f'Branches: {self.fields["branch"].queryset}')
             except (ValueError, TypeError):
                 pass
         elif self.instance.pk:
-            self.fields['branch'].queryset = self.instance.company.branch_set.order_by('name')
+            self.fields['branch'].queryset = self.instance.company.branch
 
 
 class UserDetailsForm2(forms.ModelForm):
@@ -93,12 +93,12 @@ class UserDetailsForm2(forms.ModelForm):
             try:
                 logger.info(f'Company: {self.data.get("edit_company")}')
                 company_id = int(self.data.get('edit_company'))
-                self.fields['edit_branch'].queryset = Branch.objects.filter(company_id=company_id).order_by('name')
+                self.fields['edit_branch'].queryset = Branch.objects.filter(company_id=company_id)
                 logger.info(f'Branches: {self.fields["edit_branch"].queryset}')
             except (ValueError, TypeError):
                 pass
         elif self.instance.pk:
-            self.fields['edit_branch'].queryset = self.instance.company.branch_set.order_by('name')
+            self.fields['edit_branch'].queryset = self.instance.company.order_by('name')
 
 class UserPermissionsForm(forms.ModelForm):
     class Meta:

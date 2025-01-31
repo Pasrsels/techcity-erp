@@ -567,6 +567,8 @@ def inventory_index(request):
         'form': form,
         'services':services,
         'inventory': inventory,
+        'total_cost': inventory.aggregate(total_cost=Sum(F('quantity') * F('cost')))['total_cost'] or 0,
+        'total_price': inventory.aggregate(total_price=Sum(F('quantity') * F('price')))['total_price'] or 0,
         'search_query': q,
         'category':category,
         'total_price': 0,
@@ -828,8 +830,7 @@ def inventory_transfer_index(request):
     )
     
     transfers = Transfer.objects.filter(
-        Q(branch=request.user.branch) |
-        Q(transfer_to__in=[request.user.branch]),
+        Q(branch=request.user.branch),
         delete=False
     ).annotate(
         total_quantity=Sum('transferitems__quantity'),
@@ -865,10 +866,9 @@ def inventory_transfer_index(request):
         'received_value':total_received_value,
         'totals':transfer_summary,
         'hold_transfers_count':Transfer.objects.filter(
-                Q(branch=request.user.branch) |
-                Q(transfer_to__in=[request.user.branch]),
+                Q(branch=request.user.branch),
                 delete=False, 
-                hold=True
+                # hold=True
             ).count()
         }
     )
@@ -1532,11 +1532,11 @@ def reorder_list(request):
 @login_required
 def reorder_list_json(request):
     order_list = ReorderList.objects.filter(branch=request.user.branch).values(
-        'id', 
-        'product__product__name',  
-        'product__quantity',
-        'quantity'
+        'id',
+        'product__name',
+        'quantity',
     )
+    logger.info(order_list)
     return JsonResponse(list(order_list), safe=False)
 
 @login_required
@@ -1577,15 +1577,15 @@ def clear_reorder_list(request):
 def create_order_list(request):
     if request.method == 'GET':
         products_below_five = Inventory.objects.filter(branch=request.user.branch, quantity__lte = 5).values(
-            'id', 
-            'product__id', 
-            'product__name',
-            'product__description',
+            'id',  
+            'name',
+            'description',
             'quantity', 
             'reorder',
-            'product__category__id',
-            'product__category__name'
+            'category__id',
+            'category__name'
         )
+        logger.info(products_below_five)
         return JsonResponse(list(products_below_five), safe=False)
     
     if request.method == 'POST':
@@ -1819,9 +1819,9 @@ def purchase_orders(request):
    
     return render(request, 'purchase_orders.html', 
         {
-            'form':form,
+            # 'form':form,
             'orders':orders,
-            'status_form':status_form 
+            'status_form':form 
         }
     )
 
@@ -3733,16 +3733,24 @@ class DeleteProducts(views.APIView):
 
 class InventoryList(views.APIView):
     permission_classes = [IsAuthenticated]
-    def get(self, request, id):
-        product_id = id
-        logger.info(f'product id: {product_id}')
-        if product_id:
-            logger.info(list(Inventory.objects.\
-            filter(id=product_id, branch=request.user.branch, status=True).values()))
-            inventory_data = Inventory.objects.filter(id=product_id, branch=request.user.branch, status=True).values()
-            logger.info(inventory_data)
-            return Response(inventory_data, status.HTTP_200_OK)
-        return Response({'error':'product doesnt exists'}, status.HTTP_400_BAD_REQUEST)
+    def get(self, request):
+        
+        logger.info(list(Inventory.objects.\
+        filter(branch=request.user.branch, status=True).values()))
+        inventory_data = Inventory.objects.filter(branch=request.user.branch, status=True).values()
+        logger.info(inventory_data)
+        inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).select_related(
+        'category',
+        'branch'
+        ).order_by('name').values()
+        return Response(
+            {
+                'inventory':inventory_data,
+                'total_cost':inventory.aggregate(total_cost=Sum(F('quantity') * F('cost')))['total_cost'] or 0,
+                'total_price':inventory.aggregate(total_price=Sum(F('quantity') * F('price')))['total_price'] or 0,
+            }, 
+            status.HTTP_200_OK
+        )
     
 class DeleteInventory(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -3982,6 +3990,51 @@ class BranchesInventory(views.APIView):
             'name', 'price', 'quantity', 'branch__name'
         )
         return Response(branches_inventory, status.HTTP_200_OK)
+
+class DefectiveProductViewAdd(views.APIView):
+    def get(self, request):
+        defective_products = DefectiveProduct.objects.filter(branch=request.user.branch)
+        quantity = defective_products.aggregate(Sum('quantity'))['quantity__sum'] or 0
+        price = defective_products.aggregate(Sum('product__cost'))['product__cost__sum'] or 0
+        
+        return Response( 
+            {
+                'total_cost': quantity * price,
+                'defective_products':defective_products,
+            },
+            status.HTTP_200_OK
+        )
+    # loss calculation
+    def post(self, request):
+        data = request.data
+        
+        defective_id = data['product_id']
+        quantity = data['quantity']
+        
+        try:
+            d_product = DefectiveProduct.objects.get(id=defective_id, branch=request.user.branch)
+            product = Inventory.objects.get(product__id=d_product.product.id, branch=request.user.branch)
+        except:
+            return Response({'success': False, 'message':'Product doesnt exists'}, status.HTTP_400_BAD_REQUEST)
+    
+        product.quantity += quantity
+        product.status = True if product.status == False else product.status
+        product.save()
+        
+        d_product.quantity -= quantity
+        d_product.save()
+        
+        ActivityLog.objects.create(
+            branch = request.user.branch,
+            user=request.user,
+            action= 'stock in',
+            inventory=product,
+            quantity=quantity,
+            total_quantity=product.quantity,
+            description = 'from defective products'
+        )
+        return Response({'success':True}, status.HTTP_200_OK)
+
 
 class NotificationJson(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -4758,7 +4811,7 @@ class PurchaseOrderListandCreate(views.APIView):
 
                     if not all([product_name, quantity, unit_cost, product_id]):
                         transaction.set_rollback(True)
-                        return Response({'message': 'Missing fields in item data'}, status.HTTP_400_BAD_REQUEST)
+                        return Response({'message': f'Missing fields in item data:{[product_name, quantity, unit_cost, product_id]}'}, status.HTTP_400_BAD_REQUEST)
 
                     try:
                         product = Inventory.objects.get(id=product_id, branch=request.user.branch)
@@ -4777,8 +4830,8 @@ class PurchaseOrderListandCreate(views.APIView):
                         received_quantity=0,
                         received=False,
                         supplier = supplier,
-                        price=0,
-                        wholesale_price=0
+                        # price=0,
+                        # wholesale_price=0
                     )
                     product.suppliers.add(po_item.supplier.id)
                     product.batch += f'{batch}, '
@@ -4832,6 +4885,21 @@ class PurchaseOrderListandCreate(views.APIView):
         except Exception as e:
             return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
         return Response({'message': 'Purchase order created successfully'}, status.HTTP_201_CREATED)
+
+class PurchaseOrderInformation(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        suppliers = Supplier.objects.all().values()
+        products = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name').values()
+        batch_codes = BatchCode.objects.all().values()
+        return Response(
+            {
+                'suppliers':suppliers,
+                'batch_codes':batch_codes,
+                'products':products
+            },
+            status.HTTP_200_OK
+        )
 
 class PurchaseOrderDeleteandEdit(views.APIView):
     permission_classes = [IsAuthenticated]

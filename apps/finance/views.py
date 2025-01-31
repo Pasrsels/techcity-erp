@@ -3048,6 +3048,61 @@ class CustomersViewset(ModelViewSet):
         customer_serializer = self.get_serializer(customer)
         return Response(customer_serializer.data, status=status.HTTP_201_CREATED)
     
+class AllCustomerAccounts(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        customer_infomation = Customer.objects.all()
+        customer_balances = CustomerAccountBalances.objects.all()
+
+        customer_infomation_list = {}
+        # balance = []
+        for items in customer_balances:
+            balance = []
+            customer_infomation_list[items.account.customer.id] = {
+                'name':items.account.customer.name,
+                'phone_number': items.account.customer.phone_number,
+                'email': items.account.customer.email,
+                'accounts':
+                {   
+                
+                }
+            }
+            id = items.account.customer.id
+            for item in customer_balances:
+                if id == item.account.customer.id:
+                    balance.append(
+                        {
+                            'customer_id': item.account.customer.id,
+                            'currency': item.currency.name,
+                            'balance': item.balance
+                            
+                        }
+                    )
+            customer_infomation_list[items.account.customer.id]['accounts'] = balance
+
+        logger.info(customer_infomation_list)
+        return Response(customer_infomation_list, status.HTTP_200_OK)
+
+class CustomerCurrenciesTotal(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        currencies = Currency.objects.all()
+        balances  = CustomerAccountBalances.objects.all()
+
+        currencies_information = {}
+
+        for item in currencies:
+            total_balance = 0
+            currencies_information[item.name] = {
+                'balance': 0
+            }
+            currency_name = item.name
+            for items in balances:
+                if items.currency.name == currency_name:
+                    total_balance += items.balance
+            currencies_information[item.name]['balance'] = total_balance
+
+        return Response(currencies_information, status.HTTP_200_OK)
 
 class CustomerAccountView(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -5028,3 +5083,9 @@ class ExpenseJson(views.APIView):
             expense_total = expenses.filter(issue_date__month=month, status=False).aggregate(Sum('amount'))
         
         return Response({'expense_total': expense_total['amount__sum'] or 0}, status.HTTP_200_OK)
+
+class AccountType(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        payment_options = Account.objects.all().values('name', 'type')
+        return Response({'payment options': payment_options}, status.HTTP_200_OK)

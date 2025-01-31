@@ -120,6 +120,8 @@ urlpatterns = [
     path('', include(router.urls)),
     #Customers
     # path('api/v1/customers/', CustomersViewset.as_view(), name='api_customers'),
+    path('api/v1/all-customer-account/', AllCustomerAccounts.as_view(), name='api_all_customer_account'),
+    path('api/v1/customer-total-balances/', CustomerCurrenciesTotal.as_view(), name='api_currencies_total'),
     path('api/v1/customer-account/<int:customer_id>/', CustomerAccountView.as_view(), name='api_customer_account'),
     path('api/v1/customer-account-payments/<int:customer_id>/', CustomerPaymentsJsonView.as_view(), name='api_customer_account_payments'),
     path('api/v1/customer-deposit-edit/<int:deposit_id>/', EditCustomerDeposit.as_view(), name='api_customer_deposit_edit'),
@@ -189,4 +191,7 @@ urlpatterns = [
     path('api/v1/pl_overview/', PLOverview.as_view(), name='api_pl_overview'),
     path('api/v1/income_json/', IncomeJson.as_view(), name='api_income_json'),
     path('api/v1/expense_json/', ExpenseJson.as_view(), name='api_expense_json'),
+
+    #Account type
+    path('api/v1/account-types/', AccountType.as_view(), name = 'api_account_types')
 ]

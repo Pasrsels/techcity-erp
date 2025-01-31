@@ -192,8 +192,8 @@ class PurchaseOrderItem(models.Model):
     dealer_expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, default=1)
     # cost =  models.DecimalField(max_digits=10, decimal_places=2)
-    #price = models.DecimalField(max_digits=10, decimal_places=2)
-    #wholesale_price = models.DecimalField(max_digits=10, decimal_places=2)
+    # price = models.DecimalField(max_digits=10, decimal_places=2)
+    # wholesale_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def receive_items(self, quantity):
     
@@ -260,7 +260,7 @@ class otherExpenses(models.Model):
 class Transfer(models.Model):
     transfer_ref = models.CharField(max_length=100)
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='user_branch')
-    transfer_to = models.ManyToManyField(Branch)
+    # transfer_to = models.ManyToManyField(Branch)
     description =  models.CharField(max_length=255, null=True, blank=True)
     date = models.DateField(auto_now_add=True)
     time = models.DateTimeField(auto_now_add=True)
@@ -270,7 +270,7 @@ class Transfer(models.Model):
     defective_status = models.BooleanField(default=False)
     delete = models.BooleanField(default=False, null=True)
     receive_status = models.BooleanField(default=False, null=True)
-    hold = models.BooleanField(default=False)
+    # hold = models.BooleanField(default=False)
 
     class Meta:
         indexes = [
@@ -278,7 +278,7 @@ class Transfer(models.Model):
             models.Index(fields=['transfer_ref']),
             models.Index(fields=['date']),
             models.Index(fields=['delete']),
-            models.Index(fields=['hold']),
+            # models.Index(fields=['hold']),
         ]
 
     @classmethod
@@ -465,24 +465,25 @@ class reorderSettings(models.Model):
 
 
 class StockTake(models.Model):
-    date = models.DateField()
-    s_t_number = models.CharField(max_length=255)
-    result = models.CharField(max_length=255, null=True)
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
-    status = models.BooleanField(default=False)
+    pass
+    # date = models.DateField()
+    # s_t_number = models.CharField(max_length=255)
+    # result = models.CharField(max_length=255, null=True)
+    # branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    # status = models.BooleanField(default=False)
 
-    def stocktake_number(self, branch):
-        prv_stock_take = StockTake.objects.filter(branch__name=branch).order_by('-id').first()
-        if prv_stock_take:
-            last_stocktake_number = int(prv_stock_take.s_t_number)
-            new_stocktake_number = last_stocktake_number + 1
-        else:
-            new_stocktake_number = 1
+    # def stocktake_number(self, branch):
+    #     prv_stock_take = StockTake.objects.filter(branch__name=branch).order_by('-id').first()
+    #     if prv_stock_take:
+    #         last_stocktake_number = int(prv_stock_take.s_t_number)
+    #         new_stocktake_number = last_stocktake_number + 1
+    #     else:
+    #         new_stocktake_number = 1
 
-        return new_stocktake_number
+    #     return new_stocktake_number
     
-    def __str__(self):
-        return f'{self.date}: {self.s_t_number}'
+    # def __str__(self):
+    #     return f'{self.date}: {self.s_t_number}'
         
 class StocktakeItem(models.Model):
     stocktake = models.ForeignKey(StockTake, on_delete=models.CASCADE, null=True)
