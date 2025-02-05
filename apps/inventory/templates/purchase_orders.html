@@ -136,6 +136,7 @@
         let currentSupplierIndex = 0;
 
         // green received
+      /*
         const receive = () => {
             {% for order in orders %}
                 if (${order.received}) {
@@ -144,7 +145,7 @@
             {% endfor %}
         };
         receive();
-
+         */
         function confirmDeletePurchaseOrder(purchase_order_id) {
             Swal.fire({
                 title: 'Are you sure?',
@@ -227,7 +228,7 @@
                 });
             });
         }
-
+         /*
         function showSupplierDetails(orderId) {
             fetch(/inventory/purchase_order/suppliers/${orderId}/)
                 .then(response => response.json())
@@ -246,7 +247,7 @@
                     });
                 });
         }
-
+         */
         function displaySupplier() {
             if (suppliers.length > 0 && currentSupplierIndex < suppliers.length) {
                 const supplier = suppliers[currentSupplierIndex];
