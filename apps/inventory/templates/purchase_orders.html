@@ -156,7 +156,7 @@
             const data = {
                 'status': document.getElementById('id_status').value
             };
-            fetch(/inventory/purchase_orders/status/${orderID}/, {
+            fetch(`/inventory/purchase_orders/status/${orderID}/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
