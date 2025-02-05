@@ -146,53 +146,7 @@
         };
         receive();
          */
-        function confirmDeletePurchaseOrder(purchase_order_id) {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch(/inventory/purchase_order/delete/${purchase_order_id}/, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRFToken': getCookie('csrftoken'),
-                            'Content-Type': 'application/json',
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire(
-                                'Deleted!',
-                                'Your purchase order has been deleted.',
-                                'success'
-                            ).then(() => {
-                                window.location.reload();
-                            });
-                        } else {
-                            Swal.fire(
-                                'Error!',
-                                data.message,
-                                'error'
-                            );
-                        }
-                    })
-                    .catch((error) => {
-                        Swal.fire(
-                            'Error!',
-                            'Something went wrong. Please try again.',
-                            'error'
-                        );
-                    });
-                }
-            });
-        }
-
+      
         function status(td) {
             orderID = td.dataset.id;
             statusFormModal.show();
@@ -267,5 +221,51 @@
             currentSupplierIndex += 1;
             displaySupplier();
         }
+        function confirmDeletePurchaseOrder(purchase_order_id) {
+               Swal.fire({
+                   title: 'Are you sure?',
+                   text: "You won't be able to revert this!",
+                   icon: 'warning',
+                   showCancelButton: true,
+                   confirmButtonColor: '#3085d6',
+                   cancelButtonColor: '#d33',
+                   confirmButtonText: 'Yes, delete it!'
+               }).then((result) => {
+                   if (result.isConfirmed) {
+                       fetch(/inventory/purchase_order/delete/${purchase_order_id}/, {
+                           method: 'DELETE',
+                           headers: {
+                               'X-CSRFToken': getCookie('csrftoken'),
+                               'Content-Type': 'application/json',
+                           }
+                       })
+                       .then(response => response.json())
+                       .then(data => {
+                           if (data.success) {
+                               Swal.fire(
+                                   'Deleted!',
+                                   'Your purchase order has been deleted.',
+                                   'success'
+                               ).then(() => {
+                                   window.location.reload();
+                               });
+                           } else {
+                               Swal.fire(
+                                   'Error!',
+                                   data.message,
+                                   'error'
+                               );
+                           }
+                       })
+                       .catch((error) => {
+                           Swal.fire(
+                               'Error!',
+                               'Something went wrong. Please try again.',
+                               'error'
+                           );
+                       });
+                   }
+               });
+           }
    </script>
 {% endblock %}
