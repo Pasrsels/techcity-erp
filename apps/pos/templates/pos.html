@@ -1258,6 +1258,7 @@ async function processCart(el) {
                     title: 'Success'
                 }).then(() => {
                     displayReceipt(result.invoice_id);
+                }).then(() => {
                     //reload page after
                     window.location.reload();
                 })
