@@ -1373,6 +1373,7 @@ async function displayReceipt(invoiceId) {
             timer: 2000,
             showConfirmButton: false
         }).then(()=>{
+            window.location.reload();
             //loaderModal.hide();
             receiptModal.show();
         })
