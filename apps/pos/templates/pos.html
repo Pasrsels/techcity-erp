@@ -1258,9 +1258,7 @@ async function processCart(el) {
                     title: 'Success'
                 }).then(() => {
                     displayReceipt(result.invoice_id);
-                }).then(() => {
-                    //reload page after
-                    window.location.reload();
+                    setTimeout(() =>{window.location.reload();}, 5000);
                 })
             }
         } else if (result.hold){
