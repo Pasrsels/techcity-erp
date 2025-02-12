@@ -123,14 +123,35 @@
             
                 <div class="row row-cols-1 row-cols-md-3 g-4 mt-3">
 
-                    <div class="col">
-                        <a href="{% url 'finance:cash_flow' %}" class="card text-center text-decoration-none border-dark h-100">
-                            <div class="card-body">
-                                <i class="bx bx-book fs-1"></i>
-                                <h5 class="card-title mt-2">Cash Flow</h5>
-                            </div>
-                        </a>
-                    </div>
+                    {% if request.user.branch.name == 'ADMINS' %}
+                        <div class="col">
+                            <a href="{% url 'finance:cash_flow' %}" class="card text-center text-decoration-none border-dark h-100">
+                                <div class="card-body">
+                                    <i class="bx bx-book fs-1"></i>
+                                    <h5 class="card-title mt-2">Cash Flow</h5>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col">
+                            <a href="{% url 'finance:cashbook' %}" class="card text-center text-decoration-none border-dark h-100">
+                                <div class="card-body">
+                                    <i class="bx bx-book fs-1"></i>
+                                    <h5 class="card-title mt-2">Cashbook</h5>
+                                </div>
+                            </a>
+                        </div>
+
+                    {% else %}
+                        <div class="col">
+                            <a href="{% url 'finance:cashbook' %}" class="card text-center text-decoration-none border-dark h-100">
+                                <div class="card-body">
+                                    <i class="bx bx-book fs-1"></i>
+                                    <h5 class="card-title mt-2">Cashbook</h5>
+                                </div>
+                            </a>
+                        </div>
+                    {% endif %}
 
                     <div class="col">
                         <a href="{% url 'finance:expenses' %}" class="card text-center text-decoration-none border-dark h-100">
@@ -185,9 +206,9 @@
                         </a>
                     </div>
                     <div class="col">
-                        <button type="button" class="card text-center text-decoration-none border-dark h-100" data-bs-toggle="modal" data-bs-target="#timeFrameModal" style="cursor: pointer;">
+                        <button type="button" class="w-100 card text-center text-decoration-none border-dark h-100" data-bs-toggle="modal" data-bs-target="#timeFrameModal" style="cursor: pointer;">
                             <div class="card-body">
-                                <i class="bx bx-report fs-1"></i>
+                                <i class="bx bxs-report fs-1"></i>
                                 <h5 class="card-title mt-2">Reports</h5>
                             </div>
                         </button>
@@ -197,6 +218,14 @@
                             <div class="card-body">
                                 <i class="bx bx-report fs-1"></i>
                                 <h5 class="card-title mt-2">User Accounts</h5>
+                            </div>
+                        </a>
+                    </div> 
+                    <div class="col">
+                        <a href="{% url 'finance:user_accounts'%}" class="card text-center text-decoration-none border-dark h-100">
+                            <div class="card-body">
+                                <i class="bx bx-cog fs-1"></i>
+                                <h5 class="card-title mt-2">Settings</h5>
                             </div>
                         </a>
                     </div> 
