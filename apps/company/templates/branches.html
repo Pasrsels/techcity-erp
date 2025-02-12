@@ -15,7 +15,7 @@
         </button>
       </div>
     </div>
-    <table class="table table-hover table-striped mt-3" id="branches_table" style="width: 100%;">
+    <table class="table table-hover table-striped mt-3" id="branches_table" style="width:100%;">
       <thead class="table-dark">
         <tr>
           <th>#</th>
@@ -77,19 +77,16 @@
   </div>
 
   <script>
-    // Initialize DataTable
     new DataTable('#branches_table', { paging: false });
 
-    // Modal Handler
+
     const branchModal = new bootstrap.Modal(document.getElementById('branchForm'));
     const addBranchButton = document.getElementById('add_branch');
 
-    // Show Modal on Button Click
     addBranchButton.addEventListener('click', () => {
       branchModal.show();
     });
 
-    // Form Submission
     const branchFormContent = document.getElementById('branchFormContent');
     branchFormContent.addEventListener('submit', (e) => {
       e.preventDefault();

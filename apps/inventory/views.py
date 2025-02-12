@@ -78,25 +78,10 @@ from typing import List, Dict, Any
 
 @login_required
 def notifications_json(request):
-    notifications = StockNotifications.objects.filter(inventory__branch=request.user.branch).values(
+    notifications = StockNotifications.objects.filter(inventory__branch=request.user.branch).select_related('inventory, inventory__branch').values(
         'inventory__product__name', 'type', 'notification', 'inventory__id'
     )
     return JsonResponse(list(notifications), safe=False)
-
-@login_required
-def service(request):
-    form = ServiceForm()
-    if request.method == 'POST':
-        form = ServiceForm(request.POST)
-        if form.is_valid():
-            service_obj = form.save(commit=False)
-            service_obj.cost = 0
-            service_obj.branch = request.user.branch
-            service_obj.save()
-            messages.success(request, 'Service successfully created')
-            return redirect('inventory:inventory')
-        messages.warning(request, 'Invalid form data')
-    return redirect('inventory:inventory')
     
 @login_required
 def batch_code(request):
@@ -117,28 +102,12 @@ def batch_code(request):
             BatchCode.objects.create(code=code)
             return JsonResponse({'success':True}, status=200)
         except Exception as e:
-            logger.info(e)
             return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
 
 @login_required
 def product_list(request):
     """ for the pos """
-    queryset = Inventory.objects.filter(branch=request.user.branch, status=True)
-    services = Service.objects.all().order_by('-name')
-
-    search_query = request.GET.get('q', '') 
-    product_id = request.GET.get('product', '')
-    category_id = request.GET.get('category', '')
-
-    if category_id:
-        queryset = queryset.filter(category__id=category_id)
-    if search_query:
-        queryset = queryset.filter(
-            Q(name__icontains=search_query) | 
-            Q(description__icontains=search_query) 
-        )
-    if product_id:
-        queryset = queryset.filter(id=product_id)
+    queryset = Inventory.objects.filter(branch=request.user.branch, status=True).select_related('branch')
 
     inventory_data = list(queryset.values(
         'id', 
@@ -153,6 +122,7 @@ def product_list(request):
         'image'
     ))
     
+    # to me reviewed more 
     merged_data = [{
         'inventory_id': item['id'],
         'product_id': item['id'],
@@ -166,6 +136,7 @@ def product_list(request):
         'dealer_price':item['dealer_price'],
         'image':item['image']
     } for item in inventory_data]
+
     return JsonResponse(merged_data, safe=False)
 
 @login_required
@@ -176,7 +147,7 @@ def branches_inventory(request):
 def branches_inventory_json(request):
     branches_inventory = Inventory.objects.filter(status=True).values(
         'product__name', 'price', 'quantity', 'branch__name'
-    )
+    ).select_related('compay')
     return JsonResponse(list(branches_inventory), safe=False)
         
 class AddProductView(LoginRequiredMixin, View):
@@ -442,7 +413,8 @@ def delete_transfer(request, transfer_id):
                     quantity_updates[product.id] = {'product': product, 'increment': 0}
 
                 quantity_updates[product.id]['increment'] += item.quantity
-
+            
+            # to be further reviewed
             for update in quantity_updates.values():
                 product = update['product']
                 product.quantity += update['increment']
@@ -479,10 +451,20 @@ def delete_transfer(request, transfer_id):
 @login_required       
 def transfer_details(request, transfer_id):
     transfer = TransferItems.objects.filter(id=transfer_id).values(
-        'product__name', 'transfer__transfer_ref', 'quantity', 'price', 'from_branch__name', 'to_branch__name'
+        'product__name', 
+        'transfer__transfer_ref', 
+        'quantity', 
+        'price', 
+        'from_branch__name', 
+        'to_branch__name'
+    ).select_related(
+        'transfer',
+        'transfer_to',
+        'transfer_from'
     )
     return JsonResponse(list(transfer), safe=False)
 
+# requires a good name for the view
 @login_required
 def inventory(request):
     product_id = request.GET.get('id', '')
@@ -497,7 +479,6 @@ def inventory_index(request):
     q = request.GET.get('q', '')  
     category = request.GET.get('category', '')    
     
-    services = Service.objects.all().order_by('-name')
     accessories = Accessory.objects.all()
     inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).select_related(
         'category',
@@ -571,7 +552,7 @@ def edit_service(request, service_id):
         form = ServiceForm(instance=service)
         return render(request, 'edit_service.html', {'form': form, 'service': service})
     
-    elif request.method == 'POST':
+    if request.method == 'POST':
         form = ServiceForm(request.POST, instance=service)
         if form.is_valid():
             form.save()
@@ -580,26 +561,32 @@ def edit_service(request, service_id):
         else:
             messages.warning(request, 'Please correct the errors below')
     
-    else:
-        messages.warning(request, 'Invalid request')
-        return redirect('inventory:inventory')
-    
-    return render(request, 'edit_service.html', {'form': form, 'service': service})
+    messages.warning(request, 'Invalid request')
+    return redirect('inventory:inventory')
+
         
 @login_required   
 def inventory_index_json(request):
     inventory = Inventory.objects.filter(branch=request.user.branch, status=True).values(
-        'id', 'product__name', 'product__quantity', 'product__id', 'price', 'cost', 'quantity', 'reorder'
-    ).order_by('product__name')
+        'id', 
+        'product__name', 
+        'product__quantity', 
+        'product__id',
+        'price', 
+        'cost', 
+        'quantity', 
+        'reorder'
+    ).select_related('branch').order_by('product__name')
     return JsonResponse(list(inventory), safe=False)
 
 @login_required 
 @transaction.atomic
 def activate_inventory(request, product_id):
-    product = get_object_or_404(Inventory, id=product_id)
-    product.status=True
-    product.save()
-    
+    with transaction.atomic():
+        product = Inventory.objects.select_for_update(id=product_id)
+        product.status=True
+        product.save()
+        
     ActivityLog.objects.create(
         invoice = None,
         product_transfer = None,

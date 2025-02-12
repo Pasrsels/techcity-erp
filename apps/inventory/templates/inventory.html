@@ -206,34 +206,6 @@
             </div>
         </div>
 
-        <div class="modal fade" id="sfModal" tabindex="-1" aria-labelledby="transferModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <h5 class="modal-title fw-bold p-2">Add service</h5>
-                    <div class="modal-body">
-                        <form action="{% url 'inventory:create_service' %}" method="post">
-                            {% csrf_token %}
-                            {{ form|crispy }}
-                            <div class="d-flex justify-content-end">
-                                <div class="">
-                                    <button type="reset" class="btn btn-danger btn-sm w-100">
-                                        <i class='bx bx-reset'></i>
-                                        Reset
-                                    </button>
-                                </div>
-                                <span class="px-1"></span>
-                                <div class="">
-                                    <button type="submit" id="id_submit" class="btn btn-secondary btn-sm w-100">
-                                        <i class='bx bx-save'></i>
-                                        Save
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">

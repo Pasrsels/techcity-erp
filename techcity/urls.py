@@ -18,6 +18,7 @@ urlpatterns = [
     path('dashboard/', include('apps.Dashboard.urls', namespace='dashboard')),
     path('booking', include('apps.booking.urls', namespace='booking')),
     path('verify/<uidb64>/<token>/', verify_email, name='verify_email'),
+    path('__reload__/', include('django_browser_reload.urls')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
@@ -42,3 +43,9 @@ if settings.DEBUG:
     if "debug_toolbar" in settings.INSTALLED_APPS:
         import debug_toolbar
         urlpatterns = [path("__debug__/", include(debug_toolbar.urls))] + urlpatterns
+
+    # if settings.DEBUG:
+    #     import debug_toolbar
+    #     urlpatterns = [
+    #         path('__debug__/', include(debug_toolbar.urls)),
+    #     ] + urlpatterns

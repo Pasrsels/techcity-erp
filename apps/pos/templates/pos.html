@@ -190,12 +190,14 @@
                                 <td></td>
                                 <td id="id_total_amount">0.00</td>
                             </tr>
-                            <tr>
+  <!--                          
+<tr>
                                 <td>Tax Amount</td>
                                 <td></td>
                                 <td></td>
                                 <td id="id_vat_amount">0.00</td>
                             </tr>
+-->
                             <tr>
                                 <td>Payable Amount</td>
                                 <td></td>
@@ -1000,7 +1002,7 @@ function totals(){
 
     if(discount === 0){
         document.getElementById("id_total_amount").textContent = `${ currencyData[0][0].symbol + ' ' + totalAmount.toFixed(2)}`;
-        document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
+        //document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
         document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + payable.toFixed(2)}`;
 
         payable_amount = payable
@@ -1020,7 +1022,7 @@ function totals(){
         discount_amount = discountAmount
 
         document.getElementById("id_total_amount").textContent = `${ currencyData[0][0].symbol + ' ' + totalAmount.toFixed(2)}`;
-        document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
+        //document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
         document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + payable.toFixed(2)}`;
 
         updateTfoot(vatAmount, totalAmount, payable)
@@ -1256,6 +1258,7 @@ async function processCart(el) {
                     title: 'Success'
                 }).then(() => {
                     displayReceipt(result.invoice_id);
+                    setTimeout(() =>{window.location.reload();}, 5000);
                 })
             }
         } else if (result.hold){
@@ -1510,9 +1513,9 @@ async function displayReceipt(invoiceId) {
                     }
                 </style>
             </head>
-            <body>
+            <div>
                 ${content}
-            </body>
+            </div>
             </html>
         `);
         frameDoc.document.close();

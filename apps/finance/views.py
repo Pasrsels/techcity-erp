@@ -610,14 +610,17 @@ def create_invoice(request):
 
             logger.info(f'amount paid: {amount_paid}')
 
-            #if amount_paid > invoice_total_amount:
-            #   amount_paid = invoice_total_amount
-            
             amount_due = invoice_total_amount - amount_paid  
 
             cogs = COGS.objects.create(amount=Decimal(0))
             
             with transaction.atomic():
+                amount_paid = Decimal(invoice_data['amount_paid'])
+
+                if amount_paid > invoice_total_amount:
+                    amount_paid = invoice_total_amount
+                else:
+                    amount_paid = amount_paid
                 
                 invoice = Invoice.objects.create(
                     invoice_number=Invoice.generate_invoice_number(request.user.branch.name),  
@@ -636,7 +639,7 @@ def create_invoice(request):
                     products_purchased = ', '.join([f'{item['product_name']} x {item['quantity']} ' for item in items_data]),
                     payment_terms = invoice_data['paymentTerms'],
                     hold_status = invoice_data['hold_status'],
-                    amount_received = invoice_data['amount_paid']
+                    amount_received = amount_paid
                 )
 
                 logger.info(invoice.hold_status)
@@ -1951,6 +1954,7 @@ def send_invoice_whatsapp(request, invoice_id):
         return JsonResponse({"error": "Error sending invoice via WhatsApp"})
     
 @login_required
+@transaction.atomic()
 def end_of_day(request):
     today = timezone.now().date()
     
@@ -2012,131 +2016,139 @@ def end_of_day(request):
             data = json.loads(request.body)
             logger.info(data)
             inventory_data = []
+
+            with transaction.atomic():
+                
+                for item in data:
+                    try:
+                        inventory = Inventory.objects.get(id=item['item_id'], branch=request.user.branch, status=True)
+                        inventory.physical_count = item['physical_count']
+                        inventory.save()
+
+                        sold_info = next((i for i in sold_inventory if i['inventory__id'] == inventory.id), None)
+                        inventory_data.append({
+                            'id': inventory.id,
+                            'name': inventory.name,
+                            'initial_quantity': inventory.quantity,
+                            'quantity_sold': sold_info['quantity_sold'] if sold_info else 0,
+                            'remaining_quantity': inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0),
+                            'physical_count': inventory.physical_count,
+                            'difference': inventory.physical_count - (inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0))
+                        })
+                    except Inventory.DoesNotExist:
+                        return JsonResponse({'success': False, 'error': f'Inventory item with id {item["inventory_id"]} does not exist.'})
+
+                today_min = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                today_max = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
+                
+                # Invoice data
+                invoices = Invoice.objects.filter(branch=request.user.branch, issue_date__range=(today_min, today_max))
+                partial_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PARTIAL)
+                paid_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PAID)
             
-            for item in data:
-                try:
-                    inventory = Inventory.objects.get(id=item['item_id'], branch=request.user.branch, status=True)
-                    inventory.physical_count = item['physical_count']
-                    inventory.save()
+                # Expenses
+                expenses = Expense.objects.filter(branch=request.user.branch, issue_date=today)
+                logger.info(expenses)
+                confirmed_expenses = expenses.filter(status=True)
+                unconfirmed_expenses = expenses.filter(status=False)
+                
+                # Calculate totals for CashUp
+                total_sales = paid_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0 
+                total_partial = partial_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0
+                total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
 
-                    sold_info = next((i for i in sold_inventory if i['inventory__id'] == inventory.id), None)
-                    inventory_data.append({
-                        'id': inventory.id,
-                        'name': inventory.name,
-                        'initial_quantity': inventory.quantity,
-                        'quantity_sold': sold_info['quantity_sold'] if sold_info else 0,
-                        'remaining_quantity': inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0),
-                        'physical_count': inventory.physical_count,
-                        'difference': inventory.physical_count - (inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0))
-                    })
-                except Inventory.DoesNotExist:
-                    return JsonResponse({'success': False, 'error': f'Inventory item with id {item["inventory_id"]} does not exist.'})
+                expected_cash = total_sales - total_expenses
 
-            today_min = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-            today_max = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
-            
-            # Invoice data
-            invoices = Invoice.objects.filter(branch=request.user.branch, issue_date__range=(today_min, today_max))
-            partial_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PARTIAL)
-            paid_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PAID)
-           
-            # Expenses
-            expenses = Expense.objects.filter(branch=request.user.branch, issue_date=today)
-            logger.info(expenses)
-            confirmed_expenses = expenses.filter(status=True)
-            unconfirmed_expenses = expenses.filter(status=False)
-            
-            # Calculate totals for CashUp
-            total_sales = paid_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0
-            total_partial = partial_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0
-            total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+                logger.info(expected_cash)
+                
+                # Create CashUp entry
+                cashup = CashUp.objects.create(
+                    date=today,
+                    branch=request.user.branch,
+                    expected_cash=expected_cash,
+                    received_amount=0,  
+                    balance=0,  
+                    created_by=request.user,
+                    status=False 
+                )
 
-            expected_cash = total_sales - total_expenses
+                logger.info(cashup.expected_cash)
 
-            logger.info(expected_cash)
-            
-            # Create CashUp entry
-            cashup = CashUp.objects.create(
-                date=today,
-                branch=request.user.branch,
-                expected_cash=expected_cash,
-                received_amount=0,  
-                balance=0,  
-                created_by=request.user,
-                status=False 
-            )
+                items = InvoiceItem.objects.filter(invoice__payment_status=Invoice.PaymentStatus.PAID, invoice__issue_date__range=(today_min, today_max))
+                for item in items:
+                    logger.info(f'Item: {item.invoice.payment_status}')
 
-            logger.info(cashup.expected_cash)
+                cashup.sales.set(items)
 
-            items = InvoiceItem.objects.filter(invoice__issue_date__range=(today_min, today_max))
-            cashup.sales.set(items)
-            cashup.expenses.set(expenses)
+                logger.info(cashup.sales.all())
 
-            # Create UserAccount object
-            user_account, _ = UserAccount.objects.get_or_create(
-                user=request.user,
-                defaults={
-                    'balance': Decimal('0.00'),
-                    'total_credits': Decimal('0.00'),
-                    'total_debits': Decimal('0.00'),
-                    'last_transaction_date': timezone.now()
-                }
-            )
+                cashup.expenses.set(expenses) #to change to confirmed expenses (later)
 
-            
-            # Create UserTransaction object
-            user_transaction = UserTransaction.objects.create(
-                account=user_account,
-                transaction_type='Cash',
-                amount=total_cash_amounts[0]['total_invoices_amount'] - total_cash_amounts[0]['total_withdrawals_amount'],
-                description='End of day transaction',
-                debit = expected_cash,
-                credit = 0,
-            )
+                # Create UserAccount object
+                user_account, _ = UserAccount.objects.get_or_create(
+                    user=request.user,
+                    defaults={
+                        'balance': Decimal('0.00'),
+                        'total_credits': Decimal('0.00'),
+                        'total_debits': Decimal('0.00'),
+                        'last_transaction_date': timezone.now()
+                    }
+                )
 
-            # Update UserAccount balance
-            user_account.balance += user_transaction.amount
-            user_account.total_debits += user_transaction.amount
-            user_account.last_transaction_date = timezone.now()
-            user_account.save()
+                
+                # Create UserTransaction object
+                user_transaction = UserTransaction.objects.create(
+                    account=user_account,
+                    transaction_type='Cash',
+                    amount=total_cash_amounts[0]['total_invoices_amount'] - total_cash_amounts[0]['total_withdrawals_amount'],
+                    description='End of day transaction',
+                    debit = expected_cash,
+                    credit = 0,
+                )
+
+                # Update UserAccount balance
+                user_account.balance += user_transaction.amount
+                user_account.total_debits += user_transaction.amount
+                user_account.last_transaction_date = timezone.now()
+                user_account.save()
 
 
-            # # Generate PDF report
-            # html_string = render_to_string('day_report.html', {
-            #     'request': request,
-            #     'invoices': invoices,
-            #     'expenses': expenses,
-            #     'date': today,
-            #     'inventory_data': inventory_data,
-            #     'total_sales': total_sales,
-            #     'partial_payments': total_partial,
-            #     'total_paid_invoices': paid_invoices.count(),
-            #     'total_partial_invoices': partial_invoices.count(),
-            #     'total_expenses': total_expenses,
-            #     'confirmed_expenses': confirmed_expenses,
-            #     'unconfirmed_expenses': unconfirmed_expenses,
-            #     'account_balances': AccountBalance.objects.filter(branch=request.user.branch),
-            #     'cashup': cashup
-            # })
-            
-            # pdf_buffer = BytesIO()
-            # pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
-            
-            # if not pisa_status.err:
-            #     filename = f"{request.user.branch.name}_today_report_{today}.pdf"
-            #     return JsonResponse({
-            #         "success": True,
-            #         "cashup_id": cashup.id,
-            #         "expected_cash": float(expected_cash)
-            #     })
-            # else:
-            #     return JsonResponse({"success": False, "error": "Error generating PDF."}
+                # # Generate PDF report
+                # html_string = render_to_string('day_report.html', {
+                #     'request': request,
+                #     'invoices': invoices,
+                #     'expenses': expenses,
+                #     'date': today,
+                #     'inventory_data': inventory_data,
+                #     'total_sales': total_sales,
+                #     'partial_payments': total_partial,
+                #     'total_paid_invoices': paid_invoices.count(),
+                #     'total_partial_invoices': partial_invoices.count(),
+                #     'total_expenses': total_expenses,
+                #     'confirmed_expenses': confirmed_expenses,
+                #     'unconfirmed_expenses': unconfirmed_expenses,
+                #     'account_balances': AccountBalance.objects.filter(branch=request.user.branch),
+                #     'cashup': cashup
+                # })
+                
+                # pdf_buffer = BytesIO()
+                # pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
+                
+                # if not pisa_status.err:
+                #     filename = f"{request.user.branch.name}_today_report_{today}.pdf"
+                #     return JsonResponse({
+                #         "success": True,
+                #         "cashup_id": cashup.id,
+                #         "expected_cash": float(expected_cash)
+                #     })
+                # else:
+                #     return JsonResponse({"success": False, "error": "Error generating PDF."}
 
-            return JsonResponse({
-                    "success": True,
-                    "cashup_id": cashup.id,
-                    # "expected_cash": float(expected_cash)
-            })
+                return JsonResponse({
+                        "success": True,
+                        "cashup_id": cashup.id,
+                        # "expected_cash": float(expected_cash)
+                })
 
         except json.JSONDecodeError:
             return JsonResponse({'success': False, 'error': 'Invalid JSON data.'})
@@ -3078,8 +3090,6 @@ def cash_flow(request):
 
     cashFlows_total = cashflows.aggregate(total=Sum('total'))['total'] or 0
     cash_flow_items = CashUp.objects.filter(status=False).aggregate(total=Sum('expected_cash'))['total'] or 0
-
-    logger.info(cash_flow_items)
     
     context = {
         'cashflows': cashflows,
@@ -3106,15 +3116,11 @@ def cash_up_list(request):
         .order_by('-created_at')
     )
 
-    logger.info(cashups)
-    
     data = []
     for cashup in cashups:
         cashup_dict = dict(cashup)
         cashup_dict['created_at'] = cashup['created_at'].strftime('%Y-%m-%d %H:%M:%S')
         data.append(cashup_dict)
-
-    logger.info(data)
 
     return JsonResponse({
         'success': True,
@@ -3131,8 +3137,6 @@ def cashflow_create(request):
             amount = data.get('amount')
             cash_up_id = data.get('cash_up_id')
 
-            logger.info(amount)
-
             with transaction.atomic():
                 cash_up = CashUp.objects.get(id=cash_up_id)
                 cash_up.received_amount = Decimal(amount)
@@ -3141,6 +3145,16 @@ def cashflow_create(request):
 
                 total_income = sum(sale.unit_price * sale.quantity for sale in cash_up.sales.all())
                 total_expenses = sum(expense.amount for expense in cash_up.expenses.all())
+
+                for sale in cash_up.sales.all():
+                    logger.info(f'cash sale: {sale.unit_price * sale.quantity}', {sale})
+
+                logger.info(f'total income: {total_income}')
+
+                for expenses in cash_up.expenses.all():
+                    logger.info(f'cash expense: {expenses}')
+                
+                logger.info(f'total expenses: {total_expenses}')
 
                 expense_category, _ = CashFlowCategory.objects.get_or_create(name='Expense')
                 income_category, _ = CashFlowCategory.objects.get_or_create(name='Income')
@@ -3201,57 +3215,87 @@ def cashflow_create(request):
 
 @login_required
 @transaction.atomic
-def income_cashflow_create(request):
+def record_cashflow_transaction(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            amount = data.get('amount')
+            income = float(data.get('IncomeAmount', 0))
+            expense_amount = float(data.get('ExpenseAmount', 0))
+            transaction_type = data.get('type', '')
+            income_category = data.get('incomeCategory', '')
+            expense_category = data.get('expenseCategory', '')
+            income_branch = data.get('incomeBranch', '')
+            expense_branch = data.get('expenseBranch', '')
 
+            logger.info(expense_category)
+
+            # validations 
+            
+            if not transaction_type or transaction_type not in ['income', 'expense']:
+                return JsonResponse({'success': False, 'message': 'Invalid transaction type.'}, status=400)
+            
             with transaction.atomic():
-                income_category, _ = CashFlowCategory.objects.get_or_create(name='Income')
+                if transaction_type == 'income':
 
-                Cashflow.objects.create(
-                    branch=request.user.branch,
-                    total=amount,
-                    date=datetime.datetime.now(),
-                    status=False,
-                    income=amount,
-                    category=income_category,
-                    created_by=request.user
-                )
+                    if not income or income <= 0:
+                        return JsonResponse({'success': False, 'message': 'Invalid amount.'}, status=400)
+                    
+                    if transaction_type == 'income' and not income_category:
+                        return JsonResponse({'success': False, 'message': 'Income category is required.'}, status=400)
 
-                return JsonResponse({'success': True, 'message': 'Income cashflow successfully created'}, status=201)
+                    # if transaction_type == 'income' and not income_branch:
+                    #     return JsonResponse({'success': False, 'message': 'Income branch is required.'}, status=400)
+            
+                    logger.info(f'Creating Income amount: {income}')
+
+                    income_category, _ = CashFlowCategory.objects.get_or_create(id=income_category, defaults={'name': 'Income'})
+
+                    object = Cashflow.objects.create(
+                        branch=request.user.branch,
+                        total=income,
+                        date=datetime.datetime.now(),
+                        status=False,
+                        income=income,
+                        category=income_category,
+                        created_by=request.user
+                    )
+
+                    logger.info(f'Income created: {object}.')
+
+                    return JsonResponse({'success': True, 'message': 'Income cashflow successfully created'}, status=201)
+                
+                else:
+
+                    if not expense_amount or expense_amount <= 0:
+                        return JsonResponse({'success': False, 'message': 'Invalid amount.'}, status=400)
+
+                    if transaction_type == 'expense' and not expense_category:
+                        return JsonResponse({'success': False, 'message': 'Expense category is required.'}, status=400)
+                    
+                    # if transaction_type == 'expense' and not expense_branch:
+                    #     return JsonResponse({'success': False, 'message': 'Expense branch is required.'}, status=400)
+                    
+                    logger.info(f'Creating Expense amount: {expense_amount}')
+
+                    expense_category, _ = CashFlowCategory.objects.get_or_create(id=expense_category, defaults={'name': 'Expense'})
+
+                    object = Cashflow.objects.create(
+                        branch=request.user.branch,
+                        total=expense_amount,
+                        date=datetime.datetime.now(),
+                        status=False,
+                        expense=expense_amount,
+                        income=0,
+                        category=expense_category,
+                        created_by=request.user
+                    )
+
+                    logger.info(f'Expense created: {object}.')
+
+                    return JsonResponse({'success': True, 'message': 'Expense cashflow successfully created'}, status=201)
 
         except Exception as e:
-            logger.error(f"Error creating income cashflow: {e}")
-            return JsonResponse({'success': False, 'message': str(e)}, status=400)
-
-
-@login_required
-@transaction.atomic
-def expense_cashflow_create(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            amount = data.get('amount')
-
-            with transaction.atomic():
-                expense_category, _ = CashFlowCategory.objects.get_or_create(name='Expense')
-
-                Cashflow.objects.create(
-                    branch=request.user.branch,
-                    total=amount,
-                    date=datetime.datetime.now(),
-                    status=False,
-                    income=amount,
-                    category=expense_category,
-                    created_by=request.user
-                )
-
-                return JsonResponse({'success': True, 'message': 'Expense cashflow successfully created'}, status=201)
-
-        except Exception as e:
-            logger.error(f"Error creating expense cashflow: {e}")
+            logger.error(f"Error recording transaction {e}.")
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 

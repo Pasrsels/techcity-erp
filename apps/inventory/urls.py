@@ -13,7 +13,6 @@ urlpatterns = [
     path('', inventory_index, name='inventory'),
     path('inventory/', inventory, name='inventory_list'),
     path('product/list/', product_list, name='product_list'),
-    path('add-product/', AddProductView.as_view(), name='add_product'),
     path('delete-inventory/', delete_inventory, name='delete_inventory'),
     path('notifications/', notifications_json, name='notifications_json'),
     path('add_category/', add_product_category, name='add_product_category'),
@@ -24,6 +23,8 @@ urlpatterns = [
     path('defective_product_list/', defective_product_list, name='defective_product_list'),
     path('inventory/branches/json', branches_inventory_json, name='branches_inventory_json'),
     path('detail/<int:id>/', inventory_detail, name='inventory_detail' ),
+    path('create/product/', product, name='product'),
+    path('delete_product', delete_product, name='delete'),
 
     #Stocktake
     path('stocktake/', stock_take_index, name= 'stocktake'),
@@ -34,8 +35,7 @@ urlpatterns = [
     path('batch_code/', batch_code, name='batch_code'),
     
     # product
-    path('create/product/', product, name='product'),
-    path('delete_product', delete_product, name='delete'),
+    
     
     # suppliers
     path("suppliers/", supplier_view, name="suppliers"),
@@ -48,10 +48,6 @@ urlpatterns = [
 
     # defective
     path('add/defective/product/', create_defective_product, name='create_defective_product'),
-    
-    # services
-    path('create/service/', service, name='create_service'),
-    path('edit/service/<int:service_id>/', edit_service, name='edit_service'),
     
     # re-oder
     path('reorder/list', reorder_list, name='reorder_list'),

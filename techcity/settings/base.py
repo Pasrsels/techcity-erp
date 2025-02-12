@@ -39,6 +39,7 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     "channels",
+    # 'debug_toolbar',
     "crispy_forms",
     "crispy_bootstrap5",
     'phonenumber_field',
@@ -46,6 +47,8 @@ THIRD_PARTY_APPS = [
     # 'chartjs',
     # 'django_crontab',
     # 'DjangoAsyncMail',
+    'django_browser_reload',
+
 
     'apps.company',
     'apps.users',
@@ -74,6 +77,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -84,6 +88,10 @@ MIDDLEWARE = [
     'inventory.middleware.RequestMiddleware',
     'company.middleware.CompanySetupMiddleware',
     # 'users.middleware.LoginRequiredMiddleware',
+
+    # third pard middleware
+    'django_browser_reload.middleware.BrowserReloadMiddleware',
+    
     
 ]
 

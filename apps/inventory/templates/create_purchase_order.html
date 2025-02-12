@@ -726,9 +726,9 @@
 
     // edit product modal call
     const editModal = () => {
-      console.log(prodData)
+      console.info(prodData)
       if (prodData.length > 0 && prodData[0].length > 0){
-        console.log('here');
+        console.info('here');
         document.getElementById('title').textContent = `Edit Product: ${prodData[0][0].name.toUpperCase()}`;
         document.getElementById('id_name').value = prodData[0][0].name;
         document.getElementById('id_min_stock_level').value = prodData[0][0].min_stock_level;
@@ -774,7 +774,7 @@
 
                     const result = await response.json();
                     if (result.success) {
-                      console.log(result, 'reponse');
+                      console.info(result, 'reponse');
                       Swal.fire({
                           title: "success",
                           text: result.message,
@@ -865,7 +865,7 @@
         .then(response => response.json())
         .then(data => {
           productID = data[0].id;
-          console.log(productID, 'product id');
+          console.info(productID, 'product id');
           prodData=[]
           prodData.push(data);
         })
@@ -885,13 +885,13 @@
           .then(response => response.json())
           .then(data=>{
               if (data.success) {
-                console.log(data)
+                console.info(data)
                 if(data.suppliers){
                   const supplierPrices = document.getElementById('supplier_prices')
                   supplierPrices.innerHTML = ''
                   supplierPrices.innerHTML = `<p class="text-danger">Last best prices for this product</p>`
                   data.suppliers.forEach((sup)=>{
-                      console.log(sup)
+                      console.info(sup)
                       supplierPrices.innerHTML += `
                         <button type='button' aria-label='Click to choose supplier.' class='btn btn-outline-dark hint--bottom mb-1' onclick="selectedSupplier(${sup?.id})">$${sup?.price}</button>
                       `
@@ -1063,13 +1063,13 @@
     async function fetchBatchCodes(){
           try {
               const response = await fetch('{% url "inventory:batch_code" %}');
-              console.log(response)
+              console.info(response)
               if (!response.ok) {
-                  console.log(response)
+                  console.info(response)
               }
 
               const data = await response.json();
-              console.log(data)
+              console.info(data)
               updateBatchCodes(data);
           } catch (error) {
               console.error('Error fetching batch codes:', error);
@@ -1086,7 +1086,7 @@
               catElement.remove(1)
         }
         data.forEach((batch)=>{
-          console.log(data, batch)
+          console.info(data, batch)
             catElement.innerHTML += `<option value=${batch.id}>${batch.code}</option>`
         })
     }
@@ -1125,7 +1125,7 @@
             }
           })
           .catch((error) => {
-            console.log(error)
+            console.info(error)
           });
         }
 
@@ -1148,7 +1148,7 @@
       function updateCategory(data){
           const catElement = document.querySelector('#id_category')
 
-          console.log('loading products')
+          console.info('loading products')
       
           while(catElement.options.length > 1){
               catElement.remove(1)
@@ -1267,7 +1267,7 @@
                 throw new Error('Network response was not ok.');
             }
             const data = await response.json();
-            console.log(data)
+            console.info(data)
             updateProduct(data);
         } catch (error) {
             console.error('Error fetching categories:', error);
@@ -1278,7 +1278,7 @@
         const prodElement = document.querySelector('#id_product');
         prodElement.innerHTML = '<option value="">Select Product</option>';
 
-        console.log('product data: ', data)
+        console.info('product data: ', data)
 
         data.forEach((product) => {
             const option = document.createElement('option');
@@ -1466,7 +1466,7 @@
           updateItemTotal(item); 
           calculateTotals();
       }
-      console.log('updated cart', cart)
+      console.info('updated cart', cart)
       localStorage.setItem('cart', cart)
     }
 
@@ -1558,7 +1558,7 @@
         )
       }
 
-      console.log('supplier paymetnt data: ', suppliers_payment_data)
+      console.info('supplier paymetnt data: ', suppliers_payment_data)
 
       const data= {
         'po_items':cart,
@@ -1651,7 +1651,7 @@
 
     // cost apportionment
     document.getElementById('next_button').addEventListener('click', ()=>{
-      console.log(cart, 'cart')
+      console.info(cart, 'cart')
       if (cart.length != 0){
 
         document.getElementById('main-section').style.display = 'none';
@@ -1667,7 +1667,7 @@
         totalExpenses = other_amount;
   
         cost = totalProductCost(cart, totalExpenses);
-        console.log(cost)
+        console.info(cost)
 
         apportionmentTable.innerHTML = '';
         
@@ -1678,7 +1678,7 @@
           let actualCostPrice = 0;
           let result = allocateCost(cost, item.price, item.quantity, totalExpenses)
 
-          console.log(result)
+          console.info(result)
           // add actual cost price 
           actualCostPrice = result.expCost;
 
@@ -1747,7 +1747,7 @@
                   amount: expenseAmount
               });
 
-              console.log(expensesData)
+              console.info(expensesData)
             
             // Create and append the expense row to the footer
             const expenseRow = document.createElement('tr');
@@ -1772,7 +1772,6 @@
       }
     })
 
-    // cost price overide
     function priceOverride(input, data) {
       let expense = 0;
       let totalCost = 0;
@@ -1796,7 +1795,7 @@
         
         // push product 
           products.push(data.product)
-          console.log(data.tB, exp, 'expenses')
+          console.info(data.tB, exp, 'expenses')
 
         if (!existingProduct) {
           
@@ -1812,7 +1811,7 @@
         } else {
           // If product exists, update the amount
            updateProductAmount(existingProduct, data);
-          // console.log('Updated product:', data.product);
+          // console.info('Updated product:', data.product);
         }
 
       } else {
@@ -1834,11 +1833,9 @@
     }
 
     function revertTotalExpenses(exp, tB) {
-      // Add the original cost back to total expenses
       document.getElementById('total_expenses').innerHTML = (parseFloat(exp)).toFixed(2);
     }
 
-    // New helper method to add a product to the footer
     function addProductToFooter(expFooter, data, productId) {
       expFooter.innerHTML += `
         <tr id='${productId}'>
@@ -1850,7 +1847,6 @@
       `;
     }
 
-    // update an existing product's amount
     function updateProductAmount(existingProduct, data) {
       let amountCell = existingProduct.querySelector(`#value_${existingProduct.id}`);
       let currentAmount = parseFloat(amountCell.textContent.replace(/[()]/g, ''));
@@ -1858,17 +1854,15 @@
       amountCell.textContent = `(${newAmount.toFixed(2)})`; 
     }
 
-    // recalculate total expenses
     function recalculateTotalExpenses(exp, tB) {
       expense = (exp - tB).toFixed(2)
       document.getElementById('total_expenses').innerHTML = expense;
     }
 
-    // Update values and UI after product removal
     function updateValues(newCart, expenses, product) {
-        // Find the index of the product to be removed
+      
         let totalCost = totalProductCost(newCart);
-        console.log('total cost', totalCost);
+        console.info('total cost', totalCost);
 
         for(prod in products){
           let existingItemIndex = newCart.findIndex((item) => item.product === products[prod]);
@@ -1894,7 +1888,7 @@
                         expenses
                     );
 
-                    console.log('result', result)
+                    console.info('result', result)
 
                     let totalBuying = item.price * item.quantity;
                     let total = totalBuying + parseFloat(result.allocated);
@@ -1933,12 +1927,6 @@
         });
     }
 
-    // update UI
-    function updateUi(params) {
-      
-    }
-
-    // calculate total product costs
     function totalProductCost(cart) {
       let totalCost = 0;
 
@@ -1949,8 +1937,6 @@
       return parseFloat(totalCost) || 0;
     }
 
-
-    // Allocate expenses costs -> Cost Based Allocation
     function allocateCost(totalCost, price, quantity, expenses) {
       let productCost = 0;
       let productCostAllocationRate = 0;
@@ -1958,7 +1944,7 @@
       productCost = price * quantity;
       productCostAllocationRate = productCost / totalCost;
 
-      console.log(productCostAllocationRate)
+      console.info(productCostAllocationRate)
 
       let expCost = (productCost + (productCostAllocationRate * expenses)) / quantity
       let allocated = productCostAllocationRate * expenses;
@@ -1973,7 +1959,6 @@
     function updateValues(newCart, expenses) {
         let totalCost = totalProductCost(newCart);
 
-        // Remove products from 'newCart'
         products.forEach((product) => {
             let existingItemIndex = newCart.findIndex((item) => item.product === product);
             if (existingItemIndex !== -1) {
@@ -1981,7 +1966,6 @@
             }
         });
 
-        // Update the rows of the table based on 'newCart'
         const rows = document.querySelectorAll('#apportionment-table tr');
         newCart.forEach((item) => {
             rows.forEach((row) => {
@@ -1998,7 +1982,6 @@
                     let totalBuying = item.price * item.quantity;
                     let total = totalBuying + parseFloat(result.allocated);
 
-                    // Update the row content with new values
                     row.innerHTML = `
                     <td id='${item.id}'><small>${item.product}</small></td>
                     <td id='${item.id}'><small>${item.quantity}</small></td>
@@ -2036,7 +2019,6 @@
     function submitTableData() {
         const rows = document.querySelectorAll('#apportionment-table tr');
 
-        // Loop through each row and extract data
         rows.forEach((row) => {
             let product = row.querySelector('td:first-child small')?.textContent.trim();
             let quantity = row.querySelector('td:nth-child(2) small')?.textContent.trim();
@@ -2047,7 +2029,6 @@
             let expCost = row.querySelector('td:nth-child(7) small')?.textContent.trim();
             let total = row.querySelector('td:nth-child(8) small')?.textContent.trim();
 
-            // Prepare the data object for each row
             if (product) {
                 formData.push({
                     product: product,
@@ -2062,7 +2043,7 @@
             }
         });
     }
-  // Assuming supplier data is rendered server-side in Django and passed to the JavaScript context
+
   function paymentNextBtn() {
       const tableBody = document.getElementById('detailsTableBody');
       tableBody.innerHTML = ''; 
