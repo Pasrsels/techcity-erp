@@ -47,7 +47,7 @@ THIRD_PARTY_APPS = [
     # 'chartjs',
     # 'django_crontab',
     # 'DjangoAsyncMail',
-    'django_browser_reload',
+    # 'django_browser_reload',
 
 
     'apps.company',
@@ -90,7 +90,7 @@ MIDDLEWARE = [
     # 'users.middleware.LoginRequiredMiddleware',
 
     # third pard middleware
-    'django_browser_reload.middleware.BrowserReloadMiddleware',
+    # 'django_browser_reload.middleware.BrowserReloadMiddleware',
     
     
 ]

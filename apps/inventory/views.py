@@ -218,170 +218,64 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         Returns JSON response indicating success or failure.
         """
         try:
-            with transaction.atomic():
-                data = json.loads(request.body)
-                action = data['action']
-                branches_data = data['branches_to']
-                transfer_id = data.get('transfer_id', '')
+            data = json.loads(request.body)
+            action = data['action']
 
-                logger.info(data)
-
-                # Fetch all required data in bulk
-                products = self._get_products(request.user.branch)
-                branch_obj_list = self._get_branch_objects(branches_data)
+            if action == 'process':
+                # Trigger async transfer processing
+                task = tasks.process_transfer.delay(
+                    data=data,
+                    user_id=request.user.id,
+                    user_branch_id=request.user.branch.id
+                )
                 
-
-                logger.info(f'products: {products}')
-                logger.info(f'branch: {branch_obj_list}')
-
-                # Create or get transfer object
-                transfer = self._get_or_create_transfer(
-                    request.user,
-                    transfer_id,
-                    branch_obj_list,
-                    self._get_branch_names(branches_data)
-                ),
-
-                logger.info(f'transfer obj: {transfer[0]}')
-
-                if action == 'process':
-                    self._process_transfer(data['cart'], products, branch_obj_list, transfer[0], request)
-                else:
-                    self._hold_transfer(branch_obj_list, data, transfer, request)
-
+                # Store task ID for status checking
+                request.session['transfer_task_id'] = task.id
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Transfer processing started',
+                    'task_id': task.id
+                })
+            else:
+                # Handle held transfers
+                # Add your held transfer logic here
                 return JsonResponse({'success': True})
 
         except Exception as e:
-            logger.error(f"Validation error in transfer processing: {e}")
-            return JsonResponse({'success': False, 'message': str(e)})
-        except Exception as e:
-            logger.error(f"Unexpected error in transfer processing: {e}", exc_info=True)
-            return JsonResponse({'success': False, 'data': str(e)})
+            logger.error(f"Error initiating transfer: {e}", exc_info=True)
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            })
 
-    def _get_products(self, branch) -> Dict[int, Any]:
-        """Fetch and index products by ID for the given branch."""
-        products = Inventory.objects.filter(branch=branch).select_related('branch')
-        return {product.id: product for product in products}
+    def get(self, request, *args, **kwargs) -> JsonResponse:
+        """
+        Check the status of a transfer task
+        """
+        task_id = request.GET.get('task_id')
+        if not task_id:
+            return JsonResponse({
+                'success': False,
+                'message': 'No task ID provided'
+            })
 
-    def _get_branch_objects(self, branches_data: List[Dict]) -> List[Any]:
-        """Convert branch data to Branch objects."""
-        branch_objects = []
-        for branch in branches_data:
-            if branch.get('value'):
-                branch_obj = Branch.objects.get(id=branch['value'])
-            else:
-                branch_obj = Branch.objects.get(name=branch['name'])
-            branch_objects.append(branch_obj)
-        return branch_objects
-
-    def _get_branch_names(self, branches_data: List[Dict]) -> List[str]:
-        """Extract branch names from branch data."""
-        return [branch['name'] for branch in branches_data]
-
-    def _get_or_create_transfer(self, user, transfer_id: str, branch_obj_list: List[Any], branch_names: List[str]) -> Any:
-        """Get existing transfer or create new one."""
-        logger.info(f'Branch objects: {branch_obj_list}')
-        if not transfer_id:
-            transfer = Transfer.objects.create(
-                branch=user.branch,
-                user=user,
-                transfer_ref=Transfer.generate_transfer_ref(user.branch.name, branch_names),
-                description='transfer'
-            )
-        else:
-            transfer = Transfer.objects.get(id=transfer_id)
+        # Get task result from Celery
+        task = tasks.process_transfer.AsyncResult(task_id)
         
-        transfer.transfer_to.set(branch_obj_list)
-        return transfer
-
-    def _validate_quantities(self, cart: List[Dict], products: Dict[int, Any]) -> None:
-        """Validate that requested quantities are available."""
-        product_quantities = defaultdict(int)
-        for item in cart:
-            product_quantities[item['product_id']] += item['quantity']
-
-        for product_id, total_quantity in product_quantities.items():
-            product = products.get(int(product_id))
-            if total_quantity > product.quantity:
-                return JsonResponse({'success':False, 'message':f'Insufficient stock to process product: {product.name}'})
-
-    def _process_transfer(self, cart: List[Dict], products: Dict[int, Any], branch_obj_list: List[Any], transfer: Any, request) -> None:
-        """Process the transfer cart items."""
-        self._validate_quantities(cart, products)
-
-        track_quantity = 0
-        transfer_items = []
-        for branch_obj in branch_obj_list:
-            for item in cart:
-                if item['branch_name'] == branch_obj.name:
-
-                    product_id = str(item['product_id']).strip('[]').strip()
-                    logger.info(f"Processing product ID: {product_id}")
-
-                    product = products.get(int(item['product_id']))
-                    transfer_item = self._create_transfer_item(item, product, branch_obj, transfer, request)
-                    transfer_items.append(transfer_item)
-                    track_quantity += item['quantity']
-
-        TransferItems.objects.bulk_create(transfer_items)
-
-        for transfer_item in transfer_items:
-            self._update_inventory(transfer_item, transfer)
-
-        transfer.total_quantity_track = track_quantity
-        transfer.hold = False
-        transfer.date = datetime.datetime.now()
-        transfer.save()
-
-    def _create_transfer_item(self, item: Dict, product: Any, branch_obj: Any, transfer: Any, request) -> Any:
-        """Create a transfer item instance."""
-        return TransferItems(
-            transfer=transfer,
-            product=product,
-            cost=item['cost'],
-            price=item['price'],
-            dealer_price=item['dealer_price'],
-            quantity=item['quantity'],
-            from_branch=request.user.branch,
-            to_branch=branch_obj,
-            description=f'from {request.user.branch} to {branch_obj}'
-        )
-
-    def _update_inventory(self, transfer_item: Any, transfer: Any) -> None:
-        """Update inventory and create activity log for a transfer item."""
-        with transaction.atomic():
-            # Update inventory
-            inventory = Inventory.objects.select_for_update().get(
-                id=transfer_item.product.id,
-                branch__name=transfer_item.from_branch
-            )
-            inventory.quantity -= int(transfer_item.quantity)
-            inventory.save()
-
-            # Create activity log
-            self._create_activity_log(transfer_item, inventory)
-
-            # Update transfer quantity
-            transfer.quantity += transfer_item.quantity
-            transfer.save()
-
-    def _create_activity_log(self, transfer_item: Any, inventory: Any) -> None:
-        """Create activity log entry for transfer."""
-        ActivityLog.objects.create(
-            invoice=None,
-            product_transfer=transfer_item,
-            branch=self.request.user.branch,
-            user=self.request.user,
-            action='transfer out',
-            dealer_price=transfer_item.dealer_price,
-            selling_price=transfer_item.price,
-            inventory=inventory,
-            system_quantity=inventory.quantity,
-            quantity=-transfer_item.quantity,
-            total_quantity=inventory.quantity,
-            description=f'to {transfer_item.to_branch}'
-        )
-
+        if task.ready():
+            result = task.get()
+            if result.get('success'):
+                # If transfer was successful, trigger notification
+                logger.info(f"Transfer {result.get('transfer_id')} completed successfully")
+                # tasks.notify_branch_transfer.delay(result.get('transfer_id'))
+            return JsonResponse(result)
+        
+        return JsonResponse({
+            'success': True,
+            'status': 'processing'
+        })
+    
 @login_required
 def delete_transfer(request, transfer_id):
     try:
@@ -529,9 +423,6 @@ def inventory_index(request):
         return response
 
     # logs = ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
-
-    tasks.add.delay(4,5)
-    # tasks.name.delay()
 
     context = {
         'form': form,

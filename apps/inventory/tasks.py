@@ -9,15 +9,153 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 from loguru import logger
 from celery import shared_task
+from django.db import transaction
+from collections import defaultdict
+from django.apps import apps
+import datetime
 
 
 @shared_task
-def add(x, y):
-    return x + y
+def process_transfer(data, user_id, user_branch_id):
+    """
+    Asynchronously process product transfer between branches
+    """
+    # Get models using apps.get_model to avoid circular imports
+    Transfer = apps.get_model('inventory', 'Transfer')
+    TransferItems = apps.get_model('inventory', 'TransferItems')
+    Inventory = apps.get_model('inventory', 'Inventory')
+    Branch = apps.get_model('company', 'Branch')
+    ActivityLog = apps.get_model('inventory', 'ActivityLog')
+    User = apps.get_model('users', 'User')
+
+    try:
+        with transaction.atomic():
+            user = User.objects.get(id=user_id)
+            user_branch = Branch.objects.get(id=user_branch_id)
+            
+            branches_data = data['branches_to']
+            transfer_id = data.get('transfer_id', '')
+            cart = data['cart']
+
+            # Get branch objects
+            branch_objects = []
+            for branch in branches_data:
+                if branch.get('value'):
+                    branch_obj = Branch.objects.get(id=branch['value'])
+                else:
+                    branch_obj = Branch.objects.get(name=branch['name'])
+                branch_objects.append(branch_obj)
+
+            # Get products
+            products = Inventory.objects.filter(
+                branch=user_branch
+            ).select_related('branch')
+            products_dict = {product.id: product for product in products}
+
+            # Validate quantities
+            product_quantities = defaultdict(int)
+            for item in cart:
+                product_quantities[item['product_id']] += item['quantity']
+
+            for product_id, total_quantity in product_quantities.items():
+                product = products_dict.get(int(product_id))
+                if total_quantity > product.quantity:
+                    raise ValueError(f'Insufficient stock for product: {product.name}')
+
+            # Create or get transfer
+            branch_names = [branch['name'] for branch in branches_data]
+            if not transfer_id:
+                transfer = Transfer.objects.create(
+                    branch=user_branch,
+                    user=user,
+                    transfer_ref=Transfer.generate_transfer_ref(user_branch.name, branch_names),
+                    description='transfer'
+                )
+            else:
+                transfer = Transfer.objects.get(id=transfer_id)
+            
+            transfer.transfer_to.set(branch_objects)
+
+            # Process transfer items
+            track_quantity = 0
+            transfer_items = []
+            
+            for branch_obj in branch_objects:
+                for item in cart:
+                    if item['branch_name'] == branch_obj.name:
+                        product = products_dict.get(int(item['product_id']))
+                        
+                        transfer_item = TransferItems(
+                            transfer=transfer,
+                            product=product,
+                            cost=item['cost'],
+                            price=item['price'],
+                            dealer_price=item['dealer_price'],
+                            quantity=item['quantity'],
+                            from_branch=user_branch,
+                            to_branch=branch_obj,
+                            description=f'from {user_branch} to {branch_obj}'
+                        )
+                        transfer_items.append(transfer_item)
+                        track_quantity += item['quantity']
+
+            # Bulk create transfer items
+            created_items = TransferItems.objects.bulk_create(transfer_items)
+
+            # Update inventory and create activity logs
+            for transfer_item in created_items:
+                inventory = Inventory.objects.select_for_update().get(
+                    id=transfer_item.product.id,
+                    branch__name=transfer_item.from_branch
+                )
+                inventory.quantity -= int(transfer_item.quantity)
+                inventory.save()
+
+                # Create activity log
+                ActivityLog.objects.create(
+                    invoice=None,
+                    product_transfer=transfer_item,
+                    branch=user_branch,
+                    user=user,
+                    action='transfer out',
+                    dealer_price=transfer_item.dealer_price,
+                    selling_price=transfer_item.price,
+                    inventory=inventory,
+                    system_quantity=inventory.quantity,
+                    quantity=-transfer_item.quantity,
+                    total_quantity=inventory.quantity,
+                    description=f'to {transfer_item.to_branch}'
+                )
+
+                # Update transfer quantity
+                transfer.quantity += transfer_item.quantity
+
+            transfer.total_quantity_track = track_quantity
+            transfer.hold = False
+            transfer.date = datetime.datetime.now()
+            transfer.save()
+
+            return {'success': True}
+
+    except Exception as e:
+        logger.error(f"Error processing transfer: {e}", exc_info=True)
+        return {'success': False, 'error': str(e)}
 
 @shared_task
-def name():
-    return 'Cassim'
+def notify_branch_transfer(transfer_id):
+    """
+    Notify destination branch about incoming transfer
+    """
+    Transfer = apps.get_model('inventory', 'Transfer')
+    
+    try:
+        transfer = Transfer.objects.get(id=transfer_id)
+        # Add notification logic here
+        # Could integrate with email, SMS, or internal notification system
+        return {'success': True}
+    except Exception as e:
+        logger.error(f"Error notifying branch: {e}", exc_info=True)
+        return {'success': False, 'error': str(e)}
 
 def send_stock_transfer_email(notification_id):
     notification = StockNotifications.objects.get(pk=notification_id)
