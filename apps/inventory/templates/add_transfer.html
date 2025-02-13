@@ -866,21 +866,65 @@
     });
 }
 
+    function processCart(action) {
+        const data = {
+            'action':action,
+            'cart': cart,
+            'salesPerson': salesPerson,
+            'branches_to': branches
+        };
+
+        Swal.fire({
+            title: 'Processing Transfer',
+            text: 'Please wait...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
+        });
+
+        fetch('/inventory/process-transfer-cart/', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.task_id) {
+                // Poll for status
+                checkTransferStatus(data.task_id);
+            }
+        });
+    } 
+
     function checkTransferStatus(taskId) {
         fetch(`/inventory/process-transfer-cart/?task_id=${taskId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'processing') {
+                    // Poll again after delay
                     setTimeout(() => checkTransferStatus(taskId), 2000);
-                } else if (data.status === 'failed') {
-                    Swal.fire('Failed!', 'The transfer process failed. Please try again.', 'error');
                 } else {
-                    Swal.fire('Success!', 'The transfer has been completed successfully!', 'success');
-                    handleTransferComplete(data);
-                }
-            })
-            .catch(error => {
-                Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+                    // Handle completion
+                    console.info('Transfer done')
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Product(s) Transferred Successfully',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    cart = [];
+                    let insufficientQnt = false
+                    updateCartDisplay(insufficientQnt);
+                    localStorage.clear('transfers')
+                    setTimeout(() => {
+                        window.location.href = '{% url "inventory:transfers" %}';
+                    }, 1500);
+                    }
             });
     }
 

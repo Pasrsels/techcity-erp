@@ -840,68 +840,68 @@
       updateTotalCost()
   };
 
-  function processCart(action) {
-      const data = {
-          'action':action,
-          'transfer_id':"{{ transfer.id }}",
-          'cart': cart,
-          'salesPerson': salesPerson,
-          'branches_to': branches
-      };
+//   function processCart(action) {
+//       const data = {
+//           'action':action,
+//           'transfer_id':"{{ transfer.id }}",
+//           'cart': cart,
+//           'salesPerson': salesPerson,
+//           'branches_to': branches
+//       };
 
-      console.log(cart)
+//       console.log(cart)
 
-      Swal.fire({
-          title: 'Processing Transfer',
-          text: 'Please wait...',
-          allowOutsideClick: false,
-          didOpen: () => {
-              Swal.showLoading()
-          }
-      });
+//       Swal.fire({
+//           title: 'Processing Transfer',
+//           text: 'Please wait...',
+//           allowOutsideClick: false,
+//           didOpen: () => {
+//               Swal.showLoading()
+//           }
+//       });
 
-      fetch("/inventory/process-transfer-cart/", {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": getCookie("csrftoken"),
-          },
-          body: JSON.stringify(data),
-      })
-          .then(response => response.json())
-          .then(data => {
-              if (data.success) {
-                  Swal.fire({
-                      icon: 'success',
-                      title: 'Success!',
-                      text: 'Product(s) Transferred Successfully',
-                      showConfirmButton: false,
-                      timer: 1500
-                  });
-                  cart = [];
-                  let insufficientQnt = false
-                  updateCartDisplay(insufficientQnt);
-                  localStorage.clear('transfers')
-                  setTimeout(() => {
-                      window.location.href = '{% url "inventory:transfers" %}';
-                  }, 1500);
-              } else {
-                  Swal.fire({ 
-                      icon: 'error',
-                      title: data.message,
-                      text: data.message
-                  });
-              }
-          })
-          .catch((error) => {
-              console.error("Error:", error);
-              Swal.fire({
-                  icon: 'error',
-                  title: 'Error!',
-                  text: 'An unexpected error occurred. Please try again.'
-              });
-          });
-        }
+//       fetch("/inventory/process-transfer-cart/", {
+//           method: "POST",
+//           headers: {
+//               "Content-Type": "application/json",
+//               "X-CSRFToken": getCookie("csrftoken"),
+//           },
+//           body: JSON.stringify(data),
+//       })
+//           .then(response => response.json())
+//           .then(data => {
+//               if (data.success) {
+//                   Swal.fire({
+//                       icon: 'success',
+//                       title: 'Success!',
+//                       text: 'Product(s) Transferred Successfully',
+//                       showConfirmButton: false,
+//                       timer: 1500
+//                   });
+//                   cart = [];
+//                   let insufficientQnt = false
+//                   updateCartDisplay(insufficientQnt);
+//                   localStorage.clear('transfers')
+//                   setTimeout(() => {
+//                       window.location.href = '{% url "inventory:transfers" %}';
+//                   }, 1500);
+//               } else {
+//                   Swal.fire({ 
+//                       icon: 'error',
+//                       title: data.message,
+//                       text: data.message
+//                   });
+//               }
+//           })
+//           .catch((error) => {
+//               console.error("Error:", error);
+//               Swal.fire({
+//                   icon: 'error',
+//                   title: 'Error!',
+//                   text: 'An unexpected error occurred. Please try again.'
+//               });
+//           });
+//         }
 
   function getCookie(name) {
     let cookieValue = null;
