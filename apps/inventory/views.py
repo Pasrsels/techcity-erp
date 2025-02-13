@@ -7,10 +7,7 @@ from django.http import HttpResponse
 from datetime import timedelta
 from openpyxl.styles import Alignment, Font, PatternFill
 from . models import *
-from . tasks import (
-    send_transfer_email,
-    download_stock_logs_account
-)
+import apps.inventory.tasks as tasks
 from decimal import Decimal
 from django.views import View
 from django.db.models import Q, Sum, F, FloatField, ExpressionWrapper
@@ -532,6 +529,9 @@ def inventory_index(request):
         return response
 
     # logs = ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
+
+    tasks.add.delay(4,5)
+    # tasks.name.delay()
 
     context = {
         'form': form,

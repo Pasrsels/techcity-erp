@@ -7,9 +7,17 @@ from xhtml2pdf import pisa
 from io import BytesIO
 from django.http import HttpResponse
 from django.template.loader import render_to_string
+from loguru import logger
+from celery import shared_task
 
-import logging
-logger = logging.getLogger(__name__)
+
+@shared_task
+def add(x, y):
+    return x + y
+
+@shared_task
+def name():
+    return 'Cassim'
 
 def send_stock_transfer_email(notification_id):
     notification = StockNotifications.objects.get(pk=notification_id)
