@@ -2472,7 +2472,6 @@ def receive_order(request, order_id):
         }
     )
 
-@login_required
 @transaction.atomic
 def process_received_order(request):
     if request.method == 'POST':
@@ -2481,62 +2480,197 @@ def process_received_order(request):
             edit = data.get('edit')
             order_item_id = data.get('id')
             quantity = data.get('quantity', 0)
-            wholesale_price = data.get('wholesale_price', 0)
             selling_price = data.get('selling_price', 0)
             dealer_price = data.get('dealer_price', 0)
             expected_profit = data.get('expected_profit', 0)
             dealer_expected_profit = data.get('dealer_expected_profit', 0)
 
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Invalid JSON payload'}, status=400)
+            logger.info(data)
 
-        if edit:
-            return edit_purchase_order_item(
-                order_item_id, 
-                selling_price, 
-                dealer_price, 
-                expected_profit, 
-                dealer_expected_profit, 
-                quantity, 
-                request
-            )
+            if edit:
+                return edit_purchase_order_item(order_item_id, selling_price, dealer_price, expected_profit, dealer_expected_profit, quantity, request)
 
-        if quantity == 0:
-            return JsonResponse({'success': False, 'message': 'Quantity cannot be zero.'}, status=400)
+            # if quantity == 0:
+            #     return JsonResponse({'success': False, 'message': 'Quantity cannot be zero.'}, status=400)
 
-        try:
             order_item = PurchaseOrderItem.objects.get(id=order_item_id)
+
+            logger.info(order_item)
             order = PurchaseOrder.objects.get(id=order_item.purchase_order.id)
-        except PurchaseOrderItem.DoesNotExist:
-            return JsonResponse({'success': False, 'message': f'Purchase Order Item with ID: {order_item_id} does not exist'}, status=404)
 
-        # Update the order item with received quantity
-        order_item.receive_items(quantity)
-        order_item.received_quantity = quantity
-        order_item.expected_profit = expected_profit
-        order_item.dealer_expected_profit = dealer_expected_profit
-        order_item.received = True
-        order_item.wholesale_price = wholesale_price
-        order_item.price = selling_price
+            # Update expected profit and check quantity
+            cost = order_item.actual_unit_cost
+            
+            #if quantity > order_item.quantity:
+            #    return JsonResponse({'success': False, 'message': 'Quantity cannot be more than ordered quantity.'})
 
-        order_item.save()
+            # Update the order item with received quantity
+            order_item.receive_items(quantity)
+            order_item.received_quantity = quantity
+            order_item.expected_profit = expected_profit
+            order_item.dealer_expected_profit = dealer_expected_profit
+            order_item.received = True
 
-        # order_item.check_received()
+            # order_item.check_received()
 
-        return JsonResponse({'success': True, 'message': 'Inventory updated successfully'}, status=200)
+            # Update or create inventory
+            try:
+                inventory = Inventory.objects.get(id=order_item.product.id, branch=request.user.branch)
+            except Product.DoesNotExist:
+                return JsonResponse({'success': False, 'message': f'Product with ID: {order_item.product.id} does not exist'}, status=404)
+
+            system_quantity = 0 # if new product
+
+            logger.info(inventory)
+            logger.info(f'')
+            try:          
+                system_quantity = inventory.quantity
+                # Update existing inventory
+                inventory.cost = cost
+                inventory.price = selling_price
+                inventory.dealer_price = dealer_price or 0
+                inventory.quantity += quantity
+
+                if inventory.batch:
+                    inventory.batch += f'{order.batch}, '
+                else:
+                    inventory.batch = f'{order.batch}, '
+
+                inventory.save()
+            except Inventory.DoesNotExist:
+                # Create a new inventory object if it does not exist
+                inventory = Inventory(
+                    product=inventory,
+                    branch=request.user.branch,
+                    cost=cost,
+                    price=selling_price,
+                    dealer_price=dealer_price,
+                    quantity=quantity,
+                    stock_level_threshold=product.min_stock_level,
+                    reorder=False,
+                    alert_notification=True,
+                    batch = f'{order.batch}, '
+                )
+                inventory.save()
+
+            # Prepare activity log for this transaction
+            log = ActivityLog(
+                purchase_order=order_item.purchase_order,
+                branch=request.user.branch,
+                user=request.user,
+                action='stock in',
+                dealer_price = dealer_price,
+                selling_price = selling_price,
+                inventory=inventory,
+                quantity=quantity,
+                system_quantity=system_quantity,
+                description=f'Stock in from {order_item.purchase_order.batch}',
+                total_quantity=inventory.quantity
+            )
+            log.save()
+
+            # Save updated order item
+            order_item.save()
+
+            return JsonResponse({'success': True, 'message': 'Inventory updated successfully'}, status=200)
+        except Exception as e:
+            logger.info(e)
+            return JsonResponse({'success': False, 'message': f'{e}'}, status=400)
 
     return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+
+
 
 def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expected_profit, dealer_expected_profit, quantity, request):
     try:
         po_item = PurchaseOrderItem.objects.get(id=order_item_id)
 
-        po_item.price = selling_price
-        po_item.wholesale_price = dealer_price
-        po_item.expected_profit = expected_profit
-        po_item.dealer_expected_profit = dealer_expected_profit
-        po_item.received_quantity = quantity
-        po_item.save()
+        # Update the related product's price and dealer price
+        product = po_item.product.id
+
+        # Update the inventory, assuming this item already exists in inventory
+        try:
+            inventory = Inventory.objects.get(id=product, branch=po_item.purchase_order.branch)
+            
+
+            system_quantity = inventory.quantity
+            quantity_adjustment = 0
+
+            description = ''
+
+            if po_item.quantity == quantity:
+                if inventory.quantity != quantity:
+                    # adjust quantity
+                    if inventory.quantity < quantity:
+                        quantity_adjustment = quantity - inventory.quantity 
+                        inventory.quantity += quantity_adjustment
+                        action = 'purchase edit +'
+                        description = f'Stock adjustment ({po_item.purchase_order.batch})'
+                        logger.info(f'{quantity_adjustment}: quantity adjusted')
+                    elif inventory.quantity > quantity:
+                        quantity_adjustment = inventory.quantity - quantity 
+                        inventory.quantity = quantity
+                        # quantity_adjustment = quantity
+                        action = 'purchase edit -'
+                        description = f'Stock adjustment ({po_item.purchase_order.batch})'
+                        logger.info(f'{quantity_adjustment}: quantity adjusted')
+                    else:
+                        action = 'price edit'
+                        logger.info(f'{quantity_adjustment}: quantity adjusted')
+                        inventory.quantity = quantity
+                        description = f'Price adjustment ({po_item.purchase_order.batch})'
+                else:
+                    action='price edit'
+                    description=f'Price adjustment ({po_item.purchase_order.batch})'
+            else:
+                # adjust quantity
+                if inventory.quantity < quantity:
+                    quantity_adjustment = quantity - inventory.quantity 
+                    inventory.quantity += quantity_adjustment
+                    action = 'purchase edit +'
+                    description = f'Stock adjustment ({po_item.purchase_order.batch})'
+                    logger.info(f'{quantity_adjustment}: quantity adjusted')
+                elif inventory.quantity > quantity:
+                    quantity_adjustment = inventory.quantity - quantity 
+                    inventory.quantity = quantity
+                    # quantity_adjustment = quantity
+                    action = 'purchase edit -'
+                    description = f'Stock adjustment ({po_item.purchase_order.batch})'
+                    logger.info(f'{quantity_adjustment}: quantity adjusted')
+                else:
+                    action = 'price edit'
+                    logger.info(f'{quantity_adjustment}: quantity adjusted')
+                    inventory.quantity = quantity
+                    description = f'Price adjustment ({po_item.purchase_order.batch})'
+            
+            # Update fields in the PurchaseOrderItem
+            po_item.selling_price = selling_price
+            po_item.dealer_price = dealer_price
+            po_item.expected_profit = expected_profit
+            po_item.dealer_expected_profit = dealer_expected_profit
+            po_item.received_quantity = quantity
+            po_item.save()
+
+            inventory.price = selling_price
+            inventory.dealer_price = dealer_price
+            inventory.save()
+
+            ActivityLog.objects.create(
+                purchase_order=po_item.purchase_order,
+                branch=request.user.branch,
+                user=request.user,
+                action=action,
+                inventory=inventory,
+                quantity=quantity_adjustment,
+                system_quantity = system_quantity,
+                description=description,
+                total_quantity=inventory.quantity,
+                dealer_price = dealer_price,
+                selling_price = selling_price
+            )
+
+        except Inventory.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Inventory not found for the product'}, status=404)
 
         logger.info('done')
         return JsonResponse({'success': True, 'message': 'Purchase Order Item updated successfully'}, status=200)
@@ -2545,8 +2679,7 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
         return JsonResponse({'success': False, 'message': 'Purchase Order Item not found'}, status=404)
     except Product.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
-
-
+    
 @login_required
 def mark_purchase_order_done(request, po_id):
     purchase_order = PurchaseOrder.objects.get(id=po_id)
@@ -3215,14 +3348,14 @@ def product(request):
 
         image_data = data.get('image')
 
-        if image_data:
-            try:
-                format, imgstr = image_data.split(';base64,') 
-                ext = format.split('/')[-1]
-                image = ContentFile(base64.b64decode(imgstr), name=f'{data['name']}.{ext}')
-            except Exception as e:
-                logger.error(f'Error decoding image: {e}')
-                return JsonResponse({'success': False, 'message': 'Invalid image data'})
+        # if image_data: revisit
+        #     try:
+        #         format, imgstr = image_data.split(';base64,') 
+        #         ext = format.split('/')[-1]
+        #         image = ContentFile(base64.b64decode(imgstr), name=f'{data['name']}.{ext}')
+        #     except Exception as e:
+        #         logger.error(f'Error decoding image: {e}')
+        #         return JsonResponse({'success': False, 'message': 'Invalid image data'})
 
         try:
             category = ProductCategory.objects.get(id=data['category'])
@@ -3251,7 +3384,9 @@ def product(request):
             # validation for existance
             if Inventory.objects.filter(name=data['name']).exists():
                 return JsonResponse({'success':False, 'message':f'Product {data['name']} exists'})
-            logger.info(f'Creating ')
+            
+            logger.info(f'Creating product: {data['name']}: {request.user.branch}')
+
             product = Inventory.objects.create(
                 batch = '',
                 name = data['name'],

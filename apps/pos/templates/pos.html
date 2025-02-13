@@ -1190,7 +1190,7 @@ async function processCart(el) {
     if (!holdStatus) {
         if (Number((amountReceived.value) <= 0) && (paymentTerms === 'cash')) {
             Swal.fire({
-                icon: 'Error',
+                icon: 'error',
                 text: 'Please amount cant be zero when payment its cash',
                 title: 'Error'
             }).then(() => {

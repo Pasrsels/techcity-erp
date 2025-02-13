@@ -689,7 +689,8 @@ def create_invoice(request):
                         item=item,
                         quantity=item_data['quantity'],
                         unit_price=item_data['price'],
-                        vat_rate = vat_rate
+                        vat_rate = vat_rate,
+                        total_amount = int(item_data['quantity']) * float(item_data['price'])
                     )
                     
                     # Create StockTransaction for each sold item
@@ -1945,7 +1946,6 @@ def end_of_day(request):
     user_timezone_str = request.user.timezone if hasattr(request.user, 'timezone') else 'UTC'
     user_timezone = pytz_timezone(user_timezone_str)  
 
-    # make a utility
     def filter_by_date_range(start_date, end_date):
         start_datetime = user_timezone.localize(
             timezone.datetime.combine(start_date, timezone.datetime.min.time())
@@ -1957,23 +1957,16 @@ def end_of_day(request):
 
     now = timezone.now().astimezone(user_timezone)
     today = now.date()
-
-    now = timezone.now() 
-    today = now.date()  
     
     invoices = filter_by_date_range(today, today)
-
-    logger.info(f'Invoices {invoices}')
     withdrawals = CashWithdraw.objects.filter(user__branch=request.user.branch, date=today, status=False)
     
     total_cash_amounts = [
         {
-            'total_invoices_amount' : invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
-            'total_withdrawals_amount' : withdrawals.aggregate(Sum('amount'))['amount__sum'] or 0
+            'total_invoices_amount': invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
+            'total_withdrawals_amount': withdrawals.aggregate(Sum('amount'))['amount__sum'] or 0
         }
     ]
-
-    logger.info(f'cash amounts: {total_cash_amounts}')
 
     sold_inventory = (
         ActivityLog.objects
@@ -1982,8 +1975,6 @@ def end_of_day(request):
         .annotate(quantity_sold=Sum('quantity'))
     )
 
-    logger.info(f'Sold Inventory: {sold_inventory}')
-    
     if request.method == 'GET':
         all_inventory = Inventory.objects.filter(branch=request.user.branch, status=True).values(
             'id', 'name', 'quantity'
@@ -1991,7 +1982,6 @@ def end_of_day(request):
 
         inventory_data = []
         for item in sold_inventory:
-            logger.info(item)
             sold_info = next((inv for inv in all_inventory if item['inventory__id'] == inv['id']), None)
             
             if sold_info:
@@ -1999,16 +1989,17 @@ def end_of_day(request):
                     'id': item['inventory__id'],
                     'name': item['inventory__name'],
                     'initial_quantity': item['quantity_sold'] + sold_info['quantity'] if sold_info else 0,
-                    'quantity_sold':  item['quantity_sold'],
-                    'remaining_quantity':sold_info['quantity'] if sold_info else 0,
+                    'quantity_sold': item['quantity_sold'],
+                    'remaining_quantity': sold_info['quantity'] if sold_info else 0,
                     'physical_count': None
                 })
            
-        return JsonResponse({'inventory': inventory_data, 'total_cash_amounts':total_cash_amounts})
+        return JsonResponse({'inventory': inventory_data, 'total_cash_amounts': total_cash_amounts})
     
     elif request.method == 'POST':
         try:
             data = json.loads(request.body)
+            logger.info(data)
             inventory_data = []
             
             for item in data:
@@ -2036,39 +2027,75 @@ def end_of_day(request):
             # Invoice data
             invoices = Invoice.objects.filter(branch=request.user.branch, issue_date__range=(today_min, today_max))
             partial_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PARTIAL)
-            paid_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PAID, branch=request.user.branch)
+            paid_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PAID)
            
             # Expenses
-            expenses = Expense.objects.filter(branch=request.user.branch, date=today)
+            expenses = Expense.objects.filter(branch=request.user.branch, issue_date=today)
+            logger.info(expenses)
             confirmed_expenses = expenses.filter(status=True)
             unconfirmed_expenses = expenses.filter(status=False)
             
-            # Accounts
-            account_balances = AccountBalance.objects.filter(branch=request.user.branch)
+            # Calculate totals for CashUp
+            total_sales = paid_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0
+            total_partial = partial_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0
+            total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
 
-            html_string = render_to_string('day_report.html', {
-                'request':request,
-                'invoices':invoices,
-                'expenses':expenses,
-                'date': today,
-                'inventory_data': inventory_data,
-                'total_sales': paid_invoices.aggregatea,
-                'partial_payments': partial_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
-                'total_paid_invoices': paid_invoices.count(),
-                'total_partial_invoices': partial_invoices.count(),
-                'total_expenses': confirmed_expenses.aggregate(Sum('amount'))['amount__sum'] or 0,
-                'confirmed_expenses': confirmed_expenses,
-                'unconfirmed_expenses': unconfirmed_expenses,
-                'account_balances': account_balances,
-            })
+            expected_cash = total_sales - total_expenses
             
-            pdf_buffer = BytesIO()
-            pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
-            if not pisa_status.err:
-                filename = f"{request.user.branch.name}_today_report_{today}.pdf"
-                return JsonResponse({"success": True})
-            else:
-                return JsonResponse({"success": False, "error": "Error generating PDF."})
+            # Create CashUp entry
+            cashup = CashUp.objects.create(
+                date=today,
+                branch=request.user.branch,
+                expected_cash=expected_cash,
+                received_amount=0,  
+                balance=0,  
+                created_by=request.user,
+                status=False 
+            )
+
+            logger.info(cashup.expected_cash)
+
+            items = InvoiceItem.objects.filter(invoice__issue_date__range=(today_min, today_max))
+            cashup.sales.set(items)
+            cashup.expenses.set(expenses)
+
+            # # Generate PDF report
+            # html_string = render_to_string('day_report.html', {
+            #     'request': request,
+            #     'invoices': invoices,
+            #     'expenses': expenses,
+            #     'date': today,
+            #     'inventory_data': inventory_data,
+            #     'total_sales': total_sales,
+            #     'partial_payments': total_partial,
+            #     'total_paid_invoices': paid_invoices.count(),
+            #     'total_partial_invoices': partial_invoices.count(),
+            #     'total_expenses': total_expenses,
+            #     'confirmed_expenses': confirmed_expenses,
+            #     'unconfirmed_expenses': unconfirmed_expenses,
+            #     'account_balances': AccountBalance.objects.filter(branch=request.user.branch),
+            #     'cashup': cashup
+            # })
+            
+            # pdf_buffer = BytesIO()
+            # pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
+            
+            # if not pisa_status.err:
+            #     filename = f"{request.user.branch.name}_today_report_{today}.pdf"
+            #     return JsonResponse({
+            #         "success": True,
+            #         "cashup_id": cashup.id,
+            #         "expected_cash": float(expected_cash)
+            #     })
+            # else:
+            #     return JsonResponse({"success": False, "error": "Error generating PDF."}
+
+            return JsonResponse({
+                    "success": True,
+                    "cashup_id": cashup.id,
+                    # "expected_cash": float(expected_cash)
+            })
+
         except json.JSONDecodeError:
             return JsonResponse({'success': False, 'error': 'Invalid JSON data.'})
         except Exception as e:
@@ -2978,6 +3005,235 @@ def vat(request):
         except Exception as e:
             return JsonResponse({'success':False, 'message':f'{e}'}, status = 400)
         return JsonResponse({'success':False, 'message':'VAT successfully paid'}, status = 200)
+    
+
+def cash_flow(request):
+    cashflows = Cashflow.objects.all().order_by('-date')
+    cashups = CashUp.objects.select_related('branch').all()
+    
+    context = {
+        'cashflows': cashflows,
+        'cashups': cashups,
+    }
+    return render(request, 'cashflow.html', context)
+
+
+@login_required
+def cashflow_create(request):
+    if request.method == 'POST':
+        form = CashflowForm(request.POST)
+        if form.is_valid():
+            cashflow = form.save(commit=False)
+            cashflow.created_by = request.user
+            cashflow.save()
+            # Save many-to-many relationships
+            form.save_m2m()
+            return redirect('cashflow_list')
+    else:
+        form = CashflowForm()
+    
+    context = {
+        'form': form,
+        'title': 'Create Cashflow',
+    }
+    return render(request, 'cashflow/cashflow_form.html', context)
+
+@login_required
+def cashflow_update(request, pk):
+    cashflow = get_object_or_404(Cashflow, pk=pk)
+    
+    if request.method == 'POST':
+        form = CashflowForm(request.POST, instance=cashflow)
+        if form.is_valid():
+            form.save()
+            return redirect('cashflow_list')
+    else:
+        form = CashflowForm(instance=cashflow)
+    
+    context = {
+        'form': form,
+        'title': 'Update Cashflow',
+        'cashflow': cashflow,
+    }
+    return render(request, 'cashflow/cashflow_form.html', context)
+
+@login_required
+def cashflow_detail(request, pk):
+    cashflow = get_object_or_404(Cashflow, pk=pk)
+    context = {
+        'cashflow': cashflow,
+    }
+    return render(request, 'cashflow/cashflow_detail.html', context)
+
+@login_required
+def cashup_list(request):
+    cashups = CashUp.objects.all().order_by('-date')
+    context = {
+        'cashups': cashups,
+    }
+    return render(request, 'cashup/cashup_list.html', context)
+
+@login_required
+def cashup_create(request):
+    if request.method == 'POST':
+        form = CashUpForm(request.POST)
+        if form.is_valid():
+            cashup = form.save(commit=False)
+            cashup.created_by = request.user
+            cashup.save()
+            # Save many-to-many relationships
+            form.save_m2m()
+            return redirect('cashup_list')
+    else:
+        form = CashUpForm()
+    
+    context = {
+        'form': form,
+        'title': 'Create Cash Up',
+    }
+    return render(request, 'cashup/cashup_form.html', context)
+
+@login_required
+def cashup_update(request, pk):
+    cashup = get_object_or_404(CashUp, pk=pk)
+    
+    if request.method == 'POST':
+        form = CashUpForm(request.POST, instance=cashup)
+        if form.is_valid():
+            form.save()
+            return redirect('cashup_list')
+    else:
+        form = CashUpForm(instance=cashup)
+    
+    context = {
+        'form': form,
+        'title': 'Update Cash Up',
+        'cashup': cashup,
+    }
+    return render(request, 'cashup/cashup_form.html', context)
+
+@login_required
+def cashup_detail(request, pk):
+    cashup = get_object_or_404(CashUp, pk=pk)
+    context = {
+        'cashup': cashup,
+    }
+    return render(request, 'cashup/cashup_detail.html', context)
+
+@login_required
+def get_branch_data(request, branch_id):
+    branch = get_object_or_404(Branch, id=branch_id)
+    
+    cashup = CashUp.objects.filter(branch=branch).order_by('-date').first()
+
+    logger.info(cashup.expected_cash)
+    
+    if cashup:
+        categories = {}
+        logger.info(cashup.sales.all())
+        for sale in cashup.sales.all():
+            cat_name = sale.item.name
+            logger.info(sale)
+            if sale.invoice.amount_paid > 0:
+                if cat_name not in categories:
+                    categories[cat_name] = {
+                        'product': cat_name,
+                        'expense': 0,
+                        'income': float(sale.quantity * sale.unit_price),
+                        'total': float(sale.quantity * sale.unit_price)  
+                    }
+                else:
+                    categories[cat_name]['income'] += float(sale.quantity * sale.unit_price)
+                    categories[cat_name]['total'] += float(sale.quantity * sale.unit_price)
+        
+        for expense in cashup.expenses.all():
+            logger.info(expense)
+            cat_name = expense.category.name
+            if cat_name not in categories:
+                categories[cat_name] = {
+                    'product': cat_name,
+                    'expense': float(expense.amount),
+                    'income': 0,
+                    'total': -float(expense.amount)  
+                }
+            else:
+                categories[cat_name]['expense'] += float(expense.amount)
+                categories[cat_name]['total'] -= float(expense.amount)
+
+        categories['SUMMARY'] = {
+            'product': 'SUMMARY',
+            'expense': float(cashup.get_total_expenses()),
+            'income': float(cashup.get_total_sales()),
+            'total': float(cashup.get_net_cash())
+        }
+        
+        data = sorted(
+            list(categories.values()),
+            key=lambda x: (x['product'] == 'SUMMARY', x['product'])
+        )
+        
+        response_data = {
+            'categories': data,
+            'cashup_details': {
+                'status': cashup.status,
+                'expected_cash': float(cashup.expected_cash),
+                'received_amount': float(cashup.received_amount),
+                'balance': float(cashup.balance),
+                'date': datetime.datetime.today().strftime('%Y-%m-%d')
+            }
+        }
+
+        logger.info(response_data)
+        
+        return JsonResponse(response_data, safe=False)
+    
+    return JsonResponse({
+        'categories': [],
+        'cashup_details': None
+    })
+
+# Additional utility functions
+@login_required
+def daily_summary(request, date=None):
+    """View to show daily summary of all cashflows and cashups"""
+    from datetime import datetime
+    
+    if date is None:
+        date = datetime.now().date()
+    
+    daily_cashflows = Cashflow.objects.filter(date=date)
+    daily_cashups = CashUp.objects.filter(date=date)
+    
+    total_income = daily_cashflows.aggregate(Sum('income'))['income__sum'] or 0
+    total_expense = daily_cashflows.aggregate(Sum('expense'))['expense__sum'] or 0
+    net_total = total_income - total_expense
+    
+    context = {
+        'date': date,
+        'daily_cashflows': daily_cashflows,
+        'daily_cashups': daily_cashups,
+        'total_income': total_income,
+        'total_expense': total_expense,
+        'net_total': net_total,
+    }
+    return render(request, 'cashflow/daily_summary.html', context)
+
+@login_required
+def branch_summary(request, branch_id):
+    """View to show summary of all cashflows and cashups for a specific branch"""
+    branch = get_object_or_404(Branch, id=branch_id)
+    
+    branch_cashflows = Cashflow.objects.filter(branch=branch)
+    branch_cashups = CashUp.objects.filter(branch=branch)
+    
+    context = {
+        'branch': branch,
+        'cashflows': branch_cashflows,
+        'cashups': branch_cashups,
+        'total_income': branch_cashflows.aggregate(Sum('income'))['income__sum'] or 0,
+        'total_expense': branch_cashflows.aggregate(Sum('expense'))['expense__sum'] or 0,
+    }
+    return render(request, 'cashflow/branch_summary.html', context)
     
 
 #API 

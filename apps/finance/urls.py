@@ -112,6 +112,11 @@ urlpatterns = [
     path('income_json/', income_json, name='income_json'),
     path('expense_json/', expense_json, name='expense_json'),
 
+    # cash_flows
+
+    path('cash_flow', cash_flow, name='cash_flow'),
+    path('branch_cash_up/<int:branch_id>/', get_branch_data, name='branch_cash_up'),
+
     # vat
     path('vat/', vat, name='vat'),
 

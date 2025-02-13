@@ -118,74 +118,84 @@
             <main role="main" class="col-md-9 px-4">
                 <!-- Scrollable Nav Section -->
                 <nav class="d-flex align-items-center mt-3 overflow-auto" style="white-space: nowrap;">
-                    <a href='{% url "finance:cashbook" %}' class='btn btn-outline-dark'>
-                        <i class='bx bx-book'></i> Cash Book
-                    </a>
-                    <a href="{% url 'finance:expenses' %}" class='btn btn-outline-dark mx-2'>
-                        <i class='bx bx-book'></i> Expenses
-                    </a>
-                    <div class=''>
-                        <a href="{% url 'finance:cash_transfer' %}" class='btn btn-outline-dark'>
-                            <i class='bx bx-transfer-alt'></i>
-                            Transfers
-                        </a>
-                    </div>
-                    <div class='px-2'>
-                        <a href="{% url 'finance:currency' %}" class='btn btn-outline-dark'>
-                            <i class='bx bx-money'></i>
-                            Currency
-                        </a>
-                    </div>
-                    <div class=''>
-                        <a href="{% url 'finance:withdrawals' %}" class='btn btn-outline-dark'>
-                            <i class='bx bx-money'></i>
-                            Cash WithDrawals
-                        </a>
-                    </div>
-                    <div class='px-2'>
-                        <a href="{% url 'finance:vat' %}" class='btn btn-outline-dark'>
-                            <i class='bx bx-money'></i>
-                            VAT
-                        </a>
-                    </div>
-                    <div class=''>
-                        <a href="{% url 'finance:currency' %}" class='btn btn-outline-dark'>
-                            <i class='bx bx-money'></i>
-                            Accounts
-                        </a>
-                    </div>
-                    <div class='px-2'>
-                        <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#timeFrameModal">
-                            Reports
-                        </button>
-                    </div>
+                    <h5>Finance</h5>
                 </nav>
+            
+                <div class="row row-cols-1 row-cols-md-3 g-4 mt-3">
 
-                <!-- Scrollable Table -->
-                <div class="mt-4">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover table-striped" id="sales-table">
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th></th>
-                                    <th>Monday</th>
-                                    <th>Tuesday</th>
-                                    <th>Wednesday</th>
-                                    <th>Thursday</th>
-                                    <th>Friday</th>
-                                    <th>Saturday</th>
-                                    <th>Sunday</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-body">
-                                <!-- Table Content Here -->
-                            </tbody>
-                        </table>
+                    <div class="col">
+                        <a href="{% url 'finance:cash_flow' %}" class="card text-center text-decoration-none border-dark h-100">
+                            <div class="card-body">
+                                <i class="bx bx-book fs-1"></i>
+                                <h5 class="card-title mt-2">Cash Flow</h5>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="col">
+                        <a href="{% url 'finance:expenses' %}" class="card text-center text-decoration-none border-dark h-100">
+                            <div class="card-body">
+                                <i class="bx bx-book fs-1"></i>
+                                <h5 class="card-title mt-2">Expenses</h5>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="col">
+                        <a href="{% url 'finance:cash_transfer' %}" class="card text-center text-decoration-none border-dark h-100">
+                            <div class="card-body">
+                                <i class="bx bx-transfer-alt fs-1"></i>
+                                <h5 class="card-title mt-2">Transfers</h5>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="col">
+                        <a href="{% url 'finance:currency' %}" class="card text-center text-decoration-none border-dark h-100">
+                            <div class="card-body">
+                                <i class="bx bx-money fs-1"></i>
+                                <h5 class="card-title mt-2">Currency</h5>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="col">
+                        <a href="{% url 'finance:withdrawals' %}" class="card text-center text-decoration-none border-dark h-100">
+                            <div class="card-body">
+                                <i class="bx bx-money fs-1"></i>
+                                <h5 class="card-title mt-2">Cash Withdrawals</h5>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <div class="col">
+                        <a href="{% url 'finance:vat' %}" class="card text-center text-decoration-none border-dark h-100">
+                            <div class="card-body">
+                                <i class="bx bx-money fs-1"></i>
+                                <h5 class="card-title mt-2">VAT</h5>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col">
+                        <a href="{% url 'finance:currency' %}" class="card text-center text-decoration-none border-dark h-100">
+                            <div class="card-body">
+                                <i class="bx bx-money fs-1"></i>
+                                <h5 class="card-title mt-2">Accounts</h5>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="card text-center text-decoration-none border-dark h-100" data-bs-toggle="modal" data-bs-target="#timeFrameModal" style="cursor: pointer;">
+                            <div class="card-body">
+                                <i class="bx bx-report fs-1"></i>
+                                <h5 class="card-title mt-2">Reports</h5>
+                            </div>
+                        </button>
                     </div>
                 </div>
             </main>
+            
+            
         </div>
     </div>
    </div>

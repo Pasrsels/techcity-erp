@@ -110,7 +110,7 @@ class Inventory(models.Model):
     description = models.TextField(max_length=255, default='')
     end_of_day = models.BooleanField(default=False, null=True)
     service = models.BooleanField(default=False, null=True)
-    image = models.ImageField(upload_to='product_images/', default='placeholder.png', null=True)
+    image = models.ImageField(upload_to='product_images/', default='placeholder.png', null=True, blank=True)
     disable = models.BooleanField(default=False)
 
     class Meta:
