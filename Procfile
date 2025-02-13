@@ -1,2 +1,1 @@
-web: gunicorn techcity.wsgi  
-worker: celery -A techcity worker -Q transfers,notifications --loglevel=info
+web: celery -A techcity worker -Q transfers,notifications --loglevel=info && gunicorn techcity.wsgi --bind 0.0.0.0:$PORT
