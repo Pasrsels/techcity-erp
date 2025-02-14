@@ -234,6 +234,12 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="expenseName" placeholder="Enter expense name">
+                            </div>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Amount</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
@@ -244,6 +250,17 @@
                             <label class="form-label">Category</label>
                             <select class="category-select" id="expenseCategory">
                                 <option value="">Select Category</option>
+                                <option value="1">Utilities</option>
+                                <option value="2">Rent</option>
+                                <option value="3">Salaries</option>
+                                <option value="4">Supplies</option>
+                                <option value="5">Marketing</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Sub Category</label>
+                            <select class="category-select" id="expenseSubCategory">
+                                <option value="">Select Sub Category</option>
                                 <option value="1">Utilities</option>
                                 <option value="2">Rent</option>
                                 <option value="3">Salaries</option>
