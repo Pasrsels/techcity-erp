@@ -1,11 +1,69 @@
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+*::-webkit-scrollbar-horizontal {
+  height: 8px;
+}
+
+*::-webkit-scrollbar-vertical {
+  width: 8px;
+}
+
+.overflow {
+  height: 99vh;
+  overflow-y: auto;
+}
+
 @font-face {
   font-family: Lato-Regular;
   src: url("../fonts/Lato/Lato-Regular.ttf");
 }
+.bg-w {
+  background: #fff;
+}
+
 .techcity {
   overflow: hidden;
   font-family: graphik;
   font-size: 0.9rem;
+}
+.techcity .reorder-basket {
+  position: relative;
+  bottom: 0;
+  padding: 1rem;
+}
+.techcity .detailTable td {
+  height: 10px !important;
+}
+.techcity .text-defective {
+  color: #000 !important;
+}
+.techcity .text-received {
+  color: #8BC34A !important;
+}
+.techcity .btn-primary {
+  background: #00c0ef !important;
+  border-color: #00c0ef !important;
+}
+.techcity .r eceive_inv td {
+  background-color: #198754 !important;
+  color: white;
 }
 .techcity .account-statement {
   font-family: lato-Regular;
@@ -33,8 +91,7 @@
   font-family: lato-Regular;
 }
 .techcity .transfer-btn {
-  background-color: #0d6efd !important;
-  color: white;
+  color: #333;
 }
 .techcity .hover-dark {
   background: #333;
@@ -73,7 +130,6 @@
 .techcity th {
   font-weight: bold !important;
   opacity: 0.9;
-  color: #5f5f60 !important;
   font-size: 0.8125rem;
 }
 .techcity .initials {
@@ -138,8 +194,8 @@
   text-decoration: none;
   color: #333;
 }
-.techcity .aside-bar aside .menu .menu-link:hover a,
-.techcity .aside-bar aside .settings .menu-link:hover a {
+.techcity .aside-bar aside .menu .menu-link a,
+.techcity .aside-bar aside .settings .menu-link a {
   color: #777;
 }
 .techcity .aside-bar aside .menu .dropdown,
@@ -192,8 +248,8 @@
   text-decoration: none;
   color: #333;
 }
-.techcity .top-bar .nav-bar nav .menu .menu-link:hover a,
-.techcity .top-bar .nav-bar nav .user .menu-link:hover a {
+.techcity .top-bar .nav-bar nav .menu .menu-link a,
+.techcity .top-bar .nav-bar nav .user .menu-link a {
   color: #777;
 }
 .techcity .top-bar .nav-bar nav .dropdown {
@@ -244,10 +300,6 @@
   height: -moz-fit-content;
   height: fit-content;
 }
-.techcity .finance .invoice-table {
-  height: 80vh;
-  overflow-y: auto;
-}
 .techcity .finance .card {
   border: none;
 }
@@ -266,6 +318,46 @@
 .techcity .finance .main-content .recent {
   border-bottom-width: none !important;
 }
+.techcity .finance .main-page #sidebar-section {
+  transition: all 0.3s ease;
+}
+.techcity .finance .main-page nav {
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.techcity .finance .main-page .table-responsive {
+  overflow-x: auto;
+}
+.techcity .finance .main-page ::-webkit-scrollbar {
+  margin-top: 10px;
+  height: 5px;
+  width: 5px;
+}
+.techcity .finance .main-page ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.techcity .finance .main-page ::-webkit-scrollbar-thumb {
+  background-color: #fff;
+  border-radius: 10px;
+}
+.techcity .finance .cashbook .chat-messages {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.techcity .finance .cashbook .chat-message {
+  margin-bottom: 15px;
+}
+.techcity .finance .cashbook .chat-message strong {
+  color: #007bff;
+}
+.techcity .finance .cashbook .chat-message small {
+  display: block;
+  color: #888;
+  margin-top: 5px;
+}
 .techcity .pos {
   height: 100vh;
 }
@@ -274,14 +366,19 @@
   overflow-y: auto;
 }
 .techcity .pos .products .col-3 {
-  height: 150px !important;
+  height: 250px !important;
+  width: 250px !important;
+  margin-bottom: 120px;
+  margin-right: 20px;
 }
 .techcity .pos .products .card {
-  height: 150px !important;
-  background: #8BC34A;
+  height: 350px !important;
+  width: 250px !important;
+  margin-bottom: 40px !important;
 }
-.techcity .pos .products .card p {
-  margin-top: -20px !important;
+.techcity .pos .products .card img {
+  width: 100px;
+  height: 100px;
 }
 .techcity .pos .products li {
   cursor: pointer;
@@ -291,6 +388,12 @@
 }
 .techcity .pos .products li:nth-child(even) {
   background: lightgrey;
+}
+.techcity .pos .payment-modal .payment-btn {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
 }
 .techcity .pos .product-search .form-control,
 .techcity .pos .product-search .form-select {
@@ -409,4 +512,81 @@
 }
 .techcity .users .card {
   border: none;
+}
+.techcity .customer-modal,
+.techcity .error-modal,
+.techcity .invoice-modal,
+.techcity .client-modal,
+.techcity .payment-modal,
+.techcity .expense-modal,
+.techcity .delete-modal,
+.techcity .category-modal,
+.techcity .transfers-modal {
+  display: flex;
+  justify-content: center;
+  width: 80%;
+  min-height: 500px;
+  position: absolute;
+  top: 1%;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 15px;
+  z-index: 2;
+}
+.techcity .customer-modal p,
+.techcity .error-modal p,
+.techcity .invoice-modal p,
+.techcity .client-modal p,
+.techcity .payment-modal p,
+.techcity .expense-modal p,
+.techcity .delete-modal p,
+.techcity .category-modal p,
+.techcity .transfers-modal p {
+  font-size: 0.9rem;
+  color: #777;
+  margin: 0.4rem 0 0.2rem;
+}
+.techcity .customer-modal button,
+.techcity .error-modal button,
+.techcity .invoice-modal button,
+.techcity .client-modal button,
+.techcity .payment-modal button,
+.techcity .expense-modal button,
+.techcity .delete-modal button,
+.techcity .category-modal button,
+.techcity .transfers-modal button {
+  cursor: pointer;
+  border: none;
+  font-weight: 600;
+}
+.techcity .overlay {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  -webkit-backdrop-filter: blur(3px);
+          backdrop-filter: blur(3px);
+  z-index: 1;
+}
+.techcity .hidden {
+  display: none;
+}
+.techcity .client-modal,
+.techcity .error-modal,
+.techcity .payment-modal {
+  width: 100%;
+}
+.techcity .payment-modal {
+  height: auto !important;
+}
+.techcity .nav-item {
+  cursor: pointer;
+  padding: 5px;
+}
+.techcity .nav-item.active {
+  border-top: 1px #007bff solid;
 }/*# sourceMappingURL=main.css.map */

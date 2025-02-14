@@ -1,5 +1,6 @@
 # forms.py
 from django import forms
+# from .models import APISettings
 
 class EmailSettingsForm(forms.Form):
     EMAIL_HOST = forms.CharField(label='SMTP Host')
@@ -9,3 +10,8 @@ class EmailSettingsForm(forms.Form):
     EMAIL_HOST_PASSWORD = forms.CharField(
         label='Email Password', widget=forms.PasswordInput()
     )
+
+# class APISettingsForm(forms.ModelForm):
+#     class Meta:
+#         model = APISettings
+#         fields = ['api_key', 'cert', 'private_key']

@@ -36,6 +36,23 @@
         }
     }
 
+    @media (max-width: 576px) { 
+        .row {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .col-5 {
+            order: 1;
+            width: 100%;
+        }
+
+        .col-7 {
+            order: 2;
+            width: 100%;
+        }
+    }
+
     .branches-container {
         margin-bottom: 16px; 
     }
@@ -54,8 +71,9 @@
 <div class="inventory">
     <div class="add-transfer">
         <div class="add-transfer-nav shadow p-2 d-flex justify-content-between align-items-center rounded">
-            <div>
+            <div class="d-flex align-items-center">
                 <h5 class="fw-bold px-1 mt-2">Add Transfer</h5>
+                <h5 class="border mx-2 p-1 rounded bg-light" id="total_branch_cost"></h5>
             </div>
         </div>
         
@@ -63,31 +81,39 @@
             <!-- Table Column -->
             <div class="col col-7">
                 <div id="cart-display" class="mt-2 rounded p-2" style="background: #fff;">
-                    <p id="cart-title">
+                    <div id="cart-title" class=" d-flex justify-content-between align-items-center mb-2">
                         <span>Transfer Items</span>
-                    </p>
-                    
-                    <table class="table border rounded p-2" id="cart-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Product</th>
-                                <th>Qnty</th>
-                                {% if request.user.role != 'sales' %}
-                                    <th>Price</th>
-                                    <th>W Price</th>
-                                {% endif %}
-                                <th>Destination</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cart-items"></tbody>
-                    </table>
+                        <div id="branch_totals" class="bg-light border rounded p-1" style="overflow-x: auto;">
+                            <!-- to be dynamically populated with js -->
+                        </div>
+                    </div>
+                    <div class="mb-2 mt-2">
+                        <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search products..." oninput="searchTable()">
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table border rounded p-2" id="cart-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th>Qnty</th>
+                                    {% if request.user.role != 'sales' %}
+                                        <th>Cost</th>
+                                        <th>Price</th>
+                                        <th>W Price</th>
+                                    {% endif %}
+                                    <th>Destination</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cart-items"></tbody>
+                        </table>
+                    </div>
                     <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-outline-dark mx-2 btn-sm" onclick="processCart('hold')">
-                            <i class="bx bx-save"></i> Hold
+                        <button type="button" class="btn btn-outline-dark mx-2 btn-sm" onclick="clearCart()">
+                            clear
                         </button>
-                        <button class="btn btn-primary btn-sm" id="confirm-button" onclick="processCart('process')">Confirm</button>
+                        <button class="btn btn-outline-dark btn-sm" id="confirm-button" onclick="processCart('process')">Confirm</button>
                     </div>
                 </div>
             </div>
@@ -113,6 +139,7 @@
                                 {% endif %}
                             {% endfor %}
                         </div>
+                    </div>
                     <div class="mb-1">
                         <label for="id_product" class="form-label requiredField">Product</label>
                         <select class="select form-select" id="id_product">
@@ -135,11 +162,17 @@
                 </form>
             </div>
         </div>
+
+        <div id="loading-spinner" style="display:none;">
+            <div class="spinner"></div>
+            <p>Processing your request, please wait...</p>
+        </div>
     </div>
     <div id="successModal"></div>
 </div>
 <script>
   let cart = [];
+  let itemCount = 0;
   let prodData = [];
   let searchValue = '';
   let prodQauntity = 0;
@@ -151,14 +184,111 @@
   let branchesList = [];
   let branches = [];
   let userRole = `{{ request.user.role }}`
-  let count = 1;
+  let count = 1;0
   let branchesCount = 0;
+  let productQuantity = 0;
+  let trackProductQuantity = 0;
+  let trackQuantity = [] 
 
   const errorEl = document.getElementById('error');
   const prodEl = document.querySelector('#id_price');
   const dealerEl = document.querySelector('#id_dealer_price');
   const submitBtn = document.getElementById('id_submit');
-  const quantityEl = document.getElementById('id_quantity')
+  const quantityEl = document.getElementById('id_quantity');
+  const branchTotals = document.getElementById('branch_totals');
+
+  //check if local storage have anything and populate at the page load
+  const checkLocalCart = () => {
+        Swal.fire({
+            title: 'Loading products...',
+            text: 'Please wait while we load your cart.',
+            allowOutsideClick: false, 
+            didOpen: () => {
+                Swal.showLoading();
+                const cartData = localStorage.getItem('transfers');
+
+                if (!cartData){
+                  Swal.close();
+                  return;
+                }else{
+                  if (cartData.length == 2) {
+                      Swal.close();
+                      return;
+                  }
+                }
+                
+                if (localStorage.getItem('transfers')) {
+                    cart = JSON.parse(localStorage.getItem('transfers')); 
+
+                    // update count
+                    itemCount = cart[cart.length - 1].count;
+
+                    updateCartDisplay().then(() => {
+                        Swal.close(); 
+                    }).catch(error => {
+                        console.error('Error updating cart:', error);
+                        Swal.fire('Error', 'Failed to load products. Please try again.', 'error');
+                    });
+                } else {
+                    Swal.close(); 
+                    Swal.fire('Info', 'No products found in your cart.', 'info');
+                }
+            },
+        });
+    };
+
+    checkLocalCart()
+
+    const clearCart = () => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "Do you really want to clear all transfer items?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, clear it!",
+            cancelButtonText: "Cancel"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.removeItem('transfers');
+                location.reload(); 
+            }
+        });
+    };
+
+
+  const searchTable = () => {
+    const input = document.getElementById('search-input');
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('cart-table');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName('td');
+        let found = false;
+
+        // Check each cell in the row
+        for (let j = 1; j < cells.length; j++) {
+            const cell = cells[j];
+            if (cell) {
+                const txtValue = cell.textContent || cell.innerText;
+                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        if (found) {
+            rows[i].style.display = "";
+        } else {
+            rows[i].style.display = "none";
+        }
+    }
+      }
+
+
 
   if (userRole === 'sales'){
       salesPerson = true
@@ -191,7 +321,8 @@
             if (!branchExists) {
                 branches.push({
                     'name': data.dataset.name,
-                    'value': data.value
+                    'value': data.value,
+                    'cost':0
                 });
                 branchesList.push(data.dataset.name);
             }
@@ -223,6 +354,16 @@
         }
     });
 
+    const handleEnterKeyNavigation = (event, currentElement) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            let inputs = Array.from(document.querySelectorAll(".quantity-input"));
+            let currentIndex = inputs.indexOf(currentElement);
+            if (currentIndex >= 0 && currentIndex < inputs.length - 1) {
+                inputs[currentIndex + 1].focus();
+            }
+        }
+    };
 
     const displayTables = (values, product, prodData) => {
         let tableEl = document.getElementById('branchesTable');
@@ -241,18 +382,19 @@
 
                 const productData = prodData[0]; 
 
-                console.log(defaultAverage(productData.quantity), 'branches average quantitty')
                 tableEl.innerHTML += `
                     <div class='m-1 branch-data border p-2 rounded' data-branch-name="${value?.name}">
                         <div class='d-flex justify-content-center align-items-center branch text-light rounded shadow'>
-                            <small class='text-center px-2'>${value?.name}</small>
+                            <small class="text-center px-2" title="${value?.name}">
+                                ${value?.name?.length > 6 ? value.name.substring(0, 6) + "..." : value.name}
+                            </small>
                         </div>
                         <div class="{% if request.user.role == 'sales' %} d-none {% endif %} mt-2">
                              <div id="div_id_price" class="mb-1">
                                 <label for="id_cost" class="form-label requiredField">
                                     <small>Cost</small>
                                 </label>
-                                <input type="number" name="cost" step="0.01" value="${productData.cost || ''}" class="numberinput form-control cost-input custom-input-size" required>
+                                <input type="number" name="cost" step="0.01" value="${productData.cost || ''}" class="numberinput form-control cost-input custom-input-size" disabled>
                                 <p id="price_error" class="fs-6 text-danger"></p>
                             </div>
                             <div id="div_id_price" class="mb-1">
@@ -264,7 +406,7 @@
                             </div>
                             <div id="div_id_dealer_price" class="mb-1">
                                 <label for="id_dealer_price" class="form-label requiredField">
-                                    <small>Wholesale Price</small>
+                                    <small>W/Price</small>
                                 </label>
                                 <input type="number" name="dealer_price" step="0.01" value="${productData.dealer_price || ''}" class="numberinput form-control dealer-price-input custom-input-size" required>
                                 <p id="dealer_price_error" class="fs-6 text-danger"></p>
@@ -272,54 +414,103 @@
                         </div>
                         <div id="div_id_quantity" class="mb-1">
                             <label for="id_quantity" class="form-label requiredField">
-                                <small>Quantity [<span id='id_${value.name}'>${productData.quantity}</span>]</small>
+                                <small>Qnty [<span id='id_${value.name}'>${productData.quantity}</span>]</small>
                             </label>
-                            <input type="number" name="quantity" min="0" onchange='calculateQuantityDifference(this.value, ${productData.quantity}, "${(value.name)}")' class="numberinput form-control quantity-input custom-input-size" required>
+                            <input 
+                                type="number" 
+                                name="quantity" 
+                                min="0" 
+                                onchange='calculateQuantityDifference(this.value, ${productData.quantity}, "${(value.name)}")'
+                                onkeydown="handleEnterKeyNavigation(event, this)"
+                                class="numberinput form-control quantity-input custom-input-size" required>
                         </div>
                     </div>
                 `;
             }
         });
     };
-
-    let remainingQuantities = {}; 
-    let previousQuantities = {}; 
-
+    
     const calculateQuantityDifference = (quantity, productQuantity, branchName) => {
-        quantity = parseInt(quantity) || 0; 
+        
+        let exist = trackQuantity.find(branch => branch.name === branchName) 
 
-        // Initialize if not already done
-        if (!(branchName in remainingQuantities)) {
-            remainingQuantities[branchName] = productQuantity; 
-        }
-        if (!(branchName in previousQuantities)) {
-            previousQuantities[branchName] = 0; 
-        }
+        console.log('track qnt', trackProductQuantity)
 
-        const difference = quantity - previousQuantities[branchName];
-        remainingQuantities[branchName] -= difference; 
+        console.log('exists, ', exist)
 
-        previousQuantities[branchName] = quantity;
-        document.querySelector(`#id_${branchName}`).textContent = remainingQuantities[branchName];
-
-        branchesList.forEach((b) => {
-            if (remainingQuantities[b]) {
-                document.querySelector(`#id_${b}`).textContent = remainingQuantities[b];
+        if(exist){
+            let difference = quantity - exist.value;
+            exist.value = quantity
+            if(difference < 0){ 
+                trackProductQuantity -= difference
+                console.log('after: ', trackProductQuantity)
+                branches.forEach((b)=>{
+                    document.getElementById(`id_${b.name}`).innerText = trackProductQuantity;
+                })
+                return;
+            }else if (difference > 0){
+                trackProductQuantity += difference
+            }else{
+                trackProductQuantity = trackProductQuantity
+                return;
             }
-        });
+        }else{
+            value = {
+                name : branchName,
+                value: quantity
+            }
+            trackQuantity.push(value)
+        }
 
-        console.log(`Remaining quantity for ${branchName}:`, remainingQuantities[branchName]);
+        if (trackProductQuantity !== 0){
+            trackProductQuantity -= quantity
+        }else{
+            let updatedQuantity  = productQuantity - quantity; 
+            trackProductQuantity = updatedQuantity;
+        }
+        
+        branches.forEach((b)=>{
+            document.getElementById(`id_${b.name}`).innerText = trackProductQuantity;
+        })
+       
     };
-
 
     const saveDataToServer = (action) => {
         const branchElements = document.querySelectorAll('.branch-data');
         const dataToSend = [];
-
-   
         let hasError = false; 
         let productAdded = false; 
-        let prodName = ''
+        let prodName = '';
+        let productQnty = 0
+        let insufficientQnt = false;
+
+        itemCount += 1;
+
+        for (let i = 0; i < branchElements.length; i++) {
+                const branch = branchElements[i]; 
+                const quantity = branch.querySelector('.quantity-input').value;
+
+                productQnty += parseInt(quantity);
+
+                if (productQuantity <= 0){
+                    insufficientQnt = true
+                break;
+                }else if (productQnty > productQuantity){
+                    insufficientQnt = true
+                    break;
+                }
+            }
+        
+        if (insufficientQnt){
+            Swal.fire({
+                icon: 'error',
+                title: 'error',
+                text: 'Insufficient quantity!.',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            return;
+        }else{
 
         for (let i = 0; i < branchElements.length; i++) {
             const branch = branchElements[i]; 
@@ -329,25 +520,16 @@
             const quantity = branch.querySelector('.quantity-input').value;
             const cost = parseFloat(branch.querySelector('.cost-input').value);
 
+            console.log(cost)
+
             const pElement = document.getElementById('id_product');
             const pSelectedOption = pElement.options[pElement.selectedIndex];
             let product = pSelectedOption.textContent;
-            let product_id = pElement.value
+            let product_id = pElement.value;
 
             product = product.split(' [')[0];
-
-            
-
-            // if (!price || !quantity || quantity <= 0) {
-            //     Swal.fire({
-            //         icon: 'error',
-            //         title: 'Error',
-            //         text: 'Please ensure all fields are filled correctly.'
-            //     });
-            //     hasError = true; 
-            //     break; 
-            // }
-
+            console.debug('product name:', product)
+                
             const existingItem = cart.find((item) => item.product === product && item.branch_name === branchName);
             console.log(existingItem, 'existing item');
 
@@ -367,11 +549,10 @@
                 break; 
             }
 
-            console.log(quantity)
             if (quantity){
                 const newItem = {
-                    product_id:product_id,
-                    count: count,
+                    product_id:parseInt(product_id),
+                    count: itemCount,
                     id: generateUniqueId(),
                     product: product,
                     branch_name: branchName,
@@ -384,15 +565,17 @@
                 cart.push(newItem);
                 productAdded = true; 
             }
-
-            // dataToSend.push(newItem);
             
             console.log(cart, 'cart');
-
             
         }
+            trackProductQuantity = 0;
+            trackQuantity = [] 
 
-        updateCartDisplay();
+            localStorage.setItem('transfers', JSON.stringify(cart));
+            updateCartDisplay(insufficientQnt);
+
+        }
 
         if (!hasError) { 
             count += 1;
@@ -413,6 +596,7 @@
                 });
             }
         }
+
     }
         
     document.addEventListener('DOMContentLoaded', function() {
@@ -431,18 +615,23 @@
         });
 
         const product = selectedOptions[0]?.value;
+        console.log(product, 'product id')
 
         if (product) {
-            fetch(`/inventory/inventory/?name=${product}`)
+            fetch(`/inventory/inventory/?id=${product}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.length > 0) {
                         console.log(data);
-                    
                         prodData = data;
                         console.log(prodData, 'product data')
+
+                        trackProductQuantity = 0;
+                        trackQuantity = [] 
+
                         if (prodData){
-                            let values = branches
+                            let values = branches;
+                            productQuantity = prodData[0].quantity;
                             displayTables(values, product, prodData);
                         }
                         
@@ -461,103 +650,163 @@
     }
 
 
-    function updateCartDisplay() {
-        const cartItemsList = document.getElementById("cart-items");
-        cartItemsList.innerHTML = "";
+    function updateCartDisplay(insufficientQnt) {
+        return new Promise ((resolve, reject) => {
+            try{
+                const cartItemsList = document.getElementById("cart-items");
+                cartItemsList.innerHTML = "";
 
-        let total = 0;
-        let currentColor = "gray"; 
-        let currentProduct = null; 
-        
-        let isEditing = false;
+                let total = 0;
+                let currentColor = "gray"; 
+                let currentProduct = null; 
+                
+                let isEditing = false;
 
-        
-        console.log(branchesList.length);
-
-        function toggleEdit() {
-            isEditing = !isEditing;
-            updateRowContent();
-        }
-
-        cart.reverse().forEach((item, index) => {
-
-            if (currentProduct !== item.product) {
-                currentProduct = item.product; 
-                currentColor = currentColor === "#ebeced" ? "white" : "#ebeced"; 
-            }
-
-            const row = document.createElement("tr");
-            row.style.backgroundColor = currentColor; 
-
-            function updateRowContent() {
-
-                row.innerHTML = `
-                    <td style='background:${currentColor}'><small class='${item.product}'>${item.count}</small></td>
-                    <td style='background:${currentColor}'><small class='${item.product}'>${item.product}</small></td>
-                    <td style='background:${currentColor}'>
-                        <small class='${item.product}'>
-                        ${isEditing
-                            ? `<input type="number" class="form-control form-control-sm" 
-                                value="${item.quantity}" min="1" 
-                                onchange="updateCartItem('${String(item.id)}', 'quantity', this.value);" />`
-                            : `${item.quantity}`}
-                        </small>
-                    </td>
-                    <td style='background:${currentColor}' class="${salesPerson ? 'd-none' : ''}">
-                        <smallclass='${item.product}' >
-                        ${isEditing
-                            ? `<input type="number" class="form-control form-control-sm" 
-                                value="${item.price}" step="0.01" min="0" 
-                                onchange="updateCartItem('${String(item.id)}', 'price', this.value);" />`
-                            : `${item.price}`}
-                        </small>
-                    </td>
-                    <td style='background:${currentColor}' class="${salesPerson ? 'd-none' : ''}">
-                        <small class='${item.product}'>
-                        ${isEditing
-                            ? `<input type="number" class="form-control form-control-sm" 
-                                value="${item.dealer_price}" step="0.01" min="0" 
-                                onchange="updateCartItem('${String(item.id)}', 'dealer_price', this.value);" />`
-                            : `${item.dealer_price}`}
-                        </small>
-                    </td>
-                    <td style='background:${currentColor}' class='${item.product}'><small>${item.branch_name}</small></td>
-                    <td style='background:${currentColor}' class='${item.product}'>
-                        <small>
-                        <button class="btn btn-sm btn-outline-dark mx-1 edit" onclick="toggleEdit();">
-                            ${isEditing ? "Save" : "Edit"}
-                        </button>
-                        <button class="btn btn-sm btn-danger" data-id="${String(item.id)}" onclick="removeItem(this);">
-                            <i class='bx bx-trash-alt'></i>
-                        </button>
-                        </small>
-                    </td>
-                `;
                 function toggleEdit() {
-                isEditing = !isEditing;
+                    isEditing = !isEditing;
+                    updateRowContent();
+                }
+
+                cart.sort((a, b) => b.count - a.count)
+
+                cart.forEach((item, index) => {
+
+                    if (currentProduct !== item.product) {
+                        currentProduct = item.product; 
+                        currentColor = currentColor === "#ebeced" ? "white" : "#ebeced"; 
+                    }
+
+                    const row = document.createElement("tr");
+                    row.style.backgroundColor = currentColor; 
+
+                    function updateRowContent() {
+
+                        row.innerHTML = `
+                            <td style='background:${currentColor}'><small class='${item.product}'>${item.count}</small></td>
+                            <td style='background:${currentColor}'><small class='${item.product}'>${item.product}</small></td>
+                            <td style='background:${currentColor}'>
+                                <small class='${item.product}'>
+                                ${isEditing
+                                    ? `<input type="number" class="form-control form-control-sm" 
+                                        value="${item.quantity}" min="1" 
+                                        onchange="updateCartItem('${String(item.id)}', 'quantity', this.value);" />`
+                                    : `${item.quantity}`}
+                                </small>
+                            </td>
+                            <td style='background:${currentColor}'>
+                                <small class='${item.product}'>
+                                    ${item.cost}
+                                </small>
+                            </td>
+                            <td style='background:${currentColor}' class="${salesPerson ? 'd-none' : ''}">
+                                <smallclass='${item.product}' >
+                                ${isEditing
+                                    ? `<input type="number" class="form-control form-control-sm" 
+                                        value="${item.price}" step="0.01" min="0" 
+                                        onchange="updateCartItem('${String(item.id)}', 'price', this.value);" />`
+                                    : `${item.price}`}
+                                </small>
+                            </td>
+                            <td style='background:${currentColor}' class="${salesPerson ? 'd-none' : ''}">
+                                <small class='${item.product}'>
+                                ${isEditing
+                                    ? `<input type="number" class="form-control form-control-sm" 
+                                        value="${item.dealer_price}" step="0.01" min="0" 
+                                        onchange="updateCartItem('${String(item.id)}', 'dealer_price', this.value);" />`
+                                    : `${item.dealer_price}`}
+                                </small>
+                            </td>
+                            <td style='background:${currentColor}' class='${item.product}'><small>${item.branch_name}</small></td>
+                            <td style='background:${currentColor}' class='${item.product}'>
+                                <small>
+                                <button class="btn btn-sm btn-outline-dark mx-1 edit" onclick="toggleEdit();">
+                                    ${isEditing ? "<i class='bx bx-save'></i>" : "<i class='bx bx-edit'></i>"}
+                                </button>
+                                <button class="btn btn-sm btn-danger" data-id="${String(item.id)}" onclick="removeItem(this);">
+                                    <i class='bx bx-trash-alt'></i>
+                                </button>
+                                </small>
+                            </td>
+                        `;
+                        function toggleEdit() {
+                            isEditing = !isEditing;
+                            updateRowContent();
+                        }
+                }
+
                 updateRowContent();
-            }
+                row.querySelector("button.btn-outline-dark").addEventListener("click", () => {
+                    isEditing = !isEditing;
+                    updateRowContent();
+                });
+                    cartItemsList.appendChild(row);
+                });
+
+                if (!insufficientQnt){
+                    document.getElementById("branchesTable").innerHTML = "";
+                }
+
+                updateTotalCost()
+
+                resolve();
+            } 
+            catch (error) {
+            reject(error); 
         }
-
-        updateRowContent();
-        row.querySelector("button.btn-outline-dark").addEventListener("click", () => {
-            isEditing = !isEditing;
-            updateRowContent();
-        });
-            cartItemsList.appendChild(row);
-        });
-
-        document.getElementById("branchesTable").innerHTML = "";
+    })
+       
     }
+
+    const updateTotalCost = () => {
+        const branchesCosts = []; 
+        let total = 0;
+        const totalBranchCost = document.getElementById('total_branch_cost')
+
+        cart.forEach((item) => {
+            let branchExists = branchesCosts.find(branch => branch.name === item.branch_name);
+
+            if (branchExists) {
+                branchExists.cost += parseFloat(item.cost) * parseInt(item.quantity, 10); 
+                console.log('Updated Branch cost: ', branchExists);
+            } else {
+                let cost = parseFloat(item.cost) * parseInt(item.quantity, 10) 
+                branchesCosts.push({
+                    name: item.branch_name,
+                    cost: parseFloat(item.cost) * parseInt(item.quantity, 10) 
+                });
+                console.log('New Branch created: ', branchesCosts);
+            }
+
+            total +=( item.cost * item.quantity);
+        });
+
+        branchTotals.innerHTML = '';
+        branchesCosts.forEach((b) => {
+            branchTotals.innerHTML += `
+                <small class='mx-2'>
+                    ${b.name} [USD ${b.cost.toFixed(2)}]
+                </small>
+            `;
+        });
+
+        totalBranchCost.innerHTML = total.toFixed(2)
+    };
 
     function updateCartItem(id, field, value) {
         const item = cart.find((item) => item.id === id);
         if (item) {
             item[field] = field === "quantity" ? parseInt(value, 10) : parseFloat(value).toFixed(2);
-            updateCartDisplay();
-        }
-    }
+            let insufficientQnt = false
 
+            trackProductQuantity = 0;
+            letrackQuantity = [] 
+            
+            localStorage.setItem('transfers', JSON.stringify(cart));
+
+            updateCartDisplay(insufficientQnt);
+        }
+
+    }
 
   function clearFields() {
       document.getElementById('id_quantity').value = '';
@@ -569,67 +818,116 @@
 
   const removeItem = (el) => {
       const id = el.dataset.id;
+      let insufficientQnt = false;
       cart = cart.filter((item) => item.id !== id);
-      updateCartDisplay();
+    
+      localStorage.setItem('transfers', JSON.stringify(cart));
+      trackProductQuantity = 0;
+      trackQuantity = [] 
+
+      updateCartDisplay(insufficientQnt);
+      updateTotalCost()
   };
 
+
   function processCart(action) {
-      const data = {
-          'action':action,
-          'cart': cart,
-          'salesPerson': salesPerson,
-          'branches_to': branches
-      };
+    Swal.fire({
+        title: 'Processing...',
+        text: 'Please wait while we process your request.',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        willOpen: () => {
+            Swal.showLoading();
+        }
+    });
 
-      Swal.fire({
-          title: 'Processing Transfer',
-          text: 'Please wait...',
-          allowOutsideClick: false,
-          didOpen: () => {
-              Swal.showLoading()
-          }
-      });
+    const data = {
+        'action': action,
+        'cart': cart,
+        'salesPerson': salesPerson,
+        'branches_to': branches
+    };
+    fetch('/inventory/process-transfer-cart/', {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.task_id) {
+            checkTransferStatus(data.task_id);
+        }
+    })
+    .catch(error => {
+        Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+    });
+}
 
-      fetch("/inventory/process-transfer-cart/", {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": getCookie("csrftoken"),
-          },
-          body: JSON.stringify(data),
-      })
-          .then(response => response.json())
-          .then(data => {
-              if (data.success) {
-                  Swal.fire({
-                      icon: 'success',
-                      title: 'Success!',
-                      text: 'Product(s) Transferred Successfully',
-                      showConfirmButton: false,
-                      timer: 1500
-                  });
-                  cart = [];
-                  updateCartDisplay();
-                  setTimeout(() => {
-                      window.location.href = '{% url "inventory:transfers" %}';
-                  }, 1500);
-              } else {
-                  Swal.fire({
-                      icon: 'error',
-                      title: data.message,
-                      text: data.message
-                  });
-              }
-          })
-          .catch((error) => {
-              console.error("Error:", error);
-              Swal.fire({
-                  icon: 'error',
-                  title: 'Error!',
-                  text: 'An unexpected error occurred. Please try again.'
-              });
-          });
-  }
+    function processCart(action) {
+        const data = {
+            'action':action,
+            'cart': cart,
+            'salesPerson': salesPerson,
+            'branches_to': branches
+        };
+
+        Swal.fire({
+            title: 'Processing Transfer',
+            text: 'Please wait...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
+        });
+
+        fetch('/inventory/process-transfer-cart/', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.task_id) {
+                // Poll for status
+                checkTransferStatus(data.task_id);
+            }
+        });
+    } 
+
+    function checkTransferStatus(taskId) {
+        fetch(`/inventory/process-transfer-cart/?task_id=${taskId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'processing') {
+                    // Poll again after delay
+                    setTimeout(() => checkTransferStatus(taskId), 2000);
+                } else {
+                    // Handle completion
+                    console.info('Transfer done')
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Product(s) Transferred Successfully',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    cart = [];
+                    let insufficientQnt = false
+                    updateCartDisplay(insufficientQnt);
+                    localStorage.clear('transfers')
+                    setTimeout(() => {
+                        window.location.href = '{% url "inventory:transfers" %}';
+                    }, 1500);
+                    }
+            });
+    }
+
 
   function getCookie(name) {
     let cookieValue = null;

@@ -268,3 +268,4 @@ yarl==1.11.1
 zope.interface==6.1
 psycopg2-binary
 pytz
+django_browser_reload

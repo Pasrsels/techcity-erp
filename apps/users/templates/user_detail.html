@@ -4,8 +4,12 @@
 {% block title%} Users {% endblock%}
 {% block content %}
 <div class="users mt-2"> 
-    <div class="card">
-      <div class="card-header fw-bold">
+    <div class="p-2 shadow">
+       <h5> User detail</h5>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-header bg-dark text-light fw-bold">
         {{user.first_name}} {{user.last_name}}
       </div>
       <div class="card-body">
@@ -13,6 +17,17 @@
             <div class="d-flex justify-content-between">
                 <div>
                     <img src="{% if user.profile.profile_image %}{{ user.profile.profile_image.url }}{% else %}{% static 'assets/avatar.png' %}{% endif %}" alt="Profile Picture" class="img-thumbnail" style="width: 100px; height: 100px;">
+                    <div class="mt-2">
+                        <a id="editUser" class="btn btn-outline-dark btn-sm" data-user-id="{{ user.id }}">
+                            <i class="bx bx-edit"></i>
+                            Details
+                        </a>
+    
+                        <a id="ViewUserPermission" class="btn btn-outline-dark btn-sm" data-user-id="{{ user.id }}">
+                            <i class="bx bx-plus"></i>
+                            Permissions
+                        </a>
+                    </div>
                 </div>
                 <div>
                     {# header#}
@@ -30,44 +45,56 @@
                     <p class="fw-normal">Role: {{user.role}}</p>
                     <p class="fw-normal">User Code: {{user.code}}</p>
                 </div>
-                <div>
-                    <a id="editUser" class="btn btn-light btn-sm" data-user-id="{{ user.id }}">
-                        <i class="bx bx-edit"></i>
-                        Edit Details
-                    </a>
-                </div>
             </div>
         </div>
       </div>
     </div>
     {# ********************************* modal ********************************* #}
-    
     <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-          <div class="modal-content w-100 p-4">
-            <h6 class="fw-bold">Add User</h6>
-            <form method="post">
-                {% csrf_token %}
-                {{form|crispy}}
-                <div class="d-flex justify-content-end">
-                    <div class="">
-                        <button type="reset" class="btn btn-danger btn-sm">
-                            <i class="bx bx-reset"></i>
-                            Reset
-                        </button>
+            <div class="modal-content w-100 p-4">
+                <h6 class="fw-bold">Add User</h6>
+                <form method="post">
+                    {% csrf_token %}
+                    {{form|crispy}}
+                    <div class="d-flex justify-content-end">
+                        <div class="">
+                            <button type="reset" class="btn btn-danger btn-sm">
+                                <i class="bx bx-reset"></i>
+                                Reset
+                            </button>
+                        </div>
+                        <span class="px-2"></span>
+                        <div class="">
+                            <button type="submit" class="btn btn-secondary btn-sm">
+                                <i class="bx bx-save"></i>
+                                Save
+                            </button>
+                        </div>
                     </div>
-                    <span class="px-2"></span>
-                    <div class="">
-                        <button type="submit" class="btn btn-secondary btn-sm">
-                            <i class="bx bx-save"></i>
-                            Save
-                        </button>
-                    </div>
-                </div>
-            </form>
+                </form>
             </div>
         </div>
-      </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="ViewUserPermissionsModal" tabindex="-1" aria-labelledby="ViewUserPermissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content w-100 p-4">
+            <h6 class="fw-bold">User Permissions</h6>
+            <table class="border table-bordered table-striped table-responsive">
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Actions</th>
+                </tr>
+                <tbody id="Permission-data">
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>  
@@ -76,7 +103,7 @@
     const editUserBtn = document.getElementById('editUser');
     const editUserBtns = document.querySelectorAll('.editUserBtn');
     const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
-    
+
     editUserBtn.addEventListener('click', function() {
         const userId = this.getAttribute('data-user-id');
         const url = "{% url 'users:ajax_get_user_data' 0 %}".replace('0', userId);
@@ -116,5 +143,81 @@
         });
     });
 
+
+    const viewPermissions = document.getElementById('ViewUserPermission')
+    const viewPermissionsModal = new bootstrap.Modal(document.getElementById('ViewUserPermissionsModal'))
+
+    viewPermissions.addEventListener('click', ()=>{
+        viewPermissionsModal.show();
+        const id = viewPermissions.getAttribute('data-user-id');
+        console.log(id)
+        fetch("{% url 'users:userPermissionsUD' 0 %}".replace(0, id),{
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(answer => answer.json())
+        .then(data =>{
+            if(data.success){
+                document.getElementById('Permission-data').innerHTML = ''
+                data.data.forEach( item =>{
+                    const tableBody =  document.getElementById('Permission-data');
+                    tableBody.innerHTML +=`
+                        <td><small>${ item.username }</small></td>
+                        <td><small>${ item.category}</small></td>
+                        <td><small><button class='btn btn-outlin-dark bx bx-trash' onclick='removeItem(${item.id})'></button></small></td>
+                    `
+                    // console.log(item.username)
+                    // const tableBody =  document.getElementById('Permission-data');
+                    // const tableRow = document.createElement('tr');
+
+                    // const name = document.createElement('td');
+                    // name.textContent = item.username;
+                    // tableRow.appendChild(name);
+
+                    // const category = document.createElement('td');
+                    // category.textContent = item.category;
+                    // tableRow.appendChild(category);
+
+                    // const editPermissionBtn = document.createElement('button')
+                    // editPermissionBtn.id =  'editPermissions'
+                    // editPermissionBtn.textContent = 'Edit'
+                    // tableRow.appendChild(editPermissionBtn);
+
+                    // tableBody.appendChild(tableRow);
+                });
+            }else{
+                Swal.fire({
+                    'icon': 'error',
+                    'title': 'Error',
+                    'text': data.message
+                });
+            }
+        });
+    });
+
+    removeItem = (itemId)=>{
+        fetch("{% url 'users:userPermissionsUD' 0 %}".replace(0, itemId),{
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(answer => answer.json())
+        .then(data=>{
+            if(data.success){
+                Swal.fire({
+                    'icon': 'success',
+                    'title': 'Success',
+                    'text': 'Successfully deleted'
+                });
+            }else{
+                Swal.fire({
+                    'icon': 'error',
+                    'title': 'error',
+                    'text': 'Failed to delete'
+                });
+            }
+        })
+    }
 </script>
 {% endblock content %}

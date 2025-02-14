@@ -5,22 +5,8 @@
 
 {% block content %}
 <div class="container-fluid">
-    <header class="bg-dark text-white p-3">
-        <h1 class="mb-0" style="text-align: left;">LINKSPOT</h1>
-    </header>
-
     <div class="row">
-        <aside class="col-2 bg-dark text-white p-4">
-            <ul class="list-unstyled">
-                <li><a href="{% url 'booking:service'%}" class="text-white">Services</a></li>
-                <li><a href="{% url 'booking:office' %}" class="text-white">Offices</a></li>
-                <li><a href="{% url 'booking:member'%}" class="text-white">Members</a></li>
-                <li><a href="#" class="text-white">Logs</a></li>
-                <li><a href="#" class="text-white">Settings</a></li>
-            </ul>
-        </aside>
-
-        <div class="col-10">
+        <div>
             <nav class="d-flex justify-content-between align-items-center p-3 bg-primary text-white shadow-sm">
                 <h5>Members</h5>
                 <div>
@@ -76,7 +62,7 @@
                                 </div>
                             </td>
                             <td>
-                                <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editMemberModal" onclick="loadMemberData({{ member.id }})">Edit</button>
+                                <button class="btn btn-outline-dark btn-sm" data-toggle="modal" data-target="#editMemberModal" onclick="loadMemberData({{ member.id }})">Edit</button>
                                 <button class="btn btn-danger btn-sm" onclick="deleteMember({{ member.id }})">Delete</button>
                             </td>
                         </tr>
@@ -148,7 +134,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="saveMemberBtn">Save Member</button>
+                <button type="button" class="btn btn-outline-dark" id="saveMemberBtn">Save Member</button>
             </div>
         </div>
     </div>

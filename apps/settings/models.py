@@ -1,7 +1,16 @@
 from django.db import models
+from cryptography.fernet import Fernet
+from django.conf import settings
 
+class OfflineReceipt(models.Model):
+    receipt_data = models.JSONField()  
+    created_at = models.DateTimeField(auto_now_add=True) 
+    submitted = models.BooleanField(default=False)  
 
-# A list of system notifications settings for a user.
+    def __str__(self):
+        return f"Receipt {self.id} - Submitted: {self.submitted}"
+    
+
 class NotificationsSettings(models.Model):
     # products settings
     product_creation = models.BooleanField(default=True)

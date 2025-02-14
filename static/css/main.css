@@ -38,6 +38,20 @@
   background: #fff;
 }
 
+.l-p {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: fixed;
+  right: 0;
+  /* z-index: 1000; */
+}
+.l-p button {
+  border-top-left-radius: 50%;
+  border-bottom-left-radius: 50%;
+}
+
 .techcity {
   overflow: hidden;
   font-family: graphik;
@@ -58,12 +72,8 @@
   color: #8BC34A !important;
 }
 .techcity .btn-primary {
-  background: #00c0ef !important;
-  border-color: #00c0ef !important;
-}
-.techcity .r eceive_inv td {
-  background-color: #198754 !important;
-  color: white;
+  background: #007bff !important;
+  border-color: #007bff !important;
 }
 .techcity .account-statement {
   font-family: lato-Regular;
@@ -389,12 +399,6 @@
 .techcity .pos .products li:nth-child(even) {
   background: lightgrey;
 }
-.techcity .pos .payment-modal .payment-btn {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-}
 .techcity .pos .product-search .form-control,
 .techcity .pos .product-search .form-select {
   border: none !important;
@@ -517,7 +521,6 @@
 .techcity .error-modal,
 .techcity .invoice-modal,
 .techcity .client-modal,
-.techcity .payment-modal,
 .techcity .expense-modal,
 .techcity .delete-modal,
 .techcity .category-modal,
@@ -537,7 +540,6 @@
 .techcity .error-modal p,
 .techcity .invoice-modal p,
 .techcity .client-modal p,
-.techcity .payment-modal p,
 .techcity .expense-modal p,
 .techcity .delete-modal p,
 .techcity .category-modal p,
@@ -550,7 +552,6 @@
 .techcity .error-modal button,
 .techcity .invoice-modal button,
 .techcity .client-modal button,
-.techcity .payment-modal button,
 .techcity .expense-modal button,
 .techcity .delete-modal button,
 .techcity .category-modal button,
@@ -576,8 +577,7 @@
   display: none;
 }
 .techcity .client-modal,
-.techcity .error-modal,
-.techcity .payment-modal {
+.techcity .error-modal {
   width: 100%;
 }
 .techcity .payment-modal {

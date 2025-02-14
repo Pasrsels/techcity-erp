@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
-{% load static%}
-{% block title%} Over / Less Transfers {% endblock%}
+{% load static %}
+{% block title %} Over / Less Transfers {% endblock %}
 {% block content %}
    <div class="inventory">
         <div class="inventory-navbar mb-2">
-            <nav class="d-flex justify-content-between align-items-center text-light rounded shadow p-2" style="background:#373f4c;">
+            <nav class="d-flex justify-content-between align-items-center rounded shadow p-2">
                 <div class='h5'>Over/Less Transfers</div>
             </nav>
         </div>
-        <div class="mt-1">
+        <div class="mt-1 table-responsive">
             {% include 'components/loader.html' %}
             <table class='table border table-bordered table-striped table-hover rounded p-2' style='width:100%' id='over_less_transfers'>
                 <thead class='bg-primary'>
@@ -26,10 +26,9 @@
                 </thead>
                 <tbody>
                     {% for transfer in over_less_transfers %}
-                        
                         {% if transfer.over_less_quantity != 0 %}
                             <tr>
-                                <td><small>{{ transfer.date }}</small></td>
+                                <td><small>{{ transfer.date|date:"d/m/y H:i" }}</small></td>
                                 <td><small>{{ transfer.transfer.transfer_ref }}</td>
                                 <td><small>{{ transfer.product.name }}</small></td>
                                 <td><small>{{ transfer.over_less_quantity }}</small></td>
@@ -46,9 +45,9 @@
                                     <td><small>{{ transfer.over_less_description }}</small></td>
                                 {% else %}
                                     <td>
-                                        <small><button type="button" id='formBtn' data-id={{ transfer.id }} data-action="accept" class='btn btn-success btn-sm btn-primary'>return</button></small>
-                                        <small><button type="button" id='formBtn' data-id={{ transfer.id }} data-action="write_off" data-quantity={{ transfer.over_less_quantity }} class='btn btn-success btn-sm btn-danger'>write off</button></small>
-                                        <small><button type="button" id='formBtn' data-id={{ transfer.id }} data-action="back" class='btn btn-success btn-sm btn-dark'>resend</button></small>
+                                        <small><button type="button" id='formBtn' data-id={{ transfer.id }} data-action="accept" class='btn btn-sm btn-outline-dark'>return</button></small>
+                                        <small><button type="button" id='formBtn' data-id={{ transfer.id }} data-action="write_off" data-quantity={{ transfer.over_less_quantity }} class='btn btn-outline-dark btn-sm'>write off</button></small>
+                                        <small><button type="button" id='formBtn' data-id={{ transfer.id }} data-action="back" class='btn btn-outline-dark btn-sm'>resend</button></small>
                                     </td>
                                 {% endif %}
                             </tr>
@@ -97,6 +96,7 @@
             </div>
         </div>
    </div> 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     let action = '';
     let transfer_id = '';
@@ -142,7 +142,7 @@
                 errorEl.innerHTML='Quantity cant be zero';
                 submitButton.disabled = true;
             }else if(quantity > o_l_quantity){
-                errorEl.innerHTML='Quantity cannot be more than over/less quanity';
+                errorEl.innerHTML='Quantity cannot be more than over/less quantity';
                 submitButton.disabled = true;
             }else{
                 errorEl.innerHTML='';
@@ -162,7 +162,6 @@
             submitButton.disabled = false;
         }
     });
-
 
     function sendDefectiveData(){
         const data = {
@@ -185,19 +184,31 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                defectiveFormModal.hide()
-                loaderModal.show();
-                setTimeout(() => {
+                defectiveFormModal.hide();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Operation completed successfully!',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
                     window.location.href='{% url "inventory:over_less_list_stock" %}';
-                }, 2000);
+                });
             } else {
-                loaderModal.hide();
-                errorEl.textContent=data.message;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message,
+                });
             }
         })
         .catch((error) => {
             console.error("Error:", error);
-            errorEl.textContent=data.message;
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred. Please try again.',
+            });
         });
     }
 

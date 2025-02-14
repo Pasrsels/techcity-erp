@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="stocktake">
+    <div class="d-flex align-items-center justify-content-between shadow py-2 mb-4">
+        <h5 class="px-1">Stocktake #{{ stocktake.s_t_number }}</h5>
+        <!-- Print Button -->
+        <button class="btn btn-light me-2" onclick="printStockSheet()" title="Print Stocktake">
+            <i class="bix bix-printer"></i> Print Sheet
+        </button>
+    </div>
+
+    <div id="print-section">
+        <table class="table table-striped">
+            <thead>
+                <th>#</th>
+                <th>Product</th>
+                <th>System Quantity</th>
+                <th>Quantity Difference</th>
+                <th>Quantity Difference Value</th>
+                <th>Physical Quantity</th>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td><small>{{ forloop.counter }}</small></td>
+                        <td>
+                            <small>
+                                {{ product.product.name }}
+                            </small>
+                        </td>
+                        <td id="id_quantity_{{ product.id }}">
+                            <small>
+                                {{ product.product.quantity }}
+                            </small>
+                        </td>
+                        <td>
+                            <small id="id_diff_{{ product.id }}">0</small>
+                        </td>
+                        <td>
+                            <small id="id_cost_diff_{{ product.id }}">0.00</small>
+                        </td>
+                        <td>
+                            <input
+                                value="{{ product.quantity }}"
+                                id="p_quantity_{{ product.id }}"
+                                class="form-control form-control-sm"
+                                type="number"
+                                onchange="handleQuantityChange(this.value, {{ product.product.quantity }}, {{ product.product.cost }}, {{ product.id }}, {{ product.id }})"
+                            >
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function updateDifference(systemQty, cost, productId) {
+        const physicalQtyInput = document.getElementById(`p_quantity_${productId}`);
+        const diffCell = document.getElementById(`id_diff_${productId}`);
+        const costDiffCell = document.getElementById(`id_cost_diff_${productId}`);
+
+        const physicalQty = physicalQtyInput.value ? parseFloat(physicalQtyInput.value) : 0;
+        const difference = physicalQty - systemQty;
+        const costDifference = difference * cost;
+
+        diffCell.textContent = difference.toFixed(2);
+        costDiffCell.textContent = costDifference.toFixed(2);
+    }
+    function printStockSheet() {
+        const originalContent = document.body.innerHTML;
+
+        const printSection = document.getElementById('print-section').innerHTML;
+        const heading = document.createElement('h5')
+
+        heading.classList.add('text-center')
+        heading.classList.add('m-3')
+
+        document.body.appendChild(heading)
+        document.body.innerHTML = printSection;
+
+        window.print();
+
+        document.body.innerHTML = originalContent;
+        location.reload();
+    }
+
+    function handleQuantityChange(newQuantity, systemQty, cost, productId, stocktakeId) {
+   
+        updateDifference(systemQty, cost, productId);
+
+        postQuantity(newQuantity, productId, stocktakeId);
+    }
+
+    async function postQuantity(newQuantity, productId, stocktakeId) {
+        console.log(newQuantity)
+        try {
+            Swal.fire({
+                title: 'Processing',
+                text: 'Please wait while the quantity is being updated...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const response = await fetch(`{% url "inventory:process_stock_take_item" %}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')  
+                },
+                body: JSON.stringify({
+                    quantity: newQuantity,
+                    product_id: productId,
+                    stocktake_id: stocktakeId
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                let result = data.data
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Quantity Updated',
+                    text: 'The quantity saved successfully.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                const differenceCell = document.getElementById(`id_diff_${result.item_id}`);
+                console.log(`id_diff_${result.item_id}`)
+                differenceCell.textContent = result.difference;
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to update the quantity.'
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while processing your request.'
+            });
+            console.error('Error:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const products = [
+            {% for product in products %}
+            {
+                id: {{ product.id }},
+                systemQty: {{ product.product.quantity }},
+                cost: {{ product.product.cost }},
+                physicalQtyId: 'p_quantity_{{ product.id }}',
+                diffCellId: 'id_diff_{{ product.id }}',
+                costDiffCellId: 'id_cost_diff_{{ product.id }}'
+            },
+            {% endfor %}
+        ];
+
+        products.forEach(product => {
+            const physicalQtyInput = document.getElementById(product.physicalQtyId);
+            const diffCell = document.getElementById(product.diffCellId);
+            const costDiffCell = document.getElementById(product.costDiffCellId);
+
+            const physicalQty = physicalQtyInput.value ? physicalQtyInput.value : 0;
+            const difference = physicalQty - product.systemQty;
+            const costDifference = difference * product.cost;
+
+            diffCell.textContent = difference.toFixed(2);
+            costDiffCell.textContent = costDifference.toFixed(2);
+        });
+    });
+
+</script>
+{% endblock content %}

@@ -51,7 +51,6 @@
         overflow-y: auto; 
         padding: 20px;
         position: relative;
-    
     }
 
     .modal-overlay {
@@ -60,7 +59,6 @@
         left: 0;
         width: 100%;
         height: 100%;
-/*        background-color: rgba(0, 0, 0, 0.5);*/
         display: none; 
         z-index: 1;
     }
@@ -83,28 +81,32 @@
         <div class="top-bar">
             <div class="nav-bar"> {% include "pos_navbar.html" %} </div>
         </div>
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-            {{ message }}
-            <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"></button>
-        </div>
-        {% endfor %}
-        {% endif %}
         <div class='row'>
-            <div class="aside-bar col-2 text-light"> {% include "base/aside.html" %} </div>
-            <div class='col-7'>
+            <div class="aside-bar col-1 text-light"> {% include "base/aside.html" %} </div>
+            <div class='col-8'>
                 <div class='mt-2 main-pos-area  px-2'>
+                    <div class="l-p ">
+                        <button class="btn btn-secondary"data-bs-toggle="modal" data-bs-target="#laybyModal">L</button>
+                        <button class="btn mt-2 btn-secondary"data-bs-toggle="modal" data-bs-target="#PaylaterModal">P</button>
+                    </div>
                     <div class="d-flex align-content-center justify-content-between w-100">
+                        {% if messages %}
+                            {% for message in messages %}
+                            <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                                {{ message }}
+                                <button type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="alert"
+                                        aria-label="Close"></button>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
                         <div class="d-flex align-items-center product-search">
                             <div class='list-toggle'>
                                 <button id="menu-type" class="btn border bx bx-menu"></button>
                             </div>
                             <div class="px-1"><i class="bx bx-search"></i></div>
-                            <div><input type="search" name="q" class="form-control" id='id_search' placeholder="search..." /></div>
+                            <div><input type="search" name="q" class="form-control form-control-sm border" id='id_search' placeholder="search..." /></div>
                             <div class="">
                                 <button class="btn btn-light btn-sm border" id="out_of_stock">Out of Stock</button>
                             </div>
@@ -153,7 +155,7 @@
                     <div class="table-items border bg-light table-scroll mt-2 rounded">
                         <table class="table table-responsive table-sm">
                             <thead>
-                                <th>Quanity</th>
+                                <th>Quantity</th>
                                 <th>Product</th>
                                 <th>Price</th>
                                 <th>Subtotal</th>
@@ -188,12 +190,14 @@
                                 <td></td>
                                 <td id="id_total_amount">0.00</td>
                             </tr>
-                            <tr>
+  <!--                          
+<tr>
                                 <td>Tax Amount</td>
                                 <td></td>
                                 <td></td>
                                 <td id="id_vat_amount">0.00</td>
                             </tr>
+-->
                             <tr>
                                 <td>Payable Amount</td>
                                 <td></td>
@@ -214,11 +218,16 @@
         </div>
     </div>
 
-    <div class="payment-modal hidden">
-        <div class="modal-content">
-            {% include 'pay_modal.html' %}
+    <div class="modal fade" id="payment-modal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    {% include 'pay_modal.html' %}
+                </div>
+            </div>
         </div>
     </div>
+    
     <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -240,7 +249,7 @@
     </div>
 
     <div class="modal fade" id="endOfDayModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-body">
                     {% include 'end_of_day_modal.html' %}
@@ -301,6 +310,59 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="laybyModal" tabindex="-1" aria-labelledby="laybyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header d-flex align-items-center justify-content-between w-100 py-2 mb-4">
+                    <h5 class="modal-title" id="laybyModalLabel">Laybys</h5>
+                    <p id="recordCount"></p><span id="count" class="ms-3">0</span>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                 </div>
+                    <div class="modal-body">
+                        <table id="laybyTable" class="table table-striped table-bordered" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Customer Name</th>
+                                    <th>Product</th>
+                                    <th>Amount</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="laybyTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+       </div>
+    </div>   
+    <div class="modal fade" id="PaylaterModal" tabindex="-1" aria-labelledby="PaylaterModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header d-flex align-items-center justify-content-between w-100 py-2 mb-4">
+                    <h5 class="modal-title" id="PaylaterModalLabel">Pay Later List</h5>
+                    <p id="recordCount"></p><span id="count"class="ms-3">0</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                 </div>
+                    <div class="modal-body">
+                        <table id="PaylaterTable" class="table table-striped table-bordered" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Customer Name</th>
+                                    <th>Product</th>
+                                    <th>Amount</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="PaylaterTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+       </div>
+    </div>   
 
     <div class="overlay hidden"></div>
 </body>
@@ -309,6 +371,8 @@
 <script>   
 let cart = [];
 let data = [];
+let accesoryCart = [];
+
 let respData = [];
 let currencyData = [];
 const customersData = [];
@@ -382,6 +446,15 @@ function setReceiptItems(){
             newRow.insertCell().textContent = `${price}`
             newRow.insertCell().textContent = `${quantity * price}`;
         });
+    
+    accesoryCart.forEach(({ quantity, accessory_name, accessory_price, }) => {
+    const newRow = receiptTableBody.insertRow();
+        newRow.insertCell().textContent = `${product_name}`
+        newRow.insertCell().textContent = ``;
+        newRow.insertCell().textContent = quantity;
+        newRow.insertCell().textContent = `0.00`
+        newRow.insertCell().textContent = `0.00`;
+    });
 }
 
 const laybyButton = document.getElementById("layby");
@@ -601,10 +674,10 @@ document.addEventListener("DOMContentLoaded", function() {
     })
 });
   
-setTimeout(()=>{
-    loaderSpin.classList.add('hidden');
-    loaderSpin.classList.remove('d-flex')
-}, 300)
+// setTimeout(()=>{
+//     loaderSpin.classList.add('hidden');
+//     loaderSpin.classList.remove('d-flex')
+// }, 300)
 
 $(document).ready(function() {
     $('#search-input').select2(
@@ -669,7 +742,7 @@ const ecocash= document.querySelector('.ecocash')
 
 // modals
 const overlay = document.querySelector(".overlay");
-const modal = document.querySelector('.payment-modal');
+const modal = new bootstrap.Modal(document.querySelector('#payment-modal'));
 const clientModal = new bootstrap.Modal(document.querySelector('#clientModal'));
 const closeModalBtn = document.querySelectorAll(".btn-close");
 const closebtn = document.getElementById('closebtn')
@@ -685,8 +758,7 @@ document.querySelector('#id_pay').addEventListener(
         if(clientName){
             updateCartDisplay();
             setReceiptItems()
-            modal.classList.remove('hidden')
-            overlay.classList.remove('hidden')
+            modal.show()
         }else{
             Swal.fire({
                 icon:'error',
@@ -752,6 +824,8 @@ async function fetchData (param){
         console.error('Error fetching products:', error);
         productListContainer.innerHTML = '<p class="error-message">Error loading products. Please try again later.</p>';
     } finally {
+        loaderSpin.classList.add('hidden');
+        loaderSpin.classList.remove('d-flex');
     }
 }
 
@@ -857,6 +931,8 @@ async function fetchProductData (product){
             addItem(product, value);
             addedToCartProduct = [];
             addedToCartProduct.push(product);
+
+            fetchAccessory(id)
             
         } catch (error) {
             console.error('Error fetching products:', error);
@@ -877,7 +953,6 @@ function generateUniqueId() {
 
 function addItem(product, value) {
     const existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
-    console.log(value, 'value')
     let priceType = ''
     if(value === 'wp'){
         price = product[0].dealer_price
@@ -903,6 +978,7 @@ function addItem(product, value) {
     updateCartDisplay(); 
     cartButton()
     totals()
+    updateAccessoryCartDisplay();
 }
 
 function totals(){
@@ -926,7 +1002,7 @@ function totals(){
 
     if(discount === 0){
         document.getElementById("id_total_amount").textContent = `${ currencyData[0][0].symbol + ' ' + totalAmount.toFixed(2)}`;
-        document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
+        //document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
         document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + payable.toFixed(2)}`;
 
         payable_amount = payable
@@ -938,15 +1014,15 @@ function totals(){
         totalAmount = totalAmount - discount
         
         discountAmount = calculateTotalAmount(cart) - totalAmount
-        vatAmount = totalAmount * 0.15
-        payable = totalAmount + vatAmount + delivery;
+        vatAmount = (totalAmount * 0.15) / (1 + 0.15) //  to be provided from the back
+        payable = totalAmount + delivery;
         
         vat_amount = vatAmount
         payable_amount = payable
         discount_amount = discountAmount
 
         document.getElementById("id_total_amount").textContent = `${ currencyData[0][0].symbol + ' ' + totalAmount.toFixed(2)}`;
-        document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
+        //document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
         document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + payable.toFixed(2)}`;
 
         updateTfoot(vatAmount, totalAmount, payable)
@@ -1048,6 +1124,7 @@ function updateCartTotal() {
         updateCartDisplay();
         cartButton();
         totals();
+        updateAccessoryCartDisplay()
     }
     console.log('updated value', cart)
 }
@@ -1084,11 +1161,13 @@ function updateReceiptFooter(symbol, totalBalanceDue, totalDueAmount, payable){
 }
 
 const removeItem = (el) => {
+    console.log(el)
     const id = el.dataset.id
     cart = cart.filter((item) => item.id !== id);
     updateCartDisplay();
     cartButton()
     totals()
+    updateAccessoryCartDisplay()
 }
 
 // payment methods
@@ -1113,7 +1192,7 @@ async function processCart(el) {
     if (!holdStatus) {
         if (Number((amountReceived.value) <= 0) && (paymentTerms === 'cash')) {
             Swal.fire({
-                icon: 'Error',
+                icon: 'error',
                 text: 'Please amount cant be zero when payment its cash',
                 title: 'Error'
             }).then(() => {
@@ -1179,6 +1258,7 @@ async function processCart(el) {
                     title: 'Success'
                 }).then(() => {
                     displayReceipt(result.invoice_id);
+                    setTimeout(() =>{window.location.reload();}, 5000);
                 })
             }
         } else if (result.hold){
@@ -1226,36 +1306,35 @@ async function displayReceipt(invoiceId) {
         } = invoice;
 
         let prvDue = parseFloat(document.getElementById('tpreviousDue').textContent.split('')[1]);
+        let availabeB = invoiceTotal - amountPaid + prvDue;
 
         document.getElementById('rcp-payment')
         document.getElementById('rcp-pterms').textContent = payment_terms;
         document.getElementById('rcp-currency').textContent = currencySymbol;
         document.getElementById('rcp_amount_paid').textContent = currencySymbol + ' ' + amountPaid;
-        document.getElementById('rcp_previous_due').textContent = currencySymbol + ' ' + prvDue;
-        document.getElementById('available_balance').textContent = currencySymbol + ' ' + (invoiceTotal - amountPaid + prvDue)
-        document.getElementById('total_amount').textContent = currencySymbol + ' ' + invoiceTotal
+        document.getElementById('rcp_previous_due').textContent = currencySymbol + ' ' + `${prvDue ? prvDue : 0.00}`;
+        document.getElementById('available_balance').textContent = currencySymbol + ' ' + `${availabeB ? availabeB : 0.00}`;
+        document.getElementById('total_amount').textContent = currencySymbol + ' ' + invoiceTotal;
         document.querySelector('#invoiceNumber').textContent = invoiceNumber;
 
         const receiptTableBody = document.querySelector('#receipt');
         receiptTableBody.innerHTML = '';
 
+        console.log('invoice items', invoiceItems)
+
         // Populate the table with invoice items
-        invoiceItems.forEach(({ quantity, item__product__name, unit_price, item__product__description, total_amount }) => {
+        invoiceItems.forEach(({ quantity, item__name, unit_price, item__description, total_amount }) => {
             const newRow = receiptTableBody.insertRow();
-            newRow.insertCell().textContent = `${item__product__name}`
-            newRow.insertCell().textContent = `(${item__product__description})`;
+            newRow.insertCell().textContent = `${item__name}`
+            newRow.insertCell().textContent = `(${item__description})`;
             newRow.insertCell().textContent = quantity;
             newRow.insertCell().textContent = `${unit_price}`;
-            newRow.insertCell().textContent = `${(0.15 * unit_price).toFixed(2)}`;
             newRow.insertCell().textContent = `${quantity * unit_price}`;
         });;
 
-        // Update total amounts in the footer
         document.querySelector('#subTotalAmount').textContent = `${currencySymbol} ${subTotal}`;
-        //document.querySelector('#totalAmount').textContent = `${currencySymbol} ${invoiceTotal}`;
         document.querySelector('#vatAmount').textContent = `${currencySymbol} ${vatAmount}`;
-       //document.querySelector('#rid_paid_amount').textContent = `${currencySymbol} ${amount_paid.toFixed(2)}`;
-        //document.querySelector('#rprevious_due').textContent = `${currencySymbol} ${previousDue.toFixed(2)}`;
+;
         
         const laybyDateEl = document.getElementById('rcp_payment_dates')
         const laybyTerms = document.getElementById('laybyTerms');
@@ -1286,8 +1365,7 @@ async function displayReceipt(invoiceId) {
             document.getElementById('rcp_installment_deposit').textContent = currencySymbol + ' ' + amountPaid;
         }
 
-        modal.classList.add("hidden");
-        overlay.classList.add("hidden");
+        modal.hide()
 
         Swal.fire({
             icon: 'success',
@@ -1305,6 +1383,146 @@ async function displayReceipt(invoiceId) {
         loaderModal.hide();
     }
 }
+
+    function generateReceipt(data) {
+        const { invoice, invoice_items: invoiceItems, lay_dates: dates } = data;
+        const {
+            invoice_number: invoiceNumber,
+            amount: invoiceTotal,
+            delivery_charge: deliveryCharge,
+            discount_amount: discountAmount,
+            vat: vatAmount,
+            subtotal: subTotal,
+            currency_symbol: currencySymbol,
+            amount_paid: amountPaid,
+            payment_terms: payment_terms
+        } = invoice;
+
+        let prvDue = parseFloat(document.getElementById('tpreviousDue').textContent.split('')[1]);
+        let availabeB = invoiceTotal - amountPaid + prvDue;
+
+        const receiptHTML = `
+            <style>
+                .receipt {
+                    padding: 10px;
+                    background-color: white;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }
+                .header { display: flex; justify-content: space-between; align-items: center; }
+                .logo img { height: 50px; margin-right: 10px; }
+                .receipt-info { text-align: right; }
+                .payment-details, .customer-info, .totals { font-size: 0.9em; margin-bottom: 20px; }
+                .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                .items-table th, .items-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                .items-table th { background-color: #f4f4f4; }
+                .totals { text-align: right; }
+            </style>
+
+            <div class="receipt">
+                <div class="header">
+                    <div class="logo">
+                        <img src="{% static 'assets/logo.png' %}" alt="Company Logo">
+                        <div class="company-info">
+                            <p>Tin No:20012500</p>
+                            <p>Vat: 2001278367</p>
+                            <p>65 Speke, Speke Avenue</p>
+                        </div>
+                    </div>
+                    <div class="receipt-info">
+                        <h3>Receipt <span id="invoiceNumber">${invoiceNumber}</span></h3>
+                        <p>Date: <span id="date">${new Date().toLocaleDateString()}</span></p>
+                        <p>Time: <span id="time">${new Date().toLocaleTimeString()}</span></p>
+                    </div>
+                </div>
+                <hr>
+                <div class="payment-details">
+                    <p><strong>Payment:</strong> <span id="rcp-payment">${currencySymbol} ${invoiceTotal}</span></p>
+                    <p><strong>Currency:</strong> <span id="rcp-currency">${currencySymbol}</span></p>
+                    <p><strong>Cashier:</strong> {{ request.user.first_name }}</p>
+                </div>
+                <hr>
+                <div class="customer-info">
+                    <div class="company">
+                        <p><strong>Company:</strong> {{ request.user.company.name }}</p>
+                        <p><strong>Name:</strong> <span id="customerName"></span></p>
+                        <p><strong>Cell:</strong> <span id="customerPhone"></span></p>
+                        <p><strong>Email:</strong> <span id="customerEmail"></span></p>
+                        <p><strong>Address:</strong> <span id="customerAddress"></span></p>
+                    </div>
+                </div>
+                <hr>
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>NAME</th>
+                            <th>DESCRIPTION</th>
+                            <th>QNTY</th>
+                            <th>UNIT PRICE</th>
+                            <th>TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="receipt">
+                        ${invoiceItems.map(({ quantity, item__name, unit_price, item__description }) => `
+                            <tr>
+                                <td>${item__name}</td>
+                                <td>(${item__description})</td>
+                                <td>${quantity}</td>
+                                <td>${unit_price}</td>
+                                <td>${(quantity * unit_price).toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <hr>
+                <div class="totals">
+                    <p><strong>Subtotal:</strong> <span id="subTotalAmount">${currencySymbol} ${subTotal}</span></p>
+                    <p><strong>VAT 15%:</strong> <span id="vatAmount">${currencySymbol} ${vatAmount}</span></p>
+                    <p><strong>Total:</strong> <span id='total_amount'>${currencySymbol} ${invoiceTotal}</span></p>
+                </div>
+                <hr>
+                <p style="text-align: center;">Thank you for your purchase!</p>
+            </div>
+        `;
+
+    }
+    function printReceiptSilently(content) {
+        console.log(content)
+        let printFrame = document.getElementById("print-frame");
+
+        if (!printFrame) {
+            printFrame = document.createElement("iframe");
+            printFrame.id = "print-frame";
+            printFrame.style.display = "none"
+            document.body.appendChild(printFrame);
+        }
+        const frameDoc = printFrame.contentWindow || 
+                        printFrame.contentDocument.document || 
+                        printFrame.contentDocument;
+
+        frameDoc.document.open();
+        frameDoc.document.write(`
+            <html>
+            <head>
+                <title>Receipt</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        font-size: 13.5px;
+                        margin: 0;
+                        padding: 2px;
+                    }
+                </style>
+            </head>
+            <div>
+                ${content}
+            </div>
+            </html>
+        `);
+        frameDoc.document.close();
+        setTimeout(() => {
+            printFrame.contentWindow.print(false);
+        }, 100);
+    }
 
   
 // customer get and post
@@ -1452,23 +1670,23 @@ function setCustomer(customerId){
    
     }
 
-    const getLastInvoiceNumber = async (customerId) => {
-        try {
-            const response = await fetch(`/pos/last_due_invoice/${customerId}/`);
+    // const getLastInvoiceNumber = async (customerId) => {
+    //     try {
+    //         const response = await fetch(`/pos/last_due_invoice/${customerId}/`);
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok.');
-        }
-        const lastInvoice = await response.json();
+    //     if (!response.ok) {
+    //         throw new Error('Network response was not ok.');
+    //     }
+    //     const lastInvoice = await response.json();
 
-        // set the last invoice
-        //document.getElementById('id_last_invoice').textContent = lastInvoice[0].invoice_number;
+    //     // set the last invoice
+    //     //document.getElementById('id_last_invoice').textContent = lastInvoice[0].invoice_number;
 
-        } catch (error) {
-            console.error('Error fetching Last Invoice Number:', error);
+    //     } catch (error) {
+    //         console.error('Error fetching Last Invoice Number:', error);
         
-        }
-    }
+    //     }
+    // }
 
     function customerAccount() {
         $.ajax({
@@ -1500,6 +1718,275 @@ function setCustomer(customerId){
             `
         })
     }
+
+    const apiUrl =''//update endpoint
+        async function fetchCustomerData() {
+            try {
+                const response = await fetch(apiUrl);  
+                const customers = await response.json();  
+
+                if (Array.isArray(customers) && customers.length > 0) {
+                    const tableBody = document.getElementById("laybyTableBody");
+                    const recordCount = document.getElementById("count");
+                    tableBody.innerHTML = '';
+
+                    customers.forEach(customer => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${customer.name}</td>
+                            <td>${product}</td>
+                            <td>${amount}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Send
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item"  href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
+                                            <i class='bx bxl-whatsapp'></i></a></li>
+                                        <li><a class="dropdown-item"  href='mailto:{{customer.account.customer.email}}' class="text-dark">
+                                            <i class='bx bx-envelope'></i></a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    // Updating the record count
+                    recordCount.innerText = customers.length;
+                } else {
+                    alert('No customer data available.');
+                }
+            } catch (error) {
+                console.error('Error fetching customer data:', error);
+                alert('Failed to load customer data. Please try again later.');
+            }
+        }
+
+        document.getElementById('laybyModal').addEventListener('shown.bs.modal', fetchCustomerData);
+
+    
+        async function fetchCustomerData() {
+            try {
+                const response = await fetch('',{  //update url
+                method: "GET",
+                });
+                const customers = await response.json();  
+
+                if (Array.isArray(customers) && customers.length > 0) {
+                    const tableBody = document.getElementById("PaylaterTableBody");
+                    const recordCount = document.getElementById("count");
+                    tableBody.innerHTML = '';
+
+                    customers.forEach(customer => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${customer.name}</td>
+                            <td>${product}</td>
+                            <td>${amount}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Send
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item"  href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
+                                            <i class='bx bxl-whatsapp'></i></a></li>
+                                        <li><a class="dropdown-item"  href='mailto:{{customer.account.customer.email}}' class="text-dark">
+                                            <i class='bx bx-envelope'></i></a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    recordCount.innerText = customers.length;
+                } else {
+                    showError("No customer data available.");
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        document.getElementById('PaylaterModal').addEventListener('shown.bs.modal', fetchCustomerData);
+
+
+// fetch accessory
+const fetchAccessory = (id) => {
+    console.log(`Fetching accessory with ID: ${id}`); 
+    
+    try {
+        fetch(`/inventory/get_accessory/${id}/`)
+            .then(response => {
+                console.debug('Response received:', response.status); 
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    console.info('Successfully fetched accessory data:', data.data); 
+                    accessory = data.data;
+
+                    if(accessory){
+                        accessory.forEach((acc)=>{
+                            const newAccessory = {
+                                    id:generateUniqueId(),
+                                    product:acc.main_product__name,
+                                    accessory_id:acc.id, 
+                                    accessory_product_id:acc.accessory_product__id,
+                                    accessory_name: acc.accessory_product__name,
+                                    quantity:acc.quantity,
+                                    accessory_price:0 // they are not charged on the invoice
+                                };
+                            accesoryCart.push(newAccessory)
+                            updateCartDisplay()
+                            updateAccessoryCartDisplay()
+                        })
+                    }
+                        
+                    console.log('Added accessory to cart'); 
+                } else {
+                    console.warn('Failed to fetch accessory:', data.message); 
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Fetch operation failed:', error); 
+            });
+    } catch (error) {
+        console.error('Critical error in fetchAccessory:', error); 
+    }
+};
+
+const updateAccessoryCartDisplay = () => {
+
+    try {
+        const cartItemsList = document.getElementById("cart_items");
+        if (!cartItemsList) {
+            console.error('Cart items list element not found');
+            return;
+        }
+
+        accesoryCart.forEach(item => {
+            console.debug('Processing accessory item:', item);
+            
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>
+                    <small class='d-flex align-items-center'>
+                        <small>
+                            <input 
+                                class='form-control form-control-sm' 
+                                type='number' 
+                                data-id=${item.accessory_id}
+                                value='${item.quantity}' 
+                                oninput='updateAccessoryQuantity(this);' 
+                                style='width:4rem;'
+                            />
+                        </small>
+                    </small>
+                </td>
+                <td style='text-align:left !important;'>
+                    <small>${item.accessory_name} (accessory - ${item.product})</small>
+                </td>
+                <td>
+                    <small>
+                        <input 
+                            class='form-control form-control-sm' 
+                            type='number'  
+                            step='0.01' 
+                            data-id=${item.id} 
+                            value='${parseFloat(item.accessory_price).toFixed(2)}' 
+                            oninput='updateAccessoryPrice(this);' 
+                            style='width:7rem;'
+                        />
+                    </small>
+                </td>
+                <td>
+                    <small id="accessory-total-${item.id}">
+                        ${currencyData[0][0].symbol + ' ' + 
+                        (parseInt(item.quantity) * parseFloat(item.accessory_price)).toFixed(2)}
+                    </small>
+                    <small 
+                        class='bx bx-trash-alt text-danger' 
+                        data-id=${item.id} 
+                        onclick="removeAccessoryItem(this);"
+                    ></small>
+                </td>
+            `;
+            
+            console.debug('Adding row to cart display');
+            cartItemsList.appendChild(row);
+        });
+
+        console.info('Successfully updated accessory cart display');
+    } catch (error) {
+        console.error('Error updating accessory cart display:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to update accessory cart display'
+        });
+    }
+};
+
+const removeAccessoryItem = (element) => {
+    console.log('Starting removal of accessory item');
+    
+    try {
+        const itemId = element.dataset.id;
+        console.log(`Attempting to remove accessory with ID: ${itemId}`);
+
+        const itemIndex = accessoryCart.findIndex(item => item.id === itemId);
+        
+        if (itemIndex !== -1) {
+            accessoryCart.splice(itemIndex, 1);
+            console.info(`Successfully removed accessory from cart array at index ${itemIndex}`);
+
+            const row = element.closest('tr');
+            if (row) {
+                row.remove();
+                console.info('Successfully removed accessory row from display');
+            }
+
+            updateCartTotals();
+            
+            saveCartToLocalStorage();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Item removed from cart',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } else {
+            console.warn(`Item with ID ${itemId} not found in cart`);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Item not found in cart'
+            });
+        }
+
+    } catch (error) {
+        console.error('Error removing accessory item:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to remove item from cart'
+        });
+    }
+};
+
+
+
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== "") {

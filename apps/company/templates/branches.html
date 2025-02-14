@@ -4,46 +4,135 @@
 
 <div class="row">
   <div class="col">
-  <div class='d-flex align-items-center justify-content-between bg-dark text-light shadow p-2'>
-    <div class='h5'><i class='bx bx-building'></i> Branches </div>
-    <div class=''>
-      <a class="btn btn-primary btn-sm shadow" href="{% url 'company:add_branch' %}">
-        <i class='bx bx-plus'></i>
-        new branch
-      </a>
+    <div class="d-flex align-items-center justify-content-between shadow p-2">
+      <div class="h5">
+        <i class="bx bx-building"></i> Branches
+      </div>
+      <div>
+        <button class="btn btn-outline-dark btn-sm" id="add_branch">
+          <i class="bx bx-plus"></i>
+          Add branch
+        </button>
+      </div>
+    </div>
+    <table class="table table-hover table-striped mt-3" id="branches_table" style="width:100%;">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Address</th>
+          <th>Phone Number</th>
+          <th>Email</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for branch in branches %}
+          <tr>
+            <td><small>{{ forloop.counter }}</small></td>
+            <td><small>{{ branch.id }}</small></td>
+            <td><small>{{ branch.name }}</small></td>
+            <td><small>{{ branch.address }}</small></td>
+            <td><small>{{ branch.phonenumber }}</small></td>
+            <td><small>{{ branch.email }}</small></td>
+            <td>
+              <a class="text-dark mx-2" href="{% url 'company:edit_branch' branch.id %}">
+                <i class="bx bx-edit"></i>
+              </a>
+              <a class="text-dark" href="{% url 'company:delete_branch' branch.id %}">
+                <i class="bx bx-trash"></i>
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add / Edit Branch Modal -->
+  <div class="modal fade" id="branchForm" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-body">
+          <form id="branchFormContent">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <div class="d-flex justify-content-end">
+              <button type="reset" class="btn btn-danger btn-sm">
+                <i class="bx bx-reset"></i>
+                Reset
+              </button>
+              <span class="px-2">
+                <button type="submit" class="btn btn-secondary btn-sm">
+                  <i class="bx bx-save"></i>
+                  Save
+                </button>
+              </span>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
-<table class="table table-hover table-striped mt-3">
-<thead class="bg-primary">
-    <tr>
-      <th scope="col">ID</th>
-      <th scope="col">Name</th>
-      <th scope="col">Address</th>
-      <th scope="col">Phone Number</th>
-      <th scope='col'>Email</th>
-      <th scope="col">Action</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for branch in branches %}
-      <tr>
-        <th scope="row"><small>{{ branch.id }}</small></th>
-        <td><small>{{ branch.name }}</small></td>
-        <td><small>{{ branch.address }}</small></td>
-        <td><small>{{ branch.phonenumber }}</small></td>
-        <td><small>{{ branch.email }}</small></td>
-        <td>
-          <a class="text-dark" href="{% url 'company:edit_branch' branch.id %}">
-            <i class='bx bx-edit'></i>
-          </a>
-        </td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
 
-</div>
+  <script>
+    new DataTable('#branches_table', { paging: false });
 
+
+    const branchModal = new bootstrap.Modal(document.getElementById('branchForm'));
+    const addBranchButton = document.getElementById('add_branch');
+
+    addBranchButton.addEventListener('click', () => {
+      branchModal.show();
+    });
+
+    const branchFormContent = document.getElementById('branchFormContent');
+    branchFormContent.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(branchFormContent);
+
+      fetch("{% url 'company:add_branch' %}", {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: data.message,
+            }).then(() => {
+              location.reload(); // Reload to reflect changes
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: data.message,
+            });
+          }
+        })
+        .catch((error) => {
+          console.error('There was a problem with the request:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while saving the branch.',
+          });
+        });
+    });
+  </script>
 </div>
 
 {% endblock %}

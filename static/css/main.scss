@@ -25,8 +25,6 @@
     width: 8px;
 }
 
-
-
 @mixin links{
     .menu-link{
         cursor: pointer;
@@ -91,6 +89,23 @@
     background: #fff;
 }
 
+.l-p{
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: fixed;
+    right: 0;
+    /* z-index: 1000; */
+
+    button{
+        border-top-left-radius: 50%;
+        border-bottom-left-radius: 50%;
+    }
+}
+
+  
+
 .techcity{
     .reorder-basket{
         position: relative;
@@ -109,13 +124,13 @@
         color: #8BC34A !important;
     }
     .btn-primary{
-        background: #00c0ef !important;    
-        border-color: #00c0ef !important; 
+        background: #007bff !important;    
+        border-color: #007bff !important; 
     } 
-    .r eceive_inv{
+    .receive_inv{
         td{
-            background-color:#198754 !important;
-            color:white;
+            // background-color:#198754 !important;
+            // color:white;
         }
     }
     .account-statement{
@@ -430,14 +445,6 @@
                 background: lightgrey;
             }
         }
-        .payment-modal{
-            .payment-btn{
-                position:fixed;
-                bottom: 0; 
-                left: 0;
-                width: 100%;
-            }
-        }
         .product-search{
             .form-control,
             .form-select{
@@ -587,7 +594,6 @@
     .error-modal,
     .invoice-modal,
     .client-modal,
-    .payment-modal,
     .expense-modal,
     .delete-modal,
     .category-modal,
@@ -633,8 +639,7 @@
       }
 
       .client-modal,
-      .error-modal,
-      .payment-modal{
+      .error-modal{
         width:100%;
       }
       .payment-modal{

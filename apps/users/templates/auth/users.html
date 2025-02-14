@@ -3,93 +3,241 @@
 {% load crispy_forms_tags %}
 {% block title%} Users {% endblock%}
 {% block content %}
+<style>
+    .header{
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+</style>
 <div class="users mt-2">
-    <div class='d-flex justify-content-between align-items-center border p-2 mt-2 mb-2'>
+    <div class='d-flex justify-content-between align-items-center shadow p-2 mb-2'>
         <div class="d-flex align-items-center">
             <div>
-                <button class="btn btn-light " id="addUser">
-                    <i class="bx bx-plus"></i>
-                    User
-                </button>
+                <i class='bx bx-user fs-4'></i>
             </div>
-            
+            <h5 class="mx-1" >
+                User Management
+            </h5>
         </div>
-        <form class="" method="GET">
-            <div class="input-group">
-                <input type="search" class="form-control" placeholder="Search by name or email" name="q" value="{{ search_query }}">
-            </div>
-        </form>
+        <div>
+            <button class="btn btn-outline-dark btn-sm mx-2" id="addUser">
+                Add User
+            </button>
+            <button class="btn btn-outline-dark btn-sm" id="addUser">
+                Add Permissions
+            </button>
+        </div>
     </div>
-
-    <p class="fw-bold py-2">Users</p>
-
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Profile Picture</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in users %}
-            <tr>
-                <td>{{ user.id }}</td>
-                <td>
-                    {% if user.profile.profile_image %} 
-                    <img src="{{ user.profile.profile_image.url }}" alt="Profile Picture" class="img-thumbnail" style="width: 50px; height: 50px;">
-                    {% else %}
-                    <img src="{% static 'assets/avatar.png' %}" alt="Default Profile Picture" class="img-thumbnail" style="width: 50px; height: 50px;">
-                    {% endif %}
-                </td>
-                <td><small>{{ user.get_full_name|default:user.username }}</small></td>
-                <td><small>{{ user.email }}</small></td>
-                <td>{{ user.role }}</td>  
-                <td>
-                    <a data-toggle="tooltip" data-placement="top" title="view user profile" href="{% url 'users:user_detail' user.id %}" class="btn btn-light btn-sm ">
-                        <i class="bx bx-show"></i>
-                    </a>
-                    {% if user != request.user %}
-                    <a data-toggle="tooltip" data-placement="top" title="edit user profile" class="btn btn-light btn-sm editUserBtn" id="editUser" data-user-id="{{ user.id }}">
-                        <i class="bx bx-edit"></i>
-                    </a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content w-100 p-4">
-            <h6 class="fw-bold">Add User</h6>
-            <form method="post">
-                {% csrf_token %}
-                {{form|crispy}}
-                <div class="d-flex justify-content-end">
-                    <div class="">
-                        <button type="reset" class="btn btn-danger btn-sm">
-                            <i class="bx bx-reset"></i>
-                            Reset
-                        </button>
+    
+    <div class="row" id="users">
+        <!-- search user -->
+        <div class="mt-3 mb-3 py-2">
+            <input type="search" placeholder="search user" class="form-control form-control-sm w-100">
+        </div>
+        {% for user in users %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <!-- Profile Picture -->
+                        <div class="me-3">
+                            {% if user.profile.profile_image %} 
+                            <img src="{{ user.profile.profile_image.url }}" alt="Profile Picture" class="rounded-circle" style="width: 50px; height: 50px;">
+                            {% else %}
+                            <img src="{% static 'assets/avatar.png' %}" alt="Default Profile Picture" class="rounded-circle" style="width: 50px; height: 50px;">
+                            {% endif %}
+                        </div>
+                        <!-- Name and Email -->
+                        <div class="d-flex justify-content-between align-items-center w-100">
+                            <div>
+                                <h6 class="card-title mb-1">{{ user.get_full_name|default:user.username }}</h6>
+                                <p class="text-muted mb-0"><small>{{ user.email }}</small></p>
+                            </div>
+                            <div>
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <th>{{ request.user.company }}</th>
+                                        <th>Account</th>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><small>$500.00</small></td>
+                                            <td><small>-$500.00</small></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    <span class="px-2"></span>
-                    <div class="">
-                        <button type="submit" class="btn btn-secondary btn-sm">
-                            <i class="bx bx-save"></i>
-                            Save
-                        </button>
+                    <!-- Role -->
+                    <p class="mt-3 mb-2"><strong>Role:</strong> {{ user.role }}</p>
+                    <!-- Permissions -->
+                    <p class="mb-3"><strong>Permissions:</strong></p>
+                    <ul class="list-unstyled mb-3">
+                        {% if user.user_permissions.exists %}
+                            {% for perm in user.user_permissions.all %}
+                                <li><small>{{ perm.name }}</small></li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="text-muted"><small>No permissions assigned</small></li>
+                        {% endif %}
+                    </ul>
+                    <!-- Actions -->
+                    <div class="d-flex justify-content-end">
+                        <a data-toggle="tooltip" data-placement="top" title="View user profile" href="{% url 'users:user_detail' user.id %}" class="btn btn-light btn-sm bx bx-show me-2"></a>
+                        {% if user != request.user %}
+                        <button data-toggle="tooltip" data-placement="top" title="Edit user profile" class="btn btn-light btn-sm bx bx-edit editUserBtn me-2" id="editUser" data-user-id="{{ user.id }}"></button>
+                        {% endif %}
+                        <button data-toggle="tooltip" data-placement="top" title="Add permissions" class="btn btn-light btn-sm bx bx-lock-alt" id="add-permissions" data-user-id="{{ user.id }}"></button>
                     </div>
                 </div>
-            </form>
             </div>
         </div>
-      </div>
+        {% endfor %}
+    </div>
     
+
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content p-4">
+                <!-- Close Button -->
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                
+                <h4 class="fw-bold">Add User</h6>
+                <form method="post" class="row mt-3" >
+                    {% csrf_token %}
+                    <div class="personal-details col-4 border rounded p-2 bg-light">
+                        <h5 class="header rounded">Personal Details</h5>
+                        <!-- Full Name -->
+                        <div class="mb-3 mt-3">
+                            <label for="id_first_name" class="form-label">Name</label>
+                            <input type="text" name="first_name" id="id_first_name" class="form-control" placeholder="Enter first name" required>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="id_email" class="form-label">Email</label>
+                            <input type="email" name="email" id="id_email" class="form-control" placeholder="Enter email" required>
+                        </div>
+        
+                        <!-- Phone Number -->
+                        <div class="mb-3">
+                            <label for="id_phonenumber" class="form-label">Phone Number</label>
+                            <input type="text" name="phonenumber" id="id_phonenumber" class="form-control" placeholder="Enter phone number" required>
+                        </div>
+        
+                        <!-- Username -->
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">Username</label>
+                            <input type="text" name="username" id="id_username" class="form-control" placeholder="Enter username" required>
+                        </div>
+                    </div>
+                    
+                    <div class="company-details col-4  border rounded p-2 bg-light">
+                        <h5 class="header rounded">Company Details</h5>
+                        <!-- Company -->
+                        <div class="mb-3 mt-3">
+                            <label for="id_company" class="form-label">Company</label>
+                            <select name="company" id="id_company" class="form-select" required>
+                                <option value="" selected disabled>Choose company</option>
+                                {% for company in form.fields.company.queryset %}
+                                    <option value="{{ company.id }}">{{ company.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- branch -->
+                        <div class="mb-3">
+                            <label for="id_branch" class="form-label">Branch</label>
+                            <div class="form-check-group">
+                                {% for branch in branches %}
+                                    <select name="" id="id_branch" class="form-select">
+                                        <option value="{{ branch.id }}">{{ branch.name }}</option>
+                                    </select>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+    
+                   <div class="auth-perm col-4  border rounded p-2 bg-light">
+                    <h5 class="header rounded">Authentication & Roles </h5>
+                     <!-- Role -->
+                     <div class="mb-3 mt-3">
+                        <label for="id_role" class="form-label">Role</label>
+                        <select name="role" id="id_role" class="form-select" required>
+                            <option value="" selected disabled>Choose role</option>
+                            {% for role in form.fields.role.choices %}
+                            <option value="{{ role.0 }}">{{ role.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+    
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">Password</label>
+                        <input type="password" name="password" id="id_password" class="form-control" placeholder="Enter password" required>
+                    </div>
+                   </div>
+    
+                    <div class="d-flex justify-content-end mt-3">
+                        <div>
+                            <button type="reset" class="btn btn-danger btn-sm">
+                                <i class="bx bx-reset"></i>
+                                Reset
+                            </button>
+                        </div>
+                        <span class="px-2"></span>
+                        <div>
+                            <button type="submit" class="btn btn-secondary btn-sm">
+                                <i class="bx bx-save"></i>
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="PermissionsModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content w-100 p-4">
+                <h6 class="fw-bold">Add User</h6>
+                <table class="border table-bordered table-responsive table-striped">
+                    <tr>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Actions</th>
+                    </tr>
+                    <tbody id="PermissionsTableBody">
+                        
+                    </tbody>
+                </table>
+                <div>
+                    <button class="btn btn-outline-dark btn-sm bx bx-plus d-flex justify-content-end align-items-end" type="button" id="addPermission">Add Permission</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="AddPermissionsModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content w-100 p-4">
+                <h6 class="fw-bold">Add User</h6>
+                <form method="POST" action="{% url 'users:userPermissionsCR' %}">
+                    {% csrf_token %}
+                    {{PermData | crispy}}
+                    <div>
+                        <button class="btn btn-secondary bx bx-plus" type="submit">Add</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content w-100 p-4">
@@ -128,8 +276,7 @@
     const editUserBtn = document.getElementById('editUser');
     const editUserBtns = document.querySelectorAll('.editUserBtn');
     const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
-    
-    
+
     addBtn.addEventListener('click', ()=>{
         addModal.show()
     })
@@ -199,5 +346,79 @@
             }
         });
     });
+
+    const viewPermissions = document.getElementById('viewAllPermissions');
+    const viewPermissionsModal = new bootstrap.Modal(document.getElementById('PermissionsModal'));
+
+    viewPermissions.addEventListener('click', (e)=>{
+        e.preventDefault()
+        viewPermissionsModal.show()
+        console.log('hello')
+        fetch("{% url 'users:userPermissionsCR' %}",{
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(answer => answer.json())
+        .then(data =>{
+            console.log('hie')
+            if(data.success){
+                console.log('again')
+                data.Permissiondata.forEach( item =>{
+                    console.log('i am in')
+                    const tableBody =  document.getElementById('PermissionsTableBody');
+                    tableBody.innerHTML = `
+                        <td><small>${item.name}</small></td>
+                        <td><small>${item.category}</small></td>
+                        <td>
+                            <small><button class = "btn btn-sm bx bx-trash" type = "button" onclick = "removePermission${item.id}")></button></small>
+                            <small><button class = "btn btn-sm bx bx-edit" type = "button" onclick = "editPermission${item.id}")></button></small>
+                        </td>
+                    `
+                });
+            }else{
+                Swal.fire({
+                    'icon': 'error',
+                    'title': 'Error',
+                    'text': data.message
+                });
+            }
+        })
+    })
+
+    const addPermissionBtn = document.getElementById('addPermission');
+    const addPermissionModal = new bootstrap.Modal(document.getElementById('AddPermissionsModal'));
+
+    addPermissionBtn.addEventListener('click', ()=>{
+        viewPermissionsModal.hide();
+        addPermissionModal.show();
+    })
+    removePermission = (itemId) =>{
+        fetch("{% url 'users:userPermissionsUD' 0 %}".replace(0, itemId),{
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(answer => answer.json())
+        .then(data => {
+            if(data.success){
+                Swal.fire({
+                    'icon': 'success',
+                    'title': 'Success',
+                    'text': 'Successfully deleted'
+                })
+            }else{
+                Swal.fire({
+                    'icon': 'error',
+                    'title': 'error',
+                    'text': 'Failed to delete'
+                })
+            }
+        })
+    }
+
+    editPermission = (itemId) =>{
+
+    }
 </script>
 {% endblock content %}

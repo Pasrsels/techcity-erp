@@ -7,11 +7,13 @@ from pathlib import Path
 from dotenv import load_dotenv
 #from decouple import config
 from django.apps import apps
+from datetime import timedelta
+from datetime import timedelta
+import sys
 
 env = environ.Env()   
 load_dotenv()
 
-import sys
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env(
@@ -23,7 +25,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = "django-insecure-rb&d1ur&gv!uedx9&nym9zthkk(32-kdvh1x_b0+c+&^hny!o9"
 
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = []
 # Application definition
 
@@ -38,6 +40,7 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     "channels",
+    # 'debug_toolbar',
     "crispy_forms",
     "crispy_bootstrap5",
     'phonenumber_field',
@@ -45,6 +48,8 @@ THIRD_PARTY_APPS = [
     # 'chartjs',
     # 'django_crontab',
     # 'DjangoAsyncMail',
+    # 'django_browser_reload',
+
 
     'apps.company',
     'apps.users',
@@ -54,7 +59,8 @@ THIRD_PARTY_APPS = [
     'apps.pos',
     'apps.settings',
     'apps.Analytics',
-    'apps.booking'
+    'apps.booking',
+    # 'apps.vouchers'
 ]
 
 LOCAL_APPS = [
@@ -72,6 +78,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -80,7 +87,12 @@ MIDDLEWARE = [
     
     # custom middlewares
     'inventory.middleware.RequestMiddleware',
-    'company.middleware.CompanySetupMiddleware'
+    'company.middleware.CompanySetupMiddleware',
+    # 'users.middleware.LoginRequiredMiddleware',
+
+    # third pard middleware
+    # 'django_browser_reload.middleware.BrowserReloadMiddleware',
+    
     
 ]
 
@@ -128,45 +140,36 @@ ASGI_APPLICATION = 'techcity.wsgi.application'
 AUTH_USER_MODEL = 'users.User'
 
 SESSION_AUTH = True
+SESSION_COOKIE_AGE = 36000  #
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
 
-#    'default': {
-#      'ENGINE': 'django.db.backends.postgresql',
-#        'NAME':  'techcoty',
-#        'USER': 'postgres',
-#        'PASSWORD': 'neverfail',
-#        'HOST': 'localhost',
-#        'PORT': '5432'
-#  }
-    'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-         'NAME': os.getenv('DB_NAME', 'railway'),
-         'USER': os.getenv('DB_USERNAME', 'postgres'),
-         'PASSWORD': os.getenv('DB_PASSWORD', 'TopCprLoVTPDAmezfOhAJoqvDuHLnxhw'),  
-         'HOST': os.getenv('DB_HOST', 'autorack.proxy.rlwy.net'),
-         'PORT': os.getenv('DB_PORT', '26269'),
-     }
- }
+    'default': dj_database_url.config(
+        default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
+    )
 
-if 'test' in sys.argv:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': ':memory:',
-        }
-    }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME':  'techcity',
+    #     'USER': 'postgres',
+    #     'PASSWORD': 'neverfail',
+    #     'HOST': 'localhost',
+    #     'PORT': '5432'
+    # }
+}
 
-DATABASES["default"]["ATOMIC_REQUESTS"] = True
-# https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # AUTH_USER_MODEL = "users.User"
 # # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
 # LOGIN_REDIRECT_URL = "dashboard:dashboard"
 # # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
+
 LOGIN_URL = "users:login"
 
 # PASSWORDS
@@ -256,8 +259,12 @@ LOGGING = {
 }
 
 # celery
-CELERY_BROKER_URL = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+# CELERY_BROKER_URL = 'redis://localhost:6379'
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+
+# remote
+CELERY_BROKER_URL = 'redis://default:aVrmORfgkdoGPWZoneAIwqggCmFKHXzz@autorack.proxy.rlwy.net:12167'
+CELERY_RESULT_BACKEND = 'redis://default:aVrmORfgkdoGPWZoneAIwqggCmFKHXzz@autorack.proxy.rlwy.net:12167'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -273,3 +280,38 @@ CELERY_BEAT_SCHEDULE = {
 # Inventory
 LOW_STOCK_THRESHHOLD =  6
 INVENTORY_EMAIL_NOTIFICATIONS_STATUS = True
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # to be changeed
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # to be changeed
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
+
+
+#Verificatioin retries
+VERIFICATION_TOKEN_EXPIRY_HOURS = 24
+MAX_VERIFICATION_ATTEMPTS = 5
+MAX_VERIFICATION_ATTEMPTS_PER_IP = 10
+MAX_EMAIL_VERIFICATION_ATTEMPTS_PER_DAY = 3
+
+# Default from Email
+DEFAULT_FROM_EMAIL = 'admin@techcity.co.zw' #to be dynamically
+
+# settings.py
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

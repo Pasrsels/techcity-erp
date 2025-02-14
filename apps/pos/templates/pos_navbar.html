@@ -26,7 +26,7 @@
         <div class='user mt-3  px-2 d-flex justify-content-end w-75'>
             <ul class="menu list-unstyled d-flex align-items-center">
                 <li class="menu-link dropdown">
-                    <select  id='currency' class='shadow text-dark btn form-select' style="background: #00c0ef;">
+                    <select  id='currency' class='shadow text-dark btn form-select' style="background: #007bff;">
                         <option value=''>Currency</option>
                         {% for currency in currencies %}
                             {% if currency.default %}
@@ -38,34 +38,34 @@
                     </select>
                 </li>
                 <span class='px-2'></span>
-                <li class="menu-link invoice btn btn-light shadow p-1 text-light" style="background: #00c0ef;">
+                <li class="menu-link invoice btn btn-light shadow p-1 text-light" style="background: #007bff;">
                     <a href={% url 'finance:invoice' %}  class='px-1 text-light fs-6'>
                         <small>Invoices</small>
                         <span class='badge badge-sm'>{{invoice_count}}</span>
                     </a>
                 </li>
                 <span class='px-2'></span>
-                <li class="menu-link invoice btn btn-light shadow p-1 text-light" style="background: #00c0ef;">
+                <li class="menu-link invoice btn btn-light shadow p-1 text-light" style="background: #007bff;">
                     <a href={% url 'finance:held_invoice' %}  class='px-1 text-light fs-6'>
                         <small>Held Invoices</small>
                         <span class='badge badge-sm'>{{count}}</span>
                     </a>
                 </li>
                 <span class='px-2'></span>
-                <li class="menu-link btn btn-light shadow p-1 text-light" style="background: #00c0ef;">
+                <li class="menu-link btn btn-light shadow p-1 text-light" style="background: #007bff;">
                     <a href='{% url 'finance:qoutation_list' %}' class='px-1 text-light fs-6'>
                         <small>Qoutations</small>
                         <span class='badge badge-sm'>{{qoute_count}}</span>
                     </a>
                 </li>
                 <span class='px-2'></span>
-                <li class="menu-link btn btn-light shadow p-1 text-light" style="background: #00c0ef;">
+                <li class="menu-link btn btn-light shadow p-1 text-light" style="background: #007bff;">
                     <a href={% url 'finance:withdrawals' %} class='px-1 text-light fs-6'>
                         <small>Cash Withdraw</small>
                     </a>
                 </li>
                 <span class='px-2'></span>
-                <li class="menu-link invoice btn btn-light shadow p-1" id='end' style="background: #00c0ef;">
+                <li class="menu-link invoice btn btn-light shadow p-1" id='end' style="background: #007bff;">
                     <small class='px-1 text-light'>
                         End Of Day
                     </small>
@@ -104,18 +104,21 @@
         </div>
     </nav>
     <div class="modal fade" id="branchModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-right">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-right">
             <div class="modal-content">
                 <div class="modal-body">
-                    <div class="">
+                    <div>
                         <p class='fw-bold'>Choose Branch</p>
                     </div>
-                    <div class="mt-4">
-                        <ul class='list-unstyled'>
-                            {% for branch in branches %}
-                                <li><a href="{% url 'company:switch_branch' branch.id %}" class="text-dark shadow">{{ branch.name }}</a></li>
-                            {% endfor %}
-                        </ul>
+                    <div class="row row-cols-3 g-3"> 
+                        {% for branch in branches %}
+                            <div class="col">
+                                <a class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center" 
+                                   href="{% url 'company:switch_branch' branch.id %}">
+                                    {{ branch.name }}
+                                </a>
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>

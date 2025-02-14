@@ -1,0 +1,71 @@
+{% content %}
+<div class='px-1 shadow d-flex align-items-center justify-content-between rounded'>
+    <h5>Products</h5>
+    <div class="d-flex sticky-top bg-white" 
+        style="z-index: 1000;">
+        <nav class='recent-nav navbar navbar-expand-lg'>
+            <nav class="d-flex justify-content-between align-items-center">
+                <div class="d-flex">
+                    {% if request.user.role == 'admin' %}
+                        <div>
+                            <a href='{% url 'inventory:create_purchase_order' %}' class="btn btn-outline-dark btn-sm">
+                                <i class='bx bx-plus'></i> 
+                                Product
+                            </a>
+                        </div>
+                    {% endif %}
+                    <div class='px-2'>
+                        <a href='{% url 'inventory:defective_product_list' %}' class="btn btn-outline-dark btn-sm">
+                            Defective Products
+                        </a>
+                    </div>
+                    <div> 
+                        <a href='{% url 'inventory:reorder_list' %}' class="btn btn-outline-dark btn-sm">
+                            Reorder List
+                        </a>
+                    </div>
+                    <div class='px-2'> 
+                        <a href='{% url 'inventory:purchase_orders' %}' class="btn btn-outline-dark btn-sm">
+                            Purchase Orders
+                        </a>
+                    </div>
+
+                    <div> 
+                        <a href='{% url 'inventory:suppliers' %}' class="btn btn-outline-dark btn-sm">
+                            Suppliers
+                        </a>
+                    </div>
+
+                    <div class='px-2'> 
+                        <a href='{% url 'inventory:stocktake' %}' class="btn btn-outline-dark btn-sm">
+                            Stocktake
+                        </a>
+                    </div>
+
+                </div>
+                <div class="search d-flex align-items-center">
+                    <span class='px-2'>
+                        <a href='?download=true&excel=true' class="btn btn-outline-dark btn-sm">
+                            excel
+                            <i class='bx bx-download'></i>
+                        </a>        
+                    </span>
+                    <form method="get" class="d-flex">
+                        <select name="category" class="form-control" id='id_category' value={{ category }}>
+                            <option value="">All Categories</option>
+                            <option value='inactive'>Inactive</option>
+                            {% for category in categories %}
+                                <option value="{{ category.name }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="px-1"></span>
+                        <button type="submit" class="btn btn-outline-dark btn-sm">
+                            <i class="bx bx-filter"></i>
+                        </button>
+                    </form>
+                </div>
+            </nav>
+        </nav>
+    </div>
+</div>
+{% endblock %}

@@ -7,21 +7,29 @@ This module manages user models and related functionality, including:
 * **Code Generation:** Implements logic to generate random unique codes for each user. 
 """
 
+import uuid
 import random, string
 from django.db import models
 from django.apps import apps
-from apps.company.models import Branch
 from django.contrib.auth.models import AbstractUser, Group
 from django.db.models.signals import post_migrate, post_save
+from django.contrib.auth.base_user import BaseUserManager
+from django.utils.translation import gettext_lazy as _
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils import timezone
+from django.conf import settings
 
 ADMIN_GROUP_NAME = 'Admin'
 ACCOUNTANT_GROUP_NAME = 'Accountant'
 SALESPERSON_GROUP_NAME = 'Salesperson'
 
-from django.contrib.auth.base_user import BaseUserManager
-from django.utils.translation import gettext_lazy as _
+class UserPermissions(models.Model):
+    name = models.CharField(max_length=60)
+    category = models.CharField(max_length=60)
+    def __str__(self):
+        return f'{self.name}'
 
-
+    
 class CustomUserManager(BaseUserManager):
     """
     Custom user model manager with extra functionalities.
@@ -75,9 +83,16 @@ class User(AbstractUser):
     # todo remove user code and groups
     code = models.CharField(max_length=50, null=True, blank=True)
     groups = models.ManyToManyField(Group)
-
+    user_permissions = models.ManyToManyField(UserPermissions)
     phonenumber = models.CharField(max_length=13)
     role = models.CharField(choices=USER_ROLES, max_length=50)
+
+    def tokens(self):
+        refresh = RefreshToken.for_user(self)
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token)
+        }
 
     def code_generator(self) -> str:
         length = 5
@@ -96,11 +111,29 @@ class User(AbstractUser):
         # validate that the user's branch is associated with the same company
         if self.branch and self.company and self.branch.company != self.company:
             raise ValueError('The branch does not belong to the specified company')
-
+    
     def __str__(self) -> str:
         return self.username
 
     objects = CustomUserManager()
+
+
+class EmailVerificationToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.UUIDField(default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    attempts = models.IntegerField(default=0) 
+
+    def is_valid(self):
+        return (
+            timezone.now() <= self.expires_at,
+            self.attempts < settings.MAX_VERIFICATION_ATTEMPTS
+        )
+
+    def increment_attempts(self):
+        self.attempts += 1
+        self.save()
 
 
 def assign_admin_group(sender, instance, created, **kwargs):
@@ -117,3 +150,7 @@ def create_groups(sender, **kwargs):
 
 post_save.connect(assign_admin_group, sender=User)
 post_migrate.connect(create_groups, sender=apps.get_app_config('users'))
+
+
+
+

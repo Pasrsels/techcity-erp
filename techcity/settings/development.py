@@ -3,7 +3,7 @@ from .base import *
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', 'web-production-86a7.up.railway.app']
+ALLOWED_HOSTS = ['*', 'web-production-86a7.up.railway.app', '192.168.10.213']
 
 # Development-specific apps or middleware
 INSTALLED_APPS += [

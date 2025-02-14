@@ -2,7 +2,7 @@
 /node_modules/
 /migrations/
 */migrations/*
-.env
+.venv
 *.pyc
 *~zz 
 *.swp
@@ -25,3 +25,9 @@ test.png
 .base.py
 dev/*.pyc
 *base.py
+Dockerfile
+docker_compose.yml
+*.pyc
+*.pyc
+# .docker_compose
+# .Dockerfile

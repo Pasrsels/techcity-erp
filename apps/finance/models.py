@@ -8,6 +8,13 @@ from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
+from apps.company.models import Branch
+from apps.users.models import User
+from django.db.models import Sum
+from django.utils.timezone import localdate
+
+today = localdate()
+
 
 class PaymentMethod(models.Model):
     name = models.CharField(max_length=255)
@@ -526,3 +533,89 @@ class AccountTransaction(models.Model):
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True)
     sales_returns = models.ForeignKey(SalesReturns, on_delete=models.CASCADE, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+
+class CashFlowCategory(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    
+    class Meta:
+        verbose_name_plural = "Categories"
+    
+    def __str__(self):
+        return self.name
+
+
+class Cashflow(models.Model):
+    date = models.DateField()
+    category = models.ForeignKey(CashFlowCategory, on_delete=models.CASCADE)
+    income = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    expense = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    # sales = models.ManyToManyField(Sale, blank=True)
+    status = models.BooleanField(default=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_cashflows')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    cash_up = models.ForeignKey('finance.CashUp', on_delete=models.CASCADE, null=True)
+
+    def save(self, *args, **kwargs):
+        # Calculate total (income - expense)
+        self.total = self.income - self.expense
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.branch} - {self.date} - {self.total}"
+
+class CashUp(models.Model):
+    date = models.DateField()
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    expected_cash = models.DecimalField(max_digits=10, decimal_places=2)
+    received_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    balance = models.DecimalField(max_digits=10, decimal_places=2)
+    sales = models.ManyToManyField(InvoiceItem, related_name='cashup_sales')
+    expenses = models.ManyToManyField(Expense, related_name='cashup_expenses')
+    status = models.BooleanField(default=False)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_cashups')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        # Calculate balance (received_amount - expected_cash)
+        self.balance = self.received_amount - self.expected_cash
+        super().save(*args, **kwargs)
+    
+    def get_total_sales(self):
+        return self.sales.filter(invoice__issue_date=today) \
+            .aggregate(total=Sum('total_amount'))['total'] or 0
+    
+    def get_total_expenses(self):
+        return self.expenses.filter(issue_date=today).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    def get_net_cash(self):
+        return self.get_total_sales() - self.get_total_expenses()
+
+    def __str__(self):
+        return f"{self.branch} - {self.date} - Balance: {self.balance}"
+
+    class Meta:
+        verbose_name_plural = "Cash Ups"
+
+class UserAccount(models.Model):
+    user = models.ForeignKey(User, related_name='accounts', on_delete=models.CASCADE)
+    account_type = models.CharField(max_length=50)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_credits = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_debits = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    last_transaction_date = models.DateTimeField(null=True, blank=True)
+
+class UserTransaction(models.Model):
+    account = models.ForeignKey(UserAccount, related_name='transactions', on_delete=models.CASCADE)
+    transaction_type = models.CharField(max_length=10) 
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField()
+    date = models.DateTimeField(auto_now_add=True)
+    debit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    credit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    received_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_transactions', null=True)

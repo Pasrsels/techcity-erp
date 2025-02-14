@@ -30,6 +30,7 @@
                 </div>
                 <div class="login-form mt-4">
                     <form method="post">
+                        <input type="hidden" name="next" value="{{ request.GET.next }}">
                         {{form}}
                         {% csrf_token %}
                         <div class="row">
@@ -51,7 +52,7 @@
                         <div class="row mt-2">
                             <button
                                 type="submit"
-                                class="btn btn-primary"
+                                class="btn btn-outline-dark"
                             >Login</button>
                         </div>
                     </form>
@@ -73,3 +74,4 @@
     </div>
 </body>
 </html>
+

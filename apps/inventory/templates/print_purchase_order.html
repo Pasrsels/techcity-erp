@@ -231,7 +231,7 @@
         </table>
     </div>
     <div class="print-hide">
-        <button type="button" class="btn btn-primary  d-grid w-100">
+        <button type="button" class="btn btn-outline-dark  d-grid w-100">
             <i class='bx bx-printer' ></i>
             Print
         </button>
@@ -248,7 +248,7 @@
         let rows = document.querySelectorAll('#order_table tbody tr');
         let subtotal = 0;
 
-        const printBtn = document.querySelector('.btn-primary')
+        const printBtn = document.querySelector('.btn-outline-dark')
 
         printBtn.addEventListener('click', () => {
             window.print();

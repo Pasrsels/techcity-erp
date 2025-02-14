@@ -43,18 +43,122 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+
+    
     <title>
         {% block title %}Techcity{% endblock title %}
     </title>
 </head>
+<style>
+    .l-p{
+        height: 80vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: end;
+        position: fixed;
+        right: 0;
+        z-index: 1000;
+    }
+    .l-p button{
+        border-top-left-radius: 70%;
+        border-bottom-left-radius: 70%;
+    }
+
+    .layby-btn {
+        background-color: #007bff; 
+        color: white;
+    }
+    .layby-btn:hover {
+        background-color: #0056b3; 
+    }
+
+    .paylater-btn {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .paylater-btn:hover {
+        background-color: #1e7e34; 
+    }
+
+    .monthly-btn {
+        background-color: #ffc107; 
+        color: black;
+    }
+
+    .monthly-btn:hover {
+        background-color: #d39e00; 
+    }
+
+    .hover-span {
+        display: none;
+        position: absolute;
+        top: 0; 
+        right: 100%; 
+        background-color: #f8f9fa;
+        padding: 5px 10px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        white-space: nowrap;
+        z-index: 10;
+        transform: translateX(100%); 
+        opacity: 0; 
+        transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        cursor: pointer;
+    }
+
+    .hover-span.show {
+        display: inline-block;
+        transform: translateX(0); 
+        opacity: 1; 
+    }
+    .hover-span.show + .l-p-button{
+        border-radius: none;
+    }
+
+</style>
 <body>
     <div class="techcity">
         <div class="row">
             <div class=" top-bar">
                 <div class="nav-bar fixed-top bg-light"> {% include "base/navbar.html" %} </div>
                 <div class='row' style='margin-top:58px;'>
-                    <div class="aside-bar col-2 text-light" style="background: #242140 !important;"> {% include "base/aside.html" %} </div>
+                    <div class="aside-bar text-light" style="background: #242140 !important; width: 150px;"> {% include "base/aside.html" %} </div>
                     <div class="app-area col w-100 bg-light overflow">
+                        <div class="l-p">
+                            <!-- First Button -->
+                            <div class="position-relative d-inline-block mb-2">
+                                <button class="btn layby-btn btn-sm toggle-btn" onclick="toggleSpan(this)">
+                                    L
+                                </button>
+                                <span class="hover-span" onclick="showModalWithLoader(this, 'Laybys')">Layby 
+                                    <span class="badge bg-sm  layby-btn badge-custom text-light">5</span>
+                                </span>
+                            </div>
+                        
+                            <!-- Second Button -->
+                            <div class="position-relative d-inline-block mb-2">
+                                <button class="btn paylater-btn btn-sm toggle-btn" onclick="toggleSpan(this)">
+                                    P
+                                </button>
+                                <span class="hover-span" onclick="showModalWithLoader(this, 'Paylaters')">PayLater 
+                                    <span class="badge paylater-btn bg-sm badge-custom text-light">3</span>
+                                </span>
+                            </div>
+                        
+                            <!-- Third Button -->
+                            <div class="position-relative d-inline-block">
+                                <button class="btn monthly-btn btn-sm toggle-btn" onclick="toggleSpan(this)">
+                                    M
+                                </button>
+                                <span class="hover-span" onclick="showModalWithLoader(this, 'Montly Installments')">Monthly Payments 
+                                    <span class="badge monthly-btn bg-sm badge-custom text-light">7</span>
+                                </span>
+                            </div>
+                        </div>
+                        
                         {% if messages %}
                             {% for message in messages %}
                                 <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
@@ -66,7 +170,13 @@
                                 </div>
                             {% endfor %}
                         {% endif %}
-                        {% block content %}{% endblock %}
+                        <!-- <div id="loader" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white" style="z-index: 1050;">
+                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div> -->
+                        {% block content %}
+                        {% endblock %}
                     </div>
                 </div>
             </div>
@@ -93,24 +203,70 @@
                 </div>
             </div>
             <div class="modal fade" id="branchModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-                <div class="modal-dialog modal-dialog-right">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-right">
                     <div class="modal-content">
                         <div class="modal-body">
-                            <div class="">
+                            <div>
                                 <p class='fw-bold'>Choose Branch</p>
                             </div>
-                            <div class="mt-4">
-                                <ul class='list-unstyled'>
-                                    {% for branch in branches %}
-                                        <li><a href="{% url 'company:switch_branch' branch.id %}" class="px-3 text-dark">{{ branch.name }}</a></li>
-                                    {% endfor %}
-                                </ul>
+                            <div class="row row-cols-3 g-3"> 
+                                {% for branch in branches %}
+                                    <div class="col">
+                                        <a class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center" 
+                                           href="{% url 'company:switch_branch' branch.id %}">
+                                            {{ branch.name }}
+                                        </a>
+                                    </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            
         </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg"> 
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalLabel">Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="modalContent">
+                            <div class="d-flex justify-content-between w-100">
+                                <div>
+                                    <span class="p-2 bg-light">Total amount $</span>
+                                </div>
+                                <div>
+                                    <input type="search" oninput="" class="form-control form-control-sm">
+                                </div>
+                            </div>
+                            <table class="table mt-2">
+                                <thead class="table-dark">
+                                    <th>#</th>
+                                    <th>Invoice #</th>
+                                    <th>Customer</th>
+                                    <th>Amount owing</th>
+                                    <th>Total Amount</th>
+                                    <th>Action</th>
+                                </thead>
+                                <tbody>
+                                    <!-- js population -->
+                                </tbody>
+                            </table>
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
     </div>
     <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>    
     
@@ -124,11 +280,47 @@
 
         const tableWrapper = document.querySelector('#detailTable_wrapper')
 
+        // document.addEventListener("DOMContentLoaded", function () {
+        //     const loader = document.getElementById("loader");
+        //     loader.style.display = "none"; // Hide the loader after the page loads
+        // });
+
         document.addEventListener('DOMContentLoaded', function() {
-            fetchNotifications();
+            // fetchNotifications();
         });
+
+        function toggleSpan(button) {
+            const span = button.nextElementSibling;
+
+            if (span.classList.contains('show')) {
+                span.classList.remove('show');
+            } else {
+                document.querySelectorAll('.hover-span').forEach(s => s.classList.remove('show'));
+                span.classList.add('show');
+            }
+        }
+
+        function showModalWithLoader(spanElement, title) {
+            spanElement.classList.remove('show');
+            const modal = new bootstrap.Modal(document.getElementById('infoModal'));
+            const modalTitle = document.getElementById('modalLabel');
+            modalTitle.innerText = title;
+            modal.show();
+        }
         
         document.querySelector('.col-12')?.classList.add('w-100') 
+        // document.addEventListener("DOMContentLoaded", function () {
+        //     const buttons = document.querySelectorAll(".toggle-btn");
+
+        //     buttons.forEach((button) => {
+        //         button.addEventListener("click", function () {
+        //             const span = button.nextElementSibling;
+        //             button.classList.add("fade-out");
+        //             span.classList.remove("d-none");
+        //             span.classList.add("show");
+        //         });
+        //     });
+        // });
 
         // function fetchNotifications() {
         //     fetch('{% url "inventory:reorder_from_notifications" %}')
@@ -207,42 +399,137 @@
             notisModal.show()
         })
 
-        $.ajax({
-            url: '{% url "finance:finance_notifications_json" %}',
-            type: 'GET',
-            }).done(function(response) {
-                const data = response;
-                displayFinanceNotifications(data)
-            })
+        // // $.ajax({
+        // //     url: '{% url "finance:finance_notifications_json" %}',
+        // //     type: 'GET',
+        // //     }).done(function(response) {
+        // //         const data = response;
+        // //         displayFinanceNotifications(data)
+        // //     })
         
-        function displayFinanceNotifications(data) {
-            const ul = document.querySelector('#finance_notifications');
-            const notificationTypes = {};
+        // // function displayFinanceNotifications(data) {
+        // //     const ul = document.querySelector('#finance_notifications');
+        // //     const notificationTypes = {};
             
-            data.forEach((notification) => {
-                if (!notificationTypes[notification.notification_type]) {
-                notificationTypes[notification.notification_type] = [];
-                }
-                notificationTypes[notification.notification_type].push(notification);
-            });
+        // //     data.forEach((notification) => {
+        // //         if (!notificationTypes[notification.notification_type]) {
+        // //         notificationTypes[notification.notification_type] = [];
+        // //         }
+        // //         notificationTypes[notification.notification_type].push(notification);
+        // //     });
             
-            Object.keys(notificationTypes).forEach((type) => {
+        // //     Object.keys(notificationTypes).forEach((type) => {
                 
-                notificationTypes[type].forEach((notification) => {
-                const li = document.createElement('li');
-                if(notification.transfer__to === {{request.user.branch.id}}){
-                    li.innerHTML = `<small><a href='{% url "finance:cash_transfer_list" %}'>${notification.notification}</a></small>`;
+        // //         notificationTypes[type].forEach((notification) => {
+        // //         const li = document.createElement('li');
+        // //         if(notification.transfer__to === {{request.user.branch.id}}){
+        // //             li.innerHTML = `<small><a href='{% url "finance:cash_transfer_list" %}'>${notification.notification}</a></small>`;
+        // //         }
+        // //         if(notification.expense__branch === {{request.user.branch.id}}){
+        // //             li.innerHTML = `<small><a>${notification.notification}</a></small>`;
+        // //         }
+        // //         if(notification.invoice__branch === {{request.user.branch.id}}){
+        // //             li.innerHTML = `<small><a>${notification.notification}</a></small>`;
+        // //         }
+        // //         ul.appendChild(li);
+        // //         });
+        // //     });
+        // }
+
+        const apiUrl =''//update endpoint
+        async function fetchCustomerData() {
+            try {
+                const response = await fetch(apiUrl);  
+                const customers = await response.json();  
+
+                if (Array.isArray(customers) && customers.length > 0) {
+                    const tableBody = document.getElementById("laybyTableBody");
+                    const recordCount = document.getElementById("count");
+                    tableBody.innerHTML = '';
+
+                    customers.forEach(customer => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${customer.name}</td>
+                            <td>${product}</td>
+                            <td>${amount}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Send
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item"  href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
+                                            <i class='bx bxl-whatsapp'></i></a></li>
+                                        <li><a class="dropdown-item"  href='mailto:{{customer.account.customer.email}}' class="text-dark">
+                                            <i class='bx bx-envelope'></i></a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    // Updating the record count
+                    recordCount.innerText = customers.length;
+                } else {
+                    alert('No customer data available.');
                 }
-                if(notification.expense__branch === {{request.user.branch.id}}){
-                    li.innerHTML = `<small><a>${notification.notification}</a></small>`;
-                }
-                if(notification.invoice__branch === {{request.user.branch.id}}){
-                    li.innerHTML = `<small><a>${notification.notification}</a></small>`;
-                }
-                ul.appendChild(li);
-                });
-            });
+            } catch (error) {
+                console.error('Error fetching customer data:', error);
+                alert('Failed to load customer data. Please try again later.');
+            }
         }
+
+        // document.getElementById('laybyModal').addEventListener('shown.bs.modal', fetchCustomerData);
+
+    
+        async function fetchCustomerData() {
+            try {
+                const response = await fetch('',{  //update url
+                    method: "GET",
+                });
+                const customers = await response.json();  
+
+                if (Array.isArray(customers) && customers.length > 0) {
+                    const tableBody = document.getElementById("PaylaterTableBody");
+                    const recordCount = document.getElementById("count");
+                    tableBody.innerHTML = '';
+
+                    customers.forEach(customer => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${customer.name}</td>
+                            <td>${product}</td>
+                            <td>${amount}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Send
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item"  href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
+                                            <i class='bx bxl-whatsapp'></i></a></li>
+                                        <li><a class="dropdown-item"  href='mailto:{{customer.account.customer.email}}' class="text-dark">
+                                            <i class='bx bx-envelope'></i></a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    recordCount.innerText = customers.length;
+                } else {
+                    showError("No customer data available.");
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        // document.getElementById('PaylaterModal').addEventListener('shown.bs.modal', fetchCustomerData);
+
 
         function getCookie(name) {
             let cookieValue = null;

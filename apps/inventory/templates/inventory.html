@@ -3,17 +3,125 @@
 {% load crispy_forms_tags %}
 {% block title%} Inventory {% endblock%}
 {% block content %}
+<style>
+    @media screen and (max-width: 768px) { 
+        .col-3 {
+            display: none;
+        }
+        .col-9{
+            width: 100%;
+        }
+    }
+</style>
    <div class="inventory">
-    <div class='px-2 py-2 shadow d-flex align-items-center justify-content-between rounded'>
-        <div class='h5'><i class='bx bx-cabinet mt-2'></i>Products</div>
-        <div class='px-2'>
-            <nav class='recent-nav navbar navbar-expand-lg px-2'>
-                <ul class='navbar-nav items  mr-auto'>
-                    <li class='nav-item active' data-name="products">Products</li>
-                    <li class='nav-item px-2' data-name="services">Services</li>
-                </ul>
+    <div class='px-1 shadow d-flex align-items-center justify-content-between rounded'>
+        <h5>Products</h5>
+        <div class="d-flex sticky-top bg-white" style="z-index: 1000;">
+            <nav class='recent-nav navbar navbar-expand-lg'>
+                <nav class="d-flex justify-content-between align-items-center">
+                    <!-- Static buttons for large screens -->
+                    <div class="d-none d-lg-flex">
+                        {% if request.user.role == 'admin' %}
+                            <div class="mx-2">
+                                <a href='{% url 'inventory:create_purchase_order' %}' class="btn btn-outline-dark btn-sm">
+                                    <i class='bx bx-plus'></i> 
+                                    Product
+                                </a>
+                            </div>
+                        {% endif %}
+                        <div> 
+                            <a href='{% url 'inventory:reorder_list' %}' class="btn btn-outline-dark btn-sm">
+                                Reorder List
+                            </a>
+                        </div>
+                        <div class='px-2'> 
+                            <a href='{% url 'inventory:purchase_orders' %}' class="btn btn-outline-dark btn-sm">
+                                Purchase Orders
+                            </a>
+                        </div>
+        
+                        <div> 
+                            <a href='{% url 'inventory:suppliers' %}' class="btn btn-outline-dark btn-sm">
+                                Suppliers
+                            </a>
+                        </div>
+        
+                        <div class='px-2'> 
+                            <a href='{% url 'inventory:stocktake' %}' class="btn btn-outline-dark btn-sm">
+                                Stocktake
+                            </a>
+                        </div>
+
+                        <div> 
+                            <a href='{% url 'inventory:loss_management' %}' class="btn btn-outline-dark btn-sm">
+                                Loss Management
+                            </a>
+                        </div>
+
+                    </div>
+        
+                    <!-- Dropdown for small screens -->
+                    <div class="dropdown d-lg-none">
+                        <button class="btn btn-outline-dark btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            More Options
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            {% if request.user.role == 'admin' %}
+                                <li><a class="dropdown-item" href='{% url 'inventory:create_purchase_order' %}'>Product</a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href='{% url 'inventory:defective_product_list' %}'>Defective Products</a></li>
+                            <li><a class="dropdown-item" href='{% url 'inventory:reorder_list' %}'>Reorder List</a></li>
+                            <li><a class="dropdown-item" href='{% url 'inventory:purchase_orders' %}'>Purchase Orders</a></li>
+                            <li><a class="dropdown-item" href='{% url 'inventory:suppliers' %}'>Suppliers</a></li>
+                            <li><a class="dropdown-item" href='{% url 'inventory:stocktake' %}'>Stocktake</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href='?download=true&excel=true'>Excel <i class='bx bx-download'></i></a></li>
+                            <li>
+                                <form method="get">
+                                    <select name="category" class="form-control" id='id_category' value={{ category }}>
+                                        <option value="">All Categories</option>
+                                        <option value='inactive'>Inactive</option>
+                                        {% for category in categories %}
+                                            <option value="{{ category.name }}">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-outline-dark btn-sm mt-2">
+                                        <i class="bx bx-filter"></i>
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+        
+                    <!-- Search form on large screens -->
+                    <div class="search d-flex align-items-center d-none d-lg-flex">
+                        <span class='px-2'>
+                            <a href='?download=true&excel=true' class="btn btn-outline-dark btn-sm">
+                                Excel
+                                <i class='bx bx-download'></i>
+                            </a>        
+                        </span>
+                        <form method="get" class="d-flex">
+                            <select name="category" class="form-control" id='id_category' value={{ category }}>
+                                <option value="">All Categories</option>
+                                <option value='inactive'>Inactive</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.name }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <span class="px-1"></span>
+                            <button type="submit" class="btn btn-outline-dark btn-sm">
+                                <i class="bx bx-filter"></i>
+                            </button>
+                        </form>
+                    </div>
+                </nav>
             </nav>
         </div>
+        
+        
     </div>
         <div class="row mt-3">
             <div class="col">
@@ -33,102 +141,71 @@
                 </div>
             </div>
         </div>
-        <div class="inventory-navbar mt-3">
-            <nav class="d-flex justify-content-between align-items-center p-2">
-                <div class="d-flex">
-                    {% if request.user.role == 'admin' %}
-                        <div>
-                            <a href='{% url 'inventory:create_purchase_order' %}' class="btn btn-primary shadow btn-sm">
-                                <i class='bx bx-plus'></i> 
-                                Product
-                            </a>
-                        </div>
-                    {% endif %}
-                    
-                    <div class='px-2'>
-                        <a href='{% url 'inventory:defective_product_list' %}' class="btn btn-primary shadow btn-sm">
-                            Defective Products
-                        </a>
-                    </div>
-                    <div> 
-                        <a href='{% url 'inventory:reorder_list' %}' class="btn btn-primary shadow btn-sm">
-                            Reorder List
-                        </a>
-                    </div>
-                    <div class='px-2'> 
-                        <a href='{% url 'inventory:purchase_orders' %}' class="btn btn-primary shadow btn-sm">
-                            Purchase Orders
-                        </a>
-                    </div>
 
-                    <div> 
-                        <a href='{% url 'inventory:suppliers' %}' class="btn btn-primary shadow btn-sm">
-                            Suppliers
-                        </a>
-                    </div>
-
-                    <div class='px-2'> 
-                        <a href='{% url 'inventory:stock_take' %}' class="btn btn-primary shadow btn-sm">
-                            Stocktake
-                        </a>
-                    </div>
-
+        <div class="row">
+            <div class="col-9">
+                <div>
+                    {% include "components/inventory_table.html" %}
                 </div>
-                <div class="search d-flex align-items-center">
-                    <span class='px-2'>
-                        <a href='?download=true&excel=true' class="btn btn-outline-dark btn-sm">
-                            excel
-                            <i class='bx bx-download'></i>
-                        </a>        
-                    </span>
-                    <form method="get" class="d-flex">
-                        <select name="category" class="form-control" id='id_category' value={{ category }}>
-                            <option value="">All Categories</option>
-                            <option value='inactive'>Inactive</option>
-                            {% for category in categories %}
-                                <option value="{{ category.name }}">{{ category.name }}</option>
+            </div>
+            <div class="col-3 mt-2 p-1 rounded" style="background: #fff;">
+                <h5>Logs</h5>
+                <div  style="height: 60vh; overflow-y: auto;">
+                    <table class="table table-bordered" S>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Product</th>
+                                <th>Cost</th>
+                                <th>Action</th>
+                                <!-- <th>Status</th> -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                                <tr>
+                                    <td>
+                                        <small>
+                                            {% with log.timestamp as timestamp %}
+                                                {{ timestamp|date:"d/m/y" }} 
+                                            {% endwith %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {{ log.inventory.name }}
+                                            
+                                            <!-- {{ log.product_transfer.product.name }}
+                                            {{ log.purchase_order.product.name }} -->
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {% if log.inventory.cost %}
+                                                USD {{ log.inventory.cost }}
+                                            {% else %}
+                                                USD {{ log.inventory.price }}
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {{ log.action }} x {{ log.quantity }}
+                                        </small>
+                                    </td>
+                                    <!-- <td>{{ log.quantity }}</td> -->
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3">No logs available</td>
+                                </tr>
                             {% endfor %}
-                        </select>
-                        <span class="px-1"></span>
-                        <button type="submit" class="btn btn-outline-dark btn-sm">
-                            <i class="bx bx-filter"></i>
-                        </button>
-                    </form>
-                </div>
-            </nav>
-        </div>
-        <div>
-            {% include "components/inventory_table.html" %}
-        </div>
-
-        <div class="modal fade" id="sfModal" tabindex="-1" aria-labelledby="transferModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <h5 class="modal-title fw-bold p-2">Add service</h5>
-                    <div class="modal-body">
-                        <form action="{% url 'inventory:create_service' %}" method="post">
-                            {% csrf_token %}
-                            {{ form|crispy }}
-                            <div class="d-flex justify-content-end">
-                                <div class="">
-                                    <button type="reset" class="btn btn-danger btn-sm w-100">
-                                        <i class='bx bx-reset'></i>
-                                        Reset
-                                    </button>
-                                </div>
-                                <span class="px-1"></span>
-                                <div class="">
-                                    <button type="submit" id="id_submit" class="btn btn-secondary btn-sm w-100">
-                                        <i class='bx bx-save'></i>
-                                        Save
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
+
         <div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -141,8 +218,8 @@
 
    </div>  
 <script>
-    new DataTable('#inventory', {
-        paging: false,
-    });
+    // new DataTable('#inventory', {
+    //     paging: false,
+    // });
 </script>
 {% endblock content %}

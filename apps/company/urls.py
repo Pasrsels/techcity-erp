@@ -8,5 +8,16 @@ urlpatterns = [
     path('', register_company_view, name='register_company'),
     path('add/', add_branch, name='add_branch'),
     path('edit/<int:branch_id>/', edit_branch, name='edit_branch'),
-    path('switch/<int:branch_id>/', branch_switch, name='switch_branch')
+    path('switch/<int:branch_id>/', branch_switch, name='switch_branch'),
+    path('delete/<int:branch_id>/', delete_branch, name='delete_branch'),
+
+    #API
+    #####################################################################################################
+    #Branch
+    path('api/branch-list-post/', BranchListandPost.as_view(), name='api_branch_list_post'),
+    path('api/branch-edit-delete/<int:branch_id>/', BranchEditandDelete.as_view(), name='api_branch_edit_delete'),
+
+    #Company
+    path('api/company-list/', CompanyList.as_view(), name='api_company_crud'),
+    path('api/company-register/', RegisterCompany.as_view(), name='api_register_company'),
 ]

@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField, UserCreationForm
 
-from apps.users.models import User
+from apps.users.models import User, UserPermissions
 
 
 class CustomUserChangeForm(forms.ModelForm):
@@ -60,3 +60,4 @@ class CustomUserAdmin(DefaultUserAdmin):
 
 
 admin.site.register(User, CustomUserAdmin)
+admin.site.register(UserPermissions)

@@ -1,3 +1,32 @@
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px; 
+}
+
+*::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+    border-radius: 10px; 
+}
+
+*::-webkit-scrollbar-thumb {
+    background: #888; 
+    border-radius: 10px; 
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: #555; 
+}
+
+*::-webkit-scrollbar-horizontal {
+    height: 8px;
+}
+
+*::-webkit-scrollbar-vertical {
+    width: 8px;
+}
+
+
+
 @mixin links{
     .menu-link{
         cursor: pointer;
@@ -6,7 +35,8 @@
             color:#333;
         }
     }
-    .menu-link:hover{
+    .menu-link
+    {
         a{
             color: #777;
         }
@@ -48,14 +78,8 @@
 }
 
 
-.receipt{
-    // @font-face {
-    //     font-family: 'adobe';
-    //     src: url('../assets/fontts/Adobe.tff') format('opentype');
-    //     font-weight: normal;
-    //     font-style: normal;
-    // }
-    //font-family:adobe;
+.overflow{
+    @include overflow(99vh)
 }
 
 @font-face {
@@ -63,7 +87,37 @@
     src: url('../fonts/Lato/Lato-Regular.ttf'); 
 }
 
+.bg-w{
+    background: #fff;
+}
+
 .techcity{
+    .reorder-basket{
+        position: relative;
+        bottom: 0;
+        padding: 1rem;
+    }
+    .detailTable{
+        td{
+            height: 10px !important;
+        }
+    }
+    .text-defective{
+        color: #000 !important;
+    }
+    .text-received{
+        color: #8BC34A !important;
+    }
+    .btn-primary{
+        background: #00c0ef !important;    
+        border-color: #00c0ef !important; 
+    } 
+    .r eceive_inv{
+        td{
+            background-color:#198754 !important;
+            color:white;
+        }
+    }
     .account-statement{
         font-family:lato-Regular;
         @media print {
@@ -89,8 +143,8 @@
         font-family:lato-Regular;
     }
     .transfer-btn{
-        background-color:#0d6efd !important;
-        color:white;
+        // background-color:#00c0ef !important;
+        color:#333;
     }
     .hover-dark{
         background:#333;
@@ -129,7 +183,7 @@
     th{
         font-weight:bold !important;
         opacity:.9;
-        color:#5f5f60 !important;
+        // color:#5f5f60 !important;
         font-size: 0.8125rem;
     }
     overflow:hidden;
@@ -250,6 +304,7 @@
                 color:white;
             }
         }
+    
         .card{
             border:none;
         }
@@ -268,18 +323,8 @@
             }
         }
     }
+
     .finance { 
-        // .transfers,
-        // .qoutations,
-        // .customers{
-        //     display: none;
-        // }
-        // .sale{
-        //     display:block;
-        // }
-        .invoice-table{
-            @include overflow(80vh)
-        }
         .card{
             border:none;
         }
@@ -298,7 +343,61 @@
                 border-bottom-width:none !important ;
             }
          }
+
+         .main-page{
+            #sidebar-section {
+                transition: all 0.3s ease;
+            }
+        
+            nav {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        
+            .table-responsive {
+                overflow-x: auto;
+            }
+            ::-webkit-scrollbar {
+                margin-top:10px;
+                height: 5px; 
+                width: 5px; 
+            }
+        
+            ::-webkit-scrollbar-track {
+                background: transparent;
+            }
+        
+            ::-webkit-scrollbar-thumb {
+                background-color: #fff;
+                border-radius: 10px;
+            }
+         }
+
+         .cashbook{
+            .chat-messages {
+                max-height: 300px;
+                overflow-y: auto;
+                border: 1px solid #ccc;
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+            
+            .chat-message {
+                margin-bottom: 15px;
+            }
+            
+            .chat-message strong {
+                color: #007bff;
+            }
+            
+            .chat-message small {
+                display: block;
+                color: #888;
+                margin-top: 5px;
+            }  
+         }
     }
+
     .pos{
         height:100vh;
         #product-list{
@@ -306,13 +405,19 @@
         }
         .products{
             .col-3{
-                height:150px !important;
+                height:250px !important;
+                width: 250px !important; 
+                margin-bottom: 120px;
+                margin-right: 20px;
             }
             .card{
-                height:150px !important;
-                background: #8BC34A;
-                p{
-                    margin-top: -20px !important;
+                height:350px !important;
+                width: 250px !important; 
+                margin-bottom: 40px !important;
+                
+                img{
+                    width: 100px;
+                    height: 100px;
                 }
             }
             li{
@@ -323,6 +428,14 @@
             }
             li:nth-child(even) {
                 background: lightgrey;
+            }
+        }
+        .payment-modal{
+            .payment-btn{
+                position:fixed;
+                bottom: 0; 
+                left: 0;
+                width: 100%;
             }
         }
         .product-search{
@@ -469,5 +582,70 @@
         }
     }
         
+    // modal css
+    .customer-modal,
+    .error-modal,
+    .invoice-modal,
+    .client-modal,
+    .payment-modal,
+    .expense-modal,
+    .delete-modal,
+    .category-modal,
+    .transfers-modal{
+        display:flex;
+        justify-content:center;
+        width:80%;
+        min-height: 500px;
+        position: absolute;
+        top: 1%;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 15px;
+        z-index: 2;
+    
+        p {
+            font-size: 0.9rem;
+            color: #777;
+            margin: 0.4rem 0 0.2rem;
+          }
+          
+        button {
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+          }
    
+      }
+      .overlay {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(3px);
+        z-index: 1;
+      }
+      .hidden {
+        display: none;
+      }
+
+      .client-modal,
+      .error-modal,
+      .payment-modal{
+        width:100%;
+      }
+      .payment-modal{
+        height:auto !important;
+      }
+      .nav-item{
+        cursor:pointer;
+        padding: 5px;
+      }
+      .nav-item.active {
+        border-top: 1px #007bff solid ;            
+      }
+    
 }

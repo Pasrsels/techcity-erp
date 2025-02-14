@@ -1,0 +1,129 @@
+{% block content %}
+<div class="stocktake">
+    <div class="d-flex align-items-center justify-content-between rounded text-light shadow header py-2 mb-4" style="background: #373f4c;">
+        <h5 class="text-light px-1">Stocktake</h5>
+    </div>
+
+    <div class="mt-2">
+        <table class="table table-striped">
+            <thead>
+                <th>Product</th>
+                <th>System Quantity</th>
+                <th>Physical Quantity</th>
+                <th>Quantity Difference</th>
+                <th>Quantity Difference Value</th>
+                <th>Adjust</th>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td>{{ product.product.name }}</td>
+                        <td id="id_quantity">{{ product.quantity }}</td>
+                        <td>
+                            <input id="p_quantity_{{ forloop.counter }}" 
+                                   class="form-control form-control-sm quantity-input" 
+                                   type="number" 
+                                   data-product-id="{{ product.id }}" 
+                                   onkeydown="handleEnterKey(event, this)" 
+                                   onchange="postQuantity(this.value, {{ product.id }})">
+                        </td>
+                        <td id="q_difference"></td>
+                        <td id="q_cost"></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-dark" onclick="accept()">Accept</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    async function postQuantity(newQuantity, productId) {
+        try {
+            Swal.fire({
+                title: 'Processing',
+                text: 'Please wait while the quantity is being updated...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const response = await fetch(`{% url "inventory:process_stock_take_item" %}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')  
+                },
+                body: JSON.stringify({
+                    quantity: newQuantity,
+                    product_id: productId
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Quantity Updated',
+                    text: 'The quantity has been updated successfully.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+                const differenceCell = document.querySelector(`#q_difference[data-product-id="${productId}"]`);
+                differenceCell.textContent = data.q_difference;
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to update the quantity.'
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while processing your request.'
+            });
+            console.error('Error:', error);
+        }
+    }
+
+    function accept() {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you want to proceed with accepting this update?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, accept it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire(
+                    'Accepted!',
+                    'Your changes have been accepted.',
+                    'success'
+                );
+            }
+        });
+    }
+
+    function handleEnterKey(event, currentInput) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            
+            const inputs = Array.from(document.querySelectorAll('.quantity-input'));
+            
+            const currentIndex = inputs.indexOf(currentInput);
+            
+            if (currentIndex >= 0 && currentIndex < inputs.length - 1) {
+                inputs[currentIndex + 1].focus();
+            }
+        }
+    }
+</script>
+{% endblock content %}

@@ -6,32 +6,20 @@
 <div class="customer">
     <div class="px-2 main-content ">
         <div class="customer-navbar">
-            <nav class="d-flex justify-content-between align-items-center bg-dark text-light p-2 rounded shadow">
+            <nav class="d-flex justify-content-between align-items-center p-2 rounded shadow">
                 <div class="mt-2">
                     <h5> <i class='bx bx-money mt-1'></i> Receive Money Transfers</h5>
                 </div>
                 <div class='d-flex'>
-                    <button type='button' id='transferBtn' class="btn btn-primary btn-sm">
+                    <button type='button' id='transferBtn' class="btn btn-outline-dark btn-sm">
                         <i class='bx bx-plus mt-1'></i>
                         Transfer
                     </button> 
-                    <form method="get" class='px-2'>
-                        <div>
-                            <input
-                                id="search"
-                                name="q"
-                                type="search"
-                                value="{{search_query}}"
-                                class="form-control"
-                                placeholder="search by date"
-                            />
-                        </div>
-                    </form>
                 </div>
             </nav>
         </div>
-        <table class="table border table-hover rounded p-2 mt-3">
-            <thead class='bg-primary'>
+        <table class="table border table-hover rounded p-2 mt-3" id="r_table" style="width: 100%;">
+            <thead class='table-dark'>
                 <tr>
                     <th>Date</th>
                     <th>Description</th>
@@ -50,9 +38,9 @@
                        <td>
                             <small>
                                 {% if transfer.received_status == False %}
-                                    <small><button class='btn btn-success btn-sm' data-id={{ transfer.id }} id='acceptBtn'>Accept Transfer</button></small>
+                                    <small><button class='btn btn-outline-dark btn-sm'  onClick='acceptTransfer({{ transfer.id }});'data-id={{ transfer.id }} id='acceptBtn'>Accept Transfer</button></small>
                                 {% else %}
-                                    <span class='text-success'>money received</span>
+                                    <span class='text-success'>Money received</span>
                                 {% endif %}
                             </small>
                         </td>
@@ -67,7 +55,7 @@
                 <div class="modal-body">
                     <h5 class='fw-bold'>Accept Money Transfer</h5>
                     <div>
-                        <button onClick='acceptTransfer();' class='btn btn-secondary w-100'>Yes</button>
+                        <button  class='btn btn-secondary w-100'>Yes</button>
                     </div>
                 </div>
             </div>
@@ -78,40 +66,59 @@
 <script src="{% static 'js/jquery.js'%}"></script>
 <script>
     const acceptBtn = document.querySelectorAll('#acceptBtn')
-    const acceptModal = new bootstrap.Modal(document.querySelector('#acceptModal'))
+    new DataTable('#r_table')
 
     let transferId = ''
 
-    acceptBtn.forEach((btn)=>{
-        btn.addEventListener('click', ()=>{
-            acceptModal.show()
-            transferId = btn.dataset.id
-            console.lg(transferId)
-        })      
-    
-    })
-
-    function acceptTransfer(){
-        fetch(`/finance/transfer/cash/receive/${transferId}/`, {
-            method: "POST",
-            headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCookie("csrftoken"), 
-            },
-            body: JSON.stringify({'':''}),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message) {
-                window.location.href='{% url "finance:cash_transfer_list" %}'
-            } else {
-                //error.textContent='*' + data.message
+    function acceptTransfer(transferId) {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "Do you want to receive this transfer?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, receive it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/finance/transfer/cash/receive/${transferId}/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"), 
+                    },
+                    body: JSON.stringify({}),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        Swal.fire(
+                            "Received!",
+                            "The transfer has been received successfully.",
+                            "success"
+                        ).then(() => {
+                            window.location.href = '{% url "finance:cash_transfer_list" %}';
+                        });
+                    } else {
+                        Swal.fire(
+                            "Error!",
+                            data.message || "An error occurred while processing the transfer.",
+                            "error"
+                        );
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    Swal.fire(
+                        "Error!",
+                        "An unexpected error occurred. Please try again later.",
+                        "error"
+                    );
+                });
             }
-        })
-        .catch((error) => {
-        console.error("Error:", error);
         });
     }
+
 
     function getCookie(name) {
         let cookieValue = null;
