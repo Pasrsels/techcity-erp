@@ -535,20 +535,62 @@ class AccountTransaction(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
 
-class CashFlowCategory(models.Model):
+class ExpenseSubCategory(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     
     class Meta:
-        verbose_name_plural = "Categories"
+        verbose_name_plural = "Expenses Sub Categories"
     
     def __str__(self):
         return self.name
 
+class IncomeSubCategory(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    
+    class Meta:
+        verbose_name_plural = "Income Sub Categories"
+    
+    def __str__(self):
+        return self.name
+
+class MainIncomeCategory(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    sub_income_category = models.ForeignKey(IncomeSubCategory, on_delete=models.CASCADE, null=True)
+    
+    class Meta:
+        verbose_name_plural = "Income Main Categories"
+    
+    def __str__(self):
+        return self.name
+
+class MainExpenseCategory(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    sub_expense = models.ForeignKey(ExpenseSubCategory, on_delete=models.CASCADE, null=True)
+    
+    class Meta:
+        verbose_name_plural = "Expenses Main Categories"
+    
+    def __str__(self):
+        return self.name
+
+class CashFlowName(models.Model):
+    name = models.CharField(max_length=30)
+
+    class Meta:
+        verbose_name_plural = "Names"
+    
+    def __str__(self):
+        return self.name
 
 class Cashflow(models.Model):
+    name = models.ForeignKey(CashFlowName, on_delete=models.CASCADE)
     date = models.DateField()
-    category = models.ForeignKey(CashFlowCategory, on_delete=models.CASCADE)
+    income_category = models.ForeignKey(MainIncomeCategory, on_delete=models.CASCADE, null=True)
+    expense_category = models.ForeignKey(MainExpenseCategory, on_delete=models.CASCADE, null=True)
     income = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     expense = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)

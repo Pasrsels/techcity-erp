@@ -3156,8 +3156,8 @@ def cashflow_create(request):
                 
                 logger.info(f'total expenses: {total_expenses}')
 
-                expense_category, _ = CashFlowCategory.objects.get_or_create(name='Expense')
-                income_category, _ = CashFlowCategory.objects.get_or_create(name='Income')
+                expense_category, _ = MainExpenseCategory.objects.get_or_create(name='Expense')
+                income_category, _ = MainIncomeCategory.objects.get_or_create(name='Income')
                 
                 # for income
                 Cashflow.objects.create(
@@ -3224,6 +3224,12 @@ def record_cashflow_transaction(request):
             transaction_type = data.get('type', '')
             income_category = data.get('incomeCategory', '')
             expense_category = data.get('expenseCategory', '')
+            #cashflow name
+            name = data.get('name')
+            #adding subcategories
+            income_sub_category = data.get('incomeSubCategory', '')
+            expense_sub_category = data.get('expenseSubCategory', '')
+            #ends here
             income_branch = data.get('incomeBranch', '')
             expense_branch = data.get('expenseBranch', '')
 
@@ -3247,16 +3253,17 @@ def record_cashflow_transaction(request):
                     #     return JsonResponse({'success': False, 'message': 'Income branch is required.'}, status=400)
             
                     logger.info(f'Creating Income amount: {income}')
-
-                    income_category, _ = CashFlowCategory.objects.get_or_create(id=income_category, defaults={'name': 'Income'})
+                    cash_flow_name, _ = CashFlowName.objects.get_or_create(name=name)
+                    income_category, _ = MainIncomeCategory.objects.get_or_create(id=income_category, defaults={'name': 'Income'})
 
                     object = Cashflow.objects.create(
+                        name=cash_flow_name,
                         branch=request.user.branch,
                         total=income,
                         date=datetime.datetime.now(),
                         status=False,
                         income=income,
-                        category=income_category,
+                        income_category=income_category,
                         created_by=request.user
                     )
 
@@ -3276,17 +3283,18 @@ def record_cashflow_transaction(request):
                     #     return JsonResponse({'success': False, 'message': 'Expense branch is required.'}, status=400)
                     
                     logger.info(f'Creating Expense amount: {expense_amount}')
-
-                    expense_category, _ = CashFlowCategory.objects.get_or_create(id=expense_category, defaults={'name': 'Expense'})
+                    cash_flow_name, _ = CashFlowName.objects.get_or_create(name=name)
+                    expense_category, _ = MainExpenseCategory.objects.get_or_create(id=expense_category, defaults={'name': 'Expense'})
 
                     object = Cashflow.objects.create(
+                        name=cash_flow_name,
                         branch=request.user.branch,
                         total=expense_amount,
                         date=datetime.datetime.now(),
                         status=False,
                         expense=expense_amount,
                         income=0,
-                        category=expense_category,
+                        expense_category=expense_category,
                         created_by=request.user
                     )
 
@@ -3298,6 +3306,13 @@ def record_cashflow_transaction(request):
             logger.error(f"Error recording transaction {e}.")
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
+@login_required
+def get_cashflow_categories(request):
+    if request.method == 'GET':
+        main_income_category = MainIncomeCategory.objects.all()
+        main_expense_category = MainExpenseCategory.objects.all()
+        return JsonResponse({'income': main_income_category, "expense":main_expense_category}, status == 200)
+    return JsonResponse({'success': True, 'message': 'Invalid request'}, status == 500)
 
 @login_required
 def get_branch_data(request, branch_id):
