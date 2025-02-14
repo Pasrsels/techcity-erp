@@ -3090,12 +3090,20 @@ def cash_flow(request):
 
     cashFlows_total = cashflows.aggregate(total=Sum('total'))['total'] or 0
     cash_flow_items = CashUp.objects.filter(status=False).aggregate(total=Sum('expected_cash'))['total'] or 0
+
+    # categories
+    main_income_category = MainIncomeCategory.objects.all().select_related('sub_income_category')
+    main_expense_category = MainExpenseCategory.objects.all().select_related('sub_expense')
+    cash_flow_names = CashFlowName.objects.all()
     
     context = {
         'cashflows': cashflows,
         'cashups': cashups,
         'cashFlows_total': cashFlows_total,
-        'cash_flow_items': cash_flow_items
+        'cash_flow_items': cash_flow_items,
+        'cash_flow_names': cash_flow_names,
+        'income_categories': main_income_category,
+        'expense_categories': main_expense_category,
     }
     return render(request, 'cashflow.html', context)
 

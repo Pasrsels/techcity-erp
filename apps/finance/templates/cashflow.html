@@ -234,9 +234,12 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Name</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="expenseName" placeholder="Enter expense name">
-                            </div>
+                            <select class="category-select" id="expenseName" class="form-select">
+                                <option value="">Expense Name</option>
+                                {% for name in cash_flow_names %}
+                                    <option value="{{ name.id }}">{{ name.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Amount</label>
@@ -246,25 +249,21 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Category</label>
-                            <select class="category-select" id="expenseCategory">
+                            <label class="form-label">Main Category</label>
+                            <select class="category-select" id="expenseCategory" class="form-select">
                                 <option value="">Select Category</option>
-                                <option value="1">Utilities</option>
-                                <option value="2">Rent</option>
-                                <option value="3">Salaries</option>
-                                <option value="4">Supplies</option>
-                                <option value="5">Marketing</option>
+                                {% for category in expense_categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Sub Category</label>
                             <select class="category-select" id="expenseSubCategory">
                                 <option value="">Select Sub Category</option>
-                                <option value="1">Utilities</option>
-                                <option value="2">Rent</option>
-                                <option value="3">Salaries</option>
-                                <option value="4">Supplies</option>
-                                <option value="5">Marketing</option>
+                                {% for category in expense_categories %}
+                                    <option value="{{ category.sub_expense.id }}">{{ category.sub_expense.name }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="mb-3">
@@ -310,34 +309,184 @@
 
         $(document).ready(function() {
             $('#incomeCategory').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            dropdownParent: $('#incomeModal')
+                theme: 'bootstrap-5',
+                width: '100%',
+                dropdownParent: $('#incomeModal')
             });
+
             $('#incomeBranch').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            dropdownParent: $('#incomeModal')
+                theme: 'bootstrap-5',
+                width: '100%',
+                dropdownParent: $('#incomeModal')
             });
-            $('#expenseCategory').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            dropdownParent: $('#expenseModal')
-            });
+
             $('#expenseBranch').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            dropdownParent: $('#expenseModal')
+                theme: 'bootstrap-5',
+                width: '100%',
+                dropdownParent: $('#expenseModal')
             });
+
+            $('#expenseName').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                dropdownParent: $('#expenseModal'),
+                tags: true,
+                createTag: function(params) {
+                    return {
+                        id: params.term, 
+                        text: params.term, 
+                        newTag: true 
+                    };
+                }
+            });
+            
+            $('#expenseCategory').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                dropdownParent: $('#expenseModal'),
+                tags: true,
+                createTag: function(params) {
+                    return {
+                        id: params.term, 
+                        text: params.term, 
+                        newTag: true 
+                    };
+                }
+            });
+
+
+            $('#expenseSubCategory').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                dropdownParent: $('#expenseModal'),
+                tags: true,
+                createTag: function(params) {
+                    return {
+                        id: params.term,
+                        text: params.term,
+                        newTag: true
+                    };
+                }
+            });
+
+            // to be removed just for testing
+            $('#expenseName').on('select2:select', function(e) {
+                let data = e.params.data;
+                if (data.newTag) {
+                    console.info('Name - New text entered:', data.text);
+                } else {
+                    console.info('Name - Existing option selected:', data.text);
+                }
+                console.info('Name Value:', data.id);
+            });
+
+            $('#expenseName').on('select2:closing', function(e) {
+                let searchText = $('#expenseName').data('select2').$dropdown.find('.select2-search__field').val();
+                if (searchText) {
+                    let exists = false;
+                    $('#expenseName option').each(function() {
+                        if ($(this).text().toLowerCase() === searchText.toLowerCase()) {
+                            exists = true;
+                            return false;
+                        }
+                    });
+
+                    if (!exists) {
+                        let newOption = new Option(searchText, searchText, true, true);
+                        $('#expenseName').append(newOption).trigger('change');
+                    }
+                }
+            });
+
+
+            // to be removed just for testing
+            $('#expenseCategory').on('select2:select', function(e) {
+                let data = e.params.data;
+                if (data.newTag) {
+                    console.info('Category - New text entered:', data.text);
+                } else {
+                    console.info('Category - Existing option selected:', data.text);
+                }
+                console.info('Category Value:', data.id);
+            });
+
+            $('#expenseCategory').on('select2:closing', function(e) {
+                let searchText = $('#expenseCategory').data('select2').$dropdown.find('.select2-search__field').val();
+                if (searchText) {
+                    let exists = false;
+                    $('#expenseCategory option').each(function() {
+                        if ($(this).text().toLowerCase() === searchText.toLowerCase()) {
+                            exists = true;
+                            return false;
+                        }
+                    });
+
+                    if (!exists) {
+                        let newOption = new Option(searchText, searchText, true, true);
+                        $('#expenseCategory').append(newOption).trigger('change');
+                    }
+                }
+            });
+
+            // Sto be removed just testing
+            $('#expenseSubCategory').on('select2:select', function(e) {
+                let data = e.params.data;
+                if (data.newTag) {
+                    console.info('SubCategory - New text entered:', data.text);
+                } else {
+                    console.info('SubCategory - Existing option selected:', data.text);
+                }
+                console.info('SubCategory Value:', data.id);
+            });
+
+            $('#expenseSubCategory').on('select2:closing', function(e) {
+                let searchText = $('#expenseSubCategory').data('select2').$dropdown.find('.select2-search__field').val();
+                if (searchText) {
+                    let exists = false;
+                    $('#expenseSubCategory option').each(function() {
+                        if ($(this).text().toLowerCase() === searchText.toLowerCase()) {
+                            exists = true;
+                            return false;
+                        }
+                    });
+
+                    if (!exists) {
+                        let newOption = new Option(searchText, searchText, true, true);
+                        $('#expenseSubCategory').append(newOption).trigger('change');
+                    }
+                }
+            });
+
         });
+
+        function getExpenseCategories() {
+            let category = {
+                value: $('#expenseCategory').val(),
+                text: $('#expenseCategory').select2('data')[0]?.text || ''
+            };
+            
+            let subcategory = {
+                value: $('#expenseSubCategory').val(),
+                text: $('#expenseSubCategory').select2('data')[0]?.text || ''
+            };
+
+            return { category, subcategory };
+        }
 
         function recordIncome() {
             let type = ''
             const incomeAmount = document.getElementById('incomeAmount').value;
             const ExpenseAmount = document.getElementById('expenseAmount').value;
 
+            const categories = getExpenseCategories();
+            console.info('Category:', categories.category);
+            console.info('Subcategory:', categories.subcategory);
+
+            return // to be removed to check if the function is being called and it logs the categories
+
             expCategory = document.getElementById('expenseCategory').value;
             incCategory = document.getElementById('incomeCategory').value;
+
 
             if (expCategory){
                 type='expense'

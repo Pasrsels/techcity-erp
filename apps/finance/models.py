@@ -581,13 +581,13 @@ class CashFlowName(models.Model):
     name = models.CharField(max_length=30)
 
     class Meta:
-        verbose_name_plural = "Names"
+        verbose_name_plural = "cashflow_name"
     
     def __str__(self):
         return self.name
 
 class Cashflow(models.Model):
-    name = models.ForeignKey(CashFlowName, on_delete=models.CASCADE)
+    name = models.ForeignKey(CashFlowName, on_delete=models.CASCADE, null=True)
     date = models.DateField()
     income_category = models.ForeignKey(MainIncomeCategory, on_delete=models.CASCADE, null=True)
     expense_category = models.ForeignKey(MainExpenseCategory, on_delete=models.CASCADE, null=True)
