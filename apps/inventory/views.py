@@ -106,6 +106,22 @@ def product_list(request):
     """ for the pos """
     queryset = Inventory.objects.filter(branch=request.user.branch, status=True).select_related('branch')
 
+    services = Service.objects.all().order_by('-name')
+
+    search_query = request.GET.get('q', '') 
+    product_id = request.GET.get('product', '')
+    category_id = request.GET.get('category', '')
+
+    if category_id:
+        queryset = queryset.filter(category__id=category_id)
+    if search_query:
+        queryset = queryset.filter(
+            Q(name__icontains=search_query) | 
+            Q(description__icontains=search_query) 
+        )
+    if product_id:
+        queryset = queryset.filter(id=product_id)
+
     inventory_data = list(queryset.values(
         'id', 
         'name', 
