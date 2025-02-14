@@ -66,6 +66,7 @@ from django.db.models import Count
 from django.db.models.functions import TruncDate
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.db.models import Max
 
 
 
@@ -3434,10 +3435,8 @@ def branch_summary(request, branch_id):
     }
     return render(request, 'cashflow/branch_summary.html', context)
 
-from django.db.models import Max
 @login_required
 def user_accounts(request):
-    # Get all users with their accounts
     users = User.objects.filter(is_active=True).prefetch_related('accounts')
     
     users_with_accounts = []
