@@ -182,7 +182,7 @@
         </div>
 
         <!-- Income Modal -->
-        <div class="modal fade" id="incomeModal" tabindex="">
+        <div class="modal fade" id="incomeModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -199,8 +199,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Category</label>
-                            <select class="category-select" id="incomeCategory">
-                                <option value="">Select Category</option>
+                            <select class="selectpicker w-100" id="incomeCategory" data-live-search="true" title="Select Category">
                                 <option value="1">Sales</option>
                                 <option value="2">Services</option>
                                 <option value="3">Investments</option>
@@ -209,9 +208,9 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Branch</label>
-                            <select class="category-select" id="incomeBranch">
+                            <select class="selectpicker w-100" id="incomeBranch" data-live-search="true" title="Select Branch">
                                 {% for branch in branches %}
-                                    <option value="{{ branch.id}}">{{ branch.name }}</option>
+                                    <option value="{{ branch.id }}">{{ branch.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -291,6 +290,29 @@
     </div>
     <script>
         let cash_up_id = 0;
+
+        $(document).ready(function() {
+            $('#incomeCategory').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            dropdownParent: $('#incomeModal')
+            });
+            $('#incomeBranch').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            dropdownParent: $('#incomeModal')
+            });
+            $('#expenseCategory').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            dropdownParent: $('#expenseModal')
+            });
+            $('#expenseBranch').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            dropdownParent: $('#expenseModal')
+            });
+        });
 
         function recordIncome() {
             let type = ''
