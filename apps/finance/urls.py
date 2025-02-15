@@ -6,7 +6,6 @@ app_name = 'finance'
 
 router = DefaultRouter()
 router.register(r'api/v1/customers_list', CustomersViewset, basename='customers_list')
-router.register(r'customers', CustomerCrud,  basename='customers')
 router.register(r'currency', CurrencyViewset, basename= 'currency_crud')
 router.register(r'Cashwithrawals', CashWithdrawalsViewset, basename= 'cash_withrawals')
 router.register(r'quotation', QuatationCrud, basename= 'quotation')
@@ -131,6 +130,8 @@ urlpatterns = [
     path('', include(router.urls)),
     #Customers
     # path('api/v1/customers/', CustomersViewset.as_view(), name='api_customers'),
+    path('api/v1/all-customer-account/', AllCustomerAccounts.as_view(), name='api_all_customer_account'),
+    path('api/v1/customer-total-balances/', CustomerCurrenciesTotal.as_view(), name='api_currencies_total'),
     path('api/v1/customer-account/<int:customer_id>/', CustomerAccountView.as_view(), name='api_customer_account'),
     path('api/v1/customer-account-payments/<int:customer_id>/', CustomerPaymentsJsonView.as_view(), name='api_customer_account_payments'),
     path('api/v1/customer-deposit-edit/<int:deposit_id>/', EditCustomerDeposit.as_view(), name='api_customer_deposit_edit'),
@@ -138,7 +139,7 @@ urlpatterns = [
     path('api/v1/customer-account-transaction-json/<int:id>/', CustomerAccountTransactionsJson.as_view(), name='api_customer_account_transaction_json'),
     path('api/v1/customer-refund-deposit/<int:deposit_id>/', RefundCustomerDeposit.as_view(), name='api_customer_account_refund'),
     path('api/v1/print-account-statement/<int:customer_id>/', PrintAccountStatement.as_view(), name='api_print_account_statement'),
-    path('api/v1/customer-deposits/<int:id>/', CustomerDeposits.as_view(), name='api_customer_deposits'),
+    path('api/v1/customer-deposits/<int:id>/', CustomerDepositsView.as_view(), name='api_customer_deposits'),
 
     #Deposits
     path('api/v1/deposits-list/', DepositList.as_view(), name='api_deposits_list'),
@@ -155,12 +156,12 @@ urlpatterns = [
     path('api/v1/end-of-day/', EndOfDay.as_view(), name='api_end_of_day'),
 
     #Quotation
-    path('api/v1/quotation-list/', QuotationList.as_view(), name='api_quotation_list'),
+    # path('api/v1/quotation-list/', QuotationList.as_view(), name='api_quotation_list'),
 
     #Expense
     path('api/v1/expense/<int:expense_id>/', ExpenseView.as_view(), name='api_expense'),
-    path('api/v1/expense_category/', ExpensesCategory.as_view(), name='api_expense_category'),
-    path('api/v1/add-or-edit-expense/<int:id>/', AddOrEditExpense.as_view(), name='api_add_edit_expense'),
+    path('api/v1/expense_category/', AddExpenseCategory.as_view(), name='api_expense_category'),
+    path('api/v1/add-or-edit-expense/<int:id>/', EditExpense.as_view(), name='api_add_edit_expense'),
     path('api/v1/delete-expense/', DeleteExpense.as_view(), name='api_delete_expense'),
     path('api/v1/update-expense-status/<int:id>/', UpdateExpenseStatus.as_view(), name='api_update_expense_status'),
 
@@ -200,4 +201,7 @@ urlpatterns = [
     path('api/v1/pl_overview/', PLOverview.as_view(), name='api_pl_overview'),
     path('api/v1/income_json/', IncomeJson.as_view(), name='api_income_json'),
     path('api/v1/expense_json/', ExpenseJson.as_view(), name='api_expense_json'),
+
+    #Account type
+    path('api/v1/account-types/', AccountType.as_view(), name = 'api_account_types')
 ]

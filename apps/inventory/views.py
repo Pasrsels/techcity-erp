@@ -4060,35 +4060,34 @@ from .serializers import *
 from rest_framework.viewsets import ModelViewSet
 from .serializers import *
 
-class InventoryViewset(ModelViewSet):
+class InventoryViewset(viewsets.ModelViewSet):
     serializer_class = InventorySerializer
 
     def get_queryset(self):
         user = self.request.user
-        return Inventory.objects.filter(disable=False)
-
+        inventory_details = Inventory.objects.filter(disable=False).values()
+        return Response(inventory_details, status.HTTP_200_OK)
 
 class CategoriesList(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request): 
         categories = ProductCategory.objects.all().values()
         logger.info(categories)
-        categories_serializer = CategorySerializer(categories)
         return Response(categories, status.HTTP_200_OK)
 
 class AddCategories(views.APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
         data = request.data
-        category_name = data['name'].upper()
+        category_name = data.get('name').upper()
         
         if ProductCategory.objects.filter(name=category_name).exists():
-            return JsonResponse({'success':False, 'message':'Category Exists'})
+            return Response({'message':'Category Exists'}, status.HTTP_400_BAD_REQUEST)
         
         category = ProductCategory.objects.create(
             name=category_name
         )
         return Response({'id': category.id, 'name':category.name},status.HTTP_201_CREATED)        
-
 
 class Products(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -4097,7 +4096,7 @@ class Products(views.APIView):
         products = Inventory.objects.filter(branch = request.user.branch, status=True, disable=False).values(
             'id',
             'name',
-            'quantity', 
+            'quantity',
             'price',
             'dealer_price',
             'category__name'
@@ -4122,61 +4121,59 @@ class AddProducts(views.APIView):
         try:
             data = request.data
             product_id = data.get('id', '')
-            logger.info(product_id)
-            
+            logger.info(product_id)   
         except Exception as e:
-            return JsonResponse({'success':False, 'message':'Invalid data'})
+            return Response({'message':'Invalid data'}, status.HTTP_400_BAD_REQUEST)
 
         image_data = data.get('image')
         if image_data:
             try:
                 format, imgstr = image_data.split(';base64,') 
                 ext = format.split('/')[-1]
-                image = ContentFile(base64.b64decode(imgstr), name=f'{data['name']}.{ext}')
+                image = ContentFile(base64.b64decode(imgstr), name=f'{data.get('name')}.{ext}')
             except Exception as e:
                 logger.error(f'Error decoding image: {e}')
-                return JsonResponse({'success': False, 'message': 'Invalid image data'})
+                return Response({'message': 'Invalid image data'}, status.HTTP_400_BAD_REQUEST)
 
         try:
-            category = ProductCategory.objects.get(id=data['category'])
+            category = ProductCategory.objects.get(id=data.get('category'))
         except ProductCategory.DoesNotExist:
-            return JsonResponse({'success':False, 'message':f'Category Doesnt Exists'})
+            return Response({'message':'Category Doesnt Exists'}, status.HTTP_400_BAD_REQUEST)
         
         if product_id:
             """editing the product"""
             logger.info(f'Editing product ')
             product = Inventory.objects.get(id=product_id, branch=request.user.branch)
-            product.name = data['name']
+            product.name = data.get('name')
             product.price = data.get('price', 0)
             product.cost = data.get('cost', 0)    
             product.quantity = data.get('quantity', 0)  
             product.category = category  
-            product.tax_type = data['tax_type']
-            product.stock_level_threshold = data['min_stock_level']
-            product.description = data['description']
+            product.tax_type = data.get('tax_type')
+            product.stock_level_threshold = data.get('min_stocklevel')
+            product.description = data.get('description')
             product.end_of_day = True if data.get('end_of_day') else False
             product.service = True if data.get('service') else False
             product.image=product.image
             product.batch = product.batch
         else:
             """creating a new product"""
-            
             # validation for existance
-            if Inventory.objects.filter(name=data['name']).exists():
-                return JsonResponse({'success':False, 'message':f'Product {data['name']} exists'})
+            if Inventory.objects.filter(name=data.get('name')).exists():
+                return Response({'message':f'Product {data.get('name')} exists'}, status.HTTP_400_BAD_REQUEST)
             logger.info(f'Creating ')
             product = Inventory.objects.create(
                 batch = '',
-                name = data['name'],
+                name = data.get('name'),
                 price = 0,
                 cost = 0,
                 quantity = 0,
                 category = category,
-                tax_type = data['tax_type'],
-                stock_level_threshold = data['min_stock_level'],
-                description = data['description'], 
-                end_of_day = True if data['end_of_day'] else False,
-                service = True if data['service'] else False,
+                tax_type = data.get('tax_type'),
+                stock_level_threshold = data.get('min_stock_level'),
+                description = data.get('description'), 
+                end_of_day = True if data.get('end_of_day') else False,
+                service = True if data.get('service') else False,
                 branch = request.user.branch,
                 # image = image,
                 status = True
@@ -4186,11 +4183,10 @@ class AddProducts(views.APIView):
 
 class DeleteProducts(views.APIView):
     permission_classes = [IsAuthenticated]
-    def delete_product(self, request):
+    def delete(self, request):
         try:
             data = request.data
             product_id = data.get('id', '')
-
             product = Inventory.objects.get(id=product_id, branch=request.user.branch)
 
             logger.info(product)
@@ -4201,7 +4197,6 @@ class DeleteProducts(views.APIView):
                 product.disable = True
             product.save()
             return Response({'message': 'Product deleted successfully.'}, status.HTTP_200_OK)
-
         except Inventory.DoesNotExist:
             return Response({'message': 'Product not found.'}, status.HTTP_404_NOT_FOUND)
         except Exception as e:
@@ -4210,20 +4205,24 @@ class DeleteProducts(views.APIView):
 
 class InventoryList(views.APIView):
     permission_classes = [IsAuthenticated]
-    def get(self, request, id):
-        product_id = id
-        logger.info(f'product id: {product_id}')
-        if product_id:
-            logger.info(list(Inventory.objects.\
-            filter(id=product_id, branch=request.user.branch, status=True).values()))
-            
-            inventory_data = Inventory.objects.filter(id=product_id, branch=request.user.branch, status=True).values()
-            logger.info(inventory_data)
-
-            inventory_serialized_data = InventorySerializer(inventory_data)
-
-            return Response(inventory_serialized_data.data, status.HTTP_200_OK)
-        return JsonResponse({'error':'product doesnt exists'})
+    def get(self, request):
+        
+        logger.info(list(Inventory.objects.\
+        filter(branch=request.user.branch, status=True).values()))
+        inventory_data = Inventory.objects.filter(branch=request.user.branch, status=True).values()
+        logger.info(inventory_data)
+        inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).select_related(
+        'category',
+        'branch'
+        ).order_by('name').values()
+        return Response(
+            {
+                'inventory':inventory_data,
+                'total_cost':inventory.aggregate(total_cost=Sum(F('quantity') * F('cost')))['total_cost'] or 0,
+                'total_price':inventory.aggregate(total_price=Sum(F('quantity') * F('price')))['total_price'] or 0,
+            }, 
+            status.HTTP_200_OK
+        )
     
 class DeleteInventory(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -4248,30 +4247,27 @@ class DeleteInventory(views.APIView):
     
 class EditInventory(views.APIView):
     permission_classes = [IsAuthenticated]
-    def edit_inventory(request, product_id):
+    def put(self, request, product_id):
         inv_product = Inventory.objects.get(id=product_id, branch=request.user.branch)
-
         end_of_day = request.data.get('end_of_day')
 
         if end_of_day:
             inv_product.end_of_day = True
         
-        selling_price = Decimal(request.data['price'])
-        dealer_price = Decimal(request.data['dealer_price'])
+        selling_price = Decimal(request.data.get('price'))
+        dealer_price = Decimal(request.data.get('dealer_price'))
         
         # think through
         quantity = inv_product.quantity
-        inv_product.name=request.data['name']
+        inv_product.name=request.data.get('name')
         # inv_product.batch=request.data['batch_code']
-        inv_product.description=request.data['description']
-        
-        inv_product.price = Decimal(request.data['price'])
-        inv_product.cost = Decimal(request.data['cost'])
-        inv_product.dealer_price = Decimal(request.data['dealer_price'])
-        inv_product.stock_level_threshold = request.data['min_stock_level']
+        inv_product.description=request.data.get('description')
+        inv_product.price = Decimal(request.data.get('price'))
+        inv_product.cost = Decimal(request.data.get('cost'))
+        inv_product.dealer_price = Decimal(request.data.get('dealer_price'))
+        inv_product.stock_level_threshold = request.data.get('min_stock_level')
         inv_product.dealer_price = dealer_price
-        inv_product.quantity = request.data['quantity']
-        
+        inv_product.quantity = request.data.get('quantity')
         inv_product.save()
         
         ActivityLog.objects.create(
@@ -4284,10 +4280,10 @@ class EditInventory(views.APIView):
             dealer_price = dealer_price,
             selling_price = selling_price
         )
-        
         return Response({'product':inv_product, 'title':f'Edit >>> {inv_product.name}'}, status.HTTP_202_ACCEPTED)
 
 class InventoryDetail(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, id):
         purchase_order_items = PurchaseOrderItem.objects.all()
         inventory = Inventory.objects.get(id=id, branch=request.user.branch)
@@ -4373,7 +4369,7 @@ class InventoryDetail(views.APIView):
         
         inventory_serializer = InventorySerializer(inventory)
         return Response({
-            'inventory': inventory,
+            'inventory': inventory_serializer,
             'remaining_stock_quantity':remaining_stock_quantity,
             'stock_account_data':stock_account_data,
             'inventory_value':inventory_value,
@@ -4382,21 +4378,22 @@ class InventoryDetail(views.APIView):
             'total_credits':total_credits,
             'logs': logs,
             'items':purchase_order_items,
-            'sales_data': list(sales_data.values()), 
-            'stock_in_data': list(stock_in_data.values()),
-            'transfer_data': list(transfer_data.values()),
+            'sales_data': sales_data.values(), 
+            'stock_in_data': stock_in_data.values(),
+            'transfer_data': transfer_data.values(),
             'labels': labels,
         }, status.HTTP_200_OK)
     
 class InventoryIndexJson(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         inventory = Inventory.objects.filter(branch=request.user.branch, status=True).values(
-            'id', 'product__name', 'product__quantity', 'product__id', 'price', 'cost', 'quantity', 'reorder'
-        ).order_by('product__name')
-        serializer = InventorySerializer(inventory)
-        return Response(serializer.data, status.HTTP_200_OK)
+            'id', 'name', 'price', 'cost', 'quantity', 'reorder'
+        ).order_by('name')
+        return Response(inventory, status.HTTP_200_OK)
 
 class ActivateInventory(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, product_id):
         product = get_object_or_404(Inventory, id=product_id)
         product.status=True
@@ -4416,39 +4413,37 @@ class ActivateInventory(views.APIView):
         return Response(serializer.data, status.HTTP_200_OK)
 
 class DefectiveProductList(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         defective_products = DefectiveProduct.objects.filter(branch=request.user.branch)
         
         # loss calculation
-        if request.method == 'POST':
-            data = json.loads(request.body)
-            
-            defective_id = data['product_id']
-            quantity = data['quantity']
-            
-            try:
-                d_product = DefectiveProduct.objects.get(id=defective_id, branch=request.user.branch)
-                product = Inventory.objects.get(product__id=d_product.product.id, branch=request.user.branch)
-            except:
-                return JsonResponse({'success': False, 'message':'Product doesnt exists'}, status=400)
+        data = request.data
+        defective_id = data.get('product_id')
+        quantity = data.get('quantity')       
+        try:
+            d_product = DefectiveProduct.objects.get(id=defective_id, branch=request.user.branch)
+            product = Inventory.objects.get(product__id=d_product.product.id, branch=request.user.branch)
+        except:
+            return Response({'message':'Product doesnt exists'}, status.HTTP_400_BAD_REQUEST)
+    
+        product.quantity += quantity
+        product.status = True if product.status == False else product.status
+        product.save()
         
-            product.quantity += quantity
-            product.status = True if product.status == False else product.status
-            product.save()
-            
-            d_product.quantity -= quantity
-            d_product.save()
-            
-            ActivityLog.objects.create(
-                branch = request.user.branch,
-                user=request.user,
-                action= 'stock in',
-                inventory=product,
-                quantity=quantity,
-                total_quantity=product.quantity,
-                description = 'from defective products'
-            )
-            return JsonResponse({'success':True}, status=200)
+        d_product.quantity -= quantity
+        d_product.save()
+        
+        ActivityLog.objects.create(
+            branch = request.user.branch,
+            user=request.user,
+            action= 'stock in',
+            inventory=product,
+            quantity=quantity,
+            total_quantity=product.quantity,
+            description = 'from defective products'
+        )
+        return Response(status.HTTP_200_OK)
     
         quantity = defective_products.aggregate(Sum('quantity'))['quantity__sum'] or 0
         price = defective_products.aggregate(Sum('product__cost'))['product__cost__sum'] or 0
@@ -4464,27 +4459,68 @@ class BranchesInventory(views.APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         branches_inventory = Inventory.objects.filter(status=True).values(
-            'product__name', 'price', 'quantity', 'branch__name'
+            'name', 'price', 'quantity', 'branch__name'
         )
         return Response(branches_inventory, status.HTTP_200_OK)
+
+class DefectiveProductViewAdd(views.APIView):
+    def get(self, request):
+        defective_products = DefectiveProduct.objects.filter(branch=request.user.branch)
+        quantity = defective_products.aggregate(Sum('quantity'))['quantity__sum'] or 0
+        price = defective_products.aggregate(Sum('product__cost'))['product__cost__sum'] or 0
+        
+        return Response( 
+            {
+                'total_cost': quantity * price,
+                'defective_products':defective_products,
+            },
+            status.HTTP_200_OK
+        )
+    # loss calculation
+    def post(self, request):
+        data = request.data
+        
+        defective_id = data['product_id']
+        quantity = data['quantity']
+        
+        try:
+            d_product = DefectiveProduct.objects.get(id=defective_id, branch=request.user.branch)
+            product = Inventory.objects.get(product__id=d_product.product.id, branch=request.user.branch)
+        except:
+            return Response({'success': False, 'message':'Product doesnt exists'}, status.HTTP_400_BAD_REQUEST)
+    
+        product.quantity += quantity
+        product.status = True if product.status == False else product.status
+        product.save()
+        
+        d_product.quantity -= quantity
+        d_product.save()
+        
+        ActivityLog.objects.create(
+            branch = request.user.branch,
+            user=request.user,
+            action= 'stock in',
+            inventory=product,
+            quantity=quantity,
+            total_quantity=product.quantity,
+            description = 'from defective products'
+        )
+        return Response({'success':True}, status.HTTP_200_OK)
 
 
 class NotificationJson(views.APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         notifications = StockNotifications.objects.filter(inventory__branch=request.user.branch).values(
-            'inventory__product__name', 'type', 'notification', 'inventory__id'
+            'inventory__name', 'type', 'notification', 'inventory__id'
         )
-        serializer = StockNotificationSerializer(notifications)
-        return Response(serializer.data, status.HTTP_200_OK)
-
+        return Response(notifications, status.HTTP_200_OK)
 
 class StockTakeViewEdit(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
-        products = Inventory.objects.filter(branch=request.user.branch)
-        return Response({
-            'products':products
-        }, status.HTTP_200_OK)
+        products = Inventory.objects.filter(branch=request.user.branch).values()
+        return Response({'products':products}, status.HTTP_200_OK)
     
     def post(self, request):
         """
@@ -4505,7 +4541,7 @@ class StockTakeViewEdit(views.APIView):
                 4. json to the front {id:inventory.id, different:difference}
             """
             
-            inventory_details = Inventory.objects.filter(product_id = prod_id).values('product__name', 'quantity','id')
+            inventory_details = Inventory.objects.filter(id = prod_id).values('name', 'quantity','id')
 
             quantity = inventory_details['quantity']
             inventory_id = inventory_details['id']
@@ -4518,8 +4554,66 @@ class StockTakeViewEdit(views.APIView):
             
         except Exception as e:
             return Response({'response': e}, status.HTTP_400_BAD_REQUEST)
+        
+class ProcessStockTakeItem(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+       """
+         payload = {
+            pyhsical_quantity:int
+            stocktake_id:int
+        }
+       """
+
+       try:
+           """
+            1. get the product
+            2. get the quantity
+            3. condition to check between physical_quantity and quantity of the product
+            4. json to the front {id:inventory.id, different:difference}
+           """
+
+           data = request.data
+           phy_quantity = data.get('quantity')
+           stocktake_id =data.get('stocktake_id')
+
+           logger.info(phy_quantity)
+           logger.info(type(phy_quantity))
+           
+           # update the stock item object with the quantity
+           s_item = StocktakeItem.objects.get(id=stocktake_id)
+           s_item.quantity = int(phy_quantity)
+           
+           s_item.quantity_difference = int(phy_quantity) - abs(s_item.product.quantity )
+           logger.info(s_item.product.quantity)
+
+           s_item.save()
+
+           logger.info(f'{s_item.quantity_difference}')
+
+           descripancy_value =  s_item.quantity_difference
+           details_inventory= {'item_id': s_item.id, 'difference': descripancy_value}
+           return Response({'data': details_inventory }, status.HTTP_200_OK)
+       except Exception as e:
+           return Response({'response': e}, status.HTTP_400_BAD_REQUEST)
+
+class StockTakeDetail(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, stocktake_id):
+        try:
+            products = StocktakeItem.objects.filter(stocktake__id=stocktake_id).values()
+            stocktake  = StockTake.objects.get(id=stocktake_id)
+            serializer_data = StockTakeSerializer(stocktake)
+            logger.info(stocktake)
+            return Response({
+                'products':products,
+                'stocktake':serializer_data.data
+            }, status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'message': f'{e}'}, status.HTTP_400_BAD_REQUEST)
 
 class BranchCode(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         batch_codes = BatchCode.objects.all().values(
             'id',
@@ -4687,7 +4781,7 @@ class SupplierDelete(views.APIView):
             logger.info(e)
             return Response({"message":f"{e}"}, status.HTTP_406_NOT_ACCEPTABLE)
         
-    def update(self, request, supplier_id):
+    def put(self, request, supplier_id):
         try:
             data = request.data
             logger.info(data)
@@ -4772,11 +4866,12 @@ class SupplierView(views.APIView):
 
             return Response({'data': supplier_data}, status.HTTP_200_OK)
         except Exception as e:
-            return JsonResponse({'response': f'{e}'}, status.HTTP_406_NOT_ACCEPTABLE)
+            return Response({'response': f'{e}'}, status.HTTP_406_NOT_ACCEPTABLE)
 
 class CreateDefectiveProduct(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
-        form = DefectiveProductSerializer(request.data)
+        form = DefectiveProductSerializer(data = request.data)
     
         if form.is_valid():
             branch = request.user.branch
@@ -4785,11 +4880,9 @@ class CreateDefectiveProduct(views.APIView):
             
             # validation
             if quantity > product.quantity:
-                messages.warning(request, 'Defective quantity cannot more than the products quantity')
-                return redirect('inventory:create_defective_product')
+                return Response({'Defective quantity cannot more than the products quantity'}, status.HTTP_400_BAD_REQUEST)
             elif quantity == 0:
-                messages.warning(request, 'Defective quantity cannot be less than zero')
-                return redirect('inventory:create_defective_product')
+                return Response({'Defective quantity cannot be less than zero'}, status.HTTP_400_BAD_REQUEST)
             
             product.quantity -= quantity
             product.save()
@@ -4809,12 +4902,13 @@ class CreateDefectiveProduct(views.APIView):
                 total_quantity=product.quantity,
                 description = ''
             )
-            messages.success(request, 'Product successfuly saved')
-            return redirect('inventory:defective_product_list')
+            #messages.success(request, 'Product successfuly saved')
+            return Response(status.HTTP_200_OK)
         else:
-            messages.success(request, 'Invalid form data')
+            return Response({'message': 'Invalid form data'},status.HTTP_200_OK)
 
 class CreateService(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(request):
         form = ServiceForm(request.POST)
         if form.is_valid():
@@ -4827,7 +4921,7 @@ class CreateService(views.APIView):
         messages.warning(request, 'Invalid form data')
 
 class EditService(views.APIView):
-    def edit_service(request, service_id):
+    def edit_service(request, service):
         form = ServiceForm(request.POST, instance=service)
         if form.is_valid():
             form.save()
@@ -4836,7 +4930,8 @@ class EditService(views.APIView):
         else:
             messages.warning(request, 'Please correct the errors below')
 
-class  ReorderList(views.APIView):
+class  ReorderLists(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         reorder_list = ReorderList.objects.filter(branch=request.user.branch)
         if 'download' in request:
@@ -4884,21 +4979,21 @@ class  ReorderList(views.APIView):
         return Response(status.HTTP_406_NOT_ACCEPTABLE)
 
 class CreateandGetOrder(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         products_below_five = Inventory.objects.filter(branch=request.user.branch, quantity__lte = 5).values(
             'id', 
-            'product__id', 
-            'product__name',
-            'product__description',
+            'name',
+            'description',
             'quantity', 
             'reorder',
-            'product__category__id',
-            'product__category__name'
+            'category__id',
+            'category__name'
         )
         return Response(products_below_five, status.HTTP_200_OK)
     def post(self, request):
         data = request.data
-        product_id = data['id']
+        product_id = data.get('id')
         
         product = get_object_or_404(Inventory, id=product_id, branch=request.user.branch)
         ReorderList.objects.create(product=product, branch=request.user.branch)
@@ -4908,66 +5003,60 @@ class CreateandGetOrder(views.APIView):
         return Response(status.HTTP_201_CREATED)
 
 class ReorderListJson(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         order_list = ReorderList.objects.filter(branch=request.user.branch).values(
             'id', 
-            'product__product__name',  
+            'product__name',  
             'product__quantity',
             'quantity'
         )
         return Response(order_list, status.HTTP_200_OK)
 
 class ClearReorderList(views.APIView):
-    def clear_reorder_list(request):
-        if request.method == 'GET':
-            reorders = ReorderList.objects.filter(branch=request.user.branch)
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        reorders = ReorderList.objects.filter(branch=request.user.branch)
+        
+        for item in reorders:
+            inventory_items = Inventory.objects.filter(id=item.product.id)
+            for product in inventory_items:
+                product.reorder = False
+                product.save()
             
-            for item in reorders:
-                inventory_items = Inventory.objects.filter(id=item.product.id)
-                for product in inventory_items:
-                    product.reorder = False
-                    product.save()
-                
-            reorders.delete()
-            
-            messages.success(request, 'Reoder list success fully cleared')
-            return redirect('inventory:reorder_list')
-
-        if request.method == 'POST':
-            data = json.loads(request.body)
-            product_id = data['product_id']
+        reorders.delete()
+        return Response({'Reoder list success fully cleared'}, status.HTTP_200_OK)
+    def delete(self, request):
+            data = request.data
+            product_id = data.get('product_id')
         
             product = ReorderList.objects.get(id=product_id, branch=request.user.branch)
-        
             inventory = Inventory.objects.get(id=product.product.id)
         
-            product.delete()
-            
+            product.delete() 
             inventory.reorder=False
             inventory.save()
             
-            return JsonResponse({'success':True}, status=200)
-        
+            return Response(status.HTTP_200_OK)        
 class ReorderFromNotification(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
-            notifications = StockNotifications.objects.filter(inventory__branch=request.user.branch, inventory__reorder=False, inventory__alert_notification=False).values(
-                'quantity',
-                'inventory__product__name', 
-                'inventory__id', 
-                'inventory__quantity' 
-            )
-            return Response(notifications, status.HTTP_200_OK)
-    def post(self, request):    
+        notifications = StockNotifications.objects.filter(inventory__branch=request.user.branch, inventory__reorder=False, inventory__alert_notification=False).values(
+            'quantity',
+            'inventory__name', 
+            'inventory__id', 
+            'inventory__quantity' 
+        )
+        return Response(notifications, status.HTTP_200_OK)
+    def post(self, request): 
         # payload
         """
             inventory_id
         """
         
         data = request.data
-        
-        inventory_id = data['inventory_id']
-        action_type = data['action_type']
-        
+        inventory_id = data.get('inventory_id')
+        action_type = data.get('action_type')        
         try:
             inventory = Inventory.objects.get(id=inventory_id)
             stock_notis = StockNotifications.objects.get(inventory=inventory)
@@ -4981,15 +5070,15 @@ class ReorderFromNotification(views.APIView):
                 quantity=0,
                 product=inventory, 
                 branch=request.user.branch
-            )
-            
+            )   
         elif action_type == 'remove':
             inventory.alert_notification=True
             inventory.save()
     
         return Response(status.HTTP_201_CREATED)
-
+    
 class AddReorderQuantity(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         """
         Handles adding a quantity to a reorder item.
@@ -5025,11 +5114,13 @@ class AddReorderQuantity(views.APIView):
             return Response({'message': 'Reorder quantity updated successfully'}, status.HTTP_201_CREATED)
         except ReorderList.DoesNotExist:
             return Response({'message': 'Reorder item not found'}, status.HTTP_404_NOT_FOUND)
+        
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
-            return JsonResponse({'message': 'An error occurred'}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'message': f'{e}'}, status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 class ReorderSettings(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         """ method to set reorder settings"""
         try:
@@ -5059,7 +5150,7 @@ class ReorderSettings(views.APIView):
             
             return Response({'message':'Reorder Settings Succefully Saved.'}, status.HTTP_201_CREATED)
         except Exception as e:
-            return JsonResponse({'message':f'{e}'}, status.HTTP_400_BAD_REQUEST)
+            return Response({'message':f'{e}'}, status.HTTP_400_BAD_REQUEST)
     
     def get(self, request):
         try:
@@ -5069,8 +5160,9 @@ class ReorderSettings(views.APIView):
             return Response({'message':f'{e}'}, status.HTTP_400_BAD_REQUEST)
 
 class PurchaseOrderList(views.APIView):#*
+    permission_classes = [IsAuthenticated]
     def get(self, request):
-        orders = PurchaseOrder.objects.filter(branch = request.user.branch).order_by('-order_date')
+        orders = PurchaseOrder.objects.filter(branch = request.user.branch).values().order_by('-order_date')
 
         items = PurchaseOrderItem.objects.filter(purchase_order__id=5)
 
@@ -5080,16 +5172,16 @@ class PurchaseOrderList(views.APIView):#*
             item.received_quantity
             item.save()
             
-
         # Perform a bulk update on the 'received' field
         PurchaseOrderItem.objects.bulk_update(items, ['expected_profit', 'received_quantity'])
-    
         return Response( {'orders':orders}, status.HTTP_200_OK)
 
 class PrintPurchaseOrder(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, order_id):
         try:
             purchase_order = PurchaseOrder.objects.get(id=order_id)
+            purchase_order_serializer = PurchaseOrderSerializer(purchase_order)
         except PurchaseOrder.DoesNotExist:
             return Response({f'Purchase order with ID: {order_id} does not exists'}, status.HTTP_400_BAD_REQUEST)
         
@@ -5101,12 +5193,13 @@ class PrintPurchaseOrder(views.APIView):
         return Response( 
             {
                 'orders':purchase_order_items,
-                'purchase_order':purchase_order
+                'purchase_order':purchase_order_serializer.data
             },
             status.HTTP_200_OK
         )
     
 class PurchaseOrderListandCreate(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         orders = PurchaseOrder.objects.filter(branch = request.user.branch).values().order_by('-order_date')
         items = PurchaseOrderItem.objects.filter(purchase_order__id=5)
@@ -5120,7 +5213,6 @@ class PurchaseOrderListandCreate(views.APIView):
 
         # Perform a bulk update on the 'received' field
         PurchaseOrderItem.objects.bulk_update(items, ['expected_profit', 'received_quantity'])
-    
         return Response({'orders':orders}, status.HTTP_200_OK)
 
     def post(self, request): 
@@ -5191,7 +5283,7 @@ class PurchaseOrderListandCreate(views.APIView):
 
                     if not all([product_name, quantity, unit_cost, product_id]):
                         transaction.set_rollback(True)
-                        return Response({'message': 'Missing fields in item data'}, status.HTTP_400_BAD_REQUEST)
+                        return Response({'message': f'Missing fields in item data:{[product_name, quantity, unit_cost, product_id]}'}, status.HTTP_400_BAD_REQUEST)
 
                     try:
                         product = Inventory.objects.get(id=product_id, branch=request.user.branch)
@@ -5210,8 +5302,8 @@ class PurchaseOrderListandCreate(views.APIView):
                         received_quantity=0,
                         received=False,
                         supplier = supplier,
-                        price=0,
-                        wholesale_price=0
+                        # price=0,
+                        # wholesale_price=0
                     )
                     product.suppliers.add(po_item.supplier.id)
                     product.batch += f'{batch}, '
@@ -5266,7 +5358,23 @@ class PurchaseOrderListandCreate(views.APIView):
             return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
         return Response({'message': 'Purchase order created successfully'}, status.HTTP_201_CREATED)
 
+class PurchaseOrderInformation(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        suppliers = Supplier.objects.all().values()
+        products = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name').values()
+        batch_codes = BatchCode.objects.all().values()
+        return Response(
+            {
+                'suppliers':suppliers,
+                'batch_codes':batch_codes,
+                'products':products
+            },
+            status.HTTP_200_OK
+        )
+
 class PurchaseOrderDeleteandEdit(views.APIView):
+    permission_classes = [IsAuthenticated]
     def delete(self, request, purchase_order_id):
         try:
             purchase_order = PurchaseOrder.objects.get(id=purchase_order_id)
@@ -5279,7 +5387,7 @@ class PurchaseOrderDeleteandEdit(views.APIView):
         except Exception as e:
             return Response({'message': str(e)}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def update(self, request, purchase_order_id):
+    def put(self, request, purchase_order_id):
         try:
             expenses = otherExpenses.objects.filter(purchase_order__id=purchase_order_id).values()
         
@@ -5297,20 +5405,21 @@ class PurchaseOrderDeleteandEdit(views.APIView):
 
             return Response({'po_items':purchase_order_items, 'expenses':expenses}, status.HTTP_202_ACCEPTED)
         except Exception as e:
-            return JsonResponse({'message':f'{e}'}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+            return Response({'message':f'{e}'}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ReceiveOrder(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, order_id):
         try:
             purchase_order = PurchaseOrder.objects.get(id=order_id)
+            purchase_order_serializer = PurchaseOrderSerializer(purchase_order)
         except PurchaseOrder.DoesNotExist:
             return Response({f'Purchase order with ID: {order_id} does not exists'}, status.HTTP_400_BAD_REQUEST)
         
         try:
             purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order=purchase_order).values()
         except PurchaseOrderItem.DoesNotExist:
-            messages.warning(request, f'Purchase order with ID: {order_id} does not exists')
+            #messages.warning(request, f'Purchase order with ID: {order_id} does not exists')
             return Response({f'Purchase order with ID: {order_id} does not exists'}, status.HTTP_400_BAD_REQUEST)
         
         logger.info(purchase_order_items.all().values('product'))
@@ -5343,12 +5452,13 @@ class ReceiveOrder(views.APIView):
         return Response(
             {
                 'orders':purchase_order_items,
-                'purchase_order':{purchase_order}
+                'purchase_order':purchase_order_serializer.data
             },
             status.HTTP_200_OK
         )
 
 class ProcessReceivedOrder(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         try:
             data = request.data
@@ -5376,13 +5486,13 @@ class ProcessReceivedOrder(views.APIView):
             )
 
         if quantity == 0:
-            return JsonResponse({'success': False, 'message': 'Quantity cannot be zero.'}, status=400)
+            return Response({'message': 'Quantity cannot be zero.'}, status.HTTP_400_BAD_REQUEST)
 
         try:
             order_item = PurchaseOrderItem.objects.get(id=order_item_id)
             order = PurchaseOrder.objects.get(id=order_item.purchase_order.id)
         except PurchaseOrderItem.DoesNotExist:
-            return JsonResponse({'success': False, 'message': f'Purchase Order Item with ID: {order_item_id} does not exist'}, status=404)
+            return Response({'message': f'Purchase Order Item with ID: {order_item_id} does not exist'}, status.HTTP_400_BAD_REQUEST)
 
         # Update the order item with received quantity
         order_item.receive_items(quantity)
@@ -5399,16 +5509,18 @@ class ProcessReceivedOrder(views.APIView):
         return Response({'message': 'Inventory updated successfully'}, status.HTTP_200_OK)
 
 class PurchaseOrderDetail(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, order_id):
         try:
             purchase_order = PurchaseOrder.objects.get(id=order_id)
+            purchase_order_serializer = PurchaseOrderSerializer(purchase_order)
         except PurchaseOrder.DoesNotExist:
             messages.warning(request, f'Purchase order with ID: {order_id} does not exist')
             return Response({f'Purchase order with ID: {order_id} does not exist'}, status.HTTP_400_BAD_REQUEST)
 
         items = costAllocationPurchaseOrder.objects.filter(purchase_order=purchase_order)
-        expenses = otherExpenses.objects.filter(purchase_order=purchase_order)
-        purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order=purchase_order)
+        expenses = otherExpenses.objects.filter(purchase_order=purchase_order).values()
+        purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order=purchase_order).values()
 
         total_received_quantity = purchase_order_items.aggregate(Sum('received_quantity'))['received_quantity__sum'] or 0
         total_expected_profit = purchase_order_items.aggregate(Sum('expected_profit'))['expected_profit__sum'] or 0
@@ -5447,12 +5559,13 @@ class PurchaseOrderDetail(views.APIView):
             'total_received_quantity': total_received_quantity,
             'total_expected_profit': total_expected_profit,
             'total_expenses': total_expense_sum,
-            'purchase_order': purchase_order,
+            'purchase_order': purchase_order_serializer.data,
             'total_expected_dealer_profit':total_expected_dealer_profit
         }, status.HTTP_200_OK)
     
 class PurchaseOrderStatus(views.APIView):
-    def update(self, request, order_id):
+    permission_classes = [IsAuthenticated]
+    def put(self, request, order_id):
         try:
             purchase_order = PurchaseOrder.objects.get(id=order_id)
         except PurchaseOrder.DoesNotExist:
@@ -5486,7 +5599,8 @@ class PurchaseOrderStatus(views.APIView):
             return Response({'message': 'Invalid JSON payload'}, status.HTTP_400_BAD_REQUEST)
         
 class MarkPurchaseOrderDone(views.APIView):
-    def update(self, request, po_id):
+    permission_classes = [IsAuthenticated]
+    def put(self, request, po_id):
         purchase_order = PurchaseOrder.objects.get(id=po_id)
         purchase_order.received = True
         purchase_order.save()
@@ -5494,61 +5608,64 @@ class MarkPurchaseOrderDone(views.APIView):
         return Response(status.HTTP_202_ACCEPTED)
     
 class SalesPriceListPDF(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(request, order_id):
-        try:
-            purchase_order = PurchaseOrder.objects.get(id=order_id)
-        except PurchaseOrder.DoesNotExist:
-            messages.warning(request, f'Purchase order with ID: {order_id} does not exist')
-            return Response({f'Purchase order with ID: {order_id} does not exist'}, status.HTTP_404_NOT_FOUND)
+        return Response({f'https://web-production-86a7.up.railway.app/inventory/sales_price_list_pdf/{order_id}/'})
+        # try:
+        #     purchase_order = PurchaseOrder.objects.get(id=order_id)
+        # except PurchaseOrder.DoesNotExist:
+        #     messages.warning(request, f'Purchase order with ID: {order_id} does not exist')
+        #     return Response({f'Purchase order with ID: {order_id} does not exist'}, status.HTTP_404_NOT_FOUND)
 
-        items = costAllocationPurchaseOrder.objects.filter(purchase_order=purchase_order)
-        purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order=purchase_order)
+        # items = costAllocationPurchaseOrder.objects.filter(purchase_order=purchase_order)
+        # purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order=purchase_order)
 
-        products = Inventory.objects.filter(branch=request.user.branch).values(
-            'dealer_price', 
-            'price', 
-            'product__name',
-            'product__description',
-            'quantity'
-        )
+        # products = Inventory.objects.filter(branch=request.user.branch).values(
+        #     'dealer_price', 
+        #     'price', 
+        #     'product__name',
+        #     'product__description',
+        #     'quantity'
+        # )
 
-        # Convert products queryset to a dictionary for easy lookup by product ID
-        product_prices = {product['product__name']: product for product in products}
+        # # Convert products queryset to a dictionary for easy lookup by product ID
+        # product_prices = {product['product__name']: product for product in products}
     
-        for item in items:
-            product_name = item.product
-            logger.info(product_name)
-            product_data = product_prices.get(product_name)
-            description = ''
+        # for item in items:
+        #     product_name = item.product
+        #     logger.info(product_name)
+        #     product_data = product_prices.get(product_name)
+        #     description = ''
 
-            if product_data:
-                description = item.description = product_data['product__description'] 
+        #     if product_data:
+        #         description = item.description = product_data['product__description'] 
 
-            if product_data:
-                item.dealer_price = product_data['dealer_price']
-                item.selling_price = product_data['price']
-                item.description = description
-            else:
-                item.dealer_price = 0
-                item.selling_price = 0
-                item.description = description
+        #     if product_data:
+        #         item.dealer_price = product_data['dealer_price']
+        #         item.selling_price = product_data['price']
+        #         item.description = description
+        #     else:
+        #         item.dealer_price = 0
+        #         item.selling_price = 0
+        #         item.description = description
                 
-        context = {'items': items}
+        # context = {'items': items}
 
-        template = get_template('pdf_templates/price_list.html')
-        html = template.render(context)
+        # template = get_template('pdf_templates/price_list.html')
+        # html = template.render(context)
 
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="price_list.pdf"'
+        # response = HttpResponse(content_type='application/pdf')
+        # response['Content-Disposition'] = 'attachment; filename="price_list.pdf"'
         
-        pisa_status = pisa.CreatePDF(html, dest=response)
+        # pisa_status = pisa.CreatePDF(html, dest=response)
 
-        if pisa_status.err:
-            return HttpResponse('Error generating PDF', status=400)
-        return Response(response, status.HTTP_200_OK)
+        # if pisa_status.err:
+        #     return Response('Error generating PDF', status.HTTP_400_BAD_REQUEST)
+        # return Response(response, status.HTTP_200_OK)
 
 class PurchaseOrderConfirmOrderItem(views.APIView):
-    def update(self, request, po_id):
+    permission_classes = [IsAuthenticated]
+    def put(self, request, po_id):
         try:
             order_items = PurchaseOrderItem.objects.filter(purchase_order__id=po_id).select_related('product')
 
@@ -5678,11 +5795,12 @@ class PrintTransfer(views.APIView):
     def get(self, request, transfer_id):
         try:
             transfer = Transfer.objects.get(id=transfer_id)
-            transfer_items = TransferItems.objects.filter(transfer=transfer)
+            transfer_serializer = TransferSerializer(transfer)
+            transfer_items = TransferItems.objects.filter(transfer=transfer).values()
         
-            return render(request, 'components/ibt.html', {
+            return Response({
                 'date':datetime.datetime.now(),
-                'transfer':transfer, 
+                'transfer':transfer_serializer, 
                 'transfer_items':transfer_items
             })
         except:
@@ -5705,11 +5823,12 @@ class PrintTransfer(views.APIView):
             return Response({'meesage':f'{e}'}, status.HTTP_400_BAD_REQUEST)
         
 class RecieveInventory(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         try:  
-            transfer_id = request.data['id']
-            quantity_received = int(request.data['quantity'])
-            received = request.data['received']
+            transfer_id = request.data.get('id')
+            quantity_received = int(request.data.get('quantity'))
+            received = request.data.get('received')
 
             logger.info(f'transfer item data {received}')
 
@@ -5792,6 +5911,7 @@ class RecieveInventory(views.APIView):
             return Response({'message': str(e)}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class OverListStock(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         search_query = request.GET.get('search_query', '')
         
@@ -5830,10 +5950,7 @@ class OverListStock(views.APIView):
         product = Inventory.objects.get(id=branch_transfer.product.id, branch=request.user.branch)
     
         if int(branch_transfer.over_less_quantity) > 0:
-            if action == 'write_off':   
-                if request.user.branch == branch_transfer.to_branch:
-                    return JsonResponse({'success': False,  'message':'Cant perfom this operation'})
-                
+            if action == 'write_off':    
                 product.quantity += branch_transfer.over_less_quantity 
                 product.save()
                 
@@ -5863,7 +5980,7 @@ class OverListStock(views.APIView):
                 
                 activity_log('write off', product, branch_transfer )     
 
-                return Response({f'{product.product.name} write-off successfully'}, status.HTTP_200_OK)
+                return Response({f'{product.name} write-off successfully'}, status.HTTP_200_OK)
             
             if action == 'accept':
                 product.quantity += branch_transfer.over_less_quantity 
@@ -5875,12 +5992,9 @@ class OverListStock(views.APIView):
                 branch_transfer.over_less_description = description
                 branch_transfer.save()
                 
-                return JsonResponse({f'{product.product.name} accepted back successfully'}, status.HTTP_200_OK)
+                return Response({f'{product.name} accepted back successfully'}, status.HTTP_200_OK)
             
             if action == 'back':
-                if request.user.branch == branch_transfer.to_branch:
-                    return JsonResponse({'success': False,  'message':'Cant perfom this operation'})
-                
                 description=f'transfered to {branch_transfer.to_branch}'
                 product.quantity += branch_transfer.over_less_quantity 
                 product.save()
@@ -5900,7 +6014,7 @@ class OverListStock(views.APIView):
                 branch_transfer.over_less_description = description
                 branch_transfer.save()
                 
-                return JsonResponse(status.HTTP_200_OK)
+                return Response(status.HTTP_200_OK)
             
             return Response(status.HTTP_400_BAD_REQUEST)
             
@@ -5966,12 +6080,14 @@ class TransferDelete(views.APIView):
             return Response({'message':f'{e}'}, status.HTTP_400_BAD_REQUEST)
         
 class AddTransferInventory(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         InventorySerializer(data = request.data)
         inventory = Inventory.objects.filter(branch=request.user.branch).values().order_by('-quantity')
         return Response({'inventory':inventory}, status.HTTP_201_CREATED)
     
 class TransferDetails(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, transfer_id):
         transfer = TransferItems.objects.filter(id=transfer_id).values(
             'product__name', 'transfer__transfer_ref', 'quantity', 'price', 'from_branch__name', 'to_branch__name'
@@ -5979,6 +6095,7 @@ class TransferDetails(views.APIView):
         return Response(transfer, status.HTTP_200_OK)
 
 class HeldTransferJson(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, transfer_id):
         transfer_items = Holdtransfer.objects.filter(transfer__id=transfer_id).values(
             'product__name',
@@ -5992,6 +6109,7 @@ class HeldTransferJson(views.APIView):
         return Response(transfer_items, status.HTTP_200_OK)
 
 class HeldTransfers(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         transfers = Transfer.objects.filter(
             Q(branch=request.user.branch),
@@ -6004,6 +6122,7 @@ class HeldTransfers(views.APIView):
         })
     
 class ProcessHeldTransfer(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(request, transfer_id):
         try:
             transfer = Transfer.objects.get(
@@ -6012,33 +6131,22 @@ class ProcessHeldTransfer(views.APIView):
                 delete=False, 
                 hold=True
             )
+            transfer_serializer = TransferSerializer(transfer)
             return Response({
-                'transfer':transfer
+                'transfer':transfer_serializer.data
             }, status.HTTP_200_OK)
         except:
             return Response({ f'Transfer with id {transfer_id} not found.'}, status.HTTP_400_BAD_REQUEST)
         
 class InventoryPDF(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         category = request.data.get('category', '')
 
-        inventory = get_list_or_404(Inventory, branch=request.user.branch.id, product__category__name=category) if category else get_list_or_404(Inventory, branch=request.user.branch.id)
-        title = f'{category} Inventory' if category else 'All Inventory'
-        
-        totals = calculate_inventory_totals(inventory)
-        
-        return Response(generate_pdf,
-            {
-                'inventory':inventory,
-                'title': f'{request.user.branch.name}: {title}',
-                'date':datetime.date.today(),
-                'total_cost':totals[0],
-                'total_price':totals[1],
-                'pdf_name':'Inventory'
-            }
-        )
+        return Response({'https://web-production-86a7.up.railway.app/inventory/inventory-pdf'})
 
 class InventoryReport(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         view = request.data.get('view', '')
         choice = request.data.get('type', '') 
@@ -6114,18 +6222,10 @@ class InventoryReport(views.APIView):
                 status.HTTP_200_OK
             )
         
-        return Response(
-            generate_pdf,
-            {
-                'title': 'Transfers', 
-                'date_range': time_frame if time_frame else 'All',
-                'report_date': datetime.date.today(),
-                'transfers':transfers
-            },
-            status.HTTP_200_OK
-        )
+        return Response({'https://web-production-86a7.up.railway.app/inventory/transfers-report'},status.HTTP_200_OK)
 
 class AccessoriesView(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, product_id):
-        accessories = Accessory.objects.filter(product__id=product_id).values('id', 'product__name')
+        accessories = Accessory.objects.flter(main_product__id=product_id).values('id', 'main_product__name')
         return Response({'data': accessories}, status.HTTP_200_OK)

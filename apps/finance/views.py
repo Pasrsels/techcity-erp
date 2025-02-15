@@ -3487,54 +3487,53 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from .serializers import *
 
+# class CustomerCrud(viewsets.ModelViewSet):
+#     permission_classes = [IsAuthenticated]
+#     queryset = Customer.objects.all()
+#     serializer_class = CustomerSerializer
 
-class CustomerCrud(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    queryset = Customer.objects.all()
-    serializer_class = CustomerSerializer
-
-    def create(self, request):
-        data = request.data
+#     def create(self, request):
+#         data = request.data
         
-        validation_errors = validate_customer_data(data)
-        if validation_errors:
-            return Response(validation_errors, status= status.HTTP_406_NOT_ACCEPTABLE)
-        if Customer.objects.filter(phone_number=data['phonenumber']).exists():
-            return Response('Customer exists', status= status.HTTP_409_CONFLICT)
-        else:
-            customer = Customer.objects.create(
-                name=data['name'],
-                email=data['email'],
-                address=data['address'],
-                phone_number=data['phonenumber'],
-                branch=request.user.branch
-            )
-            account = CustomerAccount.objects.create(customer=customer)
+#         validation_errors = validate_customer_data(data)
+#         if validation_errors:
+#             return Response(validation_errors, status= status.HTTP_406_NOT_ACCEPTABLE)
+#         if Customer.objects.filter(phone_number=data['phonenumber']).exists():
+#             return Response('Customer exists', status= status.HTTP_409_CONFLICT)
+#         else:
+#             customer = Customer.objects.create(
+#                 name=data['name'],
+#                 email=data['email'],
+#                 address=data['address'],
+#                 phone_number=data['phonenumber'],
+#                 branch=request.user.branch
+#             )
+#             account = CustomerAccount.objects.create(customer=customer)
 
-        balances_to_create = [
-            CustomerAccountBalances(account=account, currency=currency, balance=0) 
-            for currency in Currency.objects.all()
-        ]
-        CustomerAccountBalances.objects.bulk_create(balances_to_create)
-        return JsonResponse(status.HTTP_201_CREATED)
+#         balances_to_create = [
+#             CustomerAccountBalances(account=account, currency=currency, balance=0) 
+#             for currency in Currency.objects.all()
+#         ]
+#         CustomerAccountBalances.objects.bulk_create(balances_to_create)
+#         return JsonResponse(status.HTTP_201_CREATED)
 
 class CustomersViewset(ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
     permission_classes = [IsAuthenticated]
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request):
         data = request.data
         branch = request.user.branch
 
-        if Customer.objects.filter(Q(phone_number=data['phone_number']) | Q(email=data['email'])).exists():
+        if Customer.objects.filter(Q(phone_number=data.get('phonenumber')) | Q(email=data.get('email'))).exists():
             return Response({'error': 'Customer with this phone number or email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
         customer = Customer.objects.create(
-            name=data['name'],
-            email=data['email'],
-            address=data['address'],
-            phone_number=data['phonenumber'],
+            name=data.get('name'),
+            email=data.get('email'),
+            address=data.get('address'),
+            phone_number=data.get('phonenumber'),
             branch=branch
         )
         account = CustomerAccount.objects.create(customer=customer)
@@ -3548,27 +3547,80 @@ class CustomersViewset(ModelViewSet):
         customer_serializer = self.get_serializer(customer)
         return Response(customer_serializer.data, status=status.HTTP_201_CREATED)
     
+class AllCustomerAccounts(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        customer_infomation = Customer.objects.all()
+        customer_balances = CustomerAccountBalances.objects.all()
+
+        customer_infomation_list = {}
+        # balance = []
+        for items in customer_balances:
+            balance = []
+            customer_infomation_list[items.account.customer.id] = {
+                'name':items.account.customer.name,
+                'phone_number': items.account.customer.phone_number,
+                'email': items.account.customer.email,
+                'accounts':
+                {   
+                
+                }
+            }
+            id = items.account.customer.id
+            for item in customer_balances:
+                if id == item.account.customer.id:
+                    balance.append(
+                        {
+                            'customer_id': item.account.customer.id,
+                            'currency': item.currency.name,
+                            'balance': item.balance
+                            
+                        }
+                    )
+            customer_infomation_list[items.account.customer.id]['accounts'] = balance
+
+        logger.info(customer_infomation_list)
+        return Response(customer_infomation_list, status.HTTP_200_OK)
+
+class CustomerCurrenciesTotal(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        currencies = Currency.objects.all()
+        balances  = CustomerAccountBalances.objects.all()
+
+        currencies_information = {}
+
+        for item in currencies:
+            total_balance = 0
+            currencies_information[item.name] = {
+                'balance': 0
+            }
+            currency_name = item.name
+            for items in balances:
+                if items.currency.name == currency_name:
+                    total_balance += items.balance
+            currencies_information[item.name]['balance'] = total_balance
+
+        return Response(currencies_information, status.HTTP_200_OK)
 
 class CustomerAccountView(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, customer_id):
         customer = get_object_or_404(Customer, id=customer_id)
         customer_serializer = CustomerSerializer(customer)
 
-        account = CustomerAccountBalances.objects.filter(account__customer=customer)
-        account_serializer = CustomerAccountBalancesSerializer(account)
+        account = CustomerAccountBalances.objects.filter(account__customer=customer).values()
 
         invoices = Invoice.objects.filter(
             customer=customer, 
             branch=request.user.branch, 
             status=True
-        )
-        invoice_serializer = InvoiceSerializer(invoices)
+        ).values()
 
         invoice_payments = Payment.objects.filter(
             invoice__branch=request.user.branch, 
             invoice__customer=customer
-        ).order_by('-payment_date')
-        invoice_payments_serializer = PaymentSerializer(invoice_payments)
+        ).order_by('-payment_date').values()
 
         filters = Q()
         if request.GET.get('q'):
@@ -3586,19 +3638,20 @@ class CustomerAccountView(views.APIView):
         paid_invoice = invoices.filter(payment_status='Paid').count()
         due_invoice = invoices.filter(payment_status='Partial').count()
         return Response({
-            'account': account_serializer.data,
-            'invoices': invoice_serializer.data,
+            'account': account,
+            'invoices': invoices,
             'customer': customer_serializer.data,
             'invoice_count': invoices.count(),
-            'invoice_payments': invoice_payments_serializer.data,
+            'invoice_payments': invoice_payments,
             'paid': paid_invoice,  
             'due': due_invoice, 
         },status.HTTP_200_OK)
     
 class CustomerPaymentsJsonView(views.APIView):
-    def get(self, request, customer_id):
+    permission_classes = [IsAuthenticated]
+    def post(self, request, customer_id):
         customer_id = customer_id
-        transaction_type = request.GET.get('type')
+        transaction_type = request.data.get('type')
 
         customer = get_object_or_404(Customer, id=customer_id)
 
@@ -3618,28 +3671,28 @@ class CustomerPaymentsJsonView(views.APIView):
                 'amount_paid', 
                 'amount_due'
             )
-            invoice_payment_serializer = PaymentSerializer(invoice_payments)
-            return Response(invoice_payment_serializer.data,status.HTTP_200_OK, safe=FALSE)
+            return Response(invoice_payments,status.HTTP_200_OK)
         else:
             return Response(status.HTTP_400_BAD_REQUEST)
 
 class EditCustomerDeposit(views.APIView):
-    def update(self, request, deposit_id):
+    permission_classes = [IsAuthenticated]
+    def put(self, request, deposit_id):
         try:
             deposit = CustomerDeposits.objects.get(id=deposit_id)
         except CustomerDeposits.DoesNotExist:
             # messages.warning(request, 'Deposit not found')
             return Response(status.HTTP_404_NOT_FOUND)
         
-        form = customerDepositsForm(request.POST)
+        form = CustomerDepositSerializer(data = request.data)
         if not form.is_valid():
-            messages.warning(request, 'Invalid form submission')
-            return redirect('finance:edit_customer_deposit', deposit_id)
+            #messages.warning(request, 'Invalid form submission')
+            return Response({'message':'Invalid form submission, redirect to finance:edit_customer_deposit' , 'Deposti Id':f'{deposit_id}'}, status.HTTP_400_BAD_REQUEST)
 
-        amount = Decimal(request.POST.get('amount'))
+        amount = Decimal(request.data.get('amount'))
         if amount <= 0:
-            messages.warning(request, 'Amount cannot be zero or negative')
-            return redirect('finance:edit_customer_deposit', deposit_id)
+            #messages.warning(request, 'Amount cannot be zero or negative')
+            return Response({'message':'Amount cannot be zero or negative, redirect to finance:edit_customer_deposit' , 'Deposti Id':f'{deposit_id}'}, status.HTTP_400_BAD_REQUEST)
 
         account_types = {
             'cash': Account.AccountType.CASH,
@@ -3657,8 +3710,8 @@ class EditCustomerDeposit(views.APIView):
                 branch=request.user.branch,
             )
         except (Account.DoesNotExist, AccountBalance.DoesNotExist) as e:
-            messages.warning(request, str(e))
-            return redirect('finance:edit_customer_deposit', deposit_id)
+            #messages.warning(request, str(e))
+            return Response({'message':f'{e}' , 'Deposti Id':f'{deposit_id}'}, status.HTTP_400_BAD_REQUEST)
         
         adj_amount = amount - deposit.amount
 
@@ -3683,23 +3736,22 @@ class EditCustomerDeposit(views.APIView):
             account_balance.save()
             deposit.amount = amount
             deposit.save()
-            messages.success(request, 'Customer deposit successfully updated')
-            return redirect('finance:customer', deposit.customer_account.account.customer.id)
-        return render(request, 'customers/edit_deposit.html', {'form': form})
+            #messages.success(request, 'Customer deposit successfully updated')
+            return Response({deposit.customer_account.account.customer.id}, status.HTTP_200_OK)
 
 class CustomerAccountJson(views.APIView):
-    def retrive(self, request, customer_id):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, customer_id):
         account = CustomerAccountBalances.objects.filter(account__customer__id=customer_id).values(
             'currency__symbol', 'balance'
         )  
-        customer_account_balances_serializer = CustomerAccountBalancesSerializer(account)
-        return Response(customer_account_balances_serializer.data, status.HTTP_200_OK)
-
+        return Response(account, status.HTTP_200_OK)
 
 class CustomerAccountTransactionsJson(views.APIView):
-    def retrive(self, request, id):
+    permission_classes = [IsAuthenticated]
+    def post(self, request, id):
         customer_id = id
-        transaction_type = request.GET.get('type')
+        transaction_type = request.data.get('type')
 
         customer = get_object_or_404(Customer, id=customer_id)  
 
@@ -3718,14 +3770,13 @@ class CustomerAccountTransactionsJson(views.APIView):
                 'user__username',
                 'payment_status'
             )
-            invoice_serializer = InvoiceSerializer(invoices)
-            return Response(invoice_serializer, status.HTTP_200_OK)
+            return Response(invoices, status.HTTP_200_OK)
         else:
             return Response({'message': 'Invalid transaction type.'}, status.HTTP_400_BAD_REQUEST)
 
-
 class RefundCustomerDeposit(views.APIView):
-    def update(self, request, deposit_id):
+    permission_classes = [IsAuthenticated]
+    def put(self, request, deposit_id):
         try:
             deposit = CustomerDeposits.objects.get(id=deposit_id)
         except CustomerDeposits.DoesNotExist:
@@ -3755,10 +3806,10 @@ class RefundCustomerDeposit(views.APIView):
                 branch=request.user.branch,
             )
         except (Account.DoesNotExist, AccountBalance.DoesNotExist) as e:
-            return Response({'message': str(e)}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
         
         if amount > deposit.amount:
-            return JsonResponse({'message': 'Refund amount exceeds deposit amount'}, status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'Refund amount exceeds deposit amount'}, status.HTTP_400_BAD_REQUEST)
         
         account_balance.balance -= amount
         diff_amount = deposit.amount - amount
@@ -3783,43 +3834,42 @@ class RefundCustomerDeposit(views.APIView):
         return Response(status.HTTP_200_OK)
 
 class PrintAccountStatement(views.APIView):
-    def get(request, customer_id):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, customer_id):
         try:
             customer = get_object_or_404(Customer, id=customer_id)
             
-            account = CustomerAccountBalances.objects.filter(account__customer=customer)
+            account = CustomerAccountBalances.objects.filter(account__customer=customer).values()
             
             invoices = Invoice.objects.filter(
                 customer=customer, 
                 branch=request.user.branch, 
                 status=True
-            )
+            ).values()
         except:
             #messages.warning(request, 'Error in processing the request')
-            return redirect('finance:customer')
+            return Response({'message':'Error in processing the request'}, status.HTTP_400_BAD_REQUEST)
 
         invoice_payments = Payment.objects.select_related('invoice', 'invoice__currency', 'user').filter(
             invoice__branch=request.user.branch, 
             invoice__customer=customer
-        ).order_by('-payment_date')
+        ).order_by('-payment_date').values()
         
         customer_serializer = CustomerSerializer(customer)
-        account_serializer = CustomerAccountBalancesSerializer(account)
-        invoice_serializer = InvoiceSerializer(invoices)
-        invoice_payments_serializer = PaymentSerializer(invoice_payments)
 
         return Response({
-            'customer':customer,
+            'customer':customer_serializer.data,
             'account':account,
             'invoices':invoices, 
             'invoice_payments':invoice_payments
         }, status.HTTP_200_OK)
 
-class CustomerDeposits(views.APIView):
-    def retrive(self, request, id): 
+class CustomerDepositsView(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, id): 
         customer_id = id
         
-        if customer_id: 
+        if customer_id:
             deposits = CustomerDeposits.objects.filter(branch=request.user.branch).values(
                 'customer_account__account__customer_id',
                 'date_created',
@@ -3833,25 +3883,24 @@ class CustomerDeposits(views.APIView):
                 'id'
             ).order_by('-date_created')
 
-            deposits_serializer = CustomerDepositSerializer(deposits)
-            return Response(deposits_serializer, status.HTTP_200_OK)
+            return Response(deposits, status.HTTP_200_OK)
         else:
-            return JsonResponse({
+            return Response({
                 'message':f'{customer_id} was not provided'
             }, status.HTTP_400_BAD_REQUEST)
 
-
 class DepositList(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
-        deposits = CustomerDeposits.objects.filter(branch=request.user.branch).order_by('-date_created')
-        deposits_serializer = CustomerDepositSerializer(deposits)
+        deposits = CustomerDeposits.objects.filter(branch=request.user.branch).order_by('-date_created').values()
         return Response({
-            'deposits':deposits_serializer.data,
-            'total_deposits': deposits_serializer.data.aggregate(Sum('amount'))['amount__sum'] or 0,
-        })
+            'deposits':deposits,
+            'total_deposits': deposits.aggregate(Sum('amount'))['amount__sum'] or 0,
+        }, status.HTTP_200_OK)
 
 class CashTransfer(views.APIView):
-    def cash_transfer(self, request):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
         transfers = CashTransfers.objects.filter(branch=request.user.branch)
         
         account_types = {
@@ -3859,7 +3908,7 @@ class CashTransfer(views.APIView):
             'bank': Account.AccountType.BANK,
             'ecocash': Account.AccountType.ECOCASH,
         }
-        form = TransferForm(request.POST)
+        form = TransferSerializer(data = request.data)
         if form.is_valid():
             transfer = form.save(commit=False)
             transfer.user = request.user
@@ -3873,8 +3922,8 @@ class CashTransfer(views.APIView):
             try:
                 account = Account.objects.get(name=account_name, type=account_types[transfer.transfer_method.lower()])
             except Account.DoesNotExist:
-                messages.error(request, f"Account '{account_name}' not found.")
-                return redirect('finance:cash_transfer')  
+                #messages.error(request, f"Account '{account_name}' not found.")
+                return Response({'message': f'Account {account_name} not found.'}, status.HTTP_400_BAD_REQUEST)  
 
             try:
                 account_balance = AccountBalance.objects.select_for_update().get(
@@ -3883,36 +3932,36 @@ class CashTransfer(views.APIView):
                     branch=request.user.branch
                 )
             except AccountBalance.DoesNotExist:
-                messages.error(request, "Account balance record not found.")
-                return redirect('finance:cash_transfer')
+                #messages.error(request, "Account balance record not found.")
+                return Response({'message':'Account balance record not found.'}, status.HTTP_400_BAD_REQUEST)
 
             if account_balance.balance < transfer.amount:
-                messages.error(request, "Insufficient funds in the account.")
-                return redirect('finance:cash_transfer')  
+                #messages.error(request, "Insufficient funds in the account.")
+                return Response({'message':'Insufficient funds in the account.'}, status.HTTP_400_BAD_REQUEST) 
 
             account_balance.balance -= transfer.amount
             account_balance.save()
             transfer.save()  
             
-            messages.success(request, 'Money successfully transferred.')
-            return redirect('finance:cash_transfer')  
+            #messages.success(request, 'Money successfully transferred.')
+            return Response({'message':'Money successfully transferred.'}, status.HTTP_200_OK)  
         else:
-            messages.error(request, "Invalid form data. Please correct the errors.")
-        return render(request, 'transfers/cash_transfers.html', {'form': form, 'transfers':transfers})
+            #messages.error(request, "Invalid form data. Please correct the errors.")
+            return Response({'message':'Invalid form data. Please correct the errors.'}, status.HTTP_400_BAD_REQUEST)
 
 class CashTransferList(views.APIView):
-    def get(self, request):
-        search_query = request.GET.get('q', '')
-        transfers = CashTransfers.objects.filter(to=request.user.branch.id)
-        transfers_serializer = CashTransferSerializer(transfers)
-        if search_query:
-            transfers = transfers.filter(Q(date__icontains=search_query))
-            
-        return Response({'transfers':transfers_serializer, 'search_query':search_query}, status.HTTP_200_OK)
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        search_query = request.data.get('q', '')
+        transfers = CashTransfers.objects.filter(to=request.user.branch.id).values()
 
+        if search_query:
+            transfers = transfers.filter(Q(date__icontains=search_query))   
+        return Response({'transfers':transfers, 'search_query':search_query}, status.HTTP_200_OK)
 
 class ReceiveMoneyTransfer(views.APIView):
-    def get(self, request, transfer_id):
+    permission_classes = [IsAuthenticated]
+    def post(self, request, transfer_id):
         if transfer_id:
             transfer = get_object_or_404(CashTransfers, id=transfer_id)
             account_types = {
@@ -3926,7 +3975,7 @@ class ReceiveMoneyTransfer(views.APIView):
             try:
                 account, _ = Account.objects.get_or_create(name=account_name, type=account_types[transfer.transfer_method.lower()])
             except Account.DoesNotExist:
-                return JsonResponse({'message':f"Account '{account_name}' not found."}) 
+                return Response({'message':f"Account '{account_name}' not found."}, status.HTTP_400_BAD_REQUEST) 
 
             try:
                 account_balance, _ = AccountBalance.objects.get_or_create(
@@ -3935,19 +3984,20 @@ class ReceiveMoneyTransfer(views.APIView):
                     branch=request.user.branch
                 )
             except AccountBalance.DoesNotExist:
-                messages.error(request, )
-                return JsonResponse({'message':"Account balance record not found."})  
+                #messages.error(request, )
+                return Response({'message':"Account balance record not found."}, status.HTTP_400_BAD_REQUEST)  
 
             account_balance.balance += transfer.amount
             account_balance.save()
             
             transfer.received_status = True
             transfer.save() 
-            return JsonResponse({'message':True})  
-        return JsonResponse({'message':"Transfer ID is needed"})  
+            return Response(status.HTTP_200_OK)  
+        return Response({'message':"Transfer ID is needed"}, status.HTTP_400_BAD_REQUEST)  
 
 class FinanceNotification(views.APIView):
-    def finance_notifications_json(request):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
         notifications = FinanceNotifications.objects.filter(status=True).values(
             'transfer__id', 
             'transfer__to',
@@ -3959,13 +4009,22 @@ class FinanceNotification(views.APIView):
             'notification_type',
             'id'
         )
-        notifications_serializer = FinanceNotificationSerializer(notifications)
-        return Response(notifications_serializer.data, status.HTTP_200_OK, safe=False)
-
+        return Response(notifications, status.HTTP_200_OK)
 
 class CurrencyViewset(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
+    def retrieve(self, request, pk):
+        logger.info(pk)
+        data = Currency.objects.get(id = pk)
+        info = {
+            'code': data.code,
+            'name': data.name,
+            'symbol': data.symbol,
+            'exchange rate': data.exchange_rate
+        }
+        return Response(info, status.HTTP_200_OK)
     def list(self, request):
         data = self.queryset.values()
         logger.info(data)
@@ -3978,9 +4037,6 @@ class CurrencyViewset(viewsets.ModelViewSet):
             'symbol': con_data.get('symbol'),
             'exchange_rate': con_data.get('exchange_rate')
         }
-        # serializer = CurrencySerializer(data = data)
-        # if not serializer.is_valid():
-        #     serializer.save()
         if not Currency.objects.filter(name = con_data.get('name')):
             Currency.objects.create(
                 code = data.get('code'),
@@ -3996,19 +4052,37 @@ class CurrencyViewset(viewsets.ModelViewSet):
                 'symbol': data_saved.symbol,
                 'exchange_rate': data_saved.exchange_rate
             }
-            serializer = CurrencySerializer(data_saved)
             return Response(data_returned,status.HTTP_201_CREATED)
         return Response(status.HTTP_400_BAD_REQUEST)
+    def update(self, request, pk):
+        logger.info(pk)
+        data = request.data
+        change_data = Currency.objects.get(id = pk)
+        change_data.code = data.get('code')
+        change_data.name = data.get('name')
+        change_data.symbol = data.get('symbol')
+        change_data.exchange_rate = data.get('exchange rate')
+
+        change_data.save()
+        updated_data = Currency.objects.get(id = pk)
+
+        data_returned = {
+                'code': updated_data.code,
+                'name': updated_data.name,
+                'symbol': updated_data.symbol,
+                'exchange_rate': updated_data.exchange_rate
+        }
+        return Response(data_returned, status.HTTP_200_OK)
 
 class CashWithdrawalsViewset(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = CashWithdrawals.objects.all()
     serializer_class = CashWithdrawalSerializer
 
-
 class EndOfDay(views.APIView):
-    def end_of_day(request):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
         today = timezone.now().date()
-        
         user_timezone_str = request.user.timezone if hasattr(request.user, 'timezone') else 'UTC'
         user_timezone = pytz_timezone(user_timezone_str)  
 
@@ -4052,106 +4126,112 @@ class EndOfDay(views.APIView):
 
         logger.info(f'Sold Inventory: {sold_inventory}')
         
-        if request.method == 'GET':
-            all_inventory = Inventory.objects.filter(branch=request.user.branch, status=True).values(
-                'id', 'name', 'quantity'
+        all_inventory = Inventory.objects.filter(branch=request.user.branch, status=True).values(
+            'id', 'name', 'quantity'
+        )
+
+        inventory_data = []
+        for item in sold_inventory:
+            logger.info(item)
+            sold_info = next((inv for inv in all_inventory if item['inventory__id'] == inv['id']), None)
+            
+            if sold_info:
+                inventory_data.append({
+                    'id': item['inventory__id'],
+                    'name': item['inventory__name'],
+                    'initial_quantity': item['quantity_sold'] + sold_info['quantity'] if sold_info else 0,
+                    'quantity_sold':  item['quantity_sold'],
+                    'remaining_quantity':sold_info['quantity'] if sold_info else 0,
+                    'physical_count': None
+                })
+        logger.info(inventory_data)
+        logger.info(total_cash_amounts)
+        return Response({'inventory': inventory_data, 'total_cash_amounts':total_cash_amounts}, status.HTTP_200_OK)    
+    def post(self, request):
+        try:
+            today = timezone.now().date()
+            data = request.data
+            inventory_data = []
+            
+            sold_inventory = (
+            ActivityLog.objects
+            .filter(invoice__branch=request.user.branch, timestamp__date= today, action='Sale')
+            .values('inventory__id', 'inventory__name')
+            .annotate(quantity_sold=Sum('quantity'))
             )
 
-            inventory_data = []
-            for item in sold_inventory:
-                logger.info(item)
-                sold_info = next((inv for inv in all_inventory if item['inventory__id'] == inv['id']), None)
-                
-                if sold_info:
+            logger.info(f'Sold Inventory: {sold_inventory}')
+
+            for item in data:
+                try:
+                    inventory = Inventory.objects.get(id=item.get('item_id'), branch=request.user.branch, status=True)
+                    inventory.physical_count = item.get('physical_count')
+                    inventory.save()
+
+                    sold_info = next((i for i in sold_inventory if i['inventory__id'] == inventory.id), None)
                     inventory_data.append({
-                        'id': item['inventory__id'],
-                        'name': item['inventory__name'],
-                        'initial_quantity': item['quantity_sold'] + sold_info['quantity'] if sold_info else 0,
-                        'quantity_sold':  item['quantity_sold'],
-                        'remaining_quantity':sold_info['quantity'] if sold_info else 0,
-                        'physical_count': None
+                        'id': inventory.id,
+                        'name': inventory.name,
+                        'initial_quantity': inventory.quantity,
+                        'quantity_sold': sold_info['quantity_sold'] if sold_info else 0,
+                        'remaining_quantity': inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0),
+                        'physical_count': inventory.physical_count,
+                        'difference': inventory.physical_count - (inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0))
                     })
+                except Inventory.DoesNotExist:
+                    return Response({'error': f'Inventory item with id {item["inventory_id"]} does not exist.'}, status.HTTP_404_NOT_FOUND)
+
+            today_min = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            today_max = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
             
-            return JsonResponse({'inventory': inventory_data, 'total_cash_amounts':total_cash_amounts})
+            # Invoice data
+            invoices = Invoice.objects.filter(branch=request.user.branch, issue_date__range=(today_min, today_max))
+            partial_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PARTIAL)
+            paid_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PAID, branch=request.user.branch)
         
-        elif request.method == 'POST':
-            try:
-                data = json.loads(request.body)
-                inventory_data = []
-                
-                for item in data:
-                    try:
-                        inventory = Inventory.objects.get(id=item['item_id'], branch=request.user.branch, status=True)
-                        inventory.physical_count = item['physical_count']
-                        inventory.save()
-
-                        sold_info = next((i for i in sold_inventory if i['inventory__id'] == inventory.id), None)
-                        inventory_data.append({
-                            'id': inventory.id,
-                            'name': inventory.name,
-                            'initial_quantity': inventory.quantity,
-                            'quantity_sold': sold_info['quantity_sold'] if sold_info else 0,
-                            'remaining_quantity': inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0),
-                            'physical_count': inventory.physical_count,
-                            'difference': inventory.physical_count - (inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0))
-                        })
-                    except Inventory.DoesNotExist:
-                        return JsonResponse({'success': False, 'error': f'Inventory item with id {item["inventory_id"]} does not exist.'})
-
-                today_min = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-                today_max = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
-                
-                # Invoice data
-                invoices = Invoice.objects.filter(branch=request.user.branch, issue_date__range=(today_min, today_max))
-                partial_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PARTIAL)
-                paid_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PAID, branch=request.user.branch)
+            # Expenses
+            expenses = Expense.objects.filter(branch=request.user.branch, date=today)
+            confirmed_expenses = expenses.filter(status=True)
+            unconfirmed_expenses = expenses.filter(status=False)
             
-                # Expenses
-                expenses = Expense.objects.filter(branch=request.user.branch, date=today)
-                confirmed_expenses = expenses.filter(status=True)
-                unconfirmed_expenses = expenses.filter(status=False)
-                
-                # Accounts
-                account_balances = AccountBalance.objects.filter(branch=request.user.branch)
+            # Accounts
+            account_balances = AccountBalance.objects.filter(branch=request.user.branch)
 
-                html_string = render_to_string('day_report.html', {
-                    'request':request,
-                    'invoices':invoices,
-                    'expenses':expenses,
-                    'date': today,
-                    'inventory_data': inventory_data,
-                    'total_sales': paid_invoices.aggregatea,
-                    'partial_payments': partial_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
-                    'total_paid_invoices': paid_invoices.count(),
-                    'total_partial_invoices': partial_invoices.count(),
-                    'total_expenses': confirmed_expenses.aggregate(Sum('amount'))['amount__sum'] or 0,
-                    'confirmed_expenses': confirmed_expenses,
-                    'unconfirmed_expenses': unconfirmed_expenses,
-                    'account_balances': account_balances,
-                })
-                
-                pdf_buffer = BytesIO()
-                pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
-                if not pisa_status.err:
-                    filename = f"{request.user.branch.name}_today_report_{today}.pdf"
-                    return JsonResponse({"success": True})
-                else:
-                    return JsonResponse({"success": False, "error": "Error generating PDF."})
-            except json.JSONDecodeError:
-                return JsonResponse({'success': False, 'error': 'Invalid JSON data.'})
-            except Exception as e:
-                logger.exception(f"Error processing request: {e}")
-                return JsonResponse({'success': False, 'error': str(e)})
-        
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
-
+            html_string = render_to_string('day_report.html', {
+                'request':request,
+                'invoices':invoices,
+                'expenses':expenses,
+                'date': today,
+                'inventory_data': inventory_data,
+                'total_sales': paid_invoices.aggregatea,
+                'partial_payments': partial_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
+                'total_paid_invoices': paid_invoices.count(),
+                'total_partial_invoices': partial_invoices.count(),
+                'total_expenses': confirmed_expenses.aggregate(Sum('amount'))['amount__sum'] or 0,
+                'confirmed_expenses': confirmed_expenses,
+                'unconfirmed_expenses': unconfirmed_expenses,
+                'account_balances': account_balances,
+            })
+            
+            pdf_buffer = BytesIO()
+            pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
+            if not pisa_status.err:
+                filename = f"{request.user.branch.name}_today_report_{today}.pdf"
+                return Response(status.HTTP_200_OK)
+            else:
+                return Response({"error": "Error generating PDF."})
+        except json.JSONDecodeError:
+            return Response({'error': 'Invalid JSON data.'}, status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.exception(f"Error processing request: {e}")
+            return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
 class QuatationCrud(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Qoutation.objects.all()
     serializer_class = QuotationSerializer
     def create(self, request):
         data = request.data
-        qoute_id = data.get('id'),
+        qoute_id = int(data.get('id'))
         qoute_subtotal = data.get('subtotal')
         qoute_currency_id = data.get('currency_id')
         items_data = data.get('items')
@@ -4167,9 +4247,12 @@ class QuatationCrud(viewsets.ModelViewSet):
             qoute_reference = Qoutation.generate_qoute_number(request.user.branch.name),
             products = ', '.join([f'{item['product_name']} x {item['quantity']}' for item in items_data])
         )
-        
+        logger.info(data)
+        logger.info(items_data)
         for item_data in items_data:
-            item = Inventory.objects.get(pk=item_data['inventory_id'])
+            pk_id = item_data['inventory_id']
+            logger.info(pk_id)
+            item = Inventory.objects.get(pk=pk_id)
             
             QoutationItems.objects.create(
                 qoute=qoute,
@@ -4178,42 +4261,66 @@ class QuatationCrud(viewsets.ModelViewSet):
                 quantity=item_data['quantity'],
                 total_amount= item.price * item_data['quantity'],
             )
-        return Response({'qoute_id': qoute.id}, status.HTTP_200_OK)
-    
-class QuotationList(views.APIView):
-    def get(self, request):
+        return Response({'qoute_id': qoute.id}, status.HTTP_201_CREATED)
+    def list(self, request, *args, **kwargs):
         search_query = request.GET.get('q', '')
-        qoutations = Qoutation.objects.filter(branch=request.user.branch).order_by('-date')
+        qoutations = Qoutation.objects.filter(branch=request.user.branch).order_by('-date').values()
     
         if search_query:
-
             qoutations = qoutations.filter(
                 Q(customer__name__icontains=search_query)|
                 Q(products__icontains=search_query)|
                 Q(date__icontains=search_query)|
                 Q(qoute_reference__icontains=search_query)
             )
-            quote_serializer = QuotationSerializer(qoutations)
-        return Response(quote_serializer.data, status.HTTP_200_OK)
+        return Response(qoutations, status.HTTP_200_OK)
+    def retrieve(self, request, pk):
+        search_query = request.GET.get('q', '')
+        qoutations = Qoutation.objects.filter(id = pk, branch=request.user.branch).order_by('-date').values()
+    
+        if search_query:
+            qoutations = qoutations.filter(
+                Q(customer__name__icontains=search_query)|
+                Q(products__icontains=search_query)|
+                Q(date__icontains=search_query)|
+                Q(qoute_reference__icontains=search_query)
+            )
+        return Response(qoutations, status.HTTP_200_OK)
+    
+# class QuotationList(views.APIView):
+#     permission_classes = [IsAuthenticated]
+#     def get(self, request):
+#         search_query = request.GET.get('q', '')
+#         qoutations = Qoutation.objects.filter(branch=request.user.branch).order_by('-date').values()
+    
+#         if search_query:
+#             qoutations = qoutations.filter(
+#                 Q(customer__name__icontains=search_query)|
+#                 Q(products__icontains=search_query)|
+#                 Q(date__icontains=search_query)|
+#                 Q(qoute_reference__icontains=search_query)
+#             )
+#         return Response(qoutations, status.HTTP_200_OK)
 
 class QuotationDelete(views.APIView):
+    permission_classes = [IsAuthenticated]
     def delete(request, qoutation_id):
         qoute = get_object_or_404(Qoutation, id=qoutation_id)
         qoute.delete()
         return Response(status.HTTP_202_ACCEPTED)
 
 class QuotationView(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(request, qoutation_id):
         qoute = Qoutation.objects.get(id=qoutation_id)
         quote_serializer = QuotationSerializer(qoute)
-        qoute_items = QoutationItems.objects.filter(qoute=qoute)
-        quote_item_serializer = QuotationItemSerializer(qoute_items)
-        return render({quote_serializer.data, quote_item_serializer.data}, status.HTTP_200_OK)
+        qoute_items = QoutationItems.objects.filter(qoute=qoute).values()
+        return Response({quote_serializer.data, qoute_items}, status.HTTP_200_OK)
 
 class InvoiceList(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
-        form = InvoiceForm()
-        invoices = Invoice.objects.filter(branch=request.user.branch, status=True).order_by('-invoice_number')
+        invoices = Invoice.objects.filter(branch=request.user.branch, status=True).order_by('-invoice_number').values()
 
         query_params = request.GET
         if query_params.get('q'):
@@ -4261,7 +4368,7 @@ class InvoiceList(views.APIView):
 
         logger.info(f'Invoices: {invoices.values}')
 
-        return render({
+        return Response({
             'invoices': invoices,
             'total_paid': total_paid,
             'total_due': total_partial,
@@ -4269,6 +4376,7 @@ class InvoiceList(views.APIView):
         },status.HTTP_200_OK)
 
 class ExpenseView(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, expense_id):
         expense = get_object_or_404(Expense, id=expense_id)
         data = {
@@ -4277,27 +4385,27 @@ class ExpenseView(views.APIView):
             'description': expense.description,
             'category': expense.category.id
         }
-        expense_serializer = ExpenseSerializer(data)
-        return JsonResponse(data, status.HTTP_200_OK)
+        return Response(data, status.HTTP_200_OK)
     
-class ExpensesCategory(views.APIView):
+class AddExpenseCategory(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         categories = ExpenseCategory.objects.all().values()
         data = request.data
-        category = data['name']
+        category = data.get('name')
         logger.info(data)
         
         if ExpenseCategory.objects.filter(name=category).exists():
-            return JsonResponse({'success':False, 'message':f'Category with ID {category} Exists.'}, status=400)
+            return Response({'message':f'Category with ID {category} Exists.'}, status.HTTP_400_BAD_REQUEST)
         
         ExpenseCategory.objects.create(
             name=category
         )
-        expense_category_serializer = ExpenseCategorySerializer(categories)
-        return JsonResponse(expense_category_serializer.data, status.HTTP_201_CREATED)
+        return Response(categories, status.HTTP_201_CREATED)
     
-class AddOrEditExpense(views.APIView):
-    def post(request, id):
+class EditExpense(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request, id):
         try:
             data = request.data
             amount = data.get('amount')
@@ -4306,7 +4414,7 @@ class AddOrEditExpense(views.APIView):
             expense_id = id
 
             if not amount or not description or not category_id:
-                return JsonResponse({'success': False, 'message': 'Missing fields: amount, description, category.'})
+                return Response({'message': 'Missing fields: amount, description, category.'}, status.HTTP_400_BAD_REQUEST)
             
             category = get_object_or_404(ExpenseCategory, id=category_id)
             
@@ -4332,31 +4440,31 @@ class AddOrEditExpense(views.APIView):
                     cashbook_expense.save()
                 except Exception as e:
                     return Response({str(e)}, status.HTTP_400_BAD_REQUEST)
-            return Response({'success': True, 'message': message}, status.HTTP_201_CREATED)
+            return Response({'message': message}, status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({str(e)}, status=400)
+            return Response({str(e)}, status.HTTP_400_BAD_REQUEST)
 
 class DeleteExpense(views.APIView):
-    def delete(request, expense_id):
-        if request.method == 'DELETE':
-            try:
-                expense = get_object_or_404(Expense, id=expense_id)
-                expense.cancel = True
-                expense.save()
-                
-                Cashbook.objects.create(
-                    amount=expense.amount,
-                    debit=True,
-                    credit=False,
-                    description=f'Expense ({expense.description}): cancelled'
-                )
-                return JsonResponse({'success': True, 'message': 'Expense successfully deleted'})
-            except Exception as e:
-                return JsonResponse({'success': False, 'message': str(e)}, status=400)
-        return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=400)
+    permission_classes = [IsAuthenticated]
+    def delete(self, request, expense_id):
+        try:
+            expense = get_object_or_404(Expense, id=expense_id)
+            expense.cancel = True
+            expense.save()
+            
+            Cashbook.objects.create(
+                amount=expense.amount,
+                debit=True,
+                credit=False,
+                description=f'Expense ({expense.description}): cancelled'
+            )
+            return Response({'message': 'Expense successfully deleted'}, status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
 
 class UpdateExpenseStatus(views.APIView):
-    def update(self, request, id):
+    permission_classes = [IsAuthenticated]
+    def put(self, request, id):
         try:
             data = request.data
             expense_id = id
@@ -4368,26 +4476,25 @@ class UpdateExpenseStatus(views.APIView):
 
             return Response(status.HTTP_202_ACCEPTED)
         except Exception as e:
-            return JsonResponse({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
 
-class InvoicePDF(views.APIView):     
-    def retrive(request, id):
+class InvoicePDF(views.APIView):  
+    permission_classes = [IsAuthenticated]   
+    def get(request, id):
         invoice_id = id
-        if invoice_id:
-            try:
-                invoice = get_object_or_404(Invoice, pk=invoice_id)
+        # if invoice_id:
+        #     try:
+        #         invoice = get_object_or_404(Invoice, pk=invoice_id)
 
-                invoice_items = InvoiceItem.objects.filter(invoice=invoice)
+        #         invoice_items = InvoiceItem.objects.filter(invoice=invoice).values()
                 
-            except Invoice.DoesNotExist:
-                return HttpResponse("Invoice not found",status.HTTP_404_NOT_FOUND)
-        else:
-            return HttpResponse("Invoice ID is required",status.HTTP_404_NOT_FOUND)
+        #     except Invoice.DoesNotExist:
+        #         return Response("Invoice not found",status.HTTP_404_NOT_FOUND)
+        # else:
+        #     return Response("Invoice ID is required",status.HTTP_404_NOT_FOUND)
         
-
-        invoice_serializer = InvoiceSerializer(invoice)
-        invoice_items_serializer = InvoiceItemsSerializer(invoice_items)
-        return Response(invoice_items_serializer.data, invoice_serializer.data, status.HTTP_200_OK)
+        # invoice_serializer = InvoiceSerializer(invoice)
+        return Response({'https://web-production-86a7.up.railway.app/finance/invoice/pdf/'}, status.HTTP_200_OK)
         # return generate_pdf(
         #     None,
         #     {
@@ -4400,11 +4507,12 @@ class InvoicePDF(views.APIView):
 
 
 class CreateInvoice(views.APIView):
-    def create(self, request):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
         try:
             data = request.data
             invoice_data = data['data'][0]  
-            items_data = data['items']
+            items_data = data.get('items')
             layby_dates = data.get('layby_dates')
            
             # get currency
@@ -4491,7 +4599,7 @@ class CreateInvoice(views.APIView):
                 # check if invoice status is hold
                 if invoice.hold_status == True:
                     held_invoice(items_data, invoice, request, vat_rate)
-                    return JsonResponse({'hold':True, 'message':'Invoice succesfully on hold'})
+                    return Response({'message':'Invoice succesfully on hold'}, status.HTTP_200_OK)
 
                 # create layby object
                 if invoice.payment_terms == 'layby':
@@ -4649,6 +4757,7 @@ class CreateInvoice(views.APIView):
             return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
         
 class InvoicePaymentTrack(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, invoice_id):
         invoice_id = invoice_id
         
@@ -4656,10 +4765,10 @@ class InvoicePaymentTrack(views.APIView):
             payments = Payment.objects.filter(invoice__id=invoice_id).order_by('-payment_date').values(
                 'payment_date', 'amount_paid', 'payment_method', 'user__username'
             )
-        payments_serializer = PaymentSerializer(payments)
-        return Response(payments_serializer.data, status.HTTP_200_OK)
+        return Response(payments, status.HTTP_200_OK)
     
 class InvoiceDelete(views.APIView):
+    permission_classes = [IsAuthenticated]
     def delete(self, request, invoice_id):
         try:
             invoice = get_object_or_404(Invoice, id=invoice_id)
@@ -4716,12 +4825,13 @@ class InvoiceDelete(views.APIView):
                 invoice.cancelled=True
                 invoice.save()
 
-            return JsonResponse({'message': f'Invoice {invoice.invoice_number} successfully deleted'}, status.HTTP_204_NO_CONTENT)
+            return Response({'message': f'Invoice {invoice.invoice_number} successfully deleted'}, status.HTTP_200_OK)
         except Exception as e:
             return Response({'message': f"{e}"}, status.HTTP_400_BAD_REQUEST)
         
 class InvoiceUpdate(views.APIView):
-    def update(self, request, invoice_id):
+    permission_classes = [IsAuthenticated]
+    def put(self, request, invoice_id):
         invoice = get_object_or_404(Invoice, id=invoice_id)
         customer_account = get_object_or_404(CustomerAccount, customer=invoice.customer)
         customer_account_balance = get_object_or_404(
@@ -4729,13 +4839,13 @@ class InvoiceUpdate(views.APIView):
         )
 
         data = request.data
-        amount_paid = Decimal(data['amount_paid'])
+        amount_paid = Decimal(data.get('amount_paid'))
 
         invoice = Invoice.objects.select_for_update().get(pk=invoice.pk)
         customer_account_balance = CustomerAccountBalances.objects.select_for_update().get(pk=customer_account_balance.pk)
 
         if amount_paid <= 0:
-            return JsonResponse({'success': False, 'message': 'Invalid amount paid.'}, status=400)
+            return Response({'message': 'Invalid amount paid.'}, status.HTTP_400_BAD_REQUEST)
 
         if amount_paid >= invoice.amount_due:
             invoice.payment_status = Invoice.PaymentStatus.PAID
@@ -4815,7 +4925,8 @@ class InvoiceUpdate(views.APIView):
         return Response(status.HTTP_202_ACCEPTED)
     
 class InvoiceDetails(views.APIView):
-    def retrive(request, invoice_id):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, invoice_id):
         invoice = Invoice.objects.filter(id=invoice_id, branch=request.user.branch).values(
             'invoice_number',
             'customer__id', 
@@ -4824,24 +4935,24 @@ class InvoiceDetails(views.APIView):
             'payment_status', 
             'amount'
         )
-        invoice_serializer = InvoiceSerializer(invoice)
-        return Response(status.HTTP_200_OK)
+        return Response(invoice, status.HTTP_200_OK)
     
 class InvoicePreview(views.APIView):
-    def retrive(self, request, invoice_id):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, invoice_id):
         invoice = Invoice.objects.get(id=invoice_id)
         invoice_serializer = InvoiceSerializer(invoice)
-        invoice_items = InvoiceItem.objects.filter(invoice=invoice)
-        invoice_items_serializer = InvoiceItemsSerializer(invoice_items)
-        return Response({'invoice_id':invoice_id, 'invoice':invoice_serializer, 'invoice_items':invoice_items_serializer}, status.HTTP_200_OK)
+        invoice_items = InvoiceItem.objects.filter(invoice=invoice).values()
+        return Response({'invoice_id':invoice_id, 'invoice':invoice_serializer.data, 'invoice_items':invoice_items}, status.HTTP_200_OK)
 
 class InvoicePreviewJson(views.APIView):
-    def retrive(self, request, invoice_id):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, invoice_id):
         try:
             invoice = Invoice.objects.get(id=invoice_id)
 
         except Invoice.DoesNotExist:
-            return JsonResponse({"error": "Invoice not found"}, status=404) 
+            return Response({"error": "Invoice not found"}, status.HTTP_400_BAD_REQUEST) 
         
         dates = {}
         if invoice.payment_terms == 'layby':
@@ -4876,25 +4987,22 @@ class InvoicePreviewJson(views.APIView):
             
         invoice_dict['user_username'] = invoice.user.username  
         
-        invoice_serializer = InvoiceSerializer(invoice_dict)
-        invoice_items_serializer = InvoiceItemsSerializer(invoice_items)
-        lay_by_dates_serializer = LayByDatesSerializer(dates)
-
         invoice_data = {
-            'invoice': invoice_serializer,
-            'invoice_items': list(invoice_items_serializer),
-            'dates':list(lay_by_dates_serializer)
+            'invoice': invoice_dict,
+            'invoice_items': invoice_items,
+            'dates':dates
         }
-        return Response(invoice_data, status.HTTP_200_OK, safe = False)
+        return Response(invoice_data, status.HTTP_200_OK)
 
 class HeldInvoiceView(views.APIView):
-    def get(request):
-        invoices = Invoice.objects.filter(branch=request.user.branch, status=True, hold_status =True).order_by('-invoice_number')
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        invoices = Invoice.objects.filter(branch=request.user.branch, status=True, hold_status =True).order_by('-invoice_number').values()
         logger.info(f'Held invoices: {invoices}')
-        invoice_serializer = InvoiceSerializer(invoices)
-        return Response(invoice_serializer.data, status.HTTP_200_OK)
+        return Response(invoices, status.HTTP_200_OK)
     
 class ExpenseReport(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         search = request.data.get('search', '')
         start_date_str = request.data.get('startDate', '')
@@ -4929,105 +5037,109 @@ class ExpenseReport(views.APIView):
         if category_id:
             expenses = expenses.filter(category__id=category_id)
         
-        return Response(generate_pdf,
+        return Response(
             {
                 'title': 'Expenses', 
                 'date_range': f"{start_date} to {end_date}", 
                 'report_date': datetime.date.today(),
                 'total_expenses':calculate_expenses_totals(expenses),
                 'expenses':expenses
-            }
+            },status.HTTP_200_OK
         )
 
 class SendEmails(views.APIView):
-    def post(self, request):
-        data = request.data
-        invoice_id = data['invoice_id']
-        invoice = Invoice.objects.get(id=invoice_id)
-        invoice_items = InvoiceItem.objects.filter(invoice=invoice)
-        account = CustomerAccount.objects.get(customer__id = invoice.customer.id)
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        # data = request.data
+        # invoice_id = data['invoice_id']
+        # invoice = Invoice.objects.get(id=invoice_id)
+        # invoice_items = InvoiceItem.objects.filter(invoice=invoice)
+        # account = CustomerAccount.objects.get(customer__id = invoice.customer.id)
         
-        html_string = render_to_string('Pos/receipt.html', {'invoice': invoice, 'invoice_items':invoice_items, 'account':account})
-        buffer = BytesIO()
+        # html_string = render_to_string('Pos/receipt.html', {'invoice': invoice, 'invoice_items':invoice_items, 'account':account})
+        # buffer = BytesIO()
 
-        pisa.CreatePDF(html_string, dest=buffer) 
+        # pisa.CreatePDF(html_string, dest=buffer) 
 
-        email = EmailMessage(
-            'Your Invoice',
-            'Please find your invoice attached.',
-            'your_email@example.com',
-            ['recipient_email@example.com'],
-        )
+        # email = EmailMessage(
+        #     'Your Invoice',
+        #     'Please find your invoice attached.',
+        #     'your_email@example.com',
+        #     ['recipient_email@example.com'],
+        # )
         
-        buffer.seek(0)
-        email.attach(f'invoice_{invoice.invoice_number}.pdf', buffer.getvalue(), 'application/pdf')
+        # buffer.seek(0)
+        # email.attach(f'invoice_{invoice.invoice_number}.pdf', buffer.getvalue(), 'application/pdf')
 
-        # Send the email
-        email.send()
+        # # Send the email
+        # email.send()
 
-        task = send_invoice_email_task.delay(data['invoice_id']) 
-        task_id = task.id 
-        buffer.seek(0)
-        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename=invoice_{invoice.invoice_number}.pdf'
+        # task = send_invoice_email_task.delay(data['invoice_id']) 
+        # task_id = task.id 
+        # buffer.seek(0)
+        # response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        # response['Content-Disposition'] = f'attachment; filename=invoice_{invoice.invoice_number}.pdf'
         
-        return Response(response)
+        return Response({'https://web-production-86a7.up.railway.app/finance/invoice/send/email/'}, status.HTTP_200_OK)
 
 class SendWhatsapp(views.APIView):
-    def post(self, request, invoice_id):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, invoice_id):
         try:
             
-            invoice = Invoice.objects.get(pk=invoice_id)
-            invoice_items = InvoiceItem.objects.filter(invoice=invoice)
-            img = settings.STATIC_URL + "/assets/logo.png"
+        #     invoice = Invoice.objects.get(pk=invoice_id)
+        #     invoice_items = InvoiceItem.objects.filter(invoice=invoice)
+        #     img = settings.STATIC_URL + "/assets/logo.png"
         
-            html_string = render_to_string('Pos/invoice_template.html', {'invoice': invoice, 'request':request, 'invoice_items':invoice_items, 'img':img})
-            pdf_buffer = BytesIO()
-            pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
-            if not pisa_status.err:
+        #     html_string = render_to_string('Pos/invoice_template.html', {'invoice': invoice, 'request':request, 'invoice_items':invoice_items, 'img':img})
+        #     pdf_buffer = BytesIO()
+        #     pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
+        #     if not pisa_status.err:
             
-                s3 = boto3.client(
-                    "s3",
-                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                    region_name=settings.AWS_S3_REGION_NAME,
-                )
-                invoice_filename = f"invoice_{invoice.invoice_number}.pdf"
-                s3.put_object(
-                    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-                    Key=f"invoices/{invoice_filename}",
-                    Body=pdf_buffer.getvalue(),
-                    ContentType="application/pdf",
-                    ACL="public-read",
-                )
-                s3_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/invoices/{invoice_filename}"
+        #         s3 = boto3.client(
+        #             "s3",
+        #             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        #             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        #             region_name=settings.AWS_S3_REGION_NAME,
+        #         )
+        #         invoice_filename = f"invoice_{invoice.invoice_number}.pdf"
+        #         s3.put_object(
+        #             Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+        #             Key=f"invoices/{invoice_filename}",
+        #             Body=pdf_buffer.getvalue(),
+        #             ContentType="application/pdf",
+        #             ACL="public-read",
+        #         )
+        #         s3_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/invoices/{invoice_filename}"
 
-                account_sid = 'AC6890aa7c095ce1315c4a3a86f13bb403'
-                auth_token = '897e02139a624574c5bd175aa7aaf628'
-                client = Client(account_sid, auth_token)
-                from_whatsapp_number = 'whatsapp:' + '+14155238886'
-                to_whatsapp_number = 'whatsapp:' + '+263778587612'
+        #         account_sid = 'AC6890aa7c095ce1315c4a3a86f13bb403'
+        #         auth_token = '897e02139a624574c5bd175aa7aaf628'
+        #         client = Client(account_sid, auth_token)
+        #         from_whatsapp_number = 'whatsapp:' + '+14155238886'
+        #         to_whatsapp_number = 'whatsapp:' + '+263778587612'
 
-                message = client.messages.create(
-                    from_=from_whatsapp_number,
-                    body="Your invoice is attached.",
-                    to=to_whatsapp_number,
-                    media_url=s3_url
-                )
-                logger.info(f"WhatsApp message SID: {message.sid}")
-                return Response({"message_sid": message.sid}, status.HTTP_200_OK)
-            else:
-                logger.error(f"PDF generation error for Invoice ID: {invoice_id}")
-                return Response({"error": "PDF generation failed"}, status.HTTP_400_BAD_REQUEST)
-        except Invoice.DoesNotExist:
-            logger.error(f"Invoice not found with ID: {invoice_id}")
-            return Response({"error": "Invoice not found"}, status.HTTP_400_BAD_REQUEST)
+        #         message = client.messages.create(
+        #             from_=from_whatsapp_number,
+        #             body="Your invoice is attached.",
+        #             to=to_whatsapp_number,
+        #             media_url=s3_url
+        #         )
+        #         logger.info(f"WhatsApp message SID: {message.sid}")
+        #         return Response({"message_sid": message.sid}, status.HTTP_200_OK)
+        #     else:
+        #         logger.error(f"PDF generation error for Invoice ID: {invoice_id}")
+        #         return Response({"error": "PDF generation failed"}, status.HTTP_400_BAD_REQUEST)
+        # except Invoice.DoesNotExist:
+        #     logger.error(f"Invoice not found with ID: {invoice_id}")
+        #     return Response({"error": "Invoice not found"}, status.HTTP_400_BAD_REQUEST)
+            return Response({f'https://web-production-86a7.up.railway.app/finance/send_invoice_whatsapp/{invoice_id}/'}, status.HTTP_200_OK)
         except Exception as e:
             logger.exception(f"Error sending invoice via WhatsApp: {e}")
             return Response({"error": "Error sending invoice via WhatsApp"}, status.HTTP_400_BAD_REQUEST)
         
 
 class CashbookView(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         filter_option = request.data.get('filter', 'today')
         now = datetime.datetime.now()
@@ -5054,7 +5166,7 @@ class CashbookView(views.APIView):
             start_date = now - timedelta(days=now.weekday())
             end_date = now
 
-        entries = Cashbook.objects.filter(issue_date__gte=start_date, issue_date__lte=end_date, branch=request.user.branch).order_by('issue_date')
+        entries = Cashbook.objects.filter(issue_date__gte=start_date, issue_date__lte=end_date, branch=request.user.branch).order_by('issue_date').values()
         
         total_debit = entries.filter(debit=True, cancelled=False).aggregate(Sum('amount'))['amount__sum'] or 0
         total_credit = entries.filter(credit=True, cancelled=False).aggregate(Sum('amount'))['amount__sum'] or 0
@@ -5069,7 +5181,7 @@ class CashbookView(views.APIView):
 
         total_balance = total_debit - total_credit
         logger.info(total_balance)
-        invoice_items = InvoiceItem.objects.all()
+        invoice_items = InvoiceItem.objects.all().values()
 
         return Response({
             'filter_option': filter_option,
@@ -5084,6 +5196,7 @@ class CashbookView(views.APIView):
         }, status.HTTP_200_OK)
     
 class CashbookNote(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         #payload
         """
@@ -5100,66 +5213,67 @@ class CashbookNote(views.APIView):
             
             entry.save()
         except Exception as e:
-            return JsonResponse({'success':False, 'message':f'{e}.'}, status.HTTP_400_BAD_REQUEST)
-        return JsonResponse({'success':False, 'message':'Note successfully saved.'}, status.HTTP_201_CREATED)
+            return Response({'message':f'{e}.'}, status.HTTP_400_BAD_REQUEST)
+        return Response({'message':'Note successfully saved.'}, status.HTTP_201_CREATED)
     
 class CashbookReport(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
-        filter_option = request.data.get('filter', 'this_week')
-        now = datetime.datetime.now()
-        end_date = now
+        # filter_option = request.data.get('filter', 'this_week')
+        # now = datetime.datetime.now()
+        # end_date = now
         
-        if filter_option == 'today':
-            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        elif filter_option == 'this_week':
-            start_date = now - timedelta(days=now.weekday())
-        elif filter_option == 'yesterday':
-            start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-        elif filter_option == 'this_month':
-            start_date = now.replace(day=1)
-        elif filter_option == 'last_month':
-            start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
-        elif filter_option == 'this_year':
-            start_date = now.replace(month=1, day=1)
-        elif filter_option == 'custom':
-            start_date = request.data.get('start_date')
-            end_date = request.data.get('end_date')
-            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-        else:
-            start_date = now - timedelta(days=now.weekday())
-            end_date = now
+        # if filter_option == 'today':
+        #     start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        # elif filter_option == 'this_week':
+        #     start_date = now - timedelta(days=now.weekday())
+        # elif filter_option == 'yesterday':
+        #     start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        # elif filter_option == 'this_month':
+        #     start_date = now.replace(day=1)
+        # elif filter_option == 'last_month':
+        #     start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
+        # elif filter_option == 'this_year':
+        #     start_date = now.replace(month=1, day=1)
+        # elif filter_option == 'custom':
+        #     start_date = request.data.get('start_date')
+        #     end_date = request.data.get('end_date')
+        #     start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        #     end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        # else:
+        #     start_date = now - timedelta(days=now.weekday())
+        #     end_date = now
 
-        entries = Cashbook.objects.filter(date__gte=start_date, date__lte=end_date, branch=request.user.branch).order_by('date')
+        # entries = Cashbook.objects.filter(issue_date__gte=start_date, issue_date__lte=end_date, branch=request.user.branch).order_by('issue_date')
 
-        # Create a CSV response
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="cashbook_report_{filter_option}.csv"'
+        # # Create a CSV response
+        # response = HttpResponse(content_type='text/csv')
+        # response['Content-Disposition'] = f'attachment; filename="cashbook_report_{filter_option}.csv"'
 
-        writer = csv.writer(response)
-        writer.writerow(['Date', 'Description', 'Expenses', 'Income', 'Balance'])
+        # writer = csv.writer(response)
+        # writer.writerow(['Date', 'Description', 'Expenses', 'Income', 'Balance'])
 
-        balance = 0  
-        for entry in entries:
-            if entry.debit:
-                balance += entry.amount
-            elif entry.credit:
-                balance -= entry.amount
+        # balance = 0  
+        # for entry in entries:
+        #     if entry.debit:
+        #         balance += entry.amount
+        #     elif entry.credit:
+        #         balance -= entry.amount
 
-            writer.writerow([
-                entry.issue_date,
-                entry.description,
-                entry.amount if entry.debit else '',
-                entry.amount if entry.credit else '',
-                balance,
-                entry.accountant,
-                entry.manager,
-                entry.director
-            ])
-
-        return Response(response)
+        #     writer.writerow([
+        #         entry.issue_date,
+        #         entry.description,
+        #         entry.amount if entry.debit else '',
+        #         entry.amount if entry.credit else '',
+        #         balance,
+        #         entry.accountant,
+        #         entry.manager,
+        #         entry.director
+        #     ])
+        return Response({'https://web-production-86a7.up.railway.app/finance/report/'}, status.HTTP_200_OK)
 
 class CancelTransaction(views.APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         #payload
         """
@@ -5190,6 +5304,7 @@ class CancelTransaction(views.APIView):
             return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
         
 class CashbookNoteView(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, entry_id):
         entry = get_object_or_404(Cashbook, id=entry_id)
     
@@ -5206,12 +5321,13 @@ class CashbookNoteView(views.APIView):
             data = json.loads(request.body)
             note_text = data.get('note')
             CashBookNote.objects.create(entry=entry, user=request.user, note=note_text)
-            return JsonResponse({'success': True, 'message': 'Note successfully added.'}, status=201)
+            return Response({'message': 'Note successfully added.'}, status.HTTP_201_CREATED)
         except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
 
 class UpdateTransactionStatus(views.APIView):    
-    def post(self, request, pk):
+    permission_classes = [IsAuthenticated]
+    def put(self, request, pk):
         entry = get_object_or_404(Cashbook, pk=pk)
         data = request.data
         
@@ -5229,14 +5345,17 @@ class UpdateTransactionStatus(views.APIView):
         return Response(status.HTTP_400_BAD_REQUEST)   
     
 class DaysData(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         current_month = get_current_month()
 
-        sales = Sale.objects.filter(date__month=current_month)
-        cogs = COGSItems.objects.filter(date__month=current_month)
-
-        first_day = min(sales.first().date, cogs.first().date)
-        
+        sales = Sale.objects.filter(date__month=current_month).values()
+        cogs = COGSItems.objects.filter(date__month=current_month).values()
+        if sales or cogs:
+            first_day = min(sales.first().date, cogs.first().date)
+        else:
+            return Response({'Empty':{ 'sales':sales, 'COGS':cogs}}, status.HTTP_200_OK)
+        logger.info(first_day)
         def get_week_data(queryset, start_date, end_date, amount_field):
             week_data = queryset.filter(date__gte=start_date, date__lt=end_date).values(amount_field, 'date')
             logger.info(week_data)
@@ -5261,11 +5380,12 @@ class DaysData(views.APIView):
                 'total_cogs': cogs_total
             }
 
-        return Response(data, status.HTTP_200_OK)\
+        return Response(data, status.HTTP_200_OK)
 
 class VAT(views.APIView):
-    def get(request):
-        filter_option = request.GET.get('filter', 'today')
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        filter_option = request.GET.get('filter', 'this_week')
         download = request.GET.get('download')
         
         now = datetime.datetime.now()
@@ -5295,30 +5415,29 @@ class VAT(views.APIView):
         vat_transactions = VATTransaction.objects.filter(date__gte=start_date, date__lte=end_date).values().order_by('-date')
         
         if download:
-            response = HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = f'attachment; filename="vat_report_{filter_option}.csv"'
+            # response = HttpResponse(content_type='text/csv')
+            # response['Content-Disposition'] = f'attachment; filename="vat_report_{filter_option}.csv"'
 
-            writer = csv.writer(response)
-            writer.writerow(['Date', 'Description', 'Status', 'Input', 'Output'])
+            # writer = csv.writer(response)
+            # writer.writerow(['Date', 'Description', 'Status', 'Input', 'Output'])
 
-            balance = 0
-            for transaction in vat_transactions:
+            # balance = 0
+            # for transaction in vat_transactions:
 
-                if transaction.vat_type == 'Input':
-                    balance += transaction.tax_amount
-                else:
-                    balance -= transaction.tax_amount
+            #     if transaction.vat_type == 'Input':
+            #         balance += transaction.tax_amount
+            #     else:
+            #         balance -= transaction.tax_amount
 
-                writer.writerow([
-                    transaction.date,
-                    transaction.invoice.invoice_number if transaction.invoice else transaction.purchase_order.order_number,
-                    transaction.tax_amount if transaction.vat_type == 'Input' else  '',
-                    transaction.tax_amount if transaction.vat_type == 'Output' else  ''
-                ])
+            #     writer.writerow([
+            #         transaction.date,
+            #         transaction.invoice.invoice_number if transaction.invoice else transaction.purchase_order.order_number,
+            #         transaction.tax_amount if transaction.vat_type == 'Input' else  '',
+            #         transaction.tax_amount if transaction.vat_type == 'Output' else  ''
+            #     ])
 
-            writer.writerow(['Total', '', '', balance])
-            
-            return Response(response, status.HTTP_200_OK)
+            # writer.writerow(['Total', '', '', balance])
+            return Response({'https://web-production-86a7.up.railway.app/finance/vat/'}, status.HTTP_200_OK)
         return Response( 
             {
                 'filter_option':filter_option,
@@ -5350,8 +5469,9 @@ class VAT(views.APIView):
         return Response({'message':'VAT successfully paid'}, status.HTTP_200_OK)
 
 class PLOverview(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
-        filter_option = request.GET.get('filter')
+        filter_option = request.data.get('filter', 'today')
         today = datetime.date.today()
         previous_month = get_previous_month()
         current_year = today.year
@@ -5378,7 +5498,7 @@ class PLOverview(views.APIView):
         if filter_option == 'today':
             current_month_sales = sales.filter(date=date_filter).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
             current_month_expenses = expenses.filter(issue_date=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
-            cogs_total = cogs.objects.filter(date=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
+            cogs_total = cogs.filter(date=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
         elif filter_option == 'last_week':
             current_month_sales = sales.filter(date__range=date_filter).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
             current_month_expenses = expenses.filter(issue_date__range=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
@@ -5427,16 +5547,17 @@ class PLOverview(views.APIView):
         return Response(data, status.HTTP_200_OK)
 
 class IncomeJson(views.APIView):
-    def get(request):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
         current_month = get_current_month()
         today = datetime.date.today()
         
-        month = request.GET.get('month', current_month)
-        day = request.GET.get('day', today.day)
+        month = request.data.get('month', current_month)
+        day = request.data.get('day', today.day)
 
-        sales = Sale.objects.filter(transaction__branch=request.user.branch)
+        sales = Sale.objects.filter(transaction__branch=request.user.branch).values()
         
-        if request.GET.get('filter') == 'today':
+        if request.data.get('filter') == 'today':
             sales_total = sales.filter(date=today).aggregate(Sum('total_amount'))
         else:
             sales_total = sales.filter(date__month=month).aggregate(Sum('total_amount'))
@@ -5445,18 +5566,25 @@ class IncomeJson(views.APIView):
     
 
 class ExpenseJson(views.APIView):
-    def get(request):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
         current_month = get_current_month()
         today = datetime.date.today()
         
-        month = request.GET.get('month', current_month)
-        day = request.GET.get('day', today.day)
+        month = request.data.get('month', current_month)
+        day = request.data.get('day', today.day)
 
-        expenses = Expense.objects.filter(branch=request.user.branch)
+        expenses = Expense.objects.filter(branch=request.user.branch).values()
         
-        if request.GET.get('filter') == 'today':
+        if request.data.get('filter') == 'today':
             expense_total = expenses.filter(issue_date=today, status=False).aggregate(Sum('amount'))
         else:
             expense_total = expenses.filter(issue_date__month=month, status=False).aggregate(Sum('amount'))
         
         return Response({'expense_total': expense_total['amount__sum'] or 0}, status.HTTP_200_OK)
+
+class AccountType(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        payment_options = Account.objects.all().values('name', 'type')
+        return Response({'payment options': payment_options}, status.HTTP_200_OK)
