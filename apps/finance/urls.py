@@ -206,5 +206,5 @@ urlpatterns = [
     path('api/v1/account-types/', AccountType.as_view(), name = 'api_account_types'),
 
     #Finance
-    path('api/v1/finance', FinanceApi.as_view, name ='finance_api'),
+    path('api/v1/finance', FinanceApi.as_view(), name ='finance_api'),
 ]
