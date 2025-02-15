@@ -5588,3 +5588,20 @@ class AccountType(views.APIView):
     def get(self, request):
         payment_options = Account.objects.all().values('name', 'type')
         return Response({'payment options': payment_options}, status.HTTP_200_OK)
+
+class FinanceApi(views.APIView):
+    def get(self, request, *args, **kwargs):
+
+        balances = AccountBalance.objects.filter(branch=request.user.branch).values()
+    
+        recent_sales = Sale.objects.filter(transaction__branch=request.user.branch).order_by('-date')[:5].values()
+
+        expenses_by_category = Expense.objects.values('category__name').annotate(
+            total_amount=Sum('amount', output_field=DecimalField())
+        ).values()
+        
+        return Response({
+            'balances': balances,
+            'recent_transactions': recent_sales,
+            'expenses_by_category': expenses_by_category,
+        })

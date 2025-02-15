@@ -203,5 +203,8 @@ urlpatterns = [
     path('api/v1/expense_json/', ExpenseJson.as_view(), name='api_expense_json'),
 
     #Account type
-    path('api/v1/account-types/', AccountType.as_view(), name = 'api_account_types')
+    path('api/v1/account-types/', AccountType.as_view(), name = 'api_account_types'),
+
+    #Finance
+    path('api/v1/finance', FinanceApi.as_view, name ='finance_api'),
 ]
