@@ -270,6 +270,14 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 
+BROKER_USE_SSL={
+        'ssl_cert_reqs': os.environ.get('REDIS_SSL_CERT_REQS', 'CERT_NONE')  
+    },
+CELERY_REDIS_BACKEND_USE_SSL={
+        'ssl_cert_reqs': os.environ.get('REDIS_SSL_CERT_REQS', 'CERT_NONE')  
+    }
+
+
 CELERY_BEAT_SCHEDULE = {
     'run-all-invoices-recurring': {
         'task': 'finance.tasks.generate_recurring_invoices',
