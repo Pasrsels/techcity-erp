@@ -149,7 +149,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 DATABASES = {
 
     'default': dj_database_url.config(
-        default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
+        default=os.environ.get('DATABASE_URL')
     )
 
     # 'default': {
