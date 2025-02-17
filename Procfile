@@ -1,2 +1,2 @@
 web: gunicorn techcity.wsgi:application
-worker: celery worker --app=tasks.app
+worker: celery -A techcity worker -Q transfers,notifications --loglevel=info
