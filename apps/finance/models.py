@@ -590,7 +590,7 @@ class Cashflow(models.Model):
     name = models.ForeignKey(CashFlowName, on_delete=models.CASCADE, null=True)
     date = models.DateField()
     income_category = models.ForeignKey(MainIncomeCategory, on_delete=models.CASCADE, null=True)
-    expense_category = models.ForeignKey(MainExpenseCategory, on_delete=models.CASCADE, null=True)
+    expense_category = models.ForeignKey(MainExpenseCategory, on_delete=models.CASCADE, null=True, blank=True)
     income = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     expense = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)

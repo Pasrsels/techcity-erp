@@ -3231,39 +3231,51 @@ def record_cashflow_transaction(request):
             income = float(data.get('IncomeAmount', 0))
             expense_amount = float(data.get('ExpenseAmount', 0))
             transaction_type = data.get('type', '')
-            income_category = data.get('incomeCategory', '')
-            expense_category = data.get('expenseCategory', '')
-            #cashflow name
-            name = data.get('name')
-            #adding subcategories
-            income_sub_category = data.get('incomeSubCategory', '')
-            expense_sub_category = data.get('expenseSubCategory', '')
-            #ends here
-            income_branch = data.get('incomeBranch', '')
-            expense_branch = data.get('expenseBranch', '')
+            categories = data.get('categories', {})
 
-            logger.info(expense_category)
+            category = categories.get('category', {})
+            subcategory = categories.get('subcategory', {})
+            name = categories.get('name', {})
 
-            # validations 
-            
+            if not all([category, subcategory, name]):
+                return JsonResponse({
+                    'success': False, 
+                    'message': 'Missing required category information.'
+                }, status=400)
+
             if not transaction_type or transaction_type not in ['income', 'expense']:
-                return JsonResponse({'success': False, 'message': 'Invalid transaction type.'}, status=400)
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid transaction type.'
+                }, status=400)
             
             with transaction.atomic():
                 if transaction_type == 'income':
-
                     if not income or income <= 0:
-                        return JsonResponse({'success': False, 'message': 'Invalid amount.'}, status=400)
+                        return JsonResponse({
+                            'success': False,
+                            'message': 'Invalid amount.'
+                        }, status=400)
                     
-                    if transaction_type == 'income' and not income_category:
-                        return JsonResponse({'success': False, 'message': 'Income category is required.'}, status=400)
-
-                    # if transaction_type == 'income' and not income_branch:
-                    #     return JsonResponse({'success': False, 'message': 'Income branch is required.'}, status=400)
-            
                     logger.info(f'Creating Income amount: {income}')
-                    cash_flow_name, _ = CashFlowName.objects.get_or_create(name=name)
-                    income_category, _ = MainIncomeCategory.objects.get_or_create(id=income_category, defaults={'name': 'Income'})
+                    logger.info(f'Categories data: {categories}')
+
+                    cash_flow_name, _ = CashFlowName.objects.get_or_create(
+                        name=name.get('value')
+                    )
+                    sub_category, _ = IncomeSubCategory.objects.get_or_create(
+                        name=subcategory.get('value')
+                    )
+                    main_category, _ = MainIncomeCategory.objects.get_or_create(
+                        name=category.get('value'),
+                        defaults={'sub_income_category': sub_category}
+                    )
+
+                    main_category.save()
+
+                    logger.info(f'cash_flow name: {cash_flow_name}')
+                    logger.info(f'sub category: {sub_category}')
+                    logger.info(f'main category: {main_category.id} type: {type(main_category)}, main category sub: {main_category.sub_income_category}')
 
                     object = Cashflow.objects.create(
                         name=cash_flow_name,
@@ -3272,28 +3284,44 @@ def record_cashflow_transaction(request):
                         date=datetime.datetime.now(),
                         status=False,
                         income=income,
-                        income_category=income_category,
+                        expense=0,
+                        income_category=main_category,
                         created_by=request.user
                     )
 
                     logger.info(f'Income created: {object}.')
 
-                    return JsonResponse({'success': True, 'message': 'Income cashflow successfully created'}, status=201)
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Income cashflow successfully created'
+                    }, status=201)
                 
-                else:
-
+                else:  # expense
                     if not expense_amount or expense_amount <= 0:
-                        return JsonResponse({'success': False, 'message': 'Invalid amount.'}, status=400)
-
-                    if transaction_type == 'expense' and not expense_category:
-                        return JsonResponse({'success': False, 'message': 'Expense category is required.'}, status=400)
-                    
-                    # if transaction_type == 'expense' and not expense_branch:
-                    #     return JsonResponse({'success': False, 'message': 'Expense branch is required.'}, status=400)
+                        return JsonResponse({
+                            'success': False,
+                            'message': 'Invalid amount.'
+                        }, status=400)
                     
                     logger.info(f'Creating Expense amount: {expense_amount}')
-                    cash_flow_name, _ = CashFlowName.objects.get_or_create(name=name)
-                    expense_category, _ = MainExpenseCategory.objects.get_or_create(id=expense_category, defaults={'name': 'Expense'})
+                    
+                    # Create or get the required objects
+                    cash_flow_name, _ = CashFlowName.objects.get_or_create(
+                        name=name.get('value')
+                    )
+                    sub_category, _ = ExpenseSubCategory.objects.get_or_create(
+                        name=subcategory.get('value')
+                    )
+                    main_category, _ = MainExpenseCategory.objects.get_or_create(
+                        name=category.get('value'),
+                        defaults={'sub_expense': sub_category}
+                    )
+
+                    main_category.save()                    
+
+                    logger.info(f'cash_flow name: {cash_flow_name}')
+                    logger.info(f'sub category: {sub_category}')
+                    logger.info(f'main category: {main_category.id} type: {type(main_category)}, main category sub: {main_category.sub_expense}')
 
                     object = Cashflow.objects.create(
                         name=cash_flow_name,
@@ -3303,18 +3331,24 @@ def record_cashflow_transaction(request):
                         status=False,
                         expense=expense_amount,
                         income=0,
-                        expense_category=expense_category,
+                        expense_category=main_category,
                         created_by=request.user
                     )
 
                     logger.info(f'Expense created: {object}.')
 
-                    return JsonResponse({'success': True, 'message': 'Expense cashflow successfully created'}, status=201)
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Expense cashflow successfully created'
+                    }, status=201)
 
         except Exception as e:
-            logger.error(f"Error recording transaction {e}.")
-            return JsonResponse({'success': False, 'message': str(e)}, status=400)
-
+            logger.error(f"Error recording transaction: {e}")
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            }, status=400)
+        
 @login_required
 def get_cashflow_categories(request):
     if request.method == 'GET':
