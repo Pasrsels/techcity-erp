@@ -124,18 +124,21 @@ urlpatterns = [
     path('api/v1/products-delete', DeleteProducts.as_view(), name = 'api_delete_products'),
 
     #Inventory
-    path('api/v1/inventory-list/<int:id>/', InventoryList.as_view(), name = 'api_inventory_list'),
+    path('api/v1/inventory-list/', InventoryList.as_view(), name = 'api_inventory_list'),
     path('api/v1/inventory-delete/<int:id>/', DeleteInventory.as_view(), name = 'api_delete_inventory'),
     path('api/v1/inventory-edit/<int:product_id>/', EditInventory.as_view(), name = 'api_edit_inventory'),
     path('api/v1/inventory-index', InventoryIndexJson.as_view(), name = 'api_inventory_index_json'),
     path('api/v1/inventory-activate/<int:product_id>/', ActivateInventory.as_view(), name = 'api_inventory_activate'),
     path('api/v1/inventory-branch', BranchesInventory.as_view(), name = 'api_inventory_branch'),
+    path('api/v1/defective-product-view-add/', DefectiveProductViewAdd.as_view(), name='api_defective_product_view_add'),
 
     #Notification
     path('api/v1/notification-json', NotificationJson.as_view(), name = 'api_notification_json'),
 
     #Stock Take
     path('api/v1/stocktake-view-and-edit', StockTakeViewEdit.as_view(), name = 'api_stock_take'),
+    path('api/v1/process-stocktake-item', ProcessStockTakeItem.as_view(), name = 'api_process_stock_take'),
+    path('api/v1/stocktake-details', StockTakeDetail.as_view(), name = 'api_stock_take_detail'),
 
     #Branch
     path('api/v1/branch-view-and-add', BranchCode.as_view(), name = 'api_branch_code'),
@@ -157,6 +160,7 @@ urlpatterns = [
 
     #Purchase Order
     path('api/v1/purchase-order-list-create', PurchaseOrderListandCreate.as_view(), name= 'api_purchase_order_list_create'),
+    path('api/v1/purchase-order-information', PurchaseOrderInformation.as_view(), name= 'api_purchase_order_information'),
     path('api/v1/purchase-order-delete-update/<int:purchase_order_id>/', PurchaseOrderDeleteandEdit.as_view(), name= 'api_purchase_order_delete_edit'),
     path('api/v1/purchase-order-print/<int:order_id>/', PrintPurchaseOrder.as_view(), name= 'api_purchase_order_print'),
     path('api/v1/purchase-receive-order/<int:order_id>/', ReceiveOrder.as_view(), name= 'api_purchase_order_receive'),
