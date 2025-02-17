@@ -148,18 +148,18 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 DATABASES = {
 
-    # 'default': dj_database_url.config(
-    #     default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
-    # )
+    'default': dj_database_url.config(
+        default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
+    )
 
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME':  'techcity',
-        'USER': 'postgres',
-        'PASSWORD': 'neverfail',
-        'HOST': 'localhost',
-        'PORT': '5432'
-    }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME':  'techcity',
+    #     'USER': 'postgres',
+    #     'PASSWORD': 'neverfail',
+    #     'HOST': 'localhost',
+    #     'PORT': '5432'
+    # }
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -262,7 +262,6 @@ LOGGING = {
 # CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 
 # remote
-
 CELERY_BROKER_URL = 'redis://default:aVrmORfgkdoGPWZoneAIwqggCmFKHXzz@autorack.proxy.rlwy.net:12167'
 CELERY_RESULT_BACKEND = 'redis://default:aVrmORfgkdoGPWZoneAIwqggCmFKHXzz@autorack.proxy.rlwy.net:12167'
 CELERY_ACCEPT_CONTENT = ['json']
