@@ -373,7 +373,7 @@ def update_expense_status(request):
 @login_required
 def invoice(request):
     form = InvoiceForm()
-    invoices = Invoice.objects.filter(branch=request.user.branch, status=True, cancelled=False).order_by('-invoice_number')
+    invoices = Invoice.objects.filter(branch=request.user.branch, status=True, cancelled=True).order_by('-invoice_number')
 
     query_params = request.GET
     if query_params.get('q'):
