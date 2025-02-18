@@ -373,7 +373,7 @@ def update_expense_status(request):
 @login_required
 def invoice(request):
     form = InvoiceForm()
-    invoices = Invoice.objects.filter(branch=request.user.branch, status=True).order_by('-invoice_number')
+    invoices = Invoice.objects.filter(branch=request.user.branch, status=True, cancelled=False).order_by('-invoice_number')
 
     query_params = request.GET
     if query_params.get('q'):
@@ -688,7 +688,7 @@ def create_invoice(request):
                 
                 # Cost of sales parent object
                 
-                
+            
                 # Create InvoiceItem objects
                 for item_data in items_data:
                     item = Inventory.objects.get(pk=item_data['inventory_id'])
@@ -706,9 +706,9 @@ def create_invoice(request):
                         total_amount = int(item_data['quantity']) * float(item_data['price'])
                     )
                     
-                    # Create StockTransaction for each sold item
+                    # #Create StockTransaction for each sold item
                     # stock_transaction = StockTransaction.objects.create(
-                    #     item=product,
+                    #     item=item,
                     #     transaction_type=StockTransaction.TransactionType.SALE,
                     #     quantity=item_data['quantity'],
                     #     unit_price=item.price,
@@ -944,6 +944,7 @@ def invoice_returns(request, invoice_id): # dont forget the payments
     invoice_payment = get_object_or_404(Payment, invoice=invoice)
     stock_transactions = invoice.stocktransaction_set.all()  
     vat_transaction = get_object_or_404(VATTransaction, invoice=invoice)
+    activity = ActivityLog.objects.filter(invoice=invoice)
 
     if invoice.payment_status == Invoice.PaymentStatus.PARTIAL:
         customer_account_balance.balance -= invoice.amount_due
@@ -962,8 +963,8 @@ def invoice_returns(request, invoice_id): # dont forget the payments
     account_balance = get_object_or_404(AccountBalance, account=account, currency=invoice.currency, branch=request.user.branch)
     account_balance.balance -= invoice.amount_paid
 
-    for stock_transaction in stock_transactions:
-        product = Inventory.objects.get(product=stock_transaction.item, branch=request.user.branch)
+    for stock_transaction in activity:
+        product = Inventory.objects.get(product=stock_transaction.inventory, branch=request.user.branch)
         product.quantity += stock_transaction.quantity
         product.save()
 
@@ -1007,7 +1008,8 @@ def delete_invoice(request, invoice_id):
         invoice_payment = get_object_or_404(Payment, invoice=invoice)
         stock_transactions = invoice.stocktransaction_set.all()  
         vat_transaction = get_object_or_404(VATTransaction, invoice=invoice)
-
+        activity = ActivityLog.objects.filter(invoice=invoice)
+        
         with transaction.atomic():
             if invoice.payment_status == Invoice.PaymentStatus.PARTIAL:
                 customer_account_balance.balance -= invoice.amount_due
@@ -1026,10 +1028,15 @@ def delete_invoice(request, invoice_id):
             account_balance = get_object_or_404(AccountBalance, account=account, currency=invoice.currency, branch=request.user.branch)
             account_balance.balance -= invoice.amount_paid
 
-            for stock_transaction in stock_transactions:
-                product = Inventory.objects.get(product=stock_transaction.item, branch=request.user.branch)
-                product.quantity += stock_transaction.quantity
+            for stock_transaction in activity:
+                product = Inventory.objects.get(id=stock_transaction.inventory.id, branch=request.user.branch)
+                logger.info(product)
+                logger.info(product.quantity)
+                logger.info(stock_transaction.quantity)
+                product.quantity += abs(stock_transaction.quantity)
                 product.save()
+
+                logger.info(f'product quantity {product.quantity}')
 
                 ActivityLog.objects.create(
                     invoice=invoice,
@@ -1053,12 +1060,12 @@ def delete_invoice(request, invoice_id):
             invoice.cancelled=True
             invoice.save()
 
+            logger.info(f'Invoice {invoice.invoice_number} successfully deleted')
+
         return JsonResponse({'success':True, 'message': f'Invoice {invoice.invoice_number} successfully deleted'})
     except Exception as e:
         return JsonResponse({'success':False, 'message': f"{e}"})
-    
-    
-    
+      
 @login_required       
 def invoice_details(request, invoice_id):
     invoice = Invoice.objects.filter(id=invoice_id, branch=request.user.branch).values(

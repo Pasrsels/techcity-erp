@@ -507,6 +507,7 @@ input[type="checkbox"] {
     deleteBtn.forEach((btn) => {
         btn.addEventListener('click', () => {
             invoiceId = btn.dataset.id;
+            console.info(invoiceId)
             Swal.fire({
                 title: 'Are you sure?',
                 text: 'You won\'t be able to revert this!',
@@ -518,8 +519,8 @@ input[type="checkbox"] {
                 cancelButtonText: 'No, cancel!',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    salesReturns()
-                    //deleteInvoice(invoiceId);
+                    // salesReturns()
+                    deleteInvoice(invoiceId);
                 }
             });
         });
