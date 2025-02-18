@@ -1026,7 +1026,7 @@ def delete_invoice(request, invoice_id):
                     type=account_types.get(payment.payment_method, None)
                 )
                 account_balance = get_object_or_404(AccountBalance, account=account, currency=invoice.currency, branch=request.user.branch)
-                account_balance.balance -= payment.amount
+                account_balance.balance -= payment.amount_due
                 account_balance.save()
 
             for stock_transaction in activity:
