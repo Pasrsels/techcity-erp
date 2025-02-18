@@ -385,17 +385,6 @@ input[type="checkbox"] {
         });
     });
 
-
-    // Select All Checkbox
-    const selectAllCheckbox = document.getElementById('select-all');
-    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
-
-    selectAllCheckbox.addEventListener('change', function () {
-        rowCheckboxes.forEach(checkbox => {
-            checkbox.checked = selectAllCheckbox.checked;
-        });
-    });
-
     // Column Sorting
     const headers = document.querySelectorAll("thead th");
     const tableBody = document.querySelector("tbody");
