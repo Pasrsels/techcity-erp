@@ -2641,8 +2641,6 @@ def process_received_order(request):
                     batch = f'{order.batch}, '
                 )
                 inventory.save()
-                
-
 
             # Prepare activity log for this transaction
             log = ActivityLog(
