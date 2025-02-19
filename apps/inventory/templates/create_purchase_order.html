@@ -69,11 +69,6 @@
                             </tr>
                             <tr>
                                 <td colspan="5"></td>
-                                <td class="fw-bold">Tax Rate</td>
-                                <td id="tax_rate" class="fw-bold text-center">15%</td>
-                            </tr>
-                            <tr>
-                                <td colspan="5"></td>
                                 <td class="fw-bold">Tax Total</td>
                                 <td id="tax" class="fw-bold text-center"></td>
                             </tr>
@@ -171,6 +166,15 @@
                             <p id="quantity_error" class="fs-6 text-danger"></p>
                             <p id="cart_error" class="text-danger"></p>
                         </div> 
+                        <div id="div_id_tax" class="mb-1"> 
+                            <label for="id_tax" class="form-label requiredField">
+                                Tax
+                            </label> 
+                            <select name="tax" class="select form-select" required id="id_tax">
+                              <option value="0">Exempted</option>
+                              <option value="15">Standard (15%)</option>
+                            </select>
+                        </div>  
                         <!-- <div id="div_id_tax_method" class="mb-2"> 
                           <label for="id_tax_method" class="form-label requiredField">
                             Tax Calculation Method

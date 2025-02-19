@@ -12,6 +12,7 @@ from apps.company.models import Branch
 from apps.users.models import User
 from django.db.models import Sum
 from django.utils.timezone import localdate
+from django.db import transaction
 
 today = localdate()
 
@@ -324,17 +325,65 @@ class InvoiceItem(models.Model):
 
 class layby(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='layby')
+    branch = models.ForeignKey('company.branch', on_delete=models.CASCADE)
+    fully_paid = models.BooleanField(default=False)
+
+    def check_payment_status(self):
+        """
+        Checks if all related layby dates are paid and updates the invoice status.
+        
+        Returns:
+            bool: True if all payments are complete, False otherwise
+        """
+
+        related_dates = laybyDates.objects.filter(layby=self)
+        
+        unpaid_dates = related_dates.filter(is_paid=False)
+        
+        if not unpaid_dates.exists() and related_dates.exists():
+            with transaction.atomic():
+                self.invoice.payment_status = Invoice.PaymentStatus.PAID
+                self.invoice.amount_paid = self.invoice.amount
+                self.invoice.amount_due = Decimal('0.00')
+                self.invoice.save()
+                
+                Payment.objects.create(
+                    invoice=self.invoice,
+                    amount_paid=self.invoice.amount,
+                    payment_method=Payment.objects.filter(invoice=self.invoice).first().payment_method 
+                        if Payment.objects.filter(invoice=self.invoice).exists() else 'cash',
+                    amount_due=Decimal('0.00'),
+                    user=self.invoice.user
+                )
+                
+                self.fully_paid = True
+                self.save()
+                # Log the activity
+                # ActivityLog.objects.create(
+                #     branch=self.invoice.branch,
+                #     user=self.invoice.user,
+                #     action='Layby Complete',
+                #     invoice=self.invoice
+                # )
+                
+                return True
+        
+        return False
 
     def __str__(self):
-        return f'{self.invoice}'
+        return f'{self.invoice} : {self.branch}'
 
 class laybyDates(models.Model):
     layby = models.ForeignKey(layby, on_delete=models.CASCADE)
+    amount_to_be_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     due_date = models.DateField(auto_now_add=True)
+    paid = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.invoice}: {self.due_date}'
-    
+
 class recurringInvoices(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
     status = models.BooleanField(default=False)

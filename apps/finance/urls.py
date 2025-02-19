@@ -125,6 +125,10 @@ urlpatterns = [
     # vat
     path('vat/', vat, name='vat'),
 
+    # layby
+    path('layby/', layby_data, name='layby'),
+    path('layby/pay/', layby_payment, name='layby_payment'),
+
     ########################################################################################################################
     # API end points
     path('', include(router.urls)),

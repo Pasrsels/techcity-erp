@@ -15,11 +15,13 @@ def update_latest_due(customer, amount_received, request, payment_method, custom
     try:
         invoice = Invoice.objects.filter(customer=customer, payment_status=Invoice.PaymentStatus.PARTIAL, cancelled=False, invoice_return=False)\
         .order_by('-issue_date').first()
+
         logger.info(f"Checking if invoice.amount_due: {invoice.amount_due} < amount_received: {Decimal(amount_received)}")
 
         with transaction.atomic():
             if invoice:
-                logger.info(invoice.amount_due)
+
+                logger.info(f'Invoice amount due: {invoice.amount_due}')
 
                 if invoice.amount_due < amount_received:
                     amount_paid = invoice.amount_due
@@ -31,7 +33,7 @@ def update_latest_due(customer, amount_received, request, payment_method, custom
                 latest_payment = Payment.objects.filter(invoice=invoice).order_by('-payment_date').first()
                 amount_due = latest_payment.amount_due - amount_paid 
 
-                logger.info(f'amount due {amount_due}')
+                logger.info(f'Latest Amount Due {amount_due}')
 
                 payment = Payment.objects.create(
                     invoice=invoice,
@@ -77,9 +79,9 @@ def update_latest_due(customer, amount_received, request, payment_method, custom
                 payment.save()
 
                 logger.info(f'Invoice balance amount: {balance}')
+
                 return balance
     except Exception as e:
-        logger.info(e)
         return amount_received
 
 

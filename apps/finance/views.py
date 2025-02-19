@@ -375,7 +375,7 @@ def invoice(request):
     form = InvoiceForm()
     invoices = Invoice.objects.filter(branch=request.user.branch, status=True, cancelled=False).order_by('-invoice_number')
 
-    #cas
+    #cas+
 
     query_params = request.GET
     if query_params.get('q'):
@@ -563,7 +563,8 @@ def create_invoice(request):
             invoice_data = data['data'][0]  
             items_data = data['items']
             layby_dates = data.get('layby_dates')
-            logger.info(data)
+
+            logger.info(f'Invoice data: {data}')
            
             # get currency
             currency = Currency.objects.get(id=invoice_data['currency'])
@@ -585,10 +586,10 @@ def create_invoice(request):
                 branch=request.user.branch,
                 defaults={'balance': 0}  
             )
-            logger.info(f"[Create Invoice]: {account_balance}")
 
-            
-            # accountts_receivable
+            logger.info(f"Account Balance: {account_balance}")
+
+            # accounts_receivable
             accounts_receivable, _ = ChartOfAccounts.objects.get_or_create(name="Accounts Receivable")
 
             # VAT rate
@@ -608,23 +609,20 @@ def create_invoice(request):
             )
             
             amount_paid = update_latest_due(customer, Decimal(invoice_data['amount_paid']), request, invoice_data['paymentTerms'], customer_account_balance)
+
             invoice_total_amount = Decimal(invoice_data['payable'])
 
-
-            logger.info(f'amount paid: {amount_paid}')
+            # prevent to record greater amount paid than the invoice amount 
+            if amount_paid > invoice_total_amount:
+                amount_paid = invoice_total_amount
+            else:
+                amount_paid = amount_paid
 
             amount_due = invoice_total_amount - amount_paid  
 
             cogs = COGS.objects.create(amount=Decimal(0))
             
             with transaction.atomic():
-                amount_paid = Decimal(invoice_data['amount_paid'])
-
-                if amount_paid > invoice_total_amount:
-                    amount_paid = invoice_total_amount
-                else:
-                    amount_paid = amount_paid
-                
                 invoice = Invoice.objects.create(
                     invoice_number=Invoice.generate_invoice_number(request.user.branch.name),  
                     customer=customer,
@@ -645,29 +643,50 @@ def create_invoice(request):
                     amount_received = amount_paid
                 )
 
-                logger.info(invoice.hold_status)
-
                 logger.info(f'Invoice created for customer: {invoice}')
 
                 # check if invoice status is hold
                 if invoice.hold_status == True:
+
+                    logger.info(f'Processing held invoice: {invoice}')
+
                     held_invoice(items_data, invoice, request, vat_rate)
+
                     return JsonResponse({'hold':True, 'message':'Invoice succesfully on hold'})
 
                 # create layby object
                 if invoice.payment_terms == 'layby':
-                    layby_obj = layby.objects.create(invoice=invoice)
+
+                    logger.info(f'Creating layby object for invoice: {invoice}')
+
+                    layby_obj = layby.objects.create(
+                        invoice=invoice, 
+                        branch=request.user.branch
+                    )
 
                     logger.info(layby_obj)
 
                     layby_dates_list = []
-                    for date in layby_dates:
-                        laybyDates.objects.create(
-                            layby=layby_obj,
-                            due_date=date
-                        )
+                    number_of_dates = len(layby_dates)
                     
-                    # laybyDates.objects.bulk_create(layby_dates)
+                    # calculate amount to be paid for each month
+                    amount_per_due_date = (amount_due / number_of_dates) if number_of_dates > 0 else 0
+
+                    logger.info(f'Amount per due date: {amount_per_due_date} : {number_of_dates} : {layby_dates}')
+
+                    for date in layby_dates:
+
+                        obj = laybyDates(
+                            layby=layby_obj,
+                            due_date=date,
+                            amount_due=round(amount_per_due_date, 2),
+                        )
+
+                        layby_dates_list.append(obj)
+                    
+                    laybyDates.objects.bulk_create(layby_dates_list)
+
+                    logger.info(f'Layby object created for invoice: {invoice}')
                 
                 # create monthly installment object
                 if invoice.payment_terms == 'installment':
@@ -677,7 +696,7 @@ def create_invoice(request):
                     )
 
                 # #create transaction
-                transaction_obj = Transaction.objects.create(
+                Transaction.objects.create(
                     date=timezone.now(),
                     description=invoice.products_purchased,
                     account=accounts_receivable,
@@ -687,14 +706,10 @@ def create_invoice(request):
                 )
 
                 logger.info(f'Creating transaction obj for invoice: {invoice}')
-                
-                # Cost of sales parent object
-                
             
                 # Create InvoiceItem objects
                 for item_data in items_data:
                     item = Inventory.objects.get(pk=item_data['inventory_id'])
-                    # product = Product.objects.get(pk=item.product.id)
                     
                     item.quantity -= item_data['quantity']
                     item.save()
@@ -708,16 +723,6 @@ def create_invoice(request):
                         total_amount = int(item_data['quantity']) * float(item_data['price'])
                     )
                     
-                    # #Create StockTransaction for each sold item
-                    # stock_transaction = StockTransaction.objects.create(
-                    #     item=item,
-                    #     transaction_type=StockTransaction.TransactionType.SALE,
-                    #     quantity=item_data['quantity'],
-                    #     unit_price=item.price,
-                    #     invoice=invoice,
-                    #     date=timezone.now()
-                    # )
-                    # stock_transaction.save()
                     
                     # cost of sales item
                     COGSItems.objects.get_or_create(
@@ -788,7 +793,6 @@ def create_invoice(request):
                 # calculate total cogs amount
                 cogs.amount = COGSItems.objects.filter(cogs=cogs, cogs__date=datetime.datetime.today())\
                                                .aggregate(total=Sum('product__cost'))['total'] or 0
-                logger.info(f'COGS amount: {cogs.amount}')
                 cogs.save()
                 
                 # updae account balance
@@ -799,15 +803,12 @@ def create_invoice(request):
                 # Update customer balance
                 account_balance.balance = Decimal(invoice_data['payable']) + Decimal(account_balance.balance)
                 account_balance.save()
-
+                
+                # for tax purpose Zimra
                 save_receipt_offline(data, request.user.first_name)
 
-                # try:
-                #     return create_invoice_pdf(invoice)
-                # except Exception as e:
-                #     logger.info(e)
-                
-                # return redirect('finance:invoice_preview', invoice.id)
+                logger.info(f'inventory creation successfully done: {invoice}')
+
                 return JsonResponse({'success':True, 'invoice_id': invoice.id})
 
         except (KeyError, json.JSONDecodeError, Customer.DoesNotExist, Inventory.DoesNotExist) as e:
@@ -1074,6 +1075,90 @@ def invoice_details(request, invoice_id):
     )
     return JsonResponse(list(invoice), safe=False)
 
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+# @login_required
+def layby_data(request):
+    if request.method == 'GET':
+        layby_data = layby.objects.all().select_related(
+            'invoice',
+            'branch'
+        ).values()
+        return JsonResponse(list(layby_data), safe=False)
+    
+    if request.method == 'POST':
+        logger.info(f'layby data')
+        data = json.loads(request.body)
+
+        invoice_id = data.get('invoice_id')
+
+        if not invoice_id:
+            return JsonResponse({'success': False, 'message': 'Invoice ID is required.'})
+
+        laby_dates = laybyDates.objects.filter(layby__invoice__id=invoice_id).values()
+        
+        logger.info(laby_dates)
+        return JsonResponse({'success': True, 'data': list(laby_dates)})
+
+@login_required
+@transaction.atomic
+def layby_payment(request, layby_date_id):
+    try:
+        data = json.loads(request.body)
+        amount_paid = data.get('amount_paid')
+
+        layby_date = laybyDates.objects.get(id=layby_date_id)
+        layby_obj = layby.objects.get(id=layby_date.layby.id)
+        invoice = layby_obj.invoice
+
+        account = CustomerAccount.objects.get(customer=invoice.customer)
+        customer_account_balance = CustomerAccountBalances.objects.get(account=account, currency=invoice.currency)
+        account_types = {
+            'cash': Account.AccountType.CASH,
+            'bank': Account.AccountType.BANK,
+            'ecocash': Account.AccountType.ECOCASH,
+        }
+
+        customer_account_balance.balance -= amount_paid
+
+        account_name = f"{request.user.branch} {invoice.currency.name} {'cash'.capitalize()} Account"
+        account = Account.objects.get(name=account_name, type=account_types['cash'])
+        account_balance = AccountBalance.objects.get(account=account, currency=invoice.currency, branch=request.user.branch)
+
+        account_balance.balance -= amount_paid
+
+        amount_paid = layby_date.amount_paid
+        amount_due = layby_date.amount_due
+
+        with transaction.atomic():
+
+            account_balance.save()
+            customer_account_balance.save()
+
+            Payment.objects.create(
+                invoice=invoice,
+                amount_paid=amount_paid,
+                amount_due=amount_due, 
+                payment_method=invoice.payment_terms,
+                user=request.user
+            )
+
+            if amount_paid >= amount_due:
+                layby_date.paid = True
+                layby_date.save()
+                layby_obj.fully_paid = True
+                layby_obj.save()
+                invoice.payment_status = Invoice.PaymentStatus.PAID
+                invoice.save()
+
+                layby.check_payment_status()
+
+                return JsonResponse({'success': True, 'message': 'Layby payment successfully completed.'})
+            else:
+                return JsonResponse({'success': False, 'message': 'Invalid amount paid.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'{e}'})
 
 @login_required
 def customer(request):
