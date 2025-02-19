@@ -2602,7 +2602,7 @@ def process_received_order(request):
             try:          
                 system_quantity = inventory.quantity
                 # Update existing inventory
-                inventory.cost = cost
+                
                 inventory.price = selling_price
                 inventory.dealer_price = dealer_price or 0
                 inventory.quantity += quantity
@@ -2612,7 +2612,20 @@ def process_received_order(request):
                 else:
                     inventory.batch = f'{order.batch}, '
 
-                inventory.save()
+                cost = average_inventory_cost(inventory.id, order_item.actual_unit_cost, quantity, request.user.branch.id)
+                logger.info(cost)
+
+                inventory.cost = Decimal(round(cost, 2))
+
+                logger.info(f'Cost {cost}')  
+
+                try:
+                    inventory.save(force_update=True)
+                except Exception as e:
+                    logger.info(e)
+                    return JsonResponse({'success': False, 'message': f'{e}'}, status=400)
+                
+                logger.info(f'Inventory cost: {inventory.cost}')
             except Inventory.DoesNotExist:
                 # Create a new inventory object if it does not exist
                 inventory = Inventory(
@@ -2628,6 +2641,8 @@ def process_received_order(request):
                     batch = f'{order.batch}, '
                 )
                 inventory.save()
+                
+
 
             # Prepare activity log for this transaction
             log = ActivityLog(
@@ -3477,7 +3492,6 @@ def product(request):
                 # image = image,
                 status = True
             )
-        
         
         return JsonResponse({'success':True}, status=200)
 
