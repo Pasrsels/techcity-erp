@@ -3245,6 +3245,7 @@ def view_LifeTimeOrders(request, supplier_id):
     return JsonResponse({'success': True,  'response': 'invalid request'}, status = 500)
 
 @login_required
+@transaction.atomic
 def supplier_view(request):
     if request.method == 'GET':
         supplier_products = Product.objects.all()
@@ -3332,15 +3333,17 @@ def supplier_view(request):
             # elif Supplier.objects.filter(email=email).exists():
             #     return JsonResponse({'success': False, 'response':f'Supplier{name} already exists'}, status=400)
            
-            with transaction.atomic():
-                supplier = Supplier.objects.create(
-                    name = name,
-                    contact_person = contact_person,
-                    email = email,
-                    phone = phone,
-                    address = address,
-                    delete = False
-                )
+            logger.info('here')
+            supplier = Supplier.objects.create(
+                name = name,
+                contact_person = contact_person,
+                email = email,
+                phone = phone,
+                address = address,
+                delete = False
+            )
+            logger.info('done')
+                
                 # SupplierAccount.objects.create(
                 #     supplier = supplier,
                 #     currency = Currency.objects.get(default = True),
