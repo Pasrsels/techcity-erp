@@ -3317,38 +3317,22 @@ def supplier_view(request):
             address = data.get('address')
 
             logger.info(name)
-            
-            # check if all data exists
-            if not name or not contact_person or not email or not phone or not address:
-                return JsonResponse({'success': False, 'message':'Fill in all the form data'}, status=400)
 
-            # check is supplier exists
-            if Supplier.objects.filter(email=email).exists() and Supplier.objects.filter(delete = True).exists():
-                bring_back =  Supplier.objects.filter(email = email)
-                bring_back.delete = False
-                bring_back.update()
-                logger.info(bring_back.delete)
-                return JsonResponse({'success': True, 'response':f'Supplier{name} brought back'}, status=200)
-            elif Supplier.objects.filter(email=email).exists():
-                return JsonResponse({'success': False, 'response':f'Supplier{name} already exists'}, status=400)
+            # # check if all data exists
+            # if not name or not contact_person or not email or not phone or not address:
+            #     return JsonResponse({'success': False, 'message':'Fill in all the form data'}, status=400)
+
+            # # check is supplier exists
+            # if Supplier.objects.filter(email=email).exists() and Supplier.objects.filter(delete = True).exists():
+            #     bring_back =  Supplier.objects.filter(email = email)
+            #     bring_back.delete = False
+            #     bring_back.update()
+            #     logger.info(bring_back.delete)
+            #     return JsonResponse({'success': True, 'response':f'Supplier{name} brought back'}, status=200)
+            # elif Supplier.objects.filter(email=email).exists():
+            #     return JsonResponse({'success': False, 'response':f'Supplier{name} already exists'}, status=400)
            
             with transaction.atomic():
-                if not Currency.objects.filter(name = 'USD').exists() and not Currency.objects.filter(name = 'ZIG').exists():
-                    Currency.objects.create(
-                        code = '001',
-                        name = 'USD',
-                        symbol = '$',
-                        exchange_rate = 1,
-                        default = True
-                    )
-                    Currency.objects.create(
-                        code = '002',
-                        name = 'ZIG',
-                        symbol = 'Z',
-                        exchange_rate = 26.78,
-                        default =  False
-                    )
-
                 supplier = Supplier.objects.create(
                     name = name,
                     contact_person = contact_person,
@@ -3357,16 +3341,17 @@ def supplier_view(request):
                     address = address,
                     delete = False
                 )
-                SupplierAccount.objects.create(
-                    supplier = supplier,
-                    currency = Currency.objects.get(default = True),
-                    balance = 0,
-                )
-                SupplierAccount.objects.create(
-                    supplier = supplier,
-                    currency = Currency.objects.get(default = False),
-                    balance = 0,
-                )
+                # SupplierAccount.objects.create(
+                #     supplier = supplier,
+                #     currency = Currency.objects.get(default = True),
+                #     balance = 0,
+                # )
+
+                # SupplierAccount.objects.create(
+                #     supplier = supplier,
+                #     currency = Currency.objects.get(default = False),
+                #     balance = 0,
+                # )
             return JsonResponse({'success': True}, status=200)
         except Exception as e:
             logger.info(e)
@@ -3468,7 +3453,7 @@ def product(request):
             """creating a new product"""
             
             # validation for existance
-            if Inventory.objects.filter(name=data['name']).exists():
+            if Inventory.objects.filter(name__exact=data['name']).exists():
                 return JsonResponse({'success':False, 'message':f'Product {data['name']} exists'})
             
             logger.info(f'Creating product: {data['name']}: {request.user.branch}')

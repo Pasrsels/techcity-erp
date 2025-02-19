@@ -296,7 +296,7 @@ class Transfer(models.Model):
     @classmethod
     def generate_transfer_ref(self, branch, branches):
 
-        """revisit on 03d"""
+        """ revisit on 03d """
         
         formatted_branches = ', '.join([f"T{b[0].upper()}" for b in branches])
 
