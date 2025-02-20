@@ -144,6 +144,7 @@ input[type="checkbox"] {
                             <th>Customer Name &#9650;</th>
                             <th>Reference &#9650;</th>
                             <th>Date &#9650;</th>
+                            <th>Products</th>
                             <th>Status &#9650;</th>
                             <th>Grand Total &#9650;</th>
                             <th>Paid &#9650;</th>
@@ -158,6 +159,7 @@ input[type="checkbox"] {
                             <td><small><a href="{% url 'finance:customer' invoice.customer.id %}">{{ invoice.customer.name }}</a></small></td>
                             <td><small>#{{ invoice.invoice_number }}</small></td>
                             <td><small>{{ invoice.issue_date|date:"d/m/y H:i" }}</small></td>
+                            <td><small>{{ invoice.products_purchased }}</small></td>
                             <td>
                                 <span class="status {% if invoice.payment_status == 'Paid' %}completed{% else %}pending{% endif %}">
                                     {% if invoice.hold_status %}

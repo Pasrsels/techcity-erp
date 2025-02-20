@@ -330,12 +330,8 @@ class layby(models.Model):
 
     def check_payment_status(self):
         """
-        Checks if all related layby dates are paid and updates the invoice status.
-        
-        Returns:
-            bool: True if all payments are complete, False otherwise
+            Checks if all related layby dates are paid and updates the invoice status.
         """
-
         related_dates = laybyDates.objects.filter(layby=self)
         
         unpaid_dates = related_dates.filter(is_paid=False)
@@ -380,9 +376,30 @@ class laybyDates(models.Model):
     amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     due_date = models.DateField(auto_now_add=True)
     paid = models.BooleanField(default=False)
+    payment_method = models.CharField(max_length=50, choices=[
+        ('cash', 'Cash'),
+        ('bank', 'Bank Transfer'),
+        ('ecocash', 'EcoCash'),
+    ], null=True)
 
     def __str__(self):
         return f'{self.invoice}: {self.due_date}'
+
+class Paylater(models.Model):
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='paylater')
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    due_date = models.DateField()   
+    paid = models.BooleanField(default=False)
+    payment_method = models.CharField(max_length=50, choices=[
+        ('cash', 'Cash'),
+        ('bank', 'Bank Transfer'),
+        ('ecocash', 'EcoCash'),
+    ], null=True)
+
+    def __str__(self):
+        return f'{self.invoice}: {self.due_date}'
+
 
 class recurringInvoices(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)

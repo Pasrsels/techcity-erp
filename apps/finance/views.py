@@ -557,6 +557,7 @@ def update_invoice_amounts(invoice, amount_paid):
 @login_required
 @transaction.atomic 
 def create_invoice(request):
+    from django.utils.dateparse import parse_date
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -657,36 +658,38 @@ def create_invoice(request):
                 # create layby object
                 if invoice.payment_terms == 'layby':
 
-                    logger.info(f'Creating layby object for invoice: {invoice}')
+                    if amount_due > 0:
 
-                    layby_obj = layby.objects.create(
-                        invoice=invoice, 
-                        branch=request.user.branch
-                    )
-
-                    logger.info(layby_obj)
-
-                    layby_dates_list = []
-                    number_of_dates = len(layby_dates)
-                    
-                    # calculate amount to be paid for each month
-                    amount_per_due_date = (amount_due / number_of_dates) if number_of_dates > 0 else 0
-
-                    logger.info(f'Amount per due date: {amount_per_due_date} : {number_of_dates} : {layby_dates}')
-
-                    for date in layby_dates:
-
-                        obj = laybyDates(
-                            layby=layby_obj,
-                            due_date=date,
-                            amount_due=round(amount_per_due_date, 2),
+                        logger.info(f'Creating layby object for invoice: {invoice}')
+                        
+                        layby_obj = layby.objects.create(
+                            invoice=invoice, 
+                            branch=request.user.branch
                         )
 
-                        layby_dates_list.append(obj)
-                    
-                    laybyDates.objects.bulk_create(layby_dates_list)
+                        logger.info(layby_obj)
 
-                    logger.info(f'Layby object created for invoice: {invoice}')
+                        layby_dates_list = []
+                        number_of_dates = len(layby_dates)
+                        
+                        # calculate amount to be paid for each month
+                        amount_per_due_date = (amount_due / number_of_dates) if number_of_dates > 0 else 0
+
+                        logger.info(f'Amount per due date: {amount_per_due_date} : {number_of_dates} : {layby_dates}')
+
+                        for date in layby_dates:
+
+                            obj = laybyDates(
+                                layby=layby_obj,
+                                due_date=date,
+                                amount_due=round(amount_per_due_date, 2),
+                            )
+
+                            layby_dates_list.append(obj)
+                        
+                        laybyDates.objects.bulk_create(layby_dates_list)
+
+                        logger.info(f'Layby object created for invoice: {invoice}')
                 
                 # create monthly installment object
                 if invoice.payment_terms == 'installment':
@@ -694,6 +697,20 @@ def create_invoice(request):
                         invoice = invoice,
                         status = False
                     )
+                
+                #create a paylater
+                if invoice.payment_terms == 'pay later':
+
+                    if amount_due > 0:
+
+                        logger.info(f'Creating paylater object for invoice: {invoice}')
+
+                        Paylater.objects.create(
+                            invoice=invoice,
+                            amount_due=amount_due,
+                            due_date=parse_date(invoice_data['pay_later_date']),
+                            paid=False
+                        )
 
                 # #create transaction
                 Transaction.objects.create(
@@ -1075,10 +1092,8 @@ def invoice_details(request, invoice_id):
     )
     return JsonResponse(list(invoice), safe=False)
 
-from django.views.decorators.csrf import csrf_exempt
 
-@csrf_exempt
-# @login_required
+@login_required
 def layby_data(request):
     if request.method == 'GET':
         layby_data = layby.objects.all().select_related(
@@ -1107,6 +1122,7 @@ def layby_payment(request, layby_date_id):
     try:
         data = json.loads(request.body)
         amount_paid = data.get('amount_paid')
+        payment_method = data.get('payment_method')
 
         layby_date = laybyDates.objects.get(id=layby_date_id)
         layby_obj = layby.objects.get(id=layby_date.layby.id)
@@ -1136,12 +1152,24 @@ def layby_payment(request, layby_date_id):
             account_balance.save()
             customer_account_balance.save()
 
+            # create a payment object
             Payment.objects.create(
                 invoice=invoice,
                 amount_paid=amount_paid,
                 amount_due=amount_due, 
-                payment_method=invoice.payment_terms,
+                payment_method=payment_method,
                 user=request.user
+            )
+
+            # create a cash book object
+            Cashbook.objects.create(
+                issue_date=timezone.now(),
+                description=f'Layby payment ({layby_date.layby.invoice.invoice_number})',
+                debit=False,
+                credit=True,
+                amount=amount_paid,
+                currency=layby_date.layby.invoice.currency,
+                branch=request.user.branch
             )
 
             if amount_paid >= amount_due:
@@ -1159,6 +1187,87 @@ def layby_payment(request, layby_date_id):
                 return JsonResponse({'success': False, 'message': 'Invalid amount paid.'})
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'{e}'})
+    
+
+@login_required
+def paylater(request):
+    if request.method == 'GET':
+        paylater_data = Paylater.objects.all().select_related(
+            'invoice',
+            'branch'
+        ).values()
+        return JsonResponse(list(paylater_data), safe=False)
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            amount_paid = data.get('amount_paid')
+            payment_method = data.get('payment_method')
+            invoice_id = data.get('invoice_id')
+            paylater_id = data.get('paylater_id')
+
+            paylater = Paylater.objects.get(id=paylater_id)
+            
+            invoice = Invoice.objects.get(id=invoice_id)
+            account = CustomerAccount.objects.get(customer=invoice.customer)
+            customer_account_balance = CustomerAccountBalances.objects.get(account=account, currency=invoice.currency)
+            
+            account_types = {
+                'cash': Account.AccountType.CASH,
+                'bank': Account.AccountType.BANK,
+                'ecocash': Account.AccountType.ECOCASH,
+            }
+            
+            customer_account_balance.balance -= amount_paid
+            
+            account_name = f"{request.user.branch} {invoice.currency.name} {'cash'.capitalize()} Account"
+            account = Account.objects.get(name=account_name, type=account_types['cash'])
+            account_balance = AccountBalance.objects.get(account=account, currency=invoice.currency, branch=request.user.branch)
+            account_balance.balance -= amount_paid
+            
+            amount_due = invoice.total_amount - invoice.amount_paid
+            
+            with transaction.atomic():
+                account_balance.save()
+                customer_account_balance.save()
+                
+                # Create a payment object
+                Payment.objects.create(
+                    invoice=invoice,
+                    amount_paid=amount_paid,
+                    amount_due=amount_due,
+                    payment_method=payment_method,
+                    user=request.user
+                )
+                
+                # Create a cash book object
+                Cashbook.objects.create(
+                    issue_date=timezone.now(),
+                    description=f'Payment ({invoice.invoice_number})',
+                    debit=False,
+                    credit=True,
+                    amount=amount_paid,
+                    currency=invoice.currency,
+                    branch=request.user.branch
+                )
+                
+                # Update invoice payment status if fully paid
+                if amount_paid >= amount_due:
+                    invoice.payment_status = Invoice.PaymentStatus.PAID
+                    invoice.save()
+
+                    paylater.amount_paid = amount_paid
+
+                    if paylater.amount_paid < paylater.amount_due:
+                        paylater.amount_due = abs(amount_due - amount_paid)
+
+                    paylater.paid = True
+                    paylater.save()
+                    
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    
+    return JsonResponse({'status': 'success'})
 
 @login_required
 def customer(request):
