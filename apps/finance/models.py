@@ -351,7 +351,7 @@ class layby(models.Model):
                     amount_due=Decimal('0.00'),
                     user=self.invoice.user
                 )
-                
+                s
                 self.fully_paid = True
                 self.save()
                 # Log the activity

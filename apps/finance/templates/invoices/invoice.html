@@ -163,13 +163,13 @@ input[type="checkbox"] {
                             <td>
                                 <span class="status {% if invoice.payment_status == 'Paid' %}completed{% else %}pending{% endif %}">
                                     {% if invoice.hold_status %}
-                                    Onhold
-                                    {% else %}
-                                    {% if invoice.payment_status == 'Paid' %}
-                                    Completed
-                                    {% else %}
-                                    Pending
-                                    {% endif %}
+                                            Onhold
+                                        {% else %}
+                                        {% if invoice.payment_status == 'Paid' %}
+                                            Completed
+                                        {% else %}
+                                            Pending
+                                        {% endif %}
                                     {% endif %}
                                 </span>
                             </td>

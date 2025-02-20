@@ -10,6 +10,7 @@ from django.apps import apps
 from datetime import timedelta
 from datetime import timedelta
 import sys
+from celery.schedules import crontab
 
 env = environ.Env()   
 load_dotenv()
@@ -291,9 +292,14 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 
 CELERY_BEAT_SCHEDULE = {
-    'run-all-invoices-recurring': {
-        'task': 'finance.tasks.generate_recurring_invoices',
-        'schedule': 60.0, 
+    # 'run-all-invoices-recurring': {
+    #     'task': 'finance.tasks.generate_recurring_invoices',
+    #     'schedule': 60.0, 
+    # },
+
+    'check-upcoming-layby-payments': {
+        'task': 'your_app.tasks.check_upcoming_layby_payments',
+        'schedule': crontab(hour=9, minute=0),  
     },
 }
 

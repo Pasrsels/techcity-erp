@@ -15,11 +15,16 @@ from django.conf import settings
 from utils.email import EmailThread
 from django.core.mail import EmailMessage
 from loguru import logger
+from django.core.mail import send_mail
+from django.db.models import Q
+import calendar
 
-import logging
-logger = logging.getLogger(__name__)
 
-    
+def get_end_of_month(date):
+    """Helper function to get the last day of the current month"""
+    last_day = calendar.monthrange(date.year, date.month)[1]
+    return date.replace(day=last_day)
+
 @shared_task
 def generate_recurring_invoices():
     recurring_invoices = []
@@ -242,3 +247,116 @@ def send_expense_creation_notification(expense_id):
     
     logger.info('send')
 
+
+@shared_task
+def check_upcoming_layby_payments():
+    """
+    task that runs daily and checks for layby payments due in 3 days.
+    Sends notifications to customers and staff about these upcoming payments.
+    """
+   
+    today = timezone.now().date()
+    three_days_from_now = today + timedelta(days=3)
+    
+    upcoming_payments = laybyDates.objects.filter(
+        Q(due_date=three_days_from_now) &  
+        Q(paid=False) 
+    ).select_related('layby', 'layby__invoice', 'layby__branch')
+    
+    
+    logger.info(f"Checking for layby payments due on {three_days_from_now}")
+    
+    # Send notifications for each upcoming payment
+    notification_count = 0
+    for payment in upcoming_payments:
+        customer_notified = notify_customer_about_payment(payment)
+        staff_notified = notify_staff_about_payment(payment)
+        
+        if customer_notified or staff_notified:
+            notification_count += 1
+    
+    return f"Sent {notification_count} notifications for layby payments due on {three_days_from_now}"
+
+
+def notify_customer_about_payment(payment):
+    """Send email notification to the customer"""
+    invoice = payment.layby.invoice
+    customer_email = invoice.customer.email
+    
+    if not customer_email:
+        return False
+    
+    end_of_month = get_end_of_month(timezone.now().date())
+    
+    subject = f"Payment Reminder: Your layby payment is due at the end of the month"
+    message = f"""
+    Dear {invoice.customer.name},
+    
+    This is a friendly reminder that your layby payment of {payment.amount_to_be_paid} {invoice.currency.code} 
+    for invoice #{invoice.invoice_number} is due on {end_of_month.strftime('%d %B, %Y')}.
+    
+    Payment Details:
+    - Amount Due: {payment.amount_due} {invoice.currency.code}
+    - Due Date: {payment.due_date}
+    - Invoice #: {invoice.invoice_number}
+    - Branch: {payment.layby.branch.name}
+    
+    Please ensure your payment is made on time to maintain your layby agreement.
+    
+    Thank you for your business.
+    
+    Regards,
+    {payment.layby.branch.name} Team
+    """
+    
+    try:
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [customer_email],
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        # Log the error
+        logger.info(f"Failed to send customer notification: {str(e)}")
+        return False
+
+def notify_staff_about_payment(payment):
+    """Send email notification to branch staff"""
+    invoice = payment.layby.invoice
+    branch = payment.layby.branch
+    end_of_month = get_end_of_month(timezone.now().date())
+    
+    # Get staff emails (adjust this based on your user model structure)
+    staff_emails = list(branch.users.filter(is_active=True).values_list('email', flat=True))
+    
+    if not staff_emails:
+        return False
+    
+    subject = f"End-of-Month Layby Payment Reminder: Customer {invoice.customer.name}"
+    message = f"""
+    End-of-Month Layby Payment Notification
+    
+    Customer: {invoice.customer.name}
+    Invoice #: {invoice.invoice_number}
+    Amount Due: {payment.amount_due} {invoice.currency.code}
+    Due Date: {end_of_month.strftime('%d %B, %Y')}
+    
+    This payment is due at the end of the month. Please follow up with the customer if necessary.
+    """
+    
+    try:
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            staff_emails,
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        # Log the error
+        logger.info(f"Failed to send staff notification: {str(e)}")
+        return False
