@@ -13,11 +13,20 @@ app.conf.update(
     BROKER_URL=os.environ.get('REDIS_URL'),
     CELERY_RESULT_BACKEND=os.environ.get('REDIS_URL'),
     BROKER_USE_SSL={
-        'ssl_cert_reqs': ssl.CERT_NONE,  
+        'ssl_cert_reqs': ssl.CERT_NONE,
+        'ssl_ca_certs': None,
+        'ssl_certfile': None,
+        'ssl_keyfile': None,
     },
     CELERY_REDIS_BACKEND_USE_SSL={
-        'ssl_cert_reqs': ssl.CERT_NONE,  
-    }
+        'ssl_cert_reqs': ssl.CERT_NONE,
+        'ssl_ca_certs': None,
+        'ssl_certfile': None,
+        'ssl_keyfile': None,
+    },
+    broker_connection_retry_on_startup=True,  
+    broker_connection_max_retries=10,         
+    broker_connection_timeout=30,             
 )
 
 # Read config from Django settings, the CELERY namespace would make celery 
