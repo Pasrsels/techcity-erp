@@ -17,9 +17,9 @@ app.conf.update(
     },
     CELERY_REDIS_BACKEND_USE_SSL={
         'ssl_cert_reqs': ssl.CERT_NONE,  
-    }
-    broker_connection_retry_on_startup=True
-    broker_connection_max_retries=10      
+    },
+    broker_connection_retry_on_startup=True,
+    broker_connection_max_retries=10,      
     broker_connection_timeout=30         
 )
 
