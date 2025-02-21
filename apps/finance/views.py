@@ -760,26 +760,26 @@ def create_invoice(request):
 
                     accessories = Accessory.objects.filter(main_product=item).values('accessory_product', 'accessory_product__quantity')
 
-                    for acc in accessories:
-                        COGSItems.objects.get_or_create(
-                            invoice=invoice,
-                            defaults={'cogs': cogs, 'product': Inventory.objects.get(id=acc['accessory_product'], branch=request.user.branch)}
-                        )
-                        prod_acc = Inventory.objects.get(id = acc['accessory_product'] )
-                        prod_acc.quantity -= acc.quantity
+                    # for acc in accessories:
+                    #     COGSItems.objects.get_or_create(
+                    #         invoice=invoice,
+                    #         defaults={'cogs': cogs, 'product': Inventory.objects.get(id=acc['accessory_product'], branch=request.user.branch)}
+                    #     )
+                    #     prod_acc = Inventory.objects.get(id = acc['accessory_product'] )
+                    #     prod_acc.quantity -= acc.quantity
 
-                        logger.info(f'accessory quantity: {acc['accessory_product__quantity']}')
+                    #     logger.info(f'accessory quantity: {acc['accessory_product__quantity']}')
 
-                        ActivityLog.objects.create(
-                            branch=request.user.branch,
-                            inventory=prod_acc,
-                            user=request.user,
-                            quantity=1,
-                            total_quantity = acc['accessory_product__quantity'],
-                            action='Sale',
-                            invoice=invoice
-                        )
-                        prod_acc.save()
+                    #     ActivityLog.objects.create(
+                    #         branch=request.user.branch,
+                    #         inventory=prod_acc,
+                    #         user=request.user,
+                    #         quantity=1,
+                    #         total_quantity = acc['accessory_product__quantity'],
+                    #         action='Sale',
+                    #         invoice=invoice
+                    #     )
+                    #     prod_acc.save()
                         
                 # # Create VATTransaction
                 VATTransaction.objects.create(
