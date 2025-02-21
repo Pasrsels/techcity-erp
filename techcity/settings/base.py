@@ -303,6 +303,24 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+REDIS_OPTIONS = {
+    'ssl': True,
+    'ssl_cert_reqs': None,  # Set to None to bypass certificate verification temporarily
+    'socket_connect_timeout': 30
+}
+
+# Configure Channels to use these options
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": ["rediss://:p81af2fc64c9b750172375f4b4b521a9a32354997e449c1cb59482e8607f7f227@ec2-44-223-243-234.compute-1.amazonaws.com:23070"],
+            "symmetric_encryption_keys": [SECRET_KEY],
+            "ssl_cert_reqs": None,  
+        },
+    },
+}
+
 # Inventory
 LOW_STOCK_THRESHHOLD =  6
 INVENTORY_EMAIL_NOTIFICATIONS_STATUS = True
