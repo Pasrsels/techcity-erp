@@ -760,8 +760,6 @@ def create_invoice(request):
 
                     accessories = Accessory.objects.filter(main_product=item).values('accessory_product', 'accessory_product__quantity')
 
-                    logger.info(f'Accessories for this product: {accessories}')
-
                     for acc in accessories:
                         COGSItems.objects.get_or_create(
                             invoice=invoice,
