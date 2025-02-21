@@ -67,8 +67,7 @@ from django.db.models.functions import TruncDate
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Max
-
-
+from django.utils.dateparse import parse_date
 
 def get_previous_month():
     first_day_of_current_month = datetime.datetime.now().replace(day=1)
@@ -557,7 +556,6 @@ def update_invoice_amounts(invoice, amount_paid):
 @login_required
 @transaction.atomic 
 def create_invoice(request):
-    from django.utils.dateparse import parse_date
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -693,11 +691,13 @@ def create_invoice(request):
                 
                 # create monthly installment object
                 if invoice.payment_terms == 'installment':
-                    recurringInvoices.objects.create(
-                        invoice = invoice,
-                        status = False
-                    )
-                
+
+                    if invoice.reocurring:
+                        MonthlyInstallment.objects.create(
+                            invoice = invoice,
+                            status = False
+                        )
+                    
                 #create a paylater
                 if invoice.payment_terms == 'pay later':
 
