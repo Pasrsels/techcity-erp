@@ -78,7 +78,7 @@ class Notification(models.Model):
     
     # For grouping related notifications
     group_id = models.CharField(max_length=100, blank=True)
-    priority = models.IntegerField(default=0)  # Higher number = higher priority
+    priority = models.IntegerField(default=0) 
     
     def __str__(self):
         return f"Notification for {self.user.username}: {self.title}"

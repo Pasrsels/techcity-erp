@@ -253,7 +253,7 @@
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken'), 
+                'X-CSRFToken': '{{ csrf_token }}'
             },
         })
         .then((response) => response.json())
