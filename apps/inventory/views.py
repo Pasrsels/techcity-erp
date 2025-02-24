@@ -1912,6 +1912,7 @@ def create_purchase_order(request):
         suppliers = Supplier.objects.all()
         note_form = noteStatusForm()
         batch_form = BatchForm()
+        overide = data.get('overide')
         products = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name')
 
         batch_codes = BatchCode.objects.all()
@@ -2431,6 +2432,15 @@ def generate_csv_response(items, po_items):
         ])
 
     return response
+
+# to delete
+def test(request):
+    sentvalue = request.GET.get('sentvalue')  
+    if sentvalue is not None:
+        return JsonResponse({"message": "Received", "sentvalue": sentvalue}, status=200)
+    else:
+        return JsonResponse({"error": "Missing 'sentvalue' parameter"}, status=400)
+
  
 @login_required
 def sales_price_list_pdf(request, order_id):

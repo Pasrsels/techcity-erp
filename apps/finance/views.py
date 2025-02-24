@@ -1052,6 +1052,8 @@ def delete_invoice(request, invoice_id):
                 product.quantity += abs(stock_transaction.quantity)
                 product.save()
 
+                logger.info(f'product quantity {stock_transaction.quantity}')
+
                 ActivityLog.objects.create(
                     invoice=invoice,
                     product_transfer=None,

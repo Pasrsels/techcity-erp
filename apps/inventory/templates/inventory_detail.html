@@ -121,46 +121,46 @@
                     </thead>
                     <tbody>
                         {% for log in logs %}
-                        <tr>
-                            <td><small>{{ forloop.counter }}</small></td>
-                            <td><small>{{ log.timestamp }}</small></td>
-                            <td><small><span>{{ log.user }}</span></small></td>
-                            <td data-id="{{log.invoice.id}}" id="invoice" style="cursor:pointer;">
-                                <small>
-                                    {{ log.invoice.invoice_number }}
-                                    {{ log.product_transfer.transfer.transfer_ref }}
-                                    {{ log.purchase_order.order_number }}
-                                </small>
-                            </td>
-                            <td>
-                                <small style='width:20px !important;'>
-                                    {{ log.action }}
-                                    {% if log.description %}({{ log.description }}){% endif %}
-                                </small>
-                            </td>
-                            <td><small>{{ log.selling_price }}</small></td>
-                            <td><small>{{ log.dealer_price }}</small></td>
-                            <td>
-                                <small class="d-flex justify-content-between">
-                                    {% if log.quantity < 0 %}
-                                        <span class='text-danger'>{{log.quantity}}</span>
-                                        <i class='bx bxs-down-arrow text-danger'></i>
-                                    {% else %}
-                                    <span class='text-success'>{{log.quantity}}</span>
-                                    <i class='bx bxs-up-arrow text-success'></i>
-                                    {% endif %}
-                                </small>
-                            </td>
-                            <td><small class="fw-bold">{{log.total_quantity}}</small></td>
-                            <td><small class="fw-bold">{{log.total_quantity}}</small></td>
-                        </tr>
+                            <tr>
+                                <td><small>{{ forloop.counter }}</small></td>
+                                <td><small>{{ log.timestamp }}</small></td>
+                                <td><small><span>{{ log.user }}</span></small></td>
+                                <td data-id="{{log.invoice.id}}" id="invoice" style="cursor:pointer;">
+                                    <small>
+                                        {{ log.invoice.invoice_number }}
+                                        {{ log.product_transfer.transfer.transfer_ref }}
+                                        {{ log.purchase_order.order_number }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <small style='width:20px !important;'>
+                                        {{ log.action }}
+                                        {% if log.description %}({{ log.description }}){% endif %}
+                                    </small>
+                                </td>
+                                <td><small>{{ log.selling_price }}</small></td>
+                                <td><small>{{ log.dealer_price }}</small></td>
+                                <td>
+                                    <small class="d-flex justify-content-between">
+                                        {% if log.quantity < 0 %}
+                                            <span class='text-danger'>{{log.quantity}}</span>
+                                            <i class='bx bxs-down-arrow text-danger'></i>
+                                        {% else %}
+                                            <span class='text-success'>{{log.quantity}}</span>
+                                            <i class='bx bxs-up-arrow text-success'></i>
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td><small class="fw-bold">{{log.total_quantity}}</small></td>
+                                <td><small class="fw-bold">{{log.total_quantity}}</small></td>
+                            </tr>
                         {% endfor %}
                     </tbody>
                 </table>  
             <div class="modal fade" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
-                        <h5 class="modal-title fw-bold p-2" id="invoiceModalLabel">Invoice Details</h5>
+                            <h5 class="modal-title fw-bold p-2" id="invoiceModalLabel">Invoice Details</h5>
                         <div class="modal-body" id="invoiceDetails"></div>
                     </div>
                 </div>
