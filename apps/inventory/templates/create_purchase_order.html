@@ -1611,7 +1611,7 @@
         }
       }
 
-        // Show processing Swal
+      // Show processing Swal
       Swal.fire({
         title: 'Processing...',
         text: 'Please wait while your purchase order is being created.',
@@ -1656,6 +1656,7 @@
           });
         });
     }
+
     function calculateTotals() {
       let subtotal = 0;
       cart.forEach(item => {
@@ -1793,7 +1794,7 @@
                   type='number'
                   data-id='${item.id}'
                   onclick='clearField(this)'
-                  onChange = calculateActualPrice(this)
+                  onChange = calculateActualPrice(this, '${item.id}')
                 />
             </td> 
             <td id='${item.id}' class='actual-price'>${total.toFixed(2)}</td>
@@ -2197,8 +2198,7 @@
         });
     }
     
-    function calculateActualPrice(inputElement) {
-      console.log('here')
+    function calculateActualPrice(inputElement, productId) {
       let rowId = inputElement.dataset.id;
       let allocatedValue = parseFloat(inputElement.value) || 0;
       let row = document.querySelector(`td[id='${rowId}']`).parentNode;
@@ -2207,6 +2207,14 @@
 
       let actualPriceElement = row.querySelector(".actual-price");
       actualPriceElement.innerText = newActualPrice.toFixed(2);
+
+      productExists = cart.filter((item)=> item.id === parseInt(item.id))
+      console.info('Product exists', productExists)
+
+      if(productExists){
+        productExists.this.value
+        console.table(cart)
+      }
     }
 
 

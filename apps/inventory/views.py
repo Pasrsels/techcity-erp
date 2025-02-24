@@ -1912,7 +1912,6 @@ def create_purchase_order(request):
         suppliers = Supplier.objects.all()
         note_form = noteStatusForm()
         batch_form = BatchForm()
-        overide = data.get('overide')
         products = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name')
 
         batch_codes = BatchCode.objects.all()
@@ -1937,6 +1936,7 @@ def create_purchase_order(request):
             cost_allocations = data.get('cost_allocations', [])
             hold = data.get('hold', False)
             supplier_payment_data = data.get('supplier_data')
+            overide = data.get('overide')
 
             unique_expenses = []
 
