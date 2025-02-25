@@ -536,10 +536,10 @@
 </div>
 
   <div class="modal fade" id="overideModal" tabindex="-1" aria-labelledby="modeSelectionModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="modeSelectionModalLabel">Select Mode</h5>
+          <h5 class="modal-title" id="modeSelectionModalLabel">Select Costing Type</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -555,9 +555,6 @@
       </div>
     </div>
   </div>
-
-
-
 
 
     <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
@@ -1794,7 +1791,7 @@
                   type='number'
                   data-id='${item.id}'
                   onclick='clearField(this)'
-                  onChange = calculateActualPrice(this, '${item.id}')
+                  onChange = calculateActualPrice(this)
                 />
             </td> 
             <td id='${item.id}' class='actual-price'>${total.toFixed(2)}</td>
@@ -2198,7 +2195,7 @@
         });
     }
     
-    function calculateActualPrice(inputElement, productId) {
+    function calculateActualPrice(inputElement) {
       let rowId = inputElement.dataset.id;
       let allocatedValue = parseFloat(inputElement.value) || 0;
       let row = document.querySelector(`td[id='${rowId}']`).parentNode;
@@ -2208,12 +2205,19 @@
       let actualPriceElement = row.querySelector(".actual-price");
       actualPriceElement.innerText = newActualPrice.toFixed(2);
 
-      productExists = cart.filter((item)=> item.id === parseInt(item.id))
+      console.info('Product ID:', rowId);
+
+      productExists = cart.filter((item)=> item.id === rowId)
       console.info('Product exists', productExists)
 
-      if(productExists){
-        productExists.this.value
-        console.table(cart)
+      let productIndex = cart.findIndex((item) => item.id === rowId);
+
+      if (productIndex !== -1) {
+          cart[productIndex].actualPrice= allocatedValue;
+          console.info('Updated product price:', cart[productIndex].price);
+          console.table(cart);
+      } else {
+          console.warn('Product not found in cart:', rowId);
       }
     }
 

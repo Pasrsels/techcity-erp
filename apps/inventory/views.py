@@ -1992,8 +1992,6 @@ def create_purchase_order(request):
                     actual_unit_cost = Decimal(item_data['actualPrice'])
                     supplier_id = item_data.get('supplier', [])
 
-                    logger.info(f'Supplier id {{ supplier_id }}')
-
                     if not all([product_name, quantity, unit_cost, product_id]):
                         transaction.set_rollback(True)
                         return JsonResponse({'success': False, 'message': 'Missing fields in item data'}, status=400)
@@ -2010,8 +2008,8 @@ def create_purchase_order(request):
                         purchase_order=purchase_order,
                         product=product,
                         quantity=quantity,
-                        unit_cost=unit_cost,
-                        actual_unit_cost=actual_unit_cost,
+                        unit_cost=actual_unit_cost if overide == 'manual' else unit_cost,
+                        actual_unit_cost=actual_unit_cost, 
                         received_quantity=0,
                         received=False,
                         supplier = supplier,
