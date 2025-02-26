@@ -1240,6 +1240,7 @@ async function processCart(el) {
                     title: 'Success'
                 }).then(() => {
                     displayReceipt(result.invoice_id);
+
                 })
             }
         } else if (result.hold){
@@ -1273,6 +1274,10 @@ async function displayReceipt(invoiceId) {
         }
 
         const data = await response.json();
+
+        let content = generateReceiptContent(data)
+        printReceiptSilently(content)
+
         const { invoice, invoice_items: invoiceItems, lay_dates:dates} = data;
         const {
             invoice_number: invoiceNumber,
@@ -1365,8 +1370,8 @@ async function displayReceipt(invoiceId) {
     }
 }
 
-    function generateReceipt(data) {
-        const { invoice, invoice_items: invoiceItems, lay_dates: dates } = data;
+    function generateReceiptContent(data) {
+        const { invoice, invoice_items: invoiceItems, lay_dates:dates} = data;
         const {
             invoice_number: invoiceNumber,
             amount: invoiceTotal,
@@ -1379,93 +1384,168 @@ async function displayReceipt(invoiceId) {
             payment_terms: payment_terms
         } = invoice;
 
-        let prvDue = parseFloat(document.getElementById('tpreviousDue').textContent.split('')[1]);
-        let availabeB = invoiceTotal - amountPaid + prvDue;
+        return `
+        <style>
+            r{
+                font-family: Arial, sans-serif;
+                font-size: 12px;
+                width: 5.8cm;
+            }
+            .receipt{
+                width: 5.8cm;
+                max-width: 6cm;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .receipt h2, .footer p{
+                text-align: center;
+            }
+            .sub-header{
+                margin-top: 10px;
+            }
+            .sub-header table, .receipt-body table{
+                width: 100%;
+            }
+            .date-time{
+                margin-top: 10px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .receipt-no{
+                margin-top: 10px;
+            }
 
-        const receiptHTML = `
-            <style>
-                .receipt {
-                    padding: 10px;
-                    background-color: white;
-                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                }
-                .header { display: flex; justify-content: space-between; align-items: center; }
-                .logo img { height: 50px; margin-right: 10px; }
-                .receipt-info { text-align: right; }
-                .payment-details, .customer-info, .totals { font-size: 0.9em; margin-bottom: 20px; }
-                .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                .items-table th, .items-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-                .items-table th { background-color: #f4f4f4; }
-                .totals { text-align: right; }
-            </style>
+            .receipt-body table{
+                margin-top: 10px;
+            }
+            .receipt-body table thead th{
+                border-top:1px solid #000;
+                border-bottom: 1px solid #000;
+                text-align: left;
+            }
+            .receipt-body table tr :nth-child(4), 
+            .receipt-body table tfoot tr :nth-child(2){
+                text-align: right;
+            }
+            .terms{
+                margin-top: 10px;
+            }
+            #subtotal{
+                border-top: 1px solid #000;
+            }
 
+            #total_amount{
+                border-top: 1px solid #000;
+                border-bottom: 2px solid #000;
+            }
+        </style>
+        <div class="r">
             <div class="receipt">
-                <div class="header">
-                    <div class="logo">
-                        <img src="{% static 'assets/logo.png' %}" alt="Company Logo">
-                        <div class="company-info">
-                            <p>Tin No:20012500</p>
-                            <p>Vat: 2001278367</p>
-                            <p>65 Speke, Speke Avenue</p>
-                        </div>
-                    </div>
-                    <div class="receipt-info">
-                        <h3>Receipt <span id="invoiceNumber">${invoiceNumber}</span></h3>
-                        <p>Date: <span id="date">${new Date().toLocaleDateString()}</span></p>
-                        <p>Time: <span id="time">${new Date().toLocaleTimeString()}</span></p>
-                    </div>
+                <div>
+                    <h2>Techcity</h2>
                 </div>
-                <hr>
-                <div class="payment-details">
-                    <p><strong>Payment:</strong> <span id="rcp-payment">${currencySymbol} ${invoiceTotal}</span></p>
-                    <p><strong>Currency:</strong> <span id="rcp-currency">${currencySymbol}</span></p>
-                    <p><strong>Cashier:</strong> {{ request.user.first_name }}</p>
-                </div>
-                <hr>
-                <div class="customer-info">
-                    <div class="company">
-                        <p><strong>Company:</strong> {{ request.user.company.name }}</p>
-                        <p><strong>Name:</strong> <span id="customerName"></span></p>
-                        <p><strong>Cell:</strong> <span id="customerPhone"></span></p>
-                        <p><strong>Email:</strong> <span id="customerEmail"></span></p>
-                        <p><strong>Address:</strong> <span id="customerAddress"></span></p>
-                    </div>
-                </div>
-                <hr>
-                <table class="items-table">
-                    <thead>
-                        <tr>
-                            <th>NAME</th>
-                            <th>DESCRIPTION</th>
-                            <th>QNTY</th>
-                            <th>UNIT PRICE</th>
-                            <th>TOTAL</th>
-                        </tr>
-                    </thead>
-                    <tbody id="receipt">
-                        ${invoiceItems.map(({ quantity, item__name, unit_price, item__description }) => `
-                            <tr>
-                                <td>${item__name}</td>
-                                <td>(${item__description})</td>
-                                <td>${quantity}</td>
-                                <td>${unit_price}</td>
-                                <td>${(quantity * unit_price).toFixed(2)}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-                <hr>
-                <div class="totals">
-                    <p><strong>Subtotal:</strong> <span id="subTotalAmount">${currencySymbol} ${subTotal}</span></p>
-                    <p><strong>VAT 15%:</strong> <span id="vatAmount">${currencySymbol} ${vatAmount}</span></p>
-                    <p><strong>Total:</strong> <span id='total_amount'>${currencySymbol} ${invoiceTotal}</span></p>
-                </div>
-                <hr>
-                <p style="text-align: center;">Thank you for your purchase!</p>
-            </div>
-        `;
 
+                <div class="sub-header">
+                    <table>
+                        <tr>
+                            <td>Tin No:</td>
+                            <td id="tin_no">220356643</td>
+                        </tr>
+                        <tr>
+                            <td>VAT:</td>
+                            <td id="vat">2001020099</td>
+                        </tr>
+                        <tr>
+                            <td>Address:</td>
+                            <td id="address">63 speke avenue</td>
+                        </tr>
+                        <tr>
+                            <td>Phonenumber:</td>
+                            <td id="phone">0776079245</td>
+                        </tr>
+                        <tr>
+                            <td>Email:</td>
+                            <td id="email">info@techcity.co.zw</td>
+                        </tr>
+                    </table>
+
+                    <div class="date-time">
+                        <span id="date">
+                            Date: ${new Date().toLocaleDateString()}
+                        </span>
+                        <span id="time"></span>
+                            Time: ${new Date().toLocaleTimeString()}
+                        </span>
+                    </div>
+
+                    <div class="receipt-no">
+                        ------------------------------------------------------
+                        <p>Receipt No: <span id="receipt-number">${invoiceNumber}</span></p>
+                        <p>Payment Term: <span id="payment-term">cash</span></p>
+                        ------------------------------------------------------
+                    </div>
+                </div>
+
+                <div class="receipt-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${invoiceItems.map(item => `
+                                <tr>
+                                    <td>${item.item__name}</td>
+                                    <td>${item.quantity}</td>
+                                    <td>${currencySymbol} ${item.unit_price}</td>
+                                    <td>${currencySymbol} ${item.unit_price * item.quantity}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr id="hr">
+                                <td colspan="3">Subtotal</td>
+                                <td id="subtotal">${currencySymbol} ${subTotal || 0.00}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3">VAT</td>
+                                <td id="vat_amount">${currencySymbol} ${vatAmount || 0.00}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3">Total</td>
+                                <td id="total_amount">${currencySymbol} ${invoiceTotal|| 0.00}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="terms">
+                    -----------------------------------------------------
+                    <h4>Terms and Conditions</h4>
+                    <ul>
+                        <li>Goods once sold cannot be returned</li>
+                        <li>Warranty is valid for 1 year</li>
+                        <li>Warranty is valid for 1 year</li>
+                        <li>Warranty is valid for 1 year</li>
+                        <li>Warranty is valid for 1 year</li>
+                    </ul>
+                </div>
+
+                <div class="footer">
+                    ----------------------------------------------------
+                    <p>Thank you for shopping with us</p>
+                    ----------------------------------------------------
+                </div>
+            </div>
+        </div>
+    `;
     }
+
     function printReceiptSilently(content) {
         console.log(content)
         let printFrame = document.getElementById("print-frame");
@@ -1483,17 +1563,6 @@ async function displayReceipt(invoiceId) {
         frameDoc.document.open();
         frameDoc.document.write(`
             <html>
-            <head>
-                <title>Receipt</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        font-size: 13.5px;
-                        margin: 0;
-                        padding: 2px;
-                    }
-                </style>
-            </head>
             <body>
                 ${content}
             </body>
