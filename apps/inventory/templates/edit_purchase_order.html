@@ -591,6 +591,27 @@
     </div>
 </div>
 
+<div class="modal fade" id="overideModal" tabindex="-1" aria-labelledby="modeSelectionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modeSelectionModalLabel">Select Costing Type</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-6">
+            <button class="btn btn-outline-primary w-100 mode-select" onclick="showAllTable('auto')">Auto</button>
+          </div>
+          <div class="col-6">
+            <button class="btn btn-outline-secondary w-100 mode-select" onclick="showAllTable('manual')">Manual</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div>
 <script src="{% static 'js/calculater.js' %}"></script>
 <script>
@@ -611,6 +632,7 @@
     let isAscending = true; // for sort function
     let productID = '' // for product editing and deleting
     let taxMethod = '' // for tax method
+    
 
     const po_id = {{ purchase_order.id }}
 
@@ -637,9 +659,23 @@
     const addToCartBtn = document.getElementById('id_add_to_cart');
     const confirmBtn = document.getElementById('confirm_btn');
 
+    const overideModal = new bootstrap.Modal(document.getElementById('overideModal'));
+
     const cartError = document.getElementById('cartError');
 
+    let overide = ''
+
     calculateExpression('id_p_price', errorId = null);
+
+    document.getElementById('next_button').addEventListener('click', ()=>{
+      overideModal.show()
+    })
+
+
+    const clearField = (el) =>{
+      el.value=''
+      console.log(el)
+    }
 
     // event lister for tax method
     // document.getElementById('tax_method').addEventListener('click', ()=>{
@@ -1376,11 +1412,12 @@
         updateCartDisplay();
     }
 
-    function processCart() {
 
+    function processCart() {
         const data = {
         'po_items':cart,
         'expenses':expensesData,
+        'overide':"manual",
         'cost_allocations': formData, 
           'purchase_order': {
           'batch': document.getElementById('id_batch').value.trim(),
@@ -1459,7 +1496,12 @@
     calculateTotals();
 
     // cost apportionment
-    document.getElementById('next_button').addEventListener('click', ()=>{
+    const showAllTable = (overideType=>{
+      console.log(overideType)
+      let overide = overideType
+
+      console.info('overide type: ', overide);
+
       if (cart.length != 0){
 
         document.getElementById('main-section').style.display = 'none';
@@ -1468,26 +1510,27 @@
 
         let totalExpenses = 0;
         let rate = 0;
-
+      
         const apportionmentTable = document.getElementById('apportionment-table');
         let other_amount = parseFloat(document.getElementById('id_other').value) || 0;
 
         totalExpenses = other_amount;
-
+  
         cost = totalProductCost(cart, totalExpenses);
-        console.log(cost)
+        console.info(cost)
 
         apportionmentTable.innerHTML = '';
-
-        // populate the table
+        
+          // populate the table 
         cart.forEach((item) => {
-          const row = document.createElement("tr");
+          const row = document.createElement("tr");         
+
           let id = 1;
           let actualCostPrice = 0;
           let result = allocateCost(cost, item.price, item.quantity, totalExpenses)
 
-          console.log(result)
-          // add actual cost price
+          console.info(result)
+          // add actual cost price 
           actualCostPrice = result.expCost;
 
           // add to cart
@@ -1497,38 +1540,35 @@
           let totalBuying = item.price * item.quantity;
           let product = item.product.toString();
 
-          row.innerHTML = `
-            <td id='${item.id}'><small>${item.product}</small></td>
-            <td id='${item.id}'><small>${item.quantity}</small></td>
-            <td id='${item.id}'><small>${item.price}</small></td>
-            <td id='${item.id}'><small>${totalBuying.toFixed(2)}</small></td>
-            <td id='${item.id}'><small>${result.allocated}</small></td>
-            <td id='${item.id}'><small>${result.allocationRate.toFixed(2)}</small></td>
+          console.log(overide)
+          
+          if (overide === 'manual'){
+            row.innerHTML = `
+            <td id='${item.id}'>${item.product}</td>
+            <td id='${item.id}' class="units">${item.quantity}</td>
+            <td id='${item.id}'>${item.price}</td>
+            <td id='${item.id}'>${totalBuying}</td>
+            <td id='${item.id}'>${result.allocated}</td>
             <td id='${item.id}'>
-              <small>
+               <small>${result.allocationRate.toFixed(2)}</small>
+            </td>
+            <td id='${item.id}'>
                 <input
-                  value='${actualCostPrice}'
-                  class='po-input form-control'
+                  id='manual'
+                  value='${item.actualPrice || 0.00}'
+                  class='po-input form-control form-control-sm allocated' 
                   type='number'
                   data-id='${item.id}'
-                  oninput='priceOverride(
-                    this,
-                    {
-                      tB:${result.allocated},
-                      exp:${totalExpenses},
-                      product:"${product}",
-                      acp:${actualCostPrice}
-                    }
-                  )'
+                  onclick='clearField(this)'
+                  onChange = calculateActualPrice(this)
                 />
-              </small>
-            </td>
-            <td id='${item.id}'><small>${total.toFixed(2)}</small></td>
+            </td> 
+            <td id='${item.id}' class='actual-price'>${total.toFixed(2)}</td>
           `;
 
           apportionmentTable.appendChild(row);
 
-          expenseFooter.innerHTML = '';
+          expenseFooter.innerHTML = '';  
 
           expenseFooter.innerHTML += `
             <tr>
@@ -1543,12 +1583,16 @@
             const expenseName = document.getElementById(`expense-name-${i}`).value;
             const expenseAmount = parseFloat(document.getElementById(`expense-amount-${i}`).value) || 0;
 
-            // Push each expense as an object to the expensesData array
-            expensesData.push({
-                name: expenseName,
-                amount: expenseAmount
-            });
+              // Push each expense as an object to the expensesData array
+              let expenseExist = expensesData.filter((exp) => exp.name === expenseName)
+           
+              expensesData.push({
+                  name: expenseName,
+                  amount: expenseAmount
+              });
 
+              console.info(expensesData)
+            
             // Create and append the expense row to the footer
             const expenseRow = document.createElement('tr');
             expenseRow.innerHTML += `
@@ -1560,13 +1604,89 @@
 
             expenseFooter.appendChild(expenseRow);
           }
+
+          document.getElementById('total_expenses').innerHTML = totalExpenses.toFixed(2);
+          
+          }else{
+            row.innerHTML = `
+            <td id='${item.id}'><small>${item.product}</small></td>
+            <td id='${item.id}'><small>${item.quantity}</small></td>
+            <td id='${item.id}'><small>${item.price}</small></td>
+            <td id='${item.id}'><small>${totalBuying}</small></td>
+            <td id='${item.id}'><small>${result.allocated}</small></td>
+            <td id='${item.id}'>
+                <small>
+                    <input
+                      value='${result.allocationRate.toFixed(2)}' 
+                      class='po-input form-control' 
+                      type='number'
+                      data-id='${item.id}'
+                      oninput='priceOverride(
+                        this, 
+                        {
+                          tB:${result.allocated},
+                          exp:${totalExpenses},
+                          product:"${product}",
+                          acp:${result.allocationRate.toFixed(2)}
+                        }
+                      )'
+                    />
+                </small>
+            </td>
+            <td id='${item.id}'>
+              <small>
+                ${actualCostPrice}
+              </small>
+            </td> 
+            <td id='${item.id}'><small>${total.toFixed(2)}</small></td>
+          `;
+        
+          apportionmentTable.appendChild(row);
+
+          expenseFooter.innerHTML = '';  
+
+          expenseFooter.innerHTML += `
+            <tr>
+                <td class='fw-bold'><small>Total Expenses</small></td>
+                <td colspan="3"></td>
+                <td><small id="total_expenses" class='fw-bold'></small></td>
+                <td colspan="3"></td>
+            </tr>
+          `;
+
+          for (let i = 1; i <= expenseCount; i++) {
+            const expenseName = document.getElementById(`expense-name-${i}`).value;
+            const expenseAmount = parseFloat(document.getElementById(`expense-amount-${i}`).value) || 0;
+
+              // Push each expense as an object to the expensesData array
+              let expenseExist = expensesData.filter((exp) => exp.name === expenseName)
+           
+              expensesData.push({
+                  name: expenseName,
+                  amount: expenseAmount
+              });
+
+              console.info(expensesData)
+            
+            // Create and append the expense row to the footer
+            const expenseRow = document.createElement('tr');
+            expenseRow.innerHTML += `
+              <td>${expenseName}</td>
+              <td colspan='3'></td>
+              <td>${expenseAmount.toFixed(2)}</td>
+              <td colspan='3'></td>
+            `;
+
+            expenseFooter.appendChild(expenseRow);
+          }
+          }
           document.getElementById('total_expenses').innerHTML = totalExpenses.toFixed(2);
       });
       }else{
         Swal.fire({
-          icon: 'warning',
+          icon: 'warning',   
           text: 'Please add purchase order items!',
-          title: 'Warning',
+          title: 'Warning', 
         });
         return;
       }
@@ -1890,6 +2010,35 @@
         });
 
         console.log(formData)
+    }
+
+    function calculateActualPrice(inputElement) {
+      let rowId = inputElement.dataset.id;
+      let allocatedValue = parseFloat(inputElement.value) || 0;
+      let row = document.querySelector(`td[id='${rowId}']`).parentNode;
+      let quantity = parseFloat(row.querySelector(".units").innerText) || 0;
+      let newActualPrice = allocatedValue * quantity;
+
+      let actualPriceElement = row.querySelector(".actual-price");
+      actualPriceElement.innerText = newActualPrice.toFixed(2);
+
+      console.info('Product ID:', rowId);
+      console.info('price', newActualPrice)
+
+      productExists = cart.filter((item)=> item.id === rowId)
+      console.info('Product exists', productExists)
+
+      let productIndex = cart.findIndex((item) => item.id === rowId);
+
+      if (productIndex !== -1) {
+        cart[productIndex].actualPrice= allocatedValue;
+        console.info('Updated product price:', cart[productIndex].price);
+        console.table(cart);
+        localStorage.setItem('cart', JSON.stringify(cart));
+        console.log(JSON.parse(localStorage.getItem('cart')))
+      } else {
+        console.warn('Product not found in cart:', rowId);
+      }
     }
 
 

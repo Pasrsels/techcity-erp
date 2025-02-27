@@ -2833,9 +2833,8 @@ def edit_purchase_order(request, po_id):
             purchase_order_items_data = data.get('po_items', [])
             expenses = data.get('expenses', [])
             cost_allocations = data.get('cost_allocations', [])
+            overide = data.get('overide')
 
-            for item in purchase_order_items_data:
-                print(item)
 
             # remove duplicates
             unique_expenses = []
@@ -2892,7 +2891,7 @@ def edit_purchase_order(request, po_id):
                 suppliers_dict = {supplier.id: supplier for supplier in suppliers}
                 logs_dict = {log.inventory_id: log.quantity for log in logs}
 
-                supplier = Supplier.objects.get(name='dubai')
+                supplier = Supplier.objects.get(id=1)
 
                 purchase_order_items_bulk = []
                 for item_data in purchase_order_items_data:
@@ -2905,13 +2904,16 @@ def edit_purchase_order(request, po_id):
                     
                     if not supplier:
                         return JsonResponse({'success': False, 'message': 'Invalid supplier'}, status=400)
+                    
+                    logger.info({item_data['actualPrice']})
+                    logger.info(overide)
 
                     purchase_order_items_bulk.append(
                         PurchaseOrderItem(
                             purchase_order=purchase_order,
                             product=product,
                             quantity=item_data['quantity'],
-                            unit_cost=item_data['price'],
+                            unit_cost= item_data['actualPrice'] if overide == 'manual' else item_data['price'],
                             actual_unit_cost=item_data['actualPrice'],
                             received_quantity=log_quantity,
                             supplier=supplier,

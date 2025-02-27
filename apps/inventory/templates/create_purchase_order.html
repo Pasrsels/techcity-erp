@@ -1777,8 +1777,8 @@
             row.innerHTML = `
             <td id='${item.id}'>${item.product}</td>
             <td id='${item.id}' class="units">${item.quantity}</td>
-            <td id='${item.id}'>${item.price.toFixed(2)}</td>
-            <td id='${item.id}'>${totalBuying.toFixed(2)}</td>
+            <td id='${item.id}'>${item.price}</td>
+            <td id='${item.id}'>${totalBuying}</td>
             <td id='${item.id}'>${result.allocated}</td>
             <td id='${item.id}'>
                <small>${result.allocationRate.toFixed(2)}</small>
@@ -1786,7 +1786,7 @@
             <td id='${item.id}'>
                 <input
                   id='manual'
-                  value='${actualCostPrice}'
+                  value='${item.actualPrice}'
                   class='po-input form-control form-control-sm allocated' 
                   type='number'
                   data-id='${item.id}'
@@ -1842,8 +1842,8 @@
             row.innerHTML = `
             <td id='${item.id}'><small>${item.product}</small></td>
             <td id='${item.id}'><small>${item.quantity}</small></td>
-            <td id='${item.id}'><small>${item.price.toFixed(2)}</small></td>
-            <td id='${item.id}'><small>${totalBuying.toFixed(2)}</small></td>
+            <td id='${item.id}'><small>${item.price}</small></td>
+            <td id='${item.id}'><small>${totalBuying}</small></td>
             <td id='${item.id}'><small>${result.allocated}</small></td>
             <td id='${item.id}'>
                 <small>
@@ -2213,16 +2213,14 @@
       let productIndex = cart.findIndex((item) => item.id === rowId);
 
       if (productIndex !== -1) {
-          cart[productIndex].actualPrice= allocatedValue;
-          console.info('Updated product price:', cart[productIndex].price);
-          console.table(cart);
+        cart[productIndex].actualPrice= allocatedValue;
+        console.info('Updated product price:', cart[productIndex].price);
+        console.table(cart);
+        localStorage.setItem('cart', JSON.stringify(cart));
       } else {
-          console.warn('Product not found in cart:', rowId);
+        console.warn('Product not found in cart:', rowId);
       }
     }
-
-
-  
 
   function paymentNextBtn() {
       const tableBody = document.getElementById('detailsTableBody');
