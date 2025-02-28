@@ -142,9 +142,12 @@
                                 <td><small>{{ log.dealer_price }}</small></td>
                                 <td>
                                     <small class="d-flex justify-content-between">
-                                        {% if log.quantity < 0 %}
+                                        {% if log.quantity < 0  and not log.action == 'sale return'%}
                                             <span class='text-danger'>{{log.quantity}}</span>
                                             <i class='bx bxs-down-arrow text-danger'></i>
+                                        {% elif log.quantity < 0  and log.action == 'sale return' %}
+                                            <span class='text-success'>{{log.quantity}}</span>
+                                            <i class='bx bxs-up-arrow text-success'></i>
                                         {% else %}
                                             <span class='text-success'>{{log.quantity}}</span>
                                             <i class='bx bxs-up-arrow text-success'></i>
