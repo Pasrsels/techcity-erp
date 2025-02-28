@@ -10,6 +10,7 @@ from django.apps import apps
 from datetime import timedelta
 from datetime import timedelta
 import sys
+from celery.schedules import crontab
 
 env = environ.Env()   
 load_dotenv()
@@ -49,7 +50,6 @@ THIRD_PARTY_APPS = [
     # 'django_crontab',
     # 'DjangoAsyncMail',
     # 'django_browser_reload',
-
 
     'apps.company',
     'apps.users',
@@ -150,7 +150,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 DATABASES = {
 
     'default': dj_database_url.config(
-        default='postgresql://postgres:TopCprLoVTPDAmezfOhAJoqvDuHLnxhw@autorack.proxy.rlwy.net:26269/railway'
+        default=os.environ.get('DATABASE_URL')
     )
 
     # 'default': {
@@ -162,6 +162,13 @@ DATABASES = {
     #     'PORT': '5432'
     # }
 }
+
+if os.environ.get('TESTING'):
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'test_db.sqlite3'),
+    }
+    
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -258,22 +265,59 @@ LOGGING = {
     "root": {"level": "INFO", "handlers": ["console"]},
 }
 
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": os.environ.get('REDIS_URL'),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "ssl_cert_reqs": None
+            },
+        }
+    }
+}
+
 # celery
 # CELERY_BROKER_URL = 'redis://localhost:6379'
 # CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 
 # remote
-CELERY_BROKER_URL = 'redis://default:aVrmORfgkdoGPWZoneAIwqggCmFKHXzz@autorack.proxy.rlwy.net:12167'
-CELERY_RESULT_BACKEND = 'redis://default:aVrmORfgkdoGPWZoneAIwqggCmFKHXzz@autorack.proxy.rlwy.net:12167'
+CELERY_BROKER_URL="rediss://:p81af2fc64c9b750172375f4b4b521a9a32354997e449c1cb59482e8607f7f227@ec2-44-223-243-234.compute-1.amazonaws.com:23070"
+CELERY_RESULT_BACKEND="rediss://:p81af2fc64c9b750172375f4b4b521a9a32354997e449c1cb59482e8607f7f227@ec2-44-223-243-234.compute-1.amazonaws.com:23070"
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 
 CELERY_BEAT_SCHEDULE = {
-    'run-all-invoices-recurring': {
-        'task': 'finance.tasks.generate_recurring_invoices',
-        'schedule': 60.0, 
+    # 'run-all-invoices-recurring': {
+    #     'task': 'finance.tasks.generate_recurring_invoices',
+    #     'schedule': 60.0, 
+    # },
+
+    'check-upcoming-layby-payments': {
+        'task': 'your_app.tasks.check_upcoming_layby_payments',
+        'schedule': crontab(hour=9, minute=0),  
+    },
+}
+
+REDIS_OPTIONS = {
+    'ssl': True,
+    'ssl_cert_reqs': None,  # Set to None to bypass certificate verification temporarily
+    'socket_connect_timeout': 30
+}
+
+# Configure Channels to use these options
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": ["rediss://:p81af2fc64c9b750172375f4b4b521a9a32354997e449c1cb59482e8607f7f227@ec2-44-223-243-234.compute-1.amazonaws.com:23070"],
+            "symmetric_encryption_keys": [SECRET_KEY],
+            "ssl_cert_reqs": None,  
+        },
     },
 }
 

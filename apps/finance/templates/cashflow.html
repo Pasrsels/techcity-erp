@@ -89,10 +89,10 @@
                 <button class="btn btn-outline-primary me-2" id="toggleFilters" data-bs-toggle="modal" data-bs-target="#incomeModal">
                     <i class="bx bx-filter"></i> Filters
                 </button>
-                <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#incomeModal">
+                <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#incomeModal" id="incomeBtn">
                     <i class="bx bx-plus"></i> Income
                 </button>
-                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#expenseModal">
+                <button class="btn btn-danger" id="expenseBtn">
                     <i class="bx bx-minus"></i> Expense
                 </button>
             </div>
@@ -184,22 +184,22 @@
         <!-- Income Modal -->
         <div class="modal fade" id="incomeModal" tabindex="-1">
             <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
+            <div class="modal-content">
+                <div class="modal-header">
                         <h5 class="modal-title">Record Income</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Name</label>
-                            <select class="category-select" id="expenseName" class="form-select">
-                                <option value="">income Name</option>
+                            <select class="category-select" id="incomeName" class="form-select"></select>
+                                <option value="">Income Name</option>
                                 {% for name in cash_flow_names %}
                                     <option value="{{ name.id }}">{{ name.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3"></div>
                             <label class="form-label">Amount</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
@@ -208,10 +208,10 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Main Category</label>
-                            <select class="category-select" id="incomeMainCategory">
+                            <select class="category-select" id="incomeCategory" class="form-select">
                                 <option value="">Select Category</option>
-                                {% for income in income_categories%}
-                                    <option value="{{income.id}}">{{income.name}}</option>
+                                {% for category in income_categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -219,10 +219,8 @@
                             <label class="form-label">Sub Category</label>
                             <select class="category-select" id="incomeSubCategory">
                                 <option value="">Select Sub Category</option>
-                                {% for income in income_categories%}
-                                    {% for sub_income in income %}
-                                        <option value="{{sub_income.sub_income_category.id}}">{{sub_income.sub_income_category.name}}</option>
-                                    {% endfor %}
+                                {% for category in income_categories %}
+                                    <option value="{{ category.sub_income.id }}">{{ category.sub_income.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -230,15 +228,17 @@
                             <label class="form-label">Branch</label>
                             <select class="category-select" id="incomeBranch">
                                 {% for branch in branches %}
-                                    <option value="{{ branch.id }}">{{ branch.name }}</option>
+                                    <option value="{{ branch.id}}">{{ branch.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-success" onclick="recordIncome()">Record Income</button>
+                        </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-success" onclick="recordIncome()">Record Income</button>
-                    </div>
+                    
                 </div>
             </div>
         </div>
@@ -326,92 +326,34 @@
     </div>
     <script>
         let cash_up_id = 0;
+        let record_type = '';
+
+        const expenseModal = new bootstrap.Modal(document.getElementById('expenseModal'));
+        const incomeModal = new bootstrap.Modal(document.getElementById('incomeModal'));
+
+        const expenseButton = document.getElementById('expenseBtn');
+        const incomeButton = document.getElementById('incomeBtn');
+
+        expenseButton.addEventListener('click', () => {
+            record_type = 'expense';
+            expenseModal.show();
+        });
+
+        incomeButton.addEventListener('click', () => {
+            record_type = 'income';
+            incomeModal.show();
+        });
 
         $(document).ready(function() {
-            $('#incomeName').select2({
-                theme: 'bootstrap5',
-                width: '100%',
-                dropdownParent: $('#incomeModal'),
-                tags: true,
-                createTag: function(params){
-                    return{
-                        text: params.term,
-                        newTag: true
-                    };
-                }
-            });
-
-            $('#incomeMainCategory').select2({
+            // Configuration object for common settings
+            const commonConfig = {
                 theme: 'bootstrap-5',
-                width: '100%',
-                dropdownParent: $('#incomeModal'),
-                tags: true,
-                createTag: function(params){
-                    return{
-                        text: params.term,
-                        newTag: true
-                    };
-                }
-            });
+                width: '100%'
+            };
 
-            $('#incomeSubCategory').select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                dropdownParent: $('#incomeModal'),
-                tags: true,
-                createTag: function(params){
-                    return{
-                        text: params.term,
-                        newTag: true
-                    };
-                }
-            });
-
-            $('#incomeBranch').select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                dropdownParent: $('#incomeModal')
-            });
-
-            $('#expenseBranch').select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                dropdownParent: $('#expenseModal')
-            });
-
-            $('#expenseName').select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                dropdownParent: $('#expenseModal'),
-                tags: true,
-                createTag: function(params) {
-                    return {
-                        id: params.term, 
-                        text: params.term, 
-                        newTag: true 
-                    };
-                }
-            });
-            
-            $('#expenseCategory').select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                dropdownParent: $('#expenseModal'),
-                tags: true,
-                createTag: function(params) {
-                    return {
-                        id: params.term, 
-                        text: params.term, 
-                        newTag: true 
-                    };
-                }
-            });
-
-
-            $('#expenseSubCategory').select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                dropdownParent: $('#expenseModal'),
+            // Configuration for fields with tags
+            const tagsConfig = {
+                ...commonConfig,
                 tags: true,
                 createTag: function(params) {
                     return {
@@ -420,156 +362,112 @@
                         newTag: true
                     };
                 }
-            });
+            };
 
-            // to be removed just for testing
-            $('#expenseName').on('select2:select', function(e) {
-                let data = e.params.data;
-                if (data.newTag) {
-                    console.info('Name - New text entered:', data.text);
-                } else {
-                    console.info('Name - Existing option selected:', data.text);
-                }
-                console.info('Name Value:', data.id);
-            });
+            // Function to initialize select2 fields
+            function initializeSelect2(elementId, config) {
+                $(`#${elementId}`).select2(config);
+            }
 
-            $('#expenseName').on('select2:closing', function(e) {
-                let searchText = $('#expenseName').data('select2').$dropdown.find('.select2-search__field').val();
-                if (searchText) {
-                    let exists = false;
-                    $('#expenseName option').each(function() {
-                        if ($(this).text().toLowerCase() === searchText.toLowerCase()) {
-                            exists = true;
-                            return false;
-                        }
-                    });
-
-                    if (!exists) {
-                        let newOption = new Option(searchText, searchText, true, true);
-                        $('#expenseName').append(newOption).trigger('change');
+            // Function to add event handlers
+            function addSelect2EventHandlers(elementId, fieldType) {
+                // Select event
+                $(`#${elementId}`).on('select2:select', function(e) {
+                    let data = e.params.data;
+                    if (data.newTag) {
+                        console.info(`${fieldType} - New text entered:`, data.text);
+                    } else {
+                        console.info(`${fieldType} - Existing option selected:`, data.text);
                     }
-                }
-            });
+                    console.info(`${fieldType} Value:`, data.id);
+                });
 
+                // Closing event
+                $(`#${elementId}`).on('select2:closing', function(e) {
+                    let searchText = $(`#${elementId}`).data('select2').$dropdown.find('.select2-search__field').val();
+                    if (searchText) {
+                        let exists = false;
+                        $(`#${elementId} option`).each(function() {
+                            if ($(this).text().toLowerCase() === searchText.toLowerCase()) {
+                                exists = true;
+                                return false;
+                            }
+                        });
 
-            // to be removed just for testing
-            $('#expenseCategory').on('select2:select', function(e) {
-                let data = e.params.data;
-                if (data.newTag) {
-                    console.info('Category - New text entered:', data.text);
-                } else {
-                    console.info('Category - Existing option selected:', data.text);
-                }
-                console.info('Category Value:', data.id);
-            });
-
-            $('#expenseCategory').on('select2:closing', function(e) {
-                let searchText = $('#expenseCategory').data('select2').$dropdown.find('.select2-search__field').val();
-                if (searchText) {
-                    let exists = false;
-                    $('#expenseCategory option').each(function() {
-                        if ($(this).text().toLowerCase() === searchText.toLowerCase()) {
-                            exists = true;
-                            return false;
+                        if (!exists) {
+                            let newOption = new Option(searchText, searchText, true, true);
+                            $(`#${elementId}`).append(newOption).trigger('change');
                         }
-                    });
-
-                    if (!exists) {
-                        let newOption = new Option(searchText, searchText, true, true);
-                        $('#expenseCategory').append(newOption).trigger('change');
                     }
+                });
+            }
+
+            // Initialize Income fields
+            const incomeFields = [
+                { id: 'incomeCategory', type: 'Category', modal: 'incomeModal', hasEvents: true },
+                { id: 'incomeName', type: 'Name', modal: 'incomeModal', hasEvents: true },
+                { id: 'incomeSubCategory', type: 'SubCategory', modal: 'incomeModal', hasEvents: true },
+                { id: 'incomeBranch', type: 'Branch', modal: 'incomeModal', hasEvents: false }
+            ];
+
+            // Initialize Expense fields
+            const expenseFields = [
+                { id: 'expenseCategory', type: 'Category', modal: 'expenseModal', hasEvents: true },
+                { id: 'expenseName', type: 'Name', modal: 'expenseModal', hasEvents: true },
+                { id: 'expenseSubCategory', type: 'SubCategory', modal: 'expenseModal', hasEvents: true },
+                { id: 'expenseBranch', type: 'Branch', modal: 'expenseModal', hasEvents: false }
+            ];
+
+            // Initialize all fields
+            [...incomeFields, ...expenseFields].forEach(field => {
+                const config = {
+                    ...(field.hasEvents ? tagsConfig : commonConfig),
+                    dropdownParent: $(`#${field.modal}`)
+                };
+                
+                initializeSelect2(field.id, config);
+                
+                if (field.hasEvents) {
+                    addSelect2EventHandlers(field.id, field.type);
                 }
             });
 
-            // Sto be removed just testing
-            $('#expenseSubCategory').on('select2:select', function(e) {
-                let data = e.params.data;
-                if (data.newTag) {
-                    console.info('SubCategory - New text entered:', data.text);
-                } else {
-                    console.info('SubCategory - Existing option selected:', data.text);
-                }
-                console.info('SubCategory Value:', data.id);
-            });
+            // Helper function to get categories
+            window.getCategories = function(type = 'expense') {
+                const prefix = type.toLowerCase() === 'income' ? 'income' : 'expense';
+                
+                let category = {
+                    value: $(`#${prefix}Category`).val(),
+                    text: $(`#${prefix}Category`).select2('data')[0]?.text || ''
+                };
+                
+                let subcategory = {
+                    value: $(`#${prefix}SubCategory`).val(),
+                    text: $(`#${prefix}SubCategory`).select2('data')[0]?.text || ''
+                };
 
-            $('#expenseSubCategory').on('select2:closing', function(e) {
-                let searchText = $('#expenseSubCategory').data('select2').$dropdown.find('.select2-search__field').val();
-                if (searchText) {
-                    let exists = false;
-                    $('#expenseSubCategory option').each(function() {
-                        if ($(this).text().toLowerCase() === searchText.toLowerCase()) {
-                            exists = true;
-                            return false;
-                        }
-                    });
+                let name = {
+                    value: $(`#${prefix}Name`).val(),
+                    text: $(`#${prefix}Name`).select2('data')[0]?.text || ''
+                };
 
-                    if (!exists) {
-                        let newOption = new Option(searchText, searchText, true, true);
-                        $('#expenseSubCategory').append(newOption).trigger('change');
-                    }
-                }
-            });
-
+                return { category, subcategory, name };
+            };
         });
 
-        function getExpenseCategories() {
-            let category = {
-                value: $('#expenseCategory').val(),
-                text: $('#expenseCategory').select2('data')[0]?.text || ''
-            };
-            
-            let subcategory = {
-                value: $('#expenseSubCategory').val(),
-                text: $('#expenseSubCategory').select2('data')[0]?.text || ''
-            };
 
-            return { category, subcategory };
-        }
 
         function recordIncome() {
             let type = ''
             const incomeAmount = document.getElementById('incomeAmount').value;
             const ExpenseAmount = document.getElementById('expenseAmount').value;
 
-            const categories = getExpenseCategories();
+            const categories = getCategories(record_type);
             console.info('Category:', categories.category);
             console.info('Subcategory:', categories.subcategory);
+            console.info('Expense Name:', categories.expenseName);
 
-            return // to be removed to check if the function is being called and it logs the categories
-
-            expCategory = document.getElementById('expenseCategory').value;
-            incCategory = document.getElementById('incomeCategory').value;
-
-
-            if (expCategory){
-                type='expense'
-                if (!ExpenseAmount) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: 'Please enter the expense amount.'
-                    });
-                    return;
-                }
-            }else if (incCategory){
-                type='income'
-                if (!incomeAmount) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: 'Please enter the income amount.'
-                    });
-                    return;
-                }
-            }else{
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: 'Please select a category'
-                });
-                return;
-            }
-
+            
             const data = {
                 IncomeAmount: incomeAmount || 0.00,
                 ExpenseAmount: ExpenseAmount || 0.00,
@@ -577,10 +475,11 @@
                 expenseCategory: document.getElementById('expenseCategory').value,
                 incomeBranch: document.getElementById('incomeBranch').value,
                 expenseBranch: document.getElementById('expenseBranch').value,
-                type: type
+                categories: categories,
+                type: record_type
             };
 
-            console.info(data)
+            console.log(data)
 
             fetch('/finance/record_transaction/', {
                 method: 'POST',

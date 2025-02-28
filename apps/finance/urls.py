@@ -125,9 +125,14 @@ urlpatterns = [
     # vat
     path('vat/', vat, name='vat'),
 
+    # layby
+    path('layby/', layby_data, name='layby'),
+    path('layby/pay/<int:layby_date_id>/', layby_payment, name='layby_payment'),
+
     ########################################################################################################################
     # API end points
     path('', include(router.urls)),
+    
     #Customers
     # path('api/v1/customers/', CustomersViewset.as_view(), name='api_customers'),
     path('api/v1/all-customer-account/', AllCustomerAccounts.as_view(), name='api_all_customer_account'),

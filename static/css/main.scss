@@ -104,8 +104,53 @@
     }
 }
 
+.modal-content {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+  }
   
+  .modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .modal-title {
+    font-weight: 600;
+    color: #2d3748;
+  }
+  
+  .btn-close:focus {
+    box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.15);
+  }
+  
+  .modal-body {
+    padding: 0;
+  }
 
+
+  .search-container {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+  
+  .search-container i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+  }
+  
+  .search-input {
+    padding-left: 2.5rem;
+    border-radius: var(--border-radius);
+    border: 1px solid #dee2e6;
+  }
+  
+  .search-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.15);
+}
 .techcity{
     .reorder-basket{
         position: relative;

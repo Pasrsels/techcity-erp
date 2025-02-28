@@ -34,7 +34,7 @@ def average_inventory_cost(product_id, new_cost, new_units, branch_id):
 
     average_cost = ((old_cost * old_units) + (new_cost * new_units)) / (new_units + old_units)
     logger.info(f'Average stock: {average_cost}')
-    return average_cost
+    return (average_cost)
 
 def best_price(id):
     """ utility for calculating the best 3 suppliers per product"""

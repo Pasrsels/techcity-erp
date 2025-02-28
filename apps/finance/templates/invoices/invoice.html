@@ -144,6 +144,7 @@ input[type="checkbox"] {
                             <th>Customer Name &#9650;</th>
                             <th>Reference &#9650;</th>
                             <th>Date &#9650;</th>
+                            <th>Products</th>
                             <th>Status &#9650;</th>
                             <th>Grand Total &#9650;</th>
                             <th>Paid &#9650;</th>
@@ -158,16 +159,17 @@ input[type="checkbox"] {
                             <td><small><a href="{% url 'finance:customer' invoice.customer.id %}">{{ invoice.customer.name }}</a></small></td>
                             <td><small>#{{ invoice.invoice_number }}</small></td>
                             <td><small>{{ invoice.issue_date|date:"d/m/y H:i" }}</small></td>
+                            <td><small>{{ invoice.products_purchased }}</small></td>
                             <td>
                                 <span class="status {% if invoice.payment_status == 'Paid' %}completed{% else %}pending{% endif %}">
                                     {% if invoice.hold_status %}
-                                    Onhold
-                                    {% else %}
-                                    {% if invoice.payment_status == 'Paid' %}
-                                    Completed
-                                    {% else %}
-                                    Pending
-                                    {% endif %}
+                                            Onhold
+                                        {% else %}
+                                        {% if invoice.payment_status == 'Paid' %}
+                                            Completed
+                                        {% else %}
+                                            Pending
+                                        {% endif %}
                                     {% endif %}
                                 </span>
                             </td>
@@ -385,17 +387,6 @@ input[type="checkbox"] {
         });
     });
 
-
-    // Select All Checkbox
-    const selectAllCheckbox = document.getElementById('select-all');
-    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
-
-    selectAllCheckbox.addEventListener('change', function () {
-        rowCheckboxes.forEach(checkbox => {
-            checkbox.checked = selectAllCheckbox.checked;
-        });
-    });
-
     // Column Sorting
     const headers = document.querySelectorAll("thead th");
     const tableBody = document.querySelector("tbody");
@@ -518,6 +509,7 @@ input[type="checkbox"] {
     deleteBtn.forEach((btn) => {
         btn.addEventListener('click', () => {
             invoiceId = btn.dataset.id;
+            console.info(invoiceId)
             Swal.fire({
                 title: 'Are you sure?',
                 text: 'You won\'t be able to revert this!',
@@ -529,8 +521,8 @@ input[type="checkbox"] {
                 cancelButtonText: 'No, cancel!',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    salesReturns()
-                    //deleteInvoice(invoiceId);
+                    // salesReturns()
+                    deleteInvoice(invoiceId);
                 }
             });
         });

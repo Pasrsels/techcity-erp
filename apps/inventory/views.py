@@ -1936,6 +1936,7 @@ def create_purchase_order(request):
             cost_allocations = data.get('cost_allocations', [])
             hold = data.get('hold', False)
             supplier_payment_data = data.get('supplier_data')
+            overide = data.get('overide')
 
             unique_expenses = []
 
@@ -1991,8 +1992,6 @@ def create_purchase_order(request):
                     actual_unit_cost = Decimal(item_data['actualPrice'])
                     supplier_id = item_data.get('supplier', [])
 
-                    logger.info(f'Supplier id {{ supplier_id }}')
-
                     if not all([product_name, quantity, unit_cost, product_id]):
                         transaction.set_rollback(True)
                         return JsonResponse({'success': False, 'message': 'Missing fields in item data'}, status=400)
@@ -2009,8 +2008,8 @@ def create_purchase_order(request):
                         purchase_order=purchase_order,
                         product=product,
                         quantity=quantity,
-                        unit_cost=unit_cost,
-                        actual_unit_cost=actual_unit_cost,
+                        unit_cost=actual_unit_cost if overide == 'manual' else unit_cost,
+                        actual_unit_cost=actual_unit_cost, 
                         received_quantity=0,
                         received=False,
                         supplier = supplier,
@@ -2431,6 +2430,15 @@ def generate_csv_response(items, po_items):
         ])
 
     return response
+
+# to delete
+def test(request):
+    sentvalue = request.GET.get('sentvalue')  
+    if sentvalue is not None:
+        return JsonResponse({"message": "Received", "sentvalue": sentvalue}, status=200)
+    else:
+        return JsonResponse({"error": "Missing 'sentvalue' parameter"}, status=400)
+
  
 @login_required
 def sales_price_list_pdf(request, order_id):
@@ -2602,7 +2610,7 @@ def process_received_order(request):
             try:          
                 system_quantity = inventory.quantity
                 # Update existing inventory
-                inventory.cost = cost
+                
                 inventory.price = selling_price
                 inventory.dealer_price = dealer_price or 0
                 inventory.quantity += quantity
@@ -2612,7 +2620,20 @@ def process_received_order(request):
                 else:
                     inventory.batch = f'{order.batch}, '
 
-                inventory.save()
+                cost = average_inventory_cost(inventory.id, order_item.actual_unit_cost, quantity, request.user.branch.id)
+                logger.info(cost)
+
+                inventory.cost = Decimal(round(cost, 2))
+
+                logger.info(f'Cost {cost}')  
+
+                try:
+                    inventory.save(force_update=True)
+                except Exception as e:
+                    logger.info(e)
+                    return JsonResponse({'success': False, 'message': f'{e}'}, status=400)
+                
+                logger.info(f'Inventory cost: {inventory.cost}')
             except Inventory.DoesNotExist:
                 # Create a new inventory object if it does not exist
                 inventory = Inventory(
@@ -3245,6 +3266,7 @@ def view_LifeTimeOrders(request, supplier_id):
     return JsonResponse({'success': True,  'response': 'invalid request'}, status = 500)
 
 @login_required
+@transaction.atomic
 def supplier_view(request):
     if request.method == 'GET':
         supplier_products = Product.objects.all()
@@ -3317,56 +3339,43 @@ def supplier_view(request):
             address = data.get('address')
 
             logger.info(name)
-            
-            # check if all data exists
-            if not name or not contact_person or not email or not phone or not address:
-                return JsonResponse({'success': False, 'message':'Fill in all the form data'}, status=400)
 
-            # check is supplier exists
-            if Supplier.objects.filter(email=email).exists() and Supplier.objects.filter(delete = True).exists():
-                bring_back =  Supplier.objects.filter(email = email)
-                bring_back.delete = False
-                bring_back.update()
-                logger.info(bring_back.delete)
-                return JsonResponse({'success': True, 'response':f'Supplier{name} brought back'}, status=200)
-            elif Supplier.objects.filter(email=email).exists():
-                return JsonResponse({'success': False, 'response':f'Supplier{name} already exists'}, status=400)
+            # # check if all data exists
+            # if not name or not contact_person or not email or not phone or not address:
+            #     return JsonResponse({'success': False, 'message':'Fill in all the form data'}, status=400)
+
+            # # check is supplier exists
+            # if Supplier.objects.filter(email=email).exists() and Supplier.objects.filter(delete = True).exists():
+            #     bring_back =  Supplier.objects.filter(email = email)
+            #     bring_back.delete = False
+            #     bring_back.update()
+            #     logger.info(bring_back.delete)
+            #     return JsonResponse({'success': True, 'response':f'Supplier{name} brought back'}, status=200)
+            # elif Supplier.objects.filter(email=email).exists():
+            #     return JsonResponse({'success': False, 'response':f'Supplier{name} already exists'}, status=400)
            
-            with transaction.atomic():
-                if not Currency.objects.filter(name = 'USD').exists() and not Currency.objects.filter(name = 'ZIG').exists():
-                    Currency.objects.create(
-                        code = '001',
-                        name = 'USD',
-                        symbol = '$',
-                        exchange_rate = 1,
-                        default = True
-                    )
-                    Currency.objects.create(
-                        code = '002',
-                        name = 'ZIG',
-                        symbol = 'Z',
-                        exchange_rate = 26.78,
-                        default =  False
-                    )
+            logger.info('here')
+            supplier = Supplier.objects.create(
+                name = name,
+                contact_person = contact_person,
+                email = email,
+                phone = phone,
+                address = address,
+                delete = False
+            )
+            logger.info('done')
+                
+                # SupplierAccount.objects.create(
+                #     supplier = supplier,
+                #     currency = Currency.objects.get(default = True),
+                #     balance = 0,
+                # )
 
-                supplier = Supplier.objects.create(
-                    name = name,
-                    contact_person = contact_person,
-                    email = email,
-                    phone = phone,
-                    address = address,
-                    delete = False
-                )
-                SupplierAccount.objects.create(
-                    supplier = supplier,
-                    currency = Currency.objects.get(default = True),
-                    balance = 0,
-                )
-                SupplierAccount.objects.create(
-                    supplier = supplier,
-                    currency = Currency.objects.get(default = False),
-                    balance = 0,
-                )
+                # SupplierAccount.objects.create(
+                #     supplier = supplier,
+                #     currency = Currency.objects.get(default = False),
+                #     balance = 0,
+                # )
             return JsonResponse({'success': True}, status=200)
         except Exception as e:
             logger.info(e)
@@ -3468,7 +3477,7 @@ def product(request):
             """creating a new product"""
             
             # validation for existance
-            if Inventory.objects.filter(name=data['name']).exists():
+            if Inventory.objects.filter(name__exact=data['name']).exists():
                 return JsonResponse({'success':False, 'message':f'Product {data['name']} exists'})
             
             logger.info(f'Creating product: {data['name']}: {request.user.branch}')
@@ -3489,7 +3498,6 @@ def product(request):
                 # image = image,
                 status = True
             )
-        
         
         return JsonResponse({'success':True}, status=200)
 
