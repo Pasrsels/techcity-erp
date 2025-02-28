@@ -4377,16 +4377,81 @@ class InvoiceList(views.APIView):
 
 class ExpenseView(views.APIView):
     permission_classes = [IsAuthenticated]
+    def get(self, request):
+        filter_option = request.GET.get('filter', 'today')
+        download = request.GET.get('download')
+        
+        now = datetime.datetime.now()
+        end_date = now
+        
+        if filter_option == 'today':
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_week':
+            start_date = now - timedelta(days=now.weekday())
+        elif filter_option == 'yesterday':
+            start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_month':
+            start_date = now.replace(day=1)
+        elif filter_option == 'last_month':
+            start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
+        elif filter_option == 'this_year':
+            start_date = now.replace(month=1, day=1)
+        elif filter_option == 'custom':
+            start_date = request.GET.get('start_date')
+            end_date = request.GET.get('end_date')
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        else:
+            start_date = now - timedelta(days=now.weekday())
+            end_date = now
+            
+        expenses = Expense.objects.filter(issue_date__gte=start_date, issue_date__lte=end_date, branch=request.user.branch).order_by('issue_date').values()
+        
+        # if user role is sales filter expense by user
+        if request.user.role == 'sale':
+            expenses = expenses.filter(user=request.user)
+
+        if download:
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = f'attachment; filename="expenses_report_{filter_option}.csv"'
+
+            writer = csv.writer(response)
+            writer.writerow(['Date', 'Description', 'Done By', 'Amount'])
+
+            total_expense = 0  
+            for expense in expenses:
+                total_expense += expense.amount
+
+                writer.writerow([
+                    expense.issue_date,
+                    expense.description,
+                    expense.user.first_name,
+                    expense.amount,
+                ])
+
+            writer.writerow(['Total', '', '', total_expense])
+            
+            return response
+        
+        return Response( 
+            {
+                'expenses':expenses,
+                'filter_option': filter_option,
+            }
+        )
+
+class ExpenseDetail(views.APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, expense_id):
         expense = get_object_or_404(Expense, id=expense_id)
-        data = {
+        return Response(
+        {
             'id': expense.id,
             'amount': expense.amount,
             'description': expense.description,
             'category': expense.category.id
-        }
-        return Response(data, status.HTTP_200_OK)
-    
+        }, status.HTTP_200_OK)
+
 class AddExpenseCategory(views.APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
@@ -5140,6 +5205,60 @@ class SendWhatsapp(views.APIView):
 
 class CashbookView(views.APIView):
     permission_classes = [IsAuthenticated]
+    def get(self, request):
+        filter_option = request.GET.get('filter', 'today')
+        now = datetime.datetime.now()
+        end_date = now
+        
+        if filter_option == 'today':
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_week':
+            start_date = now - timedelta(days=now.weekday())
+        elif filter_option == 'yesterday':
+            start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_option == 'this_month':
+            start_date = now.replace(day=1)
+        elif filter_option == 'last_month':
+            start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
+        elif filter_option == 'this_year':
+            start_date = now.replace(month=1, day=1)
+        elif filter_option == 'custom':
+            start_date = request.GET.get('start_date')
+            end_date = request.GET.get('end_date')
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        else:
+            start_date = now - timedelta(days=now.weekday())
+            end_date = now
+
+        entries = Cashbook.objects.filter(issue_date__gte=start_date, issue_date__lte=end_date, branch=request.user.branch).order_by('issue_date').values()
+        
+        total_debit = entries.filter(debit=True, cancelled=False).aggregate(Sum('amount'))['amount__sum'] or 0
+        total_credit = entries.filter(credit=True, cancelled=False).aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        balance_bf = 0 
+        
+        previous_entries = Cashbook.objects.filter(issue_date__lt=start_date, branch=request.user.branch)
+
+        previous_debit = previous_entries.filter(debit=True).aggregate(Sum('amount'))['amount__sum'] or 0
+        previous_credit = previous_entries.filter(credit=True).aggregate(Sum('amount'))['amount__sum'] or 0
+        balance_bf = previous_debit - previous_credit
+
+        total_balance = total_debit - total_credit
+        logger.info(total_balance)
+        invoice_items = InvoiceItem.objects.all().values()
+
+        return Response({
+            'filter_option': filter_option,
+            'entries': entries,
+            'balance_bf': balance_bf,
+            'total_debit': total_debit,
+            'total_credit': total_credit,
+            'total_balance': total_balance,
+            'end_date': end_date,
+            'start_date': start_date,
+            'invoice_items': invoice_items
+        })
     def post(self, request):
         filter_option = request.data.get('filter', 'today')
         now = datetime.datetime.now()
@@ -5344,6 +5463,147 @@ class UpdateTransactionStatus(views.APIView):
             
         return Response(status.HTTP_400_BAD_REQUEST)   
     
+class CashFlowView(views.APIView):
+    def get(self, request):
+        cashflows = Cashflow.objects.all().order_by('-date').values()
+        cashups = CashUp.objects.select_related('branch').filter(status=False).values()
+
+        cashFlows_total = cashflows.aggregate(total=Sum('total'))['total'] or 0
+        cash_flow_items = CashUp.objects.filter(status=False).aggregate(total=Sum('expected_cash'))['total'] or 0
+
+        # categories
+        main_income_category = MainIncomeCategory.objects.all().select_related('sub_income_category').values()
+        main_expense_category = MainExpenseCategory.objects.all().select_related('sub_expense').values()
+        cash_flow_names = CashFlowName.objects.all().values()
+        
+        return Response(
+        {
+            'cashflows': cashflows,
+            'cashups': cashups,
+            'cashFlows_total': cashFlows_total,
+            'cash_flow_items': cash_flow_items,
+            'cash_flow_names': cash_flow_names,
+            'income_categories': main_income_category,
+            'expense_categories': main_expense_category,
+        }, status.HTTP_200_OK)
+    def post(self, request):
+        try:
+            data = request.data
+            income = float(data.get('IncomeAmount', 0))
+            expense_amount = float(data.get('ExpenseAmount', 0))
+            transaction_type = data.get('type', '')
+            income_category = data.get('incomeCategory', '')
+            expense_category = data.get('expenseCategory', '')
+            #cashflow name
+            name = data.get('name')
+            #adding subcategories
+            income_sub_category = data.get('incomeSubCategory', '')
+            expense_sub_category = data.get('expenseSubCategory', '')
+            #ends here
+            income_branch = data.get('incomeBranch', '')
+            expense_branch = data.get('expenseBranch', '')
+
+            logger.info(expense_category)
+
+            # validations 
+            
+            if not transaction_type or transaction_type not in ['income', 'expense']:
+                return JsonResponse({'success': False, 'message': 'Invalid transaction type.'}, status=400)
+            
+            with transaction.atomic():
+                if transaction_type == 'income':
+
+                    if not income or income <= 0:
+                        return JsonResponse({'success': False, 'message': 'Invalid amount.'}, status=400)
+                    
+                    if transaction_type == 'income' and not income_category:
+                        return Response({'message': 'Income category is required.'}, status.HTTP_400_BAD_REQUEST)
+
+                    # if transaction_type == 'income' and not income_branch:
+                    #     return JsonResponse({'success': False, 'message': 'Income branch is required.'}, status=400)
+            
+                    logger.info(f'Creating Income amount: {income}')
+                    cash_flow_name, _ = CashFlowName.objects.get_or_create(name=name)
+                    income_category, _ = MainIncomeCategory.objects.get_or_create(id=income_category, defaults={'name': 'Income'})
+
+                    object = Cashflow.objects.create(
+                        name=cash_flow_name,
+                        branch=request.user.branch,
+                        total=income,
+                        date=datetime.datetime.now(),
+                        status=False,
+                        income=income,
+                        income_category=income_category,
+                        created_by=request.user
+                    )
+
+                    logger.info(f'Income created: {object}.')
+
+                    return Response({'message': 'Income cashflow successfully created'}, status.HTTP_201_CREATED)
+                
+                else:
+
+                    if not expense_amount or expense_amount <= 0:
+                        return JsonResponse({'success': False, 'message': 'Invalid amount.'}, status=400)
+
+                    if transaction_type == 'expense' and not expense_category:
+                        return JsonResponse({'success': False, 'message': 'Expense category is required.'}, status=400)
+                    
+                    # if transaction_type == 'expense' and not expense_branch:
+                    #     return JsonResponse({'success': False, 'message': 'Expense branch is required.'}, status=400)
+                    
+                    logger.info(f'Creating Expense amount: {expense_amount}')
+                    cash_flow_name, _ = CashFlowName.objects.get_or_create(name=name)
+                    expense_category, _ = MainExpenseCategory.objects.get_or_create(id=expense_category, defaults={'name': 'Expense'})
+
+                    object = Cashflow.objects.create(
+                        name=cash_flow_name,
+                        branch=request.user.branch,
+                        total=expense_amount,
+                        date=datetime.datetime.now(),
+                        status=False,
+                        expense=expense_amount,
+                        income=0,
+                        expense_category=expense_category,
+                        created_by=request.user
+                    )
+
+                    logger.info(f'Expense created: {object}.')
+
+                    return JsonResponse({'success': True, 'message': 'Expense cashflow successfully created'}, status=201)
+
+        except Exception as e:
+            logger.error(f"Error recording transaction {e}.")
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+class CashUpList(views.APIView):
+    def get(self, request):
+        cashups = (
+            CashUp.objects
+            .select_related('branch', 'created_by')
+            .filter(status=False)
+            .values(
+                'id',
+                'branch__name',
+                'expected_cash',
+                'created_by__username',
+                'created_at',
+                'received_amount'
+            )
+            .order_by('-created_at')
+        )
+
+        data = []
+        for cashup in cashups:
+            cashup_dict = dict(cashup)
+            cashup_dict['created_at'] = cashup['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            data.append(cashup_dict)
+
+        return Response({
+            'success': True,
+            'data': data
+        }, status.HTTP_200_OK)
+
 class DaysData(views.APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):

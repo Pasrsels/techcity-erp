@@ -159,7 +159,8 @@ urlpatterns = [
     # path('api/v1/quotation-list/', QuotationList.as_view(), name='api_quotation_list'),
 
     #Expense
-    path('api/v1/expense/<int:expense_id>/', ExpenseView.as_view(), name='api_expense'),
+    path('api/v1/expense/', ExpenseView.as_view(), name='api_expense'),
+    path('api/v1/expense/<int:expense_id>/', ExpenseDetail.as_view(), name='api_expense_detail'),
     path('api/v1/expense_category/', AddExpenseCategory.as_view(), name='api_expense_category'),
     path('api/v1/add-or-edit-expense/<int:id>/', EditExpense.as_view(), name='api_add_edit_expense'),
     path('api/v1/delete-expense/', DeleteExpense.as_view(), name='api_delete_expense'),
@@ -191,6 +192,10 @@ urlpatterns = [
     path('api/v1/cancel-entry/', CancelTransaction.as_view(), name='api_cancel_entry'),
     path('api/v1/cashbook/note/<int:entry_id>/', CashbookNoteView.as_view(), name='api_cashbook_noteview'),
     path('api/v1/update_transaction_status/<int:pk>/', UpdateTransactionStatus.as_view(), name='api_update_transaction_status'),
+
+    #Cash flow
+    path("api/v1/cashflows", CashFlowView.as_view(), name="api_cash_flow"),
+    path("api/v1/cash-up-list", CashUpList.as_view(), name="api_cash_up_list"),
 
     #Days data
     path('api/v1/days_data', DaysData.as_view(), name='api_days_data'),

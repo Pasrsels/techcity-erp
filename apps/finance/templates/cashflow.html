@@ -191,6 +191,15 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <select class="category-select" id="expenseName" class="form-select">
+                                <option value="">income Name</option>
+                                {% for name in cash_flow_names %}
+                                    <option value="{{ name.id }}">{{ name.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Amount</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
@@ -198,17 +207,28 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Category</label>
-                            <select class="selectpicker w-100" id="incomeCategory" data-live-search="true" title="Select Category">
-                                <option value="1">Sales</option>
-                                <option value="2">Services</option>
-                                <option value="3">Investments</option>
-                                <option value="4">Other Income</option>
+                            <label class="form-label">Main Category</label>
+                            <select class="category-select" id="incomeMainCategory">
+                                <option value="">Select Category</option>
+                                {% for income in income_categories%}
+                                    <option value="{{income.id}}">{{income.name}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Sub Category</label>
+                            <select class="category-select" id="incomeSubCategory">
+                                <option value="">Select Sub Category</option>
+                                {% for income in income_categories%}
+                                    {% for sub_income in income %}
+                                        <option value="{{sub_income.sub_income_category.id}}">{{sub_income.sub_income_category.name}}</option>
+                                    {% endfor %}
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Branch</label>
-                            <select class="selectpicker w-100" id="incomeBranch" data-live-search="true" title="Select Branch">
+                            <select class="category-select" id="incomeBranch">
                                 {% for branch in branches %}
                                     <option value="{{ branch.id }}">{{ branch.name }}</option>
                                 {% endfor %}
@@ -308,10 +328,43 @@
         let cash_up_id = 0;
 
         $(document).ready(function() {
-            $('#incomeCategory').select2({
+            $('#incomeName').select2({
+                theme: 'bootstrap5',
+                width: '100%',
+                dropdownParent: $('#incomeModal'),
+                tags: true,
+                createTag: function(params){
+                    return{
+                        text: params.term,
+                        newTag: true
+                    };
+                }
+            });
+
+            $('#incomeMainCategory').select2({
                 theme: 'bootstrap-5',
                 width: '100%',
-                dropdownParent: $('#incomeModal')
+                dropdownParent: $('#incomeModal'),
+                tags: true,
+                createTag: function(params){
+                    return{
+                        text: params.term,
+                        newTag: true
+                    };
+                }
+            });
+
+            $('#incomeSubCategory').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                dropdownParent: $('#incomeModal'),
+                tags: true,
+                createTag: function(params){
+                    return{
+                        text: params.term,
+                        newTag: true
+                    };
+                }
             });
 
             $('#incomeBranch').select2({
