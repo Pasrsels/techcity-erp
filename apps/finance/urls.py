@@ -217,4 +217,7 @@ urlpatterns = [
 
     #Finance
     path('api/v1/finance', FinanceApi.as_view(), name ='finance_api'),
+
+    #User accounts
+    path('api/v1/user_accounts/', UserAccountsView.as_view(), name='api_user_accounts'),
 ]

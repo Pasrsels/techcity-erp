@@ -3702,7 +3702,7 @@ def user_accounts(request):
             'total_debits': total_debits,
             'last_activity': last_activity
         })
-
+    logger.info(users_with_accounts)
     context = {
         'users_with_accounts': users_with_accounts
     }
@@ -6095,3 +6095,42 @@ class FinanceApi(views.APIView):
             'recent_transactions': recent_sales,
             'expenses_by_category': expenses_by_category,
         })
+
+class UserAccountsView(views.APIView):
+    def get(self, request):
+        users = User.objects.filter(is_active=True).prefetch_related('accounts')
+    
+        users_with_accounts = []
+        for user in users:
+            accounts = user.accounts.all()
+            
+            total_balance = accounts.aggregate(
+                total=Coalesce(Sum('balance', output_field=DecimalField()), Decimal('0.00'))
+            )['total']
+            
+            total_credits = accounts.aggregate(
+                total=Coalesce(Sum('total_credits', output_field=DecimalField()), Decimal('0.00'))
+            )['total']
+            
+            total_debits = accounts.aggregate(
+                total=Coalesce(Sum('total_debits', output_field=DecimalField()), Decimal('0.00'))
+            )['total']
+
+            last_activity = accounts.aggregate(
+                last_date=Max('last_transaction_date')
+            )['last_date']
+            
+            last_activity = accounts.aggregate(
+                last_date=Max('last_transaction_date')
+            )['last_date']
+            
+            users_with_accounts.append({
+                'user': user.get_full_name(),
+                # 'accounts': accounts,
+                'total_balance': total_balance,
+                'total_credits': total_credits,
+                'total_debits': total_debits,
+                'last_activity': last_activity
+            })
+
+        return Response({'Account Data':users_with_accounts}, status.HTTP_200_OK)
