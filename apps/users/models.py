@@ -42,6 +42,7 @@ class CustomUserManager(BaseUserManager):
         """
         if not email:
             raise ValueError('The Email field is required')
+        
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.is_staff = True
@@ -49,7 +50,6 @@ class CustomUserManager(BaseUserManager):
 
         if self.model.objects.count() == 1:
             user.is_superuser = True
-            user.groups.add(Group.objects.get_or_create(name='Admin')[0])
         user.save(using=self._db)
         return user
 

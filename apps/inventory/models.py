@@ -150,24 +150,23 @@ class PurchaseOrder(models.Model):
         ('canceled', 'Canceled')
     ]
 
-    order_number = models.CharField(max_length=100, unique=True)
-    order_date = models.DateTimeField(default=timezone.now)
+    order_number = models.CharField(max_length=100, unique=True, null=True)
+    order_date = models.DateTimeField(default=timezone.now, null=True)
     delivery_date = models.DateField(null=True, blank=True)
-    total_cost = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
-    status = models.CharField(max_length=50, choices=status_choices, default='received')
-    notes = models.CharField(max_length=255 ,null=True, blank=True)
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
-    discount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
-    tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
-    other_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
-    is_partial = models.BooleanField(default=False)  
-    received = models.BooleanField(default=False)
+    total_cost = models.DecimalField(max_digits=15, decimal_places=2, default=0.00, null=True)
+    status = models.CharField(max_length=50, choices=status_choices, default='received', null=True)
+    notes = models.CharField(max_length=255, null=True, blank=True)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True)
+    discount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00, null=True)
+    tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00, null=True)
+    other_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00, null=True)
+    is_partial = models.BooleanField(default=False, null=True)
+    received = models.BooleanField(default=False, null=True)
     payment_method = models.CharField(max_length=15, choices=[
         ('cash', 'cash'),
         ('bank', 'bank'),
         ('ecocash', 'ecocash')
-    ]
-    , default="cash")
+    ], default="cash", null=True)
     batch = models.CharField(max_length=20, null=True)
     hold = models.BooleanField(null=True, default=True)
 
@@ -190,18 +189,18 @@ class PurchaseOrder(models.Model):
 
 class PurchaseOrderItem(models.Model):
 
-    purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name='items')
+    purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name='items', null=True)
     product = models.ForeignKey(Inventory, on_delete=models.SET_NULL, null=True)
-    quantity = models.IntegerField()
-    unit_cost = models.DecimalField(max_digits=10, decimal_places=2)
-    actual_unit_cost = models.DecimalField(max_digits=10, decimal_places=2)
-    received_quantity = models.IntegerField(default=0) 
+    quantity = models.IntegerField(null=True)
+    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    actual_unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    received_quantity = models.IntegerField(default=0, null=True) 
     received = models.BooleanField(default=False, null=True)
     expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     dealer_expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, default=1)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    wholesale_price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    wholesale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
     class Meta:
         models.Index(fields=['product', 'supplier'])

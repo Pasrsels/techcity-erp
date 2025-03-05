@@ -1989,7 +1989,7 @@ def create_purchase_order(request):
                     product_name = item_data['product']
                     quantity = int(item_data['quantity'])
                     unit_cost = Decimal(item_data['price'])
-                    actual_unit_cost = Decimal(item_data['actualPrice'])
+                    actual_unit_cost = Decimal(item_data['price'])
                     supplier_id = item_data.get('supplier', [])
 
                     if not all([product_name, quantity, unit_cost, product_id]):

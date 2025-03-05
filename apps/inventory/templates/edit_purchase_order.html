@@ -41,12 +41,12 @@
             <div class="col-9">
                 <div class="d-flex flex-column rounded p-2" style="background: #fff;">
                   <div class="d-flex justify-content-between align-items-center">
-                    <p id="cart-title" class="fw-bold fs-6 rounded mx-1">Purchase order Items</p>
+                    <p id="Editcart-title" class="fw-bold fs-6 rounded mx-1">Purchase order Items</p>
                     <div>
                       <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search products..." oninput="searchTable()">
                   </div>
                   </div>
-                    <table class="table border rounder p-2" id="cart-table">
+                    <table class="table border rounder p-2" id="Editcart-table">
                         <thead>
                           <th id="sort-number" style="cursor: pointer;">#
                             <span id="sort-arrow" class="sort-arrow">?</span>
@@ -58,7 +58,7 @@
                           <th>Unit Price</th>
                           <th class="text-center">Total</th>
                         </thead>
-                        <tbody id="cart-items"></tbody>
+                        <tbody id="Editcart-items"></tbody>
                         <tfoot>
                             <tr>
                                 <td colspan="5"></td>
@@ -111,7 +111,7 @@
             </div>
             <div class="col-3 rounded" style="background: #fff;">
                 <div>
-                  <p id="cart-title" class="fw-bold fs-6 mt-3">Add Product</p>
+                  <p id="Editcart-title" class="fw-bold fs-6 mt-3">Add Product</p>
                   <hr>
                     <form class='d-flex flex-column mt-2 w-100 mt-2 w-100 px-2' method='post'>
                         {% csrf_token %}
@@ -616,7 +616,7 @@
 <script src="{% static 'js/calculater.js' %}"></script>
 <script>
     let itemCount = 1;
-    let cart = [];
+    let Editcart = [];
     let prodData = [];
     let searchValue = '';
     let prodQauntity = 0;
@@ -671,6 +671,48 @@
       overideModal.show()
     })
 
+    //check if local storage have anything and populate at the page load
+    const checkLocalCart = () => {
+        Swal.fire({
+            title: 'Loading products...',
+            text: 'Please wait while we load your Editcart.',
+            allowOutsideClick: false, 
+            didOpen: () => {
+                Swal.showLoading();
+                const cartData = localStorage.getItem('Editcart');
+
+                if (!cartData){
+                  Swal.close();
+                  return;
+                }else{
+                  if (cartData.length == 2) {
+                      Swal.close();
+                      return;
+                  }
+                }
+                
+                if (localStorage.getItem('Editcart')) {
+                    Editcart = JSON.parse(localStorage.getItem('Editcart')); 
+
+                    // update count
+                    itemCount = Editcart[Editcart.length - 1].count;
+
+                    updateCartDisplay().then(() => {
+                        Swal.close(); 
+                    }).catch(error => {
+                        console.error('Error updating Editcart:', error);
+                        Swal.fire('Error', 'Failed to load products. Please try again.', 'error');
+                    });
+                } else {
+                    Swal.close(); 
+                    Swal.fire('Info', 'No products found in your Editcart.', 'info');
+                }
+            },
+        });
+    };
+
+    checkLocalCart()
+
 
     const clearField = (el) =>{
       el.value=''
@@ -685,7 +727,7 @@
     const searchTable = () => {
         const input = document.getElementById('search-input');
         const filter = input.value.toLowerCase();
-        const table = document.getElementById('cart-table');
+        const table = document.getElementById('Editcart-table');
         const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
 
         for (let i = 0; i < rows.length; i++) {
@@ -718,7 +760,7 @@
     });
 
     const sortTable = () => {
-        const table = document.getElementById("cart-table");
+        const table = document.getElementById("Editcart-table");
         const tbody = table.getElementsByTagName("tbody")[0];
         const rows = Array.from(tbody.getElementsByTagName("tr"));
 
@@ -901,7 +943,7 @@
     })
 
     //function isCartEmpty(){
-    //    if (cart.length === 0){
+    //    if (Editcart.length === 0){
     //        confirmBtn.disabled=true;
     //    }else{
     //        confirmBtn.disabled=false;
@@ -1269,59 +1311,71 @@
       }
 
     function updateCartDisplay() {
-        const cartItemsList = document.getElementById("cart-items");
-        cartItemsList.innerHTML = "";
+      return new Promise((resolve, reject) => {
+        try {
+          const cartItemsList = document.getElementById("Editcart-items");
+          cartItemsList.innerHTML = "";
+            let items = JSON.parse(localStorage.getItem('Editcart'))
 
-        console.log(cart, 'cart')
+            if (!items || items.length === 0) {
+              items = Editcart;
+            }
 
-        cart.forEach((item, index) => {
-            const row = document.createElement("tr");
+          console.log(items, 'cart')
 
-            row.innerHTML = `
-                <td><small>${item.count}</small></td>
-                <td>
-                  <small>
-                      <button class="btn" data-id=${item.id} onclick="removeItem(this);">
-                          <i class='bx bx-trash-alt'></i>
-                      </button>
+          items.reverse().forEach((item, index) => {
+              const row = document.createElement("tr");
+              row.innerHTML = `
+              <td><small>${item.count}</small></td>
+              <td>
+                <small>
+                    <button class="btn" data-id=${item.id} onclick="removeItem(this);">
+                        <i class='bx bx-trash-alt'></i>
+                    </button>
+                </small>
+              </td>
+              <td>
+                <small>
+                  ${item.product}
+                </small>
+              </td>
+              <td>
+                <small>
+                  ${item.supplierName}
+                </small>
+              </td>
+              <td>
+                <small>
+                  <input type="number" class="form-control form-control-sm" id="quantity-${item.id}" value="${item.quantity}" min="1" 
+                      onchange="updateItemQuantity('${item.id}', this.value)">
+                </small>
+              </td>
+              <td>
+                <small>
+                  <input type="number" class="form-control form-control-sm" id="price-${item.id}" value="${item.price}" min="0" step="0.01" 
+                      onchange="updateItemPrice('${item.id}', this.value)">
+                </small>
+              </td>
+              <td class='text-center' id="total-${item.id}">
+                <small>
+                  ${(item.quantity * item.price).toFixed(2)}
                   </small>
-                </td>
-                <td>
-                  <small>
-                    ${item.product}
-                  </small>
-                </td>
-                <td>
-                  <small>
-                    ${item.supplierName}
-                  </small>
-                </td>
-                <td>
-                  <small>
-                    <input type="number" class="form-control form-control-sm" id="quantity-${item.id}" value="${item.quantity}" min="1" 
-                        onchange="updateItemQuantity('${item.id}', this.value)">
-                  </small>
-                </td>
-                <td>
-                  <small>
-                    <input type="number" class="form-control form-control-sm" id="price-${item.id}" value="${item.price}" min="0" step="0.01" 
-                        onchange="updateItemPrice('${item.id}', this.value)">
-                  </small>
-                </td>
-                <td class='text-center' id="total-${item.id}">
-                  <small>
-                    ${(item.quantity * item.price).toFixed(2)}
-                    </small>
-                </td>
-            `
-            cartItemsList.appendChild(row);
-        });
+              </td>
+          `;
+              cartItemsList.appendChild(row);
+          });
 
-        calculateTotals();
+          calculateTotals(); 
+          resolve();
+        } catch (error) {
+            reject(error); 
+        }
+      });
     }
 
+
     function updateItemPrice(id, newPrice) {
-        const item = cart.find((item) => item.id === id);
+        const item = Editcart.find((item) => item.id === id);
         if (item) {
             item.price = parseFloat(newPrice);
             updateItemTotal(item);
@@ -1330,13 +1384,16 @@
     }
 
     function updateItemQuantity(id, newQuantity) {
-        const item = cart.find((item) => item.id === id);
-        if (item) {
-            item.quantity = Number(newQuantity);
-            updateItemTotal(item);
-            calculateTotals();
-        }
+      const item = Editcart.find((item) => item.id === id);
+      if (item) {
+          item.quantity = Number(newQuantity); 
+          updateItemTotal(item); 
+          calculateTotals();
+      }
+      console.info('updated Editcart', Editcart)
+      localStorage.setItem('Editcart', Editcart)
     }
+
 
     function updateItemTotal(item) {
         const totalElement = document.getElementById(`total-${item.id}`);
@@ -1349,15 +1406,13 @@
         const pElement = document.getElementById('id_product');
         const pSelectedOption = pElement.options[pElement.selectedIndex];
         let product = pSelectedOption.textContent.split(' [')[0];
-        
+
         const supplier = document.getElementById('id_supplier');
         const sSelectedOption = supplier.options[supplier.selectedIndex];
         const supplierName = sSelectedOption.textContent;
 
         const price = parseFloat(document.getElementById('id_p_price').value);
         const quantity = Number(document.getElementById('id_p_quantity').value);
-
-
 
         if (!product || !quantity || !price || !supplier) {
           Swal.fire({
@@ -1367,8 +1422,9 @@
           });
           return;
         }
-
-        const existingItem = cart.find((item) => item.product === product);
+      
+        const existingItem = Editcart.find((item) => item.product === product);
+        
         if (existingItem) {
           Swal.fire({
             icon:'error',
@@ -1377,45 +1433,46 @@
           })
           return;
         } else {
-            const newTransfer = { 
-                count:itemCount,
-                product_id: pElement.value,
-                id: generateUniqueId(),
-                product_id:pElement.value,
-                product: product,
-                quantity: quantity,
-                price: price,
-                supplierName: supplierName,
-                supplier: supplier.value,
-            };
-            cart.push(newTransfer);
+          itemCount += 1;
+          const newTransfer = { 
+            count:itemCount,
+            id: generateUniqueId(),
+            product_id:pElement.value,
+            product: product,
+            quantity: quantity,
+            price: price,
+            supplierName: supplierName,
+            supplier: supplier.value,
+          };
+            Editcart.push(newTransfer);
         }
 
+        localStorage.setItem('Editcart', JSON.stringify(Editcart));
+        
         updateCartDisplay();
         calculateTotals();
-        isCartEmpty();
-        itemCount += 1;
+        // isCartEmpty();
 
         Swal.fire({
           icon: 'success',
           title: 'Item Added',
-          text: 'The item was successfully added to your cart!',
+          text: 'The item was successfully added to your Editcart!',
           timer: 1500,
           showConfirmButton: false
         });
-      }
+    }
 
 
     const removeItem = (el) => {
         const id = el.dataset.id
-        cart = cart.filter((item) => item.id !== id);
+        Editcart = Editcart.filter((item) => item.id !== id);
         updateCartDisplay();
     }
 
 
     function processCart() {
         const data = {
-        'po_items':cart,
+        'po_items':Editcart,
         'expenses':expensesData,
         'overide':"manual",
         'cost_allocations': formData, 
@@ -1473,7 +1530,7 @@
 
     function calculateTotals() {
       let subtotal = 0;
-      cart.forEach(item => {
+      Editcart.forEach(item => {
           subtotal += item.price * item.quantity;
       });
 
@@ -1497,12 +1554,11 @@
 
     // cost apportionment
     const showAllTable = (overideType=>{
-      console.log(overideType)
+
       let overide = overideType
 
-      console.info('overide type: ', overide);
-
-      if (cart.length != 0){
+      if (Editcart.length != 0){
+        console.log('cart', Editcart)
 
         document.getElementById('main-section').style.display = 'none';
         document.getElementById('apportionment-section').style.display = 'block';
@@ -1516,13 +1572,15 @@
 
         totalExpenses = other_amount;
   
-        cost = totalProductCost(cart, totalExpenses);
+        cost = totalProductCost(Editcart, totalExpenses);
         console.info(cost)
 
         apportionmentTable.innerHTML = '';
         
-          // populate the table 
-        cart.forEach((item) => {
+        console.log('doubles:', Editcart)
+        
+        // populate the table 
+        Editcart.forEach((item) => {
           const row = document.createElement("tr");         
 
           let id = 1;
@@ -1533,7 +1591,7 @@
           // add actual cost price 
           actualCostPrice = result.expCost;
 
-          // add to cart
+          // add to Editcart
           item.actualPrice = actualCostPrice;
 
           let total = parseFloat(item.price * item.quantity) + parseFloat(result.allocated);
@@ -1696,7 +1754,7 @@
     function priceOverride(input, data) {
       let expense = 0;
       let totalCost = 0;
-      const newCart = JSON.parse(JSON.stringify(cart));
+      const newCart = JSON.parse(JSON.stringify(Editcart));
       let exp = parseFloat(document.getElementById('total_expenses').textContent);
       const newCost = parseFloat(input.value);
       const expFooter = document.getElementById('expense-footer');
@@ -1709,7 +1767,7 @@
 
         let existingProduct = document.getElementById(productId);
 
-        existItem = cart.find((item) => item.product === data.product)
+        existItem = Editcart.find((item) => item.product === data.product)
         existItem.actualPrice = parseFloat(input.value)
 
         // push product
@@ -1854,10 +1912,10 @@
     }
 
     // calculate total product costs
-    function totalProductCost(cart) {
+    function totalProductCost(Editcart) {
       let totalCost = 0;
 
-      cart.forEach((item) => {
+      Editcart.forEach((item) => {
         totalCost += item.price * item.quantity;
       })
 
@@ -1886,7 +1944,7 @@
     }
 
 
-    // get purchase order data and populate the cart on the go for edit
+    // get purchase order data and populate the Editcart on the go for edit
 
     console.log(po_id)
     const getPurchaseOrderData = () => {
@@ -1909,7 +1967,7 @@
                             supplier: item.supplier
                         }
                         console.log(cartItem);
-                        cart.push(cartItem);
+                        Editcart.push(cartItem);
                         itemCount += 1;
                     })
 
@@ -2025,19 +2083,19 @@
       console.info('Product ID:', rowId);
       console.info('price', newActualPrice)
 
-      productExists = cart.filter((item)=> item.id === rowId)
+      productExists = Editcart.filter((item)=> item.id === rowId)
       console.info('Product exists', productExists)
 
-      let productIndex = cart.findIndex((item) => item.id === rowId);
+      let productIndex = Editcart.findIndex((item) => item.id === rowId);
 
       if (productIndex !== -1) {
-        cart[productIndex].actualPrice= allocatedValue;
-        console.info('Updated product price:', cart[productIndex].price);
-        console.table(cart);
-        localStorage.setItem('cart', JSON.stringify(cart));
-        console.log(JSON.parse(localStorage.getItem('cart')))
+        Editcart[productIndex].actualPrice= allocatedValue;
+        console.info('Updated product price:', Editcart[productIndex].price);
+        console.table(Editcart);
+        localStorage.setItem('Editcart', JSON.stringify(Editcart));
+        console.log(JSON.parse(localStorage.getItem('Editcart')))
       } else {
-        console.warn('Product not found in cart:', rowId);
+        console.warn('Product not found in Editcart:', rowId);
       }
     }
 

@@ -95,7 +95,7 @@
                     </table>
                     <div class="d-flex justify-content-end">
                       <button class="btn btn-outline-dark btn-sm flex mx-2" onclick="reload();">Clear</button>
-                      <button class="btn btn-dark btn-sm flex" id="next_button">Next</button>
+                      <button class="btn btn-dark btn-sm flex" id="confirm_btn">Next</button>
                     </div>                        
                 </div>
             </div>
@@ -556,39 +556,38 @@
     </div>
   </div>
 
-
-    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-      <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-              <div class="modal-body text-center" id='payment_content'>
-                <i class='bx bx-check-circle h1'></i>
-                <h5>Product Successfully Created</h5>
-              </div>
-          </div>
-      </div>
+  <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center" id='payment_content'>
+              <i class='bx bx-check-circle h1'></i>
+              <h5>Product Successfully Created</h5>
+            </div>
+        </div>
     </div>
+  </div>
 
-    <div class="modal fade" id="supplierSuccessModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-      <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-              <div class="modal-body text-center" id='payment_content'>
-                <i class='bx bx-check-circle h1'></i>
-                <h5>Supplier Successfully Created</h5>
-              </div>
-          </div>
-      </div>
+  <div class="modal fade" id="supplierSuccessModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center" id='payment_content'>
+              <i class='bx bx-check-circle h1'></i>
+              <h5>Supplier Successfully Created</h5>
+            </div>
+        </div>
     </div>
+  </div>
 
-    <div class="modal fade" id="poSuccessModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-      <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-              <div class="modal-body text-center" id='payment_content'>
-                <i class='bx bx-check-circle h1'></i>
-                <h5>Purchase Order Successfully Created</h5>
-              </div>
-          </div>
-      </div>
+  <div class="modal fade" id="poSuccessModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center" id='payment_content'>
+              <i class='bx bx-check-circle h1'></i>
+              <h5>Purchase Order Successfully Created</h5>
+            </div>
+        </div>
     </div>
+  </div>
     
 </div>   
 <script src="{% static 'js/calculater.js' %}"></script>
