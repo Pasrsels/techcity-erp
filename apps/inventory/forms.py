@@ -106,7 +106,6 @@ class noteStatusForm(forms.ModelForm):
                 batch_number = 1  
         else:
             batch_number = 1  
-    
         self.initial['batch'] = f'Batch {batch_number}'
 
 

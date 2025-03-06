@@ -74,6 +74,9 @@ urlpatterns = [
     path('sales_price_list_pdf/<int:order_id>/', sales_price_list_pdf, name='sales_price_list'),
     path('confirm-purchase-order/<int:po_id>/', confirm_purchase_order_items, name='confirm_purchase_order'),
 
+    # delivery note
+    path('download_delivery_note/<int:po_id>/', download_delivery_note, name='download_delivery_note'),
+
     # transfers
     path('transfers', inventory_transfer_index, name='transfers'),
     path('transfer_items_data/<int:id>/', inventory_transfer_item_data, name='inventory_transfer_data'),

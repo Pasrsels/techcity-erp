@@ -8,25 +8,29 @@
         display: flex;
         align-items: center;
     }
-    .branch{
+
+    .branch {
         background: #5897fb;
         height: 80px;
     }
-    .custom-input-size{
+
+    .custom-input-size {
         font-size: 10px;
     }
-    .custom-input-width{
+
+    .custom-input-width {
         width: 30px;
     }
 </style>
 <div class="inventory">
     <div class="add-transfer">
-        <div class="add-transfer-nav shadow p-2 text-light d-flex justify-content-between align-items-center rounded" style="background: #373f4c;">
+        <div class="add-transfer-nav shadow p-2 text-light d-flex justify-content-between align-items-center rounded"
+            style="background: #373f4c;">
             <div>
                 <h5 class="fw-bold px-1 mt-2">Add Transfer</h5>
             </div>
         </div>
-        
+
         <div class="row mt-2">
             <!-- Table Column -->
             <div class="col col-8">
@@ -51,7 +55,8 @@
                         <button type="button" class="btn btn-outline-dark mx-2 btn-sm" onclick="processCart('hold')">
                             <i class="bx bx-save"></i> Hold
                         </button>
-                        <button class="btn btn-outline-dark btn-sm" id="confirm-button" onclick="processCart('process')">Confirm</button>
+                        <button class="btn btn-outline-dark btn-sm" id="confirm-button"
+                            onclick="processCart('process')">Confirm</button>
                     </div>
                 </div>
             </div>
@@ -59,14 +64,14 @@
             <div class="col col-4">
                 <form class="d-flex flex-column mt-2 w-100 rounded p-2" method="post" style="background: #fff;">
                     {% csrf_token %}
-                    <div id="div_id_transfer_to" class="mb-2"> 
+                    <div id="div_id_transfer_to" class="mb-2">
                         <label for="id_transfer_to" class="form-label requiredField">Destination Branch(s)</label>
                         <select name="transfer_to" class="select form-select" required id="id_to" multiple>
                             <option value=""></option>
                             {% for branch in branches %}
-                                {% if branch.name != request.user.branch.name %}
-                                    <option value="{{ branch.id }}">{{ branch.name }}</option>
-                                {% endif %}
+                            {% if branch.name != request.user.branch.name %}
+                            <option value="{{ branch.id }}">{{ branch.name }}</option>
+                            {% endif %}
                             {% endfor %}
                         </select>
                     </div>
@@ -75,17 +80,19 @@
                         <select class="select form-select" id="id_product">
                             <option value=""></option>
                             {% for product in inventory %}
-                                <option value="{{ product.id }}">{{ product.product.name }} [{{ product.quantity }}]</option>
+                            <option value="{{ product.id }}">{{ product.product.name }} [{{ product.quantity }}]
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="mt-3- d-flex" style="overflow-x: auto; background: #fff;" id="branchesTable">
                         <!-- data will be dynamically rendered by js -->
                     </div>
-                    
+
                     <p class="text-danger" id="error"></p>
                     <div class="d-flex justify-content-end mb-2">
-                        <button type="button" class="btn btn-secondary btn-sm" id="id_submit" onclick="saveDataToServer('process')">
+                        <button type="button" class="btn btn-secondary btn-sm" id="id_submit"
+                            onclick="saveDataToServer('process')">
                             <i class="bx bx-save"></i> Save
                         </button>
                     </div>
@@ -97,62 +104,62 @@
     <div id="successModal"></div>
 </div>
 <script>
-  let cart = [];
-  let prodData = [];
-  let searchValue = '';
-  let prodQauntity = 0;
-  let prodPrice = 0;
-  let prodCost = 0;
-  let dealerPrice = 0;
-  let productName = '';
-  let salesPerson = false;
-  let branchesList = [];
-  let branches = [];
-  let userRole = `{{ request.user.role }}`
-  const transferId = '{{ transfer.id }}'
+    let cart = [];
+    let prodData = [];
+    let searchValue = '';
+    let prodQauntity = 0;
+    let prodPrice = 0;
+    let prodCost = 0;
+    let dealerPrice = 0;
+    let productName = '';
+    let salesPerson = false;
+    let branchesList = [];
+    let branches = [];
+    let userRole = `{{ request.user.role }}`
+    const transferId = '{{ transfer.id }}'
 
-  const errorEl = document.getElementById('error');
-  const prodEl = document.querySelector('#id_price');
-  const dealerEl = document.querySelector('#id_dealer_price');
-  const submitBtn = document.getElementById('id_submit');
-  const quantityEl = document.getElementById('id_quantity')
+    const errorEl = document.getElementById('error');
+    const prodEl = document.querySelector('#id_price');
+    const dealerEl = document.querySelector('#id_dealer_price');
+    const submitBtn = document.getElementById('id_submit');
+    const quantityEl = document.getElementById('id_quantity')
 
-    if (userRole === 'sales'){
+    if (userRole === 'sales') {
         salesPerson = true
     }
 
     // get held data and populate the cart with the data
-    const fetchHeldTransfers = () =>{
-        fetch(`/inventory/held_transfer_json/${transferId}`,{
-            method:"GET"
+    const fetchHeldTransfers = () => {
+        fetch(`/inventory/held_transfer_json/${transferId}`, {
+            method: "GET"
         })
-        .then(response => response.json())
-        .then(data =>{
-            console.log(data)
-            data.forEach((item)=>{
-                addHoldItem(item)
-                addHeldBranches(item.to_branch__name)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+                data.forEach((item) => {
+                    addHoldItem(item)
+                    addHeldBranches(item.to_branch__name)
+                })
             })
-        })
     }
 
     fetchHeldTransfers()
 
-    const addHeldBranches = (branch) =>{
+    const addHeldBranches = (branch) => {
         const branchExists = branches.some(branch => branch.name === branch);
-            if (!branchExists) {
-                branches.push({
-                    'name': branch,
-                });
-                branchesList.push(branch);
-            }
+        if (!branchExists) {
+            branches.push({
+                'name': branch,
+            });
+            branchesList.push(branch);
+        }
         console.log('branch list, ', branchesList)
     }
 
-    const addHoldItem = (item) =>{
+    const addHoldItem = (item) => {
         console.log(item)
         const newItem = {
-            id: generateUniqueId(),  
+            id: generateUniqueId(),
             product: item.product__name,
             branch_name: item.to_branch__name,
             price: parseFloat(item.price),
@@ -176,11 +183,11 @@
 
     function getSelectedValues() {
         const selectElement = document.getElementById('id_to');
-        
+
         const selectedValues = Array.from(selectElement.selectedOptions).map(option => {
-        return {
-                name: option.text, 
-                value: option.value 
+            return {
+                name: option.text,
+                value: option.value
             };
         });
 
@@ -189,7 +196,7 @@
     }
 
     // document.getElementById('getValuesButton').addEventListener('click', function() {
-        const values = getSelectedValues();
+    const values = getSelectedValues();
     //     const product = document.getElementById('id_product').value;
     //     console.log('values', values)
     //     pushBranches(values)
@@ -210,17 +217,17 @@
     }
 
     const displayTables = (values, product, prodData) => {
-    let tableEl = document.getElementById('branchesTable');
+        let tableEl = document.getElementById('branchesTable');
 
-    tableEl.innerHTML = ''
+        tableEl.innerHTML = ''
 
-    values.forEach((value) => {
-        console.log('branches', branches)
-        // If branch exists, don't include it again
-        if (!branchesList.includes(value)) {
-            const productData = prodData[0]; 
+        values.forEach((value) => {
+            console.log('branches', branches)
+            // If branch exists, don't include it again
+            if (!branchesList.includes(value)) {
+                const productData = prodData[0];
 
-            tableEl.innerHTML += `
+                tableEl.innerHTML += `
                 <div class='m-1 branch-data border p-2 rounded' data-branch-name="${value?.name}">
                     <div class='d-flex justify-content-center align-items-center branch text-light rounded shadow'>
                         <small class='text-center px-2'>${value?.name}</small>
@@ -249,16 +256,16 @@
                     </div>
                 </div>
             `;
-        }
-    });
-};
+            }
+        });
+    };
 
     const saveDataToServer = (action) => {
         const branchElements = document.querySelectorAll('.branch-data');
         const dataToSend = [];
 
         branchElements.forEach(branch => {
-            
+
             const branchName = branch.dataset.branchName;
             const price = branch.querySelector('.price-input').value;
             const dealerPrice = branch.querySelector('.dealer-price-input').value;
@@ -280,7 +287,7 @@
             }
 
             const newItem = {
-                id: generateUniqueId(),  
+                id: generateUniqueId(),
                 product: product,
                 branch_name: branchName,
                 price: parseFloat(price),
@@ -295,11 +302,11 @@
             cart.reverse();
         });
 
-        
+
         updateCartDisplay();
         console.log(cart)
 
-        
+
         Swal.fire({
             icon: 'success',
             title: 'Success',
@@ -309,13 +316,13 @@
         });
     };
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         new SlimSelect({
             select: '#id_product',
             placeholder: 'Select Product'
         });
 
-        document.getElementById('id_product').addEventListener('change', function() {
+        document.getElementById('id_product').addEventListener('change', function () {
             const selectElement = document.getElementById('id_product');
             const selectedOptions = Array.from(selectElement.selectedOptions).map(option => {
                 return {
@@ -332,37 +339,37 @@
                     .then(data => {
                         if (data.length > 0) {
                             console.log(data);
-                        
+
                             prodData = data;
                             console.log(prodData, 'product data')
-                            if (prodData){
+                            if (prodData) {
                                 const values = getSelectedValues();
                                 pushBranches(values)
                                 displayTables(values, product, prodData);
                             }
-                            
+
                         }
                     })
                     .catch(error => console.error('Error:', error));
             }
-            });
+        });
     })
 
-  const successModal = new bootstrap.Modal(document.querySelector('#successModal'));
+    const successModal = new bootstrap.Modal(document.querySelector('#successModal'));
 
-  function generateUniqueId() {
-      return Math.floor(Math.random() * 1000000000).toString(36);
+    function generateUniqueId() {
+        return Math.floor(Math.random() * 1000000000).toString(36);
     }
 
-  function updateCartDisplay() {
-      const cartItemsList = document.getElementById("cart-items");
-      cartItemsList.innerHTML = "";
+    function updateCartDisplay() {
+        const cartItemsList = document.getElementById("cart-items");
+        cartItemsList.innerHTML = "";
 
-      let total = 0;
-      
-      cart.forEach((item) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
+        let total = 0;
+
+        cart.forEach((item) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
           <td id='${item.product}'>${item.product}</td>
           <td id='${item.product}'>${item.quantity}</td>
           <td class="${salesPerson ? 'd-none' : ''}" id="${item.product}-price">${item.price}</td>
@@ -374,188 +381,188 @@
               </button>
           </td>
         `;
-        cartItemsList.appendChild(row);
-      });
-      document.getElementById('branchesTable').innerHTML='';
+            cartItemsList.appendChild(row);
+        });
+        document.getElementById('branchesTable').innerHTML = '';
     }
 
-  function clearFields() {
-      document.getElementById('id_quantity').value = '';
-      document.getElementById('id_price').value = '';
-      dealerEl.value = '';
-      document.getElementById('id_description').value = '';
-  }
+    function clearFields() {
+        document.getElementById('id_quantity').value = '';
+        document.getElementById('id_price').value = '';
+        dealerEl.value = '';
+        document.getElementById('id_description').value = '';
+    }
 
-  function addItem() {
-      const pElement = document.getElementById('id_product')
-      const pSelectedOption = pElement.options[pElement.selectedIndex]
-      let product = pSelectedOption.textContent;
-      product = product.split(' [')[0]
+    function addItem() {
+        const pElement = document.getElementById('id_product')
+        const pSelectedOption = pElement.options[pElement.selectedIndex]
+        let product = pSelectedOption.textContent;
+        product = product.split(' [')[0]
 
-      const price = Number(document.getElementById('id_price').value)
-      const quantity = Number(document.getElementById('id_quantity').value)
+        const price = Number(document.getElementById('id_price').value)
+        const quantity = Number(document.getElementById('id_quantity').value)
 
-      const toElement = document.getElementById('id_to')
-      const toSelectedOption = toElement.options[toElement.selectedIndex]
-      const toBranchId = toSelectedOption.textContent
+        const toElement = document.getElementById('id_to')
+        const toSelectedOption = toElement.options[toElement.selectedIndex]
+        const toBranchId = toSelectedOption.textContent
 
-      const description = document.getElementById('id_description').value
-      const dealer_price = document.getElementById('id_dealer_price').value
+        const description = document.getElementById('id_description').value
+        const dealer_price = document.getElementById('id_dealer_price').value
 
-      const existingItem = cart.find((item) => item.product === product)
+        const existingItem = cart.find((item) => item.product === product)
 
-      if (!product) {
-          Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: 'Please fill in the Product field',
-          })
-          document.getElementById('id_product').focus()
-          return;
-      }
-
-      if (!quantity) {
-          document.getElementById('id_quantity').focus();
-          return;
-      }
-
-      if (!price) {
-          Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: 'Please fill in the Price field',
-          })
-          document.getElementById('id_price').focus()
-          return;
-      }
-
-
-      if (existingItem) {
-          existingItem.quantity
-          Swal.fire({
-              title: `Product ${productName} exists.`,
-              icon: 'error'
-          })
-      }
-
-      else {
-          if (quantity <= 0) {
-              Swal.fire({
-                  icon: 'error',
-                  title: 'Error',
-                  text: 'Quantity cannot be less than zero or below zero.',
-              })
-              return;
-          }
-
-          
-          if (!document.getElementById('id_to').value) {
-              Swal.fire({
-                  icon: 'error',
-                  title: 'Error',
-                  text: 'Please fill in the Branch field',
-              }).then(() => {
-                  document.getElementById('id_to').focus()
-              })
-              return;
-          }
-
-          const newTransfer = {
-              id: generateUniqueId(),
-              product: productName,
-              cost: prodCost,
-              to_branch: toBranchId,
-              quantity: quantity,
-              price: price,
-              dealer_price: dealer_price,
-              description: description
-          };
-          cart.push(newTransfer);
-          updateCartDisplay();
-          clearFields()
-      }
- }
-
-  const removeItem = (el) => {
-      const id = el.dataset.id;
-      cart = cart.filter((item) => item.id !== id);
-      updateCartDisplay();
-  };
-
-  function processCart(action) {
-      const toElement = document.getElementById('id_to');
-      const toSelectedOption = toElement.options[toElement.selectedIndex];
-
-      const data = {
-          'transfer_id':transferId,
-          'action':action,
-          'cart': cart,
-          'salesPerson': salesPerson,
-          'branches_to': branches
-      };
-
-      Swal.fire({
-          title: 'Processing Transfer',
-          text: 'Please wait...',
-          allowOutsideClick: false,
-          didOpen: () => {
-              Swal.showLoading()
-          }
-      });
-
-      fetch("/inventory/process-transfer-cart/", {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": getCookie("csrftoken"),
-          },
-          body: JSON.stringify(data),
-      })
-          .then(response => response.json())
-          .then(data => {
-              if (data.success) {
-                  Swal.fire({
-                      icon: 'success',
-                      title: 'Success!',
-                      text: 'Product(s) Transferred Successfully',
-                      showConfirmButton: false,
-                      timer: 1500
-                  });
-                  cart = [];
-                  updateCartDisplay();
-                  setTimeout(() => {
-                      window.location.href = '{% url "inventory:transfers" %}';
-                  }, 1500);
-              } else {
-                  Swal.fire({
-                      icon: 'error',
-                      title: data.message,
-                      text: data.message
-                  });
-              }
-          })
-          .catch((error) => {
-              console.error("Error:", error);
-              Swal.fire({
-                  icon: 'error',
-                  title: 'Error!',
-                  text: 'An unexpected error occurred. Please try again.'
-              });
-          });
-  }
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== "") {
-      const cookies = document.cookie.split(";");
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === name + "=") {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
+        if (!product) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please fill in the Product field',
+            })
+            document.getElementById('id_product').focus()
+            return;
         }
-      }
+
+        if (!quantity) {
+            document.getElementById('id_quantity').focus();
+            return;
+        }
+
+        if (!price) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please fill in the Price field',
+            })
+            document.getElementById('id_price').focus()
+            return;
+        }
+
+
+        if (existingItem) {
+            existingItem.quantity
+            Swal.fire({
+                title: `Product ${productName} exists.`,
+                icon: 'error'
+            })
+        }
+
+        else {
+            if (quantity <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Quantity cannot be less than zero or below zero.',
+                })
+                return;
+            }
+
+
+            if (!document.getElementById('id_to').value) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please fill in the Branch field',
+                }).then(() => {
+                    document.getElementById('id_to').focus()
+                })
+                return;
+            }
+
+            const newTransfer = {
+                id: generateUniqueId(),
+                product: productName,
+                cost: prodCost,
+                to_branch: toBranchId,
+                quantity: quantity,
+                price: price,
+                dealer_price: dealer_price,
+                description: description
+            };
+            cart.push(newTransfer);
+            updateCartDisplay();
+            clearFields()
+        }
     }
-    return cookieValue;
-  }
- </script>
+
+    const removeItem = (el) => {
+        const id = el.dataset.id;
+        cart = cart.filter((item) => item.id !== id);
+        updateCartDisplay();
+    };
+
+    function processCart(action) {
+        const toElement = document.getElementById('id_to');
+        const toSelectedOption = toElement.options[toElement.selectedIndex];
+
+        const data = {
+            'transfer_id': transferId,
+            'action': action,
+            'cart': cart,
+            'salesPerson': salesPerson,
+            'branches_to': branches
+        };
+
+        Swal.fire({
+            title: 'Processing Transfer',
+            text: 'Please wait...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
+        });
+
+        fetch("/inventory/process-transfer-cart/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify(data),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Product(s) Transferred Successfully',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    cart = [];
+                    updateCartDisplay();
+                    setTimeout(() => {
+                        window.location.href = '{% url "inventory:transfers" %}';
+                    }, 1500);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: data.message,
+                        text: data.message
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'An unexpected error occurred. Please try again.'
+                });
+            });
+    }
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === name + "=") {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
 {% endblock %}

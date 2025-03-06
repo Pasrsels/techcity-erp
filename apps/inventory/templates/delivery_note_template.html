@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Delivery Note</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Delivery Note</h2>
+    <p><strong>Purchase Order:</strong> {{ delivery_note.purchase_order.id }}</p>
+    <!-- <p><strong>Supplier:</strong> {{ delivery_note.purchase_order.supplier.name }}</p> -->
+    <p><strong>Delivery Date:</strong> {{ delivery_note.delivery_date }}</p>
+    <p><strong>Received By:</strong> {{ delivery_note.received_by }}</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Quantity Delivered</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in delivery_note.items.all %}
+            <tr>
+                <td>{{ item.product_name }}</td>
+                <td>{{ item.quantity_delivered }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>

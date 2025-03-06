@@ -105,7 +105,7 @@
                     </table>
                     <div class="d-flex justify-content-end">
                       <button class="btn btn-outline-dark btn-sm flex mx-2" onclick="reload();">Clear</button>
-                      <button class="btn btn-dark btn-sm flex" id="next_button">Next</button>
+                      <button class="btn btn-dark btn-sm flex" id="confirm_btn">Next</button>
                     </div>                        
                 </div>
             </div>
@@ -666,10 +666,6 @@
     let overide = ''
 
     calculateExpression('id_p_price', errorId = null);
-
-    document.getElementById('next_button').addEventListener('click', ()=>{
-      overideModal.show()
-    })
 
     //check if local storage have anything and populate at the page load
     const checkLocalCart = () => {

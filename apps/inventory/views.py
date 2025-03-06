@@ -2296,6 +2296,17 @@ def delete_purchase_order(request, purchase_order_id):
         return JsonResponse({'success': False, 'message': 'Purchase order not found'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    
+@login_required    
+def download_delivery_note(request, po_id):
+    delivery_note = get_object_or_404(DeliveryNote, purchase_order_id=po_id)
+
+    if delivery_note.pdf:
+        response = HttpResponse(delivery_note.pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="Delivery_Note_{po_id}.pdf"'
+        return response
+    else:
+        return HttpResponse("No PDF found for this delivery note.", status=404)
 
 @login_required
 @transaction.atomic
@@ -2904,17 +2915,14 @@ def edit_purchase_order(request, po_id):
                     
                     if not supplier:
                         return JsonResponse({'success': False, 'message': 'Invalid supplier'}, status=400)
-                    
-                    logger.info({item_data['actualPrice']})
-                    logger.info(overide)
 
                     purchase_order_items_bulk.append(
                         PurchaseOrderItem(
                             purchase_order=purchase_order,
                             product=product,
                             quantity=item_data['quantity'],
-                            unit_cost= item_data['actualPrice'] if overide == 'manual' else item_data['price'],
-                            actual_unit_cost=item_data['actualPrice'],
+                            unit_cost= item_data['price'],
+                            actual_unit_cost=item_data['price'],
                             received_quantity=log_quantity,
                             supplier=supplier,
                             wholesale_price = 0,
