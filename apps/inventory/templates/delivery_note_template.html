@@ -1,44 +1,241 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delivery Note</title>
     <style>
+        :root {
+            --primary-color: #4a6cf7;
+            --border-color: #e0e0e0;
+            --background-color: #f9f9f9;
+            --text-color: #333333;
+            --secondary-text: #666666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #fff;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .logo-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-section h1 {
+            color: #4a6cf7;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .logo-subtitle {
+            color: #666666;
+            font-size: 14px;
+        }
+
+        .document-info {
+            text-align: right;
+        }
+
+        .document-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333333;
+            margin-bottom: 10px;
+        }
+
+        .info-card {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            margin-bottom: 5px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #666666;
+            margin-bottom: 5px;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-size: 16px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        thead {
+            background-color: #4a6cf7;
+            color: white;
         }
 
         th,
         td {
-            border: 1px solid black;
-            padding: 8px;
+            padding: 15px;
             text-align: left;
+            border-bottom: 1px solid #e0e0e0;
         }
 
-        th {
-            background-color: #f2f2f2;
+        tr:nth-child(even) {
+            background-color: #e0e0e0;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 14px;
+            color: var(--secondary-text);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-box {
+            width: 45%;
+        }
+
+        .signature-line {
+            border-top: 1px solid #e0e0e0;
+            padding-top: 10px;
+            margin-top: 70px;
+            font-weight: 600;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                background-color: white;
+            }
+
+            .info-card {
+                box-shadow: none;
+                border: 1px solid #e0e0e0;
+            }
+
+            table {
+                box-shadow: none;
+                border: 1px solid #e0e0e0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .document-info {
+                text-align: left;
+                margin-top: 20px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .signature-section {
+                flex-direction: column;
+            }
+
+            .signature-box {
+                width: 100%;
+                margin-bottom: 30px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h2>Delivery Note</h2>
-    <p><strong>Purchase Order:</strong> {{ delivery_note.purchase_order.id }}</p>
-    <!-- <p><strong>Supplier:</strong> {{ delivery_note.purchase_order.supplier.name }}</p> -->
-    <p><strong>Delivery Date:</strong> {{ delivery_note.delivery_date }}</p>
-    <p><strong>Received By:</strong> {{ delivery_note.received_by }}</p>
+    <div class="header">
+        <div class="logo-section">
+            <h1>Company Name________________________________</h1>
+        </div>
+        <div class="document-info">
+            <div class="document-title">Delivery Note</div>
+            <div>Document #: DN-{{ delivery_note.purchase_order.id }}</div>
+            <div>Date: {{ delivery_note.delivery_date }}</div>
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-grid">
+            <div>
+                <div class="info-item">
+                    <div class="info-label">Purchase Order</div>
+                    <div class="info-value">{{ delivery_note.purchase_order.id }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Delivery Date</div>
+                    <div class="info-value">{{ delivery_note.delivery_date }}</div>
+                </div>
+            </div>
+            <div>
+                <div class="info-item">
+                    <div class="info-label">Received By</div>
+                    <div class="info-value">{{ delivery_note.received_by }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <table>
         <thead>
             <tr>
                 <th>Product Name</th>
                 <th>Quantity Delivered</th>
+                <th>Unit</th>
+                <th>Notes</th>
             </tr>
         </thead>
         <tbody>
@@ -46,10 +243,25 @@
             <tr>
                 <td>{{ item.product_name }}</td>
                 <td>{{ item.quantity_delivered }}</td>
+                <td>{{ item.unit|default:"pcs" }}</td>
+                <td>{{ item.notes|default:"" }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    <div class="signature-section">
+        <div class="signature-box">
+            <div class="signature-line">Delivered By</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line">Received By: {{ delivery_note.received_by }}</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div>© {{ purchase_order.order_date|date:"Y" }} {{ purchase_order.user.company.name }}</div>
+    </div>
 </body>
 
 </html>

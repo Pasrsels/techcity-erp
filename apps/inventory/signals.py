@@ -72,56 +72,5 @@
 #     transfer = Transfer.objects.get(id=instance.transfer.id)
 #     transfer.total_quantity_track += instance.quantity
 #     transfer.save()
-    
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from .models import PurchaseOrder, DeliveryNote, DeliveryNoteItem
-from django.utils.timezone import now
-from django.core.files.base import ContentFile
-from io import BytesIO
-from xhtml2pdf import pisa
-from django.template.loader import get_template
-from loguru import logger
-from apps.inventory.models import PurchaseOrderItem
 
-@receiver(post_save, sender=PurchaseOrder)
-def generate_delivery_note(sender, instance, **kwargs):
-    if instance.status == "received":
-        delivery_note, created = DeliveryNote.objects.get_or_create(
-            purchase_order=instance,
-            defaults={
-                'delivery_date': now(),
-                'received_by': 'Warehouse Manager'  
-            }
-        )
-        print(instance, instance.id)
-        items = PurchaseOrderItem.objects.filter(purchase_order__id=instance.id)
-        print(items)
-
-        if created:
-            print('here')
-            for item in items:
-                logger.info(item)
-                DeliveryNoteItem.objects.create(
-                    delivery_note=delivery_note,
-                    product_name=item.product,
-                    quantity_delivered=item.quantity
-                )
-
-        # Generate PDF:
-        template = get_template('delivery_note_template.html')
-        context = {'delivery_note': delivery_note}
-        html = template.render(context)
-        pdf_file = BytesIO()
-        pisa.CreatePDF(html, dest=pdf_file)
-
-        # Save PDF to the model (if needed)
-        delivery_note_pdf = pdf_file.getvalue()
-        delivery_note.pdf.save(f"Delivery_Note_{instance.id}.pdf", ContentFile(delivery_note_pdf), save=True)
-
-        print('saved')
-
-    
-
-       
             

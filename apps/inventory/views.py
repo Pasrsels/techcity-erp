@@ -32,7 +32,8 @@ from apps.finance.models import (
 )
 from . utils import (
     calculate_inventory_totals, 
-    average_inventory_cost
+    average_inventory_cost,
+    generete_delivery_note
 )
 from . forms import (
     BatchForm,
@@ -664,11 +665,10 @@ def inventory_detail(request, id):
 
     """ download a log or stock account pdf """
 
-    if request.GET.get('logs'):
-        print(request.GET.get('logs'))
-        download_stock_logs_account('logs', logs, inventory)
-    elif request.GET.get('account'):
-        download_stock_logs_account('account', logs, inventory)
+    # if request.GET.get('logs'):
+    #     download_stock_logs_account('logs', logs, inventory)
+    # elif request.GET.get('account'):
+    #     download_stock_logs_account('account', logs, inventory)
     
     return render(request, 'inventory_detail.html', {
         'inventory': inventory,
@@ -1983,7 +1983,7 @@ def create_purchase_order(request):
                 )
                 purchase_order.save()
 
-                purchase_order_items_bulk = []
+                purchase_order_items = []
                 for item_data in purchase_order_items_data:
                     product_id = item_data['product_id']
                     product_name = item_data['product']
@@ -2016,54 +2016,15 @@ def create_purchase_order(request):
                         price=0,
                         wholesale_price=0
                     )
+
+                    purchase_order_items.append(po_item)
+
                     product.suppliers.add(po_item.supplier.id)
                     product.batch += f'{batch}, '
                     product.price = 0
                     product.save()
 
-                # Handle expenses
-                expense_bulk = []
-                for expense in unique_expenses:
-                    name = expense['name']
-                    amount = expense['amount']
-                    expense_bulk.append(
-                        otherExpenses(
-                            purchase_order=purchase_order,
-                            name=name,
-                            amount=amount
-                        )
-                    )
-                otherExpenses.objects.bulk_create(expense_bulk)
-
-                # Cost allocations
-                costs_list = []
-                for cost in cost_allocations:
-                    costs_list.append(
-                        costAllocationPurchaseOrder(
-                            purchase_order=purchase_order,
-                            allocated=cost['allocated'],
-                            allocationRate=cost['allocationRate'],
-                            expense_cost=cost['expCost'],
-                            price=cost['price'],
-                            quantity=float(cost['price']),
-                            product=cost['product'],
-                            total=cost['total'],
-                            total_buying=cost['totalBuying']
-                        )
-                    )
-                costAllocationPurchaseOrder.objects.bulk_create(costs_list)
-
-                # # Process finance updates
-                # if not purchase_order.hold:
-                #     if purchase_order.status.lower() == 'received':
-                #         # if_purchase_order_is_received(
-                #         #     request, 
-                #         #     purchase_order, 
-                #         #     tax_amount, 
-                #         #     payment_method
-                #         # ) 
-                #         #
-                #         # supplier_payments(purchase_order, supplier_payment_data, request)
+                generete_delivery_note(purchase_order, purchase_order_items, request)
                           
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
