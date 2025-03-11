@@ -91,7 +91,7 @@ def generete_delivery_note(purchase_order, purchase_order_items, request):
         pdf_file = BytesIO()
         pisa.CreatePDF(html, dest=pdf_file)
 
-        # Save PDF to the model (if needed)
+        # PDF to the model 
         delivery_note_pdf = pdf_file.getvalue()
         delivery_note.pdf.save(f"Delivery_Note_{purchase_order.id}.pdf", ContentFile(delivery_note_pdf), save=True)
 

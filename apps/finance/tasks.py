@@ -18,6 +18,7 @@ from loguru import logger
 from django.core.mail import send_mail
 from django.db.models import Q
 import calendar
+from django.utils.html import strip_tags
 
 
 def get_end_of_month(date):
@@ -157,30 +158,13 @@ def send_invoice_email_task(invoice_id):
 
 
 
-def send_email_notification(notification_id):
-    try:
-        expense = Expense.objects.get(pk=notification_id)
-        
-        subject = 'Expense Confirmation Notification'
-        message = f'Please log on to confirm the expense: {expense.description}'
-        from_email = expense.user.email
-        to_email = ['admin@techcity .co.zw'] 
-        sender_name = expense.user.first_name
+@shared_task
+def send_expense_email_notification(expense_id):
+    expense = Expense.objects.get(id=expense_id)
 
-        # Render the email template with context
-        html_content = render_to_string('emails/email_template.html', {
-            'subject': subject,
-            'message': message,
-            'sender_name': sender_name,
-        })
-
-        send_mail_func(subject, message, html_content, from_email, to_email)
-            
-    except Expense.DoesNotExist:
-        print(f"Expense with ID {notification_id} does not exist")
-
-    except Exception as e:
-        print(f"An error occurred while sending email: {e}")
+    subject = "Expense Notification"()
+    html_content = render_to_string("emails/expense_notification.html", {"expense": expense})
+    text_content = strip_tags(html_content)
 
 
 
@@ -229,23 +213,21 @@ def check_and_send_invoice_reminders():
         )
         email.send()
 
-
+@shared_task
 def send_expense_creation_notification(expense_id):
     expense = Expense.objects.get(id=expense_id)
-    
+
     email = EmailMessage(
-        subject=f"Expense Notification:",
+        subject="Expense Notification",
         body=f"""
-        The email is to notify you on the creation of an expense for {expense.description}.
+        The email is to notify you about the creation of an expense for {expense.description}.
         For an amount of ${expense.amount}.
         """,
         from_email='admin@techcity.co.zw',
         to=['cassymyo@gmail.com'],
     )
     
-    EmailThread(email).start()
-    
-    logger.info('send')
+    email.send() 
 
 
 @shared_task

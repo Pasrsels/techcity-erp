@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Notification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .header {
+            background-color: #0073e6;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        .content {
+            padding: 20px;
+            font-size: 16px;
+            color: #333;
+            line-height: 1.6;
+        }
+        .footer {
+            text-align: center;
+            font-size: 14px;
+            color: #777;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #0073e6;
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .button:hover {
+            background-color: #005bb5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        Expense Notification
+    </div>
+    <div class="content">
+        <p>Hi,</p>
+        <p>This is to notify you that a new expense has been recorded.</p>
+        
+        <p><strong>Description:</strong> {{ expense.description }}</p>
+        <p><strong>Amount:</strong> ${{ expense.amount }}</p>
+        <p><strong>Date:</strong> {{ expense.date_created|date:"F d, Y" }}</p>
+        
+        <a href="https://yourdomain.com/expenses/{{ expense.id }}" class="button">View Expense</a>
+    </div>
+    <div class="footer">
+        <p>{{ expense.user.company.name }} &copy; {{ expense.issue_date | 'Y' }} | All rights reserved.</p>
+    </div>
+</div>
+
+</body>
+</html>

@@ -185,6 +185,125 @@
             Confirm Purchase Order
         </button>
     </div>
+
+
+    <div class="modal fade" id="initialModal" tabindex="-1" aria-labelledby="initialModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-light">
+          <h5 class="modal-title" id="initialModalLabel">Expenses on Purchase Order</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center py-4">
+          <i class="bi bi-question-circle text-primary" style="font-size: 3rem;"></i>
+          <p class="mt-3">Do you have any expenses incurred on this Purchase Order?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">No</button>
+          <button type="button" class="btn btn-success" id="yesButton">Yes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="expenseModal" tabindex="-1" aria-labelledby="expenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-light">
+          <h5 class="modal-title" id="expenseModalLabel">Manage Expenses</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <div class="mb-4">
+            <h6 class="border-bottom pb-2 mb-3">Costing Basis</h6>
+            <select id="costingBasis" class="form-select">
+              <option value="weight">Weight</option>
+              <option value="price">Price</option>
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <h6 class="border-bottom pb-2 mb-3">Add New Expense</h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <input type="text" id="expenseDesc" class="form-control" placeholder="Expense Description">
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input type="number" step="0.01" id="expenseAmount" class="form-control" placeholder="Amount">
+                </div>
+              </div>
+              <div class="col-md-2">
+                <button id="addExpenseBtn" class="btn btn-success w-100">
+                  <i class="bi bi-plus-circle"></i> Add
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h6 class="border-bottom pb-2 mb-3">Current Expenses</h6>
+            <div id="expensesList">
+            </div>
+            <div id="expensesTotal" class="expense-total">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="backBtn">
+            <i class="bi bi-arrow-left"></i> Back
+          </button>
+          <button type="button" class="btn btn-primary" id="saveBtn">
+            <i class="bi bi-save"></i> Save Expenses
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-light">
+          <h5 class="modal-title" id="editModalLabel">Edit Expense</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editIndex">
+          <div class="mb-3">
+            <label for="editExpenseDesc" class="form-label">Description</label>
+            <input type="text" class="form-control" id="editExpenseDesc">
+          </div>
+          <div class="mb-3">
+            <label for="editExpenseAmount" class="form-label">Amount ($)</label>
+            <input type="number" step="0.01" class="form-control" id="editExpenseAmount">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="updateExpenseBtn">Update</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">Expenses Saved</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center py-4" id="confirmModalBody">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -192,12 +311,150 @@
     let dealerExpectedProfitAmnt = 0;
     let editStatus = false;
 
+    const expenses = [];
+    let editingIndex = -1;
+    
+    const initialModal = new bootstrap.Modal(document.getElementById('initialModal'));
+    const expenseModal = new bootstrap.Modal(document.getElementById('expenseModal'));
+    const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+
+    initialModal.show()
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('yesButton').addEventListener('click', () => {
+        initialModal.hide();
+        expenseModal.show();
+        updateExpenseList();
+      });
+      
+      document.getElementById('backBtn').addEventListener('click', () => {
+        expenseModal.hide();
+        initialModal.show();
+      });
+      
+      document.getElementById('addExpenseBtn').addEventListener('click', addExpense);
+      
+      document.getElementById('saveBtn').addEventListener('click', saveExpenses);
+      
+      document.getElementById('updateExpenseBtn').addEventListener('click', updateExpense);
+    });
+    
+    const calculateTotal = () => {
+      return expenses.reduce((total, exp) => total + parseFloat(exp.amount), 0).toFixed(2);
+    };
+    
+    const addExpense = () => {
+      const desc = document.getElementById('expenseDesc').value.trim();
+      const amount = document.getElementById('expenseAmount').value;
+      
+      if (!desc || !amount) {
+        alert('Please enter both description and amount!');
+        return;
+      }
+      
+      expenses.push({ desc, amount: parseFloat(amount).toFixed(2) });
+
+      document.getElementById('expenseDesc').value = '';
+      document.getElementById('expenseAmount').value = '';
+      
+      updateExpenseList();
+      
+      document.getElementById('expenseDesc').focus();
+    };
+    
+    const updateExpenseList = () => {
+      const listElement = document.getElementById('expensesList');
+      const totalElement = document.getElementById('expensesTotal');
+      
+      if (expenses.length === 0) {
+        listElement.innerHTML = '<p class="text-muted text-center">No expenses added yet.</p>';
+        totalElement.innerHTML = '';
+        return;
+      }
+      
+      let html = '';
+      expenses.forEach((exp, index) => {
+        html += `
+          <div class="expense-item">
+            <div><strong>${exp.desc}</strong> - $${exp.amount}</div>
+            <div class="expense-actions">
+              <i class="bi bi-pencil-square action-icon edit" onclick="editExpense(${index})"></i>
+              <i class="bi bi-trash action-icon delete" onclick="removeExpense(${index})"></i>
+            </div>
+          </div>
+        `;
+      });
+      
+      listElement.innerHTML = html;
+      totalElement.innerHTML = `Total: $${calculateTotal()}`;
+    };
+    
+    const removeExpense = (index) => {
+      if (confirm('Are you sure you want to remove this expense?')) {
+        expenses.splice(index, 1);
+        updateExpenseList();
+      }
+    };
+    
+    const editExpense = (index) => {
+      editingIndex = index;
+      const expense = expenses[index];
+      
+      document.getElementById('editIndex').value = index;
+      document.getElementById('editExpenseDesc').value = expense.desc;
+      document.getElementById('editExpenseAmount').value = expense.amount;
+      
+      editModal.show();
+    };
+    
+    const updateExpense = () => {
+      const index = document.getElementById('editIndex').value;
+      const desc = document.getElementById('editExpenseDesc').value.trim();
+      const amount = document.getElementById('editExpenseAmount').value;
+      
+      if (!desc || !amount) {
+        alert('Please enter both description and amount!');
+        return;
+      }
+      
+      expenses[index] = { 
+        desc, 
+        amount: parseFloat(amount).toFixed(2) 
+      };
+      
+      editModal.hide();
+      updateExpenseList();
+    };
+    
+    const saveExpenses = () => {
+      if (expenses.length === 0) {
+        alert('You have not added any expenses yet.');
+        return;
+      }
+      
+      const basis = document.getElementById('costingBasis').value;
+    
+      document.getElementById('confirmModalBody').innerHTML = `
+        <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+        <h4 class="mt-3">Expenses Saved Successfully</h4>
+        <p>Successfully saved ${expenses.length} expense(s) with <strong>${basis}</strong> costing basis.</p>
+        <div class="alert alert-info mt-3">
+          Total amount: <strong>$${calculateTotal()}</strong>
+        </div>
+      `;
+      
+      expenseModal.hide();
+      confirmModal.show();
+    };
+
     $('#order_items_table').DataTable({
         paging: false,
         scrollY: '850px',
         scrollCollapse: true
     });
 
+    
     document.addEventListener('DOMContentLoaded', function () {
         const confirmButton = document.getElementById('confirmPurchaseOrder');
         const orderItems = document.querySelectorAll('#receive_table tr');
@@ -330,11 +587,9 @@
         const sp = document.getElementById(`sP_${itemId}`);
         const dsp = document.getElementById(`dSp_${itemId}`);
 
-        // remove the submitted button and show the submit button
         document.getElementById(`submitted_${itemId}`).style.display = 'none';
         document.getElementById(`submit_${itemId}`).style.display = 'block';
 
-        // add cancel button
         document.getElementById(`cancel_${itemId}`).style.display = 'block';
 
         console.log(pQuantity)
@@ -388,11 +643,9 @@
     }
 
     function cancel(itemId, originalSellingPrice, originalDealerPrice) {
-        // Revert Selling Price and Dealer Price to their original values
         document.getElementById(`selling_${itemId}`).replaceWith(`${originalSellingPrice}`);
         document.getElementById(`dealer_${itemId}`).replaceWith(`${originalDealerPrice}`);
 
-        // Hide the submit and cancel buttons and show the "Submitted" button
         document.getElementById(`submit_${itemId}`).style.display = 'none';
         document.getElementById(`cancel_${itemId}`).style.display = 'none';
         document.getElementById(`submitted_${itemId}`).style.display = 'block';
@@ -469,19 +722,16 @@
                     tableDataCells.forEach(td => td.classList.add('bg-warning'));
                 }
 
-                // Update the row with the new values
                 document.getElementById(`quantity_${itemId}`)?.replaceWith(`${itemData.quantity}`);
                 document.getElementById(`selling_${itemId}`).replaceWith(`${itemData.selling_price}`);
                 document.getElementById(`dealer_${itemId}`).replaceWith(`${itemData.dealer_price}`);
 
-                // Update the button
                 const submitButton = document.querySelector(`button[onclick="submitItem('${itemId}')"]`);
                 submitButton.textContent = 'Submitted';
                 submitButton.classList.remove('btn-outline-dark');
                 submitButton.classList.add('bg-success', 'text-light', 'btn-sm');
                 submitButton.disabled = true;
 
-                // Hide the submit and cancel buttons, show edit button
                 const cancelBtn = document.getElementById(`cancel_${itemId}`);
                 const editBtn = document.getElementById(`editBtn_${itemId}`);
                 if (cancelBtn) cancelBtn.style.display = 'none';

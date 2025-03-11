@@ -280,12 +280,12 @@ CACHES = {
 }
 
 # celery
-# CELERY_BROKER_URL = 'redis://localhost:6379'
-# CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 
 # remote
-CELERY_BROKER_URL="rediss://:p81af2fc64c9b750172375f4b4b521a9a32354997e449c1cb59482e8607f7f227@ec2-44-223-243-234.compute-1.amazonaws.com:23070"
-CELERY_RESULT_BACKEND="rediss://:p81af2fc64c9b750172375f4b4b521a9a32354997e449c1cb59482e8607f7f227@ec2-44-223-243-234.compute-1.amazonaws.com:23070"
+# CELERY_BROKER_URL="rediss://:p81af2fc64c9b750172375f4b4b521a9a32354997e449c1cb59482e8607f7f227@ec2-44-223-243-234.compute-1.amazonaws.com:23070"
+# CELERY_RESULT_BACKEND="rediss://:p81af2fc64c9b750172375f4b4b521a9a32354997e449c1cb59482e8607f7f227@ec2-44-223-243-234.compute-1.amazonaws.com:23070"
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -309,7 +309,6 @@ REDIS_OPTIONS = {
     'socket_connect_timeout': 30
 }
 
-# Configure Channels to use these options
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -357,5 +356,10 @@ MAX_EMAIL_VERIFICATION_ATTEMPTS_PER_DAY = 3
 # Default from Email
 DEFAULT_FROM_EMAIL = 'admin@techcity.co.zw' #to be dynamically
 
-# settings.py
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "localhost"
+EMAIL_PORT = "1025"
+EMAIL_HOST_USER = ""
+EMAIL_HOST_PASSWORD = ""
+EMAIL_USE_TLS = False

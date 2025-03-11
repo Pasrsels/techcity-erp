@@ -206,9 +206,6 @@ def expenses(request):
         account_name = account_details['account_name']
         account_type = account_details['account_type']
 
-        logger.info(account_name)
-        logger.info(account_type)
-
         account, _ = Account.objects.get_or_create(
             name=account_name,
             type=account_type
@@ -222,9 +219,6 @@ def expenses(request):
                 'balance': 0
             }
           )
-
-        logger.info(f'Account: {account}')
-        logger.info(f'Account Balance: {account_balance}')
 
         if account_balance.balance < Decimal(amount):
             return JsonResponse({'success':False, 'message':f'{account_name} have insufficient balance.'})
@@ -251,7 +245,7 @@ def expenses(request):
             branch = request.user.branch
         )
 
-        send_expense_creation_notification(expense.id)
+        send_expense_creation_notification.delay(expense.id)
         
         return JsonResponse({'success': True, 'messages':'Expense successfully created'}, status=201)
     except Exception as e:

@@ -12,12 +12,12 @@ app = Celery('techcity')
 app.conf.update(
     BROKER_URL=os.environ.get('REDIS_URL'),
     CELERY_RESULT_BACKEND=os.environ.get('REDIS_URL'),
-    BROKER_USE_SSL={
-        'ssl_cert_reqs': ssl.CERT_NONE,  
-    },
-    CELERY_REDIS_BACKEND_USE_SSL={
-        'ssl_cert_reqs': ssl.CERT_NONE,  
-    },
+    # BROKER_USE_SSL={
+    #     'ssl_cert_reqs': ssl.CERT_NONE,  
+    # },
+    # CELERY_REDIS_BACKEND_USE_SSL={
+    #     'ssl_cert_reqs': ssl.CERT_NONE,  
+    # },
     broker_connection_retry_on_startup=True,
     broker_connection_max_retries=10,      
     broker_connection_timeout=30         
@@ -38,7 +38,6 @@ app.conf.task_routes = {
     'apps.inventory.tasks.process_transfer': {'queue': 'transfers'},
     'apps.inventory.tasks.notify_branch_transfer': {'queue': 'notifications'},
 }
-
 
 @app.task(bind=True)
 def debug_task(self):

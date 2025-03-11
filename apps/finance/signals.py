@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.db.models import Max
 from django.dispatch import receiver
 from apps.inventory.middleware import _request
-from .tasks import send_email_notification
+# from .tasks import send_email_notification
 from django.db.models.signals import post_save
 from .models import (
     CashTransfers, 
@@ -49,10 +49,10 @@ logger = logging.getLogger(__name__)
 #         notification.status=False
 #         notification.save()
         
-@receiver(post_save, sender=Expense)
-def expense_confirmation_notificatioin(sender, instance, **kwargs):
-    if instance.status == False:
-        send_email_notification(instance.id)
+# @receiver(post_save, sender=Expense)
+# def expense_confirmation_notificatioin(sender, instance, **kwargs):
+#     if instance.status == False:
+#         send_email_notification(instance.id)
         
         
 @receiver(post_save, sender=Invoice)

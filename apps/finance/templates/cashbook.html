@@ -2,135 +2,198 @@
 {% load static %}
 {% block title %}Cash Book{% endblock title %}
 {% block content %}
+<style>
+    .cashbook .table td, .cashbook .table th {
+        padding: 0.75rem 1rem;
+        vertical-align: middle;
+    }
+    
+    .cashbook .table tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    .cashbook .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    .chat-messages {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .chat-message {
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        max-width: 80%;
+    }
+    
+    .chat-message.sent {
+        background-color: #e9f5ff;
+        align-self: flex-end;
+    }
+    
+    .chat-message.received {
+        background-color: #f8f9fa;
+        align-self: flex-start;
+    }
+    
+    @media (max-width: 767.98px) {
+        .cashbook .d-flex.justify-content-md-end {
+            justify-content: center !important;
+            margin-top: 1rem;
+        }
+        
+        #customDateRange {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+    }
+    </style>
 <div class="finance">
     <div class="cashbook">
-        <nav class="d-flex justify-content-between align-items-center rounded mb-2 py-2">
+        <!-- Header Section with Navigation and Filters -->
+        <header class="bg-white shadow-sm rounded p-3 mb-4">
             <div>
-                <a href='{% url "finance:finance"%}' class='border btn bx bx-arrow-back fs-5'></a>
-                <a href='/' class='bx bx-home btn border fs-5 mx-2'></a>
-                <span class='mt-2 fs-5'>Cashbook <span class='fw-bold'></span></span>
-            </div>
-            <div>
-                <div class="d-flex justify-content-between mt-1">
-                    <div>
-                        <select class="form-select" id="filterSelect" onchange="filterCashBook()">
-                            <option value="today" {% if filter_option == 'today' %}selected{% endif %}>Today</option>
-                            <option value="this_week" {% if filter_option == 'this_week' %}selected{% endif %}>This Week</option>
-                            <option value="yesterday" {% if filter_option == 'yesterday' %}selected{% endif %}>Yesterday</option>
-                            <option value="this_month" {% if filter_option == 'this_month' %}selected{% endif %}>This Month</option>
-                            <option value="last_month" {% if filter_option == 'last_month' %}selected{% endif %}>Last Month</option>
-                            <option value="this_year" {% if filter_option == 'this_year' %}selected{% endif %}>This Year</option>
-                        </select>
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center">
+                            <a href='{% url "finance:finance"%}' class='btn btn-outline-secondary me-2'>
+                                <i class='bx bx-arrow-back'></i>
+                            </a>
+                            <a href='/' class='btn btn-outline-secondary me-3'>
+                                <i class='bx bx-home'></i>
+                            </a>
+                            <h5 class="mb-0">Cashbook</h5>
+                        </div>
                     </div>
-                    <div id="customDateRange" class="d-flex mx-2">
-                        <input type="date" id="startDate" value="{{ start_date }}" class="form-control" placeholder="Start Date">
-                        <input type="date" id="endDate" value="{{ end_date}}" class="form-control mx-2" placeholder="End Date">
-                        <button class="btn btn-outline-dark" onclick="applyCustomFilter()">Apply</button>
+                    <div class="col-md-8">
+                        <div class="d-flex flex-wrap justify-content-md-end gap-2">
+                            <div class="d-flex align-items-center">
+                                <select class="form-select shadow-none" id="filterSelect" onchange="filterCashBook()">
+                                    <option value="today" {% if filter_option == 'today' %}selected{% endif %}>Today</option>
+                                    <option value="this_week" {% if filter_option == 'this_week' %}selected{% endif %}>This Week</option>
+                                    <option value="yesterday" {% if filter_option == 'yesterday' %}selected{% endif %}>Yesterday</option>
+                                    <option value="this_month" {% if filter_option == 'this_month' %}selected{% endif %}>This Month</option>
+                                    <option value="last_month" {% if filter_option == 'last_month' %}selected{% endif %}>Last Month</option>
+                                    <option value="this_year" {% if filter_option == 'this_year' %}selected{% endif %}>This Year</option>
+                                    <option value="custom" {% if filter_option == 'custom' %}selected{% endif %}>Custom Range</option>
+                                </select>
+                            </div>
+                            
+                            <div id="customDateRange" class="d-flex align-items-center gap-2">
+                                <input type="date" id="startDate" value="{{ start_date }}" class="form-control" placeholder="Start Date">
+                                <input type="date" id="endDate" value="{{ end_date}}" class="form-control" placeholder="End Date">
+                                <button class="btn btn-primary" onclick="applyCustomFilter()">Apply</button>
+                            </div>
+                            
+                            <button class="btn btn-secondary ms-md-2" onclick="downloadReport()">
+                                <i class="bx bx-download me-1"></i> Export
+                            </button>
+                        </div>
                     </div>
-                    <button class="btn btn-secondary" onclick="downloadReport()">Download Report</button>
                 </div>
             </div>
-        </nav>
+        </header>
         
-        <div class="row mt-2">
-            <div class="">
-                <div class="table-responsive ">
-                    <table id="financialTable" class="table table-striped table-bordered table-hover">
-                        <thead>
+        <!-- Main Content - Cashbook Table -->
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table id="financialTable" class="table table-hover mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <th>Date</th>
-                                <th>Details</th>
-                                <!--<th>Description</th>-->
-                                <th>Note</th>
-                                <!--<th>Payee/Payer</th>-->
-                                <th>Expenses</th>
-                                <th>Income</th>
-                                <th>Balance</th>
-                                <th>Accountant</th>
-                                <th>Manager</th>
-                                <th>Directors</th>
+                                <th class="border-0">Date</th>
+                                <th class="border-0">Details</th>
+                                <th class="border-0">Note</th>
+                                <th class="border-0 text-end">Expenses</th>
+                                <th class="border-0 text-end">Income</th>
+                                <th class="border-0 text-end">Balance</th>
+                                <th class="border-0 text-center">Accountant</th>
+                                <th class="border-0 text-center">Manager</th>
+                                <th class="border-0 text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr class="bg-light">
                                 <td colspan="5"><strong>Balance B/F</strong></td>
-                                <td id="initialBalance">{{ balance_bf|floatformat:2 }}</td>
-                                <td id="accountant">{{ balance_bf|floatformat:2 }}</td>
-                                <td id="manager">{{ balance_bf|floatformat:2 }}</td>
-                                <td id="director">{{ balance_bf|floatformat:2 }}</td>
-                                <!-- <td colspan="3"></td> -->
+                                <td class="text-end fw-bold" id="initialBalance">{{ balance_bf|floatformat:2 }}</td>
+                                <td class="text-center" id="accountant">{{ balance_bf|floatformat:2 }}</td>
+                                <td class="text-center" id="manager">{{ balance_bf|floatformat:2 }}</td>
+                                <td class="text-center" id="director">{{ balance_bf|floatformat:2 }}</td>
                             </tr>
+                            
                             {% for entry in entries %}
-                            <tr>
-                                <td class="{% if entry.credit %}text-dange{% endif %} {% if entry.cancelled %}text-decoration-line-through text-danger{% endif %}">{{ entry.issue_date }}</td>
-                                <td class="{% if entry.credit %}text-dange{% endif %}">
-                                    <span class="hint--bottom {% if entry.cancelled %}text-decoration-line-through text-danger{% endif %}" aria-label="
-                                        {% if entry.debit %}
-                                            {{ entry.invoice.products_purchased }}
-                                        {% endif %}
-                                    ">
-                                    <!-- {% if entry.invoice %}
-                                        <a href=''>{{ entry.description }}</a>
-                                    {% elif entry.expense %}
-                                        {% if entry.expense.purchase_order %}
-                                            <a href='{% url "inventory:purchase_order_detail"  entry.expense.purchase_order.id %}'>{{ entry.description }}</a>
-                                        {% else %}
-                                            <a href=''>{{ entry.description }}</a>
-                                        {% endif %}
-                                    {% endif %} -->
-                                    <a href=''>{{ entry.description }}</a>
-                                    </span>
+                            <tr class="{% if entry.cancelled %}text-muted{% endif %}">
+                                <td class="{% if entry.cancelled %}text-decoration-line-through{% endif %}">
+                                    {{ entry.issue_date }}
                                 </td>
-                                <td class="{% if entry.credit %}text-dange{% endif %}">
-                                    <span class='d-flex justify-content-center'>
-                                        <i class='bx bx-message-rounded-dots text-primary' type='button' onclick='openChat({{ entry.id }})'></i>
-                                    </span>
+                                <td>
+                                    <a href='' class="text-reset text-decoration-none {% if entry.cancelled %}text-decoration-line-through{% endif %}">
+                                        <span class="hint--bottom" aria-label="{% if entry.debit %}{{ entry.invoice.products_purchased }}{% endif %}">
+                                            {{ entry.description }}
+                                        </span>
+                                    </a>
                                 </td>
-                                <td class="expense text-dange {% if entry.cancelled %}text-decoration-line-through text-danger{% endif %}">
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-light rounded-circle" onclick="openChat({{ entry.id }})">
+                                        <i class="bx bx-message-rounded-dots text-primary"></i>
+                                    </button>
+                                </td>
+                                <td class="text-end expense {% if entry.cancelled %}text-decoration-line-through{% endif %}">
                                     {% if entry.credit %}
                                         {{ entry.amount }}
                                     {% endif %}
                                 </td>
-                                <td class="income {% if entry.cancelled %}strike-line-through{% endif %} ">
+                                <td class="text-end income {% if entry.cancelled %}text-decoration-line-through{% endif %}">
                                     {% if entry.debit %}
                                         {{ entry.amount }}
                                     {% endif %}                                                          
                                 </td>
-                                <td class="balance {% if entry.credit %}text-dange{% endif %} {% if entry.cancelled %}text-decoration-line-through text-danger{% endif %}"></td>
-                                <td>
-                                    <input type="checkbox" 
-                                           class="status-checkbox" 
-                                           data-id="{{ entry.id }}" 
-                                           data-field="accountant" 
-                                           {% if entry.accountant %}checked{% endif %}
-                                    >
+                                <td class="text-end balance {% if entry.cancelled %}text-decoration-line-through{% endif %}"></td>
+                                <td class="text-center">
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input type="checkbox" 
+                                               class="form-check-input status-checkbox shadow-none" 
+                                               data-id="{{ entry.id }}" 
+                                               data-field="accountant" 
+                                               {% if entry.accountant %}checked{% endif %}>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input type="checkbox" 
+                                               class="form-check-input status-checkbox shadow-none" 
+                                               data-id="{{ entry.id }}" 
+                                               data-field="manager" 
+                                               {% if entry.manager %}checked{% endif %}>
+                                    </div>
                                 </td>
                                 <td>
-                                    <input type="checkbox" 
-                                           class="status-checkbox" 
-                                           data-id="{{ entry.id }}" 
-                                           data-field="manager" 
-                                           {% if entry.manager %}checked{% endif %}
-                                    >
-                                </td>
-                                <td class="d-flex align-items-center">
-                                    <input type="checkbox" 
-                                           class="status-checkbox" 
-                                           data-id="{{ entry.id }}" 
-                                           data-field="director" 
-                                           {% if entry.director %}checked{% endif %}
-                                    >
-                                    <button class="btn bx bx-x mx-2 {% if entry.cancelled %}text-decoration-line-through text-danger{% endif %}" onclick="cancel({{ entry.id }});"></button>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <div class="form-check">
+                                            <input type="checkbox" 
+                                                   class="form-check-input status-checkbox shadow-none" 
+                                                   data-id="{{ entry.id }}" 
+                                                   data-field="director" 
+                                                   {% if entry.director %}checked{% endif %}>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-danger rounded-circle {% if entry.cancelled %}opacity-50{% endif %}" 
+                                                onclick="cancel({{ entry.id }});">
+                                            <i class="bx bx-x"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
                         </tbody>
-                        <tfoot>
+                        <tfoot class="table-light">
                             <tr>
                                 <td colspan="3"><strong>Total</strong></td>
-                                <td class='fw-bold'>{{ total_credit|floatformat:2 }}</td>
-                                <td class='fw-bold'>{{ total_debit|floatformat:2 }}</td>
-                                <td class='fw-bold'>{{ total_balance|floatformat:2 }}</td>
+                                <td class="text-end fw-bold">{{ total_credit|floatformat:2 }}</td>
+                                <td class="text-end fw-bold">{{ total_debit|floatformat:2 }}</td>
+                                <td class="text-end fw-bold">{{ total_balance|floatformat:2 }}</td>
                                 <td colspan="3"></td>
                             </tr>
                         </tfoot>
@@ -142,25 +205,71 @@
         <!-- Chat Modal -->
         <div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
+                <div class="modal-content border-0 shadow">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="chatModalLabel">Notes Chat</h5>
+                        <h5 class="modal-title" id="chatModalLabel">Notes & Comments</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div id="chatMessages" class="chat-messages">
+                        <div id="chatMessages" class="chat-messages p-3 bg-light rounded" style="max-height: 300px; overflow-y: auto;">
+                            <!-- Chat messages will appear here -->
                         </div>
-                        <textarea id="chatInput" class="form-control mt-3" rows="2" placeholder="Type your message..."></textarea>
+                        <div class="mt-3 position-relative">
+                            <textarea id="chatInput" class="form-control shadow-none" rows="2" placeholder="Type your message..."></textarea>
+                            <button type="button" class="btn btn-primary position-absolute bottom-0 end-0 m-2" onclick="sendMessage()">
+                                <i class="bx bx-send"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-outline-dark bx bx-send fs-3" onclick="sendMessage()"></button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterSelect = document.getElementById('filterSelect');
+    const customDateRange = document.getElementById('customDateRange');
+
+    customDateRange.style.display = filterSelect.value === 'custom' ? 'flex' : 'none';
+    
+    filterSelect.addEventListener('change', function() {
+        customDateRange.style.display = this.value === 'custom' ? 'flex' : 'none';
+        if (this.value !== 'custom') {
+            filterCashBook();
+        }
+    });
+    
+    // Calculate balance for each row
+    calculateBalances();
+});
+
+// Calculate running balance
+function calculateBalances() {
+    let balance = parseFloat(document.getElementById('initialBalance').textContent);
+    const balanceCells = document.querySelectorAll('td.balance');
+    const expenseCells = document.querySelectorAll('td.expense');
+    const incomeCells = document.querySelectorAll('td.income');
+    
+    for (let i = 0; i < balanceCells.length; i++) {
+        const expense = expenseCells[i].textContent.trim() ? parseFloat(expenseCells[i].textContent) : 0;
+        const income = incomeCells[i].textContent.trim() ? parseFloat(incomeCells[i].textContent) : 0;
+        
+        balance = balance - expense + income;
+        balanceCells[i].textContent = balance.toFixed(2);
+        
+        // Apply color based on balance
+        if (balance < 0) {
+            balanceCells[i].classList.add('text-danger');
+        } else {
+            balanceCells[i].classList.add('text-success');
+        }
+    }
+}
+</script>
 
 <script>
     let initialBalance = parseFloat(document.getElementById("initialBalance").textContent);
