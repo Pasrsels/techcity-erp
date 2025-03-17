@@ -51,7 +51,6 @@ def save_receipt_offline(invoice_data, cashier):
             "savedAt": datetime.now().isoformat()
         }
 
-        print(receipt_data)
 
         receipt = OfflineReceipt(receipt_data=receipt_data)
         receipt.save()

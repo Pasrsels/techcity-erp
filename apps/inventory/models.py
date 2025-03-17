@@ -173,10 +173,10 @@ class PurchaseOrder(models.Model):
     def generate_order_number():
         return f'PO-{uuid.uuid4().hex[:10].upper()}'
 
-    def save(self, *args, **kwargs):
-        if not self.order_number:
-            self.order_number = self.generate_order_number()
-        super(PurchaseOrder, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if not self.order_number:
+    #         # self.order_number = self.generate_order_number()
+    #     super(PurchaseOrder, self).save(*args, **kwargs)
 
     def check_partial_status(self):
         partial_items = self.items.filter(received_quantity__lt=F('quantity'))
@@ -556,12 +556,12 @@ class InventoryShrinkage(models.Model):
         return f"Shrinkage: {self.inventory_item.name} ({self.quantity})"
     
 class DeliveryNote(models.Model):
-    purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name="delivery_notes")
-    delivery_date = models.DateField()
-    received_by = models.CharField(max_length=255)
+    purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name="delivery_notes", null=True)
+    delivery_date = models.DateField(null=True)
+    received_by = models.CharField(max_length=255, null=True)
     pdf = models.FileField(upload_to='delivery_notes/', null=True, blank=True)
 
 class DeliveryNoteItem(models.Model):
-    delivery_note = models.ForeignKey(DeliveryNote, on_delete=models.CASCADE, related_name="items")
-    product_name = models.CharField(max_length=255)
-    quantity_delivered = models.PositiveIntegerField()
+    delivery_note = models.ForeignKey(DeliveryNote, on_delete=models.CASCADE, related_name="items", null=True)
+    product_name = models.CharField(max_length=255, null=True)
+    quantity_delivered = models.PositiveIntegerField(null=True)

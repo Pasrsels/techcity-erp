@@ -136,7 +136,7 @@ def product_list(request):
         'image'
     ))
     
-    # to me reviewed more 
+    # to be reviewed more 
     merged_data = [{
         'inventory_id': item['id'],
         'product_id': item['id'],
@@ -375,6 +375,10 @@ def transfer_details(request, transfer_id):
 # requires a good name for the view
 @login_required
 def inventory(request):
+    from utils.zimra import ZIMRA
+
+    zimra_instance = ZIMRA()
+
     product_id = request.GET.get('id', '')
     if product_id:
         return JsonResponse(list(Inventory.objects.\
@@ -3448,7 +3452,7 @@ def product(request):
             """creating a new product"""
             
             # validation for existance
-            if Inventory.objects.filter(name__exact=data['name']).exists():
+            if Inventory.objects.filter(name__exact=data['name'], branch=request.user.branch).exists():
                 return JsonResponse({'success':False, 'message':f'Product {data['name']} exists'})
             
             logger.info(f'Creating product: {data['name']}: {request.user.branch}')

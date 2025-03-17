@@ -2,7 +2,7 @@ from . models import Inventory, Product, PurchaseOrderItem
 from django.db.models import F, Sum, FloatField
 from loguru import logger
 from django.db.models.functions import Coalesce
-from apps.inventory.models import DeliveryNote, DeliveryNoteItem
+# from apps.inventory.models import DeliveryNote, DeliveryNoteItem
 import datetime
 from django.core.files.base import ContentFile
 from io import BytesIO
@@ -62,43 +62,6 @@ def best_price(id):
 
 
 def generete_delivery_note(purchase_order, purchase_order_items, request):
-    if purchase_order.status == "received":
-        delivery_note, created = DeliveryNote.objects.get_or_create(
-            purchase_order=purchase_order,
-            defaults={
-                'delivery_date': datetime.date.today(),
-                'received_by':   request.user.first_name
-            }
-        )
-
-        for item in purchase_order_items:
-            logger.info(item)
-            DeliveryNoteItem.objects.create(
-                delivery_note=delivery_note,
-                product_name=item.product,
-                quantity_delivered=item.quantity
-            )
-
-        # Generate PDF:
-        template = get_template('delivery_note_template.html')
-
-        context = {
-            'delivery_note': delivery_note,
-            'items':purchase_order_items
-        }
-
-        html = template.render(context)
-        pdf_file = BytesIO()
-        pisa.CreatePDF(html, dest=pdf_file)
-
-        # PDF to the model 
-        delivery_note_pdf = pdf_file.getvalue()
-        delivery_note.pdf.save(f"Delivery_Note_{purchase_order.id}.pdf", ContentFile(delivery_note_pdf), save=True)
-
-        logger.info(f'Purchase order pdf created for po: {purchase_order.id}')
-
-
-
-
+    pass
 
 

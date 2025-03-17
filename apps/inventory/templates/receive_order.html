@@ -375,6 +375,98 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let expenseIndex = 0;
+        document.addEventListener('DOMContentLoaded', function() {
+    // Initial calculation for all rows
+    const rows = document.querySelectorAll('#costing_table tbody tr');
+    rows.forEach(row => {
+        const id = row.id.replace('costing_id', '');
+        calculateRowTotal(id);
+    });
+    
+    // Add event listeners to all quantity inputs
+    const quantityInputs = document.querySelectorAll('#costing_table input[id^="quantity_"]');
+    quantityInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const id = this.dataset.id;
+            calculateRowTotal(id);
+        });
+    });
+    
+    // Add event listeners to all weight inputs
+    const weightInputs = document.querySelectorAll('#costing_table input[id^="weight_"]');
+    weightInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const id = this.id.replace('weight_', '');
+            calculateRowTotal(id);
+        });
+    });
+    
+    // Toggle weight column visibility if needed
+    const toggleWeightBtn = document.getElementById('toggle_weight_column');
+    if (toggleWeightBtn) {
+        toggleWeightBtn.addEventListener('click', function() {
+            const weightColumns = document.querySelectorAll('.weight-column');
+            weightColumns.forEach(col => {
+                col.style.display = col.style.display === 'none' ? 'table-cell' : 'none';
+            });
+            
+            // Recalculate totals after toggling
+            calculateGrandTotal();
+        });
+    }
+});
+
+function calculateRowTotal(id) {
+    const quantityEl = document.getElementById(`quantity_${id}`);
+    const unitCostCell = document.getElementById(`unit_cost_${id}`) || 
+                        document.querySelector(`#costing_id${id} td:nth-child(4)`);
+    const weightEl = document.getElementById(`weight_${id}`);
+    const totalEl = document.getElementById(`total_u_k_${id}`);
+    
+    if (!quantityEl || !totalEl) return;
+    
+    const quantity = parseFloat(quantityEl.value) || 0;
+    let unitCost = 0;
+    
+    // Extract unit cost from the cell (removing currency symbols if any)
+    if (unitCostCell) {
+        const unitCostText = unitCostCell.textContent.trim();
+        unitCost = parseFloat(unitCostText.replace(/[^\d.-]/g, '')) || 0;
+    }
+    
+    let total = 0;
+    const weightColumns = document.querySelectorAll('.weight-column');
+    const isWeightVisible = weightColumns.length > 0 && 
+                           weightColumns[0].style.display !== 'none';
+    
+    if (isWeightVisible && weightEl) {
+        // If weight column is visible, use weight in calculation
+        const weight = parseFloat(weightEl.value) || 0;
+        total = quantity * unitCost * weight;
+    } else {
+        // Otherwise use standard quantity * unit cost
+        total = quantity * unitCost;
+    }
+    
+    totalEl.textContent = total.toFixed(2);
+    
+    // Update grand total
+    calculateGrandTotal();
+}
+
+function calculateGrandTotal() {
+    const totalElements = document.querySelectorAll('[id^="total_u_k_"]');
+    let grandTotal = 0;
+    
+    totalElements.forEach(el => {
+        grandTotal += parseFloat(el.textContent) || 0;
+    });
+    
+    const totalExpenseEl = document.getElementById('total_expense');
+    if (totalExpenseEl) {
+        totalExpenseEl.textContent = grandTotal.toFixed(2);
+    }
+}
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
