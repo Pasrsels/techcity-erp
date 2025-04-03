@@ -277,6 +277,10 @@ class Invoice(models.Model):
     ))
     hold_status = models.BooleanField(default=False)
     amount_received = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    receiptServerSignature = models.TextField(null=True, blank=True)  # Change from CharField to TextField
+    receipt_hash = models.TextField(null=True, blank=True) 
+    qr_code = models.ImageField(upload_to='qr_codes/', null=True, blank=True)
+    signature_data = models.CharField(max_length=50, null=True)
 
     def generate_invoice_number(branch):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
@@ -292,7 +296,7 @@ class Invoice(models.Model):
             return f"INV{branch[:1]}-{new_invoice_number:04d}"  
 
     def __str__(self):
-        return f"Invoice #{self.invoice_number} - {self.customer}"
+        return f"Invoice #{self.invoice_number} - {self.customer.name}"
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.PROTECT, related_name='invoice_items')

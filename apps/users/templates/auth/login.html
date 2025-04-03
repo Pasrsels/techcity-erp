@@ -6,72 +6,264 @@
     <meta charset="UTF-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <meta name="description" content="Techcity Pos System"/>
-    <meta name="Author"content="casy moyo" />
+    <meta name="description" content="Techcity POS System"/>
+    <meta name="author" content="casy moyo" />
     <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}"/>
 
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     {% block css %}
         <link rel="stylesheet" href="{% static 'css/main.css'%}">
         <link rel="stylesheet" href="{% static 'css/bootstrap/css/bootstrap.min.css'%}">
     {% endblock css %}
 
     <script defer src="{% static 'css/bootstrap/js/bootstrap.min.js'%}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #3B82F6;
+            --primary-hover: #2563EB;
+            --background-color: #F9FAFB;
+            --card-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --error-color: #EF4444;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        
+        .login-card {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 420px;
+            padding: 2.5rem;
+        }
+        
+        .login-logo {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .login-title {
+            font-weight: 600;
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+        
+        .login-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+        
+        .form-floating {
+            margin-bottom: 1rem;
+        }
+        
+        .form-floating label {
+            color: var(--text-secondary);
+        }
+        
+        .form-control {
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid #E5E7EB;
+            height: auto;
+            font-size: 1rem;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+        
+        .btn-login {
+            background-color: var(--primary-color);
+            border: none;
+            color: white;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            margin-top: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-login:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+        
+        .alert {
+            margin-top: 1rem;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .alert-danger {
+            background-color: #FEF2F2;
+            color: var(--error-color);
+            border: 1px solid #FEE2E2;
+        }
+        
+        .alert-success {
+            background-color: #F0FDF4;
+            color: #16A34A;
+            border: 1px solid #DCFCE7;
+        }
+        
+        .form-check {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 1rem 0;
+        }
+        
+        .forgot-password {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .forgot-password:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+        
+        .input-icon {
+            position: relative;
+        }
+        
+        .input-icon input {
+            padding-left: 2.5rem;
+        }
+        
+        .input-icon i {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+        
+        @media (max-width: 576px) {
+            .login-card {
+                padding: 1.5rem;
+            }
+            
+            .login-logo img {
+                width: 180px;
+            }
+        }
+    </style>
 
     <title>
-        {% block title %}Techcity{% endblock %}
+        {% block title %}Techcity POS{% endblock %}
     </title>
 </head>
 <body>
-    <div class="techcity">
-        <div class="">
-            <div class="login d-flex flex-column align-items-center justify-content-center">
-                <div class="logo">
-                    <img src="{% static 'assets/logo.png' %}" width="250px"/>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="{% static 'assets/logo.png' %}" alt="Techcity Logo" width="200">
+            </div>
+            
+            <h1 class="login-title">Welcome back</h1>
+            <p class="login-subtitle">Enter your credentials to access your account</p>
+            
+            <!-- Login Form -->
+            <form method="post">
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
+                {% csrf_token %}
+                {{form}}
+                
+                <div class="input-icon mb-3">
+                    <i data-feather="mail"></i>
+                    <input
+                        name="email_address"
+                        type="email"
+                        placeholder="Email address"
+                        class="form-control"
+                        required
+                    />
                 </div>
-                <div class="login-form mt-4">
-                    <form method="post">
-                        <input type="hidden" name="next" value="{{ request.GET.next }}">
-                        {{form}}
-                        {% csrf_token %}
-                        <div class="row">
-                            <input
-                                name="email_address"
-                                type="text"
-                                placeholder="email"
-                                class="form-control"
-                            />
-                        </div>
-                        <div class="row mt-2">
-                            <input
-                                name="password"
-                                type="password"
-                                placeholder="password"
-                                class="form-control"
-                            />
-                        </div>
-                        <div class="row mt-2">
-                            <button
-                                type="submit"
-                                class="btn btn-outline-dark"
-                            >Login</button>
-                        </div>
-                    </form>
+                
+                <div class="input-icon mb-3">
+                    <i data-feather="lock"></i>
+                    <input
+                        name="password"
+                        type="password"
+                        placeholder="Password"
+                        class="form-control"
+                        required
+                    />
                 </div>
-                 <!-- messages -->
-                {% if messages %}
-                    {% for message in messages %}
-                        <small class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                
+                <div class="form-check">
+                    <div>
+                        <input class="form-check-input" type="checkbox" id="remember-me">
+                        <label class="form-check-label" for="remember-me">
+                            Remember me
+                        </label>
+                    </div>
+                    <a href="#" class="forgot-password">Forgot password?</a>
+                </div>
+                
+                <button
+                    type="submit"
+                    class="btn btn-login"
+                >
+                    Sign in
+                </button>
+            </form>
+            
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
                         {{ message }}
                         <button type="button"
                                 class="btn-close btn-sm"
                                 data-bs-dismiss="alert"
                                 aria-label="Close"></button>
-                        </small>
-                    {% endfor %}
-                {% endif %}
-            </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
         </div>
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            feather.replace();
+        });
+    </script>
 </body>
 </html>
-

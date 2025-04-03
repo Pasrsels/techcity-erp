@@ -23,9 +23,6 @@ def pos(request):
         'count':held_invoices_count,
     })
 
-@login_required
-def process_receipt(request):
-    pass    
 
 @login_required
 def last_due_invoice(request, customer_id):

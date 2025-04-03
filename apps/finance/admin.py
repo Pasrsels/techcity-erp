@@ -29,3 +29,4 @@ admin.site.register(CashUp)
 admin.site.register(Cashflow)
 admin.site.register(MainExpenseCategory)
 admin.site.register(ExpenseSubCategory)
+

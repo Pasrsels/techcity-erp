@@ -342,9 +342,16 @@
 
     <div class="overlay hidden"></div>
 </body>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src={% static "js/app_modules/signature_sign.js" %}></script>
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.0/jsrsasign-all-min.js"></script>
+
+
 <script>   
+    console.log(run())
 let cart = [];
 let data = [];
 let respData = [];
@@ -1043,7 +1050,6 @@ function updateCartDisplay() {
         </td>
       `;
       cartItemsList.appendChild(row);
-
     });
 
 }
@@ -1194,30 +1200,70 @@ async function processCart(el) {
         });
 
         const result = await response.json();
+        console.log(result, 'result')
 
         if (result.success) {
             cart = [];
             updateCartDisplay();
 
             if (el.dataset.name === 'qoutation') {
-                qouteModal.show();
-                modal.classList.add('hidden');
-                overlay.classList.add('hidden');
-
-                setTimeout(() => {
-                    qouteModal.hide();
-                    window.location.href = `/finance/qoutation/preview/${result.qoute_id}`;
-                }, 2000);
-
-            } else {
                 Swal.fire({
-                    text: 'Proccessing Receipt',
                     icon: 'success',
-                    title: 'Success'
-                }).then(() => {
-                    displayReceipt(result.invoice_id);
+                    text: 'Processing Quotation',
+                    timer: 2000,
+                    didClose: () => {
+                        Swal.fire({
+                            title: 'Loading...',
+                            text: 'Redirecting to preview...',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+            
+                        setTimeout(() => {
+                            qouteModal.hide();
+                            window.location.href = `/finance/qoutation/preview/${result.qoute_id}`;
+                        }, 1000);
+                    }
+                });
+            }
+            
+            } else {
+                if (result.data){
+                    let data;
+                    console.log(result)
 
-                })
+                    data = run(result.data)
+                    console.log('data', data)
+
+                    fetch('{% url "finance:submit_invoice"%}',{ 
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCookie("csrftoken"),
+                        },
+                        body: JSON.stringify({
+                            hash:data.hash,
+                            signature:data.signature,
+                            receipt_data:result.receipt_data
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data)
+                        if(data.success){
+                            Swal.fire({
+                                text: 'Proccessing Receipt',
+                                icon: 'success',
+                                title: 'Success'
+                            }).then(() => {
+                                displayReceipt(result.invoice_id);
+                            }) 
+                        }
+                    })
+                }
+
             }
         } else if (result.hold){
             modal.classList.add('hidden');
@@ -1237,19 +1283,6 @@ async function processCart(el) {
 
 async function displayReceipt(invoiceId) {
     try {
-        const response = await fetch(`/finance/invoice/preview/json/${invoiceId}/`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie("csrftoken"),
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok.');
-        }
-
-        const data = await response.json();
 
         let content = generateReceiptContent(data)
         printReceiptSilently(content)
@@ -1295,9 +1328,7 @@ async function displayReceipt(invoiceId) {
         });;
 
         document.querySelector('#subTotalAmount').textContent = `${currencySymbol} ${subTotal}`;
-        document.querySelector('#vatAmount').textContent = `${currencySymbol} ${vatAmount}`;
-;
-        
+        document.querySelector('#vatAmount').textContent = `${currencySymbol} ${vatAmount}`;   
         const laybyDateEl = document.getElementById('rcp_payment_dates')
         const laybyTerms = document.getElementById('laybyTerms');
         const installmentTerms = document.getElementById('installmentTerms');
@@ -1346,209 +1377,164 @@ async function displayReceipt(invoiceId) {
     }
 }
 
-    function generateReceiptContent(data) {
-        const { invoice, invoice_items: invoiceItems, lay_dates:dates} = data;
-        const {
-            invoice_number: invoiceNumber,
-            amount: invoiceTotal,
-            delivery_charge: deliveryCharge,
-            discount_amount: discountAmount,
-            vat: vatAmount,
-            subtotal: subTotal,
-            currency_symbol: currencySymbol,
-            amount_paid: amountPaid,
-            payment_terms: payment_terms
-        } = invoice;
+function generateReceiptContent(data) {
+    const { invoice, invoice_items: invoiceItems } = data;
+    const {
+        invoice_number: invoiceNumber,
+        amount: invoiceTotal,
+        vat: vatAmount,
+        subtotal: subTotal,
+        currency_symbol: currencySymbol,
+        receipt_hash: receiptHash,
+        amount_paid: amountPaid,
+        payment_terms: paymentMethod,
+        device_id: deviceId,
+        device_serial_number: deviceSerialNumber
+    } = invoice;
+    const vatRate = 15; // VAT percentage
 
-        return `
-        <style>
-            r{
-                font-family: Arial, sans-serif;
-                font-size: 12px;
-                width: 5.8cm;
-            }
-            .receipt{
-                width: 5.8cm;
-                max-width: 6cm;
-                margin: 0 auto;
-                padding: 20px;
-            }
-            .receipt h2, .footer p{
-                text-align: center;
-            }
-            .sub-header{
-                margin-top: 10px;
-            }
-            .sub-header table, .receipt-body table{
-                width: 100%;
-            }
-            .date-time{
-                margin-top: 10px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            .receipt-no{
-                margin-top: 10px;
-            }
-
-            .receipt-body table{
-                margin-top: 10px;
-            }
-            .receipt-body table thead th{
-                border-top:1px solid #000;
-                border-bottom: 1px solid #000;
-                text-align: left;
-            }
-            .receipt-body table tr :nth-child(4), 
-            .receipt-body table tfoot tr :nth-child(2){
-                text-align: right;
-            }
-            .terms{
-                margin-top: 10px;
-            }
-            #subtotal{
-                border-top: 1px solid #000;
-            }
-
-            #total_amount{
-                border-top: 1px solid #000;
-                border-bottom: 2px solid #000;
-            }
-        </style>
-        <div class="r">
-            <div class="receipt">
-                <div>
-                    <h2>Techcity</h2>
-                </div>
-
-                <div class="sub-header">
-                    <table>
-                        <tr>
-                            <td>Tin No:</td>
-                            <td id="tin_no">220356643</td>
-                        </tr>
-                        <tr>
-                            <td>VAT:</td>
-                            <td id="vat">2001020099</td>
-                        </tr>
-                        <tr>
-                            <td>Address:</td>
-                            <td id="address">63 speke avenue</td>
-                        </tr>
-                        <tr>
-                            <td>Phonenumber:</td>
-                            <td id="phone">0776079245</td>
-                        </tr>
-                        <tr>
-                            <td>Email:</td>
-                            <td id="email">info@techcity.co.zw</td>
-                        </tr>
-                    </table>
-
-                    <div class="date-time">
-                        <span id="date">
-                            Date: ${new Date().toLocaleDateString()}
-                        </span>
-                        <span id="time"></span>
-                            Time: ${new Date().toLocaleTimeString()}
-                        </span>
-                    </div>
-
-                    <div class="receipt-no">
-                        ------------------------------------------------------
-                        <p>Receipt No: <span id="receipt-number">${invoiceNumber}</span></p>
-                        <p>Payment Term: <span id="payment-term">cash</span></p>
-                        ------------------------------------------------------
-                    </div>
-                </div>
-
-                <div class="receipt-body">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th>Qty</th>
-                                <th>Price</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${invoiceItems.map(item => `
-                                <tr>
-                                    <td>${item.item__name}</td>
-                                    <td>${item.quantity}</td>
-                                    <td>${currencySymbol} ${item.unit_price}</td>
-                                    <td>${currencySymbol} ${item.unit_price * item.quantity}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                        <tfoot>
-                            <tr id="hr">
-                                <td colspan="3">Subtotal</td>
-                                <td id="subtotal">${currencySymbol} ${subTotal || 0.00}</td>
-                            </tr>
-                            <tr>
-                                <td colspan="3">VAT</td>
-                                <td id="vat_amount">${currencySymbol} ${vatAmount || 0.00}</td>
-                            </tr>
-                            <tr>
-                                <td colspan="3">Total</td>
-                                <td id="total_amount">${currencySymbol} ${invoiceTotal|| 0.00}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-
-                <div class="terms">
-                    -----------------------------------------------------
-                    <h4>Terms and Conditions</h4>
-                    <ul>
-                        <li>Goods once sold cannot be returned</li>
-                        <li>Warranty is valid for 1 year</li>
-                        <li>Warranty is valid for 1 year</li>
-                        <li>Warranty is valid for 1 year</li>
-                        <li>Warranty is valid for 1 year</li>
-                    </ul>
-                </div>
-
-                <div class="footer">
-                    ----------------------------------------------------
-                    <p>Thank you for shopping with us</p>
-                    ----------------------------------------------------
-                </div>
-            </div>
-        </div>
-    `;
-    }
-
-    function printReceiptSilently(content) {
-        console.log(content)
-        let printFrame = document.getElementById("print-frame");
-
-        if (!printFrame) {
-            printFrame = document.createElement("iframe");
-            printFrame.id = "print-frame";
-            printFrame.style.display = "none"
-            document.body.appendChild(printFrame);
+    return `
+    <style>
+        .receipt {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            width: 5.8cm;
+            max-width: 6cm;
+            margin: 0 auto;
+            padding: 10px;
         }
-        const frameDoc = printFrame.contentWindow || 
-                        printFrame.contentDocument.document || 
-                        printFrame.contentDocument;
+        .receipt h2, .footer p {
+            text-align: center;
+        }
+        .receipt-body table {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .qr-code {
+            text-align: center;
+            margin-top: 10px;
+        }
+        #qrcode {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
 
-        frameDoc.document.open();
-        frameDoc.document.write(`
-            <html>
-            <body>
-                ${content}
-            </body>
-            </html>
-        `);
-        frameDoc.document.close();
-        setTimeout(() => {
-            printFrame.contentWindow.print(false);
-        }, 100);
+    <div class="receipt">
+        <h2>Pasales Investments</h2>
+        <p><strong>FISCAL TAX INVOICE</strong></p>
+
+        <div class="sub-header">
+            <table>
+                <tr><td><strong>TIN:</strong></td><td>2001020099</td></tr>
+                <tr><td><strong>VAT No:</strong></td><td>220356643</td></tr>
+                <tr><td><strong>Branch:</strong></td><td>63 Speke Avenue</td></tr>
+                <tr><td><strong>Email:</strong></td><td>info@techcity.co.zw</td></tr>
+                <tr><td><strong>Phone:</strong></td><td>0776079245</td></tr>
+            </table>
+
+            <hr>
+
+            <table>
+                <tr><td><strong>Fiscal Device ID:</strong></td><td>${deviceId}</td></tr>
+                <tr><td><strong>Device Serial No:</strong></td><td>${deviceSerialNumber}</td></tr>
+                <tr><td><strong>Invoice No:</strong></td><td>${invoiceNumber}</td></tr>
+                <tr><td><strong>Fiscal Day No:</strong></td><td>45</td></tr>
+            </table>
+
+            <hr>
+
+            <p><strong>DATE: ${new Date().toLocaleDateString()} TIME: ${new Date().toLocaleTimeString()}</strong></p>
+
+            <hr>
+
+            <table>
+                <tr><td><strong>Customer Name:</strong></td><td>N/A</td></tr>
+                <tr><td><strong>Customer TIN:</strong></td><td>N/A</td></tr>
+            </table>
+        </div>
+
+        <div class="receipt-body">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>${currencySymbol}Price</th>
+                        <th>${currencySymbol}VAT</th>
+                        <th>${currencySymbol}Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${invoiceItems.map(item => `
+                        <tr>
+                            <td>${item.item__name}</td>
+                            <td>${item.quantity}</td>
+                            <td>${currencySymbol} ${item.unit_price}</td>
+                            <td>${currencySymbol} ${(
+                                (item.unit_price * item.quantity) - 
+                                ((item.unit_price * item.quantity) / (1 + vatRate / 100))
+                            ).toFixed(2)}</td>
+                            <td>${currencySymbol} ${(item.unit_price * item.quantity).toFixed(2)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+                <tfoot>
+                    <tr><td colspan="4"><strong>Subtotal</strong></td><td>${subTotal}</td></tr>
+                    <tr><td colspan="4"><strong>VAT</strong></td><td>${vatAmount}</td></tr>
+                    <tr><td colspan="4"><strong>Total</strong></td><td>${invoiceTotal}</td></tr>
+                    <tr><td colspan="4"><strong>Paid Amount</strong></td><td>${amountPaid}</td></tr>
+                    <tr><td colspan="4"><strong>Payment Method</strong></td><td>${paymentMethod || 'Cash'}</td></tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <p style="text-align: center;"><strong>Verification Code: ${receiptHash || ''}</strong></p>
+        <p style="text-align: center;">Verify at <a href="https://receipt.zimra.org/">https://receipt.zimra.org/</a></p>
+
+        <div class="footer">
+            <hr>
+            <p>Thank you for shopping with us</p>
+            <hr>
+        </div>
+    </div>`;
+}
+
+// Function to print the receipt silently
+function printReceiptSilently(content) {
+    let printFrame = document.getElementById("print-frame");
+
+    if (!printFrame) {
+        printFrame = document.createElement("iframe");
+        printFrame.id = "print-frame";
+        printFrame.style.position = "absolute";
+        printFrame.style.width = "0px";
+        printFrame.style.height = "0px";
+        printFrame.style.border = "none";
+        printFrame.style.visibility = "hidden";
+        document.body.appendChild(printFrame);
     }
+
+    const frameDoc = printFrame.contentWindow || 
+                     printFrame.contentDocument.document || 
+                     printFrame.contentDocument;
+
+    frameDoc.document.open();
+    frameDoc.document.write(`
+        <html>
+        <head>
+            <title>Print Receipt</title>
+            <style>
+                body { font-family: Arial, sans-serif; font-size: 12px; }
+            </style>
+        </head>
+        <body onload="window.print(); setTimeout(() => window.close(), 1000);">
+            ${content}
+        </body>
+        </html>
+    `);
+    frameDoc.document.close();
+}
 
   
 // customer get and post
@@ -1838,21 +1824,4 @@ function setCustomer(customerId){
         }
 
         document.getElementById('PaylaterModal').addEventListener('shown.bs.modal', fetchCustomerData);
-
-
-
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== "") {
-      const cookies = document.cookie.split(";");
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === name + "=") {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  } 
 </script>

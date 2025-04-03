@@ -31,3 +31,7 @@ docker_compose.yml
 *.pyc
 # .docker_compose
 # .Dockerfile
+cert_private.pem
+cert.pem
+clean_cert.pem
+csr/

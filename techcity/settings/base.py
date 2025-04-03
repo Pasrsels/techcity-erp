@@ -45,6 +45,7 @@ THIRD_PARTY_APPS = [
     "crispy_bootstrap5",
     'phonenumber_field',
     'django_extensions',
+    'django_celery_beat',
     # 'chartjs',
     # 'django_crontab',
     # 'DjangoAsyncMail',
@@ -363,5 +364,8 @@ EMAIL_PORT = "1025"
 EMAIL_HOST_USER = ""
 EMAIL_HOST_PASSWORD = ""
 EMAIL_USE_TLS = False
+
+#ZIMRA
+DEVICE_REGISTER = False
 
 

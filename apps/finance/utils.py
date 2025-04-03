@@ -2,6 +2,13 @@ from . models import Invoice, Payment, Account, AccountBalance, Cashbook
 from loguru import logger
 from decimal import Decimal
 from django.db import transaction
+from io import BytesIO
+from django.template.loader import get_template
+from django.http import HttpResponse
+from xhtml2pdf import pisa  
+from django.shortcuts import get_object_or_404
+from apps.finance.models import Qoutation, QoutationItems
+from django.conf import settings
 
 def calculate_expenses_totals(expense_queryset):
     """Calculates the total cost of all expenses in a queryset."""
@@ -83,8 +90,46 @@ def update_latest_due(customer, amount_received, request, payment_method, custom
                 return balance
     except Exception as e:
         return amount_received
+    
 
 
+def generate_quote_pdf(quote_id, request):
+    """
+    Generate PDF from qoute using pdfkit (wkhtmltopdf wrapper)
+    """
+    import pdfkit
+    from django.template.loader import render_to_string
+    
+    qoute = get_object_or_404(Qoutation, id=quote_id)
+    quote_items = QoutationItems.objects.filter(qoute=qoute)
+    
+    context = {
+        'qoute': qoute,
+        'qoute_items': quote_items,
+        'request': {
+            'user': {
+                'branch': qoute.branch,
+                'first_name': request.user.first_name if hasattr(qoute, 'created_by') else '',
+                'phonenumber': request.user.phonenumber if hasattr(qoute, 'created_by') else ''
+            }
+        },
+        'static_url': settings.STATIC_URL
+    }
+    
+    html_string = render_to_string('quotation_pdf.html', context)
+    
+    pdf = pdfkit.from_string(
+        html_string, 
+        False,  
+        options={
+            'page-size': 'Letter',
+            'encoding': 'UTF-8',
+            'no-outline': None,
+            'quiet': ''
+        }
+    )
+    
+    return pdf
 
 
 

@@ -5,10 +5,11 @@
 {% block title %} Receive Purchase Order {% endblock %}
 {% block content %}
 <style>
-    td, input {
+    td,
+    input {
         font-size: 12px;
-        vertical-align: middle; 
-        text-align: center; 
+        vertical-align: middle;
+        text-align: center;
     }
 
     input {
@@ -27,15 +28,15 @@
     }
 
     td:first-child,
-    td:nth-child(2){
+    td:nth-child(2) {
         text-align: left;
     }
 
     th {
         position: sticky;
         top: 0;
-        background: white; 
-        z-index: 10; 
+        background: white;
+        z-index: 10;
     }
 
     table {
@@ -49,74 +50,70 @@
 
     .floating-button {
         position: fixed;
-        bottom: 20px; 
+        bottom: 20px;
         right: 20px;
-        z-index: 1000; 
+        z-index: 1000;
     }
 
     .floating-button .btn {
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
+    .table-container {
+        margin: 20px;
+        overflow-x: auto;
+    }
+
+    .floating-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 100;
+    }
+
+    .expense-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 12px;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 8px;
+    }
+
+    .expense-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .expense-total {
+        margin-top: 15px;
+        padding: 10px;
+        font-weight: bold;
+        text-align: right;
+        border-top: 2px solid #dee2e6;
+    }
+
+    .weight-column {
+        background-color: #f8f9fa;
+    }
 </style>
 <div class="inventory-navbar">
     <nav class="d-flex justify-content-between align-items-center shadow rounded mb-2 p-2">
         <div class="d-flex">
             <div>
-                <h4 class='mt-1 fw-bold'><small class='px-1 fw-bold fx-6'>Receive Purchase Order: </small>{{ purchase_order.batch|lower }}</h4>
+                <h4 class='mt-1 fw-bold'><small class='px-1 fw-bold fx-6'>Receive Purchase Order:
+                    </small>{{purchase_order.batch|lower }}</h4>
             </div>
         </div>
         <!--<a href="{% url 'inventory:mark_done' purchase_order.id %}" class="btn btn-secondary">Done</a>-->
     </nav>
 </div>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Purchase Order System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        .table-container {
-            margin: 20px;
-            overflow-x: auto;
-        }
-        .floating-button {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 100;
-        }
-        .expense-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 12px;
-            border-bottom: 1px solid #eee;
-            margin-bottom: 8px;
-        }
-        .expense-actions {
-            display: flex;
-            gap: 8px;
-        }
-        .expense-total {
-            margin-top: 15px;
-            padding: 10px;
-            font-weight: bold;
-            text-align: right;
-            border-top: 2px solid #dee2e6;
-        }
-        .weight-column {
-            background-color: #f8f9fa;
-        }
-    </style>
-</head>
-<body>
+<div>
     <div class="table-container">
-        <h2>Purchase Order Receiving</h2>
+        <h5>Purchase Order Receiving</h5>
 
         <!-- show receiving table after costing or no costing -->
-        <table class='table d-none table-striped table-responsive table-bordered receiving-table' id='order_items_table' style='width:100%;'>
+        <table class='table table-striped table-responsive table-bordered receiving-table' id='order_items_table'
+            style='width:100%;'>
             <thead>
                 <tr>
                     <th>#</th>
@@ -137,43 +134,50 @@
             </thead>
             <tbody id="receive_table">
                 {% for item in orders %}
-                <tr id="tr_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
+                <tr id="tr_{{ item.id }}"
+                    class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
                     <span class="d-none" id="rq_{{ item.id }}">{{ item.received_quantity }}</span>
                     <td>{{ forloop.counter }}</td>
-                    <td id="name_{{ item.id }}" style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.product.name }}</td>
-                    <td style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.product.description }}</td>
-                    <td id="purchased_quantity_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.quantity }}</td>
-                    <td id="q_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild" d>
+                    <td id="name_{{ item.id }}" style="background: #ebeced;"
+                        class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
+                        {{item.product.name }}</td>
+                    <td style="background: #ebeced;"
+                        class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
+                        {{item.product.description }}</td>
+                    <td id="purchased_quantity_{{ item.id }}"
+                        class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
+                        {{item.quantity }}</td>
+                    <td id="q_{{ item.id }}"
+                        class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild" d>
                         {% if item.received %}
-                        <div class="rounded {% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">Received [{{item.received_quantity}}]</div>
+                        <div
+                            class="rounded {% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
+                            Received [{{item.received_quantity}}]</div>
                         {% else %}
                         <input type="number"
-                               value="{% if item.received_quantity > 0 %} {{ item.received_quantity }} {% else %} {{ item.quantity }} {% endif %}"
-                               id="quantity_{{ item.id }}"
-                               placeholder="Enter quantity received"
-                               min="1"
-                               class='form-control'
-                               onclick="clearInput(this)"
-                               oninput="expectedProfit(
+                            value="{% if item.received_quantity > 0 %} {{ item.received_quantity }} {% else %} {{ item.quantity }} {% endif %}"
+                            id="quantity_{{ item.id }}" placeholder="Enter quantity received" min="1"
+                            class='form-control' onclick="clearInput(this)" oninput="expectedProfit(
                                     '{{ item.id }}',
                                     '{{ item.quantity }}',
                                     '{{ item.actual_unit_cost }}'
                                 )">
                         {% endif %}
                     </td>
-                    <td id="difference_{{ item.id }}" style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild"></td>
-                    <td id="actual_unit_cost" class="fw-bold" style="background: #ebeced;" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.actual_unit_cost }}</td>
-                    <td id="dSp_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
+                    <td class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
+                        <small id="unit_cost_{{ item.id }}">{{ item.unit_cost }}</small>
+                    </td>
+                    <td id="difference_{{ item.id }}" style="background: #ebeced;"
+                        class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild"></td>
+                    <td id="actual_unit_cost" class="fw-bold" style="background: #ebeced;"
+                        class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
+                        {{item.actual_unit_cost }}</td>
+                    <td id="dSp_{{ item.id }}"
+                        class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
                         {% if not item.received %}
                         {% if request.user.role == 'admin' or request.user.role == 'owner' %}
-                        <input type="text"
-                               id="dealer_{{ item.id }}"
-                               placeholder="Enter Dealer Selling Price"
-                               min="1"
-                               class='form-control'
-                               value="{{ item.dealer_price }}"
-                               onclick="clearInput(this)"
-                               oninput="expectedProfit(
+                        <input type="text" id="dealer_{{ item.id }}" placeholder="Enter Dealer Selling Price" min="1"
+                            class='form-control' value="{{ item.dealer_price }}" onclick="clearInput(this)" oninput="expectedProfit(
                                 '{{ item.id }}',
                                 '{{ item.quantity }}',
                                 '{{ item.actual_unit_cost }}'
@@ -183,17 +187,13 @@
                         <span id="d_{{ item.id }}">{{ item.product.dealer_price }}</span>
                         {% endif %}
                     </td>
-                    <td id="sP_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
+                    <td id="sP_{{ item.id }}"
+                        class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
                         {% if not item.received %}
                         {% if request.user.role == 'admin' or request.user.role == 'owner' %}
-                        <input type="text"
-                               id="selling_{{ item.id }}"
-                               placeholder="Enter Selling Price"
-                               value="{{ item.selling_price|trim }}"
-                               min="1" 
-                               class='form-control'
-                               onclick="clearInput(this)"
-                               oninput="expectedProfit(
+                        <input type="text" id="selling_{{ item.id }}" placeholder="Enter Selling Price"
+                            value="{{ item.selling_price|trim }}" min="1" class='form-control'
+                            onclick="clearInput(this)" oninput="expectedProfit(
                                  '{{ item.id }}',
                                  '{{ item.quantity }}',
                                  '{{ item.actual_unit_cost }}'
@@ -203,22 +203,36 @@
                         <span id="s_{{ item.id }}">{{ item.product.price }}</span>
                         {% endif %}
                     </td>
-                    <td id="dealer_profit_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.dealer_expected_profit }}</td>
-                    <td id="profit_{{ item.id }}" class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">{{ item.expected_profit }}</td>
+                    <td id="dealer_profit_{{ item.id }}"
+                        class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
+                        {{item.dealer_expected_profit }}</td>
+                    <td id="profit_{{ item.id }}"
+                        class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
+                        {{item.expected_profit }}</td>
                     <td class="{% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">
                         {% if not item.received %}
                         <span class="d-flex">
-                            <button class="btn btn-outline-dark btn-sm" id="submit_{{ item.id }}" style="display:none;" onclick="submitItem('{{ item.id }}')">Submit</button>
-                            <button class="bx bx-edit border btn mx-1" id="editBtn_{{ item.id }}" style="display:none;" onclick="edit({{ item.id }}, {{ item.product.price }}, {{ item.product.dealer_price }}, {{ item.quantity }}, {{ item.actual_unit_cost }})"></button>
-                            <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}" onclick="cancel('{{ item.id }}', {{ item.product.price }}, {{ item.product.dealer_price|default_if_none:0 }}" style="display:none;">cancel</button>
-                            <button class="btn btn-outline-dark btn-sm" onclick="submitItem('{{ item.id }}')">Submit</button>
+                            <button class="btn btn-outline-dark btn-sm" id="submit_{{ item.id }}" style="display:none;"
+                                onclick="submitItem('{{ item.id }}')">Submit</button>
+                            <button class="bx bx-edit border btn mx-1" id="editBtn_{{ item.id }}" style="display:none;"
+                                onclick="edit({{ item.id }}, {{ item.product.price }}, {{ item.product.dealer_price }}, {{ item.quantity }}, {{ item.actual_unit_cost }})"></button>
+                            <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}"
+                                onclick="cancel('{{ item.id }}', {{ item.product.price }}, {{ item.product.dealer_price|default_if_none:0 }}"
+                                style="display:none;">cancel</button>
+                            <button class="btn btn-outline-dark btn-sm"
+                                onclick="submitItem('{{ item.id }}')">Submit</button>
                         </span>
                         {% else %}
                         <span class="d-flex">
-                            <button class="btn btn-success text-light btn-sm" id="submitted_{{ item.id }}">Submitted</button>
-                            <button class="btn btn-outline-dark btn-sm" id="submit_{{ item.id }}" style="display:none;" onclick="submitItem('{{ item.id }}')">Submit</button>
-                            <button class="bx bx-edit border btn mx-1" onclick="edit({{ item.id }}, {{ item.product.price }}, {{ item.product.dealer_price|default_if_none:0 }}, {{ item.quantity }}, {{ item.actual_unit_cost }})"></button>
-                            <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}" onclick="cancel('{{ item.id }}', {{ item.product.price }}, {{ item.product.dealer_price }})" style="display:none;">cancel</button>
+                            <button class="btn btn-success text-light btn-sm"
+                                id="submitted_{{ item.id }}">Submitted</button>
+                            <button class="btn btn-outline-dark btn-sm" id="submit_{{ item.id }}" style="display:none;"
+                                onclick="submitItem('{{ item.id }}')">Submit</button>
+                            <button class="bx bx-edit border btn mx-1"
+                                onclick="edit({{ item.id }}, {{ item.product.price }}, {{ item.product.dealer_price|default_if_none:0 }}, {{ item.quantity }}, {{ item.actual_unit_cost }})"></button>
+                            <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}"
+                                onclick="cancel('{{ item.id }}', {{ item.product.price }}, {{ item.product.dealer_price }})"
+                                style="display:none;">cancel</button>
                         </span>
                         {% endif %}
                     </td>
@@ -228,7 +242,9 @@
         </table>
 
         <!-- if costing confirmed show costing tables -->
-        {% include 'components/costing.html' %}
+        <!-- {% include 'components/costing.html' %} -->
+
+        <!-- {% include "components/receive _inventory_table.html" %} -->
 
         <div class="floating-button">
             <button class="btn btn-outline-dark btn-sm" id="confirmPurchaseOrder">
@@ -263,8 +279,10 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class=" p-2 bg-light">
-                        <h5 class="modal-title text-primary" id="expenseModalLabel" class="d-flex align-items-center"><i class="fw-bold">Lets apportion expenses in propotion to  <br>weight or price</i>
-                            <i class='bx bx-info-circle text-info px-1 hint--bottom' aria-label="Apportioning expenses incurred in purchasing products based on weight or price"></i>
+                        <h5 class="modal-title text-primary" id="expenseModalLabel" class="d-flex align-items-center"><i
+                                class="fw-bold">Lets apportion expenses in propotion to <br>weight or price</i>
+                            <i class='bx bx-info-circle text-info px-1 hint--bottom'
+                                aria-label="Apportioning expenses incurred in purchasing products based on weight or price"></i>
                         </h5>
                         <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
                     </div>
@@ -280,8 +298,10 @@
 
                         <div id="weightInputSection" class="mb-4">
                             <div class="input-group">
-                                <input type="number" placeholder="Enter total weight" id="manualTotalWeight" class="form-control" placeholder="Enter total weight (kg)" min="0" step="0.01">
-                                <button class="btn btn-success btn-sm bx bx-check" type="button" id="setTotalWeightBtn"></button>
+                                <input type="number" placeholder="Enter total weight" id="manualTotalWeight"
+                                    class="form-control" placeholder="Enter total weight (kg)" min="0" step="0.01">
+                                <button class="btn btn-success btn-sm bx bx-check" type="button"
+                                    id="setTotalWeightBtn"></button>
                             </div>
                         </div>
 
@@ -289,12 +309,14 @@
                             <h6 class="border-bottom pb-2 mb-3">Add All Incurred Expenses On This PO</h6>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <input type="text" id="expenseDesc" class="form-control" placeholder="Expense Description">
+                                    <input type="text" id="expenseDesc" class="form-control"
+                                        placeholder="Expense Description">
                                 </div>
                                 <div class="col-md-4">
                                     <div class="input-group">
                                         <span class="input-group-text fs-6">$</span>
-                                        <input type="number" step="0.01" id="expenseAmount" class="form-control" placeholder="Amount">
+                                        <input type="number" step="0.01" id="expenseAmount" class="form-control"
+                                            placeholder="Amount">
                                     </div>
                                 </div>
                                 <div class="col-md-2">
@@ -304,7 +326,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div>
                             <h6 class="border-bottom pb-2 mb-3">Current Expenses</h6>
                             <div id="expensesList">
@@ -360,7 +382,8 @@
                 <div class="modal-content">
                     <div class="modal-header bg-success text-white">
                         <h5 class="modal-title">Expenses Saved</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
                     <div class="modal-body text-center py-4" id="confirmModalBody">
                     </div>
@@ -375,120 +398,120 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let expenseIndex = 0;
-        document.addEventListener('DOMContentLoaded', function() {
-    // Initial calculation for all rows
-    const rows = document.querySelectorAll('#costing_table tbody tr');
-    rows.forEach(row => {
-        const id = row.id.replace('costing_id', '');
-        calculateRowTotal(id);
-    });
-    
-    // Add event listeners to all quantity inputs
-    const quantityInputs = document.querySelectorAll('#costing_table input[id^="quantity_"]');
-    quantityInputs.forEach(input => {
-        input.addEventListener('input', function() {
-            const id = this.dataset.id;
-            calculateRowTotal(id);
-        });
-    });
-    
-    // Add event listeners to all weight inputs
-    const weightInputs = document.querySelectorAll('#costing_table input[id^="weight_"]');
-    weightInputs.forEach(input => {
-        input.addEventListener('input', function() {
-            const id = this.id.replace('weight_', '');
-            calculateRowTotal(id);
-        });
-    });
-    
-    // Toggle weight column visibility if needed
-    const toggleWeightBtn = document.getElementById('toggle_weight_column');
-    if (toggleWeightBtn) {
-        toggleWeightBtn.addEventListener('click', function() {
-            const weightColumns = document.querySelectorAll('.weight-column');
-            weightColumns.forEach(col => {
-                col.style.display = col.style.display === 'none' ? 'table-cell' : 'none';
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initial calculation for all rows
+            const rows = document.querySelectorAll('#costing_table tbody tr');
+            rows.forEach(row => {
+                const id = row.id.replace('costing_id', '');
+                calculateRowTotal(id);
             });
-            
-            // Recalculate totals after toggling
-            calculateGrandTotal();
+
+            // Add event listeners to all quantity inputs
+            const quantityInputs = document.querySelectorAll('#costing_table input[id^="quantity_"]');
+            quantityInputs.forEach(input => {
+                input.addEventListener('input', function () {
+                    const id = this.dataset.id;
+                    calculateRowTotal(id);
+                });
+            });
+
+            // Add event listeners to all weight inputs
+            const weightInputs = document.querySelectorAll('#costing_table input[id^="weight_"]');
+            weightInputs.forEach(input => {
+                input.addEventListener('input', function () {
+                    const id = this.id.replace('weight_', '');
+                    calculateRowTotal(id);
+                });
+            });
+
+            // Toggle weight column visibility if needed
+            const toggleWeightBtn = document.getElementById('toggle_weight_column');
+            if (toggleWeightBtn) {
+                toggleWeightBtn.addEventListener('click', function () {
+                    const weightColumns = document.querySelectorAll('.weight-column');
+                    weightColumns.forEach(col => {
+                        col.style.display = col.style.display === 'none' ? 'table-cell' : 'none';
+                    });
+
+                    // Recalculate totals after toggling
+                    calculateGrandTotal();
+                });
+            }
         });
-    }
-});
 
-function calculateRowTotal(id) {
-    const quantityEl = document.getElementById(`quantity_${id}`);
-    const unitCostCell = document.getElementById(`unit_cost_${id}`) || 
-                        document.querySelector(`#costing_id${id} td:nth-child(4)`);
-    const weightEl = document.getElementById(`weight_${id}`);
-    const totalEl = document.getElementById(`total_u_k_${id}`);
-    
-    if (!quantityEl || !totalEl) return;
-    
-    const quantity = parseFloat(quantityEl.value) || 0;
-    let unitCost = 0;
-    
-    // Extract unit cost from the cell (removing currency symbols if any)
-    if (unitCostCell) {
-        const unitCostText = unitCostCell.textContent.trim();
-        unitCost = parseFloat(unitCostText.replace(/[^\d.-]/g, '')) || 0;
-    }
-    
-    let total = 0;
-    const weightColumns = document.querySelectorAll('.weight-column');
-    const isWeightVisible = weightColumns.length > 0 && 
-                           weightColumns[0].style.display !== 'none';
-    
-    if (isWeightVisible && weightEl) {
-        // If weight column is visible, use weight in calculation
-        const weight = parseFloat(weightEl.value) || 0;
-        total = quantity * unitCost * weight;
-    } else {
-        // Otherwise use standard quantity * unit cost
-        total = quantity * unitCost;
-    }
-    
-    totalEl.textContent = total.toFixed(2);
-    
-    // Update grand total
-    calculateGrandTotal();
-}
+        function calculateRowTotal(id) {
+            const quantityEl = document.getElementById(`quantity_${id}`);
+            const unitCostCell = document.getElementById(`unit_cost_${id}`) ||
+                document.querySelector(`#costing_id${id} td:nth-child(4)`);
+            const weightEl = document.getElementById(`weight_${id}`);
+            const totalEl = document.getElementById(`total_u_k_${id}`);
 
-function calculateGrandTotal() {
-    const totalElements = document.querySelectorAll('[id^="total_u_k_"]');
-    let grandTotal = 0;
-    
-    totalElements.forEach(el => {
-        grandTotal += parseFloat(el.textContent) || 0;
-    });
-    
-    const totalExpenseEl = document.getElementById('total_expense');
-    if (totalExpenseEl) {
-        totalExpenseEl.textContent = grandTotal.toFixed(2);
-    }
-}
+            if (!quantityEl || !totalEl) return;
+
+            const quantity = parseFloat(quantityEl.value) || 0;
+            let unitCost = 0;
+
+            // Extract unit cost from the cell (removing currency symbols if any)
+            if (unitCostCell) {
+                const unitCostText = unitCostCell.textContent.trim();
+                unitCost = parseFloat(unitCostText.replace(/[^\d.-]/g, '')) || 0;
+            }
+
+            let total = 0;
+            const weightColumns = document.querySelectorAll('.weight-column');
+            const isWeightVisible = weightColumns.length > 0 &&
+                weightColumns[0].style.display !== 'none';
+
+            if (isWeightVisible && weightEl) {
+                // If weight column is visible, use weight in calculation
+                const weight = parseFloat(weightEl.value) || 0;
+                total = quantity * unitCost * weight;
+            } else {
+                // Otherwise use standard quantity * unit cost
+                total = quantity * unitCost;
+            }
+
+            totalEl.textContent = total.toFixed(2);
+
+            // Update grand total
+            calculateGrandTotal();
+        }
+
+        function calculateGrandTotal() {
+            const totalElements = document.querySelectorAll('[id^="total_u_k_"]');
+            let grandTotal = 0;
+
+            totalElements.forEach(el => {
+                grandTotal += parseFloat(el.textContent) || 0;
+            });
+
+            const totalExpenseEl = document.getElementById('total_expense');
+            if (totalExpenseEl) {
+                totalExpenseEl.textContent = grandTotal.toFixed(2);
+            }
+        }
 
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Show initial modal when Confirm Purchase Order is clicked
-            document.getElementById('confirmPurchaseOrder').addEventListener('click', function() {
+            document.getElementById('confirmPurchaseOrder').addEventListener('click', function () {
                 const initialModal = new bootstrap.Modal(document.getElementById('initialModal'));
                 initialModal.show();
             });
 
             // Yes button in initial modal
-            document.getElementById('yesButton').addEventListener('click', function() {
+            document.getElementById('yesButton').addEventListener('click', function () {
                 const initialModal = bootstrap.Modal.getInstance(document.getElementById('initialModal'));
                 initialModal.hide();
                 const expenseModal = new bootstrap.Modal(document.getElementById('expenseModal'));
                 expenseModal.show();
-                
+
                 // Check costing basis and show/hide weight column
                 toggleWeightColumn(document.getElementById('costingBasis').value);
             });
 
             // Back button in expense modal
-            document.getElementById('backBtn').addEventListener('click', function() {
+            document.getElementById('backBtn').addEventListener('click', function () {
                 const expenseModal = bootstrap.Modal.getInstance(document.getElementById('expenseModal'));
                 expenseModal.hide();
                 const initialModal = new bootstrap.Modal(document.getElementById('initialModal'));
@@ -502,38 +525,38 @@ function calculateGrandTotal() {
             document.getElementById('updateExpenseBtn').addEventListener('click', updateExpense);
 
             // Costing basis change handler
-            document.getElementById('costingBasis').addEventListener('change', function() {
+            document.getElementById('costingBasis').addEventListener('change', function () {
                 toggleWeightColumn(this.value);
             });
 
             // Set total weight button
-            document.getElementById('setTotalWeightBtn').addEventListener('click', function() {
+            document.getElementById('setTotalWeightBtn').addEventListener('click', function () {
                 const totalWeightInput = document.getElementById('manualTotalWeight');
                 const totalWeight = parseFloat(totalWeightInput.value) || 0;
                 document.getElementById('totalWeight').value = totalWeight;
-                
+
                 swal.fire({
-                    icon:'success',
-                    text:`Total weight set to ${totalWeight} kg`
+                    icon: 'success',
+                    text: `Total weight set to ${totalWeight} kg`
                 })
             });
 
             // Save expenses button
-            document.getElementById('saveBtn').addEventListener('click', function() {
+            document.getElementById('saveBtn').addEventListener('click', function () {
                 calculateExpenses();
-                
+
                 // Create confirmation message
                 const costingBasis = document.getElementById('costingBasis').value;
                 const totalExpense = getTotalExpenseAmount();
                 let confirmMessage = `<p>Expenses totaling $${totalExpense.toFixed(2)} have been saved and allocated based on ${costingBasis === 'weight' ? 'weight' : 'price'}.</p>`;
-                
+
                 // Update the modal content and show it
                 document.getElementById('confirmModalBody').innerHTML = confirmMessage;
-                
+
                 // Hide the expense modal and show the confirm modal
                 const expenseModal = bootstrap.Modal.getInstance(document.getElementById('expenseModal'));
                 expenseModal.hide();
-                
+
                 const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
                 confirmModal.show();
             });
@@ -543,7 +566,7 @@ function calculateGrandTotal() {
         function toggleWeightColumn(basis) {
             const weightColumns = document.querySelectorAll('.weight-column');
             const weightInputSection = document.getElementById('weightInputSection');
-            
+
             if (basis === 'weight') {
                 weightColumns.forEach(col => col.style.display = 'table-cell');
                 weightInputSection.style.display = 'block';
@@ -564,20 +587,20 @@ function calculateGrandTotal() {
             const sellingInput = document.getElementById(`selling_${itemId}`);
             const dealerProfitCell = document.getElementById(`dealer_profit_${itemId}`);
             const profitCell = document.getElementById(`profit_${itemId}`);
-            
+
             if (dealerInput && sellingInput && dealerProfitCell && profitCell) {
                 const dealerPrice = parseFloat(dealerInput.value) || 0;
                 const sellingPrice = parseFloat(sellingInput.value) || 0;
                 const landingCost = parseFloat(actualUnitCost) || 0;
-                
+
                 // Calculate profits
                 const dealerProfit = dealerPrice - landingCost;
                 const retailProfit = sellingPrice - landingCost;
-                
+
                 // Update UI
                 dealerProfitCell.textContent = dealerProfit.toFixed(2);
                 profitCell.textContent = retailProfit.toFixed(2);
-                
+
                 // Show submit button
                 document.getElementById(`submit_${itemId}`).style.display = 'inline-block';
             }
@@ -587,10 +610,10 @@ function calculateGrandTotal() {
         function addExpense() {
             const descInput = document.getElementById('expenseDesc');
             const amountInput = document.getElementById('expenseAmount');
-            
+
             const description = descInput.value.trim();
             const amount = parseFloat(amountInput.value) || 0;
-            
+
             if (description && amount > 0) {
                 // Create expense object
                 const expense = {
@@ -598,14 +621,14 @@ function calculateGrandTotal() {
                     description: description,
                     amount: amount
                 };
-                
+
                 // Add to expenses array
                 expenses.push(expense);
-                
+
                 // Update UI
                 updateExpensesList();
                 updateExpensesTotal();
-                
+
                 // Clear inputs
                 descInput.value = '';
                 amountInput.value = '';
@@ -619,7 +642,7 @@ function calculateGrandTotal() {
         function updateExpensesList() {
             const expensesList = document.getElementById('expensesList');
             expensesList.innerHTML = '';
-            
+
             expenses.forEach((expense, index) => {
                 const expenseItem = document.createElement('div');
                 expenseItem.className = 'expense-item';
@@ -651,12 +674,12 @@ function calculateGrandTotal() {
         // Edit expense
         function editExpense(index) {
             const expense = expenses[index];
-            
+
             // Fill edit modal
             document.getElementById('editIndex').value = index;
             document.getElementById('editExpenseDesc').value = expense.description;
             document.getElementById('editExpenseAmount').value = expense.amount;
-            
+
             // Show edit modal
             const editModal = new bootstrap.Modal(document.getElementById('editModal'));
             editModal.show();
@@ -667,15 +690,15 @@ function calculateGrandTotal() {
             const index = parseInt(document.getElementById('editIndex').value);
             const description = document.getElementById('editExpenseDesc').value.trim();
             const amount = parseFloat(document.getElementById('editExpenseAmount').value) || 0;
-            
+
             if (description && amount > 0) {
                 expenses[index].description = description;
                 expenses[index].amount = amount;
-                
+
                 // Update UI
                 updateExpensesList();
                 updateExpensesTotal();
-                
+
                 // Hide modal
                 const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
                 editModal.hide();
@@ -704,7 +727,7 @@ function calculateGrandTotal() {
             if (document.getElementById('costingBasis').value === 'weight') {
                 // Update total weight from individual weights if not manually set
                 let totalWeight = parseFloat(document.getElementById('totalWeight').value) || 0;
-                console.log('Weight: ',totalWeight)
+                console.log('Weight: ', totalWeight)
                 if (totalWeight <= 0) {
                     totalWeight = 0;
                     document.querySelectorAll('[id^="weight_"]').forEach(weightInput => {
@@ -719,7 +742,7 @@ function calculateGrandTotal() {
         function calculateExpenses() {
             const costingBasis = document.getElementById('costingBasis').value;
             const totalExpenseAmount = getTotalExpenseAmount();
-            
+
             if (costingBasis === 'weight') {
                 calculateExpensesByWeight(totalExpenseAmount);
             } else {
@@ -731,20 +754,20 @@ function calculateGrandTotal() {
         function calculateExpensesByWeight(totalExpenseAmount) {
             // Get total weight
             let totalWeight = parseFloat(document.getElementById('totalWeight').value) || 0;
-            
+
             // Calculate total weight if not set manually
             if (totalWeight <= 0) {
                 document.querySelectorAll('[id^="weight_"]').forEach(weightInput => {
                     totalWeight += parseFloat(weightInput.value) || 0;
                 });
             }
-            
+
             // Can't proceed if no weight
             if (totalWeight <= 0) {
                 alert('Please enter weights for products or set a total weight.');
                 return;
             }
-            
+
             // Process each row
             document.querySelectorAll('#receive_table tr').forEach(row => {
                 const itemId = row.id.replace('tr_', '');
@@ -753,23 +776,23 @@ function calculateGrandTotal() {
                 const unitCostCell = document.getElementById(`unit_cost_${itemId}`);
                 const differenceCell = document.getElementById(`difference_${itemId}`);
                 const actualUnitCostCell = document.getElementById(`actual_unit_cost_${itemId}`);
-                
+
                 if (weightInput && quantityInput && unitCostCell && differenceCell && actualUnitCostCell) {
                     const weight = parseFloat(weightInput.value) || 0;
                     const quantity = parseFloat(quantityInput.value) || 0;
                     const unitCost = parseFloat(unitCostCell.textContent) || 0;
-                    
+
                     if (weight > 0 && quantity > 0) {
                         // Calculate expense allocation
                         const weightRatio = weight / totalWeight;
                         const expenseAmount = totalExpenseAmount * weightRatio;
                         const expenseCostPerUnit = expenseAmount / quantity;
                         const landingCost = unitCost + expenseCostPerUnit;
-                        
+
                         // Update UI
                         differenceCell.textContent = expenseCostPerUnit.toFixed(2);
                         actualUnitCostCell.textContent = landingCost.toFixed(2);
-                        
+
                         // Update profit calculations
                         expectedProfit(itemId, quantity, landingCost);
                     }
@@ -781,20 +804,20 @@ function calculateGrandTotal() {
         function calculateExpensesByPrice(totalExpenseAmount) {
             // Calculate total cost value
             let totalCost = 0;
-            
+
             // First pass: calculate total cost
             document.querySelectorAll('#receive_table tr').forEach(row => {
                 const itemId = row.id.replace('tr_', '');
                 const quantityInput = document.getElementById(`quantity_${itemId}`);
                 const unitCostCell = document.getElementById(`unit_cost_${itemId}`);
-                
+
                 if (quantityInput && unitCostCell) {
                     const quantity = parseFloat(quantityInput.value) || 0;
                     const unitCost = parseFloat(unitCostCell.textContent) || 0;
                     totalCost += quantity * unitCost;
                 }
             });
-            
+
             // Second pass: allocate expenses and update UI
             document.querySelectorAll('#receive_table tr').forEach(row => {
                 const itemId = row.id.replace('tr_', '');
@@ -802,22 +825,22 @@ function calculateGrandTotal() {
                 const unitCostCell = document.getElementById(`unit_cost_${itemId}`);
                 const differenceCell = document.getElementById(`difference_${itemId}`);
                 const actualUnitCostCell = document.getElementById(`actual_unit_cost_${itemId}`);
-                
+
                 if (quantityInput && unitCostCell && differenceCell && actualUnitCostCell) {
                     const quantity = parseFloat(quantityInput.value) || 0;
                     const unitCost = parseFloat(unitCostCell.textContent) || 0;
-                    
+
                     if (totalCost > 0 && quantity > 0) {
                         // Calculate expense allocation
                         const costRatio = (quantity * unitCost) / totalCost;
                         const expenseAmount = totalExpenseAmount * costRatio;
                         const expenseCostPerUnit = expenseAmount / quantity;
                         const landingCost = unitCost + expenseCostPerUnit;
-                        
+
                         // Update UI
                         differenceCell.textContent = expenseCostPerUnit.toFixed(2);
                         actualUnitCostCell.textContent = landingCost.toFixed(2);
-                        
+
                         // Update profit calculations
                         expectedProfit(itemId, quantity, landingCost);
                     }
@@ -829,21 +852,21 @@ function calculateGrandTotal() {
         function submitItem(itemId) {
             // In a real application, this would send data to the server
             alert(`Item #${itemId} submitted successfully!`);
-            
+
             // Update UI to show submitted state
             document.getElementById(`submit_${itemId}`).style.display = 'none';
-            
+
             // Disable inputs
             const quantityInput = document.getElementById(`quantity_${itemId}`);
             const dealerInput = document.getElementById(`dealer_${itemId}`);
             const sellingInput = document.getElementById(`selling_${itemId}`);
             const weightInput = document.getElementById(`weight_${itemId}`);
-            
+
             if (quantityInput) quantityInput.disabled = true;
             if (dealerInput) dealerInput.disabled = true;
             if (sellingInput) sellingInput.disabled = true;
             if (weightInput) weightInput.disabled = true;
-            
+
             // Check if all items are submitted
             checkAllSubmitted();
         }
@@ -852,13 +875,13 @@ function calculateGrandTotal() {
         function checkAllSubmitted() {
             const submitButtons = document.querySelectorAll('[id^="submit_"]');
             let allSubmitted = true;
-            
+
             submitButtons.forEach(button => {
                 if (button.style.display !== 'none') {
                     allSubmitted = false;
                 }
             });
-            
+
             if (allSubmitted) {
                 document.getElementById('confirmPurchaseOrder').disabled = false;
             }
@@ -871,75 +894,75 @@ function calculateGrandTotal() {
         //     const dealerInput
 
 
-    let expectedProfitAmnt = 0;
-    let dealerExpectedProfitAmnt = 0;
-    let editStatus = false;
+        let expectedProfitAmnt = 0;
+        let dealerExpectedProfitAmnt = 0;
+        let editStatus = false;
 
-    const expenses = [];
-    let editingIndex = -1;
-    
-    const initialModal = new bootstrap.Modal(document.getElementById('initialModal'));
-    const expenseModal = new bootstrap.Modal(document.getElementById('expenseModal'));
-    const editModal = new bootstrap.Modal(document.getElementById('editModal'));
-    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        const expenses = [];
+        let editingIndex = -1;
 
-    initialModal.show()
-    
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('yesButton').addEventListener('click', () => {
-        initialModal.hide();
-        expenseModal.show();
-        updateExpenseList();
-      });
-      
-      document.getElementById('backBtn').addEventListener('click', () => {
-        expenseModal.hide();
-        initialModal.show();
-      });
-      
-      document.getElementById('addExpenseBtn').addEventListener('click', addExpense);
-      
-      document.getElementById('saveBtn').addEventListener('click', saveExpenses);
-      
-      document.getElementById('updateExpenseBtn').addEventListener('click', updateExpense);
-    });
-    
-    const calculateTotal = () => {
-      return expenses.reduce((total, exp) => total + parseFloat(exp.amount), 0).toFixed(2);
-    };
-    
-    // const addExpense = () => {
-    //   const desc = document.getElementById('expenseDesc').value.trim();
-    //   const amount = document.getElementById('expenseAmount').value;
-      
-    //   if (!desc || !amount) {
-    //     alert('Please enter both description and amount!');
-    //     return;
-    //   }
-      
-    //   expenses.push({ desc, amount: parseFloat(amount).toFixed(2) });
+        const initialModal = new bootstrap.Modal(document.getElementById('initialModal'));
+        const expenseModal = new bootstrap.Modal(document.getElementById('expenseModal'));
+        const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
 
-    //   document.getElementById('expenseDesc').value = '';
-    //   document.getElementById('expenseAmount').value = '';
-      
-    //   updateExpenseList();
-      
-    //   document.getElementById('expenseDesc').focus();
-    // };
-    
-    const updateExpenseList = () => {
-      const listElement = document.getElementById('expensesList');
-      const totalElement = document.getElementById('expensesTotal');
-      
-      if (expenses.length === 0) {
-        listElement.innerHTML = '<p class="text-muted text-center">No expenses added yet.</p>';
-        totalElement.innerHTML = '';
-        return;
-      }
-      
-      let html = '';
-      expenses.forEach((exp, index) => {
-        html += `
+        initialModal.show()
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('yesButton').addEventListener('click', () => {
+                initialModal.hide();
+                expenseModal.show();
+                updateExpenseList();
+            });
+
+            document.getElementById('backBtn').addEventListener('click', () => {
+                expenseModal.hide();
+                initialModal.show();
+            });
+
+            document.getElementById('addExpenseBtn').addEventListener('click', addExpense);
+
+            document.getElementById('saveBtn').addEventListener('click', saveExpenses);
+
+            document.getElementById('updateExpenseBtn').addEventListener('click', updateExpense);
+        });
+
+        const calculateTotal = () => {
+            return expenses.reduce((total, exp) => total + parseFloat(exp.amount), 0).toFixed(2);
+        };
+
+        // const addExpense = () => {
+        //   const desc = document.getElementById('expenseDesc').value.trim();
+        //   const amount = document.getElementById('expenseAmount').value;
+
+        //   if (!desc || !amount) {
+        //     alert('Please enter both description and amount!');
+        //     return;
+        //   }
+
+        //   expenses.push({ desc, amount: parseFloat(amount).toFixed(2) });
+
+        //   document.getElementById('expenseDesc').value = '';
+        //   document.getElementById('expenseAmount').value = '';
+
+        //   updateExpenseList();
+
+        //   document.getElementById('expenseDesc').focus();
+        // };
+
+        const updateExpenseList = () => {
+            const listElement = document.getElementById('expensesList');
+            const totalElement = document.getElementById('expensesTotal');
+
+            if (expenses.length === 0) {
+                listElement.innerHTML = '<p class="text-muted text-center">No expenses added yet.</p>';
+                totalElement.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            expenses.forEach((exp, index) => {
+                html += `
           <div class="expense-item">
             <div><strong>${exp.desc}</strong> - $${exp.amount}</div>
             <div class="expense-actions">
@@ -948,58 +971,58 @@ function calculateGrandTotal() {
             </div>
           </div>
         `;
-      });
-      
-      listElement.innerHTML = html;
-      totalElement.innerHTML = `Total: $${calculateTotal()}`;
-    };
-    
-    const removeExpense = (index) => {
-      if (confirm('Are you sure you want to remove this expense?')) {
-        expenses.splice(index, 1);
-        updateExpenseList();
-      }
-    };
-    
-    // const editExpense = (index) => {
-    //   editingIndex = index;
-    //   const expense = expenses[index];
-      
-    //   document.getElementById('editIndex').value = index;
-    //   document.getElementById('editExpenseDesc').value = expense.desc;
-    //   document.getElementById('editExpenseAmount').value = expense.amount;
-      
-    //   editModal.show();
-    // };
-    
-    // const updateExpense = () => {
-    //   const index = document.getElementById('editIndex').value;
-    //   const desc = document.getElementById('editExpenseDesc').value.trim();
-    //   const amount = document.getElementById('editExpenseAmount').value;
-      
-    //   if (!desc || !amount) {
-    //     alert('Please enter both description and amount!');
-    //     return;
-    //   }
-      
-    //   expenses[index] = { 
-    //     desc, 
-    //     amount: parseFloat(amount).toFixed(2) 
-    //   };
-      
-    //   editModal.hide();
-    //   updateExpenseList();
-    // };
-    
-    const saveExpenses = () => {
-      if (expenses.length === 0) {
-        alert('You have not added any expenses yet.');
-        return;
-      }
-      
-      const basis = document.getElementById('costingBasis').value;
-    
-      document.getElementById('confirmModalBody').innerHTML = `
+            });
+
+            listElement.innerHTML = html;
+            totalElement.innerHTML = `Total: $${calculateTotal()}`;
+        };
+
+        const removeExpense = (index) => {
+            if (confirm('Are you sure you want to remove this expense?')) {
+                expenses.splice(index, 1);
+                updateExpenseList();
+            }
+        };
+
+        // const editExpense = (index) => {
+        //   editingIndex = index;
+        //   const expense = expenses[index];
+
+        //   document.getElementById('editIndex').value = index;
+        //   document.getElementById('editExpenseDesc').value = expense.desc;
+        //   document.getElementById('editExpenseAmount').value = expense.amount;
+
+        //   editModal.show();
+        // };
+
+        // const updateExpense = () => {
+        //   const index = document.getElementById('editIndex').value;
+        //   const desc = document.getElementById('editExpenseDesc').value.trim();
+        //   const amount = document.getElementById('editExpenseAmount').value;
+
+        //   if (!desc || !amount) {
+        //     alert('Please enter both description and amount!');
+        //     return;
+        //   }
+
+        //   expenses[index] = { 
+        //     desc, 
+        //     amount: parseFloat(amount).toFixed(2) 
+        //   };
+
+        //   editModal.hide();
+        //   updateExpenseList();
+        // };
+
+        const saveExpenses = () => {
+            if (expenses.length === 0) {
+                alert('You have not added any expenses yet.');
+                return;
+            }
+
+            const basis = document.getElementById('costingBasis').value;
+
+            document.getElementById('confirmModalBody').innerHTML = `
         <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
         <h4 class="mt-3">Expenses Saved Successfully</h4>
         <p>Successfully saved ${expenses.length} expense(s) with <strong>${basis}</strong> costing basis.</p>
@@ -1007,161 +1030,163 @@ function calculateGrandTotal() {
           Total amount: <strong>$${calculateTotal()}</strong>
         </div>
       `;
-      
-      expenseModal.hide();
-      confirmModal.show();
-    };
 
-    $('#order_items_table').DataTable({
-        paging: false,
-        scrollY: '850px',
-        scrollCollapse: true
-    });
+            expenseModal.hide();
+            confirmModal.show();
+        };
 
-    
-    document.addEventListener('DOMContentLoaded', function () {
-        const confirmButton = document.getElementById('confirmPurchaseOrder');
-        const orderItems = document.querySelectorAll('#receive_table tr');
+        $('#order_items_table').DataTable({
+            paging: false,
+            scrollY: '850px',
+            scrollCollapse: true
+        });
 
-        function updateConfirmButtonState() {
-            let allReceived = true;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const confirmButton = document.getElementById('confirmPurchaseOrder');
+            const orderItems = document.querySelectorAll('#receive_table tr');
+
+            function updateConfirmButtonState() {
+                let allReceived = true;
+
+                orderItems.forEach(row => {
+                    const orderedQty = parseFloat(row.querySelector(`[id^='purchased_quantity_']`).textContent.trim());
+                    const receivedInput = row.querySelector(`[id^='quantity_']`);
+
+                    if (receivedInput) {
+                        const receivedQty = parseFloat(receivedInput.value.trim());
+                        if (isNaN(receivedQty) || receivedQty < orderedQty) {
+                            allReceived = false;
+                        }
+                    }
+                });
+
+                confirmButton.disabled = !allReceived;
+            }
+
 
             orderItems.forEach(row => {
-                const orderedQty = parseFloat(row.querySelector(`[id^='purchased_quantity_']`).textContent.trim());
                 const receivedInput = row.querySelector(`[id^='quantity_']`);
-
                 if (receivedInput) {
-                    const receivedQty = parseFloat(receivedInput.value.trim());
-                    if (isNaN(receivedQty) || receivedQty < orderedQty) {
-                        allReceived = false;
-                    }
+                    receivedInput.addEventListener('input', updateConfirmButtonState);
                 }
             });
 
-            confirmButton.disabled = !allReceived;
-        }
-
-
-        orderItems.forEach(row => {
-            const receivedInput = row.querySelector(`[id^='quantity_']`);
-            if (receivedInput) {
-                receivedInput.addEventListener('input', updateConfirmButtonState);
-            }
+            updateConfirmButtonState();
         });
 
-        updateConfirmButtonState();
-    });
 
-
-    document.addEventListener('DOMContentLoaded', function () {
-        expectedProfitOnLoad();
-        calculateCostDifference();
-    });
-
-    document.getElementById('confirmPurchaseOrder').addEventListener('click', () => {
-        Swal.fire({
-            title: 'Processing...',
-            text: 'Please wait while we confirm the purchase order.',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            didOpen: () => {
-                Swal.showLoading(); 
-            },
+        document.addEventListener('DOMContentLoaded', function () {
+            expectedProfitOnLoad();
+            calculateCostDifference();
         });
 
-        
-        fetch('/inventory/mark_purchase_order_done/{{purchase_order.id }}/', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            Swal.close(); 
-            if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: 'Purchase order has been successfully confirmed!',
-                });
-
-                window.location.href = '/inventory/purchase_orders/';
-
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message || 'Failed to confirm the purchase order.',
-                });
-            }
-        })
-        .catch((error) => {
-            Swal.close(); 
+        document.getElementById('confirmPurchaseOrder').addEventListener('click', () => {
             Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'An error occurred while processing your request.',
+                title: 'Processing...',
+                text: 'Please wait while we confirm the purchase order.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
             });
-            console.error('Error:', error);
+
+
+            fetch('/inventory/mark_purchase_order_done/{{purchase_order.id }}/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    Swal.close();
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Purchase order has been successfully confirmed!',
+                        });
+
+                        window.location.href = '/inventory/purchase_orders/';
+
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Failed to confirm the purchase order.',
+                        });
+                    }
+                })
+                .catch((error) => {
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while processing your request.',
+                    });
+                    console.error('Error:', error);
+                });
         });
-    });
 
-    function calculateCostDifference() {
-        {% for item in orders %}
-            const actualUnitCost_{{ item.id }} = parseFloat("{{ item.actual_unit_cost }}");
-            const unitCost_{{ item.id }} = parseFloat("{{ item.unit_cost }}");
-            const differenceField_{{ item.id }} = document.querySelector(`#difference_{{ item.id }}`);
+        function calculateCostDifference() {
+            {% for item in orders %}
+            const actualUnitCost_{{ item.id }
+        } = parseFloat("{{ item.actual_unit_cost }}");
+        const unitCost_{{ item.id }} = parseFloat("{{ item.unit_cost }}");
+        const differenceField_{{ item.id }} = document.querySelector(`#difference_{{ item.id }}`);
 
-            if (differenceField_{{ item.id }}) {
-                const difference = actualUnitCost_{{ item.id }} - unitCost_{{ item.id }};
-                differenceField_{{ item.id }}.textContent = difference.toFixed(2) || 0.00;
+        if (differenceField_{ { item.id } }) {
+            const difference = actualUnitCost_{{ item.id }
+        } - unitCost_{ { item.id } };
+                differenceField_{ { item.id } }.textContent = difference.toFixed(2) || 0.00;
             }
         {% endfor %}
     }
 
 
-    function expectedProfitOnLoad() {
+        function expectedProfitOnLoad() {
 
-        {% for item in orders %}
+            {% for item in orders %}
             expectedProfit(
                 '{{ item.id }}',
                 '{{ item.quantity }}',
                 '{{ item.actual_unit_cost }}'
             );
-        {% endfor %}
-    }
+            {% endfor %}
+        }
 
-    function clearInput(el) {
-        el.value = '';
-    }
+        function clearInput(el) {
+            el.value = '';
+        }
 
-    function edit(itemId, sPrice, dPrice, quantity, acp) {
-        console.log(dPrice)
-        let dealerPrice = dPrice || 0.00;
+        function edit(itemId, sPrice, dPrice, quantity, acp) {
+            console.log(dPrice)
+            let dealerPrice = dPrice || 0.00;
 
-        editStatus = true;
+            editStatus = true;
 
-        const parentEl = document.getElementById('itemId');
-        const sellingPrice = document.getElementById(`selling_${itemId}`);
-        const pQuantity = document.getElementById(`rq_${itemId}`).textContent;
+            const parentEl = document.getElementById('itemId');
+            const sellingPrice = document.getElementById(`selling_${itemId}`);
+            const pQuantity = document.getElementById(`rq_${itemId}`).textContent;
 
-        const q = document.getElementById(`q_${itemId}`);
-        const sp = document.getElementById(`sP_${itemId}`);
-        const dsp = document.getElementById(`dSp_${itemId}`);
+            const q = document.getElementById(`q_${itemId}`);
+            const sp = document.getElementById(`sP_${itemId}`);
+            const dsp = document.getElementById(`dSp_${itemId}`);
 
-        document.getElementById(`submitted_${itemId}`).style.display = 'none';
-        document.getElementById(`submit_${itemId}`).style.display = 'block';
+            document.getElementById(`submitted_${itemId}`).style.display = 'none';
+            document.getElementById(`submit_${itemId}`).style.display = 'block';
 
-        document.getElementById(`cancel_${itemId}`).style.display = 'block';
+            document.getElementById(`cancel_${itemId}`).style.display = 'block';
 
-        console.log(pQuantity)
+            console.log(pQuantity)
 
-        q.innerHTML = `
+            q.innerHTML = `
             <input type="number"
-               value="${ pQuantity }"
-               id="quantity_${ itemId }"
+               value="${pQuantity}"
+               id="quantity_${itemId}"
                placeholder="Enter quantity received"
                min="1"
                class='form-control'
@@ -1173,13 +1198,13 @@ function calculateGrandTotal() {
                 )">
         `
 
-        sp.innerHTML = `
+            sp.innerHTML = `
             <input type="text"
-               id="selling_${ itemId }"
+               id="selling_${itemId}"
                placeholder="Enter Selling Price"
                min="1"
                class='form-control'
-               value="${ sPrice }"
+               value="${sPrice}"
                onclick="clearInput(this)"
                oninput="expectedProfit(
                     '${itemId}',
@@ -1188,134 +1213,134 @@ function calculateGrandTotal() {
                 )"
             >
         `;
-        dsp.innerHTML = `
+            dsp.innerHTML = `
             <input type="text"
-               id="dealer_${ itemId }"
+               id="dealer_${itemId}"
                placeholder="Enter Dealer Selling Price"
                min="1"
                class='form-control'
-               value="${ dPrice }"
+               value="${dPrice}"
                onclick="clearInput(this)"
                oninput="expectedProfit(
-                    '${ itemId }',
-                    '${ quantity }',
-                    '${ acp }'
+                    '${itemId}',
+                    '${quantity}',
+                    '${acp}'
                 )"
             >
         `;
-        expectedProfitOnLoad()
-    }
-
-    function cancel(itemId, originalSellingPrice, originalDealerPrice) {
-        document.getElementById(`selling_${itemId}`).replaceWith(`${originalSellingPrice}`);
-        document.getElementById(`dealer_${itemId}`).replaceWith(`${originalDealerPrice}`);
-
-        document.getElementById(`submit_${itemId}`).style.display = 'none';
-        document.getElementById(`cancel_${itemId}`).style.display = 'none';
-        document.getElementById(`submitted_${itemId}`).style.display = 'block';
-
-        editStatus=false
-    } 
-
-    function expectedProfit(itemId, quantity, actualUnitCost) {
-        let pQuantity = 0
-        const sellingPrice = document.getElementById(`selling_${itemId}`)?.value || document.getElementById(`s_${itemId}`).textContent;
-        const dealerPrice = document.getElementById(`dealer_${itemId}`)?.value || document.getElementById(`d_${itemId}`).textContent;
-        const expectedProfitField = document.getElementById(`profit_${itemId}`);
-        const dealerExpectedProfitField = document.getElementById(`dealer_profit_${itemId}`)
-       
-        try {
-            pQuantity = document.getElementById(`quantity_${itemId}`).value;
-        } catch (error) {
-            pQuantity = parseInt(document.getElementById(`rq_${itemId}`).textContent);
+            expectedProfitOnLoad()
         }
 
-        if (sellingPrice && quantity && actualUnitCost) {
-            const expectedProfit = (parseFloat(sellingPrice) * parseInt(pQuantity)) - (parseFloat(actualUnitCost) * parseInt(quantity));
-            expectedProfitField.textContent = expectedProfit.toFixed(2);
-            expectedProfitAmnt = expectedProfit.toFixed(2)
-        } else {
-            expectedProfitField.textContent = '';
+        function cancel(itemId, originalSellingPrice, originalDealerPrice) {
+            document.getElementById(`selling_${itemId}`).replaceWith(`${originalSellingPrice}`);
+            document.getElementById(`dealer_${itemId}`).replaceWith(`${originalDealerPrice}`);
+
+            document.getElementById(`submit_${itemId}`).style.display = 'none';
+            document.getElementById(`cancel_${itemId}`).style.display = 'none';
+            document.getElementById(`submitted_${itemId}`).style.display = 'block';
+
+            editStatus = false
         }
 
-        if (dealerPrice && quantity && actualUnitCost) {
-            const dealerExpectedProfit = (parseFloat(dealerPrice) * parseInt(pQuantity)) - (parseFloat(actualUnitCost) * parseInt(quantity));
-            dealerExpectedProfitField.textContent = dealerExpectedProfit.toFixed(2);
-            dealerExpectedProfitAmnt = dealerExpectedProfit.toFixed(2)
-        
-        }else {
-            expectedProfitField.textContent = '';
-        }
-    }
+        function expectedProfit(itemId, quantity, actualUnitCost) {
+            let pQuantity = 0
+            const sellingPrice = document.getElementById(`selling_${itemId}`)?.value || document.getElementById(`s_${itemId}`).textContent;
+            const dealerPrice = document.getElementById(`dealer_${itemId}`)?.value || document.getElementById(`d_${itemId}`).textContent;
+            const expectedProfitField = document.getElementById(`profit_${itemId}`);
+            const dealerExpectedProfitField = document.getElementById(`dealer_profit_${itemId}`)
 
-    async function submitItem(itemId) {
-        try {
-            const quantity = document.getElementById(`quantity_${itemId}`)?.value || 0;
-            const sellingPrice = document.getElementById(`selling_${itemId}`)?.value || 0;
-            const dealerPrice = document.getElementById(`dealer_${itemId}`)?.value || 0;
+            try {
+                pQuantity = document.getElementById(`quantity_${itemId}`).value;
+            } catch (error) {
+                pQuantity = parseInt(document.getElementById(`rq_${itemId}`).textContent);
+            }
 
-            const itemData = {
-                id: itemId,
-                name: document.getElementById(`name_${itemId}`).textContent,
-                edit: editStatus,
-                quantity: parseInt(quantity),
-                selling_price: parseFloat(sellingPrice),
-                dealer_price: parseFloat(dealerPrice),
-                expected_profit: parseFloat(expectedProfitAmnt),
-                dealer_expected_profit: parseFloat(dealerExpectedProfitAmnt)
-            };
-
-            const response = await fetch(`{% url "inventory:process_received_order" %}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify(itemData)
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                editStatus = false;
-                const orderedQnty = parseInt(document.getElementById(`purchased_quantity_${itemId}`).textContent);
-                const tableRow = document.getElementById(`tr_${itemId}`);
-
-                if (itemData.quantity < orderedQnty) {
-                    const tableDataCells = tableRow.querySelectorAll('td');
-                    tableDataCells.forEach(td => td.classList.add('bg-warning'));
-                }
-
-                document.getElementById(`quantity_${itemId}`)?.replaceWith(`${itemData.quantity}`);
-                document.getElementById(`selling_${itemId}`).replaceWith(`${itemData.selling_price}`);
-                document.getElementById(`dealer_${itemId}`).replaceWith(`${itemData.dealer_price}`);
-
-                const submitButton = document.querySelector(`button[onclick="submitItem('${itemId}')"]`);
-                submitButton.textContent = 'Submitted';
-                submitButton.classList.remove('btn-outline-dark');
-                submitButton.classList.add('bg-success', 'text-light', 'btn-sm');
-                submitButton.disabled = true;
-
-                const cancelBtn = document.getElementById(`cancel_${itemId}`);
-                const editBtn = document.getElementById(`editBtn_${itemId}`);
-                if (cancelBtn) cancelBtn.style.display = 'none';
-                if (editBtn) editBtn.style.display = 'block';
+            if (sellingPrice && quantity && actualUnitCost) {
+                const expectedProfit = (parseFloat(sellingPrice) * parseInt(pQuantity)) - (parseFloat(actualUnitCost) * parseInt(quantity));
+                expectedProfitField.textContent = expectedProfit.toFixed(2);
+                expectedProfitAmnt = expectedProfit.toFixed(2)
             } else {
+                expectedProfitField.textContent = '';
+            }
+
+            if (dealerPrice && quantity && actualUnitCost) {
+                const dealerExpectedProfit = (parseFloat(dealerPrice) * parseInt(pQuantity)) - (parseFloat(actualUnitCost) * parseInt(quantity));
+                dealerExpectedProfitField.textContent = dealerExpectedProfit.toFixed(2);
+                dealerExpectedProfitAmnt = dealerExpectedProfit.toFixed(2)
+
+            } else {
+                expectedProfitField.textContent = '';
+            }
+        }
+
+        async function submitItem(itemId) {
+            try {
+                const quantity = document.getElementById(`quantity_${itemId}`)?.value || 0;
+                const sellingPrice = document.getElementById(`selling_${itemId}`)?.value || 0;
+                const dealerPrice = document.getElementById(`dealer_${itemId}`)?.value || 0;
+
+                const itemData = {
+                    id: itemId,
+                    name: document.getElementById(`name_${itemId}`).textContent,
+                    edit: editStatus,
+                    quantity: parseInt(quantity),
+                    selling_price: parseFloat(sellingPrice),
+                    dealer_price: parseFloat(dealerPrice),
+                    expected_profit: parseFloat(expectedProfitAmnt),
+                    dealer_expected_profit: parseFloat(dealerExpectedProfitAmnt)
+                };
+
+                const response = await fetch(`{% url "inventory:process_received_order" %}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(itemData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    editStatus = false;
+                    const orderedQnty = parseInt(document.getElementById(`purchased_quantity_${itemId}`).textContent);
+                    const tableRow = document.getElementById(`tr_${itemId}`);
+
+                    if (itemData.quantity < orderedQnty) {
+                        const tableDataCells = tableRow.querySelectorAll('td');
+                        tableDataCells.forEach(td => td.classList.add('bg-warning'));
+                    }
+
+                    document.getElementById(`quantity_${itemId}`)?.replaceWith(`${itemData.quantity}`);
+                    document.getElementById(`selling_${itemId}`).replaceWith(`${itemData.selling_price}`);
+                    document.getElementById(`dealer_${itemId}`).replaceWith(`${itemData.dealer_price}`);
+
+                    const submitButton = document.querySelector(`button[onclick="submitItem('${itemId}')"]`);
+                    submitButton.textContent = 'Submitted';
+                    submitButton.classList.remove('btn-outline-dark');
+                    submitButton.classList.add('bg-success', 'text-light', 'btn-sm');
+                    submitButton.disabled = true;
+
+                    const cancelBtn = document.getElementById(`cancel_${itemId}`);
+                    const editBtn = document.getElementById(`editBtn_${itemId}`);
+                    if (cancelBtn) cancelBtn.style.display = 'none';
+                    if (editBtn) editBtn.style.display = 'block';
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        icon: 'error',
+                        text: data.message
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
                 Swal.fire({
                     title: 'Error',
                     icon: 'error',
-                    text: data.message
+                    text: 'An error occurred. Please try again.'
                 });
             }
-        } catch (error) {
-            console.error('Error:', error);
-            Swal.fire({
-                title: 'Error',
-                icon: 'error',
-                text: 'An error occurred. Please try again.'
-            });
         }
-    }
 
-</script>
-{% endblock content %}
+    </script>
+    {% endblock content %}

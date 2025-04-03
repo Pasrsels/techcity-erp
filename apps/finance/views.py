@@ -23,7 +23,11 @@ from apps.inventory.models import Inventory, Accessory
 from channels.layers import get_channel_layer
 import json, datetime, os, boto3, openpyxl 
 from utils.account_name_identifier import account_identifier
-from .tasks import send_invoice_email_task, send_account_statement_email
+from .tasks import (
+    send_invoice_email_task, 
+    send_account_statement_email, 
+    send_quotation_email
+)
 from pytz import timezone as pytz_timezone 
 from openpyxl.styles import Alignment, Font
 from . utils import calculate_expenses_totals
@@ -60,7 +64,8 @@ from reportlab.lib.units import inch
 from django.http import FileResponse
 import io
 from collections import defaultdict
-from apps.pos.utils.submit_receipt_offline import save_receipt_offline
+from apps.pos.utils.receipt_signature import generate_receipt_data
+from apps.pos.utils.submit_receipt_data import submit_receipt_data
 from django.db.models.functions import Coalesce
 from django.db.models import Count
 from django.db.models.functions import TruncDate
@@ -68,6 +73,14 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Max
 from django.utils.dateparse import parse_date
+from dotenv import load_dotenv
+from apps.settings.models import OfflineReceipt, FiscalDay, FiscalCounter
+from utils.zimra import ZIMRA
+ 
+# load global zimra instance
+zimra = ZIMRA()
+
+load_dotenv()
 
 def get_previous_month():
     first_day_of_current_month = datetime.datetime.now().replace(day=1)
@@ -368,8 +381,6 @@ def invoice(request):
     form = InvoiceForm()
     invoices = Invoice.objects.filter(branch=request.user.branch, status=True, cancelled=False).order_by('-invoice_number')
 
-    #cas+
-
     query_params = request.GET
     if query_params.get('q'):
         search_query = query_params['q']
@@ -414,8 +425,6 @@ def invoice(request):
     total_paid = invoices.filter(payment_status='Paid').aggregate(Sum('amount'))['amount__sum'] or 0
     total_amount = invoices.aggregate(Sum('amount'))['amount__sum'] or 0
 
-    logger.info(f'Invoices: {invoices.values}')
-
     grouped_invoices = defaultdict(list)
 
     for invoice in invoices:
@@ -428,8 +437,7 @@ def invoice(request):
             grouped_invoices['Yesterday'].append(invoice)
         else:
             grouped_invoices[issue_date.strftime('%A, %d %B %Y')].append(invoice)
-    
-    logger.info(grouped_invoices)
+
 
     return render(request, 'invoices/invoice.html', {
         'form': form,
@@ -719,19 +727,22 @@ def create_invoice(request):
                 logger.info(f'Creating transaction obj for invoice: {invoice}')
             
                 # Create InvoiceItem objects
+                invoice_items = []
                 for item_data in items_data:
                     item = Inventory.objects.get(pk=item_data['inventory_id'])
                     
                     item.quantity -= item_data['quantity']
                     item.save()
-                  
-                    InvoiceItem.objects.create(
-                        invoice=invoice,
-                        item=item,
-                        quantity=item_data['quantity'],
-                        unit_price=item_data['price'],
-                        vat_rate = vat_rate,
-                        total_amount = int(item_data['quantity']) * float(item_data['price'])
+
+                    invoice_items.append(
+                        InvoiceItem.objects.create(
+                            invoice=invoice,
+                            item=item,
+                            quantity=item_data['quantity'],
+                            unit_price=item_data['price'],
+                            vat_rate = vat_rate,
+                            total_amount = int(item_data['quantity']) * float(item_data['price'])
+                        )
                     )
                     
                     
@@ -814,13 +825,20 @@ def create_invoice(request):
                 account_balance.save()
                 
                 # for tax purpose Zimra
-                save_receipt_offline(data, request.user.first_name)
+                logger.info(invoice_items)
+
+                try:
+                    sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
+                    logger.info(f'sig data: {sig_data} {receipt_data}')
+                except Exception as e:
+                    logger.info(e)
+                    return JsonResponse({'success': False, 'error': str(e)})
 
                 logger.info(f'inventory creation successfully done: {invoice}')
 
-                return JsonResponse({'success':True, 'invoice_id': invoice.id})
+                return JsonResponse({'success':True, 'invoice_id': invoice.id, 'data':sig_data, 'receipt_data':receipt_data})
 
-        except (KeyError, json.JSONDecodeError, Customer.DoesNotExist, Inventory.DoesNotExist) as e:
+        except (KeyError, json.JSONDecodeError, Customer.DoesNotExist, Inventory.DoesNotExist, Exception) as e:
             return JsonResponse({'success': False, 'error': str(e)})
 
     return render(request, 'invoices/add_invoice.html')
@@ -829,7 +847,6 @@ def held_invoice(items_data, invoice, request, vat_rate):
     for item_data in items_data:
         item = Inventory.objects.get(pk=item_data['inventory_id'])
         # product = Product.objects.get(pk=item.product.id)
-                    
         item.quantity -= item_data['quantity']
         item.save()
                   
@@ -861,6 +878,49 @@ def held_invoice(items_data, invoice, request, vat_rate):
             action='Sale',
             invoice=invoice
         )
+
+@login_required
+def submit_invoice_data_zimra(request):
+    try:
+
+        data = json.loads(request.body)
+        hash = data.get('hash', '')
+        signature = data.get('signature', '') 
+        receipt_data = data.get('receipt_data')
+
+        logger.info(receipt_data)
+
+        if not hash:
+            return JsonResponse({'success':False,'message':f'Hash data is missing!'}, status=400)
+
+        if not signature:
+            return JsonResponse({'success':False,'message':f'Signature data is missing!'}, status=400)
+
+        submit_receipt_data(request, receipt_data, hash, signature)
+
+        return JsonResponse({'success':True, 'message':'data received'}, status=200)
+    except Exception as e:
+        return JsonResponse({'message':f'{e}', 'success':False}, status=200)
+
+
+@login_required
+def get_signature_data(request):
+    try:   
+        data = json.loads(request.body)
+        hash = data.get('hash', '')
+        signature = data.get('signature', '') 
+
+        if not hash:
+            return JsonResponse({'success':False,'message':f'Hash data is missing!'}, status=400)
+
+        if not signature:
+            return JsonResponse({'success':False,'message':f'Signature data is missing!'}, status=400)
+
+        return JsonResponse({'success':True, 'message':'data received'}, status=200)
+        
+    except Exception as e:
+        return JsonResponse({'success':False,'message':f'{e}'}, status=400)
+    
 
 @login_required
 def held_invoice_view(request):
@@ -1984,7 +2044,6 @@ def replace_item(request, item_id):
 def invoice_preview_json(request, invoice_id):
     try:
         invoice = Invoice.objects.get(id=invoice_id)
-
     except Invoice.DoesNotExist:
         return JsonResponse({"error": "Invoice not found"}, status=404) 
     
@@ -2000,11 +2059,14 @@ def invoice_preview_json(request, invoice_id):
         'unit_price'
     )
 
-    invoice_dict = {
-        field.name: getattr(invoice, field.name)
-        for field in invoice._meta.fields
-        if field.name not in ['customer', 'currency', 'branch', 'user']
-    }
+    invoice_dict = {}
+    for field in invoice._meta.fields:
+        if field.name not in ['customer', 'currency', 'branch', 'user']:
+            value = getattr(invoice, field.name)
+            if hasattr(value, 'url'):
+                invoice_dict[field.name] = value.url if value else None
+            else:
+                invoice_dict[field.name] = value
 
     invoice_dict['customer_name'] = invoice.customer.name
     invoice_dict['customer_email'] = invoice.customer.email
@@ -2013,6 +2075,9 @@ def invoice_preview_json(request, invoice_id):
     invoice_dict['currency_symbol'] = invoice.currency.symbol
     invoice_dict['amount_paid'] = invoice.amount_paid
     invoice_dict['payment_terms'] = invoice.payment_terms
+    invoice_dict['receipt_hash'] = invoice.receipt_hash
+    invoice_dict['device_id'] = os.getenv("DEVICE_ID")
+    invoice_dict['device_serial_number'] = os.getenv("DEVICE_SERIAL_NUMBER")
     
     if invoice.branch:
         invoice_dict['branch_name'] = invoice.branch.name
@@ -2020,11 +2085,24 @@ def invoice_preview_json(request, invoice_id):
         invoice_dict['branch_email'] = invoice.branch.email
         
     invoice_dict['user_username'] = invoice.user.username  
+
+    invoice_dict['receipt_signature'] = invoice.receiptServerSignature if invoice.receiptServerSignature else None
+    
+    if invoice.qr_code and invoice.qr_code.name:
+        try:
+            invoice_dict['receipt_qr_code_url'] = request.build_absolute_uri(invoice.qr_code.url)
+        except Exception as e:
+            invoice_dict['receipt_qr_code_url'] = None
+            logger.info(f"Error getting QR code URL: {e}")  
+    else:
+        invoice_dict['receipt_qr_code_url'] = None
+
+    logger.info(invoice.qr_code)
     
     invoice_data = {
         'invoice': invoice_dict,
         'invoice_items': list(invoice_items),
-        'dates':list(dates)
+        'dates': list(dates)
     }
     return JsonResponse(invoice_data)
 
@@ -2633,7 +2711,7 @@ def qoutation_list(request):
 def qoute_preview(request, qoutation_id):
     qoute = Qoutation.objects.get(id=qoutation_id)
     qoute_items = QoutationItems.objects.filter(qoute=qoute)
-    return render(request, 'Pos/qoute.html', {'qoute':qoute, 'qoute_items':qoute_items})
+    return render(request, 'qoute.html', {'qoute':qoute, 'qoute_items':qoute_items})
 
 @login_required
 def delete_qoute(request, qoutation_id):
@@ -3701,6 +3779,131 @@ def user_accounts(request):
         'users_with_accounts': users_with_accounts
     }
     return render(request, 'user_accounts/user_accounts.html', context)
+
+
+@login_required
+def tax(request):
+    tax_receipts = OfflineReceipt.objects.all()
+    return render(request, 'tax/tax.html', {
+        'tax_receipts':tax_receipts,
+        'receipts_count':tax_receipts.count(),
+    })
+
+@login_required
+def get_config(request):
+    try:
+        get_config_response = zimra.get_config()
+        logger.info(get_config_response)
+        return JsonResponse({'success':True, 'data':get_config_response})
+    except Exception as e:
+        return JsonResponse({'success':False, 'message':f'{e}'})
+
+@login_required
+def open_fiscal_day(request):
+    try:
+        open_day_response = zimra.open_day()
+        return JsonResponse({'success': True, 'data': open_day_response})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'{e}'})
+
+@login_required
+def check_fiscal_status(request):
+
+    fiscal_day = FiscalDay.objects.filter(created_at__date=datetime.datetime.today(), is_open=True).first()
+
+    if fiscal_day:
+        return  JsonResponse({'success':True, 'message':False}, status=200)
+    
+    return JsonResponse({'success':False, 'message':True}, status=400)
+
+@login_required
+def close_fiscal_day(request):
+
+    if request.method == 'GET':
+
+        try:
+            fiscal_day = FiscalDay.objects.filter(created_at__date=datetime.datetime.today(), is_open=True).first()
+            fiscal_day_counters = FiscalCounter.objects.filter(created_at__date=datetime.datetime.today())
+            
+            print(f'fiscal counters: {fiscal_day_counters.values('fiscal_counter_type', 'fiscal_counter_money_type')}')
+
+            saleByTax_string = ""  
+            saleTaxByTax_string = ""
+            balance_money_string = ""  
+            counters_string = ""
+
+            for counter in fiscal_day_counters:
+                counter_type = counter.fiscal_counter_type.upper()
+                counter_currency = counter.fiscal_counter_currency.upper()
+                counter_value = int(counter.fiscal_counter_value * 100)
+
+                if counter.fiscal_counter_type == "Balancebymoneytype":
+                    money_type = counter.fiscal_counter_money_type.upper()
+                    balance_money_string = f"{counter_type}{counter_currency}{money_type}{counter_value}"
+                else:
+                    if counter.fiscal_counter_type == 'SaleByTax':
+                        tax_percent = float(counter.fiscal_counter_tax_percent)
+
+                        if tax_percent == int(tax_percent):
+                            tax_percent_str = f"{int(tax_percent)}.00"
+                        else:
+                            tax_percent_str = f"{tax_percent:.2f}"
+
+                        saleByTax_string += f"{counter_type}{counter_currency}{tax_percent_str}{counter_value}"
+                    elif counter.fiscal_counter_type == 'SaleTaxByTax':
+                        tax_percent = float(counter.fiscal_counter_tax_percent)
+
+                        if tax_percent == int(tax_percent):
+                            tax_percent_str = f"{int(tax_percent)}.00"
+                        else:
+                            tax_percent_str = f"{tax_percent:.2f}"
+
+                        saleTaxByTax_string += f"{counter_type}{counter_currency}{tax_percent_str}{counter_value}"
+
+            counters_string += saleByTax_string + saleTaxByTax_string + balance_money_string
+
+            final_counters_string = f"{ZIMRA.device_identification}{fiscal_day.day_no}{datetime.datetime.today().date()}{counters_string}"
+
+            logger.info(f'fiscal_counter_values: {final_counters_string.strip(' ')}')
+            # close_day_response = zimra.close_day()
+            return JsonResponse({'success': True, 'data': final_counters_string}, status=200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'{e}'}, status=400)
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            hash = data.get('hash', '')
+            signature = data.get('signature', '')
+
+            if not hash:
+                return JsonResponse({'message':'Hash data missing.', 'success':False})
+            
+            if not signature:
+                return JsonResponse({'message':'Signature data missing.', 'success':False})
+            
+            fiscal_day_counters = FiscalCounter.objects.filter(created_at__date=datetime.datetime.today())
+
+            close_day_response = zimra.close_day(hash, signature, fiscal_day_counters)
+
+            return JsonResponse({'message':close_day_response, 'success':True})
+
+        except Exception as e:
+            return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
+
+@login_required
+def submit_z_report(request):
+    try:
+        z_report_response = zimra.z_report()
+        return JsonResponse({'success': True, 'data': z_report_response})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'{e}'})
+
+@login_required
+def send_quote_email(request, quote_id):
+    if request.method == 'POST':
+        return send_quotation_email(request, quote_id)
+    return JsonResponse({'success': False, 'error': 'Only POST method is allowed'})
     
 
 #API 
@@ -4449,6 +4652,8 @@ class EndOfDay(views.APIView):
         except Exception as e:
             logger.exception(f"Error processing request: {e}")
             return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
+        
+
 class QuatationCrud(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Qoutation.objects.all()

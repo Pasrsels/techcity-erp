@@ -33,6 +33,7 @@ urlpatterns = [
     path('invoice/preview/<int:invoice_id>/', invoice_preview, name='invoice_preview'),
     path('invoice/preview/json/<int:invoice_id>/', invoice_preview_json, name='invoice_preview_json'),
     path('held/invoices', held_invoice_view, name='held_invoice'),
+
     
     #customer
     path('customers/', customer, name='customers'),
@@ -56,6 +57,7 @@ urlpatterns = [
     path('qoutation/add/', create_quotation, name='add_qoutation'),
     path('qoutation/delete/<int:qoutation_id>/', delete_qoute, name='delete_qoutation'),
     path('qoutation/preview/<int:qoutation_id>/', qoute_preview, name='quotation_preview'),
+    path('send_quote_email/<int:quote_id>/', send_quote_email, name='send_quote_email'),
     
     # transfers
     path('transfer/cash/', cash_transfer, name='cash_transfer'),
@@ -128,6 +130,16 @@ urlpatterns = [
     # layby
     path('layby/', layby_data, name='layby'),
     path('layby/pay/<int:layby_date_id>/', layby_payment, name='layby_payment'),
+
+    # tax
+    path('tax', tax, name='tax'),
+    path('get_status/', get_config, name='overview'),
+    path('open_fiscal/', open_fiscal_day, name='get_status'),
+    path('day_status/', check_fiscal_status, name='day_status'),
+    path('close_fiscal/', close_fiscal_day, name='close_fiscal'),
+    path('submit_z_report/', submit_z_report, name='get_status'),
+    path('get_signature/', get_signature_data, name='get_signature'),
+    path('submit_invoice_data/', submit_invoice_data_zimra, name='submit_invoice'),
 
     ########################################################################################################################
     # API end points

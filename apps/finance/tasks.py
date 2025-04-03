@@ -19,12 +19,80 @@ from django.core.mail import send_mail
 from django.db.models import Q
 import calendar
 from django.utils.html import strip_tags
+from utils.zimra import ZIMRA 
+from django.core.mail import EmailMultiAlternatives
+from apps.finance.utils import generate_quote_pdf
+import os
+from django.http.response import JsonResponse
+from django.shortcuts import get_object_or_404
 
 
 def get_end_of_month(date):
     """Helper function to get the last day of the current month"""
     last_day = calendar.monthrange(date.year, date.month)[1]
     return date.replace(day=last_day)
+
+
+def send_quotation_email(request, quote_id):
+    """
+    Send quotation email with PDF attachment to customer
+    """
+    
+    qoute = get_object_or_404(Qoutation, id=quote_id)
+    qoute_items = QoutationItems.objects.filter(qoute=qoute)
+    customer = qoute.customer
+    
+    subject = f"Your Quotation #{qoute.qoute_reference} from Techcity"
+    from_email = request.user.branch.email
+    to_email = customer.email
+
+    pdf_file = generate_quote_pdf(quote_id, request)
+    
+    context = {
+        'customer_name': customer.name,
+        'quote_reference': qoute.qoute_reference,
+        'quote_date': qoute.date,
+        'quote_amount': qoute.amount,
+        'currency_symbol': qoute.currency.symbol,
+        'expiry_date': qoute.date + timedelta(days=30), 
+        'sales_person': request.user.first_name,
+        'sales_position': request.user.position,
+        'branch_phone': request.user.branch.phonenumber,
+        'branch_email': request.user.branch.email,
+        'branch_address': request.user.branch.address,
+        'qoute_items': qoute_items
+    }
+    
+    html_content = render_to_string('emails/quotation_email.html', context)
+    text_content = strip_tags(html_content)  
+    
+    email = EmailMultiAlternatives(
+        subject=subject,
+        body=text_content,
+        from_email=from_email,
+        to=[to_email]
+    )
+    
+    # Attach HTML content
+    email.attach_alternative(html_content, "text/html")
+    
+    # Attach company logo for inline embedding in email
+    logo_path = os.path.join(settings.STATIC_ROOT, 'assets/logo.png')
+    if os.path.exists(logo_path):
+        with open(logo_path, 'rb') as f:
+            email.attach('logo.png', f.read(), 'image/png')
+            email.mixed_subtype = 'related'
+            email.make_alternative()
+            email.attach_inline('logo.png', f.read(), 'image/png', 'company-logo')
+    
+    # Attach PDF quotation
+    email.attach(f'Quotation_{qoute.qoute_reference}.pdf', pdf_file, 'application/pdf')
+    
+    try:
+        email.send()
+        return JsonResponse({'success': True, 'message': 'Quotation email sent successfully'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 @shared_task
 def generate_recurring_invoices():
@@ -162,7 +230,7 @@ def send_invoice_email_task(invoice_id):
 def send_expense_email_notification(expense_id):
     expense = Expense.objects.get(id=expense_id)
 
-    subject = "Expense Notification"()
+    subject = "Expense Notification"
     html_content = render_to_string("emails/expense_notification.html", {"expense": expense})
     text_content = strip_tags(html_content)
 
@@ -236,28 +304,29 @@ def check_upcoming_layby_payments():
     task that runs daily and checks for layby payments due in 3 days.
     Sends notifications to customers and staff about these upcoming payments.
     """
+    pass
    
-    today = timezone.now().date()
-    three_days_from_now = today + timedelta(days=3)
+    # today = timezone.now().date()
+    # three_days_from_now = today + timedelta(days=3)
     
-    upcoming_payments = laybyDates.objects.filter(
-        Q(due_date=three_days_from_now) &  
-        Q(paid=False) 
-    ).select_related('layby', 'layby__invoice', 'layby__branch')
+    # upcoming_payments = laybyDates.objects.filter(
+    #     Q(due_date=three_days_from_now) &  
+    #     Q(paid=False) 
+    # ).select_related('layby', 'layby__invoice', 'layby__branch')
     
     
-    logger.info(f"Checking for layby payments due on {three_days_from_now}")
+    # logger.info(f"Checking for layby payments due on {three_days_from_now}")
     
-    # Send notifications for each upcoming payment
-    notification_count = 0
-    for payment in upcoming_payments:
-        customer_notified = notify_customer_about_payment(payment)
-        staff_notified = notify_staff_about_payment(payment)
+    # # Send notifications for each upcoming payment
+    # notification_count = 0
+    # for payment in upcoming_payments:
+    #     customer_notified = notify_customer_about_payment(payment)
+    #     staff_notified = notify_staff_about_payment(payment)
         
-        if customer_notified or staff_notified:
-            notification_count += 1
+    #     if customer_notified or staff_notified:
+    #         notification_count += 1
     
-    return f"Sent {notification_count} notifications for layby payments due on {three_days_from_now}"
+    # return f"Sent {notification_count} notifications for layby payments due on {three_days_from_now}"
 
 
 def notify_customer_about_payment(payment):
@@ -342,3 +411,5 @@ def notify_staff_about_payment(payment):
         # Log the error
         logger.info(f"Failed to send staff notification: {str(e)}")
         return False
+    
+
