@@ -602,6 +602,7 @@ def inventory_detail(request, id):
         inventory=inventory,
         branch=request.user.branch
     ).order_by('-timestamp__date', '-timestamp__time')
+    logger.info(logs)
 
     # stock account data and totals (costs and quantities)
     stock_account_data = get_stock_account_data(logs)
@@ -612,6 +613,7 @@ def inventory_detail(request, id):
     total_credits_quantity = sum(entry['quantity'] for entry in stock_account_data if entry['type'] == 'credits')
 
     logger.info(f'debits {total_debits_quantity}')
+    logger.info(f'debits {total_credits_quantity}')
 
     remaining_stock_quantity = total_debits_quantity - total_credits_quantity
 
@@ -619,7 +621,7 @@ def inventory_detail(request, id):
     inventory_value = []
     inventory_sold_value = []
     inventory_total_cost = inventory.cost * inventory.quantity
-
+    
     for currency in Currency.objects.all():
         inventory_value.append(
             {
@@ -666,6 +668,11 @@ def inventory_detail(request, id):
                 transfer_data[month_year] += log.quantity
             else:
                 transfer_data[month_year] = log.quantity
+        elif log.action == 'sale return':
+            if month_year in transfer_data:
+                transfer_data[month_year] += abs(log.quantity)
+            else:
+                transfer_data[month_year] = abs(log.quantity)
 
         if month_year not in labels:
             labels.append(month_year)
@@ -676,6 +683,8 @@ def inventory_detail(request, id):
     #     download_stock_logs_account('logs', logs, inventory)
     # elif request.GET.get('account'):
     #     download_stock_logs_account('account', logs, inventory)
+    
+    logger.info(stock_account_data)
     
     return render(request, 'inventory_detail.html', {
         'inventory': inventory,
@@ -708,20 +717,46 @@ def get_stock_account_data(logs):
         else:
             continue  
         
-        inventory_cost = getattr(log.inventory, 'cost', Decimal('0.00'))
-        cost = log.quantity * inventory_cost
-        
-        stock_account.append({
-            'type': entry_type,
-            'description': log.action,
-            'quantity': log.quantity,
-            'cost': cost,
-            # 'currency': 'USD',
-            'timestamp': log.timestamp,
-            'user': log.user.username if log.user else 'Unknown',
-            'branch': log.branch.name,
-        })
-    
+        if log.action == 'sale return':
+            inventory_cost = getattr(log.inventory, 'cost', Decimal('0.00'))
+            cost = abs(log.quantity) * inventory_cost
+            
+            logger.info(f'action : {log.action}')
+            logger.info(f'quantity : {abs(log.quantity)}')
+            logger.info(f'inventory cost : {inventory_cost}')
+            logger.info(f'cost : {cost}')
+
+            stock_account.append({
+                'type': entry_type,
+                'description': log.action,
+                'quantity': abs(log.quantity),
+                'cost': cost,
+                # 'currency': 'USD',
+                'timestamp': log.timestamp,
+                'user': log.user.username if log.user else 'Unknown',
+                'branch': log.branch.name,
+            })
+            logger.info(stock_account)
+        else:
+            inventory_cost = getattr(log.inventory, 'cost', Decimal('0.00'))
+            cost = abs(log.quantity) * inventory_cost
+            
+            logger.info(f'action : {log.action}')
+            logger.info(f'quantity : {log.quantity}')
+            logger.info(f'inventory cost : {inventory_cost}')
+            logger.info(f'cost : {cost}')
+
+            stock_account.append({
+                'type': entry_type,
+                'description': log.action,
+                'quantity': log.quantity,
+                'cost': cost,
+                # 'currency': 'USD',
+                'timestamp': log.timestamp,
+                'user': log.user.username if log.user else 'Unknown',
+                'branch': log.branch.name,
+            })
+            logger.info(stock_account)
     return stock_account
 
 @login_required
