@@ -1263,19 +1263,7 @@ async function processCart(el) {
                         }
                     })
                 }
-
             }
-        } else if (result.hold){
-            modal.classList.add('hidden');
-            overlay.classList.add('hidden');
-            Swal.fire({
-                icon: 'success',
-                text: result.message,
-                title: 'success'
-            })
-        } else {
-            console.log('Error:', result.message);
-        }
     } catch (error) {
         console.error("Error during request:", error);
     }

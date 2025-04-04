@@ -378,73 +378,38 @@ def update_expense_status(request):
 
 @login_required
 def invoice(request):
+    page = int(request.GET.get('page', 1))
+    page_size = 20
+
     form = InvoiceForm()
-    invoices = Invoice.objects.filter(branch=request.user.branch, status=True, cancelled=False).order_by('-invoice_number')
-
-    query_params = request.GET
-    if query_params.get('q'):
-        search_query = query_params['q']
-        invoices = invoices.filter(
-            Q(customer__name__icontains=search_query) |
-            Q(invoice_number__icontains=search_query) |
-            Q(issue_date__icontains=search_query)
-        )
-
-    user_timezone_str = request.user.timezone if hasattr(request.user, 'timezone') else 'UTC'
-    user_timezone = pytz_timezone(user_timezone_str)  
-
-    def filter_by_date_range(start_date, end_date):
-        start_datetime = user_timezone.localize(
-            timezone.datetime.combine(start_date, timezone.datetime.min.time())
-        )
-        end_datetime = user_timezone.localize(
-            timezone.datetime.combine(end_date, timezone.datetime.max.time())
-        )
-        return invoices.filter(issue_date__range=[start_datetime, end_datetime])
-
-    now = timezone.now().astimezone(user_timezone)
-    today = now.date()
-
-    now = timezone.now() 
-    today = now.date()  
+    invoices = Invoice.objects.filter(branch=request.user.branch, status=True, cancelled=False).select_related(
+        'customer',
+        'currency',
+        'user'
+    ).order_by('-invoice_number')
     
-    date_filters = {
-        'today': lambda: filter_by_date_range(today, today),
-        'yesterday': lambda: filter_by_date_range(today - timedelta(days=1), today - timedelta(days=1)),
-        't_week': lambda: filter_by_date_range(today - timedelta(days=today.weekday()), today),
-        'l_week': lambda: filter_by_date_range(today - timedelta(days=today.weekday() + 7), today - timedelta(days=today.weekday() + 1)),
-        't_month': lambda: invoices.filter(issue_date__month=today.month, issue_date__year=today.year),
-        'l_month': lambda: invoices.filter(issue_date__month=today.month - 1 if today.month > 1 else 12, issue_date__year=today.year if today.month > 1 else today.year - 1),
-        't_year': lambda: invoices.filter(issue_date__year=today.year),
-    }
+    #pagination
+    start = (page - 1) * page_size
+    end = start + page_size
 
-    if query_params.get('day') in date_filters:
-        invoices = date_filters[query_params['day']]()
+    total_vouchers = invoices.count()
+    has_more = total_vouchers > end
 
-    total_partial = invoices.filter(payment_status='Partial').aggregate(Sum('amount'))['amount__sum'] or 0
-    total_paid = invoices.filter(payment_status='Paid').aggregate(Sum('amount'))['amount__sum'] or 0
-    total_amount = invoices.aggregate(Sum('amount'))['amount__sum'] or 0
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        html = render_to_string(
+            'invoices/partials/voucher_items.html',
+            {'invoices': invoices}
+        )
 
-    grouped_invoices = defaultdict(list)
-
-    for invoice in invoices:
-
-        issue_date = invoice.issue_date.date() 
-
-        if issue_date == today:
-            grouped_invoices['Today'].append(invoice)
-        elif issue_date == today - timedelta(days=1):
-            grouped_invoices['Yesterday'].append(invoice)
-        else:
-            grouped_invoices[issue_date.strftime('%A, %d %B %Y')].append(invoice)
+        return JsonResponse({
+            'html':html,
+            'has_more':has_more,
+            'next_page': page + 1 if has_more else None
+        })
 
 
     return render(request, 'invoices/invoice.html', {
         'form': form,
-        'grouped_invoices': dict(grouped_invoices),
-        'total_paid': total_paid,
-        'total_due': total_partial,
-        'total_amount': total_amount,
     })
 
 

@@ -13,6 +13,7 @@ from apps.users.models import User
 from django.db.models import Sum
 from django.utils.timezone import localdate
 from django.db import transaction
+import os
 
 today = localdate()
 
@@ -202,11 +203,23 @@ class StockTransaction(models.Model):
     unit_price = models.DecimalField(max_digits=15, decimal_places=2)
     date = models.DateField()
 
+
+def expense_receipt_upload_path(instance, filename):
+    """Generates a unique file path for uploaded receipts."""
+    return os.path.join('receipts/', f"expense_{instance.id}_{filename}")
+
 class ExpenseCategory(models.Model):
     name = models.CharField(max_length=50)
-    
+    parent = models.ForeignKey(
+        'self', 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name='subcategories'
+    )
+
     def __str__(self):
-        return self.name
+        return f"{self.parent.name} → {self.name}" if self.parent else self.name
 
 class Expense(models.Model):
     issue_date = models.DateField(auto_now_add=True)
@@ -216,16 +229,19 @@ class Expense(models.Model):
         ('bank', 'bank'),
         ('ecocash', 'ecocash')
     ])
-    currency = models.ForeignKey(Currency, on_delete=models.CASCADE)
-    category = models.ForeignKey(ExpenseCategory, on_delete=models.PROTECT)
+    currency = models.ForeignKey('Currency', on_delete=models.CASCADE)
+    category = models.ForeignKey('ExpenseCategory', on_delete=models.PROTECT)
     description = models.CharField(max_length=200)
-    user = models.ForeignKey('users.user', on_delete=models.CASCADE)
-    branch = models.ForeignKey('company.branch', on_delete=models.CASCADE)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
     status = models.BooleanField(default=False)
-    purchase_order = models.ForeignKey("inventory.PurchaseOrder", on_delete=models.CASCADE, null=True)
+    purchase_order = models.ForeignKey("inventory.PurchaseOrder", on_delete=models.CASCADE, null=True, blank=True)
+
+    receipt = models.FileField(upload_to=expense_receipt_upload_path, null=True, blank=True)
 
     def __str__(self):
         return f"{self.issue_date} - {self.category} - {self.description} - ${self.amount}"
+
     
 class Sale(models.Model):
     """
