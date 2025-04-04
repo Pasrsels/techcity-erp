@@ -1150,21 +1150,21 @@ document.querySelectorAll('.pm').forEach(button => {
 });
 
 async function processCart(el) {
-
     const amountReceived = document.getElementById('id_amount_paid');
 
     if (!holdStatus) {
         if (Number((amountReceived.value) <= 0) && (paymentTerms === 'cash')) {
             Swal.fire({
-                icon: 'Error',
-                text: 'Please amount cant be zero when payment its cash',
+                icon: 'error',
+                text: 'Amount can’t be zero when payment method is cash.',
                 title: 'Error'
             }).then(() => {
                 amountReceived.focus()
-            })
+            });
             return;
         }
     }
+
     const data = [
         {
             subtotal: calculateTotalAmount(cart),
@@ -1174,7 +1174,7 @@ async function processCart(el) {
             payable: payable_amount,
             vat_amount: vat_amount,
             payment_method: paymentMethod,
-            recourring:document.getElementById('id_reoccuring').checked,
+            recourring: document.getElementById('id_reoccuring').checked,
             paymentTerms: paymentTerms,
             hold_status: holdStatus,
             pay_later_date: document.getElementById('paylater_date').value
@@ -1186,6 +1186,16 @@ async function processCart(el) {
         : "{% url 'finance:create_invoice' %}";
 
     try {
+        // Show loading/processing Swal
+        Swal.fire({
+            title: 'Processing...',
+            text: 'Please wait while we process the invoice.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         const response = await fetch(url, {
             method: "POST",
             headers: {
@@ -1200,170 +1210,97 @@ async function processCart(el) {
         });
 
         const result = await response.json();
-        console.log(result, 'result')
 
-        if (result.success) {
-            cart = [];
-            updateCartDisplay();
+        Swal.close(); // Close the processing Swal once we have a result
 
-            if (el.dataset.name === 'qoutation') {
-                Swal.fire({
-                    icon: 'success',
-                    text: 'Processing Quotation',
-                    timer: 2000,
-                    didClose: () => {
-                        Swal.fire({
-                            title: 'Loading...',
-                            text: 'Redirecting to preview...',
-                            allowOutsideClick: false,
-                            didOpen: () => {
-                                Swal.showLoading();
-                            }
-                        });
-            
-                        setTimeout(() => {
-                            qouteModal.hide();
-                            window.location.href = `/finance/qoutation/preview/${result.qoute_id}`;
-                        }, 1000);
-                    }
-                });
-            }
-            
-            } else {
-                if (result.data){
-                    let data;
-                    console.log(result)
+        if (el.dataset.name === 'qoutation') {
+            Swal.fire({
+                icon: 'success',
+                text: 'Quotation Processed!',
+                timer: 2000,
+                didClose: () => {
+                    Swal.fire({
+                        title: 'Redirecting...',
+                        text: 'Taking you to the quotation preview.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
 
-                    data = run(result.data)
-                    console.log('data', data)
+                    setTimeout(() => {
+                        qouteModal.hide();
+                        window.location.href = `/finance/qoutation/preview/${result.qoute_id}`;
+                    }, 1000);
+                }
+            });
+        } else {
+            console.log(result, 'result');
 
-                    fetch('{% url "finance:submit_invoice"%}',{ 
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRFToken": getCookie("csrftoken"),
-                        },
-                        body: JSON.stringify({
-                            hash:data.hash,
-                            signature:data.signature,
-                            receipt_data:result.receipt_data
-                        })
-                    })
+            const invoiceId = result.invoice_id;
+
+            if (invoiceId) {
+                fetch(`/finance/invoice/preview/json/${invoiceId}`)
                     .then(response => response.json())
                     .then(data => {
-                        console.log(data)
-                        if(data.success){
-                            Swal.fire({
-                                text: 'Proccessing Receipt',
-                                icon: 'success',
-                                title: 'Success'
-                            }).then(() => {
-                                displayReceipt(result.invoice_id);
-                            }) 
-                        }
-                    })
-                }
+                        console.log("Invoice data:", data);
+                        displayReceipt(data);
+                        cart = [];
+                        updateCartDisplay();
+                    });
+            } else {
+                console.error("Invoice ID not found in response.");
             }
+        }
+
     } catch (error) {
+        Swal.close(); // Close the loading Swal if there's an error
         console.error("Error during request:", error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: 'Something went wrong while processing your request.',
+        });
     }
 }
 
-async function displayReceipt(invoiceId) {
+
+function displayReceipt(data) {
     try {
-
-        let content = generateReceiptContent(data)
-        printReceiptSilently(content)
-
-        const { invoice, invoice_items: invoiceItems, lay_dates:dates} = data;
-        const {
-            invoice_number: invoiceNumber,
-            amount: invoiceTotal,
-            delivery_charge: deliveryCharge,
-            discount_amount: discountAmount,
-            vat: vatAmount,
-            subtotal: subTotal,
-            currency_symbol: currencySymbol,
-            amount_paid: amountPaid,
-            payment_terms: payment_terms
-        } = invoice;
-
-        let prvDue = parseFloat(document.getElementById('tpreviousDue').textContent.split('')[1]);
-        let availabeB = invoiceTotal - amountPaid + prvDue;
-
-        document.getElementById('rcp-payment')
-        document.getElementById('rcp-pterms').textContent = payment_terms;
-        document.getElementById('rcp-currency').textContent = currencySymbol;
-        document.getElementById('rcp_amount_paid').textContent = currencySymbol + ' ' + amountPaid;
-        document.getElementById('rcp_previous_due').textContent = currencySymbol + ' ' + `${prvDue ? prvDue : 0.00}`;
-        document.getElementById('available_balance').textContent = currencySymbol + ' ' + `${availabeB ? availabeB : 0.00}`;
-        document.getElementById('total_amount').textContent = currencySymbol + ' ' + invoiceTotal;
-        document.querySelector('#invoiceNumber').textContent = invoiceNumber;
-
-        const receiptTableBody = document.querySelector('#receipt');
-        receiptTableBody.innerHTML = '';
-
-        console.log('invoice items', invoiceItems)
-
-        // Populate the table with invoice items
-        invoiceItems.forEach(({ quantity, item__name, unit_price, item__description, total_amount }) => {
-            const newRow = receiptTableBody.insertRow();
-            newRow.insertCell().textContent = `${item__name}`
-            newRow.insertCell().textContent = `(${item__description})`;
-            newRow.insertCell().textContent = quantity;
-            newRow.insertCell().textContent = `${unit_price}`;
-            newRow.insertCell().textContent = `${quantity * unit_price}`;
-        });;
-
-        document.querySelector('#subTotalAmount').textContent = `${currencySymbol} ${subTotal}`;
-        document.querySelector('#vatAmount').textContent = `${currencySymbol} ${vatAmount}`;   
-        const laybyDateEl = document.getElementById('rcp_payment_dates')
-        const laybyTerms = document.getElementById('laybyTerms');
-        const installmentTerms = document.getElementById('installmentTerms');
-
-        if (payment_terms === 'cash') {
-            laybyTerms.style.display = 'none';
-            installmentTerms.style.display = 'none';
-        } else if (payment_terms === 'layby') {
-            laybyTerms.style.display = 'block';
-            installmentTerms.style.display = 'none';
-
-            let ul = document.createElement('ul');
-            document.getElementById('rcp_deposited').textContent = currencySymbol + ' ' + amountPaid;
-            document.getElementById('rcp_period').textContent = Object.keys(layby_dates).length + '' + 'month(s)';
-
-            layby_dates.forEach((date)=>{
-                let li = document.createElement('li');
-                li.textContent = new Date(date).toLocaleDateString()
-                ul.appendChild(li)
-            })
-
-            laybyDateEl.appendChild(ul);
-
-        } else if (payment_terms === 'installment') {
-            laybyTerms.style.display = 'none';
-            installmentTerms.style.display = 'block';
-            document.getElementById('rcp_installment_deposit').textContent = currencySymbol + ' ' + amountPaid;
-        }
-
-        modal.hide()
+        let content = generateReceiptContent(data);
+        printReceiptSilently(content);
 
         Swal.fire({
-            icon: 'success',
-            title: 'success',
-            text: 'Invoice successfully processed',
-            timer: 2000,
-            showConfirmButton: false
-        }).then(()=>{
-            //loaderModal.hide();
-            receiptModal.show();
-        })
+            title: 'Printing Receipt...',
+            text: 'Please wait while we finish printing.',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            timer: 3000,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+        }).then(() => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Done!',
+                text: 'Receipt printed successfully.',
+                confirmButtonText: 'OK'
+            }).then(() => {
+                location.reload();
+            });
+        });
 
     } catch (error) {
         console.error("Error:", error);
-        loaderModal.hide();
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to print the receipt. Please try again.'
+        });
     }
 }
+
 
 function generateReceiptContent(data) {
     const { invoice, invoice_items: invoiceItems } = data;
@@ -1379,8 +1316,7 @@ function generateReceiptContent(data) {
         device_id: deviceId,
         device_serial_number: deviceSerialNumber
     } = invoice;
-    const vatRate = 15; // VAT percentage
-
+    const vatRate = 15; 
     return `
     <style>
         .receipt {
@@ -1477,8 +1413,8 @@ function generateReceiptContent(data) {
             </table>
         </div>
 
-        <p style="text-align: center;"><strong>Verification Code: ${receiptHash || ''}</strong></p>
-        <p style="text-align: center;">Verify at <a href="https://receipt.zimra.org/">https://receipt.zimra.org/</a></p>
+        {% comment %} <p style="text-align: center;"><strong>Verification Code: ${receiptHash || ''}</strong></p>
+        <p style="text-align: center;">Verify at <a href="https://receipt.zimra.org/">https://receipt.zimra.org/</a></p> {% endcomment %}
 
         <div class="footer">
             <hr>

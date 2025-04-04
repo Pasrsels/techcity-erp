@@ -45,6 +45,14 @@
             white-space: nowrap;
         }
     }
+
+    .image-preview {
+        max-width: 100%;
+        max-height: 200px;
+        margin-top: 1rem;
+        display: none; /* Initially hidden */
+    }
+
 </style>
 <div class="finance-expenses">
     <!-- Header Section with Navigation and Controls -->
@@ -106,6 +114,7 @@
                             <th class="border-0">Description</th>
                             <th class="border-0">Category</th>
                             <th class="border-0 text-end">Amount</th>
+                            <th class="border-0">Receipt</th>
                             <th class="border-0">By</th>
                             <th class="border-0 text-center">Status</th>
                             <th class="border-0 text-center">Actions</th>
@@ -128,6 +137,14 @@
                             </td>
                             <td class="{% if expense.cancel %}text-decoration-line-through text-danger{% endif %}">
                                 {{ expense.user.username }}
+                            </td>
+                            <td class="{% if expense.cancel %}text-decoration-line-through text-danger{% endif %}">
+                                {% if expense.receipt %}
+                                {{ expense.receipt.url }}
+                                    <imge src="{{ expense.receipt.url }}" width="100px" alt="expense_img"/>
+                                {% else %}
+                                    no receipt
+                                {%endif%}
                             </td>
                             <td class="text-center">
                                 <div class="form-check form-switch d-flex justify-content-center">
@@ -240,7 +257,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form method="post">
+                    <form method="post" enctype="multipart/form-data" id="expenseForm">
                         {% csrf_token %}
                         <div class="mb-3">
                             <label for="id_payment_method" class="form-label">Payment Method<span class="text-danger">*</span></label>
@@ -266,30 +283,49 @@
                             <div class="invalid-feedback" id="id_amount_error"></div>
                         </div>
                         <div class="mb-3">
-                            <label for="id_category" class="form-label">Category<span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <select name="category" class="form-select shadow-none" required id="id_category">
+                            <label for="id_category" class="form-label">Main Category<span class="text-danger">*</span></label>
+                            <div class='form-group d-flex align-items-center'>
+                                <select name="main_category" class="form-select shadow-none" required id="id_main_category" onchange="updateSubcategories()">
                                     <option value="" selected>---------</option>
                                     {% for category in expense_categories %}
-                                        <option value="{{category.id}}">{{category.name}}</option>
+                                        {% if category.parent is None %}
+                                            <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endif %}
                                     {% endfor %}
                                 </select>
-                                <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#AddCategoryModal" type="button">
-                                    <i class='bx bx-plus'></i>
-                                </button>
+                                <div>
+                                    <button class='btn btn-lg bx bx-plus btn btn-outline-dark' id='addCategory' type='button' ></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 form-group">
+                            <label for="id_subcategory" class="form-label">Subcategory<span class="text-danger">*</span></label>
+                            <div class='form-group d-flex align-items-center'>
+                                <select name="subcategory" class="form-select shadow-none" required id="id_subcategory">
+                                    <option value="" selected>---------</option>
+                                    <!-- Subcategories will be populated here based on the main category selection -->
+                                </select>
+                                <div>
+                                    <button class='btn btn-lg bx bx-plus btn btn-outline-dark' id='addCategory' type='button'></button>
+                                </div>
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="id_description" class="form-label">Description<span class="text-danger">*</span></label>
                             <textarea name="description" rows="3" maxlength="200" class="form-control shadow-none" required id="id_description"></textarea>
                         </div>
+                        <div class="mb-3">
+                            <label for="expenseImageInput" class="form-label">Upload Image</label>
+                            <input type="file" id="expenseImageInput"im name='image' accept="image/*" class="form-control" onchange="previewImage(event)">
+                            <div class="w-100">
+                                <img id="imagePreview" class="image-preview" src="#" alt="Image Preview">
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="submitExpenseForm()">
-                        <i class="bx bx-save me-1"></i> Save Expense
-                    </button>
+                    <button type="button" class="btn btn-primary" id="saveExpenseButton">Save Expense</button>
                 </div>
             </div>
         </div>
@@ -299,6 +335,44 @@
     let tableRows = document.querySelectorAll('#expense_table tbody, tr');
     let runningBalance = 0;
     new DataTable('#expense_table')
+
+    const addButton = document.querySelectorAll('#addCategory');
+    console.log(addButton)
+    const addCategoryModal = new bootstrap.Modal(document.getElementById('AddCategoryModal'))
+
+    const updateSubcategories = async() =>{
+        try {
+            const response = await fetch('{% url "finance:add_expense_category" %}');
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok.');
+            }
+            const data = await response.json();
+            console.log('expense data: ', data)
+            updateSubCategoriesOptions(data);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+        } 
+    }
+
+    const updateSubCategoriesOptions = (data) =>{
+        const catElement = document.querySelector('#id_subcategory')
+        const editCatElement = document.getElementById('id_e_category')
+
+        while(catElement.options.length > 1){
+            catElement.remove(1)
+        }
+
+        data.forEach(category=>catElement.innerHTML += `<option value=${category.id}>${category.name}</option>`)
+
+        while(editCatElement.options.length > 1){
+            editCatElement.remove(1)
+        }
+        data.forEach((category)=>{
+            editCatElement.innerHTML += `<option value=${category.id}>${category.name}</option>`
+        })
+
+    }
 
     $(document).ready(function() {
         calculateTotal();
@@ -320,6 +394,7 @@
 
         let totalAmountCell = document.getElementById('total')
         let amountCell = row.querySelector(".amount");
+        let amount = 0
         
         if (amountCell){
             let amount = parseFloat(amountCell.textContent) || 0;
@@ -367,9 +442,20 @@
     const addModal = new bootstrap.Modal(document.getElementById('AddExpenseModal'))
     const categoryModal = new bootstrap.Modal(document.getElementById('AddCategoryModal'))
 
+    addButton.forEach((btn)=>{
+        btn.addEventListener('click', ()=>{
+            addCategoryModal.show()
+            addModal.hide()
+        })
+    })
+
     function categorySubmit(){
     
-        const data = {name:$('#id_name').val()}
+        const data = {
+            name:$('#id_name').val(),
+            parent:$('#id_parent').val()
+        }
+
         console.log(data)
             
         fetch("{% url 'finance:add_expense_category' %}", {
@@ -384,14 +470,15 @@
             .then(data => {
                 if (data.success) {
                 fetchCategories()
-                categoryModal.hide()
-                addModal.show()
+                addCategoryModal.hide()
                 } else {
                 Swal.fire({
-                    title: "Error",
+                   title: "Success",
                     text: data.message,
-                    icon: "error"
-                });
+                    icon: "success"
+                }).then(()=>{
+                    addModal.show()
+                })
                 }
             })
             .catch((error) => {
@@ -468,7 +555,20 @@ function openEditModal(expenseId) {
         });
 }
 
-document.getElementById('saveExpenseBtn').addEventListener('click', function() {
+function previewImage(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const imagePreview = document.getElementById('imagePreview');
+        imagePreview.src = e.target.result;
+        imagePreview.style.display = 'block'; 
+    }
+    if (file) {
+        reader.readAsDataURL(file);
+    }
+}
+
+{% comment %} document.getElementById('saveExpenseBtn').addEventListener('click', function() {
     const expenseId = this.getAttribute('data-expense-id');
     const url = "{% url 'finance:add_or_edit_expense' %}";
 
@@ -519,8 +619,36 @@ document.getElementById('saveExpenseBtn').addEventListener('click', function() {
             confirmButtonText: 'OK'
         });
     });
-});
+}); {% endcomment %}
 
+document.getElementById('saveExpenseButton').addEventListener('click', function() {
+    console.log('here')
+    const formData = new FormData(document.getElementById('expenseForm'));console.log('Form Data Entries:');
+    for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+    }
+    console.log(formData)
+    fetch('{% url "finance:expenses"%}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire('Success!', 'Expense added successfully.', 'success');
+            location.reload(); 
+        } else {
+            Swal.fire('Error!', data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding expense:', error);
+        Swal.fire('Error!', 'An error occurred while adding the expense.', 'error');
+    });
+});
 // submit expenses
 
 function submitExpenseForm() {

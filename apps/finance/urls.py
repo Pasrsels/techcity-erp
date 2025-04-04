@@ -21,7 +21,6 @@ urlpatterns = [
     path('delete_expense/<int:expense_id>/', delete_expense, name='delete_expense'),
     path('update_expense_status/', update_expense_status, name='update_expense_status'),
     
-    
     #invoice
     path('invoice/', invoice, name='invoice'),
     path('invoice/pdf/', invoice_pdf, name='invoice_pdf'),
@@ -33,7 +32,6 @@ urlpatterns = [
     path('invoice/preview/<int:invoice_id>/', invoice_preview, name='invoice_preview'),
     path('invoice/preview/json/<int:invoice_id>/', invoice_preview_json, name='invoice_preview_json'),
     path('held/invoices', held_invoice_view, name='held_invoice'),
-
     
     #customer
     path('customers/', customer, name='customers'),

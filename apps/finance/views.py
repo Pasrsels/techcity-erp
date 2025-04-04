@@ -195,15 +195,20 @@ def expenses(request):
             }
         """
     try:
-        data = json.loads(request.body)
+        # body_unicode = request.body.decode('utf-8')
+        
+        data = request.POST
+
+        logger.info(f"Received body: {data}")
         
         amount = data.get('amount')
         description = data.get('description')
-        category = data.get('category')
+        category = data.get('subcategory')
         payment_method = data.get('payment_method')
         currency_id = data.get('currency')
+        image = request.FILES.get('image')
 
-        logger.info(currency_id)
+        logger.info(image)
         
         if not amount or not description or not category:
             return JsonResponse({'success':False, 'message':'Missing fields: amount, description, category.'})
@@ -246,7 +251,8 @@ def expenses(request):
             currency = currency,
             payment_method = payment_method,
             description = description,
-            branch = request.user.branch
+            branch = request.user.branch,
+            receipt=image
         )
         
         Cashbook.objects.create(
@@ -320,21 +326,40 @@ def add_or_edit_expense(request):
 
 @login_required
 def add_expense_category(request):
-    categories = ExpenseCategory.objects.all().values()
+    subcategories = ExpenseCategory.objects.filter(parent__isnull=False).values(
+        'id',
+        'name'
+    )
+
+    logger.info(subcategories)
     
     if request.method == 'POST':
         data = json.loads(request.body)
         category = data['name']
-        logger.info(data)
+        parent = data.get('parent', '')
+
+        if not category:
+            return JsonResponse({'success':False, 'message':f'Please enter the category'}, status=400)
         
         if ExpenseCategory.objects.filter(name=category).exists():
             return JsonResponse({'success':False, 'message':f'Category with ID {category} Exists.'}, status=400)
         
-        ExpenseCategory.objects.create(
-            name=category
-        )
-        return JsonResponse({'success':True}, status=201)
-    return JsonResponse(list(categories), safe=False)
+        if category and parent:
+            main_category = get_object_or_404(ExpenseCategory, id=int(parent))
+            ExpenseCategory.objects.create(
+                name=category,
+                parent=main_category
+            )
+
+            return JsonResponse({'success':True}, status=201)
+        
+        else:
+            ExpenseCategory.objects.create(
+                name=category,
+            )
+            return JsonResponse({'success':True}, status=201)
+            
+    return JsonResponse(list(subcategories), safe=False)
 
 @login_required
 @transaction.atomic
@@ -792,16 +817,16 @@ def create_invoice(request):
                 # for tax purpose Zimra
                 logger.info(invoice_items)
 
-                try:
-                    sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
-                    logger.info(f'sig data: {sig_data} {receipt_data}')
-                except Exception as e:
-                    logger.info(e)
-                    return JsonResponse({'success': False, 'error': str(e)})
+                # try:
+                #     sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
+                #     logger.info(f'sig data: {sig_data} {receipt_data}')
+                # except Exception as e:
+                #     logger.info(e)
+                #     return JsonResponse({'success': False, 'error': str(e)})
 
                 logger.info(f'inventory creation successfully done: {invoice}')
 
-                return JsonResponse({'success':True, 'invoice_id': invoice.id, 'data':sig_data, 'receipt_data':receipt_data})
+                return JsonResponse({'success':True, 'invoice_id': invoice.id, 'data':[], 'receipt_data':[]})
 
         except (KeyError, json.JSONDecodeError, Customer.DoesNotExist, Inventory.DoesNotExist, Exception) as e:
             return JsonResponse({'success': False, 'error': str(e)})
@@ -2025,13 +2050,6 @@ def invoice_preview_json(request, invoice_id):
     )
 
     invoice_dict = {}
-    for field in invoice._meta.fields:
-        if field.name not in ['customer', 'currency', 'branch', 'user']:
-            value = getattr(invoice, field.name)
-            if hasattr(value, 'url'):
-                invoice_dict[field.name] = value.url if value else None
-            else:
-                invoice_dict[field.name] = value
 
     invoice_dict['customer_name'] = invoice.customer.name
     invoice_dict['customer_email'] = invoice.customer.email
@@ -2040,7 +2058,11 @@ def invoice_preview_json(request, invoice_id):
     invoice_dict['currency_symbol'] = invoice.currency.symbol
     invoice_dict['amount_paid'] = invoice.amount_paid
     invoice_dict['payment_terms'] = invoice.payment_terms
+    invoice_dict['amount'] = invoice.amount
+    invoice_dict['invoice_number'] = invoice.invoice_number
     invoice_dict['receipt_hash'] = invoice.receipt_hash
+    invoice_dict['subtotal'] = invoice.subtotal
+    invoice_dict['vat'] =  invoice.vat
     invoice_dict['device_id'] = os.getenv("DEVICE_ID")
     invoice_dict['device_serial_number'] = os.getenv("DEVICE_SERIAL_NUMBER")
     
@@ -2051,18 +2073,18 @@ def invoice_preview_json(request, invoice_id):
         
     invoice_dict['user_username'] = invoice.user.username  
 
-    invoice_dict['receipt_signature'] = invoice.receiptServerSignature if invoice.receiptServerSignature else None
+    # invoice_dict['receipt_signature'] = invoice.receiptServerSignature if invoice.receiptServerSignature else None
     
-    if invoice.qr_code and invoice.qr_code.name:
-        try:
-            invoice_dict['receipt_qr_code_url'] = request.build_absolute_uri(invoice.qr_code.url)
-        except Exception as e:
-            invoice_dict['receipt_qr_code_url'] = None
-            logger.info(f"Error getting QR code URL: {e}")  
-    else:
-        invoice_dict['receipt_qr_code_url'] = None
+    # if invoice.qr_code and invoice.qr_code.name:
+    #     try:
+    #         invoice_dict['receipt_qr_code_url'] = request.build_absolute_uri(invoice.qr_code.url)
+    #     except Exception as e:
+    #         invoice_dict['receipt_qr_code_url'] = None
+    #         logger.info(f"Error getting QR code URL: {e}")  
+    # else:
+    #     invoice_dict['receipt_qr_code_url'] = None
 
-    logger.info(invoice.qr_code)
+    # logger.info(invoice.qr_code)
     
     invoice_data = {
         'invoice': invoice_dict,
