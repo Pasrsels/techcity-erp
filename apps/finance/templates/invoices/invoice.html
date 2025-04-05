@@ -1,832 +1,803 @@
 {% extends "base.html" %}
-{% load static %}
-{% block title %} Invoices {% endblock %}
+{% load static%}
+{% block title%} Invoices {% endblock%}
 {% block content %}
 <style>
-:root {
-  --primary: #4361ee;
-  --secondary: #3f37c9;
-  --success: #4cc9f0;
-  --danger: #f72585;
-  --warning: #f8961e;
-  --info: #4895ef;
-  --light: #f8f9fa;
-  --dark: #212529;
-  --gray: #6c757d;
-  --border-radius: 0.375rem;
-  --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-  --transition: all 0.2s ease-in-out;
-}
-
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-}
-
-.badge {
-  padding: 0.35em 0.65em;
-  border-radius: var(--border-radius);
-  font-size: 0.75em;
-  font-weight: 600;
-}
-
-.badge-success {
-  background-color: rgba(76, 201, 240, 0.15);
-  color: var(--success);
-}
-
-.badge-warning {
-  background-color: rgba(248, 150, 30, 0.15);
-  color: var(--warning);
-}
-
-.badge-danger {
-  background-color: rgba(247, 37, 133, 0.15);
-  color: var(--danger);
-}
-
-.badge-info {
-  background-color: rgba(72, 149, 239, 0.15);
-  color: var(--info);
-}
-
-.finance-navbar {
-  margin-bottom: 1.5rem;
-  border-radius: var(--border-radius);
-  background-color: white;
-}
-
 .table-container {
-  max-width: 100%;
-  overflow-x: auto;
-  background-color: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
+    max-width: 100%;
+    margin: auto;
+    overflow-x: auto;
+    background-color: white;
 }
 
-.table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  text-align: left;
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
 }
 
-.table thead th {
-  position: sticky;
-  top: 60px;
-  z-index: 10;
-  background-color: var(--primary);
-  color: white;
-  padding: 1rem;
-  font-weight: 600;
-  border: none;
-  border-bottom: 2px solid var(--light);
-  cursor: pointer;
-  transition: var(--transition);
+thead th {
+    background-color: #f9f9f9;
+    padding: 8px 10px;
+    border-bottom: 1px solid #ddd;
+    cursor: pointer;
 }
 
-.table thead th:hover {
-  background-color: var(--secondary);
+tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
 }
 
-.table tbody td {
-  padding: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  vertical-align: middle;
+tbody tr:hover {
+    background-color: #f1f1f1;
 }
 
-.table tbody tr {
-  transition: var(--transition);
+input[type="checkbox"] {
+    cursor: pointer;
 }
 
-.table tbody tr:hover {
-  background-color: rgba(67, 97, 238, 0.05);
+.status {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9em;
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1rem;
-  border-radius: var(--border-radius);
-  font-weight: 500;
-  transition: var(--transition);
-  cursor: pointer;
-  border: none;
+.status.completed {
+    background-color: #d4edda;
+    color: #155724;
 }
 
-.btn-primary {
-  background-color: var(--primary);
-  color: white;
+.status.pending {
+    background-color: #f8d7da;
+    color: #721c24;
 }
 
-.btn-primary:hover {
-  background-color: var(--secondary);
+.payment-btn {
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
 }
 
-.btn-outline-primary {
-  background-color: transparent;
-  color: var(--primary);
-  border: 1px solid var(--primary);
+.payment-btn.paid {
+    background-color: #28a745;
+    color: white;
 }
 
-.btn-outline-primary:hover {
-  background-color: var(--primary);
-  color: white;
+.payment-btn.due {
+    background-color: #dc3545;
+    color: white;
 }
 
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
+/* Table Container to allow scrolling */
+.table-container {
+    max-height: 100vh !important;
+    overflow-y: auto;
+    position: relative;
 }
 
-.action-icon {
-  font-size: 1.25rem;
-  transition: var(--transition);
-  cursor: pointer;
-  color: var(--gray);
+/* Sticky Search Bar */
+.sticky-top-search {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 100;
+    padding: 10px 0;
+    border-bottom: 2px solid #ccc;
 }
 
-.action-icon:hover {
-  color: var(--primary);
+/* Sticky Table Header */
+.sticky-header th {
+    position: sticky;
+    top: 56px; 
+    z-index: 99;
+    background-color: #007bff; 
+    color: white;
 }
 
-.card {
-  background-color: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  overflow: hidden;
+.table-scroll {
+    width: 100%;
+    display: block;
 }
 
-.card-header {
-  padding: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.card-body {
-  padding: 1rem;
-}
-
-.filters-container {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.35s ease;
-}
-
-.filters-container.show {
-  max-height: 500px;
-}
-
-.search-container {
-  position: relative;
-  margin-bottom: 1rem;
-}
-
-.search-container input {
-  width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
-  border-radius: var(--border-radius);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  transition: var(--transition);
-}
-
-.search-container input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.25);
-}
-
-.search-icon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--gray);
-}
-
-.date-section {
-  font-weight: 600;
-  padding: 0.75rem 1rem;
-  margin: 1rem 0 0.5rem;
-  background-color: rgba(67, 97, 238, 0.05);
-  border-radius: var(--border-radius);
-  color: var(--dark);
-}
-
-.loader {
-  width: 100%;
-  height: 80px;
-  display: none;
-  align-items: center;
-  justify-content: center;
-}
-
-.loader.active {
-  display: flex;
-}
-
-.dot-pulse {
-  position: relative;
-  width: 10px;
-  height: 10px;
-  border-radius: 5px;
-  background-color: var(--primary);
-  animation: dot-pulse 1.5s infinite linear;
-}
-
-.dot-pulse::before,
-.dot-pulse::after {
-  content: '';
-  position: absolute;
-  display: inline-block;
-  top: 0;
-  width: 10px;
-  height: 10px;
-  border-radius: 5px;
-  background-color: var(--primary);
-}
-
-.dot-pulse::before {
-  left: -15px;
-  animation: dot-pulse-before 1.5s infinite linear;
-}
-
-.dot-pulse::after {
-  left: 15px;
-  animation: dot-pulse-after 1.5s infinite linear;
-}
-
-@keyframes dot-pulse-before {
-  0% { opacity: 0.4; }
-  25% { opacity: 1; }
-  50% { opacity: 0.4; }
-  75% { opacity: 0.4; }
-  100% { opacity: 0.4; }
-}
-
-@keyframes dot-pulse {
-  0% { opacity: 0.4; }
-  25% { opacity: 0.4; }
-  50% { opacity: 1; }
-  75% { opacity: 0.4; }
-  100% { opacity: 0.4; }
-}
-
-@keyframes dot-pulse-after {
-  0% { opacity: 0.4; }
-  25% { opacity: 0.4; }
-  50% { opacity: 0.4; }
-  75% { opacity: 1; }
-  100% { opacity: 0.4; }
-}
-
-.tooltip {
-  position: relative;
-  display: inline-block;
-}
-
-.tooltip .tooltiptext {
-  visibility: hidden;
-  background-color: var(--dark);
-  color: white;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 10px;
-  position: absolute;
-  z-index: 1;
-  bottom: 125%;
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0;
-  transition: opacity 0.3s;
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
-
-.tooltip:hover .tooltiptext {
-  visibility: visible;
-  opacity: 1;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.75rem;
-  background-color: rgba(67, 97, 238, 0.1);
-  color: var(--primary);
-  border-radius: 1rem;
-  font-size: 0.75rem;
-  margin-right: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.chip .chip-close {
-  margin-left: 0.5rem;
-  cursor: pointer;
-}
-
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: 1000;
-  min-width: 10rem;
-  padding: 0.5rem 0;
-  margin: 0.125rem 0 0;
-  background-color: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  display: none;
-}
 
-.dropdown-menu.show {
-  display: block;
-}
-
-.dropdown-item {
-  display: block;
-  width: 100%;
-  padding: 0.5rem 1rem;
-  clear: both;
-  text-align: inherit;
-  white-space: nowrap;
-  background-color: transparent;
-  border: 0;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.dropdown-item:hover {
-  background-color: rgba(67, 97, 238, 0.05);
-  color: var(--primary);
-}
-
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1040;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: none;
-}
-
-.modal-backdrop.show {
-  display: block;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1050;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  outline: 0;
-  display: none;
-}
-
-.modal.show {
-  display: block;
-}
-
-.modal-dialog {
-  position: relative;
-  width: auto;
-  margin: 1.75rem auto;
-  max-width: 500px;
-}
-
-.modal-content {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  background-color: white;
-  background-clip: padding-box;
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  outline: 0;
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.modal-body {
-  position: relative;
-  flex: 1 1 auto;
-  padding: 1rem;
-}
-
-.modal-footer {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0.75rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.payment-status {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-  margin-right: 0.5rem;
-}
-
-.payment-status.paid {
-  background-color: var(--success);
-}
-
-.payment-status.pending {
-  background-color: var(--warning);
-}
-
-.payment-status.overdue {
-  background-color: var(--danger);
-}
-
-.payment-status.onhold {
-  background-color: var(--info);
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem;
-  text-align: center;
-}
-
-.empty-state-icon {
-  font-size: 4rem;
-  color: rgba(67, 97, 238, 0.2);
-  margin-bottom: 1rem;
-}
-
-.loading-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(67, 97, 238, 0.1);
-  border-radius: 50%;
-  border-top-color: var(--primary);
-  animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.progress-container {
-  width: 100%;
-  height: 4px;
-  background-color: rgba(67, 97, 238, 0.1);
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 9999;
-}
-
-.progress-bar {
-  height: 100%;
-  background-color: var(--primary);
-  width: 0;
-  transition: width 0.3s;
-}
-
-@media (max-width: 992px) {
-  .table thead th {
-    white-space: nowrap;
-  }
-  
-  .table {
-    min-width: 992px;
-  }
-}
 </style>
-
 <div class="finance">
-  <!-- Progress Bar -->
-  <div class="progress-container">
-    <div class="progress-bar" id="progressBar"></div>
-  </div>
-
-  <div class="finance-navbar">
-    <div class="d-flex justify-content-between align-items-center p-3">
-      <div class="d-flex align-items-center">
-        <h4 class="m-0">Invoices</h4>
-        <span class="badge badge-info ms-2" id="invoiceCount">0</span>
-      </div>
-      <div class="d-flex align-items-center">
-        <button class="btn btn-sm btn-outline-primary me-2" id="toggleFilters">
-          <i class='bx bx-filter me-1'></i> Filters
-        </button>
-        <div class="dropdown">
-          <button class="btn btn-sm btn-outline-primary me-2" id="dateFilterDropdown">
-            <i class='bx bx-calendar me-1'></i> <span id="dateFilterText">Today</span>
-          </button>
-          <div class="dropdown-menu" id="dateFilterMenu">
-            <button class="dropdown-item" data-filter="today">Today</button>
-            <button class="dropdown-item" data-filter="yesterday">Yesterday</button>
-            <button class="dropdown-item" data-filter="this_week">This Week</button>
-            <button class="dropdown-item" data-filter="this_month">This Month</button>
-            <button class="dropdown-item" data-filter="last_month">Last Month</button>
-            <button class="dropdown-item" data-filter="this_year">This Year</button>
-            <button class="dropdown-item" data-filter="custom">Custom Date Range</button>
-          </div>
-        </div>
-        <button class="btn btn-sm btn-primary" id="downloadReportBtn">
-          <i class='bx bx-download me-1'></i> Export
-        </button>
-      </div>
+    <div class="finance-navbar">
+        <nav class="d-flex justify-content-between align-items-center  rounded shadow p-2">
+            <div class='h5'>
+                Invoices
+            </div>
+            <div class="d-flex justify-content-between mt-1">
+                <div>
+                    <select class="form-select" id="filterSelect" onchange="filterCashBook()">
+                        <option value="today" {% if filter_option == 'today' %}selected{% endif %}>Today</option>
+                        <option value="this_week" {% if filter_option == 'this_week' %}selected{% endif %}>This Week</option>
+                        <option value="yesterday" {% if filter_option == 'yesterday' %}selected{% endif %}>Yesterday</option>
+                        <option value="this_month" {% if filter_option == 'this_month' %}selected{% endif %}>This Month</option>
+                        <option value="last_month" {% if filter_option == 'last_month' %}selected{% endif %}>Last Month</option>
+                        <option value="this_year" {% if filter_option == 'this_year' %}selected{% endif %}>This Year</option>
+                    </select>
+                </div>
+                <div id="customDateRange" class="d-flex mx-2">
+                    <input type="date" id="startDate" value="{{ start_date }}" class="form-control" placeholder="Start Date">
+                    <input type="date" id="endDate" value="{{ end_date}}" class="form-control mx-2" placeholder="End Date">
+                    <button class="btn btn-outline-dark btn-sm" onclick="applyCustomFilter()">Apply</button>
+                </div>
+                <button class="btn btn-outline-dark btn-sm" onclick="downloadReport()">Download Report</button>
+            </div>
+        </nav>
     </div>
-  </div>
-
-  <!-- Advanced Filters Section -->
-  <div class="card mb-3 filters-container" id="filtersContainer">
-    <div class="card-body">
-      <div class="row">
-        <div class="col-md-12 mb-3">
-          <h5>Active Filters</h5>
-          <div id="activeFilters" class="mt-2">
-            <!-- Active filters will appear here as chips -->
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-3 mb-3">
-          <label class="form-label">Date Range</label>
-          <div class="d-flex">
-            <input type="date" id="startDate" class="form-control form-control-sm me-2">
-            <input type="date" id="endDate" class="form-control form-control-sm">
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <label class="form-label">Status</label>
-          <select id="statusFilter" class="form-select form-select-sm">
-            <option value="">All Statuses</option>
-            <option value="paid">Paid</option>
-            <option value="pending">Pending</option>
-            <option value="onhold">On Hold</option>
-          </select>
-        </div>
-        <div class="col-md-3 mb-3">
-          <label class="form-label">Amount Range</label>
-          <div class="d-flex">
-            <input type="number" id="minAmount" placeholder="Min" class="form-control form-control-sm me-2">
-            <input type="number" id="maxAmount" placeholder="Max" class="form-control form-control-sm">
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <label class="form-label">Products</label>
-          <select id="productsFilter" class="form-select form-select-sm">
-            <option value="">All Products</option>
-            <!-- Products will be loaded dynamically -->
-          </select>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-3 mb-3">
-          <label class="form-label">Due Amounts</label>
-          <select id="dueFilter" class="form-select form-select-sm">
-            <option value="">All</option>
-            <option value="with_due">With Due Amount</option>
-            <option value="no_due">No Due Amount</option>
-          </select>
-        </div>
-        <div class="col-md-3 mb-3">
-          <label class="form-label">Returns</label>
-          <select id="returnsFilter" class="form-select form-select-sm">
-            <option value="">All</option>
-            <option value="with_returns">With Returns</option>
-            <option value="no_returns">No Returns</option>
-          </select>
-        </div>
-        <div class="col-md-3 mb-3">
-          <label class="form-label">Customer</label>
-          <select id="customerFilter" class="form-select form-select-sm">
-            <option value="">All Customers</option>
-            <!-- Customers will be loaded dynamically -->
-          </select>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-12 d-flex justify-content-end">
-          <button class="btn btn-sm btn-outline-primary me-2" id="resetFiltersBtn">Reset Filters</button>
-          <button class="btn btn-sm btn-primary" id="applyFiltersBtn">Apply Filters</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Search bar -->
-  <div class="card mb-3">
-    <div class="card-body p-2">
-      <div class="search-container">
-        <i class='bx bx-search search-icon'></i>
-        <input type="text" id="searchInput" placeholder="Search invoices by customer, reference, product, amount...">
-      </div>
-    </div>
-  </div>
-
-  <!-- Invoice Table Container -->
-  <div class="card">
-    <div class="card-body p-0">
-      <div class="table-container">
-        <table class="table" id="invoiceTable">
-          <thead>
-            <tr>
-              <th data-sort="customer"><span>Customer</span> <i class='bx bx-sort-alt-2'></i></th>
-              <th data-sort="invoice"><span>Reference</span> <i class='bx bx-sort-alt-2'></i></th>
-              <th data-sort="date"><span>Date</span> <i class='bx bx-sort-alt-2'></i></th>
-              <th data-sort="products"><span>Products</span> <i class='bx bx-sort-alt-2'></i></th>
-              <th data-sort="status"><span>Status</span> <i class='bx bx-sort-alt-2'></i></th>
-              <th data-sort="amount"><span>Total</span> <i class='bx bx-sort-alt-2'></i></th>
-              <th data-sort="paid"><span>Paid</span> <i class='bx bx-sort-alt-2'></i></th>
-              <th data-sort="due"><span>Due</span> <i class='bx bx-sort-alt-2'></i></th>
-              <th><span>Payment</span></th>
-              <th><span>Actions</span></th>
-            </tr>
-          </thead>
-          <tbody id="invoiceTableBody">
-            <!-- Invoices will be loaded here -->
-          </tbody>
-        </table>
-        
-        <!-- Loader for infinite scroll -->
-        <div class="loader" id="scrollLoader">
-          <div class="dot-pulse"></div>
+        <!-- {% include 'components/loader.html' %} -->
+        <div class='table-responsive' style="height: 100vh;">
+            <div class="row mt-2 mb-3 sticky-top-search">
+                <div class="col-md-4 w-100 px-3">
+                    <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search invoices...">
+                </div>
+            </div>
+            {% for date_heading, invoices in grouped_invoices.items %}
+                <h4 class="mt-3">{{ date_heading }}</h4>
+                <table class="sticky-header table-stripped" id="invoiceTable">
+                    <thead>
+                        <tr>
+                            <th>Customer Name &#9650;</th>
+                            <th>Reference &#9650;</th>
+                            <th>Date &#9650;</th>
+                            <th>Products</th>
+                            <th>Status &#9650;</th>
+                            <th>Grand Total &#9650;</th>
+                            <th>Paid &#9650;</th>
+                            <th>Due &#9650;</th>
+                            <th>Payment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                        <tr>
+                            <td><small><a href="{% url 'finance:customer' invoice.customer.id %}">{{ invoice.customer.name }}</a></small></td>
+                            <td><small>#{{ invoice.invoice_number }}</small></td>
+                            <td><small>{{ invoice.issue_date|date:"d/m/y H:i" }}</small></td>
+                            <td><small>{{ invoice.products_purchased }}</small></td>
+                            <td>
+                                <span class="status {% if invoice.payment_status == 'Paid' %}completed{% else %}pending{% endif %}">
+                                    {% if invoice.hold_status %}
+                                            Onhold
+                                        {% else %}
+                                        {% if invoice.payment_status == 'Paid' %}
+                                            Completed
+                                        {% else %}
+                                            Pending
+                                        {% endif %}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td><small>{{ invoice.currency.symbol }} {{ invoice.amount }}</small></td>
+                            <td id="tr" data-invoiceID="{{ invoice.id }}"><small>{{ invoice.currency.symbol }} {{ invoice.amount_paid }}</small></td>
+                            <td><small>{{ invoice.currency.symbol }} {{ invoice.amount_due }}</small></td>
+                            <td>
+                                <button class="payment-btn">
+                                    {% if invoice.amount_due > 0 %}
+                                    Due
+                                    {% else %}
+                                    Paid
+                                    {% endif %}
+                                </button>
+                            </td>
+                            <td>
+                                <span>
+                                    <a href="{% url 'finance:invoice_preview' invoice.id %}" class='text-dark'>
+                                        <i class='bx bx-show'></i>
+                                    </a>
+                                </span>
+                                <span class='px-2'>
+                                    {% if invoice.amount_due > 0 %}
+                                    <span style='cursor:pointer;' data-id="{{ invoice.id }}" data-amount="{{ invoice.amount_due }}" id='id_update' class="text-dark">
+                                        <i class='bx bx-right-arrow bg-success'></i>
+                                    </span>
+                                    {% else %}
+                                    <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Invoice fully paid'>
+                                        <i class='bx bx-bx-right-arrow bg-danger'></i>
+                                    </span>
+                                    {% endif %}
+                                </span>
+                                <span>
+                                    {% if request.user.role == 'admin' %}
+                                    <span id='id_delete' data-id="{{ invoice.id }}" class="text-dark hint--bottom" aria-label='sales return'>
+                                        <img width="18px" src="{% static 'assets/return.png' %}" />
+                                    </span>
+                                    {% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endfor %}
         </div>
         
-        <!-- Empty state -->
-        <div class="empty-state" id="emptyState" style="display: none;">
-          <i class='bx bx-receipt empty-state-icon'></i>
-          <h5>No invoices found</h5>
-          <p>Try adjusting your filters or search terms</p>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Modals -->
-  <!-- Payment Modal -->
-  <div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Update Payment</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">Invoice #<span id="paymentInvoiceNumber"></span></label>
-            <p>Amount Due: <span id="paymentAmountDue"></span></p>
-          </div>
-          <div class="mb-3">
-            <label for="paymentAmount" class="form-label">Payment Amount</label>
-            <input type="number" class="form-control" id="paymentAmount" step="0.01">
-            <div class="invalid-feedback" id="paymentAmountError"></div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Payment Method</label>
-            <div class="d-flex">
-              <button class="btn btn-outline-primary me-2 payment-method-btn" data-method="cash">Cash</button>
-              <button class="btn btn-outline-primary me-2 payment-method-btn" data-method="bank">Bank</button>
-              <button class="btn btn-outline-primary payment-method-btn" data-method="ecocash">Mobile Money</button>
+        <div class="modal fade" id="appModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Sending invoice to WhatsApp...</p>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" id="confirmPaymentBtn">Process Payment</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Receipt Modal -->
-  <div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Payment Receipt</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body" id="receiptContent">
-          {% include 'invoices/update_receipt.html' %}
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" id="printReceiptBtn">Print Receipt</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Returns Modal -->
-  <div class="modal fade" id="returnsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Sales Return</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="d-flex justify-content-between mb-3">
-            <div>
-              <h6>SALE RETURN</h6>
-              <p id="returnCurrentDate">DATE: </p>
+        <div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body" id='payment_content'>
+                        {% include 'invoices/update_invoice.html' %}
+                    </div>
+                </div>
             </div>
-            <div>
-              <h6 id="returnInvoiceNumber"></h6>
-              <p id="returnInvoiceDate">DATE: </p>
-            </div>
-          </div>
-        
-          <table class="table" id="returnsTable">
-            <thead>
-              <tr>
-                <th></th>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th id="returnUnitPrice">Price</th>
-                <th id="returnTotalPrice">Total</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Return items will be loaded here -->
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="3"></td>
-                <td class="fw-bold">Total (with VAT)</td>
-                <td class="fw-bold" id="returnTotal"></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td colspan="3"></td>
-                <td class="fw-bold">Paid</td>
-                <td class="fw-bold" id="returnPaid"></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td colspan="3"></td>
-                <td class="fw-bold">Balance</td>
-                <td class="fw-bold" id="returnBalance"></td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
-          
-          <hr />
-          
-          <h6>Items selected for refund</h6>
-          <table class="table">
-            <tbody id="refundItemsList"></tbody>
-          </table>
-          
-          <hr/>
-          
-          <h5>Total Refund: <span id="refundTotal"></span></h5>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" id="processRefundBtn">Process Refund</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Loading Screen -->
-  <div class="loading-screen" id="loadingScreen" style="display: none;">
-    <div class="loading-spinner"></div>
-  </div>
+        <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        {% include 'invoices/update_receipt.html' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="paymentsModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center" id='payment_content'>
+                        {% include 'invoices/invoice_payments.html' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="receiptItems" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center">
+                        <div class="d-flex justify-content-between">
+                            <div class="">
+                                <h5>SALE RETURN</h5>
+                                <p id="id_date">DATE: </p>
+                            </div>
+                            <div>
+                                <h5 id="id_invoice_number"></h5>
+                                <p id="id_invoice_date">DATE: </p>
+                            </div>
+                        </div>
+                        
+                        <table id="returnsTable" class="table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th id="unit_price_header">Price</th>
+                                    <th id="id_total_header">Total</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Invoice items will be inserted here -->
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3"></td>
+                                    <td class="fw-bold">Total (with VAT)</td>
+                                    <td class="fw-bold" id="id_total"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"></td>
+                                    <td class="fw-bold">Paid</td>
+                                    <td class="fw-bold" id="id_paid"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"></td>
+                                    <td class="fw-bold">Balance</td>
+                                    <td class="fw-bold" id="id_balance"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <hr />
+                        <h5>Items selected for refund</h5>
+                        <table>
+                            <tbody id="id_refund_items"></tbody>
+                        </table>
+                        <hr/>
+
+                        <h3>Total Refund: <span class="mx-2" id="id_refund_total"></span></h3>
+                        
+                        <hr/>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body" id='delete_content'>
+                        <h5 class='fw-bold'>Delete Invoice</h5>
+                        <div>
+                            <button class='btn btn-secondary w-100' onclick='deleteInvoice();'>Yes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 </div>
-{% endblock %}
+<script type="text/javascript">
+
+    let invoiceId = '';
+    let invoiceAmountDue = '';
+    let paymentMethod = '';
+    let duePaid = 0;
+
+    const whatsappBtn = document.getElementById('whatsappBtn');
+    const appModal = new bootstrap.Modal(document.getElementById('appModal'));
+
+    const trEl = document.querySelectorAll('#tr')
+    const paymentsModal = new bootstrap.Modal(document.getElementById('paymentsModal'));
+
+    const deleteBtn = document.querySelectorAll('#id_delete')
+
+    const updateBtn = document.querySelectorAll('#id_update')
+    const updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
+
+    const loader = new bootstrap.Modal(document.getElementById('loaderModal'));
+
+    const error = document.querySelector('#id_amount_error');
+    const returnsModal = new bootstrap.Modal(document.getElementById('receiptItems'));
+    const tableEl = document.querySelector('#invoiceTable');
+    const loaderSpin = document.querySelector('#loader');
+
+    const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const searchValue = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#invoiceTable tbody tr');
+        
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            let found = false;
+
+            cells.forEach(cell => {
+                if (cell.textContent.toLowerCase().includes(searchValue)) {
+                    found = true;
+                }
+            });
+
+            if (found) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Column Sorting
+    const headers = document.querySelectorAll("thead th");
+    const tableBody = document.querySelector("tbody");
+    const rows = Array.from(tableBody.querySelectorAll("tr"));
+
+    headers.forEach((header, index) => {
+        header.addEventListener("click", () => {
+            const isAscending = header.classList.toggle("ascending");
+            const direction = isAscending ? 1 : -1;
+            const type = header.innerText.trim();
+            
+            rows.sort((rowA, rowB) => {
+                const cellA = rowA.querySelectorAll("td")[index].innerText;
+                const cellB = rowB.querySelectorAll("td")[index].innerText;
+                
+                if (!isNaN(cellA) && !isNaN(cellB)) {
+                    return direction * (parseFloat(cellA) - parseFloat(cellB));
+                }
+                return direction * cellA.localeCompare(cellB);
+            });
+            
+            rows.forEach(row => tableBody.appendChild(row));
+        });
+    });
+
+    
+    setTimeout(()=>{
+        loaderSpin.classList.add('hidden');
+        loaderSpin.classList.remove('d-flex')
+        // tableEl.classList.remove('hidden')
+    }, 300)
+
+    // payment methods
+    document.querySelectorAll('.pm').forEach(button => {
+        button.addEventListener('click', () => {
+            let name = button.dataset.name;
+            if(['ecocash', 'cash', 'bank'].includes(name)){
+                paymentMethod = button.dataset.name;
+                updatePayment();
+            }        
+        });
+    });
+
+    // update payment
+    function updatePayment(){
+        const amount_paid = parseFloat(document.querySelector('#id_amount_paid').value);
+        let validation = false
+
+        duePaid = amount_paid;
+
+        const data = {
+            amount_paid: amount_paid,
+            payment_method: paymentMethod
+        }
+
+        let customerName = '{{invoice.customer.name}}'
+        error.textContent = `Updating ${customerName}(s) invoice`;
+
+        if (paymentMethod === ''){
+            error.textContent = `* Please choose payment method`;
+        }
+        else if (amount_paid === '' || amount_paid <= 0){
+            error.textContent = `* Amount cannot be zero or negative `;
+        }else if (amount_paid > invoiceAmountDue ){
+            error.textContent = `* Amount cannot be more than amount due ${invoiceAmountDue} `;
+        }
+        else{
+            validation = true
+        }
+
+        if(validation){
+
+            Swal.fire({
+                title: 'Processing Payment',
+                text: 'Please wait...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                }
+            });
+
+            fetch(`/finance/invoice/update/${invoiceId}/`, {
+                method: "POST",
+                headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"), 
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateModal.hide()
+                    displayReceipt(invoiceId)
+                } else {
+                    loaderModal.hide()
+                    error.textContent='*' + data.message
+                }
+            })
+            .catch((error) => {
+            console.error("Error:", error);
+            });
+        }
+    }
+
+    function name(params) {
+        
+    }
+
+    updateBtn.forEach((btn)=>{
+        btn.addEventListener(
+            'click', ()=>{
+                invoiceId= btn.dataset.id
+                invoiceAmountDue = btn.dataset.amount
+                updateModal.show()
+            }    
+        )
+    })
+
+    deleteBtn.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            invoiceId = btn.dataset.id;
+            console.info(invoiceId)
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'You won\'t be able to revert this!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'No, cancel!',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // salesReturns()
+                    deleteInvoice(invoiceId);
+                }
+            });
+        });
+    });
+
+    const salesReturns = () => {
+        fetch(`/finance/invoice/preview/json/${invoiceId}/`, {
+            method: 'GET'
+        })
+            .then(response => response.json())
+            .then(data => {
+                returnsModal.show()
+                displaySales(data);
+                
+            });
+    }
+
+    const displaySales = (data) => {
+        const tableBody = document.querySelector('#returnsTable tbody');
+        tableBody.innerHTML = ''; 
+        let subtotal = 0;
+        console.log(data)
+        data.invoice_items.forEach(item => {
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+            <td>
+                <button class='btn' onclick="removeItem(${item.id})"><i class='bx bx-minus text-danger fs-4'></i></button>
+            </td>
+            <td>${item.item__product__name}</td>
+            <td>${item.quantity}</td>
+            <td>${item.unit_price}</td>
+            <td>${(parseFloat(item.unit_price) * item.quantity).toFixed(2)}</td>
+            <td>
+                <button class='btn' onclick="replaceItem(${item.id})"><i class='bx bx-plus text-success fs-4s'></i></button>
+            </td>
+        `;
+            tableBody.appendChild(row);
+            subtotal += item.price * item.quantity;
+
+            
+        });
+
+        const tax = subtotal * 0.15;
+        const total = subtotal + tax;
+        let refundAmount = parseFloat(0.00)
+        //const amountReturned = calculateAmountReturned(total);
+
+        document.getElementById('id_invoice_number').textContent = data.invoice.invoice_number;
+        document.getElementById('id_invoice_date').innerHTML = '<small class="text-muted">' + 'Date: ' + new Date(data.invoice.issue_date).toLocaleString() + '</small>';
+        document.getElementById('id_total_header').textContent = 'Total' + ' ' + `(${data.invoice.currency_symbol})` || 'Total';
+        document.getElementById('unit_price_header').textContent = 'Price' + ' ' + `(${data.invoice.currency_symbol})` || 'Price';
+        document.getElementById('id_total').textContent = data.invoice.amount || 0.00;
+        document.getElementById('id_paid').textContent = data.invoice.amount_paid || 0.00;
+        document.getElementById('id_balance').textContent = data.invoice.amount_due || 0.00;
+        document.getElementById('id_refund_total').textContent = `(${data.invoice.currency_symbol})` + ' ' + refundAmount || 0.00;
+        
+        //document.getElementById('subtotalAmount').innerText = subtotal.toFixed(2);
+        //document.getElementById('taxAmount').innerText = tax.toFixed(2);
+        //document.getElementById('totalAmount').innerText = total.toFixed(2);
+        //document.getElementById('amountReturned').innerText = amountReturned.toFixed(2);
+    }
+
+    const removeItem = (itemId) => {
+        fetch(`/finance/invoice/remove/${itemId}/`, {
+            method: 'DELETE',
+        })
+            .then(response => {
+                if (response.ok) {
+                    salesReturns();
+                } else {
+                    console.error('Error removing item');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    const replaceItem = (itemId) => {
+        console.log(`Replacing item with ID: ${itemId}`);
+    }
+
+
+    function deleteInvoice() {
+        Swal.fire({
+            title: 'Processing Sales returns',
+            text: 'Please wait...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
+        });
+        fetch(`/finance/invoice/delete/${invoiceId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            if (data.success){
+                Swal.fire({
+                    title: 'Success!',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.reload();
+                });
+            }else{
+                Swal.fire({
+                    title: 'Error',
+                    text: data.message,
+                    icon: 'Error',
+                    confirmButtonText: 'OK'
+                })
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                title: 'Error!',
+                text: error,
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        });
+    }
+
+    trEl.forEach((tr) => {
+        tr.addEventListener('click', () => {
+            fetchInvoiceData(tr.dataset.invoiceid);
+        });
+    });
+
+
+    //whatsappBtn.addEventListener('click', function() {
+    //    appModal.show(); 
+    //    whatsappBtn.disabled = true; 
+
+    //    const invoiceId = this.dataset.id;
+
+    //    fetch(`/finance/send_invoice_whatsapp/${invoiceId}/`, {
+    //        method: 'POST',
+    //        headers: {
+    //            'Content-Type': 'application/json',
+    //            'X-CSRFToken': getCookie('csrftoken')
+    //        }
+    //    })
+    //    .then(response => response.json())
+    //    .then(data => {
+    //        whatsappBtn.disabled = false;
+    //    })
+    //    .catch(error => {
+    //        whatsappBtn.disabled = false; 
+    //        console.error('Error:', error);
+    //    });
+    //});
+
+    async function displayReceipt(invoiceId) {
+    try {
+        const response = await fetch(`/finance/invoice/preview/json/${invoiceId}/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok.');
+        }
+
+        const data = await response.json();
+        const { invoice, invoice_items: invoiceItems, lay_dates:dates} = data;
+        const {
+            invoice_number: invoiceNumber,
+            amount: invoiceTotal,
+            delivery_charge: deliveryCharge,
+            discount_amount: discountAmount,
+            vat: vatAmount,
+            subtotal: subTotal,
+            currency_symbol: currencySymbol,
+            amount_paid: amountPaid,
+            payment_terms: payment_terms,
+            customer_name: customer_name,
+            customer_email: customer_email,
+            customer_cell: customer_cell,
+            customer_address: customer_address,
+        } = invoice;
+
+        console.log(data)
+
+        let amount_due = invoiceTotal - amountPaid;
+        let prvPaid = amountPaid - duePaid;
+        console.log(duePaid)
+
+        document.getElementById('rcp-payment').textContent = paymentMethod;
+        document.getElementById('rcp-pterms').textContent = payment_terms;
+        document.getElementById('rcp-currency').textContent = currencySymbol;
+        document.getElementById('rcp_amount_paid').textContent = currencySymbol + ' ' + duePaid.toFixed(2);
+        document.getElementById('rcp_prv_paid').textContent = currencySymbol + ' ' + prvPaid.toFixed(2);
+        //document.getElementById('available_balance').textContent = currencySymbol + ' ' + (invoiceTotal - amountPaid + prvDue)
+        document.getElementById('total_amount').textContent = currencySymbol + ' ' + invoiceTotal
+        document.querySelector('#invoiceNumber').textContent = invoiceNumber;
+        document.getElementById('rcp_due').textContent = currencySymbol + ' ' + amount_due.toFixed(2);
+        document.getElementById('id_balance').textContent = currencySymbol + ' ' + amount_due.toFixed(2);
+        document.getElementById('f_prv_paid').textContent = currencySymbol + ' ' + amountPaid;
+
+        // set customer details
+        document.getElementById('customerCompany').textContent = customer_name;
+        document.getElementById('customerName').textContent = customer_name;
+        document.getElementById('customerPhone').textContent = customer_cell;
+        document.getElementById('customerEmail').textContent = customer_email;
+        document.getElementById('customerAddress').textContent = customer_address;
+
+
+        const receiptTableBody = document.querySelector('#receipt');
+        receiptTableBody.innerHTML = '';
+
+        // Populate the table with invoice items
+        invoiceItems.forEach(({ quantity, item__product__name, unit_price, item__product__description, total_amount }) => {
+            const newRow = receiptTableBody.insertRow();
+            newRow.insertCell().textContent = `${item__product__name}`
+            newRow.insertCell().textContent = `(${item__product__description})`;
+            newRow.insertCell().textContent = quantity;
+            newRow.insertCell().textContent = `${unit_price}`;
+            newRow.insertCell().textContent = `${quantity * unit_price}`;
+        });;
+
+        // Update total amounts in the footer
+        document.querySelector('#subTotalAmount').textContent = `${currencySymbol} ${subTotal}`;
+        //document.querySelector('#totalAmount').textContent = `${currencySymbol} ${invoiceTotal}`;
+        document.querySelector('#vatAmount').textContent = `${currencySymbol} ${vatAmount}`;
+       //document.querySelector('#rid_paid_amount').textContent = `${currencySymbol} ${amount_paid.toFixed(2)}`;
+        //document.querySelector('#rprevious_due').textContent = `${currencySymbol} ${previousDue.toFixed(2)}`;
+        
+        const laybyDateEl = document.getElementById('rcp_payment_dates')
+        const laybyTerms = document.getElementById('laybyTerms');
+        const installmentTerms = document.getElementById('installmentTerms');
+
+        
+        //modal.classList.add("hidden");
+        //overlay.classList.add("hidden");
+
+        Swal.fire({
+            icon: 'success',
+            title: 'success',
+            text: 'Invoice successfully processed',
+            timer: 2000,
+            showConfirmButton: false
+        }).then(()=>{
+            loaderModal.hide();
+            receiptModal.show();
+        })
+
+    } catch (error) {
+        console.error("Error:", error);
+        loaderModal.hide();
+    }
+}
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock content %}
