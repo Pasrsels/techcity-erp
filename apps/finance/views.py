@@ -120,66 +120,23 @@ def expenses(request):
     cat_form = ExpenseCategoryForm()
 
     if request.method == 'GET':
-        filter_option = request.GET.get('filter', 'today')
-        download = request.GET.get('download')
+        filter_button = request.GET.get('filter_button')
+        filter_option = request.GET.get('filter', 'today')  
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
         
-        now = datetime.datetime.now()
-        end_date = now
+        expenses = Expense.objects.filter(user=request.user).order_by('-date')
         
-        if filter_option == 'today':
-            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        elif filter_option == 'this_week':
-            start_date = now - timedelta(days=now.weekday())
-        elif filter_option == 'yesterday':
-            start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-        elif filter_option == 'this_month':
-            start_date = now.replace(day=1)
-        elif filter_option == 'last_month':
-            start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
-        elif filter_option == 'this_year':
-            start_date = now.replace(month=1, day=1)
-        elif filter_option == 'custom':
-            start_date = request.GET.get('start_date')
-            end_date = request.GET.get('end_date')
-            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-        else:
-            start_date = now - timedelta(days=now.weekday())
-            end_date = now
-            
-        expenses = Expense.objects.filter(issue_date__gte=start_date, issue_date__lte=end_date, branch=request.user.branch).order_by('issue_date')
-        
-        # if user role is sales filter expense by user
+        filtered_expenses = filter_expenses(expenses, filter_option, start_date, end_date)
+
         if request.user.role == 'sale':
             expenses = expenses.filter(user=request.user)
-
-        if download:
-            response = HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = f'attachment; filename="expenses_report_{filter_option}.csv"'
-
-            writer = csv.writer(response)
-            writer.writerow(['Date', 'Description', 'Done By', 'Amount'])
-
-            total_expense = 0  
-            for expense in expenses:
-                total_expense += expense.amount
-
-                writer.writerow([
-                    expense.issue_date,
-                    expense.description,
-                    expense.user.first_name,
-                    expense.amount,
-                ])
-
-            writer.writerow(['Total', '', '', total_expense])
-            
-            return response
         
         return render(request, 'expenses.html', 
             {
                 'form':form,
                 'cat_form':cat_form,
-                'expenses':expenses,
+                'expenses':filter_expenses,
                 'filter_option': filter_option,
             }
         )
@@ -306,7 +263,7 @@ def add_or_edit_expense(request):
                 expense.category = category
                 expense.save()
                 message = 'Expense successfully updated'
-                
+            
                 try:
                     cashbook_expense = Cashbook.objects.get(expense=expense)
                     expense_amount = Decimal(expense.amount)
@@ -360,6 +317,60 @@ def add_expense_category(request):
             return JsonResponse({'success':True}, status=201)
             
     return JsonResponse(list(subcategories), safe=False)
+
+@login_required
+def income(request):
+    """returns income both from the cash sales and income deposited"""
+    pass
+
+def filter_expenses(queryset, filter_option, start_date=None, end_date=None):
+    """
+    Filter expense queryset based on specified time period
+    """
+    today = timezone.localtime().date()
+    
+    if filter_option == 'today':
+        return queryset.filter(date=today)
+    
+    elif filter_option == 'yesterday':
+        yesterday = today - timedelta(days=1)
+        return queryset.filter(date=yesterday)
+    
+    elif filter_option == 'this_week':
+        start_of_week = today - timedelta(days=today.weekday())  
+        end_of_week = start_of_week + timedelta(days=6) 
+        return queryset.filter(date__gte=start_of_week, date__lte=end_of_week)
+    
+    elif filter_option == 'last_week':
+        end_of_last_week = today - timedelta(days=today.weekday() + 1)  
+        start_of_last_week = end_of_last_week - timedelta(days=6)  
+        return queryset.filter(date__gte=start_of_last_week, date__lte=end_of_last_week)
+    
+    elif filter_option == 'this_month':
+        return queryset.filter(date__year=today.year, date__month=today.month)
+    
+    elif filter_option == 'last_month':
+        last_month = today.replace(day=1) - timedelta(days=1)
+        return queryset.filter(date__year=last_month.year, date__month=last_month.month)
+    
+    elif filter_option == 'this_year':
+        return queryset.filter(date__year=today.year)
+    
+    elif filter_option == 'last_year':
+        return queryset.filter(date__year=today.year - 1)
+    
+    elif filter_option == 'custom' and start_date and end_date:
+        try:
+            if isinstance(start_date, str):
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            if isinstance(end_date, str):
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+                
+            return queryset.filter(date__gte=start_date, date__lte=end_date)
+        except (ValueError, TypeError):
+            return queryset
+
+    return queryset
 
 @login_required
 @transaction.atomic

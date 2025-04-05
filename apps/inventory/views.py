@@ -383,13 +383,6 @@ def inventory(request):
 
 @login_required
 def inventory_index(request):
-    from utils.zimra import ZIMRA
-
-    zimra_instance = ZIMRA()
-    logger.info(zimra_instance.get_config())
-    # logger.info(zimra_instance.open_day())
-    logger.info(zimra_instance.submit_file())
-
     form = ServiceForm()
     q = request.GET.get('q', '')  
     category = request.GET.get('category', '')    

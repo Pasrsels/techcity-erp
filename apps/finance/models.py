@@ -758,3 +758,32 @@ class UserTransaction(models.Model):
     debit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     credit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     received_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_transactions', null=True)
+
+
+
+class IncomeCategory(models.Model):
+    name = models.CharField(max_length=100)
+    parent = models.ForeignKey(
+        'self', 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name='incomes'
+    )
+
+    def __str__(self):
+        return f"{self.parent.name} → {self.name}" if self.parent else self.name
+
+
+class Income(models.Model):
+    created_at = models.DateField(auto_now_add=True)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    currency = models.ForeignKey('Currency', on_delete=models.CASCADE)
+    category = models.ForeignKey('Income', on_delete=models.PROTECT)
+    note = models.CharField(max_length=200)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
+    status = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.created_at} - {self.category} - {self.description} - ${self.amount}"
