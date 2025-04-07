@@ -222,7 +222,7 @@ class ExpenseCategory(models.Model):
         return f"{self.parent.name} → {self.name}" if self.parent else self.name
 
 class Expense(models.Model):
-    issue_date = models.DateField(auto_now_add=True)
+    issue_date = models.DateTimeField(auto_now_add=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     payment_method = models.CharField(max_length=15, choices=[
         ('cash', 'cash'),
@@ -776,14 +776,29 @@ class IncomeCategory(models.Model):
 
 
 class Income(models.Model):
-    created_at = models.DateField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     currency = models.ForeignKey('Currency', on_delete=models.CASCADE)
-    category = models.ForeignKey('Income', on_delete=models.PROTECT)
+    category = models.ForeignKey('IncomeCategory', on_delete=models.PROTECT)
     note = models.CharField(max_length=200)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
     status = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.created_at} - {self.category} - {self.description} - ${self.amount}"
+        return f"{self.created_at} - {self.category} - {self.note} - ${self.amount}"
+
+class FinanceLog(models.Model):
+    TRANSACTION_TYPES = [
+        ('income', 'Income'),
+        ('expense', 'Expense'),
+    ]
+
+    type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    category = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    date = models.DateField(auto_now_add=True)
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.get_type_display()} | {self.category} | ${self.amount}"

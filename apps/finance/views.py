@@ -125,9 +125,9 @@ def expenses(request):
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
         
-        expenses = Expense.objects.filter(user=request.user).order_by('-date')
+        expenses = Expense.objects.filter(user=request.user).order_by('-issue_date')
         
-        filtered_expenses = filter_expenses(expenses, filter_option, start_date, end_date)
+        # filtered_expenses = filter_expenses(expenses, filter_option, start_date, end_date)
 
         if request.user.role == 'sale':
             expenses = expenses.filter(user=request.user)
@@ -137,7 +137,7 @@ def expenses(request):
                 'form':form,
                 'cat_form':cat_form,
                 'expenses':filter_expenses,
-                'filter_option': filter_option,
+                'filter_option': expenses,
             }
         )
     if request.method == 'POST':
@@ -415,7 +415,11 @@ def update_expense_status(request):
 @login_required
 def invoice(request):
     form = InvoiceForm()
-    invoices = Invoice.objects.filter(branch=request.user.branch, status=True, cancelled=False).order_by('-invoice_number')
+    invoices = Invoice.objects.filter(branch=request.user.branch, status=True, cancelled=False).select_related(
+        'branch',
+        'currency',
+        'users'
+    ).order_by('-invoice_number')
 
     #cas+
 
@@ -463,8 +467,6 @@ def invoice(request):
     total_paid = invoices.filter(payment_status='Paid').aggregate(Sum('amount'))['amount__sum'] or 0
     total_amount = invoices.aggregate(Sum('amount'))['amount__sum'] or 0
 
-    logger.info(f'Invoices: {invoices.values}')
-
     grouped_invoices = defaultdict(list)
 
     for invoice in invoices:
@@ -477,8 +479,6 @@ def invoice(request):
             grouped_invoices['Yesterday'].append(invoice)
         else:
             grouped_invoices[issue_date.strftime('%A, %d %B %Y')].append(invoice)
-    
-    logger.info(grouped_invoices)
 
     return render(request, 'invoices/invoice.html', {
         'form': form,
@@ -605,7 +605,7 @@ def create_invoice(request):
             items_data = data['items']
             layby_dates = data.get('layby_dates')
 
-            logger.info(f'Invoice data: {data}')
+            # logger.info(f'Invoice data: {data}')
            
             # get currency
             currency = Currency.objects.get(id=invoice_data['currency'])
@@ -3392,26 +3392,62 @@ def vat(request):
     
 @login_required
 def cash_flow(request):
-    cashflows = Cashflow.objects.all().order_by('-date')
-    cashups = CashUp.objects.select_related('branch').filter(status=False)
+    from itertools import chain
+    today = datetime.datetime.today()
 
-    cashFlows_total = cashflows.aggregate(total=Sum('total'))['total'] or 0
-    cash_flow_items = CashUp.objects.filter(status=False).aggregate(total=Sum('expected_cash'))['total'] or 0
+    # Income & Sales
+    sales = Invoice.objects.filter(issue_date__date=today)
+    income = Income.objects.filter(created_at__date=today)
+    logs = FinanceLog.objects.filter(date=today)
 
-    # categories
-    main_income_category = MainIncomeCategory.objects.all().select_related('sub_income_category')
-    main_expense_category = MainExpenseCategory.objects.all().select_related('sub_expense')
-    cash_flow_names = CashFlowName.objects.all()
-    
+    # Expenses
+    expenses = Expense.objects.filter(issue_date__date=today)
+
+    # Normalize income entries
+    normalized_incomes = income.annotate(
+        type_label=models.Value('income', output_field=models.CharField()),
+        category_name=models.F('category__name'),
+        parent_category=models.F('category__parent__name'),
+        datetime=models.F('created_at'),
+        source=models.Value('Income', output_field=models.CharField())
+    ).values('datetime', 'amount', 'type_label', 'category_name', 'parent_category', 'source')
+
+    # Normalize expense entries
+    normalized_expenses = expenses.annotate(
+        type_label=models.Value('expense', output_field=models.CharField()),
+        category_name=models.F('category__name'),
+        parent_category=models.F('category__parent__name'),
+        datetime=models.F('issue_date'),
+        source=models.Value('Expense', output_field=models.CharField())
+    ).values('datetime', 'amount', 'type_label', 'category_name', 'parent_category', 'source')
+
+    # Combine and sort by datetime
+    combined_cashflow = sorted(
+        chain(normalized_incomes, normalized_expenses),
+        key=lambda x: x['datetime']
+    )
+
+    # Totals
+    sales_total = sales.aggregate(total=Sum('amount'))['total'] or 0
+    income_total = income.aggregate(total=Sum('amount'))['total'] or 0
+    expenses_total = expenses.aggregate(total=Sum('amount'))['total'] or 0
+    total_income = sales_total + income_total
+    balance = total_income - expenses_total
+
     context = {
-        'cashflows': cashflows,
-        'cashups': cashups,
-        'cashFlows_total': cashFlows_total,
-        'cash_flow_items': cash_flow_items,
-        'cash_flow_names': cash_flow_names,
-        'income_categories': main_income_category,
-        'expense_categories': main_expense_category,
+        'sales': sales,
+        'sales_total': sales_total,
+        'income': income,
+        'income_total': income_total,
+        'expenses_total': expenses_total,
+        'total_income': total_income,
+        'combined_cashflow': combined_cashflow,  
+        'balance':balance,
+        'logs':logs
+        # 'grouped_expenses': grouped_expenses,
+        # 'grouped_income': grouped_income,
     }
+
     return render(request, 'cashflow.html', context)
 
 @login_required

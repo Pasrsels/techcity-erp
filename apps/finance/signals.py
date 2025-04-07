@@ -12,7 +12,10 @@ from .models import (
     Expense, 
     Invoice, 
     CustomerDeposits,
-    Cashbook
+    Cashbook,
+    FinanceLog, 
+    Income, 
+    IncomeCategory
 )
 
 from django.core.mail import EmailMessage
@@ -55,18 +58,18 @@ logger = logging.getLogger(__name__)
 #         send_email_notification(instance.id)
         
         
-@receiver(post_save, sender=Invoice)
-def invoice_remove_notification(sender, instance, **kwargs):
-    try:
-        notification = FinanceNotifications.objects.get(
-            invoice=instance,
-            status=True,
-            notification_type='Invoice'
-        )
-        notification.status=False
-        notification.save()
-    except FinanceNotifications.DoesNotExist:
-        logger.warning(f"No active FinanceNotification found for Invoice #{instance.id}.")
+# @receiver(post_save, sender=Invoice)
+# def invoice_remove_notification(sender, instance, **kwargs):
+#     try:
+#         notification = FinanceNotifications.objects.get(
+#             invoice=instance,
+#             status=True,
+#             notification_type='Invoice'
+#         )
+#         notification.status=False
+#         notification.save()
+#     except FinanceNotifications.DoesNotExist:
+#         logger.warning(f"No active FinanceNotification found for Invoice #{instance.id}.")
 
 def create_cashbook_entry(instance, debit, credit):
     if instance.cancelled or instance.invoice_return:
@@ -90,9 +93,9 @@ def create_cashbook_entry(instance, debit, credit):
             branch=instance.branch
         )
 
-@receiver(post_save, sender=Invoice)
-def create_invoice_cashbook_entry(sender, instance, **kwargs):
-    create_cashbook_entry(instance, debit=True, credit=False)
+# @receiver(post_save, sender=Invoice)
+# def create_invoice_cashbook_entry(sender, instance, **kwargs):
+#     create_cashbook_entry(instance, debit=True, credit=False)
 
 @receiver(post_save, sender=Expense)
 def create_expense_cashbook_entry(sender, instance, **kwargs):
@@ -124,3 +127,39 @@ def create_expense_cashbook_entry(sender, instance, **kwargs):
 #         branch=instance.to_branch
 #     )
     
+@receiver(post_save, sender=Invoice)
+def handle_invoice_post_save(sender, instance, created, **kwargs):
+    if created:
+        # Create Income
+        category, _ = IncomeCategory.objects.get_or_create(name='sales')
+
+        income = Income.objects.create(
+            amount=instance.amount_paid,
+            currency=instance.currency,
+            category=category,
+            note=instance.products_purchased,
+            user=instance.user,
+            branch=instance.branch,
+            status=False
+        )
+        logger.info(f'Income created: {income}')
+
+        # Create Finance Log
+        FinanceLog.objects.create(
+            type='income',
+            category='sales',
+            amount=instance.amount_paid,
+            description=instance.products_purchased
+        )
+        logger.info(f'Finance log created for invoice: {instance}')
+
+
+@receiver(post_save, sender=Expense)
+def create_finance_log(sender, instance, **kwargs):
+    FinanceLog.objects.create(
+        type='expense',
+        category='expense',
+        amount=instance.amount,    
+        description=instance.description
+    )
+    logger.info(f'Finance log for {instance} created')
