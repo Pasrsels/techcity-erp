@@ -26,6 +26,20 @@
         vertical-align: middle;
         text-align: center;
     } */
+    .spinner {
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #3498db;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
 </style>
 <div class="inventory">
   <div class='add-purchase-order'>
@@ -110,22 +124,28 @@
           <hr>
           <form class='d-flex flex-column mt-2 w-100 mt-2 w-100 px-2' method='post'>
             {% csrf_token %}
-            <div class="mb-1">
+            <div class="mb-1 position-relative">
               <label for="id_id_product" class="form-label requiredField">
                 Product
               </label>
-              <div class="d-flex form-group">
-                <select class="select form-select" id='id_product'>
-                  <option value="">Select Product</option>
-                  {% for product in products %}
-                  <option value={{product.id}}>{{product.name}} [{{ product.quantity }}]</option>
-                  {% endfor %}
-                </select>
+              <div class="d-flex form-group align-items-center">
+                <div style="position: relative; width: 100%;">
+                  <select class="select form-select" id="id_product">
+                    <option value="">Select Product</option>
+                    {% for product in products %}
+                      <option value="{{ product.id }}">{{ product.name }} [{{ product.quantity }}]</option>
+                    {% endfor %}
+                  </select>
+            
+                  <!-- Spinner positioned inside select area -->
+                  <div id="product_loader" class="spinner" style="display: none; position: absolute; top: 50%; right: 10px; transform: translateY(-50%); z-index: 10;"></div>
+                </div>
+            
                 <button type="button" class="btn bx bx-edit border me-2" onclick="editModal()"></button>
                 <button type="button" class="btn bx bx-trash border me-2 m" onclick="deleteProduct()"></button>
                 <button type="button" class="btn bx bx-plus border" id="id_add_supplier"></button>
               </div>
-            </div>
+            </div>            
             <div class="mb-1">
               <label for="id_s" class="form-label requiredField">
                 Supplier
@@ -140,13 +160,18 @@
                 <button type="button" class="btn border bx bx-plus" id="id_add_product"></button>
               </div>
             </div>
-            <div id="div_id_price" class="mb-1">
-              <label for="ufnit_price" class="form-label requiredField">
+            <div id="div_id_price" class="mb-1 position-relative">
+              <label for="unit_price" class="form-label requiredField">
                 Unit price
               </label>
               <input type="text" name="price" step="0.01" class="numberinput form-control" required id="id_p_price">
+              
+              <!-- Spinner inside the input wrapper -->
+              <div id="loader" class="spinner" style="display: none; position: absolute; top: 38px; right: 10px;"></div>
+              
               <p id="price_error" class="fs-6 text-danger"></p>
             </div>
+            
             <div id="supplier_prices" class="mb-1">
               <!-- to be rendered by js -->
             </div>
@@ -863,6 +888,8 @@
       const productId = $(this).val();
       const productName = $(this).find('option:selected').text().split(' [')[0];
 
+      console.log(productId, 'product id');
+
       getProductData(productId)
       getBestSupplierPrices(productId)
 
@@ -871,16 +898,36 @@
 
   // fetch prodcut data
   const getProductData = (productId) => {
+    const unitPriceEl = document.getElementById('id_p_price');
+    const loaderEl = document.getElementById('loader');
+    const errorEl = document.getElementById('price_error');
+  
+    // Reset previous state
+    loaderEl.style.display = 'inline-block';
+    unitPriceEl.disabled = true;
+    errorEl.textContent = '';
+  
     fetch(`/inventory/inventory/?id=${productId}`)
       .then(response => response.json())
       .then(data => {
-        productID = data[0].id;
-        console.info(productID, 'product id');
-        prodData = []
-        prodData.push(data);
+        if (data && data[0]) {
+          unitPriceEl.value = data[0].cost;
+        } else {
+          unitPriceEl.value = '';
+          errorEl.textContent = 'Price not found for this product.';
+        }
       })
-      .catch(error => console.error('Error:', error));
+      .catch(error => {
+        console.error('Error:', error);
+        unitPriceEl.value = '';
+        errorEl.textContent = 'Error fetching price.';
+      })
+      .finally(() => {
+        loaderEl.style.display = 'none';
+        unitPriceEl.disabled = false;
+      });
   }
+  
 
   // get best supplies
   const getBestSupplierPrices = (id) => {
@@ -1270,25 +1317,33 @@
   }
 
   async function fetchProducts() {
+    const productSelect = document.getElementById('id_product');
+    const loader = document.getElementById('product_loader');
+  
+    loader.style.display = 'inline-block';
+    productSelect.disabled = true;
+  
     try {
       const response = await fetch("{% url 'inventory:product' %}");
-
+  
       if (!response.ok) {
         throw new Error('Network response was not ok.');
       }
+  
       const data = await response.json();
-      console.info(data)
       updateProduct(data);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error fetching products:', error);
+    } finally {
+      loader.style.display = 'none';
+      productSelect.disabled = false;
     }
   }
+  
 
   function updateProduct(data, newProductId) {
     const prodElement = document.querySelector('#id_product');
     prodElement.innerHTML = '<option value="">Select Product</option>';
-
-    console.info('product data: ', data)
 
     data.forEach((product) => {
       const option = document.createElement('option');
@@ -1707,10 +1762,6 @@
             </tr>
           `;
   }
-
-  document.getElementById('next_button').addEventListener('click', () => {
-    overideModal.show()
-  })
 
   // cost apportionment
   const showAllTable = (overideType => {

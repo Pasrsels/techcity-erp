@@ -376,10 +376,21 @@ def transfer_details(request, transfer_id):
 @login_required
 def inventory(request):
     product_id = request.GET.get('id', '')
+
     if product_id:
-        return JsonResponse(list(Inventory.objects.\
-            filter(id=product_id, branch=request.user.branch, status=True).values()), safe=False)
-    return JsonResponse({'error':'product doesnt exists'})
+        inventory_items = Inventory.objects.filter(
+            id=product_id,
+            status=True
+        ).filter(
+            Q(branch=request.user.branch) | Q(branch_id=31)
+        ).values()
+
+        if inventory_items:
+            return JsonResponse(list(inventory_items), safe=False)
+        else:
+            return JsonResponse({'error': 'Product not found in allowed branches'}, status=404)
+
+    return JsonResponse({'error': 'Product ID is required'}, status=400)
 
 @login_required
 def inventory_index(request):
@@ -1949,6 +1960,13 @@ def create_purchase_order(request):
         batch_form = BatchForm()
         products = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name')
 
+        admin_branch_id = 31
+        products = Inventory.objects.filter(
+            Q(branch=request.user.branch) | Q(branch_id=admin_branch_id),
+            status=True,
+            disable=False
+        ).order_by('name')
+
         batch_codes = BatchCode.objects.all()
         return render(request, 'create_purchase_order.html',
             {
@@ -3509,13 +3527,18 @@ def product(request):
         
         return JsonResponse({'success':True}, status=200)
 
-            
     if request.method == 'GET':
-        products = Inventory.objects.filter(branch = request.user.branch, status=True, disable=False).values(
+        admin_branch_id = 31  # to be dynamic
+        products = Inventory.objects.filter(
+            Q(branch=request.user.branch) | Q(branch_id=admin_branch_id),
+            status=True,
+            disable=False
+        ).values(
             'id',
             'name',
             'quantity'
-        ).order_by('name')          
+        ).order_by('name')     
+
         return JsonResponse(list(products), safe=False)
     
     return JsonResponse({'success':False, 'message':'Invalid request'}, status=400)

@@ -867,16 +867,16 @@ def create_invoice(request):
                 # for tax purpose Zimra
                 logger.info(invoice_items)
 
-                # try:
-                #     sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
-                #     logger.info(f'sig data: {sig_data} {receipt_data}')
-                # except Exception as e:
-                #     logger.info(e)
-                #     return JsonResponse({'success': False, 'error': str(e)})
+                try:
+                    sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
+                    logger.info(f'sig data: {sig_data} {receipt_data}')
+                except Exception as e:
+                    logger.info(e)
+                    return JsonResponse({'success': False, 'error': str(e)})
 
                 logger.info(f'inventory creation successfully done: {invoice}')
 
-                return JsonResponse({'success':True, 'invoice_id': invoice.id, 'data':[], 'receipt_data':[]})
+                return JsonResponse({'success':True, 'invoice_id': invoice.id, 'data':sig_data, 'receipt_data':receipt_data})
 
         except (KeyError, json.JSONDecodeError, Customer.DoesNotExist, Inventory.DoesNotExist, Exception) as e:
             return JsonResponse({'success': False, 'error': str(e)})
@@ -3452,32 +3452,77 @@ def cash_flow(request):
 
 @login_required
 def cash_up_list(request):
-    cashups = (
-        CashUp.objects
-        .select_related('branch', 'created_by')
-        .filter(status=False)
-        .values(
-            'id',
-            'branch__name',
-            'expected_cash',
-            'created_by__username',
-            'created_at',
-            'received_amount'
+    if request.method == 'GET':
+        cashups = (
+            CashUp.objects.filter(status=False)
+            .select_related('branch', 'created_by')
+            .prefetch_related(
+                'sales',
+                'expenses'
+            ).select_related(
+                'branch',
+                'created_by'
+            ).values(
+                'id',
+                'branch__name',
+                'expected_cash',
+                'created_by__username',
+                'created_at',
+                'received_amount'
+            ).order_by('-created_at')
         )
-        .order_by('-created_at')
-    )
 
-    data = []
-    for cashup in cashups:
-        cashup_dict = dict(cashup)
-        cashup_dict['created_at'] = cashup['created_at'].strftime('%Y-%m-%d %H:%M:%S')
-        data.append(cashup_dict)
+        data = []
+        for cashup in cashups:
+            cashup_dict = dict(cashup)
+            cashup_dict['created_at'] = cashup['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            data.append(cashup_dict)
 
-    return JsonResponse({
-        'success': True,
-        'data': data
-    })
+        return JsonResponse({
+            'success': True,
+            'data': data
+        })
+   
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            cash_up_id = data.get('cash_up_id', '')
 
+            if not cash_up_id:
+                return JsonResponse(
+                    {
+                        'message': 'Cash up ID missing',
+                        'success': False
+                    },
+                    status=400
+                )
+
+            cash_up = CashUp.objects.filter(id=cash_up_id).prefetch_related(
+                'sales',
+                'expenses'
+            ).select_related('branch', 'created_by').first()
+
+            if not cash_up:
+                return JsonResponse({'message': 'Cash up not found', 'success': False}, status=404)
+
+            sales = list(cash_up.sales.values(
+                'id',
+                'invoice__products_purchased',
+                'total_amount',
+                'invoice__branch'
+            ))  
+            expenses = list(cash_up.expenses.values())
+
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'sales': sales,
+                    'expenses': expenses
+                }
+            }, status=200)
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 @login_required
 @transaction.atomic
@@ -3563,6 +3608,76 @@ def cashflow_create(request):
 
         except Exception as e:
             return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
+
+@login_required
+@transaction.atomic
+def record_cashflow(request):
+    try:
+        data = json.loads(request.body)
+        logger.info(data)
+        type = data.get('type', '')
+        id = data.get('id', '')
+        branch = data.get('branch', '')
+        cashup_id = data.get('cashup_id', '')
+
+        logger.info(id)
+        
+        # get branch
+        branch = get_object_or_404(Branch, id=branch)
+
+        if type == 'sale':
+            sale = InvoiceItem.objects.filter(invoice__branch=branch, id=id).first()
+            category = IncomeCategory.objects.filter(name='sales', parent__name='sales').first()
+
+            if not category:
+                new_main_category = IncomeCategory.objects.create(
+                    name='sales',
+                    parent=None
+                )
+
+                new_sub_category = IncomeCategory.objects.create(
+                    name="sales",
+                    parent=new_main_category
+                )
+
+                category = new_sub_category
+        else:
+            # expense = Expense.objects.filter(branch=branch, id=id)
+            pass
+
+        with transaction.atomic():
+
+            Income.objects.create(
+                amount = sale.invoice.amount_paid,
+                currency = sale.invoice.currency,
+                note = sale.invoice.products_purchased,
+                branch = request.user.branch,
+                status = False,
+                sale = sale,
+                user=request.user,
+                category = category
+            )
+
+            cash_up = CashUp.objects.get(id=cashup_id)
+            
+            sales = cash_up.sales.all()  
+            logger.info(sales)
+            sale = sales.filter(id=id).first()
+            sale.cash_up_status = True
+            sale.save() 
+
+            logger.info(sale)
+
+            return JsonResponse(
+                {
+                    'success':True, 
+                    'message':'Sale recorded succesfully', 
+                    'id':id,
+                    'cash_up_status':True
+                }, status=200)
+    except Exception as e:
+        logger.info(e)
+        return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
 
 @login_required
 @transaction.atomic

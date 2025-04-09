@@ -322,6 +322,7 @@ class InvoiceItem(models.Model):
     vat_rate = models.ForeignKey(VATRate, on_delete=models.PROTECT)
     vat_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0, editable=False)  
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    cash_up_status = models.BooleanField(default=False)
     
     @property
     def subtotal(self):
@@ -741,6 +742,7 @@ class CashUp(models.Model):
     class Meta:
         verbose_name_plural = "Cash Ups"
 
+
 class UserAccount(models.Model):
     user = models.ForeignKey(User, related_name='accounts', on_delete=models.CASCADE)
     account_type = models.CharField(max_length=50)
@@ -758,8 +760,6 @@ class UserTransaction(models.Model):
     debit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     credit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     received_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_transactions', null=True)
-
-
 
 class IncomeCategory(models.Model):
     name = models.CharField(max_length=100)
@@ -784,6 +784,9 @@ class Income(models.Model):
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
     status = models.BooleanField(default=False)
+    sale = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE, null=True)
+    expenses = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True)
+    
 
     def __str__(self):
         return f"{self.created_at} - {self.category} - {self.note} - ${self.amount}"

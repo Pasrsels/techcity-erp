@@ -118,6 +118,7 @@ urlpatterns = [
     path('cash_up_list/', cash_up_list, name='cash_up_list'),
     path('record_transaction/', record_cashflow_transaction, name='record_transaction'),
     path('cash-flow/categories/', get_cashflow_categories, name='cashflow_categories'),
+    path('get_cash_up_details/', cash_up_list, name='get_cash_up_details'),
 
     # user accounts
     path('user_accounts/', user_accounts, name='user_accounts'),
@@ -138,6 +139,7 @@ urlpatterns = [
     path('submit_z_report/', submit_z_report, name='get_status'),
     path('get_signature/', get_signature_data, name='get_signature'),
     path('submit_invoice_data/', submit_invoice_data_zimra, name='submit_invoice'),
+    path('record_cashflow/', record_cashflow, name='record_cashflow'),
 
     ########################################################################################################################
     # API end points
