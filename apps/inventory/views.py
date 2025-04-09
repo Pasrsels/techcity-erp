@@ -2050,10 +2050,44 @@ def create_purchase_order(request):
                         return JsonResponse({'success': False, 'message': 'Missing fields in item data'}, status=400)
 
                     try:
+                        # Try to get the product in the user's branch
                         product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+
                     except Inventory.DoesNotExist:
-                        transaction.set_rollback(True)
-                        return JsonResponse({'success': False, 'message': f'Product with Name {product_name} not found'}, status=404)
+                        try:
+                            # Try to get the product from branch 31
+                            from_other_branch = Inventory.objects.get(id=product_id, branch__id=31)
+
+                            # Clone the product into the user's branch
+                            cloned_product = Inventory.objects.create(
+                                branch=request.user.branch,
+                                name=from_other_branch.name,
+                                cost=from_other_branch.cost,
+                                price=from_other_branch.price,
+                                dealer_price=from_other_branch.dealer_price,
+                                quantity=0, 
+                                status=from_other_branch.status,
+                                stock_level_threshold=from_other_branch.stock_level_threshold,
+                                reorder=from_other_branch.reorder,
+                                alert_notification=from_other_branch.alert_notification,
+                                batch=from_other_branch.batch,
+                                category=from_other_branch.category,
+                                tax_type=from_other_branch.tax_type,
+                                description=from_other_branch.description,
+                                end_of_day=from_other_branch.end_of_day,
+                                service=from_other_branch.service,
+                                image=from_other_branch.image,
+                                disable=from_other_branch.disable,
+                            )
+
+                            cloned_product.suppliers.set(from_other_branch.suppliers.all())
+
+                            product = cloned_product
+
+                        except Inventory.DoesNotExist:
+                            transaction.set_rollback(True)
+                            return Response({'message': f'Product with ID {product_id} not found in user branch or branch 31.'}, status=status.HTTP_404_NOT_FOUND)
+
 
                     supplier = Supplier.objects.get(id=supplier_id)
 
@@ -5325,10 +5359,44 @@ class PurchaseOrderListandCreate(views.APIView):
                         return Response({'message': f'Missing fields in item data:{[product_name, quantity, unit_cost, product_id]}'}, status.HTTP_400_BAD_REQUEST)
 
                     try:
+                        # Try to get the product in the user's branch
                         product = Inventory.objects.get(id=product_id, branch=request.user.branch)
+
                     except Inventory.DoesNotExist:
-                        transaction.set_rollback(True)
-                        return Response({'message': f'Product with Name {product_name} not found'}, status.HTTP_404_NOT_FOUND)
+                        try:
+                            # Try to get the product from branch 31
+                            from_other_branch = Inventory.objects.get(id=product_id, branch__id=31)
+
+                            # Clone the product into the user's branch
+                            cloned_product = Inventory.objects.create(
+                                branch=request.user.branch,
+                                name=from_other_branch.name,
+                                cost=from_other_branch.cost,
+                                price=from_other_branch.price,
+                                dealer_price=from_other_branch.dealer_price,
+                                quantity=0, 
+                                status=from_other_branch.status,
+                                stock_level_threshold=from_other_branch.stock_level_threshold,
+                                reorder=from_other_branch.reorder,
+                                alert_notification=from_other_branch.alert_notification,
+                                batch=from_other_branch.batch,
+                                category=from_other_branch.category,
+                                tax_type=from_other_branch.tax_type,
+                                description=from_other_branch.description,
+                                end_of_day=from_other_branch.end_of_day,
+                                service=from_other_branch.service,
+                                image=from_other_branch.image,
+                                disable=from_other_branch.disable,
+                            )
+
+                            cloned_product.suppliers.set(from_other_branch.suppliers.all())
+
+                            product = cloned_product
+
+                        except Inventory.DoesNotExist:
+                            transaction.set_rollback(True)
+                            return Response({'message': f'Product with ID {product_id} not found in user branch or branch 31.'}, status=status.HTTP_404_NOT_FOUND)
+
 
                     supplier = Supplier.objects.get(id=supplier_id)
 
