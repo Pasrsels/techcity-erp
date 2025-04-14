@@ -2,6 +2,9 @@
 {% load static %}
 {% block title %} Finance Overview {% endblock title %}
 {% block content %}
+
+
+
 <div class="finance-dashboard">
     <div class="container-fluid p-0">
       <div class="row g-0">
@@ -26,7 +29,11 @@
   
             <!-- Overview Cards -->
             <div class="card border-0 shadow-sm mb-3">
+              
               <div class="card-body">
+                <div class="loader d-none" id="pl_loader">
+                  {% include 'loader.html' %}
+                </div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h6 class="text-muted fw-normal mb-0">Income</h6>
                   <i class="bi bi-graph-up-arrow text-success"></i>
@@ -36,7 +43,11 @@
             </div>
   
             <div class="card border-0 shadow-sm mb-3">
+              
               <div class="card-body">
+                <div class="loader d-none" id="pl_loader">
+                  {% include 'loader.html' %}
+                </div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h6 class="text-muted fw-normal mb-0">Total Expenses</h6>
                   <i class="bi bi-graph-down-arrow text-danger"></i>
@@ -46,8 +57,13 @@
             </div>
   
             <!-- P&L Overview Card -->
-            <div class="card border-0 shadow-sm mb-3">
+            
+             <div class="card border-0 shadow-sm mb-3">
+              <div class="loader d-none" id="pl_loader">
+                {% include 'loader.html' %}
+              </div>
               <div class="card-body">
+                
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h6 class="text-muted fw-normal mb-0">P&L Overview</h6>
                   <i class="bi bi-pie-chart-fill text-primary"></i>
@@ -55,6 +71,7 @@
                 <h3 id="pl_overview_total" class="fw-bold mb-3">$0.00</h3>
                 
                 <div class="table-responsive">
+                  
                   <table class="table table-sm">
                     <tbody>
                       <tr>
@@ -70,7 +87,7 @@
                         <td class="text-end fw-medium" id="id_gp_metrix_amount">$0.00</td>
                       </tr>
                       <tr>
-                        <td class="text-muted border-0">Expenses</td>
+                     <td class="text-muted border-0">Expenses</td>
                         <td class="text-end fw-medium border-0" id="id_expenses_metrix_amount">$0.00</td>
                       </tr>
                       <tr class="border-top border-bottom">
@@ -85,7 +102,8 @@
                   </table>
                 </div>
               </div>
-            </div>
+            
+          </div>
           </div>
         </aside>
   
@@ -387,7 +405,15 @@
       }
     }
   </style>
-  
+  <script>
+    // Simulate data loading delay
+    document.addEventListener("DOMContentLoaded", function () {
+      setTimeout(() => {
+        document.getElementById("loader-container").style.display = "none";
+        document.getElementById("pl-card").style.display = "block";
+      }, 1500); // Change delay as needed
+    });
+  </script>
   <script>
     // Toggle sidebar on mobile
     function toggleSidebar() {
@@ -540,38 +566,50 @@ document.getElementById('timeFrameForm').addEventListener('submit', function (ev
 });
 
 function fetchData(filter) {
-    fetch(`/finance/income_json/?filter=${filter}`)
-        .then(response => response.json())
-        .then(data => {
-            const sales = data.sales_total
-            document.getElementById('id_income').textContent = `$${sales}`;
-        });
+  // Show loader
+  document.getElementById('pl_loader').classList.remove('d-none');
 
-    fetch(`/finance/expense_json/?filter=${filter}`)
-        .then(response => response.json())
-        .then(data => {
-            const expenses = data.expense_total;
-            document.getElementById('id_expense').textContent = `$${expenses}`;
-        });
+  // Fetch all three endpoints
+  const salesFetch = fetch(`/finance/income_json/?filter=${filter}`)
+      .then(response => response.json())
+      .then(data => {
+          const sales = data.sales_total;
+          document.getElementById('id_income').textContent = `$${sales}`;
+      });
 
-    fetch(`/finance/pl_overview/?filter=${filter}`)
-        .then(response => response.json())
-        .then(data => {
-            const net_income = data.current_net_income;
-            document.getElementById('net_income_amount').textContent = `$${net_income}`;
-            document.getElementById('id_cogs').textContent = `$${data.cogs_total}`
-            document.getElementById('id_gp_metrix_amount').textContent = `$${data.current_gross_profit}`
-            document.getElementById('id_gpm_metrix').textContent = `${data.current_gross_profit_margin}%`
-            document.getElementById('id_expenses_metrix_amount').textContent = `$${data.current_expenses}`
-            document.getElementById('id_net_metrix_amount').textContent = `$${data.current_net_profit}`
-            document.getElementById('pl_overview_total').textContent = `$${data.current_net_profit}`
+  const expensesFetch = fetch(`/finance/expense_json/?filter=${filter}`)
+      .then(response => response.json())
+      .then(data => {
+          const expenses = data.expense_total;
+          document.getElementById('id_expense').textContent = `$${expenses}`;
+      });
 
-            if (data.current_net_profit < 0) {
-                document.getElementById('pl_overview_total').classList.add('text-danger')
-                console.log(data.current_net_profit)
-            }
-        });
+  const overviewFetch = fetch(`/finance/pl_overview/?filter=${filter}`)
+      .then(response => response.json())
+      .then(data => {
+          const net_income = data.current_net_income;
+          document.getElementById('net_income_amount').textContent = `$${net_income}`;
+          document.getElementById('id_cogs').textContent = `$${data.cogs_total}`;
+          document.getElementById('id_gp_metrix_amount').textContent = `$${data.current_gross_profit}`;
+          document.getElementById('id_gpm_metrix').textContent = `${data.current_gross_profit_margin}%`;
+          document.getElementById('id_expenses_metrix_amount').textContent = `$${data.current_expenses}`;
+          document.getElementById('id_net_metrix_amount').textContent = `$${data.current_net_profit}`;
+          document.getElementById('pl_overview_total').textContent = `$${data.current_net_profit}`;
+
+          if (data.current_net_profit < 0) {
+              document.getElementById('pl_overview_total').classList.add('text-danger');
+          } else {
+              document.getElementById('pl_overview_total').classList.remove('text-danger');
+          }
+      });
+
+  // Wait for all fetches to finish, then hide the loader
+  Promise.all([salesFetch, expensesFetch, overviewFetch])
+      .finally(() => {
+          document.getElementById('pl_loader').classList.add('d-none');
+      });
 }
+
 fetchData('today');
 document.addEventListener('DOMContentLoaded', function () {
 

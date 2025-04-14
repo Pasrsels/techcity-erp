@@ -1,0 +1,51 @@
+{% load static%}
+{% load crispy_forms_tags %}
+{% block content %}
+<style>
+    
+.navbar { 
+    position: top;
+    top:0;
+    margin-left: 200px;
+    background-color: white;
+     padding: 10px 20px; 
+     border-radius: 10px; 
+     width: 90%; 
+     /* Adjust the width as needed */
+      max-width: 2000px;
+       /* Prevent it from getting too large */
+     } .navbar ul { 
+        list-style: none; 
+        padding: 0; 
+        margin: 0; 
+        display: flex; 
+        justify-content: space-around;
+     } 
+     .navbar ul li {
+         display: inline;
+         } 
+         .navbar ul li a { 
+            text-decoration: none; 
+            color: white; 
+            padding: 10px 15px;
+             display: inline-block; 
+            } 
+            .navbar ul li a:hover { 
+                background-color: white; 
+                border-radius: 5px; 
+            }
+
+
+
+</style>
+    <nav class="navbar">
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Services</a></li>
+            <li><a href="#">Contact</a></li>
+        </ul>
+    </nav>
+
+
+{% endblock content %}
