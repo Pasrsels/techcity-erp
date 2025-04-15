@@ -3389,6 +3389,194 @@ def vat(request):
         except Exception as e:
             return JsonResponse({'success':False, 'message':f'{e}'}, status = 400)
         return JsonResponse({'success':False, 'message':'VAT successfully paid'}, status = 200)
+
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum, Avg, F, Value, CharField
+import datetime
+from itertools import chain
+
+@login_required
+def cash_flow(request):
+    """
+    View to display a comprehensive financial overview including sales, income, and expenses.
+    """
+    today = datetime.datetime.today()
+    
+    # Get filter parameters
+    filter_type = request.GET.get('filter_type', 'today')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    
+    # Set date range based on filter type
+    if filter_type == 'today':
+        start_date = today.strftime('%Y-%m-%d')
+        end_date = today.strftime('%Y-%m-%d')
+    elif filter_type == 'weekly':
+        # Start from Monday of current week
+        start_date = (today - datetime.timedelta(days=today.weekday())).strftime('%Y-%m-%d')
+        end_date = today.strftime('%Y-%m-%d')
+    elif filter_type == 'monthly':
+        # Start from 1st of current month
+        start_date = today.replace(day=1).strftime('%Y-%m-%d')
+        end_date = today.strftime('%Y-%m-%d')
+    elif filter_type == 'yearly':
+        # Start from January 1st of current year
+        start_date = today.replace(month=1, day=1).strftime('%Y-%m-%d')
+        end_date = today.strftime('%Y-%m-%d')
+    elif filter_type == 'custom':
+        # Use the provided custom date range
+        if not start_date:
+            start_date = today.strftime('%Y-%m-%d')
+        if not end_date:
+            end_date = today.strftime('%Y-%m-%d')
+    
+    # Convert string dates to datetime objects
+    start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+    end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+    # Add a day to end_date to include the entire day
+    end_date_query = end_date_obj + datetime.timedelta(days=1)
+    
+    # Query for invoice items in the date range
+    invoice_items = InvoiceItem.objects.filter(
+        invoice__issue_date__date__gte=start_date_obj,
+        invoice__issue_date__date__lt=end_date_query
+    )
+    
+    # Query for other income and expenses
+    income = Income.objects.filter(
+        created_at__date__gte=start_date_obj,
+        created_at__date__lt=end_date_query
+    )
+    
+    expenses = Expense.objects.filter(
+        issue_date__date__gte=start_date_obj,
+        issue_date__date__lt=end_date_query
+    )
+    
+    logs = FinanceLog.objects.filter(
+        date__gte=start_date_obj.date(),
+        date__lt=end_date_query.date()
+    )
+    
+    # Normalize invoice items for timeline
+    normalized_sales = invoice_items.annotate(
+        type_label=Value('sale', output_field=CharField()),
+        category_name=F('item__description'),  # Use product description as category
+        parent_category=Value('Sales', output_field=CharField()),
+        datetime=F('invoice__issue_date'),
+        source=Value('Invoice', output_field=CharField()),
+        amount=F('total_amount')  # Make sure to use the right field for amount
+    ).values('datetime', 'amount', 'type_label', 'category_name', 'parent_category', 'source')
+    
+    # Normalize income entries
+    normalized_incomes = income.annotate(
+        type_label=Value('income', output_field=CharField()),
+        category_name=F('category__name'),
+        parent_category=F('category__parent__name'),
+        datetime=F('created_at'),
+        source=Value('Income', output_field=CharField())
+    ).values('datetime', 'amount', 'type_label', 'category_name', 'parent_category', 'source')
+    
+    # Normalize expense entries
+    normalized_expenses = expenses.annotate(
+        type_label=Value('expense', output_field=CharField()),
+        category_name=F('category__name'),
+        parent_category=F('category__parent__name'),
+        datetime=F('issue_date'),
+        source=Value('Expense', output_field=CharField())
+    ).values('datetime', 'amount', 'type_label', 'category_name', 'parent_category', 'source')
+    
+    # Combine and sort by datetime (chronological timeline of all financial activity)
+    combined_cashflow = sorted(
+        chain(normalized_sales, normalized_incomes, normalized_expenses),
+        key=lambda x: x['datetime']
+    )
+    
+    # Aggregate by product for sales summary
+    product_sales = invoice_items.values(
+        'item__id', 
+        'item__name',
+        'item__description'
+    ).annotate(
+        total_quantity=Sum('quantity'),
+        total_revenue=Sum('total_amount'),
+        average_price=Avg('unit_price'),
+        total_vat=Sum('vat_amount')
+    ).order_by('-total_revenue')
+    
+    # Calculate totals
+    sales_total = invoice_items.aggregate(total=Sum('total_amount'))['total'] or 0
+    income_total = income.aggregate(total=Sum('amount'))['total'] or 0
+    expenses_total = expenses.aggregate(total=Sum('amount'))['total'] or 0
+    total_income = sales_total + income_total
+    balance = total_income - expenses_total
+    
+    # Group expenses by category for summary
+    expenses_by_category = expenses.values(
+        'category__name'
+    ).annotate(
+        total=Sum('amount')
+    ).order_by('-total')
+    
+    # Group income by category for summary
+    income_by_category = income.values(
+        'category__name'
+    ).annotate(
+        total=Sum('amount')
+    ).order_by('-total')
+
+
+     # Add percentage to each expense category
+    for category in expenses_by_category:
+        if expenses_total > 0:
+            category['percentage'] = (category['total'] / expenses_total) * 100
+        else:
+            category['percentage'] = 0
+    
+    # Group income by category for summary
+    income_by_category = income.values(
+        'category__name'
+    ).annotate(
+        total=Sum('amount')
+    ).order_by('-total')
+    
+    # Add percentage to each income category
+    for category in income_by_category:
+        if income_total > 0:
+            category['percentage'] = (category['total'] / income_total) * 100
+        else:
+            category['percentage'] = 0
+            
+    
+    context = {
+        # Time filter data
+        'start_date': start_date,
+        'end_date': end_date,
+        'filter_type': filter_type,
+        
+        # Raw data
+        'sales': invoice_items,
+        'income': income,
+        'expenses': expenses,
+        'logs': logs,
+        
+        # Summaries
+        'product_sales': product_sales,
+        'expenses_by_category': expenses_by_category,
+        'income_by_category': income_by_category,
+        'combined_cashflow': combined_cashflow,
+        
+        # Totals
+        'sales_total': sales_total,
+        'income_total': income_total,
+        'expenses_total': expenses_total,
+        'total_income': total_income,
+        'balance': balance,
+    }
+    
+    return render(request, 'cashflow.html', context)
     
 # @login_required
 # def cash_flow(request):
@@ -3449,83 +3637,6 @@ def vat(request):
 #     }
 
 #     return render(request, 'cashflow.html', context)
-
-@login_required
-def cash_flow(request):
-    from django.db.models import Sum, Avg
-    """
-    View to display aggregated sales data per product with time period filtering.
-    """
-    today = datetime.datetime.today()
-    
-    # Get filter parameters
-    filter_type = request.GET.get('filter_type', 'today')
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    
-    # Set date range based on filter type
-    if filter_type == 'today':
-        start_date = today.strftime('%Y-%m-%d')
-        end_date = today.strftime('%Y-%m-%d')
-    elif filter_type == 'weekly':
-        # Start from Monday of current week
-        start_date = (today - datetime.timedelta(days=today.weekday())).strftime('%Y-%m-%d')
-        end_date = today.strftime('%Y-%m-%d')
-    elif filter_type == 'monthly':
-        # Start from 1st of current month
-        start_date = today.replace(day=1).strftime('%Y-%m-%d')
-        end_date = today.strftime('%Y-%m-%d')
-    elif filter_type == 'yearly':
-        # Start from January 1st of current year
-        start_date = today.replace(month=1, day=1).strftime('%Y-%m-%d')
-        end_date = today.strftime('%Y-%m-%d')
-    elif filter_type == 'custom':
-        # Use the provided custom date range
-        if not start_date:
-            start_date = today.strftime('%Y-%m-%d')
-        if not end_date:
-            end_date = today.strftime('%Y-%m-%d')
-    
-    # Convert string dates to datetime objects
-    start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-    end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-    # Add a day to end_date to include the entire day
-    end_date_query = end_date_obj + datetime.timedelta(days=1)
-    
-    # Query for invoice items in the date range
-    items = InvoiceItem.objects.filter(
-        invoice__issue_date__date__gte=start_date_obj,
-        invoice__issue_date__date__lt=end_date_query
-    )
-    
-    # Aggregate by product
-    product_sales = items.values(
-        'item__id', 
-        'item__description',
-        'item__name'
-    ).annotate(
-        total_quantity=Sum('quantity'),
-        total_revenue=Sum('amount_paid'),
-        average_price=Avg('unit_price'),
-        total_vat=Sum('vat_amount')
-    ).order_by('-total_revenue')
-    
-    # Calculate overall totals
-    overall_totals = {
-        'quantity': items.aggregate(total=Sum('quantity'))['total'] or 0,
-        'revenue': items.aggregate(total=Sum('total_amount'))['total'] or 0,
-        'vat': items.aggregate(total=Sum('vat_amount'))['total'] or 0
-    }
-    
-    context = {
-        'product_sales': product_sales,
-        'overall_totals': overall_totals,
-        'start_date': start_date,
-        'end_date': end_date,
-        'filter_type': filter_type,
-    }
-    
-    return render(request, 'cashflow.html', context)
 
 @login_required
 def cash_up_list(request):

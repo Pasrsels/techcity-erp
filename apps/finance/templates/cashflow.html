@@ -174,7 +174,7 @@
         </div>
 
          <!-- Stats Cards -->
-         <div class="row mb-1">
+         {% comment %} <div class="row mb-1">
             <div class="col-md-3">
                 <div class="stats-card">
                     <h6 class="text-muted">Total Income</h6>
@@ -199,75 +199,113 @@
                     <h3>$<span id="pendingReceivables">0.00</span></h3>
                 </div>
             </div>
-        </div>
+        </div> {% endcomment %}
 
-        <div class="row mt-1">
-
-            <div id="loader" class="text-center my-4" style="display: none;">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Loading...</span>
+         <!-- Financial Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Sales</h5>
+                    <h2 class="card-text">{{ sales_total|floatformat:2 }}</h2>
                 </div>
             </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Other Income</h5>
+                    <h2 class="card-text">{{ income_total|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Expenses</h5>
+                    <h2 class="card-text">{{ expenses_total|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card {% if balance >= 0 %}bg-info{% else %}bg-warning{% endif %} text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Net Balance</h5>
+                    <h2 class="card-text">{{ balance|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            {% comment %} <div class="table-responsive">
-                <div id="defaultTable">
-                    <h5>Transactions Summary</h5>
-                    <table class="table table-hover mb-0 table-borderless mt-1">
-                    <!-- <thead class="table-light">
+    <!-- Main content area with tabs -->
+    <ul class="nav nav-tabs" id="financialTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab" aria-controls="timeline" aria-selected="true">Timeline</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab" aria-controls="products" aria-selected="false">Product Sales</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button" role="tab" aria-controls="categories" aria-selected="false">Categories</button>
+        </li>
+    </ul>
+    
+    <div class="tab-content p-3 border border-top-0 mb-4" id="financialTabsContent">
+        <!-- Timeline Tab -->
+        <div class="tab-pane fade show active" id="timeline" role="tabpanel" aria-labelledby="timeline-tab">
+            <h4>Chronological Activity</h4>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
                         <tr>
-                        <th>Details</th>
-                        <th>Amount</th>
+                            <th>Date/Time</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Source</th>
+                            <th class="text-right">Amount</th>
                         </tr>
-                    </thead> -->
+                    </thead>
                     <tbody>
                         {% for item in combined_cashflow %}
-                        <tr class="{% if item.type_label == 'income' %}text-success{% else %}text-danger{% endif %}">
-                            <td>
-                                <i class='bx bx-money-withdraw'></i>
-                                {{ item.category_name }}<br>
-                                <small>{{ item.datetime }}</small>
-                            </td>
-                            <td>
-                            {% if item.type_label == 'income' %}
-                                <span class="text-success">+${{ item.amount }}</span>
-                            {% else %}
-                                <span class="text-danger">-${{ item.amount }}</span>
-                            {% endif %}
-                            </td>
+                        <tr class="{% if item.type_label == 'expense' %}table-danger{% elif item.type_label == 'sale' %}table-primary{% else %}table-success{% endif %}">
+                            <td>{{ item.datetime|date:"Y-m-d H:i" }}</td>
+                            <td>{{ item.type_label|title }}</td>
+                            <td>{% if item.category_name %}{{ item.category_name }}{% else %}Uncategorized{% endif %}</td>
+                            <td>{{ item.source }}</td>
+                            <td class="text-right">{{ item.amount|floatformat:2 }}</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="2" class="text-center">No transactions found.</td>
+                            <td colspan="5" class="text-center">No financial activity in the selected period.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
-                    <tfoot>
-                        <tr>
-                        <td>{{'Balance'|title}}</td>
-                        <td>
-                            ${{ balance }}
-                        </td>
-                        </tr>
-                    </tfoot>
-                    </table>
-                </div>
-            </div> {% endcomment %}
-
+                </table>
+            </div>
+        </div>
+        
+        <!-- Product Sales Tab -->
+        <div class="tab-pane fade" id="products" role="tabpanel" aria-labelledby="products-tab">
+            <h4>Product Sales Summary</h4>
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
                         <tr>
                             <th>Product</th>
-                            <th class="text-right">Quantity Sold</th>
-                            <th class="text-right">Total Revenue</th>
-                            <th class="text-right">Avg. Unit Price</th>
-                            <th class="text-right">Total VAT</th>
+                            <th class="text-right">Quantity</th>
+                            <th class="text-right">Revenue</th>
+                            <th class="text-right">Avg. Price</th>
+                            <th class="text-right">VAT</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for product in product_sales %}
                         <tr>
-                            <td>{{ product.item__name }}</td>
+                            <td>{{product.item__name}}
+                                {% if product.item__description %} 
+                                    - {{ product.item__description }}
+                                {% endif %}
+                            </td>
                             <td class="text-right">{{ product.total_quantity }}</td>
                             <td class="text-right">{{ product.total_revenue|floatformat:2 }}</td>
                             <td class="text-right">{{ product.average_price|floatformat:2 }}</td>
@@ -282,15 +320,94 @@
                     <tfoot>
                         <tr class="font-weight-bold">
                             <td>Totals</td>
-                            <td class="text-right">{{ overall_totals.quantity }}</td>
-                            <td class="text-right">{{ overall_totals.revenue|floatformat:2 }}</td>
+                            <td class="text-right">{{ sales.aggregate.total_quantity }}</td>
+                            <td class="text-right">{{ sales_total|floatformat:2 }}</td>
                             <td class="text-right">-</td>
-                            <td class="text-right">{{ overall_totals.vat|floatformat:2 }}</td>
+                            <td class="text-right">{{ sales.aggregate.total_vat }}</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
-      
+        </div>
+        
+        <!-- Categories Tab -->
+        <div class="tab-pane fade" id="categories" role="tabpanel" aria-labelledby="categories-tab">
+            <div class="row">
+                <!-- Expense Categories -->
+                <div class="col-md-6">
+                    <h4>Expense Categories</h4>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th class="text-right">Amount</th>
+                                    <th class="text-right">% of Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in expenses_by_category %}
+                                <tr>
+                                    <td>{% if category.category__name %}{{ category.category__name }}{% else %}Uncategorized{% endif %}</td>
+                                    <td class="text-right">{{ category.total|floatformat:2 }}</td>
+                                    <td class="text-right">{{ category.percentage|floatformat:1 }}%</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No expense data available.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="font-weight-bold">
+                                    <td>Total</td>
+                                    <td class="text-right">{{ expenses_total|floatformat:2 }}</td>
+                                    <td class="text-right">100%</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Income Categories -->
+                <div class="col-md-6">
+                    <h4>Income Categories</h4>
+                    <div class="table-responsive">Income	sales	Income	20.00
+                        2025-04-07 04:15	Income	sales	Income	20.00
+                        2025-04-07 14:16	Income	sales	Income	0.00
+                        2025-04-07 14:48	
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th class="text-right">Amount</th>
+                                    <th class="text-right">% of Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in income_by_category %}
+                                <tr>
+                                    <td>{% if category.category__name %}{{ category.category__name }}{% else %}Uncategorized{% endif %}</td>
+                                    <td class="text-right">{{ category.total|floatformat:2 }}</td>
+                                    <td class="text-right">{{ category.percentage|floatformat:1 }}%</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No income data available.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="font-weight-bold">
+                                    <td>Total</td>
+                                    <td class="text-right">{{ income_total|floatformat:2 }}</td>
+                                    <td class="text-right">100%</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
         <div id="transactionsTableContainer" style="display: none;">
             <div class="d-flex align-items-center">
