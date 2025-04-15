@@ -3477,7 +3477,7 @@ def cash_flow(request):
         parent_category=F('category__parent__name'),
         datetime=F('created_at'),
         source=Value('Income', output_field=CharField())
-    ).values('datetime', 'amount', 'type_label', 'category_name', 'parent_category', 'source')
+    ).values('datetime', 'amount', 'type_label', 'category_name', 'parent_category', 'source', 'note')
     
     # Normalize expense entries
     normalized_expenses = expenses.annotate(
@@ -3490,7 +3490,7 @@ def cash_flow(request):
     
     # Combine and sort by datetime (chronological timeline of all financial activity)
     combined_cashflow = sorted(
-        chain(normalized_sales, normalized_incomes, normalized_expenses),
+        chain(normalized_incomes, normalized_expenses),
         key=lambda x: x['datetime']
     )
     

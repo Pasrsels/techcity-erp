@@ -131,7 +131,7 @@ def create_expense_cashbook_entry(sender, instance, **kwargs):
 def handle_invoice_post_save(sender, instance, created, **kwargs):
     if created:
         # Create Income
-        category, _ = IncomeCategory.objects.get_or_create(name='sales')
+        category = IncomeCategory.objects.filter(name='sales').first() #to change
 
         income = Income.objects.create(
             amount=instance.amount_paid,
@@ -140,7 +140,7 @@ def handle_invoice_post_save(sender, instance, created, **kwargs):
             note=instance.products_purchased,
             user=instance.user,
             branch=instance.branch,
-            status=False
+            status=False,
         )
         logger.info(f'Income created: {income}')
 

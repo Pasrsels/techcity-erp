@@ -261,7 +261,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
+                        {% comment %} <tr>
                             <td>Sales</td>
                             <td class='text-right'>{{sales_total}}</td>
                         </tr>
@@ -272,13 +272,15 @@
                         <tr>
                             <td>Total Income</td>
                             <td>{{ income_total }}</td>
-                        </tr>
+                        </tr> {% endcomment %}
                         {% for item in combined_cashflow %}
                         <tr class="{% if item.type_label == 'expense' %}table-danger{% elif item.type_label == 'sale' %}table-primary{% else %}table-success{% endif %}">
-                            <td>{{ item.datetime|date:"Y-m-d H:i" }}</td>
-                            <td>{{ item.type_label|title }}</td>
-                            <td>{% if item.category_name %}{{ item.category_name }}{% else %}Uncategorized{% endif %}</td>
-                            <td>{{ item.source }}</td>
+                            <td>
+                                <i class='bx bx-money-withdraw'></i>
+                                {{ item.category_name }} - {{ item.note }}
+                                <br>
+                                <small>{{ item.datetime|date:"Y-m-d H:i" }}</small>
+                            </td>
                             <td class="text-right">{{ item.amount|floatformat:2 }}</td>
                         </tr>
                         {% empty %}
