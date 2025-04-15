@@ -418,10 +418,8 @@ def invoice(request):
     invoices = Invoice.objects.filter(branch=request.user.branch, status=True, cancelled=False).select_related(
         'branch',
         'currency',
-        'users'
+        'user'
     ).order_by('-invoice_number')
-
-    #cas+
 
     query_params = request.GET
     if query_params.get('q'):
@@ -784,6 +782,8 @@ def create_invoice(request):
                             total_amount = int(item_data['quantity']) * float(item_data['price'])
                         )
                     )
+
+                    print(invoice_items)
                     
                     
                     # cost of sales item
@@ -867,16 +867,16 @@ def create_invoice(request):
                 # for tax purpose Zimra
                 logger.info(invoice_items)
 
-                try:
-                    sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
-                    logger.info(f'sig data: {sig_data} {receipt_data}')
-                except Exception as e:
-                    logger.info(e)
-                    return JsonResponse({'success': False, 'error': str(e)})
+                # try:
+                #     sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
+                #     logger.info(f'sig data: {sig_data} {receipt_data}')
+                # except Exception as e:
+                #     logger.info(e)
+                #     return JsonResponse({'success': False, 'error': str(e)})
 
-                logger.info(f'inventory creation successfully done: {invoice}')
+                # logger.info(f'inventory creation successfully done: {invoice}')
 
-                return JsonResponse({'success':True, 'invoice_id': invoice.id, 'data':sig_data, 'receipt_data':receipt_data})
+                return JsonResponse({'success':True, 'invoice_id': invoice.id, 'data':[], 'receipt_data':[]})
 
         except (KeyError, json.JSONDecodeError, Customer.DoesNotExist, Inventory.DoesNotExist, Exception) as e:
             return JsonResponse({'success': False, 'error': str(e)})
