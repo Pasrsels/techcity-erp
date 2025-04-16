@@ -140,6 +140,7 @@ urlpatterns = [
     path('get_signature/', get_signature_data, name='get_signature'),
     path('submit_invoice_data/', submit_invoice_data_zimra, name='submit_invoice'),
     path('record_cashflow/', record_cashflow, name='record_cashflow'),
+    path('record_income/', record_income, name='record_income'),
 
     ########################################################################################################################
     # API end points

@@ -239,6 +239,20 @@ class Expense(models.Model):
 
     receipt = models.FileField(upload_to=expense_receipt_upload_path, null=True, blank=True)
 
+    is_recurring = models.BooleanField(default=False)
+    recurrence_value = models.PositiveIntegerField(null=True, blank=True, help_text="Repeat every X units")
+    recurrence_unit = models.CharField(
+        max_length=10,
+        choices=[
+            ('day', 'Day(s)'),
+            ('week', 'Week(s)'),
+            ('month', 'Month(s)'),
+            ('year', 'Year(s)')
+        ],
+        null=True,
+        blank=True
+    )
+
     def __str__(self):
         return f"{self.issue_date} - {self.category} - {self.description} - ${self.amount}"
 
@@ -786,8 +800,21 @@ class Income(models.Model):
     status = models.BooleanField(default=False)
     sale = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE, null=True)
     expenses = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True)
-    
+    is_recurring = models.BooleanField(default=False)
+    recurrence_value = models.PositiveIntegerField(null=True, blank=True)
+    recurrence_unit = models.CharField(
+        max_length=10,
+        choices=[
+            ('day', 'Day(s)'),
+            ('week', 'Week(s)'),
+            ('month', 'Month(s)'),
+            ('year', 'Year(s)')
+        ],
+        null=True,
+        blank=True
+    )
 
+    
     def __str__(self):
         return f"{self.created_at} - {self.category} - {self.note} - ${self.amount}"
 

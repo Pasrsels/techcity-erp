@@ -50,7 +50,7 @@
 
     .form-control:focus {
         box-shadow: none;
-        border-color: #3498db;
+        {% comment %} border-color: #3498db; {% endcomment %}
     }
 
     .stats-card {
@@ -120,10 +120,6 @@
     .container-fluid {
         padding-bottom: 70px;
     }
-
-    .active{
-        background: #3498db;
-    }
 </style>
 <div>
     <div class="container-fluid py-4">
@@ -161,7 +157,7 @@
                 </div>
             </div>
             <div class="action-buttons">
-                <button class="btn btn-sm btn-outline-dark" id="expenseBtn">
+                <button class="btn btn-sm btn-outline-dark" type="button" id="expenseBtn">
                    Income/Expense
                 </button>
             </div>
@@ -414,10 +410,7 @@
                 <!-- Income Categories -->
                 <div class="col-md-6">
                     <h4>Income Categories</h4>
-                    <div class="table-responsive">Income	sales	Income	20.00
-                        2025-04-07 04:15	Income	sales	Income	20.00
-                        2025-04-07 14:16	Income	sales	Income	0.00
-                        2025-04-07 14:48	
+                    <div class="table-responsive">
                         <table class="table table-striped">
                             <thead>
                                 <tr>
@@ -460,189 +453,244 @@
                     <h5>Transactions</h5>
                 </div>
             </div>
-            {% comment %} <div class="table-responsive mt-2">
-              <table class="table table-hover mb-0">
-                <!-- <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Category</th>
-                    <th>Income</th>
-                    <th>Expense</th>
-                    <th>Total</th>
-                    <th>Branch</th>
-                    <th>Received By</th>
-                  </tr>
-                </thead> -->
-                <tbody>
-                  {% for cashflow in logs %}
-                  <tr>
-                    <td>
-                        <i class='bx bx-money-withdraw'></i>
-                        {{ cashflow.category }}
-                        <br>
-                        <small>{{ cashflow.date }}</small>
-                    </td>
-                    <td>
-                        <span class="{% if cashflow.type == 'income' %} text-success {% else %} text-danger {% endif %}">
-                            {{ cashflow.amount }}
-                        </span>
-                    </td>
-                    <td>{{ cashflow.branch.name }}</td>
-                    <td>{{ cashflow.created_by }}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div> {% endcomment %}
           </div>
           
           <div id="categoriesTableContainer" style="display: none;">
             <p>Categories table goes here...</p>
           </div>
-
-        <!-- Income Modal -->
-        <div class="modal fade" id="incomeModal" tabindex="-1">
-            <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                        <h5 class="modal-title">Record Income</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Name</label>
-                            <select class="category-select" id="incomeName" class="form-select"></select>
-                                <option value="">Income Name</option>
-                                {% for name in cash_flow_names %}
-                                    <option value="{{ name.id }}">{{ name.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3"></div>
-                            <label class="form-label">Amount</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="incomeAmount" placeholder="Enter amount">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Main Category</label>
-                            <select class="category-select" id="incomeCategory" class="form-select">
-                                <option value="">Select Category</option>
-                                {% for category in income_categories %}
-                                    <option value="{{ category.id }}">{{ category.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Sub Category</label>
-                            <select class="category-select" id="incomeSubCategory">
-                                <option value="">Select Sub Category</option>
-                                {% for category in income_categories %}
-                                    <option value="{{ category.sub_income.id }}">{{ category.sub_income.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Branch</label>
-                            <select class="category-select" id="incomeBranch">
-                                {% for branch in branches %}
-                                    <option value="{{ branch.id}}">{{ branch.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-success" onclick="recordIncome()">Record Income</button>
-                        </div>
-                    </div>
-                    
-                </div>
-            </div>
         </div>
 
-        <!-- expenses modal -->
-        <div class="modal fade" id="expenseModal" tabindex="">
+
+        <!-- Modal for Income/Expense/Cash Ups -->
+        <div class="modal fade" id="cashFlowModal" tabindex="-1">
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <div>
-                            <button class="active btn btn-outline-dark">Income</button>
-                            <button class="btn btn-outline-dark px-2">Expenses</button>
-                        </div>
+                        <h5 class="modal-title">Cash Flow Management</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Name</label>
-                            <select class="category-select" id="expenseName" class="form-select">
-                                <option value="">Expense Name</option>
-                                {% for name in cash_flow_names %}
-                                    <option value="{{ name.id }}">{{ name.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Amount</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="expenseAmount" placeholder="Enter amount">
+                        <!-- Tabs for Income/Expense/Cash Ups -->
+                        <ul class="nav nav-tabs" id="cashFlowTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="income-tab" data-bs-toggle="tab" data-bs-target="#income-panel" type="button" role="tab" aria-controls="income-panel" aria-selected="true">Income</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="expense-tab" data-bs-toggle="tab" data-bs-target="#expense-panel" type="button" role="tab" aria-controls="expense-panel" aria-selected="false">Expenses</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="cashups-tab" data-bs-toggle="tab" data-bs-target="#cashups-panel" type="button" role="tab" aria-controls="cashups-panel" aria-selected="false">Cash Ups</button>
+                            </li>
+                        </ul>
+                        
+                        <!-- Tab Content -->
+                        <div class="tab-content p-3 border border-top-0" id="cashFlowTabsContent">
+                            <!-- Income Tab -->
+                            <div class="tab-pane fade show active" id="income-panel" role="tabpanel" aria-labelledby="income-tab">
+                                <div class="mb-3">
+                                    <select class="category-select form-select" id="incomeName">
+                                        <option value="">Income Note</option>
+                                        {% for name in cash_flow_names %}
+                                            <option value="{{ name.id }}">{{ name.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="incomeAmount" placeholder="Enter amount">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <select class="category-select form-select" id="incomeCategory">
+                                        <option value="">Select Category</option>
+                                        {% for category in income_categories %}
+                                            <optgroup label="{{ category.name }}">
+                                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                                {% for sub in category.sub_incomes.all %}
+                                                    <option value="{{ sub.id }}">&nbsp;&nbsp;↳ {{ sub.name }}</option>
+                                                {% endfor %}
+                                            </optgroup>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <select class="category-select form-select" id="incomeBranch">
+                                        {% for branch in branches %}
+                                            <option value="{{ branch.id}}">{{ branch.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="incomeRecurringToggle" onchange="toggleRecurrence('income')">
+                                    <label class="form-check-label" for="incomeRecurringToggle">Recurring Income?</label>
+                                </div>
+                                <div class="mb-3 gap-2 align-items-center" id="incomeRecurrenceGroup" style="display: none;">
+                                    <label class="mb-0">Repeat every</label>
+                                    <input type="number" class="form-control w-auto" id="incomeRecurrenceValue" min="1" value="1">
+                                    <select class="form-select w-auto" id="incomeRecurrenceUnit">
+                                        <option value="day">Day(s)</option>
+                                        <option value="week">Week(s)</option>
+                                        <option value="month">Month(s)</option>
+                                        <option value="year">Year(s)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-success" onclick="recordIncome()">Record Income</button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Main Category</label>
-                            <select class="category-select" id="expenseCategory" class="form-select">
-                                <option value="">Select Category</option>
-                                {% for category in expense_categories %}
-                                    <option value="{{ category.id }}">{{ category.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Sub Category</label>
-                            <select class="category-select" id="expenseSubCategory">
-                                <option value="">Select Sub Category</option>
-                                {% for category in expense_categories %}
-                                    <option value="{{ category.sub_expense.id }}">{{ category.sub_expense.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Branch</label>
-                            <select class="category-select" id="expenseBranch">
-                                {% for branch in branches %}
-                                    <option value="{{ branch.id}}">{{ branch.name }}</option>
-                                {% endfor %}
-                            </select>
+                            
+                            <!-- Expense Tab -->
+                            <div class="tab-pane fade" id="expense-panel" role="tabpanel" aria-labelledby="expense-tab">
+                                <div class="mb-3">
+                                    <select class="category-select form-select" id="expenseName">
+                                        <option value="">Expense note</option>
+                                        {% for name in cash_flow_names %}
+                                            <option value="{{ name.id }}">{{ name.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="expenseAmount" placeholder="Enter amount">
+                                    </div>
+                                </div>
+                                <div class="mb-3 d-flex aling-items-center">
+                                    {% comment %} <label for="expenseCategory" class="form-label">Expense Category</label> {% endcomment %}
+                                    <select class="category-select form-select" id="expenseCategory">
+                                        <option value="">Select Category</option>
+                                        {% for parent in expenses_categories %}
+                                          {% if not parent.parent %}
+                                            <optgroup label="{{ parent.name }}">
+                                              <option value="{{ parent.id }}">{{ parent.name }}</option>
+                                              {% for sub in parent.sub_expenses.all %}
+                                                <option value="{{ sub.id }}">&nbsp;&nbsp;↳ {{ sub.name }}</option>
+                                              {% endfor %}
+                                            </optgroup>
+                                          {% endif %}
+                                        {% endfor %}
+                                      </select>                                      
+                                    <button class='btn btn-outline-secondary bx bx-plus' id="expenseCategoryBtn" type="button"></button>
+                                </div>                                
+                                <div class="mb-3">
+                                    <select class="category-select form-select" id="expenseBranch">
+                                        {% for branch in branches %}
+                                            <option value="{{ branch.id}}">{{ branch.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="expenseRecurringToggle" onchange="toggleRecurrence('expense')">
+                                    <label class="form-check-label" for="expenseRecurringToggle">Recurring Expense?</label>
+                                </div>
+                                <div class="mb-3 gap-2 align-items-center" id="expenseRecurrenceGroup" style="display: none;">
+                                    <label class="mb-0">Repeat every</label>
+                                    <input type="number" class="form-control w-auto" id="expenseRecurrenceValue" min="1" value="1">
+                                    <select class="form-select w-auto" id="expenseRecurrenceUnit">
+                                        <option value="day">Day(s)</option>
+                                        <option value="week">Week(s)</option>
+                                        <option value="month">Month(s)</option>
+                                        <option value="year">Year(s)</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="expenseImage" class="form-label">Attach Image (optional)</label>
+                                    <input class="form-control" type="file" id="expenseImage" accept="image/*" onchange="previewExpenseImage()">
+                                </div>
+                                <div class="mb-3" id="expenseImagePreviewContainer" style="display: none;">
+                                    <label class="form-label">Image Preview</label>
+                                    <div>
+                                        <img id="expenseImagePreview" src="#" alt="Image Preview" class="img-fluid rounded" style="max-height: 200px;" />
+                                    </div>
+                                </div>                                                                
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-danger" onclick="recordExpense()">Record Expense</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Cash Ups Tab -->
+                            <div class="tab-pane fade" id="cashups-panel" role="tabpanel" aria-labelledby="cashups-tab">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5>Cash Ups to be Recorded</h5>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="loadCashUps()">
+                                        <i class="bx bx-refresh"></i> Refresh
+                                    </button>
+                                </div>
+                                <div class="card cash-flow-card">
+                                    <div class="card-body p-0">
+                                        <table class="table table-striped table-bordered table-hover mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Branch</th>
+                                                    <th>Expected Amount</th>
+                                                    <th>Expense</th>
+                                                    <th>Amount received</th>
+                                                    <th>Created By</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="cash_up_table">
+                                                <!-- Cash ups will be dynamically populated here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-danger" onclick="recordIncome()">Record Expense</button>
-                    </div>
-
-                    <div class="card cash-flow-card">
-                        <div class="card-body">
-                            <table class="table table-striped table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Branch</th>
-                                        <th>Expected Amount</th>
-                                        <th>Expense</th>
-                                        <th>Amount received</th>
-                                        <th>Created By</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cash_up_table">
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <form id="addCategoryForm">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Add Expense Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+          
+                    <div class="mb-3">
+                      <label for="categoryName" class="form-label">Category Name</label>
+                      <input type="text" class="form-control" id="categoryName" name="name" required>
+                    </div>
+          
+                    <div class="mb-3">
+                      <label for="parentCategorySelect" class="form-label">Parent Category (Optional)</label>
+                      <select class="form-select" id="parentCategorySelect" name="parent_id">
+                        <option value="">-- Select Existing Parent Category --</option>
+                        {% for cat in expense_categories %}
+                          {% if not cat.parent %} <!-- Only show top-level categories -->
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                          {% endif %}
+                        {% endfor %}
+                        <option value="__create_new__">+ Add New Parent Category</option>
+                      </select>
+                    </div>
+          
+                    <div class="mb-3 d-none" id="newParentInputWrapper">
+                      <label for="parentCategoryInput" class="form-label">New Parent Category Name</label>
+                      <input type="text" class="form-control" id="parentCategoryInput" placeholder="Type new parent category">
+                    </div>
+          
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="saveCategoryBtn">
+                      <span class="spinner-border spinner-border-sm d-none" id="categoryLoader" role="status" aria-hidden="true"></span>
+                      Save Category
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          
 
         <div class="modal fade" id="receiveModal" tabindex="-1">
             <div class="modal-dialog">
@@ -669,13 +717,226 @@
         let cash_up_id = 0;
         let record_type = '';
 
-        const expenseModal = new bootstrap.Modal(document.getElementById('expenseModal'));
-        const incomeModal = new bootstrap.Modal(document.getElementById('incomeModal'));
-
-        const expenseButton = document.getElementById('expenseBtn');
+        const expenseButton = document.getElementById('expenseCategoryBtn');
         const incomeButton = document.getElementById('incomeBtn');
+        const cashFlowModal = new bootstrap.Modal(document.getElementById('cashFlowModal'));
 
-         // Show/hide custom date range form based on selection
+        const expCatModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+
+        function previewExpenseImage() {
+            const fileInput = document.getElementById('expenseImage');
+            const preview = document.getElementById('expenseImagePreview');
+            const previewContainer = document.getElementById('expenseImagePreviewContainer');
+        
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+        
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                };
+        
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                previewContainer.style.display = 'none';
+                preview.src = '#';
+            }
+        }
+        
+
+        expenseButton.addEventListener('click', function() {
+            expCatModal.show();
+        });
+
+        document.getElementById('expenseBtn').addEventListener('click', function() {
+            cashFlowModal.show();
+        });
+
+        document.getElementById('parentCategorySelect').addEventListener('change', function () {
+            const newParentWrapper = document.getElementById('newParentInputWrapper');
+            if (this.value === '__create_new__') {
+              newParentWrapper.classList.remove('d-none');
+            } else {
+              newParentWrapper.classList.add('d-none');
+            }
+          });
+        
+          function recordIncome() {
+            const name = document.getElementById('incomeName').value;
+            const amount = document.getElementById('incomeAmount').value;
+            const category = document.getElementById('incomeCategory').value;
+            const branch = document.getElementById('incomeBranch').value;
+            const isRecurring = document.getElementById('incomeRecurringToggle').checked;
+            const recurrenceValue = document.getElementById('incomeRecurrenceValue').value;
+            const recurrenceUnit = document.getElementById('incomeRecurrenceUnit').value;
+        
+            if (!name || !amount || !category || !branch) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Fields',
+                    text: 'Please fill in all required fields.',
+                });
+                return;
+            }
+        
+            const data = new FormData();
+            data.append('name', name);
+            data.append('amount', amount);
+            data.append('category', category);
+            data.append('branch', branch);
+            data.append('is_recurring', isRecurring);
+            if (isRecurring) {
+                data.append('recurrence_value', recurrenceValue);
+                data.append('recurrence_unit', recurrenceUnit);
+            }
+        
+            fetch("{% url 'finance:record_income' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: data
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Income Recorded',
+                        text: res.message || 'Your income has been recorded successfully.'
+                    });
+                    document.getElementById('incomeName').value = '';
+                    document.getElementById('incomeAmount').value = '';
+                    document.getElementById('incomeCategory').value = '';
+                    document.getElementById('incomeBranch').value = '';
+                    document.getElementById('incomeRecurringToggle').checked = false;
+                    document.getElementById('incomeRecurrenceGroup').style.display = 'none';
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: res.message || 'Something went wrong.'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Server Error',
+                    text: 'Could not connect to server.'
+                });
+            });
+        }
+        
+        document.getElementById('saveCategoryBtn').addEventListener('click', function(e) {
+            const saveBtn = document.getElementById('saveCategoryBtn');
+            const loader = document.getElementById('categoryLoader');
+            loader.classList.remove('d-none');
+            saveBtn.disabled = true;
+        
+            const name = document.getElementById('categoryName').value;
+            const p_name = document.getElementById('parentCategoryInput').value;
+            const parentSelectValue = document.getElementById('parentCategorySelect').value;
+            let parent_name = "";
+
+            if (parentSelectValue === "__create_new__") {
+                parent_name = document.getElementById('parentCategoryInput').value;
+            }
+        
+            fetch("{% url 'finance:add_expense_category' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(
+                    { 
+                        name: name, 
+                        parent_name: p_name,
+                        parent_id: parentSelectValue !== "__create_new__" ? parentSelectValue : null, 
+                })
+            })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(({ status, body }) => {
+                if (status === 200 || status === 201) {
+                    const select = document.getElementById('expenseCategory');
+                    const newOption = document.createElement('option');
+                    newOption.value = body.id;
+                    newOption.text = body.name;
+                    newOption.selected = true;
+                    select.appendChild(newOption);
+        
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Category Created',
+                        text: body.message || 'The category was added successfully!',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+        
+                    expCatModal.hide();
+                    {% comment %} getSubcategories(body.id); {% endcomment %}
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: body.message || 'Something went wrong!',
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.toString(),
+                });
+            })
+            .finally(() => {
+                loader.classList.add('d-none');
+                saveBtn.disabled = false;
+            });
+        });
+        
+
+        function getSubcategories(categoryId) {
+            // Show loading indicator
+            const subcategorySelect = document.getElementById('expenseSubCategory');
+            subcategorySelect.innerHTML = '<option value="">Loading subcategories...</option>';
+            
+            // Fetch subcategories based on selected parent category
+            fetch(`/finance/get_subcategories/?parent_id=${categoryId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                subcategorySelect.innerHTML = '<option value="">Select Sub Category</option>';
+                
+                if (data && data.length > 0) {
+                    data.forEach(subcategory => {
+                        const option = document.createElement('option');
+                        option.value = subcategory.id;
+                        option.textContent = subcategory.name;
+                        subcategorySelect.appendChild(option);
+                    });
+                    
+                    $('#expenseSubCategory').trigger('change');
+                } else {
+                    subcategorySelect.innerHTML = '<option value="">No subcategories available</option>';
+                    $('#expenseSubCategory').trigger('change');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching subcategories:', error);
+                subcategorySelect.innerHTML = '<option value="">Error loading subcategories</option>';
+                $('#expenseSubCategory').trigger('change');
+            });
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
             const filterButtons = document.querySelectorAll('.btn-group a');
             const dateRangeForm = document.getElementById('dateRangeForm');
@@ -691,6 +952,12 @@
                 });
             });
         });
+
+        function toggleRecurrence(type) {
+            const group = document.getElementById(`${type}RecurrenceGroup`);
+            const toggle = document.getElementById(`${type}RecurringToggle`);
+            group.style.display = toggle.checked ? 'flex' : 'none';
+        }
 
 
         function showView(view) {
@@ -712,10 +979,6 @@
             }, 500); 
         }
 
-        expenseButton.addEventListener('click', () => {
-            record_type = 'expense';
-            expenseModal.show();
-        });
 
         // incomeButton.addEventListener('click', () => {
         //     record_type = 'income';
@@ -782,35 +1045,33 @@
 
             // Initialize Income fields
             const incomeFields = [
-                { id: 'incomeCategory', type: 'Category', modal: 'incomeModal', hasEvents: true },
-                { id: 'incomeName', type: 'Name', modal: 'incomeModal', hasEvents: true },
-                { id: 'incomeSubCategory', type: 'SubCategory', modal: 'incomeModal', hasEvents: true },
-                { id: 'incomeBranch', type: 'Branch', modal: 'incomeModal', hasEvents: false }
+            { id: 'incomeCategory', type: 'Category', hasEvents: true },
+            { id: 'incomeName', type: 'Name', hasEvents: true },
+            { id: 'incomeSubCategory', type: 'SubCategory', hasEvents: true },
+            { id: 'incomeBranch', type: 'Branch', hasEvents: false }
             ];
 
             // Initialize Expense fields
             const expenseFields = [
-                { id: 'expenseCategory', type: 'Category', modal: 'expenseModal', hasEvents: true },
-                { id: 'expenseName', type: 'Name', modal: 'expenseModal', hasEvents: true },
-                { id: 'expenseSubCategory', type: 'SubCategory', modal: 'expenseModal', hasEvents: true },
-                { id: 'expenseBranch', type: 'Branch', modal: 'expenseModal', hasEvents: false }
+            { id: 'expenseCategory', type: 'Category', hasEvents: true },
+            { id: 'expenseName', type: 'Name', hasEvents: true },
+            { id: 'expenseSubCategory', type: 'SubCategory', hasEvents: true },
+            { id: 'expenseBranch', type: 'Branch', hasEvents: false }
             ];
 
             // Initialize all fields
             [...incomeFields, ...expenseFields].forEach(field => {
-                const config = {
-                    ...(field.hasEvents ? tagsConfig : commonConfig),
-                    dropdownParent: $(`#${field.modal}`)
-                };
-                
-                initializeSelect2(field.id, config);
-                
-                if (field.hasEvents) {
-                    addSelect2EventHandlers(field.id, field.type);
-                }
-            });
+            const config = {
+                ...(field.hasEvents ? tagsConfig : commonConfig),
+                dropdownParent: $('#cashFlowModal') // Use the actual modal ID
+            };
 
-            // Helper function to get categories
+            initializeSelect2(field.id, config);
+
+            if (field.hasEvents) {
+                addSelect2EventHandlers(field.id, field.type);
+            }
+            });            // Helper function to get categories
             window.getCategories = function(type = 'expense') {
                 const prefix = type.toLowerCase() === 'income' ? 'income' : 'expense';
                 
@@ -845,7 +1106,7 @@
 
 
 
-        function recordIncome() {
+        {% comment %} function recordIncome() {
             let type = ''
             const incomeAmount = document.getElementById('incomeAmount').value;
             const ExpenseAmount = document.getElementById('expenseAmount').value;
@@ -885,7 +1146,7 @@
                     alert(response.message);
                 }
             });
-        }
+        } {% endcomment %}
 
         function recordExpense() {
             const expenseAmount = document.getElementById('expenseAmount').value;
@@ -1137,10 +1398,81 @@
             });
         }
 
-        function recordExpense(expenseId) {
-            console.log('Recording expense:', expenseId);
-            // send POST request to record expense
+        function recordExpense() {
+            const name = document.getElementById('expenseName').value;
+            const amount = document.getElementById('expenseAmount').value;
+            const category = document.getElementById('expenseCategory').value;
+            const branch = document.getElementById('expenseBranch').value;
+            const isRecurring = document.getElementById('expenseRecurringToggle').checked;
+            const recurrenceValue = document.getElementById('expenseRecurrenceValue').value;
+            const recurrenceUnit = document.getElementById('expenseRecurrenceUnit').value;
+            const image = document.getElementById('expenseImage').files[0];
+        
+            if (!name || !amount || !category || !branch) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Fields',
+                    text: 'Please fill in all required fields.',
+                });
+                return;
+            }
+        
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('amount', parseFloat(amount));
+            formData.append('category', category);
+            formData.append('branch', branch);
+            formData.append('is_recurring', isRecurring);
+            if (isRecurring) {
+                formData.append('recurrence_value', recurrenceValue);
+                formData.append('recurrence_unit', recurrenceUnit);
+            }
+            if (image) {
+                formData.append('image', image);
+            }
+        
+            fetch("{% url 'finance:expenses' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Expense Recorded',
+                        text: res.message || 'Your expense has been recorded successfully.'
+                    });
+                    document.getElementById('expenseName').value = '';
+                    document.getElementById('expenseAmount').value = '';
+                    document.getElementById('expenseCategory').value = '';
+                    document.getElementById('expenseBranch').value = '';
+                    document.getElementById('expenseRecurringToggle').checked = false;
+                    document.getElementById('expenseRecurrenceGroup').style.display = 'none';
+                    document.getElementById('expenseImage').value = '';
+                    document.getElementById('expenseImagePreviewContainer').style.display = 'none';
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: res.message || 'Something went wrong.'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Server Error',
+                    text: 'Could not connect to server.'
+                });
+            });
         }
+        
+        
 
 
         const receiveModal = new bootstrap.Modal(document.getElementById('receiveModal'));

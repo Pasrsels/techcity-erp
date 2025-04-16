@@ -141,94 +141,99 @@ def expenses(request):
             }
         )
     if request.method == 'POST':
-        #payload
-        """
-            {
-                amount:float
-                description:str
-                category:id (int)
-                payment_method:str
-                currency:id
-            }
-        """
-    try:
-        # body_unicode = request.body.decode('utf-8')
-        
-        data = request.POST
-
-        logger.info(f"Received body: {data}")
-        
-        amount = data.get('amount')
-        description = data.get('description')
-        category = data.get('subcategory')
-        payment_method = data.get('payment_method')
-        currency_id = data.get('currency')
-        image = request.FILES.get('image')
-
-        logger.info(image)
-        
-        if not amount or not description or not category:
-            return JsonResponse({'success':False, 'message':'Missing fields: amount, description, category.'})
-        
         try:
-            category = ExpenseCategory.objects.get(id=category)
-        except ExpenseCategory.DoesNotExist:
-            return JsonResponse({'success':False, 'message':f'Category with ID: {category}, doesn\'t exists.'})
+            data = request.POST
+            image = request.FILES.get('image')
+
+            logger.info(f"Received POST data: {data}")
+            logger.info(f"Received file: {image}")
+
+            name_id = data.get('name') 
+            amount = data.get('amount')
+            category_id = data.get('category')  
+            payment_method = data.get('payment_method', 'cash')
+            currency_id = data.get('currency', 'USD')
+            branch_id = data.get('branch')
+
+            is_recurring = data.get('is_recurring') == 'true'
+            recurrence_value = data.get('recurrence_value')
+            recurrence_unit = data.get('recurrence_unit')
+
+            # Validation
+            if not all([name_id, amount, category_id, payment_method, currency_id, branch_id]):
+                return JsonResponse({'success': False, 'message': 'Missing required fields.'})
+
+            # Fetch related objects
+            try:
+                category = ExpenseCategory.objects.get(id=category_id)
+            except ExpenseCategory.DoesNotExist:
+                return JsonResponse({'success': False, 'message': f'Category with ID {category_id} does not exist.'})
+
+            currency = get_object_or_404(Currency, name__icontains='usd')
+            branch = get_object_or_404(Branch, id=branch_id)
+
+            # Get or create account and balance
+            account_details = account_identifier(request, currency, payment_method)
+            account_name = account_details['account_name']
+            account_type = account_details['account_type']
+
+            account, _ = Account.objects.get_or_create(
+                name=account_name,
+                type=account_type
+            )
+
+            account_balance, _ = AccountBalance.objects.get_or_create(
+                account=account,
+                currency=currency,
+                defaults={
+                    'currency': currency,
+                    'branch': branch,
+                    'balance': 0
+                }
+            )
+
+            if account_balance.balance < Decimal(amount):
+                return JsonResponse({'success': False, 'message': f'{account_name} has insufficient balance.'})
+
+            # Deduct from balance
+            account_balance.balance -= Decimal(amount)
+            account_balance.save()
+
+            # Create Expense
+            expense = Expense.objects.create(
+                amount=amount,
+                category=category,
+                user=request.user,
+                currency=currency,
+                payment_method=payment_method ,
+                branch=branch,
+                is_recurring=is_recurring,
+                recurrence_value=int(recurrence_value) if is_recurring and recurrence_value else None,
+                recurrence_unit=recurrence_unit if is_recurring else None,
+                receipt=image
+            )
+
+            # Create Cashbook entry
+            Cashbook.objects.create(
+                amount=amount,
+                expense=expense,
+                currency=currency,
+                credit=True,
+                description=f'Expense ({expense.description[:20]})',
+                branch=branch
+            )
+
+            # Send notification
+            send_expense_creation_notification.delay(expense.id)
+
+            return JsonResponse({'success': True, 'message': 'Expense recorded successfully.'})
+
+        except Exception as e:
+            logger.exception("Error while recording expense:")
+            return JsonResponse({'success': False, 'message': str(e)})
         
-        currency = get_object_or_404(Currency, id=currency_id)
 
-        account_details = account_identifier(request, currency, payment_method)
-        account_name = account_details['account_name']
-        account_type = account_details['account_type']
-
-        account, _ = Account.objects.get_or_create(
-            name=account_name,
-            type=account_type
-        )
-        account_balance, _ = AccountBalance.objects.get_or_create(
-            account=account,
-            currency=currency,
-            defaults={
-                'currency':currency,
-                'branch':request.user.branch,
-                'balance': 0
-            }
-          )
-
-        if account_balance.balance < Decimal(amount):
-            return JsonResponse({'success':False, 'message':f'{account_name} have insufficient balance.'})
-        
-        account_balance.balance -= Decimal(amount)
-        account_balance.save()
-        
-        expense = Expense.objects.create(
-            amount = amount,
-            category = category,
-            user = request.user,
-            currency = currency,
-            payment_method = payment_method,
-            description = description,
-            branch = request.user.branch,
-            receipt=image
-        )
-        
-        Cashbook.objects.create(
-            amount = amount,
-            expense = expense,
-            currency = currency,
-            credit = True,
-            description=f'Expense ({expense.description[:20]})',
-            branch = request.user.branch
-        )
-
-        send_expense_creation_notification.delay(expense.id)
-        
-        return JsonResponse({'success': True, 'messages':'Expense successfully created'}, status=201)
-    except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)}, status=400)
-
-
-@login_required   
+@login_required  
 def get_expense(request, expense_id):
     expense = get_object_or_404(Expense, id=expense_id)
     data = {
@@ -282,6 +287,7 @@ def add_or_edit_expense(request):
     return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=400)
 
 @login_required
+@transaction.atomic()
 def add_expense_category(request):
     subcategories = ExpenseCategory.objects.filter(parent__isnull=False).values(
         'id',
@@ -290,33 +296,42 @@ def add_expense_category(request):
 
     logger.info(subcategories)
     
+@transaction.atomic
+@login_required
+def add_expense_category(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        category = data['name']
-        parent = data.get('parent', '')
+        category_name = data.get('name', '').strip()
+        parent_name = data.get('parent_name', '').strip()
+        parent_id = data.get('parent_id', '')
 
-        if not category:
-            return JsonResponse({'success':False, 'message':f'Please enter the category'}, status=400)
-        
-        if ExpenseCategory.objects.filter(name=category).exists():
-            return JsonResponse({'success':False, 'message':f'Category with ID {category} Exists.'}, status=400)
-        
-        if category and parent:
-            main_category = get_object_or_404(ExpenseCategory, id=int(parent))
-            ExpenseCategory.objects.create(
-                name=category,
-                parent=main_category
-            )
+        if not category_name:
+            return JsonResponse({'success': False, 'message': 'Category name is required.'}, status=400)
 
-            return JsonResponse({'success':True}, status=201)
-        
-        else:
-            ExpenseCategory.objects.create(
-                name=category,
-            )
-            return JsonResponse({'success':True}, status=201)
+        parent_obj = None
+        if parent_name:
+            parent_obj, _ = ExpenseCategory.objects.get_or_create(name=parent_name, parent=None)
+            logger.info(f'Parent created/found by name: {parent_obj}')
+
+        elif parent_id:
+            try:
+                parent_obj = ExpenseCategory.objects.get(id=int(parent_id))
+                logger.info(f'Parent found by ID: {parent_obj}')
+            except ExpenseCategory.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Parent category not found.'}, status=404)
             
-    return JsonResponse(list(subcategories), safe=False)
+        if ExpenseCategory.objects.filter(name=category_name, parent=parent_obj).exists():
+            return JsonResponse({'success': False, 'message': f'Category "{category_name}" already exists under this parent.'}, status=400)
+        
+        child_obj = ExpenseCategory.objects.create(
+            name=category_name,
+            parent=parent_obj
+        )
+
+        logger.info(f'New category created: {child_obj} under parent: {parent_obj}')
+        return JsonResponse({'success': True, 'id': child_obj.id, 'name': child_obj.name}, status=201)
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
 @login_required
 def income(request):
@@ -3548,8 +3563,11 @@ def cash_flow(request):
             category['percentage'] = (category['total'] / income_total) * 100
         else:
             category['percentage'] = 0
+
+    # categories
+    expenses_categories = ExpenseCategory.objects.all()
+    income_categories = IncomeCategory.objects.all()
             
-    
     context = {
         # Time filter data
         'start_date': start_date,
@@ -3574,6 +3592,10 @@ def cash_flow(request):
         'expenses_total': expenses_total,
         'total_income': total_income,
         'balance': balance,
+
+        # categories 
+        'expenses_categories':expenses_categories,
+        'income_categories':income_categories
     }
     
     return render(request, 'cashflow.html', context)
@@ -3674,6 +3696,7 @@ def cash_up_list(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            cash_up_type = data.get('type', '')
             cash_up_id = data.get('cash_up_id', '')
 
             if not cash_up_id:
@@ -3693,19 +3716,21 @@ def cash_up_list(request):
             if not cash_up:
                 return JsonResponse({'message': 'Cash up not found', 'success': False}, status=404)
 
-            sales = list(cash_up.sales.values(
-                'id',
-                'invoice__products_purchased',
-                'total_amount',
-                'invoice__branch'
-            ))  
-            expenses = list(cash_up.expenses.values())
+            if cash_up_type  == 'sales':
+                sales = list(cash_up.sales.values(
+                    'id',
+                    'invoice__products_purchased',
+                    'total_amount',
+                    'invoice__branch'
+                ))  
+            else:
+                expenses = list(cash_up.expenses.values())
 
             return JsonResponse({
                 'success': True,
                 'data': {
-                    'sales': sales,
-                    'expenses': expenses
+                    'sales': sales if sales else [],
+                    'expenses': expenses if sales else []
                 }
             }, status=200)
 
@@ -3866,6 +3891,55 @@ def record_cashflow(request):
     except Exception as e:
         logger.info(e)
         return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
+
+@login_required
+@transaction.atomic
+def record_income(request):
+    try:
+        data = request.POST
+        name = data.get('name')
+        amount = data.get('amount')
+        category_id = data.get('category')
+        branch_id = data.get('branch')
+        is_recurring = data.get('is_recurring') == 'true'
+        recurrence_value = data.get('recurrence_value')
+        recurrence_unit = data.get('recurrence_unit')
+
+        if not all([name, amount, category_id, branch_id]):
+            return JsonResponse({'success': False, 'message': 'All fields are required.'})
+
+        category = get_object_or_404(IncomeCategory, id=category_id)
+        branch = get_object_or_404(Branch, id=branch_id)
+        currency = get_object_or_404(Currency, name__icontains='USD')
+
+        logger.info(name)
+
+        income = Income.objects.create(
+            note=name,
+            amount=amount,
+            category=category,
+            user=request.user,
+            currency=currency,
+            branch=branch,
+            is_recurring=is_recurring,
+            recurrence_value=recurrence_value if is_recurring else None,
+            recurrence_unit=recurrence_unit if is_recurring else None,
+        )
+
+        Cashbook.objects.create(
+            amount=amount,
+            currency=currency,
+            credit=False,
+            description=f"Income ({name[:20]})",
+            branch=branch
+        )
+
+        return JsonResponse({'success': True, 'message': 'Income recorded successfully.'})
+
+    except Exception as e:
+        logger.exception("Error saving income")
+        return JsonResponse({'success': False, 'message': str(e)})
+
 
 @login_required
 @transaction.atomic
