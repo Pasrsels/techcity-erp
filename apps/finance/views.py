@@ -3419,38 +3419,32 @@ def cash_flow(request):
     """
     today = datetime.datetime.today()
     
-    # Get filter parameters
+
     filter_type = request.GET.get('filter_type', 'today')
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     
-    # Set date range based on filter type
     if filter_type == 'today':
         start_date = today.strftime('%Y-%m-%d')
         end_date = today.strftime('%Y-%m-%d')
     elif filter_type == 'weekly':
-        # Start from Monday of current week
         start_date = (today - datetime.timedelta(days=today.weekday())).strftime('%Y-%m-%d')
         end_date = today.strftime('%Y-%m-%d')
     elif filter_type == 'monthly':
-        # Start from 1st of current month
         start_date = today.replace(day=1).strftime('%Y-%m-%d')
         end_date = today.strftime('%Y-%m-%d')
     elif filter_type == 'yearly':
-        # Start from January 1st of current year
         start_date = today.replace(month=1, day=1).strftime('%Y-%m-%d')
         end_date = today.strftime('%Y-%m-%d')
     elif filter_type == 'custom':
-        # Use the provided custom date range
         if not start_date:
             start_date = today.strftime('%Y-%m-%d')
         if not end_date:
             end_date = today.strftime('%Y-%m-%d')
     
-    # Convert string dates to datetime objects
     start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
     end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-    # Add a day to end_date to include the entire day
+
     end_date_query = end_date_obj + datetime.timedelta(days=1)
     
     # Query for invoice items in the date range
@@ -3478,11 +3472,11 @@ def cash_flow(request):
     # Normalize invoice items for timeline
     normalized_sales = invoice_items.annotate(
         type_label=Value('sale', output_field=CharField()),
-        category_name=F('item__description'),  # Use product description as category
+        category_name=F('item__description'), 
         parent_category=Value('Sales', output_field=CharField()),
         datetime=F('invoice__issue_date'),
         source=Value('Invoice', output_field=CharField()),
-        amount=F('total_amount')  # Make sure to use the right field for amount
+        amount=F('total_amount')  
     ).values('datetime', 'amount', 'type_label', 'category_name', 'parent_category', 'source')
     
     # Normalize income entries
@@ -3509,7 +3503,6 @@ def cash_flow(request):
         key=lambda x: x['datetime']
     )
     
-    # Aggregate by product for sales summary
     product_sales = invoice_items.values(
         'item__id', 
         'item__name',
@@ -3664,7 +3657,7 @@ def cash_flow(request):
 def cash_up_list(request):
     if request.method == 'GET':
         cashups = (
-            CashUp.objects.filter(status=False)
+            CashUp.objects.filter() # replace back the status
             .select_related('branch', 'created_by')
             .prefetch_related(
                 'sales',
@@ -3728,12 +3721,14 @@ def cash_up_list(request):
             ))  
 
             expenses = list(cash_up.expenses.values())
+            
+            logger.info(expenses)
 
             return JsonResponse({
                 'success': True,
                 'data': {
                     'sales': sales if sales else [],
-                    'expenses': expenses if sales else []
+                    'expenses': expenses if expenses else []
                 }
             }, status=200)
 
@@ -3921,6 +3916,8 @@ def check_cashup_status(request, cash_up_id):
     
     if cash_up:
         if True:
+            cash_up.status = True
+            cash_up.save()
             return JsonResponse({
                 'success':True,
                 'status':True

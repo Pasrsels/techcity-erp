@@ -124,42 +124,47 @@
 <div>
     <div class="container-fluid py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class='d-flex align-items-center'>
-                <h2 class="">Cash Flow Management</h2>
-                <div class="px-2">
-                    <div class="card-body">                    
-                        <!-- Quick filter buttons -->
-                        <div class="btn-group mb-3" role="group" aria-label="Time filters">
-                            <a href="{% url 'finance:cash_flow' %}?filter_type=today" class="btn btn-outline-primary {% if filter_type == 'today' %}active{% endif %}">Today</a>
-                            <a href="{% url 'finance:cash_flow' %}?filter_type=weekly" class="btn btn-outline-primary {% if filter_type == 'weekly' %}active{% endif %}">Weekly</a>
-                            <a href="{% url 'finance:cash_flow' %}?filter_type=monthly" class="btn btn-outline-primary {% if filter_type == 'monthly' %}active{% endif %}">Monthly</a>
-                            <a href="{% url 'finance:cash_flow' %}?filter_type=yearly" class="btn btn-outline-primary {% if filter_type == 'yearly' %}active{% endif %}">Yearly</a>
-                            <a href="{% url 'finance:cash_flow' %}?filter_type=custom" class="btn btn-outline-primary {% if filter_type == 'custom' %}active{% endif %}">Custom</a>
-                        </div>
-                        
-                        <!-- Custom date range form, shown only when custom is selected -->
-                        <form method="get" id="dateRangeForm" class="{% if filter_type != 'custom' %}d-none{% endif %}">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <label for="start_date">Start Date:</label>
-                                    <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="form-control">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="end_date">End Date:</label>
-                                    <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="form-control">
-                                </div>
-                                <div class="col-md-4 d-flex align-items-end">
-                                    <input type="hidden" name="filter_type" value="custom">
-                                    <button type="submit" class="btn btn-primary">Apply Filter</button>
-                                </div>
+            <div class='d-flex align-items-center justify-content-between'>
+                <div class='d-flex align-items-center'>
+                    <div>
+                        <h4 class="mb-1">Cash Flow Management</h4>
+                        <p class="text-muted mb-0">Manage your cash operations</p>
+                    </div>
+                    <div class="px-2">
+                        <div class="card-body">                    
+                            <!-- Quick filter buttons -->
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=today" class="btn btn-outline-primary {% if filter_type == 'today' %}active{% endif %}">Today</a>
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=weekly" class="btn btn-outline-primary {% if filter_type == 'weekly' %}active{% endif %}">Weekly</a>
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=monthly" class="btn btn-outline-primary {% if filter_type == 'monthly' %}active{% endif %}">Monthly</a>
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=yearly" class="btn btn-outline-primary {% if filter_type == 'yearly' %}active{% endif %}">Yearly</a>
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=custom" class="btn btn-outline-primary {% if filter_type == 'custom' %}active{% endif %}">Custom</a>
                             </div>
+                            
+                            <!-- Custom date range form, shown only when custom is selected -->
+                            <form method="get" id="dateRangeForm" class="{% if filter_type != 'custom' %}d-none{% endif %}">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label for="start_date">Start Date:</label>
+                                        <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="end_date">End Date:</label>
+                                        <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="form-control">
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <input type="hidden" name="filter_type" value="custom">
+                                        <button type="submit" class="btn btn-primary">Apply Filter</button>
+                                    </div>
+                                </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="action-buttons">
-                <button class="btn btn-sm btn-outline-dark" type="button" id="expenseBtn">
-                   Income/Expense
-                </button>
+                <div class="action-buttons">
+                    <button class="btn btn-outline-dark" type="button" id="expenseBtn">
+                       <i class='bx bx-plus'></i>
+                       <span>Income/Expense/Cashup(s)</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -192,40 +197,43 @@
         </div> {% endcomment %}
 
          <!-- Financial Summary Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Total Sales</h5>
-                    <h2 class="card-text">{{ sales_total|floatformat:2 }}</h2>
+         <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Total Sales</h6>
+                        <h2 class="fw-bold text-dark">{{ sales_total|floatformat:2 }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Other Income</h6>
+                        <h2 class="fw-bold text-dark">{{ income_total|floatformat:2 }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Total Expenses</h6>
+                        <h2 class="fw-bold text-dark">{{ expenses_total|floatformat:2 }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Net Balance</h6>
+                        <h2 class="fw-bold {% if balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ balance|floatformat:2 }}
+                        </h2>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Other Income</h5>
-                    <h2 class="card-text">{{ income_total|floatformat:2 }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Total Expenses</h5>
-                    <h2 class="card-text">{{ expenses_total|floatformat:2 }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card {% if balance >= 0 %}bg-info{% else %}bg-warning{% endif %} text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Net Balance</h5>
-                    <h2 class="card-text">{{ balance|floatformat:2 }}</h2>
-                </div>
-            </div>
-        </div>
-    </div>
+        
 
     <!-- Main content area with tabs -->
     <ul class="nav nav-tabs" id="financialTabs" role="tablist">
