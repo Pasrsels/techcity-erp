@@ -262,6 +262,7 @@
                         <tr>
                             <th>Details</th>
                             <th class="text-right">Amount</th>
+                            <th>Percent</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -278,7 +279,7 @@
                             <td>{{ income_total }}</td>
                         </tr> {% endcomment %}
                         {% for item in combined_cashflow %}
-                        <tr class="{% if item.type_label == 'expense' %}table-danger{% elif item.type_label == 'sale' %}table-primary{% else %}table-success{% endif %}">
+                        {% comment %} <tr class="{% if item.type_label == 'expense' %}table-danger{% elif item.type_label == 'sale' %}table-primary{% else %}table-success{% endif %}">
                             <td>
                                 <i class='bx bx-money-withdraw'></i>
                                 {{ item.category_name }} - {{ item.note }}
@@ -290,6 +291,19 @@
                         {% empty %}
                         <tr>
                             <td colspan="5" class="text-center">No financial activity in the selected period.</td>
+                        </tr>
+                        {% endfor %} {% endcomment %}
+                        {% for category in income_by_category %}
+                               km 
+                        {% for category in expenses_by_category %}
+                        <tr>
+                            <td>{% if category.category__name %}{{ category.category__name }}{% else %}Uncategorized{% endif %}</td>
+                            <td class="text-right">{{ category.total|floatformat:2 }}</td>
+                            <td class="text-right">{{ category.percentage|floatformat:1 }}%</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center">No expense data available.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
