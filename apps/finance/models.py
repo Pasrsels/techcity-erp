@@ -734,7 +734,9 @@ class CashUp(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_cashups')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    sales_status = models.BooleanField(default=False)
+    expenses_status = models.BooleanField(default=False)
+    
     def save(self, *args, **kwargs):
         # Calculate balance (received_amount - expected_cash)
         self.balance = self.received_amount - self.expected_cash

@@ -3698,6 +3698,8 @@ def cash_up_list(request):
             data = json.loads(request.body)
             cash_up_type = data.get('type', '')
             cash_up_id = data.get('cash_up_id', '')
+            
+            logger.info(f'Cash up type:{cash_up_type}')
 
             if not cash_up_id:
                 return JsonResponse(
@@ -3716,15 +3718,16 @@ def cash_up_list(request):
             if not cash_up:
                 return JsonResponse({'message': 'Cash up not found', 'success': False}, status=404)
 
-            if cash_up_type  == 'sales':
-                sales = list(cash_up.sales.values(
-                    'id',
-                    'invoice__products_purchased',
-                    'total_amount',
-                    'invoice__branch'
-                ))  
-            else:
-                expenses = list(cash_up.expenses.values())
+           
+            sales = list(cash_up.sales.values(
+                'id',
+                'invoice__products_purchased',
+                'total_amount',
+                'invoice__branch',
+                'invoice__invoice_items__cash_up_status'
+            ))  
+
+            expenses = list(cash_up.expenses.values())
 
             return JsonResponse({
                 'success': True,
@@ -3830,17 +3833,19 @@ def record_cashflow(request):
         logger.info(data)
         type = data.get('type', '')
         id = data.get('id', '')
-        branch = data.get('branch', '')
-        cashup_id = data.get('cashup_id', '')
+        branch = int(data.get('branch', ''))
+        cashup_id = int(data.get('cash_up_id', ''))
+        category_id = int(data.get('category'))
 
         logger.info(id)
         
         # get branch
         branch = get_object_or_404(Branch, id=branch)
 
+        category = None
         if type == 'sale':
             sale = InvoiceItem.objects.filter(invoice__branch=branch, id=id).first()
-            category = IncomeCategory.objects.filter(name='sales', parent__name='sales').first()
+            category = IncomeCategory.objects.filter(id=category_id).first()
 
             if not category:
                 new_main_category = IncomeCategory.objects.create(
@@ -3878,19 +3883,56 @@ def record_cashflow(request):
             sale = sales.filter(id=id).first()
             sale.cash_up_status = True
             sale.save() 
-
-            logger.info(sale)
+            
+            # mark all sales recorded
+            cash_up_status = check_if_all_received(sales)
+            
+            if cash_up_status:
+                cash_up = CashUp.objects.filter(id=cashup_id).first()
+                if cash_up:
+                    cash_up.sales_status = True
+                    cash_up.save()
 
             return JsonResponse(
                 {
                     'success':True, 
                     'message':'Sale recorded succesfully', 
                     'id':id,
-                    'cash_up_status':True
+                    'cash_up_status':True,
+                    'overal_cash_up_status':check_if_all_received(sales)
                 }, status=200)
     except Exception as e:
         logger.info(e)
         return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
+    
+
+def check_if_all_received(sales):
+    status= True
+    for sale in sales:
+        if not sale.cash_up_status:
+            status = False
+            break
+    return status
+
+@login_required
+def check_cashup_status(request, cash_up_id):
+    logger.info(cash_up_id)
+    cash_up = CashUp.objects.filter(id=cash_up_id).first()
+    
+    if cash_up:
+        if True:
+            return JsonResponse({
+                'success':True,
+                'status':True
+            }, status=200)
+        return JsonResponse({
+                'success':True,
+                'status':False
+            }, status=200)
+    return JsonResponse({
+            'success':False,
+            'message':'Error occured'
+        }, status=400)
 
 @login_required
 @transaction.atomic

@@ -1191,212 +1191,834 @@
         function populateCashUpTable() {
             const tableBody = document.getElementById('cash_up_table');
             tableBody.innerHTML = '';
-
+        
             fetch('/finance/cash_up_list/')
-                .then(response => response.json())
-                .then(response => {
-                    if (!response.success) return;
-
-                    const groupedData = {};
-                    response.data.forEach(cashup => {
-                        const date = cashup.created_at.split(' ')[0];
-                        if (!groupedData[date]) {
-                            groupedData[date] = [];
-                        }
-                        groupedData[date].push(cashup);
-                    });
-
-                    Object.keys(groupedData)
-                        .sort()
-                        .reverse()
-                        .forEach(date => {
-                            const dateRow = document.createElement('tr');
-                            dateRow.className = 'table-secondary';
-                            dateRow.innerHTML = `
-                                <td colspan="6" class="fw-bold">
-                                    ${new Date(date).toLocaleDateString()}
-                                </td>
-                            `;
-                            tableBody.appendChild(dateRow);
-
-                            groupedData[date].forEach(cashup => {
-                                const row = document.createElement('tr');
-                                row.classList.add('cashup-row');
-                                row.setAttribute('data-cashup-id', cashup.id);
-                                row.innerHTML = `
-                                    <td><small>${cashup.branch__name}</small></td>
-                                    <td><small>$${cashup.expected_cash}</small></td>
-                                    <td><small>$${cashup.expense || 0.00}</small></td>
-                                    <td><small>$${cashup.received_amount}</small></td>
-                                    <td><small>${cashup.created_by__username}</small></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="toggleCashUpDetails(${cashup.id}, this)">View</button>
-                                    </td>
-                                `;
-                                tableBody.appendChild(row);
-                            });
-                        });
+              .then(res => res.json())
+              .then(response => {
+                if (!response.success) return;
+        
+                const groupedData = {};
+                response.data.forEach(cashup => {
+                  const date = cashup.created_at.split(' ')[0];
+                  groupedData[date] = groupedData[date] || [];
+                  groupedData[date].push(cashup);
                 });
-        }
+        
+                Object.keys(groupedData)
+                  .sort().reverse()
+                  .forEach(date => {
+                    // date header row
+                    const dateRow = document.createElement('tr');
+                    dateRow.className = 'table-secondary';
+                    dateRow.innerHTML = `
+                      <td colspan="6" class="fw-bold">
+                        ${new Date(date).toLocaleDateString()}
+                      </td>`;
+                    tableBody.appendChild(dateRow);
+        
+                    // individual cash‑up rows
+                    groupedData[date].forEach(cashup => {
+                      const row = document.createElement('tr');
+                      row.classList.add('cashup-row');
+                      row.setAttribute('data-cashup-id', cashup.id);
+                      row.innerHTML = `
+                        <td><small>${cashup.branch__name}</small></td>
+                        <td><small>$${cashup.expected_cash}</small></td>
+                        <td><small>$${cashup.expense || 0.00}</small></td>
+                        <td><small>$${cashup.received_amount}</small></td>
+                        <td><small>${cashup.created_by__username}</small></td>
+                        <td>
+                          <button class="btn btn-sm btn-outline-primary" onclick="toggleCashUpDetails(${cashup.id}, this)">View</button>
+                          <button class="btn btn-sm btn-outline-success" onclick="checkStatus(${cashup.id}, this)">Mark Done</button>
+                        </td>`;
+                      tableBody.appendChild(row);
+                    });
+                  });
+              })
+              .catch(err => console.error('Failed to load cash‑ups', err));
+          }
 
         populateCashUpTable() 
 
         let cashup_id = ''
 
+        function checkStatus(cashUpId, btn) {
+
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Loading...
+            `;
+            btn.disabled = true;
+
+            fetch(`/finance/check_cash_up_status/${cashUpId}/`)
+              .then(res => res.json())
+              .then(data => {
+                if (!data.success) {
+                  return alert('Error checking status: ' + (data.message || 'unknown'));
+                }
+        
+                if (data.status) {
+                  const row = btn.closest('tr');
+                  row.parentNode.removeChild(row);
+        
+                  const dateRow = row.previousElementSibling;
+                  const next = row.nextElementSibling;
+                  if (next === null || next.classList.contains('table-secondary')) {
+                    dateRow.parentNode.removeChild(dateRow);
+                  }
+                } else {
+                  alert('Cash‑up is not yet complete.');
+                  btn.innerHTML = originalHTML;
+                  btn.disabled = false;
+                }
+              })
+              .catch(err => {
+                console.error(err);
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            })
+          }
+
         function toggleCashUpDetails(cashUpId, btn) {
             const row = btn.closest('tr');
-
-            cashup_id = cashUpId
-
-            if (row.nextElementSibling && row.nextElementSibling.classList.contains('children-row')) {
-                row.nextElementSibling.remove();
+            cashup_id = cashUpId;
+        
+            if (row.nextElementSibling && row.nextElementSibling.classList.contains('details-row')) {
+                row.nextElementSibling.classList.add('fade-out');
+                setTimeout(() => row.nextElementSibling.remove(), 300);
                 return;
             }
-
+        
             const loaderRow = document.createElement('tr');
-            loaderRow.classList.add('children-row');
-            loaderRow.innerHTML = `<td colspan="6" class="text-center py-3">
-                <div class="spinner-border text-primary" role="status"></div>
-            </td>`;
+            loaderRow.classList.add('details-row', 'fade-in');
+            loaderRow.innerHTML = `
+                <td colspan="6" class="p-3">
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span class="ms-2">Loading details...</span>
+                    </div>
+                </td>
+            `;
             row.parentNode.insertBefore(loaderRow, row.nextSibling);
-
-            fetch('/finance/get_cash_up_details/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ cash_up_id: cashUpId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                console.log(data)
+        
+            fetchCashUpDetails(cashUpId, loaderRow);
+        }
+        
+        async function fetchCashUpDetails(cashUpId, loaderRow) {
+            try {
+                const response = await fetch('/finance/get_cash_up_details/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ cash_up_id: cashUpId })
+                });
+                
+                const data = await response.json();
+                
                 if (!data.success) {
-                    loaderRow.innerHTML = `<td colspan="6" class="text-danger text-center">Failed to load details</td>`;
+                    showErrorMessage(loaderRow, 'Could not load details. Please try again.');
                     return;
                 }
+                
+                renderCashUpDetails(data, loaderRow);
+            } catch (error) {
+                console.error('Error fetching cash up details:', error);
+                showErrorMessage(loaderRow, 'An error occurred while loading details.');
+            }
+        }
+        
+        function showErrorMessage(loaderRow, message) {
+            loaderRow.innerHTML = `
+                <td colspan="6" class="p-3">
+                    <div class="alert alert-danger d-flex align-items-center mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>${message}</div>
+                        <button type="button" class="btn-close ms-auto" onclick="this.closest('tr').remove()"></button>
+                    </div>
+                </td>
+            `;
+        }
+        
+        function renderCashUpDetails(data, loaderRow) {
+            const salesSection = createSalesSection(data.data.sales);
 
-                console.log('here')
-                console.log('sales data:', data.data.sales);
-
-                let salesTable = '<div>No sales data available</div>';
-                if (Array.isArray(data.data.sales) && data.data.sales.length > 0) {
-                    salesTable = `
-                        <table class="table table-borderless mb-2">
-                            ${data.data.sales.map(s => `
-                                <tr>
+            const expensesSection = createExpensesSection(data.data.expenses);
+            
+            // Combine sections into a card-based layout
+            loaderRow.innerHTML = `
+                <td colspan="6" class="p-0">
+                    <div class="container-fluid p-3 bg-light border-top border-bottom">
+                        <div class="row g-3">
+                            <div class="col-12 w-100">
+                                <div class="card shadow-sm">
+                                    <div class="card-body">${salesSection}</div>
+                                </div>
+                            </div>
+                            <div class="col-12 w-100">
+                                <div class="card shadow-sm">
+                                    <div class="card-body">${expensesSection}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            `;
+        }
+        
+        function createSalesSection(sales) {
+            if (!Array.isArray(sales) || sales.length === 0) {
+                return `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Sales</h5>
+                    </div>
+                    <div class="text-muted py-3 text-center">No sales data available</div>
+                `;
+            }
+        
+            return `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Sales</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <select id="category-all-${cashup_id}" class="form-select form-select-sm">
+                            <option value="">Select Category for All</option>
+                            {% for category in income_categories %}
+                                <option value='{{ category.id }}'>{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-primary btn-sm" onclick="recordAllSales(${cashup_id})">
+                            <i class="bi bi-check2-all me-1"></i>Record All
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-end">Amount</th>
+                                <th>Category</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sales.map(s => `
+                                <tr data-sale-id="${s.id}" data-branch="${s.invoice__branch}">
                                     <td>${s.invoice__products_purchased || 'No description'}</td>
-                                    <td></td>
-                                    <td>$${s.total_amount}</td>
+                                    <td class="text-end fw-bold">$${s.total_amount}</td>
                                     <td>
-                                        <button class="btn btn-sm btn-success" id='${s.id}' onclick="recordSale(${s.id}, 'sale', ${s.invoice__branch})">Record</button>
+                                        <select id="category-${s.id}" class="form-select form-select-sm sale-category">
+                                            <option value="">Select Category</option>
+                                            {% for category in income_categories %}
+                                                <option value='{{ category.id }}'>{{ category.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td class="text-center">
+                                       ${ s.invoice__invoice_items__cash_up_status
+                                            ? `<span class="badge bg-success">Success recorded</span>`
+                                            : `<button
+                                                class="btn btn-sm btn-outline-success record-sale-btn"
+                                                id="btn-${s.id}"
+                                                onclick="recordSale(
+                                                    ${s.id},
+                                                    'sale',
+                                                    ${s.invoice__branch},
+                                                    document.getElementById('category-${s.id}').value
+                                                )"
+                                                >
+                                                <i class="bi bi-check-lg"></i> Record
+                                                </button>`
+                                        }
                                     </td>
                                 </tr>
                             `).join('')}
-                        </table>
-                    `;
-                }
-
-                const expensesTable = `
-                    <table class="table table-borderless">
-                        ${data.data.expenses.map(e => `
-                            <tr>
-                                <td>${e.description || 'No description'}</td>
-                                <td>$${e.amount}</td>
-                                <td>
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-sm btn-warning" onclick="recordExpense(${e.id})">Record</button>
-                                        <button type="button" class="btn btn-sm btn-warning dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <span class="visually-hidden">Toggle Dropdown</span>
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="#">Mark as Reviewed</a></li>
-                                            <li><a class="dropdown-item" href="#">Flag Issue</a></li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('')}
+                        </tbody>
                     </table>
-                `;
-
-                loaderRow.innerHTML = `
-                    <td colspan="6">
-                        <div class="mb-2"><strong>Sales:</strong></div>
-                        ${salesTable || '<div>No Sales</div>'}
-                        <div class="mb-2"><strong>Expenses:</strong></div>
-                        ${expensesTable || '<div>No Expenses</div>'}
-                    </td>
-                `;
-
-             })
-            .catch(err => {
-                loaderRow.innerHTML = `<td colspan="6" class="text-danger text-center">Error loading data</td>`;
-            });
+                </div>
+            `;
         }
-
-        function recordSale(saleId, type, branch) {
-            console.log('Recording sale:', saleId, branch, cashup_id);
-
-            // Show Swal loading modal
-            Swal.fire({
-                title: 'Processing...',
-                text: 'Please wait while the sale is being recorded.',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+        
+        function createExpensesSection(expenses) {
+            if (!Array.isArray(expenses) || expenses.length === 0) {
+                return `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Expenses</h5>
+                    </div>
+                    <div class="text-muted py-3 text-center">No expenses data available</div>
+                `;
+            }
+        
+            return `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Expenses</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-end">Amount</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${expenses.map(e => `
+                                <tr data-expense-id="${e.id}">
+                                    <td>${e.description || 'No description'}</td>
+                                    <td class="text-end fw-bold">$${e.amount}</td>
+                                    <td class="text-center">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-receipt"></i> Actions
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><button class="dropdown-item" onclick="recordExpense(${e.id})">Record Expense</button></li>
+                                                <li><button class="dropdown-item" onclick="splitExpense(${e.id}, '${e.description || 'Expense'}', ${e.amount})">Split Expense</button></li>
+                                                <li><button class="dropdown-item" onclick="markAsReviewed(${e.id})">Mark as Reviewed</button></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><button class="dropdown-item text-danger" onclick="flagIssue(${e.id})">Flag Issue</button></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+        
+                <!-- Split Expense Modal -->
+                <div class="modal fade" id="splitExpenseModal" tabindex="-1" aria-labelledby="splitExpenseModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="splitExpenseModalLabel">Split Expense</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <span class="fw-bold" id="expenseDescription"></span>
+                                            <span class="text-muted">- Original Amount: $<span id="originalAmount"></span></span>
+                                        </div>
+                                        <span class="text-muted">Remaining: $<span id="remainingAmount" class="fw-bold"></span></span>
+                                    </div>
+                                    <div class="progress mb-3">
+                                        <div id="splitProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+        
+                                <div id="splitItemsContainer">
+                                    <!-- Split items will be added here -->
+                                </div>
+                                
+                                <button type="button" class="btn btn-outline-primary mt-3" id="addSplitItemBtn">
+                                    <i class="bi bi-plus-circle"></i> Add Another Category
+                                </button>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="saveSplitExpenseBtn" disabled>Save Splits</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Global variables for expense splitting
+        let currentExpenseId = null;
+        let currentExpenseTotal = 0;
+        let splitItems = [];
+        let splitItemCounter = 0;
+        
+        // Function to open the split expense modal
+        function splitExpense(expenseId, description, amount) {
+            // Reset state
+            currentExpenseId = expenseId;
+            currentExpenseTotal = parseFloat(amount);
+            splitItems = [];
+            splitItemCounter = 0;
+            
+            // Set modal values
+            document.getElementById('expenseDescription').textContent = description;
+            document.getElementById('originalAmount').textContent = amount;
+            document.getElementById('remainingAmount').textContent = amount;
+            document.getElementById('splitProgressBar').style.width = '0%';
+            document.getElementById('splitItemsContainer').innerHTML = '';
+            document.getElementById('saveSplitExpenseBtn').disabled = true;
+            
+            // Add first split item
+            addSplitItem();
+            
+            // Show the modal
+            const splitModal = new bootstrap.Modal(document.getElementById('splitExpenseModal'));
+            splitModal.show();
+        }
+        
+        // Function to add a new split item row
+        function addSplitItem() {
+            splitItemCounter++;
+            const itemId = `split-item-${splitItemCounter}`;
+            
+            const splitItem = document.createElement('div');
+            splitItem.className = 'split-item card mb-3';
+            splitItem.id = itemId;
+            
+            // Get expense categories from Django template context
+            const categoryOptions = `
+                {% for category in expense_categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            `;
+            
+            splitItem.innerHTML = `
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label class="form-label">Category</label>
+                            <select class="form-select category-select" data-item-id="${itemId}">
+                                <option value="">Select Category</option>
+                                ${categoryOptions}
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control amount-input" data-item-id="${itemId}" step="0.01" min="0.01" max="${currentExpenseTotal}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button class="btn btn-outline-danger w-100 remove-split-btn" data-item-id="${itemId}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <label class="form-label">Note (Optional)</label>
+                            <textarea class="form-control note-input" data-item-id="${itemId}" rows="1"></textarea>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('splitItemsContainer').appendChild(splitItem);
+            
+            // Add event listeners to the new inputs
+            const categorySelect = splitItem.querySelector('.category-select');
+            const amountInput = splitItem.querySelector('.amount-input');
+            const noteInput = splitItem.querySelector('.note-input');
+            const removeButton = splitItem.querySelector('.remove-split-btn');
+            
+            categorySelect.addEventListener('change', updateSplitItem);
+            amountInput.addEventListener('input', updateSplitItem);
+            noteInput.addEventListener('input', updateSplitItem);
+            
+            // Only show remove button if there's more than one item
+            if (document.querySelectorAll('.split-item').length === 1) {
+                removeButton.disabled = true;
+            } else {
+                document.querySelectorAll('.remove-split-btn').forEach(btn => {
+                    btn.disabled = false;
+                });
+            }
+            
+            removeButton.addEventListener('click', function() {
+                removeSplitItem(itemId);
             });
-
-            fetch('/finance/record_cashflow/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')  
-                },
-                body: JSON.stringify({ id: saleId, type:type, branch:branch, cashup_id:cashup_id })  
-            })
-            .then(response => response.json())
-            .then(data => {
-                Swal.close(); 
-
-                if (data.success) {
-                    Toastify({
-                        text: "Sale recorded successfully!",
-                        duration: 3000,
-                        gravity: "top", 
-                        position: "center",
-                        background: "#28a745"
-                    }).showToast();
-
-                    // setTimeout(() => location.reload(), 1500);
-                    const recordBtn = document.getElementById(`${data.id}`)
-                    console.log(recordBtn)
-                    recordBtn.textContent = 'recorded'
-                    recordBtn.disabled = true
+            
+            // Scroll to the new item
+            splitItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            // Update split items array
+            splitItems.push({
+                id: itemId,
+                category: '',
+                amount: 0,
+                note: ''
+            });
+            
+            updateTotals();
+        }
+        
+        // Function to update a split item in the items array
+        function updateSplitItem(event) {
+            const itemId = event.target.getAttribute('data-item-id');
+            const itemIndex = splitItems.findIndex(item => item.id === itemId);
+            
+            if (itemIndex === -1) return;
+            
+            const item = document.getElementById(itemId);
+            
+            splitItems[itemIndex] = {
+                id: itemId,
+                category: item.querySelector('.category-select').value,
+                amount: parseFloat(item.querySelector('.amount-input').value) || 0,
+                note: item.querySelector('.note-input').value
+            };
+            
+            updateTotals();
+        }
+        
+        // Function to remove a split item
+        function removeSplitItem(itemId) {
+            document.getElementById(itemId).remove();
+            
+            // Update splitItems array
+            const itemIndex = splitItems.findIndex(item => item.id === itemId);
+            if (itemIndex !== -1) {
+                splitItems.splice(itemIndex, 1);
+            }
+            
+            // If only one item remains, disable its remove button
+            if (document.querySelectorAll('.split-item').length === 1) {
+                document.querySelector('.remove-split-btn').disabled = true;
+            }
+            
+            updateTotals();
+        }
+        
+        // Function to update totals and progress bar
+        function updateTotals() {
+            const totalSplit = splitItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+            const remaining = Math.max(0, (currentExpenseTotal - totalSplit).toFixed(2));
+            const percentage = Math.min(100, (totalSplit / currentExpenseTotal) * 100);
+            
+            // Update UI
+            document.getElementById('remainingAmount').textContent = remaining;
+            
+            const progressBar = document.getElementById('splitProgressBar');
+            progressBar.style.width = `${percentage}%`;
+            
+            // Update progress bar color based on status
+            if (Math.abs(totalSplit - currentExpenseTotal) < 0.01) {
+                progressBar.className = 'progress-bar bg-success';
+                document.getElementById('saveSplitExpenseBtn').disabled = false;
+            } else if (totalSplit > currentExpenseTotal) {
+                progressBar.className = 'progress-bar bg-danger';
+                document.getElementById('saveSplitExpenseBtn').disabled = true;
+            } else {
+                progressBar.className = 'progress-bar bg-primary';
+                document.getElementById('saveSplitExpenseBtn').disabled = true;
+            }
+        }
+        
+        // Initialize event listeners once the DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event listener for "Add Another Category" button
+            document.getElementById('addSplitItemBtn').addEventListener('click', addSplitItem);
+            
+            // Event listener for "Save Splits" button
+            document.getElementById('saveSplitExpenseBtn').addEventListener('click', saveSplitExpense);
+        });
+        
+        // Function to save the split expense
+        async function saveSplitExpense() {
+            // Validate all splits have categories
+            const invalidSplits = splitItems.filter(item => !item.category);
+            if (invalidSplits.length > 0) {
+                alert('Please select a category for all splits.');
+                return;
+            }
+            
+            // Show loading state
+            const saveButton = document.getElementById('saveSplitExpenseBtn');
+            const originalText = saveButton.innerHTML;
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+            
+            try {
+                // Prepare data for the API
+                const splitItemsForApi = splitItems.map(item => ({
+                    category_id: item.category,
+                    amount: item.amount,
+                    note: item.note
+                }));
+                
+                // Send to backend
+                const response = await fetch('/finance/split_expense/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        expense_id: currentExpenseId,
+                        splits: splitItemsForApi,
+                        cash_up_id: cashup_id
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Hide the modal
+                    bootstrap.Modal.getInstance(document.getElementById('splitExpenseModal')).hide();
                     
+                    // Show success toast
+                    showToast('Success', 'Expense has been split successfully', 'success');
+                    
+                    // Update the UI to show expense has been processed
+                    const expenseRow = document.querySelector(`tr[data-expense-id="${currentExpenseId}"]`);
+                    if (expenseRow) {
+                        expenseRow.classList.add('table-success', 'fade-out');
+                        setTimeout(() => {
+                            expenseRow.remove();
+                        }, 500);
+                    }
                 } else {
-                    Toastify({
-                        text: data.message || "Failed to record sale",
-                        duration: 4000,
-                        gravity: "top", 
-                        position: "center",
-                        background: "#dc3545"
-                    }).showToast();
+                    throw new Error(result.message || 'Failed to split expense');
                 }
-            })
-            .catch(error => {
-                Swal.close();
-
-                Toastify({
-                    text: "An error occurred",
-                    duration: 4000,
-                    gravity: "top", 
-                    position: "center",
-                    background: "#dc3545"
-                }).showToast();
+            } catch (error) {
+                console.error('Error splitting expense:', error);
+                showToast('Error', error.message || 'Failed to split expense', 'danger');
+            } finally {
+                // Reset button state
+                saveButton.disabled = false;
+                saveButton.innerHTML = originalText;
+            }
+        }
+        
+        // Add CSS for the split expense feature
+        document.head.insertAdjacentHTML('beforeend', `
+        <style>
+            .split-item {
+                position: relative;
+                transition: all 0.3s ease;
+            }
+            
+            .split-item:hover {
+                box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+            }
+            
+            .progress {
+                height: 8px;
+            }
+            
+            .progress-bar {
+                transition: width 0.3s ease, background-color 0.3s ease;
+            }
+            
+            .fade-out {
+                animation: fadeOut 0.5s forwards;
+            }
+            
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; transform: translateY(-10px); }
+            }
+        </style>
+        `);
+        
+        // Toast notification function (if not already defined)
+        function showToast(title, message, type = 'info') {
+            const toastContainer = document.getElementById('toast-container') || createToastContainer();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center border-0 show`;
+            toast.classList.add(`bg-${type === 'info' ? 'primary' : type}`);
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body text-white">
+                        <strong>${title}:</strong> ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+        
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            container.style.zIndex = '1050';
+            document.body.appendChild(container);
+            return container;
+        }
+        
+        function recordAllSales(cashupId) {
+            const categorySelector = document.getElementById(`category-all-${cashupId}`);
+            const selectedCategory = categorySelector.value;
+            
+            if (!selectedCategory) {
+                showToast('Warning', 'Please select a category for all sales', 'warning');
+                return;
+            }
+            
+            // Get all sale rows for this cashup
+            const saleRows = document.querySelectorAll(`tr[data-sale-id]`);
+            let processedCount = 0;
+            
+            // Show processing indicator
+            showToast('Processing', 'Recording all sales...', 'info');
+            
+            // Process each sale
+            saleRows.forEach(row => {
+                const saleId = row.getAttribute('data-sale-id');
+                const branch = row.getAttribute('data-branch');
+                const categoryDropdown = document.getElementById(`category-${saleId}`);
+                
+                if (categoryDropdown) {
+                    categoryDropdown.value = selectedCategory;
+                    recordSale(saleId, 'sale', branch, selectedCategory)
+                        .then(() => {
+                            processedCount++;
+                            if (processedCount === saleRows.length) {
+                                showToast('Success', `All ${processedCount} sales recorded successfully`, 'success');
+                            }
+                        })
+                        .catch(error => {
+                            console.error(`Error recording sale ${saleId}:`, error);
+                        });
+                }
             });
         }
+        
+        // Modern toast notification system
+        function showToast(title, message, type = 'info') {
+            const toastContainer = document.getElementById('toast-container') || createToastContainer();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center border-0 show`;
+            toast.classList.add(`bg-${type === 'info' ? 'primary' : type}`);
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body text-white">
+                        <strong>${title}:</strong> ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+        
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            container.style.zIndex = '1050';
+            document.body.appendChild(container);
+            return container;
+        }
+        
+        // Promise-based recordSale function
+        async function recordSale(saleId, type, branch, category) {
+            const button = document.getElementById(`btn-${saleId}`);
+            const originalText = button.innerHTML;
+            
+            // Show loading state
+            button.disabled = true;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...`;
+            
+            try {
+                console.log(
+                    { 
+                        id: saleId, 
+                        type: type, 
+                        branch: branch,
+                        category: category,
+                        cash_up_id: cashup_id
+                    }
+                )
+                const response = await fetch('/finance/record_cashflow/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ 
+                        id: saleId, 
+                        type: type, 
+                        branch: branch,
+                        category: category,
+                        cash_up_id: cashup_id
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    button.classList.remove('btn-outline-success');
+                    button.classList.add('btn-success');
+                    button.innerHTML = `<i class="bi bi-check-circle"></i> Recorded`;
+                    
+                    const categorySelect = document.getElementById(`category-${saleId}`);
+                    if (categorySelect) categorySelect.disabled = true;
+                    
+                    return result;
+                } else {
+                    throw new Error(result.message || 'Failed to record sale');
+                }
+            } catch (error) {
+                console.error(`Error recording sale ${saleId}:`, error);
+                button.disabled = false;
+                button.innerHTML = originalText;
+                showToast('Error', error.message || 'Failed to record sale', 'danger');
+                throw error;
+            }
+        }
+        
+        // Add some CSS to the page for animations and styling
+        document.head.insertAdjacentHTML('beforeend', `
+        <style>
+            .fade-in {
+                animation: fadeIn 0.3s ease-in;
+            }
+            
+            .fade-out {
+                animation: fadeOut 0.3s ease-out;
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            
+            @keyframes fadeOut {
+                from { opacity: 1; transform: translateY(0); }
+                to { opacity: 0; transform: translateY(-10px); }
+            }
+            
+            .details-row td {
+                transition: all 0.3s ease;
+            }
+            
+            .table-hover tbody tr:hover {
+                background-color: rgba(0,0,0,.03);
+            }
+        </style>
+        `);
 
         function recordExpense() {
             const name = document.getElementById('expenseName').value;

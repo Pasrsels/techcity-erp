@@ -119,6 +119,7 @@ urlpatterns = [
     path('record_transaction/', record_cashflow_transaction, name='record_transaction'),
     path('cash-flow/categories/', get_cashflow_categories, name='cashflow_categories'),
     path('get_cash_up_details/', cash_up_list, name='get_cash_up_details'),
+    path('check_cash_up_status/<int:cash_up_id>/', check_cashup_status, name='check_cashup_status'),
 
     # user accounts
     path('user_accounts/', user_accounts, name='user_accounts'),
