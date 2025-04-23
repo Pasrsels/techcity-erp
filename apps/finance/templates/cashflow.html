@@ -261,8 +261,8 @@
                     <thead>
                         <tr>
                             <th>Details</th>
-                            <th class="text-right">Amount</th>
                             <th>Percent</th>
+                            <th class="text-right">Amount</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -278,7 +278,7 @@
                             <td>Total Income</td>
                             <td>{{ income_total }}</td>
                         </tr> {% endcomment %}
-                        {% for item in combined_cashflow %}
+                        {% comment %} {% for item in combined_cashflow %} {% endcomment %}
                         {% comment %} <tr class="{% if item.type_label == 'expense' %}table-danger{% elif item.type_label == 'sale' %}table-primary{% else %}table-success{% endif %}">
                             <td>
                                 <i class='bx bx-money-withdraw'></i>
@@ -293,19 +293,33 @@
                             <td colspan="5" class="text-center">No financial activity in the selected period.</td>
                         </tr>
                         {% endfor %} {% endcomment %}
-                        {% for category in income_by_category %}
-                               km 
+                        {% comment %} {% for category in income_by_category %}
+                               km  {% endcomment %}
+                        <tr>
+                            <td>Income</td>
+                            <td></td>
+                            <td class='text-success'>{{ total_income }}</td>
+                        </tr>
                         {% for category in expenses_by_category %}
                         <tr>
                             <td>{% if category.category__name %}{{ category.category__name }}{% else %}Uncategorized{% endif %}</td>
-                            <td class="text-right">{{ category.total|floatformat:2 }}</td>
-                            <td class="text-right">{{ category.percentage|floatformat:1 }}%</td>
+                            <td class="text-right text-danger">{{ category.percentage|floatformat:1 }}%</td>
+                            <td class="text-right text-danger">-{{ category.total|floatformat:2 }}</td>
                         </tr>
                         {% empty %}
                         <tr>
                             <td colspan="3" class="text-center">No expense data available.</td>
                         </tr>
                         {% endfor %}
+                        <tfoot>
+                            <tr class="bg-dark">
+                                <td class='fw-bold'>Balance</td>
+                                <td></td>
+                                <td class='{% if balance < 0 %} table-dark {% else %} tabler-dark {% endif %}'>
+                                    {{ balance }}
+                                </td>
+                            </tr>
+                        </tfoot>
                     </tbody>
                 </table>
             </div>
@@ -319,6 +333,7 @@
                     <thead>
                         <tr>
                             <th>Date/Time</th>
+                            <th>Descriptions</th>
                             <th>Type</th>
                             <th>Category</th>
                             <th>Source</th>
@@ -329,8 +344,15 @@
                         {% for item in combined_cashflow %}
                         <tr class="{% if item.type_label == 'expense' %}table-danger{% elif item.type_label == 'sale' %}table-primary{% else %}table-success{% endif %}">
                             <td>{{ item.datetime|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                {% if item.type_label == 'expense'%}
+                                    {{ item.description }}
+                                {% else %}
+                                    {{ item.sale__invoice__invoice_items__item__name }}
+                                {% endif %}
+                            </td>
                             <td>{{ item.type_label|title }}</td>
-                            <td>{% if item.category_name %}{{ item.category_name }}{% else %}Uncategorized{% endif %}</td>
+                            <td>{% if item.category_name %}{{ item.category__name }}{% else %}Uncategorized{% endif %}</td>
                             <td>{{ item.source }}</td>
                             <td class="text-right">{{ item.amount|floatformat:2 }}</td>
                         </tr>

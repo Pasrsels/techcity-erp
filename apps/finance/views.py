@@ -148,7 +148,7 @@ def expenses(request):
             logger.info(f"Received POST data: {data}")
             logger.info(f"Received file: {image}")
 
-            name_id = data.get('name') 
+            name = data.get('name') 
             amount = data.get('amount')
             category_id = data.get('category')  
             payment_method = data.get('payment_method', 'cash')
@@ -160,7 +160,7 @@ def expenses(request):
             recurrence_unit = data.get('recurrence_unit')
 
             # Validation
-            if not all([name_id, amount, category_id, payment_method, currency_id, branch_id]):
+            if not all([name, amount, category_id, payment_method, currency_id, branch_id]):
                 return JsonResponse({'success': False, 'message': 'Missing required fields.'})
 
             # Fetch related objects
@@ -191,6 +191,8 @@ def expenses(request):
                     'balance': 0
                 }
             )
+            
+            logger.info(account_balance.balance)
 
             if account_balance.balance < Decimal(amount):
                 return JsonResponse({'success': False, 'message': f'{account_name} has insufficient balance.'})
@@ -201,6 +203,7 @@ def expenses(request):
 
             # Create Expense
             expense = Expense.objects.create(
+                description=name,
                 amount=amount,
                 category=category,
                 user=request.user,
@@ -223,8 +226,8 @@ def expenses(request):
                 branch=branch
             )
 
-            # Send notification
-            send_expense_creation_notification.delay(expense.id)
+            # Send notification (to turn on)
+            # send_expense_creation_notification.delay(expense.id)
 
             return JsonResponse({'success': True, 'message': 'Expense recorded successfully.'})
 
@@ -3446,7 +3449,7 @@ def cash_flow(request):
     end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d')
 
     end_date_query = end_date_obj + datetime.timedelta(days=1)
-    
+        
     # Query for invoice items in the date range
     invoice_items = InvoiceItem.objects.filter(
         invoice__issue_date__date__gte=start_date_obj,
@@ -3486,7 +3489,7 @@ def cash_flow(request):
         parent_category=F('category__parent__name'),
         datetime=F('created_at'),
         source=Value('Income', output_field=CharField())
-    ).values('datetime', 'amount', 'type_label', 'category_name', 'parent_category', 'source', 'note')
+    ).values('datetime',  'sale__invoice__invoice_items__item__name', 'amount', 'type_label', 'category_name', 'parent_category', 'source', 'note')
     
     # Normalize expense entries
     normalized_expenses = expenses.annotate(
@@ -3495,7 +3498,7 @@ def cash_flow(request):
         parent_category=F('category__parent__name'),
         datetime=F('issue_date'),
         source=Value('Expense', output_field=CharField())
-    ).values('datetime', 'amount', 'type_label', 'category_name', 'parent_category', 'source')
+    ).values('datetime', 'amount', 'description', 'type_label', 'category_name', 'parent_category', 'source')
     
     # Combine and sort by datetime (chronological timeline of all financial activity)
     combined_cashflow = sorted(
