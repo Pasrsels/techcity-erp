@@ -973,7 +973,7 @@ function totals(){
         document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + payable.toFixed(2)}`;
 
         payable_amount = payable
-        discount_amount = discount
+        discount_amount = discountF
 
         updateTfoot(vatAmount, totalAmount, delivery, payable)
 
@@ -1239,17 +1239,46 @@ async function processCart(el) {
             const invoiceId = result.invoice_id;
 
             if (invoiceId) {
-                fetch(`/finance/invoice/preview/json/${invoiceId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log("Invoice data:", data);
-                        displayReceipt(data);
-                        cart = [];
-                        updateCartDisplay();
-                    });
+                Swal.fire({
+                    title: 'Printing...',
+                    text: 'Generating receipt, please wait...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                        fetch(`/finance/invoice/preview/json/${invoiceId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log("Invoice data:", data);
+                                displayReceipt(data);
+                                cart = [];
+                                updateCartDisplay();
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Receipt Printed',
+                                    text: 'The receipt has been successfully generated!',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                            })
+                            .catch(error => {
+                                console.error("Error fetching invoice data:", error);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Oops...',
+                                    text: 'Failed to generate receipt!',
+                                });
+                            });
+                    }
+                });
             } else {
                 console.error("Invoice ID not found in response.");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Invoice',
+                    text: 'Invoice ID was not found. Please try again.',
+                });
             }
+            
         }
 
     } catch (error) {
