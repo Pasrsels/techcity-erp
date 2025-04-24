@@ -882,16 +882,16 @@ def create_invoice(request):
                 # for tax purpose Zimra
                 logger.info(invoice_items)
 
-                # try:
-                #     sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
-                #     logger.info(f'sig data: {sig_data} {receipt_data}')
-                # except Exception as e:
-                #     logger.info(e)
-                #     return JsonResponse({'success': False, 'error': str(e)})
+                try:
+                    sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
+                    logger.info(f'sig data: {sig_data} {receipt_data}')
+                except Exception as e:
+                    logger.info(e)
+                    return JsonResponse({'success': False, 'error': str(e)})
 
-                # logger.info(f'inventory creation successfully done: {invoice}')
+                logger.info(f'inventory creation successfully done: {invoice}')
 
-                return JsonResponse({'success':True, 'invoice_id': invoice.id, 'data':[], 'receipt_data':[]})
+                return JsonResponse({'success':True, 'invoice_id': invoice.id, 'data':sig_data, 'receipt_data':receipt_data})
 
         except (KeyError, json.JSONDecodeError, Customer.DoesNotExist, Inventory.DoesNotExist, Exception) as e:
             return JsonResponse({'success': False, 'error': str(e)})
@@ -942,6 +942,7 @@ def submit_invoice_data_zimra(request):
         hash = data.get('hash', '')
         signature = data.get('signature', '') 
         receipt_data = data.get('receipt_data')
+        invoice_id = data.get('invoice_id')
 
         logger.info(receipt_data)
 
@@ -950,10 +951,22 @@ def submit_invoice_data_zimra(request):
 
         if not signature:
             return JsonResponse({'success':False,'message':f'Signature data is missing!'}, status=400)
+        
+        try:
+            submit_receipt_data(request, receipt_data, hash, signature)
+            logger.info('done')
+        except Exception as e:
+            return JsonResponse(
+                {
+                    'success':False,
+                    'messsage':f'{e}'
+                },
+                status=400
+            )
+        
+        invoice_data = invoice_preview_json(request, invoice_id)
 
-        submit_receipt_data(request, receipt_data, hash, signature)
-
-        return JsonResponse({'success':True, 'message':'data received'}, status=200)
+        return JsonResponse({'success':True, 'message':'data received', 'data':invoice_data}, status=200)
     except Exception as e:
         return JsonResponse({'message':f'{e}', 'success':False}, status=200)
 
@@ -2095,7 +2108,6 @@ def replace_item(request, item_id):
         except (InvoiceItem.DoesNotExist, ValueError):
             return JsonResponse({'success': False, 'error': 'Invalid item'}, status=404)
 
-@login_required
 def invoice_preview_json(request, invoice_id):
     try:
         invoice = Invoice.objects.get(id=invoice_id)
@@ -2138,7 +2150,8 @@ def invoice_preview_json(request, invoice_id):
         
     invoice_dict['user_username'] = invoice.user.username  
 
-    # invoice_dict['receipt_signature'] = invoice.receiptServerSignature if invoice.receiptServerSignature else None
+    invoice_dict['receipt_signature'] = invoice.receiptServerSignature if invoice.receiptServerSignature else None
+    invoice_dict['qr_code'] = invoice.qr_code
     
     # if invoice.qr_code and invoice.qr_code.name:
     #     try:
@@ -2149,13 +2162,14 @@ def invoice_preview_json(request, invoice_id):
     # else:
     #     invoice_dict['receipt_qr_code_url'] = None
 
-    # logger.info(invoice.qr_code)
+    logger.info(invoice.qr_code)
     
     invoice_data = {
         'invoice': invoice_dict,
         'invoice_items': list(invoice_items),
         'dates': list(dates)
     }
+    
     return JsonResponse(invoice_data)
 
 @login_required

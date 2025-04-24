@@ -60,7 +60,6 @@
         left: 0;
         width: 100%;
         height: 100%;
-/*        background-color: rgba(0, 0, 0, 0.5);*/
         display: none; 
         z-index: 1;
     }
@@ -342,357 +341,298 @@
 
     <div class="overlay hidden"></div>
 </body>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src={% static "js/app_modules/signature_sign.js" %}></script>
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.0/jsrsasign-all-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src={% static "js/app_modules/signature_sign.js" %}></script>
 
 <script>   
     console.log(run())
-let cart = [];
-let data = [];
-let respData = [];
-let currencyData = [];
-const customersData = [];
-let customerBalanceData = [];
+    let cart = [];
+    let data = [];
+    let respData = [];
+    let currencyData = [];
+    const customersData = [];
+    let customerBalanceData = [];
 
-let holdStatus = false;
+    let holdStatus = false;
 
-let bal = 0;
-let previousDue = 0
-let discount_amount = 0;
-let delivery_amount = 0;
-let payable_amount = 0;
-let vat_amount = 0;
-let amount_paid = 0;
-let paymentMethod = 'cash'
-let menuName = '';
-let clientName = '';
-let initialCurrencyValue = '';
-let addedToCartProduct = [];
-let paymentTerms = 'cash';
-let sub = 0
-let vatAmount
-let price = 0
+    let bal = 0;
+    let previousDue = 0
+    let discount_amount = 0;
+    let delivery_amount = 0;
+    let payable_amount = 0;
+    let vat_amount = 0;
+    let amount_paid = 0;
+    let paymentMethod = 'cash'
+    let menuName = '';
+    let clientName = '';
+    let initialCurrencyValue = '';
+    let addedToCartProduct = [];
+    let paymentTerms = 'cash';
+    let sub = 0
+    let vatAmount
+    let price = 0
 
-const layby_dates = []
-const taxMethod = "{{ tax_method }}"
+    const layby_dates = []
+    const taxMethod = "{{ tax_method }}"
 
-let error = document.querySelector('#error_message');
+    let error = document.querySelector('#error_message');
 
-// import { calculateInclusiveTax, calculateExclusiveTax } from "{% static 'js/app_modules/taxes.js' %}";
-// console.log(calculateExclusiveTax)
+    // import { calculateInclusiveTax, calculateExclusiveTax } from "{% static 'js/app_modules/taxes.js' %}";
+    // console.log(calculateExclusiveTax)
 
-const currencySelect = document.querySelector('#currency')
-const endOfDayModal = new bootstrap.Modal(document.getElementById('endOfDayModal'));
-const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
-const loaderModal = new bootstrap.Modal(document.getElementById('loaderModal'));
-const qouteModal = new bootstrap.Modal(document.getElementById('qouteModal'));
-const chooseCustomerModal= new bootstrap.Modal(document.getElementById('chooseCustomerModal'))
+    const currencySelect = document.querySelector('#currency')
+    const endOfDayModal = new bootstrap.Modal(document.getElementById('endOfDayModal'));
+    const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+    const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+    const loaderModal = new bootstrap.Modal(document.getElementById('loaderModal'));
+    const qouteModal = new bootstrap.Modal(document.getElementById('qouteModal'));
+    const chooseCustomerModal= new bootstrap.Modal(document.getElementById('chooseCustomerModal'))
 
-const customerModal = new bootstrap.Modal(document.getElementById('customerModal'));
-const menuType = document.getElementById('menu-type');
-const ostBtn = document.getElementById('out_of_stock');
+    const customerModal = new bootstrap.Modal(document.getElementById('customerModal'));
+    const menuType = document.getElementById('menu-type');
+    const ostBtn = document.getElementById('out_of_stock');
 
-const tableEl = document.querySelector('#invoiceTable');
-const loaderSpin = document.querySelector('#loader');
-const previousDueEl = document.querySelector('#previous_due');
-const holdBtn = document.getElementById('id_hold');
+    const tableEl = document.querySelector('#invoiceTable');
+    const loaderSpin = document.querySelector('#loader');
+    const previousDueEl = document.querySelector('#previous_due');
+    const holdBtn = document.getElementById('id_hold');
 
-holdBtn.addEventListener('click', () => {
-        holdStatus = true;
-        processCart(holdBtn);
-})
-
-// set receipt items
-function setReceiptItems(){
-    const receiptTableBody = document.querySelector('#receiptTable');
-    const prvDue = document.getElementById('previous_due');
-    const tpreviousDue = document.getElementById('tpreviousDue')
-
-    tpreviousDue.textContent = prvDue.textContent
-    
-    receiptTableBody.innerHTML = '';
-
-    // Populate the table with invoice items
-    cart.forEach(({ quantity, product_name, price, product_description }) => {
-        const newRow = receiptTableBody.insertRow();
-            newRow.insertCell().textContent = `${product_name}`
-            newRow.insertCell().textContent = `(${product_description})`;
-            newRow.insertCell().textContent = quantity;
-            newRow.insertCell().textContent = `${price}`
-            newRow.insertCell().textContent = `${quantity * price}`;
-        });
-}
-
-const laybyButton = document.getElementById("layby");
-const installmentButton = document.getElementById("Installment");
-const cashButton = document.getElementById("cash");
-const payLaterBtn = document.getElementById('pay_later');
-const laybyTerms = document.querySelector(".layby-terms");
-const payLaterTerms = document.querySelector(".paylater");
-const monthlyInstallments = document.querySelector(".monthly-installments");
-
-laybyTerms.style.display = "none";
-monthlyInstallments.style.display = "none";
-payLaterTerms.style.display = "none";
-
-const amountPaidInput = document.getElementById('id_amount_paid');
-const totalBalanceDueElement = document.getElementById('total_balance_due');
-const balanceDueElement = document.getElementById('id_balance');
-const balanceLabel = document.getElementById('balance_label');
-const paymentButtons = document.querySelectorAll(".btn-terms");
-
-let paymentTerm = 'cash'; 
-
-document.getElementById('payment_modal_btn').addEventListener('click', () => {
-    document.querySelector('.payment-modal').classList.add('hidden');
-})
-
-function calculateBalance() {
-    let total = parseFloat(totalBalanceDueElement.textContent.split(' ')[1]); 
-    let amountPaid = parseFloat(amountPaidInput.value) || 0;
-    let balance;
-
-    if (paymentTerm === 'cash') {
-        balance = amountPaid - total; 
-
-        if (balance < 0) {
-            balance = 0
-        }
-
-        balanceLabel.textContent = 'Change';
-        balanceDueElement.textContent = Math.abs(balance).toFixed(2);
-    } else {
-        balance = total - amountPaid; 
-
-        if (balance < 0) {
-            balance = 0
-        }
-
-        balanceLabel.textContent = 'Amount Due';
-        balanceDueElement.textContent = balance.toFixed(2);
-    }
-}
-
-amountPaidInput.addEventListener('input', calculateBalance);
-paymentButtons.forEach(button => {
-    button.addEventListener('click', function () {
-        paymentTerm = this.id === 'cash' ? 'cash' : 'layby_installment';
-
-        paymentButtons.forEach(btn => btn.classList.remove("active"));
-        this.classList.add("active");
-
-        calculateBalance();
-    });
-});
-
-function handlePaymentTypeClick(selectedButton) {
-    
-    cashButton.classList.remove("active");
-    laybyButton.classList.remove("active");
-    installmentButton.classList.remove("active");
-
-    selectedButton.classList.add("active");
-
-    if (selectedButton.id === "layby") {
-        laybyTerms.style.display = "block";
-        monthlyInstallments.style.display = "none";
-        payLaterTerms.style.display = "none";
-    } else if (selectedButton.id === "Installment") {
-        laybyTerms.style.display = "none";
-        monthlyInstallments.style.display = "block";
-        payLaterTerms.style.display = "none";
-    } else if (selectedButton.id === "cash") {
-        laybyTerms.style.display = "none";
-        monthlyInstallments.style.display = "none";
-        payLaterTerms.style.display = "none";
-    } else if (selectedButton.id === "pay_later") {
-        laybyTerms.style.display = "none";
-        monthlyInstallments.style.display = "none";
-        payLaterTerms.style.display = "block";
-    }
-}
-
-payLaterBtn.addEventListener('click', () => {
-    handlePaymentTypeClick(payLaterBtn);
-    paymentTerms = 'pay later';
-})
-
-laybyButton.addEventListener("click", function () {
-    handlePaymentTypeClick(laybyButton);
-    paymentTerms = 'layby';
-});
-
-installmentButton.addEventListener("click", function () {
-    handlePaymentTypeClick(installmentButton);
-    paymentTerms = 'installment';
-});
-
-function handlePaymentMethodClick(selectedButton) {
-    paymentButtons.forEach(button => button.classList.remove("active"));
-    selectedButton.classList.add("active");
-}
-
-const paymentMethodButtons = document.querySelectorAll(".payment-method button");
-
-paymentMethodButtons.forEach(button => {
-    button.addEventListener("click", function () {
-        paymentMethodButtons.forEach(btn => btn.classList.remove("active"));
-        this.classList.add("active");
-        if (button.dataset.name === 'cash') { 
-            paymentMethod = button.dataset.name;
-        } else if (button.dataset.name === 'ecocash'){
-            paymentMethod = button.dataset.name;
-        } else if (button.dataset.name === 'bank'){
-            paymentMethod = button.dataset.name;
-        }
-    });
-    
-});
-
-const receipt = () =>{
-    const id_amount_paid = document.getElementById('id_amount_paid');
-    const depositedAmount = document.getElementById('id_deposited');
-    const period = document.getElementById('id_period')
-    const availableBalance = document.getElementById('availableBalance')
-    const availableBal = document.getElementById('availableBal')
-    const previousDue = document.getElementById('previous_due')
-    const termsButtons = document.querySelectorAll('.btn');
-
-    let value;
-    let amountDue = previousDue.textContent.split('')[0];
-    // default if they is previous due
-    
-    period.addEventListener('input', ()=>{
-        if(period.value < 0){
-            Swal.fire({
-                icon:'error',
-                text:'Period interval can be less than 0', 
-                title: 'error'
-            })
-            return;
-        }
-        displayDueDates(period.value)
+    holdBtn.addEventListener('click', () => {
+            holdStatus = true;
+            processCart(holdBtn);
     })
 
-    id_amount_paid.addEventListener('input', ()=>{
-        value = id_amount_paid.value;
-        depositedAmount.textContent = value;
+    // set receipt items
+    function setReceiptItems(){
+        const receiptTableBody = document.querySelector('#receiptTable');
+        const prvDue = document.getElementById('previous_due');
+        const tpreviousDue = document.getElementById('tpreviousDue')
 
-        const amountDue = parseFloat(previousDue.textContent.split(' ')[1]);
-       
-        // availabe balance 
-        availableBalance.textContent = parseFloat(value) - amountDue || 0;
-        availableBal.textContent = parseFloat(value) - amountDue || 0;
+        tpreviousDue.textContent = prvDue.textContent
         
+        receiptTableBody.innerHTML = '';
+
+        // Populate the table with invoice items
+        cart.forEach(({ quantity, product_name, price, product_description }) => {
+            const newRow = receiptTableBody.insertRow();
+                newRow.insertCell().textContent = `${product_name}`
+                newRow.insertCell().textContent = `(${product_description})`;
+                newRow.insertCell().textContent = quantity;
+                newRow.insertCell().textContent = `${price}`
+                newRow.insertCell().textContent = `${quantity * price}`;
+            });
+    }
+
+    const laybyButton = document.getElementById("layby");
+    const installmentButton = document.getElementById("Installment");
+    const cashButton = document.getElementById("cash");
+    const payLaterBtn = document.getElementById('pay_later');
+    const laybyTerms = document.querySelector(".layby-terms");
+    const payLaterTerms = document.querySelector(".paylater");
+    const monthlyInstallments = document.querySelector(".monthly-installments");
+
+    laybyTerms.style.display = "none";
+    monthlyInstallments.style.display = "none";
+    payLaterTerms.style.display = "none";
+
+    const amountPaidInput = document.getElementById('id_amount_paid');
+    const totalBalanceDueElement = document.getElementById('total_balance_due');
+    const balanceDueElement = document.getElementById('id_balance');
+    const balanceLabel = document.getElementById('balance_label');
+    const paymentButtons = document.querySelectorAll(".btn-terms");
+
+    let paymentTerm = 'cash'; 
+
+    document.getElementById('payment_modal_btn').addEventListener('click', () => {
+        document.querySelector('.payment-modal').classList.add('hidden');
     })
 
-    const calculateNextDueDate = (period) => {
-        const todayDate = new Date(); 
-        const dueDates = []; 
+    function calculateBalance() {
+        let total = parseFloat(totalBalanceDueElement.textContent.split(' ')[1]); 
+        let amountPaid = parseFloat(amountPaidInput.value) || 0;
+        let balance;
 
-        for (let i = 1; i <= period; i++) {
-            const nextDueDate = new Date(todayDate); 
-            nextDueDate.setDate(todayDate.getDate() + 30 * i); 
-            layby_dates.push(nextDueDate);
-            dueDates.push(nextDueDate); 
+        if (paymentTerm === 'cash') {
+            balance = amountPaid - total; 
+
+            if (balance < 0) {
+                balance = 0
+            }
+
+            balanceLabel.textContent = 'Change';
+            balanceDueElement.textContent = Math.abs(balance).toFixed(2);
+        } else {
+            balance = total - amountPaid; 
+
+            if (balance < 0) {
+                balance = 0
+            }
+
+            balanceLabel.textContent = 'Amount Due';
+            balanceDueElement.textContent = balance.toFixed(2);
         }
+    }
 
-        return dueDates;
-    };
+    amountPaidInput.addEventListener('input', calculateBalance);
+    paymentButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            paymentTerm = this.id === 'cash' ? 'cash' : 'layby_installment';
 
-    
-    const displayDueDates = (period) => {
-        const dueDates = calculateNextDueDate(period);
-        const paymentDateElement = document.getElementById('payment_date');
+            paymentButtons.forEach(btn => btn.classList.remove("active"));
+            this.classList.add("active");
 
-        let dateFields = ''; 
-
-        dueDates.forEach((date, index) => {
-            // Format the date as yyyy-mm-dd for the date input field
-            const formattedDate = date.toISOString().split('T')[0];
-
-            // Create input fields for each payment date
-            dateFields += `
-                <label for="payment_date_${index}">Payment ${index + 1}:</label>
-                <input type="date" id="payment_date_${index}" value="${formattedDate}">
-                <br>
-            `;
+            calculateBalance();
         });
+    });
 
-        paymentDateElement.innerHTML = dateFields; 
-    };
-}
+    function handlePaymentTypeClick(selectedButton) {
+        
+        cashButton.classList.remove("active");
+        laybyButton.classList.remove("active");
+        installmentButton.classList.remove("active");
 
-receipt()
+        selectedButton.classList.add("active");
 
-document.addEventListener("DOMContentLoaded", function() {
-    const currencySelect = document.getElementById("currency");
-    initialCurrencyValue = currencySelect.value; 
-    const data = {id:initialCurrencyValue}
-    $.ajax({
-        url: '{% url "finance:currency_json" %}',
-        type: 'GET',
-        data: data,
-        }).done(function(response) {
-            const data = response
-            currencyData = []
-            currencyData.push(data)
+        if (selectedButton.id === "layby") {
+            laybyTerms.style.display = "block";
+            monthlyInstallments.style.display = "none";
+            payLaterTerms.style.display = "none";
+        } else if (selectedButton.id === "Installment") {
+            laybyTerms.style.display = "none";
+            monthlyInstallments.style.display = "block";
+            payLaterTerms.style.display = "none";
+        } else if (selectedButton.id === "cash") {
+            laybyTerms.style.display = "none";
+            monthlyInstallments.style.display = "none";
+            payLaterTerms.style.display = "none";
+        } else if (selectedButton.id === "pay_later") {
+            laybyTerms.style.display = "none";
+            monthlyInstallments.style.display = "none";
+            payLaterTerms.style.display = "block";
+        }
+    }
+
+    payLaterBtn.addEventListener('click', () => {
+        handlePaymentTypeClick(payLaterBtn);
+        paymentTerms = 'pay later';
     })
-});
-  
-setTimeout(()=>{
-    loaderSpin.classList.add('hidden');
-    loaderSpin.classList.remove('d-flex')
-}, 300)
 
-$(document).ready(function() {
-    $('#search-input').select2(
-        {placeholder: 'Select Client'}
-    )
-    .on('change', function (e){
-        clientName = $(this).val()
-        fetchCustomerAccount(clientName)
-        getLastInvoiceNumber(clientName)
-    })
-    
-})
+    laybyButton.addEventListener("click", function () {
+        handlePaymentTypeClick(laybyButton);
+        paymentTerms = 'layby';
+    });
 
-ostBtn.addEventListener('click', ()=>{
-    if( menuName !== 'out of stock'){
-        menuName = 'out of stock';
-    }else{
-        menuName = '';
+    installmentButton.addEventListener("click", function () {
+        handlePaymentTypeClick(installmentButton);
+        paymentTerms = 'installment';
+    });
+
+    function handlePaymentMethodClick(selectedButton) {
+        paymentButtons.forEach(button => button.classList.remove("active"));
+        selectedButton.classList.add("active");
     }
-    fetchData()
-});
 
-menuType.addEventListener('click', ()=>{
-    if(menuType.classList.contains('bx-list-ul')){
-        menuType.classList.remove('bx-list-ul');
-        menuType.classList.add('bx-menu');
-        menuName = 'tiles'
-    }else{
-        menuType.classList.add('bx-list-ul');
-        menuType.classList.remove('bx-menu');
-        menuName = 'list'
+    const paymentMethodButtons = document.querySelectorAll(".payment-method button");
+
+    paymentMethodButtons.forEach(button => {
+        button.addEventListener("click", function () {
+            paymentMethodButtons.forEach(btn => btn.classList.remove("active"));
+            this.classList.add("active");
+            if (button.dataset.name === 'cash') { 
+                paymentMethod = button.dataset.name;
+            } else if (button.dataset.name === 'ecocash'){
+                paymentMethod = button.dataset.name;
+            } else if (button.dataset.name === 'bank'){
+                paymentMethod = button.dataset.name;
+            }
+        });
+        
+    });
+
+    const receipt = () =>{
+        const id_amount_paid = document.getElementById('id_amount_paid');
+        const depositedAmount = document.getElementById('id_deposited');
+        const period = document.getElementById('id_period')
+        const availableBalance = document.getElementById('availableBalance')
+        const availableBal = document.getElementById('availableBal')
+        const previousDue = document.getElementById('previous_due')
+        const termsButtons = document.querySelectorAll('.btn');
+
+        let value;
+        let amountDue = previousDue.textContent.split('')[0];
+        // default if they is previous due
+        
+        period.addEventListener('input', ()=>{
+            if(period.value < 0){
+                Swal.fire({
+                    icon:'error',
+                    text:'Period interval can be less than 0', 
+                    title: 'error'
+                })
+                return;
+            }
+            displayDueDates(period.value)
+        })
+
+        id_amount_paid.addEventListener('input', ()=>{
+            value = id_amount_paid.value;
+            depositedAmount.textContent = value;
+
+            const amountDue = parseFloat(previousDue.textContent.split(' ')[1]);
+        
+            // availabe balance 
+            availableBalance.textContent = parseFloat(value) - amountDue || 0;
+            availableBal.textContent = parseFloat(value) - amountDue || 0;
+            
+        })
+
+        const calculateNextDueDate = (period) => {
+            const todayDate = new Date(); 
+            const dueDates = []; 
+
+            for (let i = 1; i <= period; i++) {
+                const nextDueDate = new Date(todayDate); 
+                nextDueDate.setDate(todayDate.getDate() + 30 * i); 
+                layby_dates.push(nextDueDate);
+                dueDates.push(nextDueDate); 
+            }
+
+            return dueDates;
+        };
+
+        
+        const displayDueDates = (period) => {
+            const dueDates = calculateNextDueDate(period);
+            const paymentDateElement = document.getElementById('payment_date');
+
+            let dateFields = ''; 
+
+            dueDates.forEach((date, index) => {
+                // Format the date as yyyy-mm-dd for the date input field
+                const formattedDate = date.toISOString().split('T')[0];
+
+                // Create input fields for each payment date
+                dateFields += `
+                    <label for="payment_date_${index}">Payment ${index + 1}:</label>
+                    <input type="date" id="payment_date_${index}" value="${formattedDate}">
+                    <br>
+                `;
+            });
+
+            paymentDateElement.innerHTML = dateFields; 
+        };
     }
-    fetchData();
-});
 
-document.querySelector('#end').addEventListener(
-    'click', ()=>{
-        endOfDayModal.show()
-    }
-)
+    receipt()
 
-currencySelect.addEventListener(
-    'change', ()=>{
-        const data = {id:currencySelect.value}
+    document.addEventListener("DOMContentLoaded", function() {
+        const currencySelect = document.getElementById("currency");
+        initialCurrencyValue = currencySelect.value; 
+        const data = {id:initialCurrencyValue}
         $.ajax({
             url: '{% url "finance:currency_json" %}',
             type: 'GET',
@@ -702,1049 +642,1107 @@ currencySelect.addEventListener(
                 currencyData = []
                 currencyData.push(data)
         })
-    }
-)
+    });
+    
+    setTimeout(()=>{
+        loaderSpin.classList.add('hidden');
+        loaderSpin.classList.remove('d-flex')
+    }, 300)
 
-//credit
-const cashBtn = document.querySelector('#id_cash_btn')
-const bankBtn = document.querySelector('.bank')
-const ecocash= document.querySelector('.ecocash')
+    $(document).ready(function() {
+        $('#search-input').select2(
+            {placeholder: 'Select Client'}
+        )
+        .on('change', function (e){
+            clientName = $(this).val()
+            fetchCustomerAccount(clientName)
+            getLastInvoiceNumber(clientName)
+        })
+        
+    })
 
-
-// modals
-const overlay = document.querySelector(".overlay");
-const modal = new bootstrap.Modal(document.querySelector('#payment-modal'));
-const clientModal = new bootstrap.Modal(document.querySelector('#clientModal'));
-const closeModalBtn = document.querySelectorAll(".btn-close");
-const closebtn = document.getElementById('closebtn')
-
-closebtn.addEventListener('click', ()=>{
-    modal.classList.add('hidden');
-    overlay.classList.add('hidden');
-})
-
-
-document.querySelector('#id_pay').addEventListener(
-    'click', ()=>{
-        if(clientName){
-            updateCartDisplay();
-            setReceiptItems()
-            modal.show()
+    ostBtn.addEventListener('click', ()=>{
+        if( menuName !== 'out of stock'){
+            menuName = 'out of stock';
         }else{
-            Swal.fire({
-                icon:'error',
-                text:'Choose Customer First.',
-                title:'error'
-            })
+            menuName = '';
         }
-    }
-)
+        fetchData()
+    });
 
-document.querySelector('#id_add_client').addEventListener(
-    'click',()=>{
-        clientModal.show()
-    }
-)
+    menuType.addEventListener('click', ()=>{
+        if(menuType.classList.contains('bx-list-ul')){
+            menuType.classList.remove('bx-list-ul');
+            menuType.classList.add('bx-menu');
+            menuName = 'tiles'
+        }else{
+            menuType.classList.add('bx-list-ul');
+            menuType.classList.remove('bx-menu');
+            menuName = 'list'
+        }
+        fetchData();
+    });
 
-closeModalBtn.forEach((btn)=>{
-    btn.addEventListener(
+    document.querySelector('#end').addEventListener(
         'click', ()=>{
-            clientModal.classList.add('hidden')
-            modal.classList.add("hidden");
-            overlay.classList.add("hidden");
+            endOfDayModal.show()
         }
     )
-})
 
-//search filters and fetching data
-const productListContainer = document.getElementById('product-list');
-const categorySelect = document.getElementById('id_category');
-const search = document.getElementById('id_search');
-
-search.addEventListener('input', ()=>{
-    fetchData(search.value)
-})
-   
-categorySelect.addEventListener('change', function() {
-    const selectedCategoryId = this.value;
-    fetchData(parseInt(selectedCategoryId))
-});
-
-async function fetchData (param){
-
-    let url = '/inventory/product/list/';
-
-    if (typeof param ==="number" & param !== 0) {
-        url += `?category=${param}`; 
-    }else if (typeof param === "string"){
-        url += `?q=${param}`; 
-    }
-   
-    try {
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok.');
+    currencySelect.addEventListener(
+        'change', ()=>{
+            const data = {id:currencySelect.value}
+            $.ajax({
+                url: '{% url "finance:currency_json" %}',
+                type: 'GET',
+                data: data,
+                }).done(function(response) {
+                    const data = response
+                    currencyData = []
+                    currencyData.push(data)
+            })
         }
-        const products = await response.json();
-        productListContainer.innerHTML = ''; 
-        
-        displayProducts(products);
-        
-    } catch (error) {
-        console.error('Error fetching products:', error);
-        productListContainer.innerHTML = '<p class="error-message">Error loading products. Please try again later.</p>';
-    } finally {
-    }
-}
+    )
 
-fetchData()
+    //credit
+    const cashBtn = document.querySelector('#id_cash_btn')
+    const bankBtn = document.querySelector('.bank')
+    const ecocash= document.querySelector('.ecocash')
 
-function cartButton(){
-    const cartBtn = document.querySelector('#id_pay')
-    if(cart.length==0){
-        cartBtn.disabled = true
-    }else{
-        cartBtn.disabled = false
-    }
-}
-cartButton()
 
-function displayProducts(products) {
+    // modals
+    const overlay = document.querySelector(".overlay");
+    const modal = new bootstrap.Modal(document.querySelector('#payment-modal'));
+    const clientModal = new bootstrap.Modal(document.querySelector('#clientModal'));
+    const closeModalBtn = document.querySelectorAll(".btn-close");
+    const closebtn = document.getElementById('closebtn')
 
-    productListContainer.innerHTML = '';
-    products.forEach(product => {
-        if (menuName === 'tiles' || menuName === '') {
-            if (product.quantity > 0) {
-                const productDiv = document.createElement('div');
-                productDiv.className = 'col-3';
-                productDiv.innerHTML = `
-                    <div class="card mb-4" id='id_product_card' data-product='${JSON.stringify(product)}'>
-                        <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart" data-product='${product.inventory_id}'>
-                            <div>
-                                <img src="${product.image ? product.image : '{% static "placeholder.png" %}'}" alt="${product.product_name}">
-                            </div>
-                            <p class='text-center mt-2'><small class="fw-bold">${product.product_name}</small></p>
-                            <p class='text-center'><small class="text-muted">${product.description}</small></p>
-                            <p class='text-center'><small class="text-muted">[${product.quantity}]</small></p>
-                            <span class='btn btn-outline-secondary btn-sm w-100' data-product='${product.inventory_id}' data-price='rp' onclick='fetchProductData(this)'>RP ${product.price}</span>
-                            <span class='btn btn-outline-secondary btn-sm mt-2 w-100' data-product='${product.inventory_id}' data-price='wp' onclick='fetchProductData(this)'>WP${product.dealer_price}</span> 
-                        </div>
-                    </div>
-                `;
-                productListContainer.appendChild(productDiv); 
+    closebtn.addEventListener('click', ()=>{
+        modal.classList.add('hidden');
+        overlay.classList.add('hidden');
+    })
+
+
+    document.querySelector('#id_pay').addEventListener(
+        'click', ()=>{
+            if(clientName){
+                updateCartDisplay();
+                setReceiptItems()
+                modal.show()
+            }else{
+                Swal.fire({
+                    icon:'error',
+                    text:'Choose Customer First.',
+                    title:'error'
+                })
             }
-        } else if (menuName === 'out of stock') {
-            if (product.quantity <= 0) {
-                const productDiv = document.createElement('div');
-                productDiv.className = 'col-3';
-                productDiv.innerHTML = `
-                    <div class="card bg-danger" id='id_product_card' data-product='${JSON.stringify(product)}'>
-                        <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart" data-product='${product.inventory_id}' onclick='fetchProductData(this)'>
-                            <div class="d-flex align-items-center mb-3">
-                                <i style="font-size:30px" class='bx bx-barcode'></i>
-                            </div>
-                            <p><small class="fw-bold">${product.product_name}</small></p>
-                            <p><small class="text-muted">${product.description}</small></p>
-                            <p><small class="text-muted">[${product.quantity}]</small></p>
-                            <p>
-                                <small class="text-muted mx-1">USD${product.price}</small>
-                                <small class='text-muted'>Wholesale PriceUSD${product.dealer_price}</small>
-                            </p>
-                        </div>
-                    </div>
-                `;
-                productListContainer.appendChild(productDiv); 
-            }
-        } else {
-            if (!document.querySelector('ul.product-list')) {
-                const productList = document.createElement('ul');
-                productList.className = 'list-unstyled product-list';
-                productListContainer.appendChild(productList);
-            }
-            
-            const productListItem = document.createElement('li');
-            productListItem.id = 'id_add_to_cart';
-            productListItem.setAttribute('data-product', product.inventory_id);
-            productListItem.setAttribute('onclick', 'fetchProductData(this)');
-            productListItem.className = `product-list-item ${product.quantity <= 0 ? 'text-danger' : ''}`;
-            productListItem.innerHTML = `
-                <i class='bx bx-barcode'></i>
-                <small class="px-1 fw-bold">${product.product_name}</small>
-                <small class="text-muted">${product.description}</small>
-                <small class="text-muted">USD${product.price}</small>
-                <small class="text-muted">[${product.quantity}]</small>
-            `;
-            document.querySelector('ul.product-list').appendChild(productListItem);
-            return;
         }
+    )
+
+    document.querySelector('#id_add_client').addEventListener(
+        'click',()=>{
+            clientModal.show()
+        }
+    )
+
+    closeModalBtn.forEach((btn)=>{
+        btn.addEventListener(
+            'click', ()=>{
+                clientModal.classList.add('hidden')
+                modal.classList.add("hidden");
+                overlay.classList.add("hidden");
+            }
+        )
+    })
+
+    //search filters and fetching data
+    const productListContainer = document.getElementById('product-list');
+    const categorySelect = document.getElementById('id_category');
+    const search = document.getElementById('id_search');
+
+    search.addEventListener('input', ()=>{
+        fetchData(search.value)
+    })
+    
+    categorySelect.addEventListener('change', function() {
+        const selectedCategoryId = this.value;
+        fetchData(parseInt(selectedCategoryId))
     });
-}
 
+    async function fetchData (param){
 
-// Cart 
-async function fetchProductData (product){
-    if(initialCurrencyValue){
-        const id = product.dataset.product
-        const value = product.dataset.price
+        let url = '/inventory/product/list/';
 
-        let url = `/inventory/product/list/?product=${id}`;
-
+        if (typeof param ==="number" & param !== 0) {
+            url += `?category=${param}`; 
+        }else if (typeof param === "string"){
+            url += `?q=${param}`; 
+        }
+    
         try {
             const response = await fetch(url);
 
             if (!response.ok) {
                 throw new Error('Network response was not ok.');
             }
-            const product = await response.json();
-            addItem(product, value);
-            addedToCartProduct = [];
-            addedToCartProduct.push(product);
+            const products = await response.json();
+            productListContainer.innerHTML = ''; 
+            
+            displayProducts(products);
             
         } catch (error) {
             console.error('Error fetching products:', error);
             productListContainer.innerHTML = '<p class="error-message">Error loading products. Please try again later.</p>';
         } finally {
         }
-    }else{
-        errorModal.show()
-        error.textContent=''
-        error.textContent=`Choose Currency`
-    }
-    
-}
-
-function generateUniqueId() {
-    return Math.floor(Math.random() * 1000000000).toString(36);
-  }
-
-function addItem(product, value) {
-    const existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
-    console.log(value, 'value')
-    let priceType = ''
-    if(value === 'wp'){
-        price = product[0].dealer_price
-        priceType = `${product[0].dealer_price * parseFloat(currencyData[0][0]?.exchange_rate)}`
-    }else{
-        price = product[0].price
-        priceType = `${product[0].price * parseFloat(currencyData[0][0]?.exchange_rate)}`
     }
 
-    if (existingItem) {
-        existingItem.quantity += 1;
-    } else {
-        const newTransfer = {
-        id:generateUniqueId(),
-        inventory_id:product[0].inventory_id, 
-        product_name: product[0].product_name,
-        product_description: product[0].description,
-        quantity:1,
-        price:priceType
-        };
-        cart.push(newTransfer);
+    fetchData()
+
+    function cartButton(){
+        const cartBtn = document.querySelector('#id_pay')
+        if(cart.length==0){
+            cartBtn.disabled = true
+        }else{
+            cartBtn.disabled = false
+        }
     }
-    updateCartDisplay(); 
     cartButton()
-    totals()
-}
 
-function totals(){
+    function displayProducts(products) {
 
-    let totalAmount = calculateTotalAmount(cart);
-    let vatAmount = calculateVAT(totalAmount);
-    let discount = $('#id_discount').val()
-    let delivery = parseFloat($('#id_dc_input').val())
-
-    console.log('vat amout: ', vatAmount)
-    
-    let payable = totalAmount - vatAmount + delivery;
-    
-    // validate for not a number
-    if (delivery >= 0){
-        delivery = delivery
-    }else{delivery = 0}
-
-    delivery_amount = delivery
-    vat_amount = vatAmount
-
-    if(discount === 0){
-        document.getElementById("id_total_amount").textContent = `${ currencyData[0][0].symbol + ' ' + totalAmount.toFixed(2)}`;
-        document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
-        document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + payable.toFixed(2)}`;
-
-        payable_amount = payable
-        discount_amount = discount
-
-        updateTfoot(vatAmount, totalAmount, delivery, payable)
-
-    }else{
-        totalAmount = totalAmount - discount
-        
-        discountAmount = calculateTotalAmount(cart) - totalAmount
-        vatAmount = (totalAmount * 0.15) / (1 + 0.15) //  to be provided from the back
-        payable = totalAmount + delivery;
-        
-        vat_amount = vatAmount
-        payable_amount = payable
-        discount_amount = discountAmount
-
-        document.getElementById("id_total_amount").textContent = `${ currencyData[0][0].symbol + ' ' + totalAmount.toFixed(2)}`;
-        document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
-        document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + payable.toFixed(2)}`;
-
-        updateTfoot(vatAmount, totalAmount, payable)
-    }
-}
-
-function calculateTotalAmount(cart) {
-   let total = cart.reduce((total, item) => total + item.price * item.quantity, 0);
-   return total.toFixed(2)
-}
-
-function calculateVAT(totalAmount) {
-    if( taxMethod === 'Exclusive'){
-        return calculateExclusiveTax(totalAmount, 0.15)
-    }else if( taxMethod === 'Inclusive'){
-        return calculateExclusiveTax(totalAmount, 0.15)
-    }else{
-        return 0;
-    }
-}
-
-// events for discount and delivery charge
-document.querySelector('#id_discount').addEventListener(
-    'input', ()=>{
-        totals()
-    }
-)
-
-document.querySelector('#id_dc_input').addEventListener(
-    'input', ()=>{
-        totals()
-    }
-)
-
-function updateCartDisplay() {
-    const cartItemsList = document.getElementById("cart_items");
-    cartItemsList.innerHTML = ""; 
-  
-    let total = 0;
-    cart.forEach((item) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>
-            <small class='d-flex align-items-center'>
-                <small><input class='form-control form-control-sm' type='number' data-id=${item.inventory_id} value='${item.quantity}' oninput='addOrDreceaseQuantity(this);' style='width:4rem;'/></small>
-            </small>
-        </td>
-        <td style='text-align:left !important;'><small>${item.product_name}</small></td>
-        <td>
-            <small>
-                <input class='form-control form-control-sm' type='number' step='0.01' data-id=${item.id} value='${parseFloat(item.price).toFixed(2)}' oninput='updatePrice(this);' style='width:7rem;'/>
-            </small>
-        </td>
-        <td>
-            <small id="total-${item.id}">${currencyData[0][0].symbol + ' ' + (parseInt(item.quantity) * parseFloat(item.price)).toFixed(2)}</small>
-            <small class='bx bx-trash-alt text-danger' data-id=${item.id} onclick="removeItem(this);"></small>
-        </td>
-      `;
-      cartItemsList.appendChild(row);
-    });
-
-}
-
-function updatePrice(input) {
-    const itemId = input.getAttribute("data-id");
-    const newPrice = parseFloat(input.value);
-   
-    // Update the cart item's price and total cost dynamically
-    const cartItem = cart.find(item => item.id == itemId);
-    if (cartItem) {
-        cartItem.price = newPrice;
-        const totalElement = document.getElementById(`total-${itemId}`);
-        totalElement.innerText = currencyData[0][0].symbol + ' ' + (cartItem.quantity * cartItem.price).toFixed(2);
-    }
-    totals();
-
-    // Recalculate the cart total and update the display
-    //updateCartTotal();
-    
-   
-}
-
-function updateCartTotal() {
-    let total = cart.reduce((acc, item) => acc + (item.quantity * item.price), 0);
-    document.getElementById("cart_total").innerText = currencyData[0][0].symbol + ' ' + total.toFixed(2);
-}
-
-  function addOrDreceaseQuantity(sm) {
-    const item_id = parseInt(sm.dataset.id);
-    const updatedQuantity = parseInt(sm.value);
-
-    if (!updatedQuantity) return;
-
-    const existingItem = cart.find(item => item.inventory_id === item_id);
-
-    if (existingItem) {
-        existingItem.quantity = updatedQuantity;
-        updateCartDisplay();
-        cartButton();
-        totals();
-    }
-    console.log('updated value', cart)
-}
-
-// update tfoot
-function updateTfoot(vat, totalAmount, payable){
-    let totalDueAmount = 0;
-    const symbol = currencyData[0][0].symbol;
-    
-    if(bal>0){
-        totalDueAmount = parseFloat(bal.toFixed(2)) + parseFloat(payable.toFixed(2)); 
-    }else{
-        totalDueAmount = parseFloat(payable.toFixed(2)); 
-    }
-
-    const totalBalanceDue = totalDueAmount - parseFloat(amount_paid.toFixed(2));
-
-    //sub = calculateTotalAmount(cart)
-    //vatAmount = vat.toFixed(2)
-
-    document.querySelector('#id_subtotal').textContent = `${ symbol + ' ' + calculateTotalAmount(cart) }`
-    document.querySelector('#id_vat').textContent = `${ symbol + ' ' + vat.toFixed(2) }`
-    // document.querySelector('#id_due_amount').textContent = `${ symbol + ' ' + payable.toFixed(2) }`
-    document.querySelector('#id_balance').textContent = `${ symbol + ' ' + totalBalanceDue.toFixed(2) }`, 
-    document.querySelector('#total_balance_due').textContent = `${symbol + ' ' + totalDueAmount.toFixed(2) }`
-
-    // updateReceiptFooter(symbol, totalBalanceDue, totalDueAmount, payable)
-}
-
-function updateReceiptFooter(symbol, totalBalanceDue, totalDueAmount, payable){
-    document.querySelector('#rid_due_amount').textContent = `${ symbol + ' ' + payable.toFixed(2) }`
-    document.querySelector('#rid_balance').textContent = `${ symbol + ' ' + totalBalanceDue.toFixed(2) }`, 
-    document.querySelector('#rtotal_balance_due').textContent = `${symbol + ' ' + totalDueAmount.toFixed(2) }`
-}
-
-const removeItem = (el) => {
-    const id = el.dataset.id
-    cart = cart.filter((item) => item.id !== id);
-    updateCartDisplay();
-    cartButton()
-    totals()
-}
-
-// payment methods
-document.querySelectorAll('.pm').forEach(button => {
-    button.addEventListener('click', () => {
-        if (button.dataset.name === 'cash') { 
-            paymentMethod = button.dataset.name;
-        } else if (button.dataset.name === 'ecocash'){
-            paymentMethod = button.dataset.name;
-        } else if (button.dataset.name === 'bank'){
-            paymentMethod = button.dataset.name;
-        }else if (button.dataset.name === 'paylater'){
-            paymentMethod = button.dataset.name;
-        }
-    });
-});
-
-async function processCart(el) {
-    const amountReceived = document.getElementById('id_amount_paid');
-
-    if (!holdStatus) {
-        if (Number((amountReceived.value) <= 0) && (paymentTerms === 'cash')) {
-            Swal.fire({
-                icon: 'error',
-                text: 'Amount can’t be zero when payment method is cash.',
-                title: 'Error'
-            }).then(() => {
-                amountReceived.focus()
-            });
-            return;
-        }
-    }
-
-    const data = [
-        {
-            subtotal: calculateTotalAmount(cart),
-            currency: currencyData[0][0].id,
-            amount_paid: parseFloat(amountReceived.value) || 0.00,
-            client_id: clientName,
-            payable: payable_amount,
-            vat_amount: vat_amount,
-            payment_method: paymentMethod,
-            recourring: document.getElementById('id_reoccuring').checked,
-            paymentTerms: paymentTerms,
-            hold_status: holdStatus,
-            pay_later_date: document.getElementById('paylater_date').value
-        }
-    ];
-
-    const url = el.dataset.name === 'qoutation' 
-        ? "{% url 'finance:add_qoutation' %}" 
-        : "{% url 'finance:create_invoice' %}";
-
-    try {
-        // Show loading/processing Swal
-        Swal.fire({
-            title: 'Processing...',
-            text: 'Please wait while we process the invoice.',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
+        productListContainer.innerHTML = '';
+        products.forEach(product => {
+            if (menuName === 'tiles' || menuName === '') {
+                if (product.quantity > 0) {
+                    const productDiv = document.createElement('div');
+                    productDiv.className = 'col-3';
+                    productDiv.innerHTML = `
+                        <div class="card mb-4" id='id_product_card' data-product='${JSON.stringify(product)}'>
+                            <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart" data-product='${product.inventory_id}'>
+                                <div>
+                                    <img src="${product.image ? product.image : '{% static "placeholder.png" %}'}" alt="${product.product_name}">
+                                </div>
+                                <p class='text-center mt-2'><small class="fw-bold">${product.product_name}</small></p>
+                                <p class='text-center'><small class="text-muted">${product.description}</small></p>
+                                <p class='text-center'><small class="text-muted">[${product.quantity}]</small></p>
+                                <span class='btn btn-outline-secondary btn-sm w-100' data-product='${product.inventory_id}' data-price='rp' onclick='fetchProductData(this)'>RP ${product.price}</span>
+                                <span class='btn btn-outline-secondary btn-sm mt-2 w-100' data-product='${product.inventory_id}' data-price='wp' onclick='fetchProductData(this)'>WP${product.dealer_price}</span> 
+                            </div>
+                        </div>
+                    `;
+                    productListContainer.appendChild(productDiv); 
+                }
+            } else if (menuName === 'out of stock') {
+                if (product.quantity <= 0) {
+                    const productDiv = document.createElement('div');
+                    productDiv.className = 'col-3';
+                    productDiv.innerHTML = `
+                        <div class="card bg-danger" id='id_product_card' data-product='${JSON.stringify(product)}'>
+                            <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart" data-product='${product.inventory_id}' onclick='fetchProductData(this)'>
+                                <div class="d-flex align-items-center mb-3">
+                                    <i style="font-size:30px" class='bx bx-barcode'></i>
+                                </div>
+                                <p><small class="fw-bold">${product.product_name}</small></p>
+                                <p><small class="text-muted">${product.description}</small></p>
+                                <p><small class="text-muted">[${product.quantity}]</small></p>
+                                <p>
+                                    <small class="text-muted mx-1">USD${product.price}</small>
+                                    <small class='text-muted'>Wholesale PriceUSD${product.dealer_price}</small>
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    productListContainer.appendChild(productDiv); 
+                }
+            } else {
+                if (!document.querySelector('ul.product-list')) {
+                    const productList = document.createElement('ul');
+                    productList.className = 'list-unstyled product-list';
+                    productListContainer.appendChild(productList);
+                }
+                
+                const productListItem = document.createElement('li');
+                productListItem.id = 'id_add_to_cart';
+                productListItem.setAttribute('data-product', product.inventory_id);
+                productListItem.setAttribute('onclick', 'fetchProductData(this)');
+                productListItem.className = `product-list-item ${product.quantity <= 0 ? 'text-danger' : ''}`;
+                productListItem.innerHTML = `
+                    <i class='bx bx-barcode'></i>
+                    <small class="px-1 fw-bold">${product.product_name}</small>
+                    <small class="text-muted">${product.description}</small>
+                    <small class="text-muted">USD${product.price}</small>
+                    <small class="text-muted">[${product.quantity}]</small>
+                `;
+                document.querySelector('ul.product-list').appendChild(productListItem);
+                return;
             }
         });
+    }
 
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie("csrftoken"),
-            },
-            body: JSON.stringify({
-                data: data,
-                items: cart,
-                layby_dates: layby_dates
-            }),
+
+    // Cart 
+    async function fetchProductData (product){
+        if(initialCurrencyValue){
+            const id = product.dataset.product
+            const value = product.dataset.price
+
+            let url = `/inventory/product/list/?product=${id}`;
+
+            try {
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
+                const product = await response.json();
+                addItem(product, value);
+                addedToCartProduct = [];
+                addedToCartProduct.push(product);
+                
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                productListContainer.innerHTML = '<p class="error-message">Error loading products. Please try again later.</p>';
+            } finally {
+            }
+        }else{
+            errorModal.show()
+            error.textContent=''
+            error.textContent=`Choose Currency`
+        }
+        
+    }
+
+    function generateUniqueId() {
+        return Math.floor(Math.random() * 1000000000).toString(36);
+    }
+
+    function addItem(product, value) {
+        const existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
+        console.log(value, 'value')
+        let priceType = ''
+        if(value === 'wp'){
+            price = product[0].dealer_price
+            priceType = `${product[0].dealer_price * parseFloat(currencyData[0][0]?.exchange_rate)}`
+        }else{
+            price = product[0].price
+            priceType = `${product[0].price * parseFloat(currencyData[0][0]?.exchange_rate)}`
+        }
+
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            const newTransfer = {
+            id:generateUniqueId(),
+            inventory_id:product[0].inventory_id, 
+            product_name: product[0].product_name,
+            product_description: product[0].description,
+            quantity:1,
+            price:priceType
+            };
+            cart.push(newTransfer);
+        }
+        updateCartDisplay(); 
+        cartButton()
+        totals()
+    }
+
+    function totals(){
+
+        let totalAmount = calculateTotalAmount(cart);
+        let vatAmount = calculateVAT(totalAmount);
+        let discount = $('#id_discount').val()
+        let delivery = parseFloat($('#id_dc_input').val())
+
+        console.log('vat amout: ', vatAmount)
+        
+        let payable = totalAmount - vatAmount + delivery;
+        
+        // validate for not a number
+        if (delivery >= 0){
+            delivery = delivery
+        }else{delivery = 0}
+
+        delivery_amount = delivery
+        vat_amount = vatAmount
+
+        if(discount === 0){
+            document.getElementById("id_total_amount").textContent = `${ currencyData[0][0].symbol + ' ' + totalAmount.toFixed(2)}`;
+            document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
+            document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + payable.toFixed(2)}`;
+
+            payable_amount = payable
+            discount_amount = discount
+
+            updateTfoot(vatAmount, totalAmount, delivery, payable)
+
+        }else{
+            totalAmount = totalAmount - discount
+            
+            discountAmount = calculateTotalAmount(cart) - totalAmount
+            vatAmount = (totalAmount * 0.15) / (1 + 0.15) //  to be provided from the back
+            payable = totalAmount + delivery;
+            
+            vat_amount = vatAmount
+            payable_amount = payable
+            discount_amount = discountAmount
+
+            document.getElementById("id_total_amount").textContent = `${ currencyData[0][0].symbol + ' ' + totalAmount.toFixed(2)}`;
+            document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
+            document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + payable.toFixed(2)}`;
+
+            updateTfoot(vatAmount, totalAmount, payable)
+        }
+    }
+
+    function calculateTotalAmount(cart) {
+    let total = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    return total.toFixed(2)
+    }
+
+    function calculateVAT(totalAmount) {
+        if( taxMethod === 'Exclusive'){
+            return calculateExclusiveTax(totalAmount, 0.15)
+        }else if( taxMethod === 'Inclusive'){
+            return calculateExclusiveTax(totalAmount, 0.15)
+        }else{
+            return 0;
+        }
+    }
+
+    // events for discount and delivery charge
+    document.querySelector('#id_discount').addEventListener(
+        'input', ()=>{
+            totals()
+        }
+    )
+
+    document.querySelector('#id_dc_input').addEventListener(
+        'input', ()=>{
+            totals()
+        }
+    )
+
+    function updateCartDisplay() {
+        const cartItemsList = document.getElementById("cart_items");
+        cartItemsList.innerHTML = ""; 
+    
+        let total = 0;
+        cart.forEach((item) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>
+                <small class='d-flex align-items-center'>
+                    <small><input class='form-control form-control-sm' type='number' data-id=${item.inventory_id} value='${item.quantity}' oninput='addOrDreceaseQuantity(this);' style='width:4rem;'/></small>
+                </small>
+            </td>
+            <td style='text-align:left !important;'><small>${item.product_name}</small></td>
+            <td>
+                <small>
+                    <input class='form-control form-control-sm' type='number' step='0.01' data-id=${item.id} value='${parseFloat(item.price).toFixed(2)}' oninput='updatePrice(this);' style='width:7rem;'/>
+                </small>
+            </td>
+            <td>
+                <small id="total-${item.id}">${currencyData[0][0].symbol + ' ' + (parseInt(item.quantity) * parseFloat(item.price)).toFixed(2)}</small>
+                <small class='bx bx-trash-alt text-danger' data-id=${item.id} onclick="removeItem(this);"></small>
+            </td>
+        `;
+        cartItemsList.appendChild(row);
         });
 
-        const result = await response.json();
+    }
 
-        Swal.close(); // Close the processing Swal once we have a result
+    function updatePrice(input) {
+        const itemId = input.getAttribute("data-id");
+        const newPrice = parseFloat(input.value);
+    
+        // Update the cart item's price and total cost dynamically
+        const cartItem = cart.find(item => item.id == itemId);
+        if (cartItem) {
+            cartItem.price = newPrice;
+            const totalElement = document.getElementById(`total-${itemId}`);
+            totalElement.innerText = currencyData[0][0].symbol + ' ' + (cartItem.quantity * cartItem.price).toFixed(2);
+        }
+        totals();
 
-        if (el.dataset.name === 'qoutation') {
+        // Recalculate the cart total and update the display
+        //updateCartTotal();
+        
+    
+    }
+
+    function updateCartTotal() {
+        let total = cart.reduce((acc, item) => acc + (item.quantity * item.price), 0);
+        document.getElementById("cart_total").innerText = currencyData[0][0].symbol + ' ' + total.toFixed(2);
+    }
+
+    function addOrDreceaseQuantity(sm) {
+        const item_id = parseInt(sm.dataset.id);
+        const updatedQuantity = parseInt(sm.value);
+
+        if (!updatedQuantity) return;
+
+        const existingItem = cart.find(item => item.inventory_id === item_id);
+
+        if (existingItem) {
+            existingItem.quantity = updatedQuantity;
+            updateCartDisplay();
+            cartButton();
+            totals();
+        }
+        console.log('updated value', cart)
+    }
+
+    // update tfoot
+    function updateTfoot(vat, totalAmount, payable){
+        let totalDueAmount = 0;
+        const symbol = currencyData[0][0].symbol;
+        
+        if(bal>0){
+            totalDueAmount = parseFloat(bal.toFixed(2)) + parseFloat(payable.toFixed(2)); 
+        }else{
+            totalDueAmount = parseFloat(payable.toFixed(2)); 
+        }
+
+        const totalBalanceDue = totalDueAmount - parseFloat(amount_paid.toFixed(2));
+
+        //sub = calculateTotalAmount(cart)
+        //vatAmount = vat.toFixed(2)
+
+        document.querySelector('#id_subtotal').textContent = `${ symbol + ' ' + calculateTotalAmount(cart) }`
+        document.querySelector('#id_vat').textContent = `${ symbol + ' ' + vat.toFixed(2) }`
+        // document.querySelector('#id_due_amount').textContent = `${ symbol + ' ' + payable.toFixed(2) }`
+        document.querySelector('#id_balance').textContent = `${ symbol + ' ' + totalBalanceDue.toFixed(2) }`, 
+        document.querySelector('#total_balance_due').textContent = `${symbol + ' ' + totalDueAmount.toFixed(2) }`
+
+        // updateReceiptFooter(symbol, totalBalanceDue, totalDueAmount, payable)
+    }
+
+    function updateReceiptFooter(symbol, totalBalanceDue, totalDueAmount, payable){
+        document.querySelector('#rid_due_amount').textContent = `${ symbol + ' ' + payable.toFixed(2) }`
+        document.querySelector('#rid_balance').textContent = `${ symbol + ' ' + totalBalanceDue.toFixed(2) }`, 
+        document.querySelector('#rtotal_balance_due').textContent = `${symbol + ' ' + totalDueAmount.toFixed(2) }`
+    }
+
+    const removeItem = (el) => {
+        const id = el.dataset.id
+        cart = cart.filter((item) => item.id !== id);
+        updateCartDisplay();
+        cartButton()
+        totals()
+    }
+
+    // payment methods
+    document.querySelectorAll('.pm').forEach(button => {
+        button.addEventListener('click', () => {
+            if (button.dataset.name === 'cash') { 
+                paymentMethod = button.dataset.name;
+            } else if (button.dataset.name === 'ecocash'){
+                paymentMethod = button.dataset.name;
+            } else if (button.dataset.name === 'bank'){
+                paymentMethod = button.dataset.name;
+            }else if (button.dataset.name === 'paylater'){
+                paymentMethod = button.dataset.name;
+            }
+        });
+    });
+
+    async function processCart(el) {
+        const amountReceived = document.getElementById('id_amount_paid');
+
+        if (!holdStatus) {
+            if (Number((amountReceived.value) <= 0) && (paymentTerms === 'cash')) {
+                Swal.fire({
+                    icon: 'error',
+                    text: 'Amount can’t be zero when payment method is cash.',
+                    title: 'Error'
+                }).then(() => {
+                    amountReceived.focus()
+                });
+                return;
+            }
+        }
+
+        const data = [
+            {
+                subtotal: calculateTotalAmount(cart),
+                currency: currencyData[0][0].id,
+                amount_paid: parseFloat(amountReceived.value) || 0.00,
+                client_id: clientName,
+                payable: payable_amount,
+                vat_amount: vat_amount,
+                payment_method: paymentMethod,
+                recourring: document.getElementById('id_reoccuring').checked,
+                paymentTerms: paymentTerms,
+                hold_status: holdStatus,
+                pay_later_date: document.getElementById('paylater_date').value
+            }
+        ];
+
+        const url = el.dataset.name === 'qoutation' 
+            ? "{% url 'finance:add_qoutation' %}" 
+            : "{% url 'finance:create_invoice' %}";
+
+        try {
+            // Show loading/processing Swal
             Swal.fire({
-                icon: 'success',
-                text: 'Quotation Processed!',
-                timer: 2000,
-                didClose: () => {
-                    Swal.fire({
-                        title: 'Redirecting...',
-                        text: 'Taking you to the quotation preview.',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-
-                    setTimeout(() => {
-                        qouteModal.hide();
-                        window.location.href = `/finance/qoutation/preview/${result.qoute_id}`;
-                    }, 1000);
+                title: 'Processing...',
+                text: 'Please wait while we process the invoice.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
                 }
             });
-        } else {
-            console.log(result, 'result');
 
-            const invoiceId = result.invoice_id;
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+                body: JSON.stringify({
+                    data: data,
+                    items: cart,
+                    layby_dates: layby_dates
+                }),
+            });
 
-            if (invoiceId) {
-                fetch(`/finance/invoice/preview/json/${invoiceId}`)
+            const result = await response.json();
+
+            Swal.close(); // Close the processing Swal once we have a result
+
+            if (el.dataset.name === 'qoutation') {
+                Swal.fire({
+                    icon: 'success',
+                    text: 'Quotation Processed!',
+                    timer: 2000,
+                    didClose: () => {
+                        Swal.fire({
+                            title: 'Redirecting...',
+                            text: 'Taking you to the quotation preview.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        setTimeout(() => {
+                            qouteModal.hide();
+                            window.location.href = `/finance/qoutation/preview/${result.qoute_id}`;
+                        }, 1000);
+                    }
+                });
+            } else {
+                console.log(result, 'result');
+
+                const invoiceId = result.invoice_id;
+
+                if (invoiceId) {
+                    const signature_data = run(result.data);  
+                    const receipt_data = result.data;              
+                    const hash = signature_data.hash;              
+                    const signature = signature_data.signature;    
+                
+                    fetch('/finance/submit_invoice_data/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken'), 
+                        },
+                        body: JSON.stringify({
+                            hash: hash,
+                            signature: signature,
+                            receipt_data: receipt_data,
+                            invoice_id: invoiceId
+                        })
+                    })
                     .then(response => response.json())
                     .then(data => {
-                        console.log("Invoice data:", data);
-                        displayReceipt(data);
-                        cart = [];
-                        updateCartDisplay();
+                        if (data.success) {
+                            {% comment %} displayReceipt(data.data); {% endcomment %}
+                            cart = [];
+                            updateCartDisplay();
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Submission Failed',
+                                text: data.message || 'An error occurred while submitting to ZIMRA.',
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error',
+                            text: error.toString()
+                        });
                     });
-            } else {
-                console.error("Invoice ID not found in response.");
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No Invoice ID',
+                        text: 'Invoice ID not found in the response.'
+                    });
+                }
+                
             }
-        }
 
-    } catch (error) {
-        Swal.close(); // Close the loading Swal if there's an error
-        console.error("Error during request:", error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops!',
-            text: 'Something went wrong while processing your request.',
-        });
-    }
-}
-
-
-function displayReceipt(data) {
-    try {
-        let content = generateReceiptContent(data);
-        printReceiptSilently(content);
-
-        Swal.fire({
-            title: 'Printing Receipt...',
-            text: 'Please wait while we finish printing.',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showConfirmButton: false,
-            timer: 3000,
-            didOpen: () => {
-                Swal.showLoading();
-            },
-        }).then(() => {
+        } catch (error) {
+            Swal.close(); // Close the loading Swal if there's an error
+            console.error("Error during request:", error);
             Swal.fire({
-                icon: 'success',
-                title: 'Done!',
-                text: 'Receipt printed successfully.',
-                confirmButtonText: 'OK'
-            }).then(() => {
-                location.reload();
+                icon: 'error',
+                title: 'Oops!',
+                text: 'Something went wrong while processing your request.',
             });
-        });
-
-    } catch (error) {
-        console.error("Error:", error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to print the receipt. Please try again.'
-        });
-    }
-}
-
-
-function generateReceiptContent(data) {
-    const { invoice, invoice_items: invoiceItems } = data;
-    const {
-        invoice_number: invoiceNumber,
-        amount: invoiceTotal,
-        vat: vatAmount,
-        subtotal: subTotal,
-        currency_symbol: currencySymbol,
-        receipt_hash: receiptHash,
-        amount_paid: amountPaid,
-        payment_terms: paymentMethod,
-        device_id: deviceId,
-        device_serial_number: deviceSerialNumber
-    } = invoice;
-    const vatRate = 15; 
-    return `
-    <style>
-        .receipt {
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-            width: 5.8cm;
-            max-width: 6cm;
-            margin: 0 auto;
-            padding: 10px;
         }
-        .receipt h2, .footer p {
-            text-align: center;
-        }
-        .receipt-body table {
-            width: 100%;
-            margin-top: 10px;
-        }
-        .qr-code {
-            text-align: center;
-            margin-top: 10px;
-        }
-        #qrcode {
-            display: flex;
-            justify-content: center;
-        }
-    </style>
-
-    <div class="receipt">
-        <h2>Pasales Investments</h2>
-        <p><strong>FISCAL TAX INVOICE</strong></p>
-
-        <div class="sub-header">
-            <table>
-                <tr><td><strong>TIN:</strong></td><td>2001020099</td></tr>
-                <tr><td><strong>VAT No:</strong></td><td>220356643</td></tr>
-                <tr><td><strong>Branch:</strong></td><td>63 Speke Avenue</td></tr>
-                <tr><td><strong>Email:</strong></td><td>info@techcity.co.zw</td></tr>
-                <tr><td><strong>Phone:</strong></td><td>0776079245</td></tr>
-            </table>
-
-            <hr>
-
-            <table>
-                <tr><td><strong>Fiscal Device ID:</strong></td><td>${deviceId}</td></tr>
-                <tr><td><strong>Device Serial No:</strong></td><td>${deviceSerialNumber}</td></tr>
-                <tr><td><strong>Invoice No:</strong></td><td>${invoiceNumber}</td></tr>
-                <tr><td><strong>Fiscal Day No:</strong></td><td>45</td></tr>
-            </table>
-
-            <hr>
-
-            <p><strong>DATE: ${new Date().toLocaleDateString()} TIME: ${new Date().toLocaleTimeString()}</strong></p>
-
-            <hr>
-
-            <table>
-                <tr><td><strong>Customer Name:</strong></td><td>N/A</td></tr>
-                <tr><td><strong>Customer TIN:</strong></td><td>N/A</td></tr>
-            </table>
-        </div>
-
-        <div class="receipt-body">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Qty</th>
-                        <th>${currencySymbol}Price</th>
-                        <th>${currencySymbol}VAT</th>
-                        <th>${currencySymbol}Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${invoiceItems.map(item => `
-                        <tr>
-                            <td>${item.item__name}</td>
-                            <td>${item.quantity}</td>
-                            <td>${currencySymbol} ${item.unit_price}</td>
-                            <td>${currencySymbol} ${(
-                                (item.unit_price * item.quantity) - 
-                                ((item.unit_price * item.quantity) / (1 + vatRate / 100))
-                            ).toFixed(2)}</td>
-                            <td>${currencySymbol} ${(item.unit_price * item.quantity).toFixed(2)}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-                <tfoot>
-                    <tr><td colspan="4"><strong>Subtotal</strong></td><td>${subTotal}</td></tr>
-                    <tr><td colspan="4"><strong>VAT</strong></td><td>${vatAmount}</td></tr>
-                    <tr><td colspan="4"><strong>Total</strong></td><td>${invoiceTotal}</td></tr>
-                    <tr><td colspan="4"><strong>Paid Amount</strong></td><td>${amountPaid}</td></tr>
-                    <tr><td colspan="4"><strong>Payment Method</strong></td><td>${paymentMethod || 'Cash'}</td></tr>
-                </tfoot>
-            </table>
-        </div>
-
-        {% comment %} <p style="text-align: center;"><strong>Verification Code: ${receiptHash || ''}</strong></p>
-        <p style="text-align: center;">Verify at <a href="https://receipt.zimra.org/">https://receipt.zimra.org/</a></p> {% endcomment %}
-
-        <div class="footer">
-            <hr>
-            <p>Thank you for shopping with us</p>
-            <hr>
-        </div>
-    </div>`;
-}
-
-// Function to print the receipt silently
-function printReceiptSilently(content) {
-    let printFrame = document.getElementById("print-frame");
-
-    if (!printFrame) {
-        printFrame = document.createElement("iframe");
-        printFrame.id = "print-frame";
-        printFrame.style.position = "absolute";
-        printFrame.style.width = "0px";
-        printFrame.style.height = "0px";
-        printFrame.style.border = "none";
-        printFrame.style.visibility = "hidden";
-        document.body.appendChild(printFrame);
     }
 
-    const frameDoc = printFrame.contentWindow || 
-                     printFrame.contentDocument.document || 
-                     printFrame.contentDocument;
 
-    frameDoc.document.open();
-    frameDoc.document.write(`
-        <html>
-        <head>
-            <title>Print Receipt</title>
+    function displayReceipt(data) {
+        try {
+            let content = generateReceiptContent(data);
+            printReceiptSilently(content);
+
+            Swal.fire({
+                title: 'Printing Receipt...',
+                text: 'Please wait while we finish printing.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                timer: 3000,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+            }).then(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Done!',
+                    text: 'Receipt printed successfully.',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    location.reload();
+                });
+            });
+
+        } catch (error) {
+            console.error("Error:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to print the receipt. Please try again.'
+            });
+        }
+    }
+
+
+    function generateReceiptContent(data) {
+        const { invoice, invoice_items: invoiceItems } = data;
+        const {
+            invoice_number: invoiceNumber,
+            amount: invoiceTotal,
+            vat: vatAmount,
+            subtotal: subTotal,
+            currency_symbol: currencySymbol,
+            receipt_hash: receiptHash,
+            amount_paid: amountPaid,
+            payment_terms: paymentMethod,
+            device_id: deviceId,
+            device_serial_number: deviceSerialNumber,
+            qr_code: qr_code
+        } = invoice;
+
+        const vatRate = 15;
+        const qrValue = `Invoice: ${invoiceNumber}, Total: ${currencySymbol}${invoiceTotal}, Hash: ${receiptHash}`;
+
+        return `
             <style>
-                body { font-family: Arial, sans-serif; font-size: 12px; }
+                .receipt { font-family: Arial, sans-serif; font-size: 12px; width: 5.8cm; margin: auto; padding: 10px; }
+                .receipt h2, .footer p { text-align: center; }
+                .receipt-body table { width: 100%; margin-top: 10px; }
+                .qr-code { text-align: center; margin-top: 10px; }
             </style>
-        </head>
-        <body onload="window.print(); setTimeout(() => window.close(), 1000);">
-            ${content}
-        </body>
-        </html>
-    `);
-    frameDoc.document.close();
-}
 
-  
-// customer get and post
-function submitClient() {
-    const data = {
-        name: document.getElementById('id_name').value,
-        email: document.getElementById('id_email').value,
-        phonenumber: document.getElementById('id_phonenumber').value,
-        address: document.getElementById('id_address').value,
-    };
+            <div class="receipt">
+                <h2>Pasales Investments</h2>
+                <p><strong>FISCAL TAX INVOICE</strong></p>
 
-    fetch("{% url 'finance:add_customer' %}", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCookie("csrftoken"),
-        },
-        body: JSON.stringify(data),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            clientModal.hide();
-            Swal.fire({
-              icon: 'success',
-              title: 'success',
-              text: 'Customer Succesfully Added.',
-              timer: 2000,
-              showConfirmButton: false
-            }).then(()=>{
-                customerModal.hide();
-                fetchCustomers();
-            })
-        } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'error',
-              text: data.message,
-              timer: 2000,
-              showConfirmButton: false
-            })
-        }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-    });
-}
-    
-async function fetchCustomers() {
-    try {
-        const response = await fetch('{% url "finance:customers" %}');
+                <!-- sub-header, customer info, invoice info omitted for brevity -->
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok.');
-        }
-        const customers = await response.json();
+                <div class="receipt-body">
+                    <table>
+                        <thead>
+                            <tr><th>Item</th><th>Qty</th><th>${currencySymbol}Price</th><th>${currencySymbol}VAT</th><th>${currencySymbol}Total</th></tr>
+                        </thead>
+                        <tbody>
+                            ${invoiceItems.map(item => `
+                                <tr>
+                                    <td>${item.item__name}</td>
+                                    <td>${item.quantity}</td>
+                                    <td>${currencySymbol} ${item.unit_price}</td>
+                                    <td>${currencySymbol} ${(
+                                        (item.unit_price * item.quantity) - 
+                                        ((item.unit_price * item.quantity) / (1 + vatRate / 100))
+                                    ).toFixed(2)}</td>
+                                    <td>${currencySymbol} ${(item.unit_price * item.quantity).toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr><td colspan="4"><strong>Subtotal</strong></td><td>${subTotal}</td></tr>
+                            <tr><td colspan="4"><strong>VAT</strong></td><td>${vatAmount}</td></tr>
+                            <tr><td colspan="4"><strong>Total</strong></td><td>${invoiceTotal}</td></tr>
+                            <tr><td colspan="4"><strong>Paid Amount</strong></td><td>${amountPaid}</td></tr>
+                            <tr><td colspan="4"><strong>Payment Method</strong></td><td>${paymentMethod || 'Cash'}</td></tr>
+                        </tfoot>
+                    </table>
+                </div>
 
-        customersData.push(customers);
-        displayCustomers(customers);
+                <div class="qr-code">
+                   <div class="qr-code">
+                    <img src="${qr_code_image}" alt="QR Code">
+                   </div>
+            </div>
+                </div>
 
-    } catch (error) {
-        console.error('Error fetching customers:', error);
-        productListContainer.innerHTML = '<p class="error-message">Error loading customers. Please try again later.</p>';
-    }
-}
+                <div class="footer">
+                    <hr>
+                    <p>Thank you for shopping with us</p>
+                    <hr>
+                </div>
+            </div>
 
-fetchCustomers();
-
-function displayCustomers(customers) {
-    const cusElement = document.querySelector('#search-input');
-    
-    while (cusElement.options.length > 1) {
-        cusElement.remove(1);
+            {% comment %} <script>
+                setTimeout(() => {
+                    new QRCode(document.getElementById("qrcode"), "${qrValue}");
+                }, 100);
+            </script> {% endcomment %}
+        `;
     }
 
-    customers.forEach((customer) => {
-        const option = document.createElement('option');
-        option.value = customer.id;
-        option.textContent = customer.name;
-        cusElement.appendChild(option);
-    });
-}
 
-async function fetchCustomerAccount(customerId) {
-    try {
-        const response = await fetch(`/finance/customer/account/json/${customerId}/`, {
+    // Function to print the receipt silently
+    function printReceiptSilently(content) {
+        let printFrame = document.getElementById("print-frame");
+
+        if (!printFrame) {
+            printFrame = document.createElement("iframe");
+            printFrame.id = "print-frame";
+            printFrame.style.position = "absolute";
+            printFrame.style.width = "0px";
+            printFrame.style.height = "0px";
+            printFrame.style.border = "none";
+            printFrame.style.visibility = "hidden";
+            document.body.appendChild(printFrame);
+        }
+
+        const frameDoc = printFrame.contentWindow || 
+                        printFrame.contentDocument.document || 
+                        printFrame.contentDocument;
+
+        frameDoc.document.open();
+        frameDoc.document.write(`
+            <html>
+            <head>
+                <title>Print Receipt</title>
+                <style>
+                    body { font-family: Arial, sans-serif; font-size: 12px; }
+                </style>
+            </head>
+            <body onload="window.print(); setTimeout(() => window.close(), 1000);">
+                ${content}
+            </body>
+            </html>
+        `);
+        frameDoc.document.close();
+    }
+
+    
+    // customer get and post
+    function submitClient() {
+        const data = {
+            name: document.getElementById('id_name').value,
+            email: document.getElementById('id_email').value,
+            phonenumber: document.getElementById('id_phonenumber').value,
+            address: document.getElementById('id_address').value,
+        };
+
+        fetch("{% url 'finance:add_customer' %}", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "X-CSRFToken": getCookie("csrftoken"),
             },
-            body: JSON.stringify({}),
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok.');
-        }
-
-        const data = await response.json();
-
-        const balanceEl = document.querySelector('#due_balance');
-        balanceEl.innerHTML = '';
-
-        const previousDueEl = document.getElementById('previous_due');
-        const balance = data.find(item => item.currency__symbol === currencyData[0][0]?.symbol);
-
-        if (balance.balance < 0) {
-            bal = Math.abs(balance.balance); 
-        } else {
-            bal = -Math.abs(balance.balance); 
-        }
-
-        previousDue = bal;
-        previousDueEl.textContent = balance ? `${balance.currency__symbol} ${bal}` : "0.00";
-
-        data.forEach((balance) => {
-            const balanceItem = document.createElement('small');
-            balanceItem.id = 'id_due';
-            balanceItem.className = 'text-danger';
-            balanceItem.textContent = `${balance.currency__symbol} ${balance.balance}`;
-            balanceEl.appendChild(balanceItem);
-        });
-        setCustomer(customerId)
-        totals();
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-
-function setCustomer(customerId){
-    // customer information
-    const company = document.getElementById('customerCompany');
-    const name = document.getElementById('customerName');
-    const cell = document.getElementById('customerPhone');
-    const email = document.getElementById('customerEmail')
-    const address = document.getElementById('customerAddress')
-
-    data = customersData[0].filter((cus)=> cus.id == customerId)
-
-    name.textContent = data[0]?.name;
-    name.textContent = data[0]?.name;
-    cell.textContent = data[0]?.cell;
-    email.textContent = data[0]?.email;
-    address.textContent = data[0]?.address;
-   
-    }
-
-    // const getLastInvoiceNumber = async (customerId) => {
-    //     try {
-    //         const response = await fetch(`/pos/last_due_invoice/${customerId}/`);
-
-    //     if (!response.ok) {
-    //         throw new Error('Network response was not ok.');
-    //     }
-    //     const lastInvoice = await response.json();
-
-    //     // set the last invoice
-    //     //document.getElementById('id_last_invoice').textContent = lastInvoice[0].invoice_number;
-
-    //     } catch (error) {
-    //         console.error('Error fetching Last Invoice Number:', error);
-        
-    //     }
-    // }
-
-    function customerAccount() {
-        $.ajax({
-            url: '/finance/customer/payments/json/',
-            type: 'GET',
-            data: { 'type': 'invoice_payments', 'customer_id': 1 },
-        }).done(function (response) {
-            const data = response
-            //displaypaymentsTable(data)
+            body: JSON.stringify(data),
         })
-    }
-
-  
-    function displaypaymentsTable(data) {
-        //customerAccountTableModal.show()
-        customerAccountTable.innerHTML = '';
-        data.forEach((d) => {
-            customerAccountTable.innerHTML += `
-            
-            <tr>
-                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${new Date(d.payment_date).toDateString()}</small></td>
-                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>#${d.invoice__invoice_number}</small></td>
-                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__products_purchased}</small></td>
-                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.invoice__amount}</small></td>
-                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.amount_paid}</small></td>
-                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.amount_due}</small></td>
-                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.user__username}</small></td>
-            </tr>
-            `
-        })
-    }
-
-    const apiUrl =''//update endpoint
-        async function fetchCustomerData() {
-            try {
-                const response = await fetch(apiUrl);  
-                const customers = await response.json();  
-
-                if (Array.isArray(customers) && customers.length > 0) {
-                    const tableBody = document.getElementById("laybyTableBody");
-                    const recordCount = document.getElementById("count");
-                    tableBody.innerHTML = '';
-
-                    customers.forEach(customer => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${customer.name}</td>
-                            <td>${product}</td>
-                            <td>${amount}</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Send
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item"  href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
-                                            <i class='bx bxl-whatsapp'></i></a></li>
-                                        <li><a class="dropdown-item"  href='mailto:{{customer.account.customer.email}}' class="text-dark">
-                                            <i class='bx bx-envelope'></i></a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-
-                    // Updating the record count
-                    recordCount.innerText = customers.length;
-                } else {
-                    alert('No customer data available.');
-                }
-            } catch (error) {
-                console.error('Error fetching customer data:', error);
-                alert('Failed to load customer data. Please try again later.');
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                clientModal.hide();
+                Swal.fire({
+                icon: 'success',
+                title: 'success',
+                text: 'Customer Succesfully Added.',
+                timer: 2000,
+                showConfirmButton: false
+                }).then(()=>{
+                    customerModal.hide();
+                    fetchCustomers();
+                })
+            } else {
+                Swal.fire({
+                icon: 'error',
+                title: 'error',
+                text: data.message,
+                timer: 2000,
+                showConfirmButton: false
+                })
             }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+        });
+    }
+        
+    async function fetchCustomers() {
+        try {
+            const response = await fetch('{% url "finance:customers" %}');
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok.');
+            }
+            const customers = await response.json();
+
+            customersData.push(customers);
+            displayCustomers(customers);
+
+        } catch (error) {
+            console.error('Error fetching customers:', error);
+            productListContainer.innerHTML = '<p class="error-message">Error loading customers. Please try again later.</p>';
+        }
+    }
+
+    fetchCustomers();
+
+    function displayCustomers(customers) {
+        const cusElement = document.querySelector('#search-input');
+        
+        while (cusElement.options.length > 1) {
+            cusElement.remove(1);
         }
 
-        document.getElementById('laybyModal').addEventListener('shown.bs.modal', fetchCustomerData);
+        customers.forEach((customer) => {
+            const option = document.createElement('option');
+            option.value = customer.id;
+            option.textContent = customer.name;
+            cusElement.appendChild(option);
+        });
+    }
+
+    async function fetchCustomerAccount(customerId) {
+        try {
+            const response = await fetch(`/finance/customer/account/json/${customerId}/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+                body: JSON.stringify({}),
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok.');
+            }
+
+            const data = await response.json();
+
+            const balanceEl = document.querySelector('#due_balance');
+            balanceEl.innerHTML = '';
+
+            const previousDueEl = document.getElementById('previous_due');
+            const balance = data.find(item => item.currency__symbol === currencyData[0][0]?.symbol);
+
+            if (balance.balance < 0) {
+                bal = Math.abs(balance.balance); 
+            } else {
+                bal = -Math.abs(balance.balance); 
+            }
+
+            previousDue = bal;
+            previousDueEl.textContent = balance ? `${balance.currency__symbol} ${bal}` : "0.00";
+
+            data.forEach((balance) => {
+                const balanceItem = document.createElement('small');
+                balanceItem.id = 'id_due';
+                balanceItem.className = 'text-danger';
+                balanceItem.textContent = `${balance.currency__symbol} ${balance.balance}`;
+                balanceEl.appendChild(balanceItem);
+            });
+            setCustomer(customerId)
+            totals();
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    function setCustomer(customerId){
+        // customer information
+        const company = document.getElementById('customerCompany');
+        const name = document.getElementById('customerName');
+        const cell = document.getElementById('customerPhone');
+        const email = document.getElementById('customerEmail')
+        const address = document.getElementById('customerAddress')
+
+        data = customersData[0].filter((cus)=> cus.id == customerId)
+
+        name.textContent = data[0]?.name;
+        name.textContent = data[0]?.name;
+        cell.textContent = data[0]?.cell;
+        email.textContent = data[0]?.email;
+        address.textContent = data[0]?.address;
+    
+        }
+
+        // const getLastInvoiceNumber = async (customerId) => {
+        //     try {
+        //         const response = await fetch(`/pos/last_due_invoice/${customerId}/`);
+
+        //     if (!response.ok) {
+        //         throw new Error('Network response was not ok.');
+        //     }
+        //     const lastInvoice = await response.json();
+
+        //     // set the last invoice
+        //     //document.getElementById('id_last_invoice').textContent = lastInvoice[0].invoice_number;
+
+        //     } catch (error) {
+        //         console.error('Error fetching Last Invoice Number:', error);
+            
+        //     }
+        // }
+
+        function customerAccount() {
+            $.ajax({
+                url: '/finance/customer/payments/json/',
+                type: 'GET',
+                data: { 'type': 'invoice_payments', 'customer_id': 1 },
+            }).done(function (response) {
+                const data = response
+                //displaypaymentsTable(data)
+            })
+        }
 
     
-        async function fetchCustomerData() {
-            try {
-                const response = await fetch('',{  //update url
-                method: "GET",
-                });
-                const customers = await response.json();  
-
-                if (Array.isArray(customers) && customers.length > 0) {
-                    const tableBody = document.getElementById("PaylaterTableBody");
-                    const recordCount = document.getElementById("count");
-                    tableBody.innerHTML = '';
-
-                    customers.forEach(customer => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${customer.name}</td>
-                            <td>${product}</td>
-                            <td>${amount}</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Send
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item"  href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
-                                            <i class='bx bxl-whatsapp'></i></a></li>
-                                        <li><a class="dropdown-item"  href='mailto:{{customer.account.customer.email}}' class="text-dark">
-                                            <i class='bx bx-envelope'></i></a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-
-                    recordCount.innerText = customers.length;
-                } else {
-                    showError("No customer data available.");
-                }
-            } catch (error) {
-                console.log(error)
-            }
+        function displaypaymentsTable(data) {
+            //customerAccountTableModal.show()
+            customerAccountTable.innerHTML = '';
+            data.forEach((d) => {
+                customerAccountTable.innerHTML += `
+                
+                <tr>
+                    <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${new Date(d.payment_date).toDateString()}</small></td>
+                    <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>#${d.invoice__invoice_number}</small></td>
+                    <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__products_purchased}</small></td>
+                    <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.invoice__amount}</small></td>
+                    <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.amount_paid}</small></td>
+                    <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.amount_due}</small></td>
+                    <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.user__username}</small></td>
+                </tr>
+                `
+            })
         }
 
-        document.getElementById('PaylaterModal').addEventListener('shown.bs.modal', fetchCustomerData);
+        const apiUrl =''//update endpoint
+            async function fetchCustomerData() {
+                try {
+                    const response = await fetch(apiUrl);  
+                    const customers = await response.json();  
+
+                    if (Array.isArray(customers) && customers.length > 0) {
+                        const tableBody = document.getElementById("laybyTableBody");
+                        const recordCount = document.getElementById("count");
+                        tableBody.innerHTML = '';
+
+                        customers.forEach(customer => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${customer.name}</td>
+                                <td>${product}</td>
+                                <td>${amount}</td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Send
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item"  href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
+                                                <i class='bx bxl-whatsapp'></i></a></li>
+                                            <li><a class="dropdown-item"  href='mailto:{{customer.account.customer.email}}' class="text-dark">
+                                                <i class='bx bx-envelope'></i></a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+
+                        // Updating the record count
+                        recordCount.innerText = customers.length;
+                    } else {
+                        alert('No customer data available.');
+                    }
+                } catch (error) {
+                    console.error('Error fetching customer data:', error);
+                    alert('Failed to load customer data. Please try again later.');
+                }
+            }
+
+            document.getElementById('laybyModal').addEventListener('shown.bs.modal', fetchCustomerData);
+
+        
+            async function fetchCustomerData() {
+                try {
+                    const response = await fetch('',{  //update url
+                    method: "GET",
+                    });
+                    const customers = await response.json();  
+
+                    if (Array.isArray(customers) && customers.length > 0) {
+                        const tableBody = document.getElementById("PaylaterTableBody");
+                        const recordCount = document.getElementById("count");
+                        tableBody.innerHTML = '';
+
+                        customers.forEach(customer => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${customer.name}</td>
+                                <td>${product}</td>
+                                <td>${amount}</td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Send
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item"  href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
+                                                <i class='bx bxl-whatsapp'></i></a></li>
+                                            <li><a class="dropdown-item"  href='mailto:{{customer.account.customer.email}}' class="text-dark">
+                                                <i class='bx bx-envelope'></i></a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+
+                        recordCount.innerText = customers.length;
+                    } else {
+                        showError("No customer data available.");
+                    }
+                } catch (error) {
+                    console.log(error)
+                }
+            }
+
+            document.getElementById('PaylaterModal').addEventListener('shown.bs.modal', fetchCustomerData);
 </script>

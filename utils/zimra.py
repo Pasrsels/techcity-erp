@@ -22,7 +22,6 @@ class DateTimeEncoder(json.JSONEncoder):
             return obj.isoformat()
         return super().default(obj)
 
-
 class ZIMRA:
 
     device_identification = os.getenv("DEVICE_ID")
@@ -48,6 +47,7 @@ class ZIMRA:
             "deviceModelName": self.device_model_name,
             "deviceModelVersion": self.device_model_version
         }
+        
         try:
             response = requests.post(f"{self.registration_url}/RegisterDevice", json=payload, headers=headers)
             response.raise_for_status()
@@ -182,6 +182,8 @@ class ZIMRA:
             hash,
             signature
         ):
+        
+        logger.info(receipt_data)
         """
             Submits a single receipt to the FDMS.
         """

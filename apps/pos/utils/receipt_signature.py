@@ -114,7 +114,7 @@ def generate_receipt_data(invoice, invoice_items, request):
             zimra = ZIMRA()
             zimra.open_day()
 
-        last_global_no = get_last_receipt_numbers()
+        last_global_no = 1
 
         new_receipt_global_no = last_global_no + 1
 
