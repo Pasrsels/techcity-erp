@@ -192,6 +192,9 @@ def generate_receipt_data(invoice, invoice_items, request):
             receipt_data['receiptTaxes'],
             receipt_data['previousReceiptHash'],
         )
+        
+        logger.info(f'Signature data: {signature_data}')
+        logger.info(f'Receipt_data: {receipt_data}')
 
         return signature_data, receipt_data
     except Exception as e:
