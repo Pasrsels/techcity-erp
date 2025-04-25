@@ -678,7 +678,6 @@ def create_invoice(request):
             
             with transaction.atomic():
                 invoice = Invoice.objects.create(
-                    invoice_number=Invoice.generate_invoice_number(request.user.branch.name),  
                     customer=customer,
                     issue_date=timezone.now(),
                     amount=invoice_total_amount,
@@ -2130,7 +2129,6 @@ def invoice_preview_json(request, invoice_id):
     )
 
     invoice_dict = {}
-
     invoice_dict['customer_name'] = invoice.customer.name
     invoice_dict['customer_email'] = invoice.customer.email
     invoice_dict['customer_cell'] = invoice.customer.phone_number
@@ -2145,6 +2143,8 @@ def invoice_preview_json(request, invoice_id):
     invoice_dict['vat'] = round(invoice.vat, 2)
     invoice_dict['device_id'] = os.getenv("DEVICE_ID")
     invoice_dict['device_serial_number'] = os.getenv("DEVICE_SERIAL_NUMBER")
+    invoice_dict['code'] =  invoice.code
+    invoice_dict['fiscal_day'] = invoice.fiscal_day
 
     if invoice.branch:
         invoice_dict['branch_name'] = invoice.branch.name

@@ -1259,7 +1259,6 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            console.log(data)
                             displayReceipt(data.data);
                             cart = [];
                             updateCartDisplay();
@@ -1354,7 +1353,9 @@
             qr_code: qrCodeURL,
             branch_name: branchName,
             branch_phone: branchPhone,
-            branch_email: branchEmail
+            branch_email: branchEmail,
+            code: code,
+            fiscal_day:fiscal_day
         } = invoice;
     
         const vatRate = 15;
@@ -1399,8 +1400,11 @@
                 <strong>Phone:</strong> ${branchPhone || 'N/A'}<br>
                 <strong>Email:</strong> ${branchEmail || 'N/A'}</p>
     
-                <p><strong>Device ID:</strong> ${deviceId}<br>
-                <strong>Device Serial:</strong> ${deviceSerialNumber}</p>
+                <p>
+                    <strong>Fiscal Day No: ${fiscal_day}</strong><br>
+                    <strong>Device ID:</strong> ${deviceId}<br>
+                    <strong>Device Serial:</strong> ${deviceSerialNumber}
+                </p>
     
                 <div class="receipt-body">
                     <table>
@@ -1422,7 +1426,7 @@
                                         <td>${item.item__name}</td>
                                         <td>${item.quantity}</td>
                                         <td>${currencySymbol}${item.unit_price}</td>
-                                        <td>${currencySymbol}${vat}</td>
+                                        <td>${currencySymbol}${vat.toFixed(2)}</td>
                                         <td>${currencySymbol}${total}</td>
                                     </tr>
                                 `;
@@ -1441,10 +1445,10 @@
                 <div class="qr-code">
                     <img src="${qrCodeURL}" alt="QR Code" width="100" height="100" style="display:block; margin: 0 auto;">
                 </div>
-    
                 <div class="footer center">
-                    <p><strong>Hash:</strong> ${receiptHash}</p>
-
+                    <p><strong>Verification Code: <br> </strong> ${code} <br>
+                        Verification Url: https://fdmstest.zimra.co.zw/
+                    </p>
                     <hr>
                     <p>Thank you for shopping with us</p>
                     <hr>

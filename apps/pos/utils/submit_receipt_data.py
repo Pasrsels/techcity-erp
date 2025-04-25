@@ -6,6 +6,8 @@ import qrcode
 from io import BytesIO
 from apps.settings.models import FiscalCounter
 from apps.finance.models import Invoice
+import hashlib
+import os
 
 def submit_receipt_data(request, receipt_data, hash, signature):
     try:
@@ -26,20 +28,43 @@ def submit_receipt_data(request, receipt_data, hash, signature):
             invoice.receiptServerSignature = signature
             invoice.receipt_hash = hash
 
-            qr = qrcode.make(hash)
+            base_url = "https://fdmstest.zimra.co.zw"
+            
+            device_id = f'00000{os.getenv('DEVICE_ID')}'
+            receipt_date = datetime.strptime(receipt_data['receiptDate'], "%Y-%m-%dT%H:%M:%S").strftime('%d%m%Y')
+            receipt_global_no = str(receipt_data['receiptGlobalNo']).zfill(10) #to fix
+            receipt_qr_data = generate_verification_code_from_signature(signature).replace('-', '')
+            
+            logger.info(f'{device_id}, {receipt_date}, {receipt_global_no} {receipt_qr_data}')
+
+            # qr_url = "https://invoice.zimra.co.zw"  
+            full_url = f"{base_url}/{device_id}{receipt_date}{receipt_global_no}{receipt_qr_data}"
+
+            # Generate QR code
+            qr = qrcode.make(full_url)
+
+            qr = qrcode.make(full_url)
             qr_io = BytesIO()
             qr.save(qr_io, format='PNG')
             qr_io.seek(0)
-
+                        
             from django.core.files.base import ContentFile
-            invoice.qr_code.save(f"qr_{invoice.invoice_number}.png", ContentFile(qr_io.getvalue()), save=False)
-            try:
-                invoice.save()
-            except Exception as e:
-                print(e)
-
+            
             fiscal_day = FiscalDay.objects.filter(created_at__date=datetime.today(), is_open=True).first()
             logger.info(f'fiscal_day: {fiscal_day}')
+
+            invoice.qr_code.save(f"qr_{invoice.invoice_number}.png", ContentFile(qr_io.getvalue()), save=False)
+            code = generate_verification_code_from_signature(signature)
+            logger.info(code)
+            
+            try:
+                invoice.code=code
+                invoice.fiscal_day=fiscal_day.day_no
+                invoice.invoice_number = f"{receipt_data['receiptGlobalNo']}"
+                invoice.save()
+                logger.info(f'invoice saved: {invoice}')
+            except Exception as e:
+                logger.info(e)
 
             if fiscal_day:
 
@@ -116,3 +141,8 @@ def submit_receipt_data(request, receipt_data, hash, signature):
     except KeyError as e:
         logger.error(f"KeyError: Missing key in invoice data: {e}")
         raise ValueError(f"Invalid invoice data: {e}")
+    
+def generate_verification_code_from_signature(signature: str) -> str:
+    md5_hash = hashlib.md5(signature.encode()).hexdigest().upper()
+    return '-'.join([md5_hash[i:i+4] for i in range(0, 16, 4)])
+
