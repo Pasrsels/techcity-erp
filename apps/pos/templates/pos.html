@@ -1239,7 +1239,7 @@
 
                 if (invoiceId) {
                     const signature_data = run(result.data);  
-                    const receipt_data = result.data;              
+                    const receipt_data = result.receipt_data;              
                     const hash = signature_data.hash;              
                     const signature = signature_data.signature;    
                 
@@ -1259,7 +1259,8 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            {% comment %} displayReceipt(data.data); {% endcomment %}
+                            console.log(data)
+                            displayReceipt(data.data);
                             cart = [];
                             updateCartDisplay();
                         } else {
@@ -1349,77 +1350,109 @@
             payment_terms: paymentMethod,
             device_id: deviceId,
             device_serial_number: deviceSerialNumber,
-            qr_code: qr_code
+            receipt_signature: receiptSignature,
+            qr_code: qrCodeURL,
+            branch_name: branchName,
+            branch_phone: branchPhone,
+            branch_email: branchEmail
         } = invoice;
-
+    
         const vatRate = 15;
-        const qrValue = `Invoice: ${invoiceNumber}, Total: ${currencySymbol}${invoiceTotal}, Hash: ${receiptHash}`;
-
+    
         return `
             <style>
-                .receipt { font-family: Arial, sans-serif; font-size: 12px; width: 5.8cm; margin: auto; padding: 10px; }
-                .receipt h2, .footer p { text-align: center; }
-                .receipt-body table { width: 100%; margin-top: 10px; }
-                .qr-code { text-align: center; margin-top: 10px; }
+                .receipt {
+                    font-family: Arial, sans-serif;
+                    font-size: 12px;
+                    width: 5.8cm;
+                    margin: auto;
+                    padding: 10px;
+                }
+                .receipt h2, .footer p, .center {
+                    text-align: center;
+                }
+                .receipt-body table {
+                    width: 100%;
+                    margin-top: 10px;
+                    border-collapse: collapse;
+                }
+                .receipt-body th, .receipt-body td {
+                    padding: 2px;
+                    border-bottom: 1px dashed #000;
+                }
+                .qr-code {
+                    text-align: center;
+                    margin-top: 10px;
+                }
+                .footer {
+                    font-size: 11px;
+                    margin-top: 10px;
+                }
             </style>
-
+    
             <div class="receipt">
                 <h2>Pasales Investments</h2>
                 <p><strong>FISCAL TAX INVOICE</strong></p>
-
-                <!-- sub-header, customer info, invoice info omitted for brevity -->
-
+    
+                <p><strong>Invoice No:</strong> ${invoiceNumber}</p>
+                <p><strong>Branch:</strong> ${branchName || 'Main'}<br>
+                <strong>Phone:</strong> ${branchPhone || 'N/A'}<br>
+                <strong>Email:</strong> ${branchEmail || 'N/A'}</p>
+    
+                <p><strong>Device ID:</strong> ${deviceId}<br>
+                <strong>Device Serial:</strong> ${deviceSerialNumber}</p>
+    
                 <div class="receipt-body">
                     <table>
                         <thead>
-                            <tr><th>Item</th><th>Qty</th><th>${currencySymbol}Price</th><th>${currencySymbol}VAT</th><th>${currencySymbol}Total</th></tr>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>${currencySymbol}Price</th>
+                                <th>${currencySymbol}VAT</th>
+                                <th>${currencySymbol}Total</th>
+                            </tr>
                         </thead>
                         <tbody>
-                            ${invoiceItems.map(item => `
-                                <tr>
-                                    <td>${item.item__name}</td>
-                                    <td>${item.quantity}</td>
-                                    <td>${currencySymbol} ${item.unit_price}</td>
-                                    <td>${currencySymbol} ${(
-                                        (item.unit_price * item.quantity) - 
-                                        ((item.unit_price * item.quantity) / (1 + vatRate / 100))
-                                    ).toFixed(2)}</td>
-                                    <td>${currencySymbol} ${(item.unit_price * item.quantity).toFixed(2)}</td>
-                                </tr>
-                            `).join('')}
+                            ${invoiceItems.map(item => {
+                                const total = item.unit_price * item.quantity;
+                                const vat = total - (total / (1 + vatRate / 100));
+                                return `
+                                    <tr>
+                                        <td>${item.item__name}</td>
+                                        <td>${item.quantity}</td>
+                                        <td>${currencySymbol}${item.unit_price}</td>
+                                        <td>${currencySymbol}${vat}</td>
+                                        <td>${currencySymbol}${total}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
                         </tbody>
                         <tfoot>
-                            <tr><td colspan="4"><strong>Subtotal</strong></td><td>${subTotal}</td></tr>
-                            <tr><td colspan="4"><strong>VAT</strong></td><td>${vatAmount}</td></tr>
-                            <tr><td colspan="4"><strong>Total</strong></td><td>${invoiceTotal}</td></tr>
-                            <tr><td colspan="4"><strong>Paid Amount</strong></td><td>${amountPaid}</td></tr>
+                            <tr><td colspan="4"><strong>Subtotal</strong></td><td>${currencySymbol}${subTotal}</td></tr>
+                            <tr><td colspan="4"><strong>VAT (${vatRate}%)</strong></td><td>${currencySymbol}${vatAmount}</td></tr>
+                            <tr><td colspan="4"><strong>Total</strong></td><td>${currencySymbol}${invoiceTotal}</td></tr>
+                            <tr><td colspan="4"><strong>Amount Paid</strong></td><td>${currencySymbol}${amountPaid}</td></tr>
                             <tr><td colspan="4"><strong>Payment Method</strong></td><td>${paymentMethod || 'Cash'}</td></tr>
                         </tfoot>
                     </table>
                 </div>
-
+    
                 <div class="qr-code">
-                   <div class="qr-code">
-                    <img src="${qr_code_image}" alt="QR Code">
-                   </div>
-            </div>
+                    <img src="${qrCodeURL}" alt="QR Code" width="100" height="100" style="display:block; margin: 0 auto;">
                 </div>
+    
+                <div class="footer center">
+                    <p><strong>Hash:</strong> ${receiptHash}</p>
 
-                <div class="footer">
                     <hr>
                     <p>Thank you for shopping with us</p>
                     <hr>
                 </div>
             </div>
-
-            {% comment %} <script>
-                setTimeout(() => {
-                    new QRCode(document.getElementById("qrcode"), "${qrValue}");
-                }, 100);
-            </script> {% endcomment %}
         `;
     }
-
+    
 
     // Function to print the receipt silently
     function printReceiptSilently(content) {

@@ -956,6 +956,7 @@ def submit_invoice_data_zimra(request):
             submit_receipt_data(request, receipt_data, hash, signature)
             logger.info('done')
         except Exception as e:
+            logger.info(e)
             return JsonResponse(
                 {
                     'success':False,
@@ -965,6 +966,7 @@ def submit_invoice_data_zimra(request):
             )
         
         invoice_data = invoice_preview_json(request, invoice_id)
+        logger.info(invoice_data)
 
         return JsonResponse({'success':True, 'message':'data received', 'data':invoice_data}, status=200)
     except Exception as e:
@@ -2107,19 +2109,20 @@ def replace_item(request, item_id):
             return JsonResponse({'success': True})
         except (InvoiceItem.DoesNotExist, ValueError):
             return JsonResponse({'success': False, 'error': 'Invalid item'}, status=404)
-
+        
 def invoice_preview_json(request, invoice_id):
+    from django.core.serializers.json import DjangoJSONEncoder
     try:
         invoice = Invoice.objects.get(id=invoice_id)
     except Invoice.DoesNotExist:
-        return JsonResponse({"error": "Invoice not found"}, status=404) 
-    
+        return JsonResponse({"error": "Invoice not found"}, status=404)
+
     dates = {}
     if invoice.payment_terms == 'layby':
         dates = laybyDates.objects.filter(layby__invoice=invoice).values('due_date')
-     
+
     invoice_items = InvoiceItem.objects.filter(invoice=invoice).values(
-        'item__name', 
+        'item__name',
         'quantity',
         'item__description',
         'total_amount',
@@ -2139,38 +2142,38 @@ def invoice_preview_json(request, invoice_id):
     invoice_dict['invoice_number'] = invoice.invoice_number
     invoice_dict['receipt_hash'] = invoice.receipt_hash
     invoice_dict['subtotal'] = invoice.subtotal
-    invoice_dict['vat'] =  invoice.vat
+    invoice_dict['vat'] = round(invoice.vat, 2)
     invoice_dict['device_id'] = os.getenv("DEVICE_ID")
     invoice_dict['device_serial_number'] = os.getenv("DEVICE_SERIAL_NUMBER")
-    
+
     if invoice.branch:
         invoice_dict['branch_name'] = invoice.branch.name
         invoice_dict['branch_phone'] = invoice.branch.phonenumber
         invoice_dict['branch_email'] = invoice.branch.email
-        
-    invoice_dict['user_username'] = invoice.user.username  
 
+    invoice_dict['user_username'] = invoice.user.username
     invoice_dict['receipt_signature'] = invoice.receiptServerSignature if invoice.receiptServerSignature else None
-    invoice_dict['qr_code'] = invoice.qr_code
-    
-    # if invoice.qr_code and invoice.qr_code.name:
-    #     try:
-    #         invoice_dict['receipt_qr_code_url'] = request.build_absolute_uri(invoice.qr_code.url)
-    #     except Exception as e:
-    #         invoice_dict['receipt_qr_code_url'] = None
-    #         logger.info(f"Error getting QR code URL: {e}")  
-    # else:
-    #     invoice_dict['receipt_qr_code_url'] = None
 
-    logger.info(invoice.qr_code)
-    
+    # Safely serialize qr_code
+    if invoice.qr_code and hasattr(invoice.qr_code, 'url'):
+        try:
+            invoice_dict['qr_code'] = request.build_absolute_uri(invoice.qr_code.url)
+            logger.info(invoice_dict['qr_code'])
+        except Exception as e:
+            invoice_dict['qr_code'] = None
+            logger.info(f"Error generating QR code URL: {e}")
+    else:
+        invoice_dict['qr_code'] = None
+
     invoice_data = {
         'invoice': invoice_dict,
         'invoice_items': list(invoice_items),
         'dates': list(dates)
     }
     
-    return JsonResponse(invoice_data)
+    logger.info(invoice_data)
+
+    return invoice_data
 
 @login_required
 def invoice_pdf(request):

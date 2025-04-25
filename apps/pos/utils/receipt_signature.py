@@ -109,12 +109,12 @@ def generate_receipt_data(invoice, invoice_items, request):
         logger.info(f"Processing Invoice: {invoice.invoice_number}")
 
         fiscal_day = FiscalDay.objects.filter(is_open=True, created_at__date=datetime.today()).first()
-
+        logger.info(fiscal_day)
         if not fiscal_day:
             zimra = ZIMRA()
             zimra.open_day()
 
-        last_global_no = 1
+        last_global_no = get_last_receipt_numbers()
 
         new_receipt_global_no = last_global_no + 1
 

@@ -13,7 +13,7 @@ def submit_receipt_data(request, receipt_data, hash, signature):
         receipt = OfflineReceipt(receipt_data=receipt_data)
         receipt.save()
         logger.info(f'Receipt saved offline: {receipt}')
-
+    
         zimra_instance = ZIMRA()
         response = zimra_instance.submit_receipt({"receipt":receipt_data}, hash, signature)
         logger.info(f"Receipt submission response: {response}")

@@ -178,29 +178,35 @@ class ZIMRA:
 
     def submit_receipt(
             self, 
-            receipt_data, 
+            receipt_data,
             hash,
             signature
         ):
-        
-        logger.info(receipt_data)
         """
             Submits a single receipt to the FDMS.
         """
-
-        logger.info(receipt_data)
-
-        receipt_data['receipt']['receiptDeviceSignature'] = {
-            "hash": hash,
-            "signature": signature
-        }
+        
+        try:
+        
+            logger.info(receipt_data)
+            
+            receipt_data['receipt']['receiptDeviceSignature'] = {
+                "hash": hash,
+                "signature": signature
+            }
+            
+            logger.info(receipt_data)
+            
+        except Exception as e:
+            logger.info(e)
+        
 
         headers = {
             "Content-Type": "application/json",
             "deviceModelName": self.device_model_name,
             "deviceModelVersion": self.device_model_version
         }
-        logger.info(receipt_data)
+        
     
         try:
             response = requests.post(f"{self.base_url}/SubmitReceipt", json=receipt_data, headers=headers, cert=(self.certificate_path, self.certificate_key))
