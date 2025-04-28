@@ -8,6 +8,7 @@ from apps.settings.models import FiscalCounter
 from apps.finance.models import Invoice
 import hashlib
 import os
+import base64
 
 def submit_receipt_data(request, receipt_data, hash, signature):
     try:
@@ -33,7 +34,7 @@ def submit_receipt_data(request, receipt_data, hash, signature):
             device_id = f'00000{os.getenv('DEVICE_ID')}'
             receipt_date = datetime.strptime(receipt_data['receiptDate'], "%Y-%m-%dT%H:%M:%S").strftime('%d%m%Y')
             receipt_global_no = str(receipt_data['receiptGlobalNo']).zfill(10) #to fix
-            receipt_qr_data = generate_verification_code_from_signature(signature).replace('-', '')
+            receipt_qr_data = generate_verification_code(signature).replace('-', '')
             
             logger.info(f'{device_id}, {receipt_date}, {receipt_global_no} {receipt_qr_data}')
 
@@ -54,7 +55,7 @@ def submit_receipt_data(request, receipt_data, hash, signature):
             logger.info(f'fiscal_day: {fiscal_day}')
 
             invoice.qr_code.save(f"qr_{invoice.invoice_number}.png", ContentFile(qr_io.getvalue()), save=False)
-            code = generate_verification_code_from_signature(signature)
+            code = generate_verification_code(signature)
             logger.info(code)
             
             try:
@@ -142,7 +143,12 @@ def submit_receipt_data(request, receipt_data, hash, signature):
         logger.error(f"KeyError: Missing key in invoice data: {e}")
         raise ValueError(f"Invalid invoice data: {e}")
     
-def generate_verification_code_from_signature(signature: str) -> str:
-    md5_hash = hashlib.md5(signature.encode()).hexdigest().upper()
-    return '-'.join([md5_hash[i:i+4] for i in range(0, 16, 4)])
-
+def generate_verification_code(base64_signature):
+    decoded_bytes = base64.b64decode(base64_signature)
+    hex_string = decoded_bytes.hex()
+    
+    md5_hash = hashlib.md5(hex_string.encode('utf-8')).hexdigest()
+    
+    verification_code = md5_hash[:16]
+    
+    return verification_code.upper()
