@@ -1,0 +1,900 @@
+{% load static %}
+<div>
+    <div class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class='d-flex align-items-center justify-content-between'>
+                <div class='d-flex align-items-center'>
+                    <div>
+                        <h4 class="mb-1">Cash Ups</h4>
+                        <p class="text-muted mb-0">Record other cash from other branches</p>
+                    </div>
+                    <div class="px-2">
+                        <div class="card-body">                    
+                            <!-- Quick filter buttons -->
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=today" class="btn btn-outline-primary {% if filter_type == 'today' %}active{% endif %}">Today</a>
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=weekly" class="btn btn-outline-primary {% if filter_type == 'weekly' %}active{% endif %}">Weekly</a>
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=monthly" class="btn btn-outline-primary {% if filter_type == 'monthly' %}active{% endif %}">Monthly</a>
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=yearly" class="btn btn-outline-primary {% if filter_type == 'yearly' %}active{% endif %}">Yearly</a>
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=custom" class="btn btn-outline-primary {% if filter_type == 'custom' %}active{% endif %}">Custom</a>
+                            </div>
+                            
+                            <!-- Custom date range form, shown only when custom is selected -->
+                            <form method="get" id="dateRangeForm" class="{% if filter_type != 'custom' %}d-none{% endif %}">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label for="start_date">Start Date:</label>
+                                        <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="end_date">End Date:</label>
+                                        <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="form-control">
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <input type="hidden" name="filter_type" value="custom">
+                                        <button type="submit" class="btn btn-primary">Apply Filter</button>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div>
+            <ul class="nav nav-tabs" id="cashFlowTabs" role="tablist">
+                {% for branch in branches %}
+                <li class="nav-item" role="presentation">
+                    <button 
+                        class="nav-link" 
+                        id="overview" 
+                        ata-branch-id="{{ branch.id }}" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#overview-panel" 
+                        type="button" 
+                        role="tab" 
+                        aria-controls="overview-panel" 
+                        aria-selected="true"
+                        onclick="fetchCashUpDetails({{ branch.id }})"
+                    >
+                        {{ branch.name }}
+                    </button>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <div class="mt-2" id='details'>
+
+            </div>
+        </div>
+
+        <!-- Cash Ups Tab -->
+
+        <div class="tab-pane fade card cash-flow-card">
+            <div class="card-body p-0">
+                
+                <table class="table table-striped table-bordered table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Branch</th>
+                            <th>Expected Amount</th>
+                            <th>Expense</th>
+                            <th>Amount received</th>
+                            <th>Created By</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cash_up_table">
+                        <!-- Cash ups will be dynamically populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% csrf_token %}
+</div>
+
+<script>
+    const loaderRow = document.getElementById('details')
+    
+
+    async function fetchCashUpDetails(branch_id) {
+        try {
+            const response = await fetch('/finance/get_cash_up_details/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ branch_id: branch_id })
+            });
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                showErrorMessage(loaderRow, 'Could not load details. Please try again.');
+                return;
+            }
+            
+            renderCashUpDetails(data, loaderRow);
+        } catch (error) {
+            console.error('Error fetching cash up details:', error);
+            showErrorMessage(loaderRow, 'An error occurred while loading details.');
+        }
+    }
+    
+    function showErrorMessage(loaderRow, message) {
+        loaderRow.innerHTML = `
+            <td colspan="6" class="p-3">
+                <div class="alert alert-danger d-flex align-items-center mb-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>${message}</div>
+                    <button type="button" class="btn-close ms-auto" onclick="this.closest('tr').remove()"></button>
+                </div>
+            </td>
+        `;
+    }
+    
+    function renderCashUpDetails(data, loaderRow) {
+        const salesSection = createSalesSection(data.data.sales);
+
+        const expensesSection = createExpensesSection(data.data.expenses);
+        
+        loaderRow.innerHTML = `
+            <td colspan="6" class="p-0">
+                <div class="container-fluid p-3 bg-light border-top border-bottom">
+                    <div class="row g-3">
+                        <div class="col-12 w-100">
+                            <div class="card shadow-sm">
+                                <div class="card-body">${salesSection}</div>
+                            </div>
+                        </div>
+                        <div class="col-12 w-100">
+                            <div class="card shadow-sm">
+                                <div class="card-body">${expensesSection}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+        `;
+    }
+    
+    function createSalesSection(sales) {
+        if (!Array.isArray(sales) || sales.length === 0) {
+            return `
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Sales</h5>
+                </div>
+                <div class="text-muted py-3 text-center">No sales data available</div>
+            `;
+        }
+    
+        return `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Sales</h5>
+                <div class="d-flex align-items-center gap-2">
+                    <select id="category-all-${cashup_id}" class="form-select form-select-sm">
+                        <option value="">Select Category for All</option>
+                        {% for category in income_categories %}
+                            <option value='{{ category.id }}'>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-primary btn-sm" onclick="recordAllSales(${cashup_id})">
+                        <i class="bi bi-check2-all me-1"></i>Record All
+                    </button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Description</th>
+                            <th class="text-end">Amount</th>
+                            <th>Category</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sales.map(s => `
+                            <tr data-sale-id="${s.id}" data-branch="${s.invoice__branch}">
+                                <td>${s.invoice__products_purchased || 'No description'}</td>
+                                <td class="text-end fw-bold">$${s.total_amount}</td>
+                                <td>
+                                    <select id="category-${s.id}" class="form-select form-select-sm sale-category">
+                                        <option value="">Select Category</option>
+                                        {% for category in income_categories %}
+                                            <option value='{{ category.id }}'>{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td class="text-center">
+                                   ${ s.invoice__invoice_items__cash_up_status
+                                        ? `<span class="badge bg-success">Success recorded</span>`
+                                        : `<button
+                                            class="btn btn-sm btn-outline-success record-sale-btn"
+                                            id="btn-${s.id}"
+                                            onclick="recordSale(
+                                                ${s.id},
+                                                'sale',
+                                                ${s.invoice__branch},
+                                                document.getElementById('category-${s.id}').value
+                                            )"
+                                            >
+                                            <i class="bi bi-check-lg"></i> Record
+                                            </button>`
+                                    }
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+    
+    function createExpensesSection(expenses) {
+        if (!Array.isArray(expenses) || expenses.length === 0) {
+            return `
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Expenses</h5>
+                </div>
+                <div class="text-muted py-3 text-center">No expenses data available</div>
+            `;
+        }
+    
+        return `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Expenses</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Description</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${expenses.map(e => `
+                            <tr data-expense-id="${e.id}">
+                                <td>${e.description || 'No description'}</td>
+                                <td class="text-end fw-bold">$${e.amount}</td>
+                                <td class="text-center">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-receipt"></i> Actions
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><button class="dropdown-item" onclick="recordExpense(${e.id})">Record Expense</button></li>
+                                            <li><button class="dropdown-item" onclick="splitExpense(${e.id}, '${e.description || 'Expense'}', ${e.amount})">Split Expense</button></li>
+                                            <li><button class="dropdown-item" onclick="markAsReviewed(${e.id})">Mark as Reviewed</button></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><button class="dropdown-item text-danger" onclick="flagIssue(${e.id})">Flag Issue</button></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+    
+            <!-- Split Expense Modal -->
+            <div class="modal fade" id="splitExpenseModal" tabindex="-1" aria-labelledby="splitExpenseModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="splitExpenseModalLabel">Split Expense</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <span class="fw-bold" id="expenseDescription"></span>
+                                        <span class="text-muted">- Original Amount: $<span id="originalAmount"></span></span>
+                                    </div>
+                                    <span class="text-muted">Remaining: $<span id="remainingAmount" class="fw-bold"></span></span>
+                                </div>
+                                <div class="progress mb-3">
+                                    <div id="splitProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
+                            </div>
+    
+                            <div id="splitItemsContainer">
+                                <!-- Split items will be added here -->
+                            </div>
+                            
+                            <button type="button" class="btn btn-outline-primary mt-3" id="addSplitItemBtn" onclick='addSplitItem()'>
+                                <i class="bi bi-plus-circle"></i> Add Another Category
+                            </button>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="saveSplitExpenseBtn" onclick="saveSplitExpense()" disabled>Save Splits</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    let currentExpenseId = null;
+    let currentExpenseTotal = 0;
+    let splitItems = [];
+    let splitItemCounter = 0;
+
+    function splitExpense(expenseId, description, amount) {
+        currentExpenseId = expenseId;
+        currentExpenseTotal = parseFloat(amount);
+        splitItems = [];
+        splitItemCounter = 0;
+        
+        document.getElementById('expenseDescription').textContent = description;
+        document.getElementById('originalAmount').textContent = amount;
+        document.getElementById('remainingAmount').textContent = amount;
+        document.getElementById('splitProgressBar').style.width = '0%';
+        document.getElementById('splitItemsContainer').innerHTML = '';
+        document.getElementById('saveSplitExpenseBtn').disabled = true;
+        
+        addSplitItem();
+        
+        const splitModal = new bootstrap.Modal(document.getElementById('splitExpenseModal'));
+        splitModal.show();
+    }
+    
+    function addSplitItem() {
+        splitItemCounter++;
+        console.log('here')
+        const itemId = `split-item-${splitItemCounter}`;
+        
+        const splitItem = document.createElement('div');
+        splitItem.className = 'split-item card mb-3';
+        splitItem.id = itemId;
+        
+        const categoryOptions = `
+            {% for category in expense_categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+        `;
+        
+        splitItem.innerHTML = `
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label">Category</label>
+                        <select class="form-select category-select" data-item-id="${itemId}">
+                            <option value="">Select Category</option>
+                            ${categoryOptions}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control amount-input" data-item-id="${itemId}" step="0.01" min="0.01" max="${currentExpenseTotal}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-outline-danger w-100 remove-split-btn" data-item-id="${itemId}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <label class="form-label">Note (Optional)</label>
+                        <textarea class="form-control note-input" data-item-id="${itemId}" rows="1"></textarea>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('splitItemsContainer').appendChild(splitItem);
+        
+        const categorySelect = splitItem.querySelector('.category-select');
+        const amountInput = splitItem.querySelector('.amount-input');
+        const noteInput = splitItem.querySelector('.note-input');
+        const removeButton = splitItem.querySelector('.remove-split-btn');
+        
+        categorySelect.addEventListener('change', updateSplitItem);
+        amountInput.addEventListener('input', updateSplitItem);
+        noteInput.addEventListener('input', updateSplitItem);
+        
+        if (document.querySelectorAll('.split-item').length === 1) {
+            removeButton.disabled = true;
+        } else {
+            document.querySelectorAll('.remove-split-btn').forEach(btn => {
+                btn.disabled = false;
+            });
+        }
+        
+        removeButton.addEventListener('click', function() {
+            removeSplitItem(itemId);
+        });
+
+        splitItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+        splitItems.push({
+            id: itemId,
+            category: '',
+            amount: 0,
+            note: ''
+        });
+        
+        updateTotals();
+    }
+    
+    function updateSplitItem(event) {
+        const itemId = event.target.getAttribute('data-item-id');
+        const itemIndex = splitItems.findIndex(item => item.id === itemId);
+        
+        if (itemIndex === -1) return;
+        
+        const item = document.getElementById(itemId);
+        
+        splitItems[itemIndex] = {
+            id: itemId,
+            category: item.querySelector('.category-select').value,
+            amount: parseFloat(item.querySelector('.amount-input').value) || 0,
+            note: item.querySelector('.note-input').value
+        };
+        
+        updateTotals();
+    }
+    
+    function removeSplitItem(itemId) {
+        document.getElementById(itemId).remove();
+        
+        const itemIndex = splitItems.findIndex(item => item.id === itemId);
+        if (itemIndex !== -1) {
+            splitItems.splice(itemIndex, 1);
+        }
+        
+        if (document.querySelectorAll('.split-item').length === 1) {
+            document.querySelector('.remove-split-btn').disabled = true;
+        }
+        
+        updateTotals();
+    }
+    
+    function updateTotals() {
+        const totalSplit = splitItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+        const remaining = Math.max(0, (currentExpenseTotal - totalSplit).toFixed(2));
+        const percentage = Math.min(100, (totalSplit / currentExpenseTotal) * 100);
+        
+        document.getElementById('remainingAmount').textContent = remaining;
+        
+        const progressBar = document.getElementById('splitProgressBar');
+        progressBar.style.width = `${percentage}%`;
+        
+        if (Math.abs(totalSplit - currentExpenseTotal) < 0.01) {
+            progressBar.className = 'progress-bar bg-success';
+            document.getElementById('saveSplitExpenseBtn').disabled = false;
+        } else if (totalSplit > currentExpenseTotal) {
+            progressBar.className = 'progress-bar bg-danger';
+            document.getElementById('saveSplitExpenseBtn').disabled = true;
+        } else {
+            progressBar.className = 'progress-bar bg-primary';
+            document.getElementById('saveSplitExpenseBtn').disabled = true;
+        }
+    }
+    
+    {% comment %} document.getElementById('addSplitItemBtn').addEventListener('click', addSplitItem); {% endcomment %}
+    {% comment %} document.getElementById('saveSplitExpenseBtn').addEventListener('click', saveSplitExpense); {% endcomment %}
+    
+    async function saveSplitExpense() {
+
+        const invalidSplits = splitItems.filter(item => !item.category);
+        if (invalidSplits.length > 0) {
+            alert('Please select a category for all splits.');
+            return;
+        }
+        
+        const saveButton = document.getElementById('saveSplitExpenseBtn');
+        const originalText = saveButton.innerHTML;
+        saveButton.disabled = true;
+        saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+        
+        try {
+            const splitItemsForApi = splitItems.map(item => ({
+                expense_id:currentExpenseId, 
+                category_id: item.category,
+                amount: item.amount,
+                note: item.note
+            }));
+
+            console.log('Split items: ', splitItemsForApi)
+
+            return
+            
+            const response = await fetch('/finance/split_expense/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    expense_id: currentExpenseId,
+                    splits: splitItemsForApi,
+                    cash_up_id: cashup_id
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+               
+                bootstrap.Modal.getInstance(document.getElementById('splitExpenseModal')).hide();
+                
+                showToast('Success', 'Expense has been split successfully', 'success');
+                
+                const expenseRow = document.querySelector(`tr[data-expense-id="${currentExpenseId}"]`);
+                if (expenseRow) {
+                    expenseRow.classList.add('table-success', 'fade-out');
+                    setTimeout(() => {
+                        expenseRow.remove();
+                    }, 500);
+                }
+            } else {
+                throw new Error(result.message || 'Failed to split expense');
+            }
+        } catch (error) {
+            console.error('Error splitting expense:', error);
+            showToast('Error', error.message || 'Failed to split expense', 'danger');
+        } finally {
+            saveButton.disabled = false;
+            saveButton.innerHTML = originalText;
+        }
+    }
+    
+    document.head.insertAdjacentHTML('beforeend', `
+    <style>
+        .split-item {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .split-item:hover {
+            box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+        }
+        
+        .progress {
+            height: 8px;
+        }
+        
+        .progress-bar {
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+        
+        .fade-out {
+            animation: fadeOut 0.5s forwards;
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+    </style>
+    `);
+
+    function showToast(title, message, type = 'info') {
+        const toastContainer = document.getElementById('toast-container') || createToastContainer();
+        
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center border-0 show`;
+        toast.classList.add(`bg-${type === 'info' ? 'primary' : type}`);
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body text-white">
+                    <strong>${title}:</strong> ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+    
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        container.style.zIndex = '1050';
+        document.body.appendChild(container);
+        return container;
+    }
+    
+    function recordAllSales(cashupId) {
+        const categorySelector = document.getElementById(`category-all-${cashupId}`);
+        const selectedCategory = categorySelector.value;
+        
+        if (!selectedCategory) {
+            showToast('Warning', 'Please select a category for all sales', 'warning');
+            return;
+        }
+        
+        const saleRows = document.querySelectorAll(`tr[data-sale-id]`);
+        let processedCount = 0;
+        
+        showToast('Processing', 'Recording all sales...', 'info');
+        
+        saleRows.forEach(row => {
+            const saleId = row.getAttribute('data-sale-id');
+            const branch = row.getAttribute('data-branch');
+            const categoryDropdown = document.getElementById(`category-${saleId}`);
+            
+            if (categoryDropdown) {
+                categoryDropdown.value = selectedCategory;
+                recordSale(saleId, 'sale', branch, selectedCategory)
+                    .then(() => {
+                        processedCount++;
+                        if (processedCount === saleRows.length) {
+                            showToast('Success', `All ${processedCount} sales recorded successfully`, 'success');
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Error recording sale ${saleId}:`, error);
+                    });
+            }
+        });
+    }
+    
+    function showToast(title, message, type = 'info') {
+        const toastContainer = document.getElementById('toast-container') || createToastContainer();
+        
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center border-0 show`;
+        toast.classList.add(`bg-${type === 'info' ? 'primary' : type}`);
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body text-white">
+                    <strong>${title}:</strong> ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+    
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        container.style.zIndex = '1050';
+        document.body.appendChild(container);
+        return container;
+    }
+    
+    async function recordSale(saleId, type, branch, category) {
+        const button = document.getElementById(`btn-${saleId}`);
+        const originalText = button.innerHTML;
+        
+        button.disabled = true;
+        button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...`;
+        
+        try {
+            console.log(
+                { 
+                    id: saleId, 
+                    type: type, 
+                    branch: branch,
+                    category: category,
+                    cash_up_id: cashup_id
+                }
+            )
+            const response = await fetch('/finance/record_cashflow/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ 
+                    id: saleId, 
+                    type: type, 
+                    branch: branch,
+                    category: category,
+                    cash_up_id: cashup_id
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                button.classList.remove('btn-outline-success');
+                button.classList.add('btn-success');
+                button.innerHTML = `<i class="bi bi-check-circle"></i> Recorded`;
+                
+                const categorySelect = document.getElementById(`category-${saleId}`);
+                if (categorySelect) categorySelect.disabled = true;
+                
+                return result;
+            } else {
+                throw new Error(result.message || 'Failed to record sale');
+            }
+        } catch (error) {
+            console.error(`Error recording sale ${saleId}:`, error);
+            button.disabled = false;
+            button.innerHTML = originalText;
+            showToast('Error', error.message || 'Failed to record sale', 'danger');
+            throw error;
+        }
+    }
+    
+    document.head.insertAdjacentHTML('beforeend', `
+    <style>
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .fade-out {
+            animation: fadeOut 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+        
+        .details-row td {
+            transition: all 0.3s ease;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(0,0,0,.03);
+        }
+    </style>
+    `);
+
+    function recordExpense() {
+        const name = document.getElementById('expenseName').value;
+        const amount = document.getElementById('expenseAmount').value;
+        const category = document.getElementById('expenseCategory').value;
+        const branch = document.getElementById('expenseBranch').value;
+        const isRecurring = document.getElementById('expenseRecurringToggle').checked;
+        const recurrenceValue = document.getElementById('expenseRecurrenceValue').value;
+        const recurrenceUnit = document.getElementById('expenseRecurrenceUnit').value;
+        const image = document.getElementById('expenseImage').files[0];
+    
+        if (!name || !amount || !category || !branch) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Missing Fields',
+                text: 'Please fill in all required fields.',
+            });
+            return;
+        }
+    
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('amount', parseFloat(amount));
+        formData.append('category', category);
+        formData.append('branch', branch);
+        formData.append('is_recurring', isRecurring);
+        if (isRecurring) {
+            formData.append('recurrence_value', recurrenceValue);
+            formData.append('recurrence_unit', recurrenceUnit);
+        }
+        if (image) {
+            formData.append('image', image);
+        }
+    
+        fetch("{% url 'finance:expenses' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie("csrftoken")
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Expense Recorded',
+                    text: res.message || 'Your expense has been recorded successfully.'
+                });
+                document.getElementById('expenseName').value = '';
+                document.getElementById('expenseAmount').value = '';
+                document.getElementById('expenseCategory').value = '';
+                document.getElementById('expenseBranch').value = '';
+                document.getElementById('expenseRecurringToggle').checked = false;
+                document.getElementById('expenseRecurrenceGroup').style.display = 'none';
+                document.getElementById('expenseImage').value = '';
+                document.getElementById('expenseImagePreviewContainer').style.display = 'none';
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: res.message || 'Something went wrong.'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Server Error',
+                text: 'Could not connect to server.'
+            });
+        });
+    }
+    
+    {% comment %} const receiveModal = new bootstrap.Modal(document.getElementById('receiveModal'));
+
+    function receive(id) {
+        cash_up_id = id;
+        receiveModal.show();
+    } {% endcomment %}
+
+    function createCashFlow() {
+        const amount = document.getElementById('amount-received').value;
+        if (!amount) {
+            alert('Please enter the amount received');
+            return;
+        }
+
+        const data = {
+            amount: amount,
+            cash_up_id: cash_up_id
+        };
+
+        fetch('/finance/create_cash_flow/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>

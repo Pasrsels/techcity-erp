@@ -320,10 +320,10 @@ class Invoice(models.Model):
                 new_invoice_number = last_invoice_number + 1   
             else:
                 new_invoice_number = 1
-            return f"INV{branch[:1]}-{new_invoice_number:04d}"  
+            return f"1INV{branch[:1]}-{new_invoice_number:04d}"  
         else:
             new_invoice_number = 1
-            return f"INV{branch[:1]}-{new_invoice_number:04d}"  
+            return f"1INV{branch[:1]}-{new_invoice_number:04d}"  
 
     def __str__(self):
         return f"Invoice #{self.invoice_number} - {self.customer.name}"

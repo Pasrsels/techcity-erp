@@ -76,6 +76,12 @@ from django.utils.dateparse import parse_date
 from dotenv import load_dotenv
 from apps.settings.models import OfflineReceipt, FiscalDay, FiscalCounter
 from utils.zimra import ZIMRA
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum, Avg, F, Value, CharField
+import datetime
+from itertools import chain
+
  
 # load global zimra instance
 zimra = ZIMRA()
@@ -234,7 +240,15 @@ def expenses(request):
         except Exception as e:
             logger.exception("Error while recording expense:")
             return JsonResponse({'success': False, 'message': str(e)})
-        
+
+@login_required
+def save_expense_split(request):
+    try:
+      print(x)
+    except Exception as e:
+      return JsonResponse({
+          'm'
+      })
 
 @login_required  
 def get_expense(request, expense_id):
@@ -2372,7 +2386,7 @@ def end_of_day(request):
                 paid_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PAID)
             
                 # Expenses
-                expenses = Expense.objects.filter(branch=request.user.branch, issue_date=today)
+                expenses = Expense.objects.filter(branch=request.user.branch, issue_date__date=today)
                 logger.info(expenses)
                 confirmed_expenses = expenses.filter(status=True)
                 unconfirmed_expenses = expenses.filter(status=False)
@@ -3409,12 +3423,6 @@ def vat(request):
         return JsonResponse({'success':False, 'message':'VAT successfully paid'}, status = 200)
 
 
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Avg, F, Value, CharField
-import datetime
-from itertools import chain
-
 @login_required
 def cash_flow(request):
     """
@@ -3693,23 +3701,25 @@ def cash_up_list(request):
         try:
             data = json.loads(request.body)
             cash_up_type = data.get('type', '')
-            cash_up_id = data.get('cash_up_id', '')
+            branch_id = data.get('branch_id', '')
             
             logger.info(f'Cash up type:{cash_up_type}')
 
-            if not cash_up_id:
+            if not branch_id:
                 return JsonResponse(
                     {
-                        'message': 'Cash up ID missing',
+                        'message': 'Branch ID missing',
                         'success': False
                     },
                     status=400
                 )
 
-            cash_up = CashUp.objects.filter(id=cash_up_id).prefetch_related(
+            cash_up = CashUp.objects.filter(branch__id=branch_id).prefetch_related(
                 'sales',
                 'expenses'
             ).select_related('branch', 'created_by').first()
+            
+            logger.info(f'Cash up type:{cash_up}')
 
             if not cash_up:
                 return JsonResponse({'message': 'Cash up not found', 'success': False}, status=404)
@@ -3724,6 +3734,7 @@ def cash_up_list(request):
             ))  
 
             expenses = list(cash_up.expenses.values())
+            logger.info(sales)
             
             logger.info(expenses)
 

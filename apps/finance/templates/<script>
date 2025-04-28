@@ -1,0 +1,542 @@
+  <script>
+        let cash_up_id = 0;
+        let record_type = '';
+
+        const expenseButton = document.getElementById('expenseCategoryBtn');
+        const incomeButton = document.getElementById('incomeBtn');
+        const cashFlowModal = new bootstrap.Modal(document.getElementById('cashFlowModal'));
+
+        const expCatModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+
+        function previewExpenseImage() {
+            const fileInput = document.getElementById('expenseImage');
+            const preview = document.getElementById('expenseImagePreview');
+            const previewContainer = document.getElementById('expenseImagePreviewContainer');
+        
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+        
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                };
+        
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                previewContainer.style.display = 'none';
+                preview.src = '#';
+            }
+        }
+        
+
+        expenseButton.addEventListener('click', function() {
+            expCatModal.show();
+        });
+
+        document.getElementById('expenseBtn').addEventListener('click', function() {
+            cashFlowModal.show();
+        });
+
+        document.getElementById('parentCategorySelect').addEventListener('change', function () {
+            const newParentWrapper = document.getElementById('newParentInputWrapper');
+            if (this.value === '__create_new__') {
+              newParentWrapper.classList.remove('d-none');
+            } else {
+              newParentWrapper.classList.add('d-none');
+            }
+          });
+        
+          function recordIncome() {
+            const name = document.getElementById('incomeName').value;
+            const amount = document.getElementById('incomeAmount').value;
+            const category = document.getElementById('incomeCategory').value;
+            const branch = document.getElementById('incomeBranch').value;
+            const isRecurring = document.getElementById('incomeRecurringToggle').checked;
+            const recurrenceValue = document.getElementById('incomeRecurrenceValue').value;
+            const recurrenceUnit = document.getElementById('incomeRecurrenceUnit').value;
+        
+            if (!name || !amount || !category || !branch) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Fields',
+                    text: 'Please fill in all required fields.',
+                });
+                return;
+            }
+        
+            const data = new FormData();
+            data.append('name', name);
+            data.append('amount', amount);
+            data.append('category', category);
+            data.append('branch', branch);
+            data.append('is_recurring', isRecurring);
+            if (isRecurring) {
+                data.append('recurrence_value', recurrenceValue);
+                data.append('recurrence_unit', recurrenceUnit);
+            }
+        
+            fetch("{% url 'finance:record_income' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: data
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Income Recorded',
+                        text: res.message || 'Your income has been recorded successfully.'
+                    });
+                    document.getElementById('incomeName').value = '';
+                    document.getElementById('incomeAmount').value = '';
+                    document.getElementById('incomeCategory').value = '';
+                    document.getElementById('incomeBranch').value = '';
+                    document.getElementById('incomeRecurringToggle').checked = false;
+                    document.getElementById('incomeRecurrenceGroup').style.display = 'none';
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: res.message || 'Something went wrong.'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Server Error',
+                    text: 'Could not connect to server.'
+                });
+            });
+        }
+        
+        document.getElementById('saveCategoryBtn').addEventListener('click', function(e) {
+            const saveBtn = document.getElementById('saveCategoryBtn');
+            const loader = document.getElementById('categoryLoader');
+            loader.classList.remove('d-none');
+            saveBtn.disabled = true;
+        
+            const name = document.getElementById('categoryName').value;
+            const p_name = document.getElementById('parentCategoryInput').value;
+            const parentSelectValue = document.getElementById('parentCategorySelect').value;
+            let parent_name = "";
+
+            if (parentSelectValue === "__create_new__") {
+                parent_name = document.getElementById('parentCategoryInput').value;
+            }
+        
+            fetch("{% url 'finance:add_expense_category' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(
+                    { 
+                        name: name, 
+                        parent_name: p_name,
+                        parent_id: parentSelectValue !== "__create_new__" ? parentSelectValue : null, 
+                })
+            })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(({ status, body }) => {
+                if (status === 200 || status === 201) {
+                    const select = document.getElementById('expenseCategory');
+                    const newOption = document.createElement('option');
+                    newOption.value = body.id;
+                    newOption.text = body.name;
+                    newOption.selected = true;
+                    select.appendChild(newOption);
+        
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Category Created',
+                        text: body.message || 'The category was added successfully!',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+        
+                    expCatModal.hide();
+                    {% comment %} getSubcategories(body.id); {% endcomment %}
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: body.message || 'Something went wrong!',
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.toString(),
+                });
+            })
+            .finally(() => {
+                loader.classList.add('d-none');
+                saveBtn.disabled = false;
+            });
+        });
+        
+
+        function getSubcategories(categoryId) {
+            // Show loading indicator
+            const subcategorySelect = document.getElementById('expenseSubCategory');
+            subcategorySelect.innerHTML = '<option value="">Loading subcategories...</option>';
+            
+            // Fetch subcategories based on selected parent category
+            fetch(`/finance/get_subcategories/?parent_id=${categoryId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                subcategorySelect.innerHTML = '<option value="">Select Sub Category</option>';
+                
+                if (data && data.length > 0) {
+                    data.forEach(subcategory => {
+                        const option = document.createElement('option');
+                        option.value = subcategory.id;
+                        option.textContent = subcategory.name;
+                        subcategorySelect.appendChild(option);
+                    });
+                    
+                    $('#expenseSubCategory').trigger('change');
+                } else {
+                    subcategorySelect.innerHTML = '<option value="">No subcategories available</option>';
+                    $('#expenseSubCategory').trigger('change');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching subcategories:', error);
+                subcategorySelect.innerHTML = '<option value="">Error loading subcategories</option>';
+                $('#expenseSubCategory').trigger('change');
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterButtons = document.querySelectorAll('.btn-group a');
+            const dateRangeForm = document.getElementById('dateRangeForm');
+            
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (this.href.includes('filter_type=custom')) {
+                        e.preventDefault();
+                        dateRangeForm.classList.remove('d-none');
+                    } else {
+                        dateRangeForm.classList.add('d-none');
+                    }
+                });
+            });
+        });
+
+        function toggleRecurrence(type) {
+            const group = document.getElementById(`${type}RecurrenceGroup`);
+            const toggle = document.getElementById(`${type}RecurringToggle`);
+            group.style.display = toggle.checked ? 'flex' : 'none';
+        }
+
+
+        function showView(view) {
+            document.getElementById("defaultTable").style.display = "none";
+            document.getElementById("transactionsTableContainer").style.display = "none";
+            document.getElementById("categoriesTableContainer").style.display = "none";
+            document.getElementById("loader").style.display = "block";
+
+            setTimeout(() => {
+                document.getElementById("loader").style.display = "none";
+
+                if (view === 'transactions') {
+                    document.getElementById("transactionsTableContainer").style.display = "block";
+                } else if (view === 'categories') {
+                    document.getElementById("categoriesTableContainer").style.display = "block";
+                } else {
+                    document.getElementById("defaultTable").style.display = "block";
+                }
+            }, 500); 
+        }
+
+
+        // incomeButton.addEventListener('click', () => {
+        //     record_type = 'income';
+        //     incomeModal.show();
+        // });
+
+        $(document).ready(function() {
+            // Configuration object for common settings
+            const commonConfig = {
+                theme: 'bootstrap-5',
+                width: '100%'
+            };
+
+            // Configuration for fields with tags
+            const tagsConfig = {
+                ...commonConfig,
+                tags: true,
+                createTag: function(params) {
+                    return {
+                        id: params.term,
+                        text: params.term,
+                        newTag: true
+                    };
+                }
+            };
+
+            // Function to initialize select2 fields
+            function initializeSelect2(elementId, config) {
+                $(`#${elementId}`).select2(config);
+            }
+
+            // Function to add event handlers
+            function addSelect2EventHandlers(elementId, fieldType) {
+                // Select event
+                $(`#${elementId}`).on('select2:select', function(e) {
+                    let data = e.params.data;
+                    if (data.newTag) {
+                        console.info(`${fieldType} - New text entered:`, data.text);
+                    } else {
+                        console.info(`${fieldType} - Existing option selected:`, data.text);
+                    }
+                    console.info(`${fieldType} Value:`, data.id);
+                });
+
+                // Closing event
+                $(`#${elementId}`).on('select2:closing', function(e) {
+                    let searchText = $(`#${elementId}`).data('select2').$dropdown.find('.select2-search__field').val();
+                    if (searchText) {
+                        let exists = false;
+                        $(`#${elementId} option`).each(function() {
+                            if ($(this).text().toLowerCase() === searchText.toLowerCase()) {
+                                exists = true;
+                                return false;
+                            }
+                        });
+
+                        if (!exists) {
+                            let newOption = new Option(searchText, searchText, true, true);
+                            $(`#${elementId}`).append(newOption).trigger('change');
+                        }
+                    }
+                });
+            }
+
+            // Initialize Income fields
+            const incomeFields = [
+            { id: 'incomeCategory', type: 'Category', hasEvents: true },
+            { id: 'incomeName', type: 'Name', hasEvents: true },
+            { id: 'incomeSubCategory', type: 'SubCategory', hasEvents: true },
+            { id: 'incomeBranch', type: 'Branch', hasEvents: false }
+            ];
+
+            // Initialize Expense fields
+            const expenseFields = [
+            { id: 'expenseCategory', type: 'Category', hasEvents: true },
+            { id: 'expenseName', type: 'Name', hasEvents: true },
+            { id: 'expenseSubCategory', type: 'SubCategory', hasEvents: true },
+            { id: 'expenseBranch', type: 'Branch', hasEvents: false }
+            ];
+
+            // Initialize all fields
+            [...incomeFields, ...expenseFields].forEach(field => {
+            const config = {
+                ...(field.hasEvents ? tagsConfig : commonConfig),
+                dropdownParent: $('#cashFlowModal') // Use the actual modal ID
+            };
+
+            initializeSelect2(field.id, config);
+
+            if (field.hasEvents) {
+                addSelect2EventHandlers(field.id, field.type);
+            }
+            });            
+            window.getCategories = function(type = 'expense') {
+                const prefix = type.toLowerCase() === 'income' ? 'income' : 'expense';
+                
+                let category = {
+                    value: $(`#${prefix}Category`).val(),
+                    text: $(`#${prefix}Category`).select2('data')[0]?.text || ''
+                };
+                
+                let subcategory = {
+                    value: $(`#${prefix}SubCategory`).val(),
+                    text: $(`#${prefix}SubCategory`).select2('data')[0]?.text || ''
+                };
+
+                let name = {
+                    value: $(`#${prefix}Name`).val(),
+                    text: $(`#${prefix}Name`).select2('data')[0]?.text || ''
+                };
+
+                return { category, subcategory, name };
+            };
+            
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-item').forEach(item => {
+                if (item.getAttribute('href') === currentPath) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        });
+
+
+
+        {% comment %} function recordIncome() {
+            let type = ''
+            const incomeAmount = document.getElementById('incomeAmount').value;
+            const ExpenseAmount = document.getElementById('expenseAmount').value;
+
+            const categories = getCategories(record_type);
+            console.info('Category:', categories.category);
+            console.info('Subcategory:', categories.subcategory);
+            console.info('Expense Name:', categories.expenseName);
+
+            
+            const data = {
+                IncomeAmount: incomeAmount || 0.00,
+                ExpenseAmount: ExpenseAmount || 0.00,
+                incomeCategory: document.getElementById('incomeCategory').value,
+                expenseCategory: document.getElementById('expenseCategory').value,
+                incomeBranch: document.getElementById('incomeBranch').value,
+                expenseBranch: document.getElementById('expenseBranch').value,
+                categories: categories,
+                type: record_type
+            };
+
+            console.log(data)
+
+            fetch('/finance/record_transaction/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(response => {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert(response.message);
+                }
+            });
+        } {% endcomment %}
+
+        function recordExpense() {
+            const expenseAmount = document.getElementById('expenseAmount').value;
+            if (!expenseAmount) {
+                alert('Please enter the expense amount');
+                return;
+            }
+
+            const data = {
+                amount: expenseAmount,
+                type: 'expense'
+            };
+
+            fetch('/finance/record_transaction/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(response => {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Expense recorded successfully'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: response.message
+                    });
+                }
+            });
+        }
+
+        
+        let cashup_id = ''
+
+        function checkStatus(cashUpId, btn) {
+
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Loading...
+            `;
+            btn.disabled = true;
+
+            fetch(`/finance/check_cash_up_status/${cashUpId}/`)
+              .then(res => res.json())
+              .then(data => {
+                if (!data.success) {
+                  return alert('Error checking status: ' + (data.message || 'unknown'));
+                }
+        
+                if (data.status) {
+                  const row = btn.closest('tr');
+                  row.parentNode.removeChild(row);
+        
+                  const dateRow = row.previousElementSibling;
+                  const next = row.nextElementSibling;
+                  if (next === null || next.classList.contains('table-secondary')) {
+                    dateRow.parentNode.removeChild(dateRow);
+                  }
+                } else {
+                  alert('Cash‑up is not yet complete.');
+                  btn.innerHTML = originalHTML;
+                  btn.disabled = false;
+                }
+              })
+              .catch(err => {
+                console.error(err);
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            })
+          }
+
+        function toggleCashUpDetails(cashUpId, btn) {
+            const row = btn.closest('tr');
+            cashup_id = cashUpId;
+        
+            if (row.nextElementSibling && row.nextElementSibling.classList.contains('details-row')) {
+                row.nextElementSibling.classList.add('fade-out');
+                setTimeout(() => row.nextElementSibling.remove(), 300);
+                return;
+            }
+        
+            const loaderRow = document.createElement('tr');
+            loaderRow.classList.add('details-row', 'fade-in');
+            loaderRow.innerHTML = `
+                <td colspan="6" class="p-3">
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span class="ms-2">Loading details...</span>
+                    </div>
+                </td>
+            `;
+            row.parentNode.insertBefore(loaderRow, row.nextSibling);
+        
+            fetchCashUpDetails(cashUpId, loaderRow);
+        }
+    </script>
