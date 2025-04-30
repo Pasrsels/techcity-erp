@@ -235,6 +235,11 @@
 <div class='main-content'>
     <div id="overview-panel" class="tab-pane fade show active" role="tabpanel" aria-labelledby="overview-panel">
         <div class="scrollable-container">
+            {% include "cashflows/cashflow.html" %}
+        </div>
+    </div>
+    <div id="cash-panel" class="tab-pane fade show" role="tabpanel" aria-labelledby="cash-panel">
+        <div class="scrollable-container">
             {% include "cashflows/cash_ups.html" %}
         </div>
     </div>
@@ -250,7 +255,7 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="cash_management" data-bs-toggle="tab" data-bs-target="#cash-panel" type="button" role="tab" aria-controls="expense-panel" aria-selected="false">
+                    <button class="nav-link" id="cash" data-bs-toggle="tab" data-bs-target="#cash-panel" type="button" role="tab" aria-controls="cash-panel" aria-selected="false">
                         <i class="bi bi-wallet2 me-2"></i>Cash Management
                     </button>
                 </li>
