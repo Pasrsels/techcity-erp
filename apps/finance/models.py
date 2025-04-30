@@ -307,23 +307,24 @@ class Invoice(models.Model):
     ))
     hold_status = models.BooleanField(default=False)
     amount_received = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    receiptServerSignature = models.TextField(null=True, blank=True)  # Change from CharField to TextField
+    receiptServerSignature = models.TextField(null=True, blank=True)
     receipt_hash = models.TextField(null=True, blank=True) 
     qr_code = models.ImageField(upload_to='qr_codes/', null=True, blank=True)
     signature_data = models.CharField(max_length=50, null=True)
-
+    cash_up_status = models.BooleanField(default=False)
+    
     def generate_invoice_number(branch):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
         if last_invoice:
             if str(last_invoice.invoice_number.split('-')[0])[-1] == branch[0]:
                 last_invoice_number = int(last_invoice.invoice_number.split('-')[1]) 
-                new_invoice_number = last_invoice_number + 1   
+                new_invoice_number = last_invoice_number + 500   
             else:
                 new_invoice_number = 1
-            return f"1INV{branch[:1]}-{new_invoice_number:04d}"  
+            return f"INV{branch[:700]}-{new_invoice_number:04d}"  
         else:
             new_invoice_number = 1
-            return f"1INV{branch[:1]}-{new_invoice_number:04d}"  
+            return f"INV{branch[:700]}-{new_invoice_number:04d}"  
 
     def __str__(self):
         return f"Invoice #{self.invoice_number} - {self.customer.name}"
@@ -728,7 +729,7 @@ class CashUp(models.Model):
     expected_cash = models.DecimalField(max_digits=10, decimal_places=2)
     received_amount = models.DecimalField(max_digits=10, decimal_places=2)
     balance = models.DecimalField(max_digits=10, decimal_places=2)
-    sales = models.ManyToManyField(InvoiceItem, related_name='cashup_sales')
+    sales = models.ManyToManyField(Invoice, related_name='cashup_sales')
     expenses = models.ManyToManyField(Expense, related_name='cashup_expenses')
     status = models.BooleanField(default=False)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_cashups')
