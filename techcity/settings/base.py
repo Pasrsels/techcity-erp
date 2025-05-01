@@ -150,28 +150,28 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 DATABASES = {
 
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL')
-    )
+    # 'default': dj_database_url.config(
+    #     default=os.environ.get('DATABASE_URL')
+    # )
 
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME':  'casy',
-    #     'USER': 'postgres',
-    #     'PASSWORD': 'neverfail',
-    #     'HOST': 'localhost',
-    #     'PORT': '5432'
-    # }
+    'default': {
+         'ENGINE': 'django.db.backends.postgresql',
+         'NAME':  'techcity_db',
+         'USER': 'postgres',
+         'PASSWORD': 'neverfail',
+         'HOST': 'localhost',
+         'PORT': '5432'
+     }
 }
 
 if os.environ.get('TESTING'):
     DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'test_db.sqlite3'),
+    
     }
     
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField" 
 
 # AUTH_USER_MODEL = "users.User"
 # # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
