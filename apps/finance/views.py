@@ -793,12 +793,12 @@ def create_invoice(request):
                             quantity=item_data['quantity'],
                             unit_price=item_data['price'],
                             vat_rate = vat_rate,
-                            total_amount = int(item_data['quantity']) * float(item_data['price'])
+                            total_amount = int(item_data['quantity']) * float(item_data['price']),
+                            cash_up_status = False
                         )
                     )
 
                     print(invoice_items)
-                    
                     
                     # cost of sales item
                     COGSItems.objects.get_or_create(
@@ -4337,6 +4337,12 @@ def close_fiscal_day(request):
             saleTaxByTax_string = ""
             balance_money_string = ""  
             counters_string = ""
+            
+            balance_money_zwg_string = ""
+            balance_money_usd_string = ""
+            
+            zig_value = 0
+            usd_value = 0
 
             for counter in fiscal_day_counters:
                 counter_type = counter.fiscal_counter_type.upper()
@@ -4344,8 +4350,15 @@ def close_fiscal_day(request):
                 counter_value = int(counter.fiscal_counter_value * 100)
 
                 if counter.fiscal_counter_type == "Balancebymoneytype":
+                    logger.debug(counter.fiscal_counter_money_type)
                     money_type = counter.fiscal_counter_money_type.upper()
-                    balance_money_string = f"{counter_type}{counter_currency}{money_type}{counter_value}"
+                   
+                    if counter_currency == "USD":
+                        usd_value += counter_value
+                        balance_money_usd_string += f"{counter_type}{counter_currency}{money_type}{usd_value}"
+                    else:
+                        zig_value += counter_value
+                        balance_money_zwg_string = f"{counter_type}{counter_currency}{money_type}{zig_value}"
                 else:
                     if counter.fiscal_counter_type == 'SaleByTax':
                         tax_percent = float(counter.fiscal_counter_tax_percent)
@@ -4365,6 +4378,8 @@ def close_fiscal_day(request):
                             tax_percent_str = f"{tax_percent:.2f}"
 
                         saleTaxByTax_string += f"{counter_type}{counter_currency}{tax_percent_str}{counter_value}"
+                        
+            balance_money_string = balance_money_usd_string + balance_money_zwg_string
 
             counters_string += saleByTax_string + saleTaxByTax_string + balance_money_string
 

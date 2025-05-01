@@ -291,7 +291,7 @@ class ZIMRA:
 
         regular_counters = []
         sale_tax_by_tax_counter = None  
-        balance_by_money_counter = None  
+        balance_by_money_counter = [] 
 
         for counter in counters:
             fiscal_counter_data = {
@@ -306,7 +306,7 @@ class ZIMRA:
             if counter.fiscal_counter_type == "SaleTaxByTax":
                 sale_tax_by_tax_counter = fiscal_counter_data  
             elif counter.fiscal_counter_type == "BalanceByMoneyType":
-                balance_by_money_counter = fiscal_counter_data  
+                balance_by_money_counter.append(fiscal_counter_data) 
             else:
                 regular_counters.append(fiscal_counter_data)
 
@@ -317,6 +317,8 @@ class ZIMRA:
         
         if balance_by_money_counter:
             fiscal_day_counters.append(balance_by_money_counter)
+        
+        logger.debug(fiscal_day_counters)
         
         payload = {
             "fiscalDayNo": active_day.day_no,

@@ -313,6 +313,7 @@ class Invoice(models.Model):
     signature_data = models.CharField(max_length=50, null=True)
     code = models.CharField(max_length=50, null=True)
     fiscal_day = models.CharField(max_length=50, null=True)
+    cash_up_status = models.BooleanField(default=False, null=True)
     
     def generate_invoice_number(branch):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
@@ -338,7 +339,7 @@ class InvoiceItem(models.Model):
     vat_rate = models.ForeignKey(VATRate, on_delete=models.PROTECT)
     vat_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0, editable=False)  
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
-    cash_up_status = models.BooleanField(default=False)
+    cash_up_status = models.BooleanField(default=False, null=True)
     
     @property
     def subtotal(self):

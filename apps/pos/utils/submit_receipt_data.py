@@ -9,6 +9,7 @@ from apps.finance.models import Invoice
 import hashlib
 import os
 import base64
+import binascii
 
 def submit_receipt_data(request, receipt_data, hash, signature):
     try:
@@ -86,7 +87,7 @@ def submit_receipt_data(request, receipt_data, hash, signature):
                 defaults={
                     "fiscal_counter_tax_percent":15,
                     "fiscal_counter_tax_id":3,
-                    "fiscal_counter_money_type":"Cash", #to be dynamic
+                    "fiscal_counter_money_type":invoice.payment_terms,
                     "fiscal_counter_value":invoice.amount
                 }
             )
@@ -125,7 +126,7 @@ def submit_receipt_data(request, receipt_data, hash, signature):
                         "fiscal_counter_tax_percent": None,
                         "fiscal_counter_tax_id": 0,
                         "fiscal_counter_tax_percent": 0,
-                        "fiscal_counter_money_type": "Cash", # payment type to be dynamic
+                        "fiscal_counter_money_type": invoice.payment_terms,
                         "fiscal_counter_value": invoice.amount
                     }
                 )
@@ -147,8 +148,10 @@ def generate_verification_code(base64_signature):
     decoded_bytes = base64.b64decode(base64_signature)
     hex_string = decoded_bytes.hex()
     
-    md5_hash = hashlib.md5(hex_string.encode('utf-8')).hexdigest()
+    md5 = hashlib.md5()
+    md5.update(binascii.unhexlify(hex_string))
+    md5_hash = md5.hexdigest()
     
     verification_code = md5_hash[:16]
-    
+
     return verification_code.upper()
