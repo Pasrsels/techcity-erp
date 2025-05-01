@@ -1,0 +1,1114 @@
+{% load static %}
+<div>
+    <div class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class='d-flex align-items-center justify-content-between'>
+                <div class='d-flex align-items-center'>
+                    <div>
+                        <h4 class="mb-1">Cash Ups</h4>
+                        <p class="text-muted mb-0">Record other cash from other branches</p>
+                    </div>
+                    <div class="px-2">
+                        <div class="card-body">                    
+                            <!-- Quick filter buttons -->
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=today" class="btn btn-outline-primary {% if filter_type == 'today' %}active{% endif %}">Today</a>
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=weekly" class="btn btn-outline-primary {% if filter_type == 'weekly' %}active{% endif %}">Weekly</a>
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=monthly" class="btn btn-outline-primary {% if filter_type == 'monthly' %}active{% endif %}">Monthly</a>
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=yearly" class="btn btn-outline-primary {% if filter_type == 'yearly' %}active{% endif %}">Yearly</a>
+                                <a href="{% url 'finance:cash_flow' %}?filter_type=custom" class="btn btn-outline-primary {% if filter_type == 'custom' %}active{% endif %}">Custom</a>
+                            </div>
+                            
+                            <!-- Custom date range form, shown only when custom is selected -->
+                            <form method="get" id="dateRangeForm" class="{% if filter_type != 'custom' %}d-none{% endif %}">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label for="start_date">Start Date:</label>
+                                        <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="end_date">End Date:</label>
+                                        <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="form-control">
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <input type="hidden" name="filter_type" value="custom">
+                                        <button type="submit" class="btn btn-primary">Apply Filter</button>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div>
+            <ul class="nav nav-tabs" id="cashFlowTabs" role="tablist">
+                {% for branch in branches %}
+                <li class="nav-item" role="presentation">
+                    <button 
+                        class="nav-link" 
+                        id="overview" 
+                        ata-branch-id="{{ branch.id }}" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#overview-panel" 
+                        type="button" 
+                        role="tab" 
+                        aria-controls="overview-panel" 
+                        aria-selected="true"
+                        onclick="fetchCashUpDetails({{ branch.id }})"
+                    >
+                        {{ branch.name }}
+                    </button>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <div class="mt-2" id='details'>
+
+            </div>
+        </div>
+
+        <!-- Cash Ups Tab -->
+
+        <div class="tab-pane fade card cash-flow-card">
+            <div class="card-body p-0">
+                
+                <table class="table table-striped table-bordered table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Branch</th>
+                            <th>Expected Amount</th>
+                            <th>Expense</th>
+                            <th>Amount received</th>
+                            <th>Created By</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cash_up_table">
+                        <!-- Cash ups will be dynamically populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% csrf_token %}
+</div>
+
+<script>
+const loaderRow = document.getElementById('details')
+
+let totalRecordItems = 0;
+let recordedCount = 0;
+
+totalRecordItems = document.querySelectorAll('.record-sale-btn, .expense-action[data-action="record"]').length;
+recordedCount = 0
+
+async function fetchCashUpDetails(branch_id) {
+    try {
+        // Show loading state
+        loaderRow.innerHTML = `
+            <div class="d-flex justify-content-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        `;
+        
+        const response = await fetch('/finance/get_cash_up_details/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ 
+                branch_id: branch_id,
+                type: 'cash_up'  // Adding this based on your view function
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            showErrorMessage(loaderRow, data.message || 'Could not load details. Please try again.');
+            return;
+        }
+        
+        renderCashUpDetails(data, loaderRow);
+    } catch (error) {
+        console.error('Error fetching cash up details:', error);
+        showErrorMessage(loaderRow, 'An error occurred while loading details.');
+    }
+}
+
+function showErrorMessage(container, message) {
+    container.innerHTML = `
+        <div class="alert alert-danger d-flex align-items-center mb-0">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <div>${message}</div>
+        </div>
+    `;
+}
+
+function renderCashUpDetails(data, container) {
+    // Make sure we have the correct data structure
+    const salesData = data.data.sales || [];
+    const expensesData = data.data.expenses || [];
+    
+    const salesSection = createSalesSection(salesData);
+    const expensesSection = createExpensesSection(expensesData);
+    
+    container.innerHTML = `
+        <div class="container-fluid p-3 bg-light border-top border-bottom">
+            <div class="row g-3">
+                <div class="col-12">
+                        {% comment %} <!-- Progress bar -->
+                        <div class="progress mb-4" style="height: 20px;">
+                            <div id="recordProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                                role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                0%
+                            </div>
+                        </div>
+                    </div> {% endcomment %}
+                <div class="col-12 w-100">
+                    <div class="card shadow-sm">
+                        <div class="card-body">${salesSection}</div>
+                    </div>
+                </div>
+                <div class="col-12 w-100">
+                    <div class="card shadow-sm">
+                        <div class="card-body">${expensesSection}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // After rendering, attach event listeners to any new elements
+    attachSplitExpenseEventListeners();
+}
+
+function createSalesSection(sales) {
+    if (!Array.isArray(sales) || sales.length === 0) {
+        return `
+            <div class="section-header d-flex justify-content-between align-items-center">
+                <h5 class="section-title">Sales</h5>
+            </div>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-cart-x"></i>
+                </div>
+                <p>No sales data available</p>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="section-header d-flex justify-content-between align-items-center mb-4">
+            <h5 class="section-title">Sales</h5>
+            <div class="d-flex align-items-center gap-3">
+                <select id="category-all" class="form-select form-select-sm rounded-pill">
+                    <option value="">Select Category for All</option>
+                    {% for category in income_categories %}
+                        <option value='{{ category.id }}'>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-primary btn-sm rounded-pill" id="record-all-sales-btn">
+                    <i class="bi bi-check2-all me-1"></i>Record All
+                </button>
+            </div>
+        </div>
+        
+        <div class="sales-grid">
+            ${sales.map(s => `
+                <div class="sale-card" data-sale-id="${s.id}" data-branch="${s.branch}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="sale-description">
+                                <h6 class="mb-1">${s.products_purchased || 'No description'}</h6>
+                                <span class="text-muted small">Invoice number: ${s.invoice_number}</span>
+                                <span class="text-muted small">Branch: ${s.branch__name}</span>
+                            </div>
+                            <div class="sale-amount">
+                                <span class="amount-badge">$${s.amount_paid}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer-actions">
+                            <div class="category-selector">
+                                <select id="category-${s.id}" class="form-select form-select-sm sale-category">
+                                    <option value="sales">sales</option>
+                                    {% for category in income_categories %}
+                                        <option value='{{ category.name }}>{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="action-area">
+                               ${ s.cash_up_status
+                                    ? `<span class="status-indicator success">
+                                         <i class="bi bi-check-circle-fill me-1"></i> Recorded
+                                       </span>`
+                                    : `<button
+                                        class="btn btn-sm btn-outline-success rounded-pill record-sale-btn"
+                                        id="btn-${s.id}"
+                                        data-sale-id="${s.id}"
+                                        data-branch="${s.branch}"
+                                        >
+                                        <i class="bi bi-check-lg"></i> Record
+                                        </button>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        
+        <style>
+            .sales-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+            
+            .sale-card {
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+                transition: all 0.25s ease;
+                border: 1px solid #fff;
+                overflow: hidden;
+            }
+            
+            .sale-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            }
+            
+            .card-body {
+                padding: 20px;
+                border:none;
+            }
+            
+            .sale-description h6 {
+                font-weight: 600;
+                line-height: 1.3;
+                color: #3a3a3a;
+            }
+            
+            .amount-badge {
+                background: #edf2ff;
+                color: #4361ee;
+                font-weight: 600;
+                padding: 6px 12px;
+                border-radius: 100px;
+                font-size: 0.9rem;
+            }
+            
+            .card-footer-actions {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 8px;
+                gap: 12px;
+            }
+            
+            .category-selector {
+                flex: 1;
+            }
+            
+            .status-indicator {
+                font-size: 0.8rem;
+                font-weight: 500;
+                padding: 6px 12px;
+                border-radius: 100px;
+                display: inline-flex;
+                align-items: center;
+            }
+            
+            .status-indicator.success {
+                background: #d1f8d9;
+                color: #18a849;
+            }
+            
+            .section-header {
+                margin-bottom: 16px;
+            }
+            
+            .section-title {
+                font-weight: 600;
+                color: #2d3748;
+                margin: 0;
+            }
+            
+            .empty-state {
+                text-align: center;
+                padding: 36px;
+                background: #f9fafb;
+                border-radius: 12px;
+                color: #64748b;
+            }
+            
+            .empty-icon {
+                font-size: 2.5rem;
+                margin-bottom: 16px;
+                opacity: 0.5;
+            }
+        </style>
+    `;
+}
+
+function createExpensesSection(expenses) {
+    if (!Array.isArray(expenses) || expenses.length === 0) {
+        return `
+            <div class="section-header d-flex justify-content-between align-items-center">
+                <h5 class="section-title">Expenses</h5>
+            </div>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-receipt-cutoff"></i>
+                </div>
+                <p>No expenses data available</p>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="section-header d-flex justify-content-between align-items-center mb-4">
+            <h5 class="section-title">Expenses</h5>
+        </div>
+        
+        <div class="expenses-grid">
+            ${expenses.map(e => `
+                <div class="expense-card" data-expense-id="${e.id}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="expense-description">
+                                <h6 class="mb-1">${e.description || 'No description'}</h6>
+                                <span class="text-muted small">Expense #${e.id}</span>
+                            </div>
+                            <div class="expense-amount">
+                                <span class="amount-badge expense">$${e.amount}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="expense-actions">
+                            <button class="btn btn-action expense-action" data-action="record" data-expense-id="${e.id}">
+                                <i class="bi bi-journal-check"></i>
+                                <span>Record</span>
+                            </button>
+                            <button class="btn btn-action expense-action" data-action="split" data-expense-id="${e.id}" data-description="${e.description || 'Expense'}" data-amount="${e.amount}">
+                                <i class="bi bi-scissors"></i>
+                                <span>Split</span>
+                            </button>
+                            <button class="btn btn-action expense-action" data-action="review" data-expense-id="${e.id}">
+                                <i class="bi bi-eye"></i>
+                                <span>Review</span>
+                            </button>
+                            <button class="btn btn-action warning expense-action" data-action="flag" data-expense-id="${e.id}">
+                                <i class="bi bi-flag"></i>
+                                <span>Flag</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        
+        <style>
+            .expenses-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+            
+            .expense-card {
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+                transition: all 0.25s ease;
+                border: 1px solid rgba(0,0,0,0.05);
+                overflow: hidden;
+            }
+            
+            .expense-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            }
+            
+            .amount-badge.expense {
+                background: #fff5f5;
+                color: #e53e3e;
+            }
+            
+            .expense-actions {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+                margin-top: 12px;
+            }
+            
+            .btn-action {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 10px 0;
+                border-radius: 8px;
+                transition: all 0.2s ease;
+                background: #f8fafc;
+                border: none;
+                color: #475569;
+            }
+            
+            .btn-action:hover {
+                background: #f1f5f9;
+                color: #334155;
+            }
+            
+            .btn-action i {
+                font-size: 1.2rem;
+                margin-bottom: 4px;
+            }
+            
+            .btn-action span {
+                font-size: 0.7rem;
+                font-weight: 500;
+            }
+            
+            .btn-action.warning:hover {
+                background: #fff1f2;
+                color: #e11d48;
+            }
+        </style>
+
+        <!-- Split Expense Modal -->
+        <div class="modal fade" id="splitExpenseModal" tabindex="-1" aria-labelledby="splitExpenseModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="splitExpenseModalLabel">Split Expense</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <span class="fs-5 fw-bold" id="expenseDescription"></span>
+                                    <span class="text-muted ms-2">Original: $<span id="originalAmount"></span></span>
+                                </div>
+                                <div class="remaining-badge">
+                                    Remaining: $<span id="remainingAmount" class="fw-bold"></span>
+                                </div>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div id="splitProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div id="splitItemsContainer" class="split-items-grid">
+                            <!-- Split items will be added here -->
+                        </div>
+                        
+                        <button type="button" class="btn btn-outline-primary mt-4 rounded-pill" id="addSplitItemBtn">
+                            <i class="bi bi-plus-circle me-1"></i> Add Another Category
+                        </button>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary rounded-pill" id="saveSplitExpenseBtn" disabled>Save Splits</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+            .modal-content {
+                border-radius: 16px;
+                border: none;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            }
+            
+            .modal-header {
+                border-bottom: 1px solid rgba(0,0,0,0.05);
+                padding: 20px 24px;
+            }
+            
+            .modal-body {
+                padding: 24px;
+            }
+            
+            .modal-footer {
+                border-top: 1px solid rgba(0,0,0,0.05);
+                padding: 16px 24px;
+            }
+            
+            .remaining-badge {
+                background: #f0f9ff;
+                color: #0284c7;
+                padding: 6px 16px;
+                border-radius: 100px;
+                font-size: 0.9rem;
+            }
+            
+            .progress {
+                border-radius: 100px;
+                background: #e2e8f0;
+                overflow: hidden;
+            }
+            
+            .progress-bar {
+                background: linear-gradient(to right, #4361ee, #3b82f6);
+                transition: width 0.4s ease;
+            }
+            
+            .split-items-grid {
+                display: grid;
+                gap: 16px;
+            }
+        </style>
+    `;
+}
+
+function updateProgressBar(totalItems, recordedItems) {
+    const progressBar = document.getElementById('recordProgressBar');
+    if (!progressBar) return;
+
+    const percentage = Math.round((recordedItems / totalItems) * 100);
+    progressBar.style.width = `${percentage}%`;
+    progressBar.setAttribute('aria-valuenow', percentage);
+    progressBar.innerText = `${percentage}%`;
+
+    if (percentage === 100) {
+        progressBar.classList.remove('progress-bar-animated');
+    }
+}
+
+
+function attachSplitExpenseEventListeners() {
+    // Attach event listeners for split expense modal
+    document.getElementById('addSplitItemBtn')?.addEventListener('click', addSplitItem);
+    document.getElementById('saveSplitExpenseBtn')?.addEventListener('click', saveSplitExpense);
+    
+    // Attach event listeners for recording sales
+    document.querySelectorAll('.record-sale-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const saleId = this.getAttribute('data-sale-id');
+            const branch = this.getAttribute('data-branch');
+            const categoryElement = document.getElementById(`category-${saleId}`);
+            const category = categoryElement ? categoryElement.value : '';
+            
+            recordSale(saleId, 'sale', branch, category);
+        });
+    });
+    
+    // Attach event listener for "Record All" button
+    document.getElementById('record-all-sales-btn')?.addEventListener('click', function() {
+        const categorySelector = document.getElementById('category-all');
+        const selectedCategory = categorySelector.value;
+        
+        if (!selectedCategory) {
+            showToast('Warning', 'Please select a category for all sales', 'warning');
+            return;
+        }
+        
+        recordAllSales(selectedCategory);
+    });
+    
+    // Attach event listeners for expense actions
+    document.querySelectorAll('.expense-action').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const action = this.getAttribute('data-action');
+            const expenseId = this.getAttribute('data-expense-id');
+            
+            if (action === 'split') {
+                const description = this.getAttribute('data-description');
+                const amount = parseFloat(this.getAttribute('data-amount'));
+                splitExpense(expenseId, description, amount);
+            } else if (action === 'record') {
+                recordExpense(expenseId);
+            } else if (action === 'review') {
+                markAsReviewed(expenseId);
+            } else if (action === 'flag') {
+                flagIssue(expenseId);
+            }
+        });
+    });
+}
+
+let currentExpenseId = null;
+let currentExpenseTotal = 0;
+let splitItems = [];
+let splitItemCounter = 0;
+
+function splitExpense(expenseId, description, amount) {
+    currentExpenseId = expenseId;
+    currentExpenseTotal = parseFloat(amount);
+    splitItems = [];
+    splitItemCounter = 0;
+    
+    document.getElementById('expenseDescription').textContent = description;
+    document.getElementById('originalAmount').textContent = amount;
+    document.getElementById('remainingAmount').textContent = amount;
+    document.getElementById('splitProgressBar').style.width = '0%';
+    document.getElementById('splitItemsContainer').innerHTML = '';
+    document.getElementById('saveSplitExpenseBtn').disabled = true;
+    
+    addSplitItem();
+    
+    const splitModal = new bootstrap.Modal(document.getElementById('splitExpenseModal'));
+    splitModal.show();
+}
+
+function addSplitItem() {
+    splitItemCounter++;
+    const itemId = `split-item-${splitItemCounter}`;
+    
+    const splitItem = document.createElement('div');
+    splitItem.className = 'split-item card mb-3';
+    splitItem.id = itemId;
+    
+    const categoryOptions = `
+        {% for category in expense_categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+        {% endfor %}
+    `;
+    
+    splitItem.innerHTML = `
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label">Category</label>
+                    <select class="form-select category-select" data-item-id="${itemId}">
+                        <option value="">Select Category</option>
+                        ${categoryOptions}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">Amount</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" class="form-control amount-input" data-item-id="${itemId}" step="0.01" min="0.01" max="${currentExpenseTotal}">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-outline-danger w-100 remove-split-btn" data-item-id="${itemId}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-12">
+                    <label class="form-label">Note (Optional)</label>
+                    <textarea class="form-control note-input" data-item-id="${itemId}" rows="1"></textarea>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('splitItemsContainer').appendChild(splitItem);
+    
+    const categorySelect = splitItem.querySelector('.category-select');
+    const amountInput = splitItem.querySelector('.amount-input');
+    const noteInput = splitItem.querySelector('.note-input');
+    const removeButton = splitItem.querySelector('.remove-split-btn');
+    
+    categorySelect.addEventListener('change', updateSplitItem);
+    amountInput.addEventListener('input', updateSplitItem);
+    noteInput.addEventListener('input', updateSplitItem);
+    
+    if (document.querySelectorAll('.split-item').length === 1) {
+        removeButton.disabled = true;
+    } else {
+        document.querySelectorAll('.remove-split-btn').forEach(btn => {
+            btn.disabled = false;
+        });
+    }
+    
+    removeButton.addEventListener('click', function() {
+        removeSplitItem(itemId);
+    });
+
+    splitItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    splitItems.push({
+        id: itemId,
+        category: '',
+        amount: 0,
+        note: ''
+    });
+    
+    updateTotals();
+}
+
+function updateSplitItem(event) {
+    const itemId = event.target.getAttribute('data-item-id');
+    const itemIndex = splitItems.findIndex(item => item.id === itemId);
+    
+    if (itemIndex === -1) return;
+    
+    const item = document.getElementById(itemId);
+    
+    splitItems[itemIndex] = {
+        id: itemId,
+        category: item.querySelector('.category-select').value,
+        amount: parseFloat(item.querySelector('.amount-input').value) || 0,
+        note: item.querySelector('.note-input').value
+    };
+    
+    updateTotals();
+}
+
+function removeSplitItem(itemId) {
+    document.getElementById(itemId).remove();
+    
+    const itemIndex = splitItems.findIndex(item => item.id === itemId);
+    if (itemIndex !== -1) {
+        splitItems.splice(itemIndex, 1);
+    }
+    
+    if (document.querySelectorAll('.split-item').length === 1) {
+        document.querySelector('.remove-split-btn').disabled = true;
+    }
+    
+    updateTotals();
+}
+
+function updateTotals() {
+    const totalSplit = splitItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+    const remaining = Math.max(0, (currentExpenseTotal - totalSplit).toFixed(2));
+    const percentage = Math.min(100, (totalSplit / currentExpenseTotal) * 100);
+    
+    document.getElementById('remainingAmount').textContent = remaining;
+    
+    const progressBar = document.getElementById('splitProgressBar');
+    progressBar.style.width = `${percentage}%`;
+    
+    if (Math.abs(totalSplit - currentExpenseTotal) < 0.01) {
+        progressBar.className = 'progress-bar bg-success';
+        document.getElementById('saveSplitExpenseBtn').disabled = false;
+    } else if (totalSplit > currentExpenseTotal) {
+        progressBar.className = 'progress-bar bg-danger';
+        document.getElementById('saveSplitExpenseBtn').disabled = true;
+    } else {
+        progressBar.className = 'progress-bar bg-primary';
+        document.getElementById('saveSplitExpenseBtn').disabled = true;
+    }
+}
+
+async function saveSplitExpense() {
+    const invalidSplits = splitItems.filter(item => !item.category);
+    if (invalidSplits.length > 0) {
+        alert('Please select a category for all splits.');
+        return;
+    }
+    
+    const saveButton = document.getElementById('saveSplitExpenseBtn');
+    const originalText = saveButton.innerHTML;
+    saveButton.disabled = true;
+    saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+    
+    try {
+        const splitItemsForApi = splitItems.map(item => ({
+            expense_id: currentExpenseId, 
+            category_id: item.category,
+            amount: item.amount,
+            note: item.note
+        }));
+        
+        const response = await fetch('/finance/split_expense/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                expense_id: currentExpenseId,
+                splits: splitItemsForApi
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+           
+            bootstrap.Modal.getInstance(document.getElementById('splitExpenseModal')).hide();
+            
+            showToast('Success', 'Expense has been split successfully', 'success');
+            
+            const expenseRow = document.querySelector(`tr[data-expense-id="${currentExpenseId}"]`);
+            if (expenseRow) {
+                expenseRow.classList.add('table-success', 'fade-out');
+                setTimeout(() => {
+                    expenseRow.remove();
+                }, 500);
+            }
+        } else {
+            throw new Error(result.message || 'Failed to split expense');
+        }
+    } catch (error) {
+        console.error('Error splitting expense:', error);
+        showToast('Error', error.message || 'Failed to split expense', 'danger');
+    } finally {
+        saveButton.disabled = false;
+        saveButton.innerHTML = originalText;
+    }
+}
+
+function recordAllSales(selectedCategory) {
+    const saleRows = document.querySelectorAll(`tr[data-sale-id]`);
+    let processedCount = 0;
+    let successCount = 0;
+    
+    showToast('Processing', 'Recording all sales...', 'info');
+    
+    const promises = Array.from(saleRows).map(row => {
+        const saleId = row.getAttribute('data-sale-id');
+        const branch = row.getAttribute('data-branch');
+        const categoryDropdown = document.getElementById(`category-${saleId}`);
+        
+        if (categoryDropdown) {
+            categoryDropdown.value = selectedCategory;
+            return recordSale(saleId, 'sale', branch, selectedCategory)
+                .then(() => {
+                    processedCount++;
+                    successCount++;
+                })
+                .catch(error => {
+                    processedCount++;
+                    console.error(`Error recording sale ${saleId}:`, error);
+                });
+        }
+        return Promise.resolve();
+    });
+    
+    Promise.all(promises).then(() => {
+        if (successCount === saleRows.length) {
+            showToast('Success', `All ${successCount} sales recorded successfully`, 'success');
+        } else {
+            showToast('Partial Success', `${successCount} of ${saleRows.length} sales recorded successfully`, 'warning');
+        }
+    });
+}
+
+async function recordSale(saleId, type, branch, category) {
+    if (!category) {
+        showToast('Warning', 'Please select a category first', 'warning');
+        throw new Error('Category not selected');
+    }
+
+    console.log(saleId, type, branch, category)
+    
+    const button = document.getElementById(`btn-${saleId}`);
+    if (!button) return Promise.reject(new Error('Button not found'));
+
+    console.log(button)
+    
+    const originalText = button.innerHTML;
+    
+    button.disabled = true;
+    button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...`;
+    
+    try {
+        const response = await fetch('/finance/record_cashflow/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ 
+                id: saleId, 
+                type: type, 
+                branch: branch,
+                category: category
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            button.classList.remove('btn-outline-success');
+            button.classList.add('btn-success');
+            button.innerHTML = `<i class="bi bi-check-circle"></i> Recorded`;
+            button.disabled = true;
+            
+            const categorySelect = document.getElementById(`category-${saleId}`);
+            if (categorySelect) categorySelect.disabled = true;
+            
+            showToast('Success', 'Sale recorded successfully', 'success');
+            return result;
+        } else {
+            throw new Error(result.message || 'Failed to record sale');
+        }
+    } catch (error) {
+        console.error(`Error recording sale ${saleId}:`, error);
+        button.disabled = false;
+        button.innerHTML = originalText;
+        showToast('Error', error.message || 'Failed to record sale', 'danger');
+        throw error;
+    }
+}
+
+function showToast(title, message, type = 'info') {
+    const toastContainer = document.getElementById('toast-container') || createToastContainer();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center border-0 show`;
+    toast.classList.add(`bg-${type === 'info' ? 'primary' : type}`);
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body text-white">
+                <strong>${title}:</strong> ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+    container.style.zIndex = '1050';
+    document.body.appendChild(container);
+    return container;
+}
+
+// Add these additional functions to handle the other expense actions
+function recordExpense(expenseId) {
+    // Implement the record expense functionality
+    console.log(`Recording expense ${expenseId}`);
+    showToast('Success', 'Expense recorded successfully', 'success');
+    
+    const expenseRow = document.querySelector(`tr[data-expense-id="${expenseId}"]`);
+    if (expenseRow) {
+        expenseRow.classList.add('table-success');
+        
+        // Update the action button or cell if needed
+        const actionCell = expenseRow.querySelector('td:last-child');
+        if (actionCell) {
+            actionCell.innerHTML = '<span class="badge bg-success">Successfully recorded</span>';
+        }
+    }
+}
+
+function markAsReviewed(expenseId) {
+    // Implement mark as reviewed functionality
+    console.log(`Marking expense ${expenseId} as reviewed`);
+    showToast('Success', 'Expense marked as reviewed', 'info');
+    
+    const expenseRow = document.querySelector(`tr[data-expense-id="${expenseId}"]`);
+    if (expenseRow) {
+        expenseRow.classList.add('table-info');
+        
+        // Optionally update the UI to show it's been reviewed
+        const actionCell = expenseRow.querySelector('td:last-child');
+        if (actionCell) {
+            actionCell.innerHTML = '<span class="badge bg-info">Reviewed</span>';
+        }
+    }
+}
+
+function flagIssue(expenseId) {
+    // Implement flag issue functionality
+    console.log(`Flagging issue with expense ${expenseId}`);
+    showToast('Warning', 'Issue flagged for review', 'warning');
+    
+    const expenseRow = document.querySelector(`tr[data-expense-id="${expenseId}"]`);
+    if (expenseRow) {
+        expenseRow.classList.add('table-warning');
+        
+        // Optionally update the UI to show it's been flagged
+        const actionCell = expenseRow.querySelector('td:last-child');
+        if (actionCell) {
+            actionCell.innerHTML = '<span class="badge bg-warning text-dark">Issue Flagged</span>';
+        }
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Add this style to the document
+document.head.insertAdjacentHTML('beforeend', `
+<style>
+    .fade-in {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    .fade-out {
+        animation: fadeOut 0.3s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(-10px); }
+    }
+    
+    .details-row td {
+        transition: all 0.3s ease;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,0,0,.03);
+    }
+    
+    .split-item {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    
+    .split-item:hover {
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+    }
+    
+    .progress {
+        height: 8px;
+    }
+    
+    .progress-bar {
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
+</style>
+`);
+
+// Initialize the tab functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Activate the first branch tab if it exists
+    const firstBranchTab = document.querySelector('[data-branch-id]');
+    if (firstBranchTab) {
+        const branchId = firstBranchTab.getAttribute('data-branch-id');
+        fetchCashUpDetails(branchId);
+        firstBranchTab.classList.add('active');
+    }
+});
+</script>

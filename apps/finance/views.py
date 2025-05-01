@@ -76,6 +76,12 @@ from django.utils.dateparse import parse_date
 from dotenv import load_dotenv
 from apps.settings.models import OfflineReceipt, FiscalDay, FiscalCounter
 from utils.zimra import ZIMRA
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum, Avg, F, Value, CharField
+import datetime
+from itertools import chain
+
  
 # load global zimra instance
 zimra = ZIMRA()
@@ -234,7 +240,15 @@ def expenses(request):
         except Exception as e:
             logger.exception("Error while recording expense:")
             return JsonResponse({'success': False, 'message': str(e)})
-        
+
+@login_required
+def save_expense_split(request):
+    try:
+      print(x)
+    except Exception as e:
+      return JsonResponse({
+          'm'
+      })
 
 @login_required  
 def get_expense(request, expense_id):
@@ -2372,7 +2386,7 @@ def end_of_day(request):
                 paid_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PAID)
             
                 # Expenses
-                expenses = Expense.objects.filter(branch=request.user.branch, issue_date=today)
+                expenses = Expense.objects.filter(branch=request.user.branch, issue_date__date=today)
                 logger.info(expenses)
                 confirmed_expenses = expenses.filter(status=True)
                 unconfirmed_expenses = expenses.filter(status=False)
@@ -2383,8 +2397,6 @@ def end_of_day(request):
                 total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
 
                 expected_cash = total_sales - total_expenses
-
-                logger.info(expected_cash)
                 
                 # Create CashUp entry
                 cashup = CashUp.objects.create(
@@ -2399,9 +2411,16 @@ def end_of_day(request):
 
                 logger.info(cashup.expected_cash)
 
-                items = InvoiceItem.objects.filter(invoice__payment_status=Invoice.PaymentStatus.PAID, invoice__issue_date__range=(today_min, today_max))
+                items = Invoice.objects.filter(
+                    payment_status=Invoice.PaymentStatus.PAID, 
+                    issue_date__range=(today_min, today_max),
+                    branch=request.user.branch
+                )
+                
+                logger.info(items)
+                
                 for item in items:
-                    logger.info(f'Item: {item.invoice.payment_status}')
+                    logger.info(f'Item: {item.id} {item.payment_status}')
 
                 cashup.sales.set(items)
 
@@ -3409,12 +3428,6 @@ def vat(request):
         return JsonResponse({'success':False, 'message':'VAT successfully paid'}, status = 200)
 
 
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Avg, F, Value, CharField
-import datetime
-from itertools import chain
-
 @login_required
 def cash_flow(request):
     """
@@ -3693,37 +3706,57 @@ def cash_up_list(request):
         try:
             data = json.loads(request.body)
             cash_up_type = data.get('type', '')
-            cash_up_id = data.get('cash_up_id', '')
+            branch_id = data.get('branch_id', '')
             
             logger.info(f'Cash up type:{cash_up_type}')
 
-            if not cash_up_id:
+            if not branch_id:
                 return JsonResponse(
                     {
-                        'message': 'Cash up ID missing',
+                        'message': 'Branch ID missing',
                         'success': False
                     },
                     status=400
                 )
 
-            cash_up = CashUp.objects.filter(id=cash_up_id).prefetch_related(
+            cash_up = CashUp.objects.filter(
+                branch__id=branch_id,
+                status=False,
+                created_at__date=today
+            ).annotate(
+                total_sales_amount=Coalesce(
+                    Sum('sales__amount_paid', output_field=models.DecimalField(max_digits=10, decimal_places=2)), 
+                    Value(0, output_field=models.DecimalField(max_digits=10, decimal_places=2))
+                ),
+                total_expenses_amount=Coalesce(
+                    Sum('expenses__amount', output_field=models.DecimalField(max_digits=10, decimal_places=2)), 
+                    Value(0, output_field=models.DecimalField(max_digits=10, decimal_places=2))
+                )
+            ).prefetch_related(
                 'sales',
                 'expenses'
-            ).select_related('branch', 'created_by').first()
+            ).select_related(
+                'branch',
+                'created_by'
+            ).order_by('-created_at__time').first()
+
+            logger.info(f'Sales total:{cash_up.total_sales_amount}')
 
             if not cash_up:
                 return JsonResponse({'message': 'Cash up not found', 'success': False}, status=404)
 
-           
             sales = list(cash_up.sales.values(
                 'id',
-                'invoice__products_purchased',
-                'total_amount',
-                'invoice__branch',
-                'invoice__invoice_items__cash_up_status'
+                'invoice_number',
+                'products_purchased',
+                'amount_paid',
+                'branch',
+                'branch__name',
+                'cash_up_status'
             ))  
 
             expenses = list(cash_up.expenses.values())
+            logger.info(sales)
             
             logger.info(expenses)
 
@@ -3832,8 +3865,7 @@ def record_cashflow(request):
         type = data.get('type', '')
         id = data.get('id', '')
         branch = int(data.get('branch', ''))
-        cashup_id = int(data.get('cash_up_id', ''))
-        category_id = int(data.get('category'))
+        category = (data.get('category'))
 
         logger.info(id)
         
@@ -3843,7 +3875,7 @@ def record_cashflow(request):
         category = None
         if type == 'sale':
             sale = InvoiceItem.objects.filter(invoice__branch=branch, id=id).first()
-            category = IncomeCategory.objects.filter(id=category_id).first()
+            category = IncomeCategory.objects.filter(name__iexact=category).first()
 
             if not category:
                 new_main_category = IncomeCategory.objects.create(
@@ -3874,7 +3906,9 @@ def record_cashflow(request):
                 category = category
             )
 
-            cash_up = CashUp.objects.get(id=cashup_id)
+            cash_up = CashUp.objects.get(sales__id=id)
+            
+            logger.info(cash_up)
             
             sales = cash_up.sales.all()  
             logger.info(sales)
@@ -3886,7 +3920,7 @@ def record_cashflow(request):
             cash_up_status = check_if_all_received(sales)
             
             if cash_up_status:
-                cash_up = CashUp.objects.filter(id=cashup_id).first()
+                cash_up = CashUp.objects.filter(sales__id=id).first()
                 if cash_up:
                     cash_up.sales_status = True
                     cash_up.save()

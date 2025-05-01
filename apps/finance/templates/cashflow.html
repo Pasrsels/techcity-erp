@@ -3,2196 +3,269 @@
 {% block title %}Cash Flow{% endblock title %}
 {% block content %}
 <style>
+    :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3a0ca3;
+        --success-color: #2ecc71;
+        --danger-color: #e63946;
+        --light-bg: #f8f9fa;
+        --dark-bg: #212529;
+        --border-radius: 12px;
+        --box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        --transition: all 0.3s ease;
+    }
+
+    .main-content {
+        position: relative;
+        min-height: 100vh;
+        padding-bottom: 60px;
+    }
+
+    .scrollable-container {
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+        padding: 0 5px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--primary-color) transparent;
+    }
+
+    .scrollable-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .scrollable-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .scrollable-container::-webkit-scrollbar-thumb {
+        background-color: var(--primary-color);
+        border-radius: 20px;
+    }
+
     .filter-section {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: var(--box-shadow);
+        border: 1px solid rgba(0,0,0,0.05);
     }
 
     .action-buttons .btn {
-        transition: all 0.3s ease;
+        transition: var(--transition);
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 10px 16px;
     }
 
     .action-buttons .btn:hover {
         transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+
+    .table {
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--box-shadow);
+        margin-bottom: 24px;
     }
 
     .table th {
-        background-color: #2c3e50;
+        background-color: var(--primary-color);
         color: white;
-        font-weight: 500;
+        font-weight: 600;
+        padding: 14px;
+        border: none;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
     }
 
     .table tbody tr {
-        transition: all 0.2s ease;
+        transition: var(--transition);
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .table tbody tr:last-child {
+        border-bottom: none;
     }
 
     .table tbody tr:hover {
-        background-color: #f8f9fa;
+        background-color: rgba(67, 97, 238, 0.05);
         cursor: pointer;
     }
 
+    .table td {
+        padding: 16px 14px;
+        vertical-align: middle;
+    }
+
     .income-amount {
-        color: #2ecc71;
-        font-weight: 500;
+        color: var(--success-color);
+        font-weight: 600;
     }
 
     .expense-amount {
-        color: #e74c3c;
-        font-weight: 500;
+        color: var(--danger-color);
+        font-weight: 600;
     }
 
     .modal-content {
-        border-radius: 12px;
+        border-radius: var(--border-radius);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        border: none;
+    }
+
+    .modal-header {
+        background-color: var(--light-bg);
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+        padding: 20px 24px;
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .form-control {
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(0,0,0,0.1);
+        transition: var(--transition);
     }
 
     .form-control:focus {
-        box-shadow: none;
-        {% comment %} border-color: #3498db; {% endcomment %}
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.25);
+        border-color: var(--primary-color);
+    }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #495057;
     }
 
     .stats-card {
         background: white;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
+        border-radius: var(--border-radius);
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: var(--box-shadow);
+        transition: var(--transition);
+        border: 1px solid rgba(0,0,0,0.05);
+        height: 100%;
     }
 
     .stats-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 12px 20px rgba(0,0,0,0.1);
     }
 
-    .modal-header {
-        background-color: #f8f9fa;
-        border-radius: 12px 12px 0 0;
+    .stats-card h5 {
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: var(--dark-bg);
+    }
+
+    .stats-card .stats-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .stats-card .stats-label {
+        color: #6c757d;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .category-select {
-        border-radius: 6px;
-        padding: 8px;
+        border-radius: 8px;
+        padding: 12px;
         width: 100%;
-        margin-bottom: 10px;
+        margin-bottom: 16px;
+        border: 1px solid rgba(0,0,0,0.1);
     }
     
-    /* Bottom Navigation Styles */
-    .bottom-nav {
+    .footer-header {
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
-        background-color: #ffffff;
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-        display: flex;
-        justify-content: space-around;
+        background: white;
+        box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
         padding: 12px 0;
-        z-index: 1000;
+        backdrop-filter: blur(8px);
+        border-top: 1px solid rgba(0,0,0,0.05);
     }
-    
-    .nav-item {
+
+    .nav-buttons {
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        color: #6c757d;
-        text-decoration: none;
-        transition: all 0.3s ease;
+        justify-content: center;
     }
-    
-    .nav-item:hover, .nav-item.active {
-        color: #3498db;
+
+    .nav-tabs {
+        border-bottom: none;
+        gap: 8px;
     }
-    
-    .nav-icon {
-        font-size: 24px;
-        margin-bottom: 4px;
-    }
-    
-    .nav-text {
-        font-size: 12px;
+
+    .nav-tabs .nav-link {
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
         font-weight: 500;
+        color: #6c757d;
+        transition: var(--transition);
     }
-    
-    /* Add padding to main content to prevent overlap with nav */
-    .container-fluid {
-        padding-bottom: 70px;
+
+    .nav-tabs .nav-link:hover {
+        background-color: rgba(67, 97, 238, 0.1);
+        color: var(--primary-color);
+    }
+
+    .nav-tabs .nav-link.active {
+        background-color: var(--primary-color);
+        color: white;
+        box-shadow: 0 4px 8px rgba(67, 97, 238, 0.25);
     }
 </style>
-<div>
-    <div class="container-fluid py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class='d-flex align-items-center justify-content-between'>
-                <div class='d-flex align-items-center'>
-                    <div>
-                        <h4 class="mb-1">Cash Flow Management</h4>
-                        <p class="text-muted mb-0">Manage your cash operations</p>
-                    </div>
-                    <div class="px-2">
-                        <div class="card-body">                    
-                            <!-- Quick filter buttons -->
-                                <a href="{% url 'finance:cash_flow' %}?filter_type=today" class="btn btn-outline-primary {% if filter_type == 'today' %}active{% endif %}">Today</a>
-                                <a href="{% url 'finance:cash_flow' %}?filter_type=weekly" class="btn btn-outline-primary {% if filter_type == 'weekly' %}active{% endif %}">Weekly</a>
-                                <a href="{% url 'finance:cash_flow' %}?filter_type=monthly" class="btn btn-outline-primary {% if filter_type == 'monthly' %}active{% endif %}">Monthly</a>
-                                <a href="{% url 'finance:cash_flow' %}?filter_type=yearly" class="btn btn-outline-primary {% if filter_type == 'yearly' %}active{% endif %}">Yearly</a>
-                                <a href="{% url 'finance:cash_flow' %}?filter_type=custom" class="btn btn-outline-primary {% if filter_type == 'custom' %}active{% endif %}">Custom</a>
-                            </div>
-                            
-                            <!-- Custom date range form, shown only when custom is selected -->
-                            <form method="get" id="dateRangeForm" class="{% if filter_type != 'custom' %}d-none{% endif %}">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <label for="start_date">Start Date:</label>
-                                        <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="form-control">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="end_date">End Date:</label>
-                                        <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="form-control">
-                                    </div>
-                                    <div class="col-md-4 d-flex align-items-end">
-                                        <input type="hidden" name="filter_type" value="custom">
-                                        <button type="submit" class="btn btn-primary">Apply Filter</button>
-                                    </div>
-                                </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="action-buttons">
-                    <button class="btn btn-outline-dark" type="button" id="expenseBtn">
-                       <i class='bx bx-plus'></i>
-                       <span>Income/Expense/Cashup(s)</span>
-                    </button>
-                </div>
-            </div>
-        </div>
 
-         <!-- Stats Cards -->
-         {% comment %} <div class="row mb-1">
-            <div class="col-md-3">
-                <div class="stats-card">
-                    <h6 class="text-muted">Total Income</h6>
-                    <h3 class="income-amount">$<span id="totalIncome">{{ total_income }}</span></h3>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stats-card">
-                    <h6 class="text-muted">Total Expenses</h6>
-                    <h3 class="expense-amount">$<span id="totalExpenses">{{ expenses_total }}</span></h3>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stats-card">
-                    <h6 class="text-muted">Net Cash Flow</h6>
-                    <h3>$<span id="netCashFlow">{{ balance }}</span></h3>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stats-card">
-                    <h6 class="text-muted">Pending Receivables</h6>
-                    <h3>$<span id="pendingReceivables">0.00</span></h3>
-                </div>
-            </div>
-        </div> {% endcomment %}
-
-         <!-- Financial Summary Cards -->
-         <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body">
-                        <h6 class="text-muted mb-1">Total Sales</h6>
-                        <h2 class="fw-bold text-dark">{{ sales_total|floatformat:2 }}</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body">
-                        <h6 class="text-muted mb-1">Other Income</h6>
-                        <h2 class="fw-bold text-dark">{{ income_total|floatformat:2 }}</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body">
-                        <h6 class="text-muted mb-1">Total Expenses</h6>
-                        <h2 class="fw-bold text-dark">{{ expenses_total|floatformat:2 }}</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body">
-                        <h6 class="text-muted mb-1">Net Balance</h6>
-                        <h2 class="fw-bold {% if balance >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {{ balance|floatformat:2 }}
-                        </h2>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-
-    <!-- Main content area with tabs -->
-    <ul class="nav nav-tabs" id="financialTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="false">Overview</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab" aria-controls="timeline" aria-selected="true">Timeline</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab" aria-controls="products" aria-selected="false">Product Sales</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button" role="tab" aria-controls="categories" aria-selected="false">Categories</button>
-        </li>
-    </ul>
-    
-    <div class="tab-content p-3 border border-top-0 mb-4" id="financialTabsContent">
-
-        <!-- Overview Tab -->
-        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
-            <h4>Overview</h4>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Details</th>
-                            <th>Percent</th>
-                            <th class="text-right">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% comment %} <tr>
-                            <td>Sales</td>
-                            <td class='text-right'>{{sales_total}}</td>
-                        </tr>
-                        <tr>
-                            <td clas='text-right'>Other Income</td>
-                            <td>{{income_total}}</td>
-                        </tr>
-                        <tr>
-                            <td>Total Income</td>
-                            <td>{{ income_total }}</td>
-                        </tr> {% endcomment %}
-                        {% comment %} {% for item in combined_cashflow %} {% endcomment %}
-                        {% comment %} <tr class="{% if item.type_label == 'expense' %}table-danger{% elif item.type_label == 'sale' %}table-primary{% else %}table-success{% endif %}">
-                            <td>
-                                <i class='bx bx-money-withdraw'></i>
-                                {{ item.category_name }} - {{ item.note }}
-                                <br>
-                                <small>{{ item.datetime|date:"Y-m-d H:i" }}</small>
-                            </td>
-                            <td class="text-right">{{ item.amount|floatformat:2 }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center">No financial activity in the selected period.</td>
-                        </tr>
-                        {% endfor %} {% endcomment %}
-                        {% comment %} {% for category in income_by_category %}
-                               km  {% endcomment %}
-                        <tr>
-                            <td>Income</td>
-                            <td></td>
-                            <td class='text-success'>{{ total_income }}</td>
-                        </tr>
-                        {% for category in expenses_by_category %}
-                        <tr>
-                            <td>{% if category.category__name %}{{ category.category__name }}{% else %}Uncategorized{% endif %}</td>
-                            <td class="text-right text-danger">{{ category.percentage|floatformat:1 }}%</td>
-                            <td class="text-right text-danger">-{{ category.total|floatformat:2 }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center">No expense data available.</td>
-                        </tr>
-                        {% endfor %}
-                        <tfoot>
-                            <tr class="bg-dark">
-                                <td class='fw-bold'>Balance</td>
-                                <td></td>
-                                <td class='{% if balance < 0 %} table-dark {% else %} tabler-dark {% endif %}'>
-                                    {{ balance }}
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Timeline Tab -->
-        <div class="tab-pane fade" id="timeline" role="tabpanel" aria-labelledby="timeline-tab">
-            <h4>Transaction(s) Activity</h4>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Date/Time</th>
-                            <th>Descriptions</th>
-                            <th>Type</th>
-                            <th>Category</th>
-                            <th>Source</th>
-                            <th class="text-right">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in combined_cashflow %}
-                        <tr class="{% if item.type_label == 'expense' %}table-danger{% elif item.type_label == 'sale' %}table-primary{% else %}table-success{% endif %}">
-                            <td>{{ item.datetime|date:"Y-m-d H:i" }}</td>
-                            <td>
-                                {% if item.type_label == 'expense'%}
-                                    {{ item.description }}
-                                {% else %}
-                                    {{ item.sale__invoice__invoice_items__item__name }}
-                                {% endif %}
-                            </td>
-                            <td>{{ item.type_label|title }}</td>
-                            <td>{% if item.category_name %}{{ item.category__name }}{% else %}Uncategorized{% endif %}</td>
-                            <td>{{ item.source }}</td>
-                            <td class="text-right">{{ item.amount|floatformat:2 }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center">No financial activity in the selected period.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- Product Sales Tab -->
-        <div class="tab-pane fade" id="products" role="tabpanel" aria-labelledby="products-tab">
-            <h4>Product Sales Summary</h4>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th class="text-right">Quantity</th>
-                            <th class="text-right">Revenue</th>
-                            <th class="text-right">Avg. Price</th>
-                            <th class="text-right">VAT</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for product in product_sales %}
-                        <tr>
-                            <td>{{product.item__name}}
-                                {% if product.item__description %} 
-                                    - {{ product.item__description }}
-                                {% endif %}
-                            </td>
-                            <td class="text-right">{{ product.total_quantity }}</td>
-                            <td class="text-right">{{ product.total_revenue|floatformat:2 }}</td>
-                            <td class="text-right">{{ product.average_price|floatformat:2 }}</td>
-                            <td class="text-right">{{ product.total_vat|floatformat:2 }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center">No sales data available for the selected period.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot>
-                        <tr class="font-weight-bold">
-                            <td>Totals</td>
-                            <td class="text-right">{{ sales.aggregate.total_quantity }}</td>
-                            <td class="text-right">{{ sales_total|floatformat:2 }}</td>
-                            <td class="text-right">-</td>
-                            <td class="text-right">{{ sales.aggregate.total_vat }}</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-        
-        <!-- Categories Tab -->
-        <div class="tab-pane fade" id="categories" role="tabpanel" aria-labelledby="categories-tab">
-            <div class="row">
-                <!-- Expense Categories -->
-                <div class="col-md-6">
-                    <h4>Expense Categories</h4>
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th class="text-right">Amount</th>
-                                    <th class="text-right">% of Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for category in expenses_by_category %}
-                                <tr>
-                                    <td>{% if category.category__name %}{{ category.category__name }}{% else %}Uncategorized{% endif %}</td>
-                                    <td class="text-right">{{ category.total|floatformat:2 }}</td>
-                                    <td class="text-right">{{ category.percentage|floatformat:1 }}%</td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="3" class="text-center">No expense data available.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot>
-                                <tr class="font-weight-bold">
-                                    <td>Total</td>
-                                    <td class="text-right">{{ expenses_total|floatformat:2 }}</td>
-                                    <td class="text-right">100%</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-                
-                <!-- Income Categories -->
-                <div class="col-md-6">
-                    <h4>Income Categories</h4>
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th class="text-right">Amount</th>
-                                    <th class="text-right">% of Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for category in income_by_category %}
-                                <tr>
-                                    <td>{% if category.category__name %}{{ category.category__name }}{% else %}Uncategorized{% endif %}</td>
-                                    <td class="text-right">{{ category.total|floatformat:2 }}</td>
-                                    <td class="text-right">{{ category.percentage|floatformat:1 }}%</td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="3" class="text-center">No income data available.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot>
-                                <tr class="font-weight-bold">
-                                    <td>Total</td>
-                                    <td class="text-right">{{ income_total|floatformat:2 }}</td>
-                                    <td class="text-right">100%</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div id="transactionsTableContainer" style="display: none;">
-            <div class="d-flex align-items-center">
-                <button class="btn btn-outline-dark hint--bottom" aria-label="transaction summary" onclick="showView('defaultTable')">
-                    <i class='bx bx-chevron-left'></i>
-                </button>
-                <div class="px-2">
-                    <h5>Transactions</h5>
-                </div>
-            </div>
-          </div>
-          
-          <div id="categoriesTableContainer" style="display: none;">
-            <p>Categories table goes here...</p>
-          </div>
-        </div>
-
-
-        <!-- Modal for Income/Expense/Cash Ups -->
-        <div class="modal fade" id="cashFlowModal" tabindex="-1">
-            <div class="modal-dialog modal-xl">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Cash Flow Management</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Tabs for Income/Expense/Cash Ups -->
-                        <ul class="nav nav-tabs" id="cashFlowTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="income-tab" data-bs-toggle="tab" data-bs-target="#income-panel" type="button" role="tab" aria-controls="income-panel" aria-selected="true">Income</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="expense-tab" data-bs-toggle="tab" data-bs-target="#expense-panel" type="button" role="tab" aria-controls="expense-panel" aria-selected="false">Expenses</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="cashups-tab" data-bs-toggle="tab" data-bs-target="#cashups-panel" type="button" role="tab" aria-controls="cashups-panel" aria-selected="false">Cash Ups</button>
-                            </li>
-                        </ul>
-                        
-                        <!-- Tab Content -->
-                        <div class="tab-content p-3 border border-top-0" id="cashFlowTabsContent">
-                            <!-- Income Tab -->
-                            <div class="tab-pane fade show active" id="income-panel" role="tabpanel" aria-labelledby="income-tab">
-                                <div class="mb-3">
-                                    <select class="category-select form-select" id="incomeName">
-                                        <option value="">Income Note</option>
-                                        {% for name in cash_flow_names %}
-                                            <option value="{{ name.id }}">{{ name.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="incomeAmount" placeholder="Enter amount">
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <select class="category-select form-select" id="incomeCategory">
-                                        <option value="">Select Category</option>
-                                        {% for category in income_categories %}
-                                            <optgroup label="{{ category.name }}">
-                                                <option value="{{ category.id }}">{{ category.name }}</option>
-                                                {% for sub in category.sub_incomes.all %}
-                                                    <option value="{{ sub.id }}">&nbsp;&nbsp;↳ {{ sub.name }}</option>
-                                                {% endfor %}
-                                            </optgroup>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <select class="category-select form-select" id="incomeBranch">
-                                        {% for branch in branches %}
-                                            <option value="{{ branch.id}}">{{ branch.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="form-check form-switch mb-2">
-                                    <input class="form-check-input" type="checkbox" id="incomeRecurringToggle" onchange="toggleRecurrence('income')">
-                                    <label class="form-check-label" for="incomeRecurringToggle">Recurring Income?</label>
-                                </div>
-                                <div class="mb-3 gap-2 align-items-center" id="incomeRecurrenceGroup" style="display: none;">
-                                    <label class="mb-0">Repeat every</label>
-                                    <input type="number" class="form-control w-auto" id="incomeRecurrenceValue" min="1" value="1">
-                                    <select class="form-select w-auto" id="incomeRecurrenceUnit">
-                                        <option value="day">Day(s)</option>
-                                        <option value="week">Week(s)</option>
-                                        <option value="month">Month(s)</option>
-                                        <option value="year">Year(s)</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="text-end">
-                                    <button type="button" class="btn btn-success" onclick="recordIncome()">Record Income</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Expense Tab -->
-                            <div class="tab-pane fade" id="expense-panel" role="tabpanel" aria-labelledby="expense-tab">
-                                <div class="mb-3">
-                                    <select class="category-select form-select" id="expenseName">
-                                        <option value="">Expense note</option>
-                                        {% for name in cash_flow_names %}
-                                            <option value="{{ name.id }}">{{ name.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="expenseAmount" placeholder="Enter amount">
-                                    </div>
-                                </div>
-                                <div class="mb-3 d-flex aling-items-center">
-                                    {% comment %} <label for="expenseCategory" class="form-label">Expense Category</label> {% endcomment %}
-                                    <select class="category-select form-select" id="expenseCategory">
-                                        <option value="">Select Category</option>
-                                        {% for parent in expenses_categories %}
-                                          {% if not parent.parent %}
-                                            <optgroup label="{{ parent.name }}">
-                                              <option value="{{ parent.id }}">{{ parent.name }}</option>
-                                              {% for sub in parent.sub_expenses.all %}
-                                                <option value="{{ sub.id }}">&nbsp;&nbsp;↳ {{ sub.name }}</option>
-                                              {% endfor %}
-                                            </optgroup>
-                                          {% endif %}
-                                        {% endfor %}
-                                      </select>                                      
-                                    <button class='btn btn-outline-secondary bx bx-plus' id="expenseCategoryBtn" type="button"></button>
-                                </div>                                
-                                <div class="mb-3">
-                                    <select class="category-select form-select" id="expenseBranch">
-                                        {% for branch in branches %}
-                                            <option value="{{ branch.id}}">{{ branch.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="form-check form-switch mb-2">
-                                    <input class="form-check-input" type="checkbox" id="expenseRecurringToggle" onchange="toggleRecurrence('expense')">
-                                    <label class="form-check-label" for="expenseRecurringToggle">Recurring Expense?</label>
-                                </div>
-                                <div class="mb-3 gap-2 align-items-center" id="expenseRecurrenceGroup" style="display: none;">
-                                    <label class="mb-0">Repeat every</label>
-                                    <input type="number" class="form-control w-auto" id="expenseRecurrenceValue" min="1" value="1">
-                                    <select class="form-select w-auto" id="expenseRecurrenceUnit">
-                                        <option value="day">Day(s)</option>
-                                        <option value="week">Week(s)</option>
-                                        <option value="month">Month(s)</option>
-                                        <option value="year">Year(s)</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="expenseImage" class="form-label">Attach Image (optional)</label>
-                                    <input class="form-control" type="file" id="expenseImage" accept="image/*" onchange="previewExpenseImage()">
-                                </div>
-                                <div class="mb-3" id="expenseImagePreviewContainer" style="display: none;">
-                                    <label class="form-label">Image Preview</label>
-                                    <div>
-                                        <img id="expenseImagePreview" src="#" alt="Image Preview" class="img-fluid rounded" style="max-height: 200px;" />
-                                    </div>
-                                </div>                                                                
-                                <div class="text-end">
-                                    <button type="button" class="btn btn-danger" onclick="recordExpense()">Record Expense</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Cash Ups Tab -->
-                            <div class="tab-pane fade" id="cashups-panel" role="tabpanel" aria-labelledby="cashups-tab">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5>Cash Ups to be Recorded</h5>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="loadCashUps()">
-                                        <i class="bx bx-refresh"></i> Refresh
-                                    </button>
-                                </div>
-                                <div class="card cash-flow-card">
-                                    <div class="card-body p-0">
-                                        <table class="table table-striped table-bordered table-hover mb-0">
-                                            <thead>
-                                                <tr>
-                                                    <th>Branch</th>
-                                                    <th>Expected Amount</th>
-                                                    <th>Expense</th>
-                                                    <th>Amount received</th>
-                                                    <th>Created By</th>
-                                                    <th>Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="cash_up_table">
-                                                <!-- Cash ups will be dynamically populated here -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-              <form id="addCategoryForm">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title">Add Expense Category</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-          
-                    <div class="mb-3">
-                      <label for="categoryName" class="form-label">Category Name</label>
-                      <input type="text" class="form-control" id="categoryName" name="name" required>
-                    </div>
-          
-                    <div class="mb-3">
-                      <label for="parentCategorySelect" class="form-label">Parent Category (Optional)</label>
-                      <select class="form-select" id="parentCategorySelect" name="parent_id">
-                        <option value="">-- Select Existing Parent Category --</option>
-                        {% for cat in expense_categories %}
-                          {% if not cat.parent %} <!-- Only show top-level categories -->
-                            <option value="{{ cat.id }}">{{ cat.name }}</option>
-                          {% endif %}
-                        {% endfor %}
-                        <option value="__create_new__">+ Add New Parent Category</option>
-                      </select>
-                    </div>
-          
-                    <div class="mb-3 d-none" id="newParentInputWrapper">
-                      <label for="parentCategoryInput" class="form-label">New Parent Category Name</label>
-                      <input type="text" class="form-control" id="parentCategoryInput" placeholder="Type new parent category">
-                    </div>
-          
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="saveCategoryBtn">
-                      <span class="spinner-border spinner-border-sm d-none" id="categoryLoader" role="status" aria-hidden="true"></span>
-                      Save Category
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </div>
-          
-
-        <div class="modal fade" id="receiveModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Receive Cash</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Amount Received</label>
-                            <input type="number" class="form-control" id="amount-received" placeholder="Enter amount">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" onclick="createCashFlow()">Confirm</button>
-                    </div>
-                </div>
-            </div>
+<div class='main-content'>
+    <div id="overview-panel" class="tab-pane fade show active" role="tabpanel" aria-labelledby="overview-panel">
+        <div class="scrollable-container">
+            {% include "cashflows/cashflow.html" %}
         </div>
     </div>
-    <script>
-        let cash_up_id = 0;
-        let record_type = '';
+    <div id="cash-panel" class="tab-pane fade show" role="tabpanel" aria-labelledby="cash-panel">
+        <div class="scrollable-container">
+            {% include "cashflows/cash_ups.html" %}
+        </div>
+    </div>
 
-        const expenseButton = document.getElementById('expenseCategoryBtn');
-        const incomeButton = document.getElementById('incomeBtn');
-        const cashFlowModal = new bootstrap.Modal(document.getElementById('cashFlowModal'));
-
-        const expCatModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
-
-        function previewExpenseImage() {
-            const fileInput = document.getElementById('expenseImage');
-            const preview = document.getElementById('expenseImagePreview');
-            const previewContainer = document.getElementById('expenseImagePreviewContainer');
-        
-            if (fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-        
-                reader.onload = function (e) {
-                    preview.src = e.target.result;
-                    previewContainer.style.display = 'block';
-                };
-        
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                previewContainer.style.display = 'none';
-                preview.src = '#';
-            }
-        }
-        
-
-        expenseButton.addEventListener('click', function() {
-            expCatModal.show();
-        });
-
-        document.getElementById('expenseBtn').addEventListener('click', function() {
-            cashFlowModal.show();
-        });
-
-        document.getElementById('parentCategorySelect').addEventListener('change', function () {
-            const newParentWrapper = document.getElementById('newParentInputWrapper');
-            if (this.value === '__create_new__') {
-              newParentWrapper.classList.remove('d-none');
-            } else {
-              newParentWrapper.classList.add('d-none');
-            }
-          });
-        
-          function recordIncome() {
-            const name = document.getElementById('incomeName').value;
-            const amount = document.getElementById('incomeAmount').value;
-            const category = document.getElementById('incomeCategory').value;
-            const branch = document.getElementById('incomeBranch').value;
-            const isRecurring = document.getElementById('incomeRecurringToggle').checked;
-            const recurrenceValue = document.getElementById('incomeRecurrenceValue').value;
-            const recurrenceUnit = document.getElementById('incomeRecurrenceUnit').value;
-        
-            if (!name || !amount || !category || !branch) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Missing Fields',
-                    text: 'Please fill in all required fields.',
-                });
-                return;
-            }
-        
-            const data = new FormData();
-            data.append('name', name);
-            data.append('amount', amount);
-            data.append('category', category);
-            data.append('branch', branch);
-            data.append('is_recurring', isRecurring);
-            if (isRecurring) {
-                data.append('recurrence_value', recurrenceValue);
-                data.append('recurrence_unit', recurrenceUnit);
-            }
-        
-            fetch("{% url 'finance:record_income' %}", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": getCookie("csrftoken")
-                },
-                body: data
-            })
-            .then(res => res.json())
-            .then(res => {
-                if (res.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Income Recorded',
-                        text: res.message || 'Your income has been recorded successfully.'
-                    });
-                    document.getElementById('incomeName').value = '';
-                    document.getElementById('incomeAmount').value = '';
-                    document.getElementById('incomeCategory').value = '';
-                    document.getElementById('incomeBranch').value = '';
-                    document.getElementById('incomeRecurringToggle').checked = false;
-                    document.getElementById('incomeRecurrenceGroup').style.display = 'none';
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: res.message || 'Something went wrong.'
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Server Error',
-                    text: 'Could not connect to server.'
-                });
-            });
-        }
-        
-        document.getElementById('saveCategoryBtn').addEventListener('click', function(e) {
-            const saveBtn = document.getElementById('saveCategoryBtn');
-            const loader = document.getElementById('categoryLoader');
-            loader.classList.remove('d-none');
-            saveBtn.disabled = true;
-        
-            const name = document.getElementById('categoryName').value;
-            const p_name = document.getElementById('parentCategoryInput').value;
-            const parentSelectValue = document.getElementById('parentCategorySelect').value;
-            let parent_name = "";
-
-            if (parentSelectValue === "__create_new__") {
-                parent_name = document.getElementById('parentCategoryInput').value;
-            }
-        
-            fetch("{% url 'finance:add_expense_category' %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(
-                    { 
-                        name: name, 
-                        parent_name: p_name,
-                        parent_id: parentSelectValue !== "__create_new__" ? parentSelectValue : null, 
-                })
-            })
-            .then(response => response.json().then(data => ({ status: response.status, body: data })))
-            .then(({ status, body }) => {
-                if (status === 200 || status === 201) {
-                    const select = document.getElementById('expenseCategory');
-                    const newOption = document.createElement('option');
-                    newOption.value = body.id;
-                    newOption.text = body.name;
-                    newOption.selected = true;
-                    select.appendChild(newOption);
-        
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Category Created',
-                        text: body.message || 'The category was added successfully!',
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-        
-                    expCatModal.hide();
-                    {% comment %} getSubcategories(body.id); {% endcomment %}
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: body.message || 'Something went wrong!',
-                    });
-                }
-            })
-            .catch(error => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.toString(),
-                });
-            })
-            .finally(() => {
-                loader.classList.add('d-none');
-                saveBtn.disabled = false;
-            });
-        });
-        
-
-        function getSubcategories(categoryId) {
-            // Show loading indicator
-            const subcategorySelect = document.getElementById('expenseSubCategory');
-            subcategorySelect.innerHTML = '<option value="">Loading subcategories...</option>';
-            
-            // Fetch subcategories based on selected parent category
-            fetch(`/finance/get_subcategories/?parent_id=${categoryId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                subcategorySelect.innerHTML = '<option value="">Select Sub Category</option>';
-                
-                if (data && data.length > 0) {
-                    data.forEach(subcategory => {
-                        const option = document.createElement('option');
-                        option.value = subcategory.id;
-                        option.textContent = subcategory.name;
-                        subcategorySelect.appendChild(option);
-                    });
-                    
-                    $('#expenseSubCategory').trigger('change');
-                } else {
-                    subcategorySelect.innerHTML = '<option value="">No subcategories available</option>';
-                    $('#expenseSubCategory').trigger('change');
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching subcategories:', error);
-                subcategorySelect.innerHTML = '<option value="">Error loading subcategories</option>';
-                $('#expenseSubCategory').trigger('change');
-            });
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const filterButtons = document.querySelectorAll('.btn-group a');
-            const dateRangeForm = document.getElementById('dateRangeForm');
-            
-            filterButtons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    if (this.href.includes('filter_type=custom')) {
-                        e.preventDefault();
-                        dateRangeForm.classList.remove('d-none');
-                    } else {
-                        dateRangeForm.classList.add('d-none');
-                    }
-                });
-            });
-        });
-
-        function toggleRecurrence(type) {
-            const group = document.getElementById(`${type}RecurrenceGroup`);
-            const toggle = document.getElementById(`${type}RecurringToggle`);
-            group.style.display = toggle.checked ? 'flex' : 'none';
-        }
-
-
-        function showView(view) {
-            document.getElementById("defaultTable").style.display = "none";
-            document.getElementById("transactionsTableContainer").style.display = "none";
-            document.getElementById("categoriesTableContainer").style.display = "none";
-            document.getElementById("loader").style.display = "block";
-
-            setTimeout(() => {
-                document.getElementById("loader").style.display = "none";
-
-                if (view === 'transactions') {
-                    document.getElementById("transactionsTableContainer").style.display = "block";
-                } else if (view === 'categories') {
-                    document.getElementById("categoriesTableContainer").style.display = "block";
-                } else {
-                    document.getElementById("defaultTable").style.display = "block";
-                }
-            }, 500); 
-        }
-
-
-        // incomeButton.addEventListener('click', () => {
-        //     record_type = 'income';
-        //     incomeModal.show();
-        // });
-
-        $(document).ready(function() {
-            // Configuration object for common settings
-            const commonConfig = {
-                theme: 'bootstrap-5',
-                width: '100%'
-            };
-
-            // Configuration for fields with tags
-            const tagsConfig = {
-                ...commonConfig,
-                tags: true,
-                createTag: function(params) {
-                    return {
-                        id: params.term,
-                        text: params.term,
-                        newTag: true
-                    };
-                }
-            };
-
-            // Function to initialize select2 fields
-            function initializeSelect2(elementId, config) {
-                $(`#${elementId}`).select2(config);
-            }
-
-            // Function to add event handlers
-            function addSelect2EventHandlers(elementId, fieldType) {
-                // Select event
-                $(`#${elementId}`).on('select2:select', function(e) {
-                    let data = e.params.data;
-                    if (data.newTag) {
-                        console.info(`${fieldType} - New text entered:`, data.text);
-                    } else {
-                        console.info(`${fieldType} - Existing option selected:`, data.text);
-                    }
-                    console.info(`${fieldType} Value:`, data.id);
-                });
-
-                // Closing event
-                $(`#${elementId}`).on('select2:closing', function(e) {
-                    let searchText = $(`#${elementId}`).data('select2').$dropdown.find('.select2-search__field').val();
-                    if (searchText) {
-                        let exists = false;
-                        $(`#${elementId} option`).each(function() {
-                            if ($(this).text().toLowerCase() === searchText.toLowerCase()) {
-                                exists = true;
-                                return false;
-                            }
-                        });
-
-                        if (!exists) {
-                            let newOption = new Option(searchText, searchText, true, true);
-                            $(`#${elementId}`).append(newOption).trigger('change');
-                        }
-                    }
-                });
-            }
-
-            // Initialize Income fields
-            const incomeFields = [
-            { id: 'incomeCategory', type: 'Category', hasEvents: true },
-            { id: 'incomeName', type: 'Name', hasEvents: true },
-            { id: 'incomeSubCategory', type: 'SubCategory', hasEvents: true },
-            { id: 'incomeBranch', type: 'Branch', hasEvents: false }
-            ];
-
-            // Initialize Expense fields
-            const expenseFields = [
-            { id: 'expenseCategory', type: 'Category', hasEvents: true },
-            { id: 'expenseName', type: 'Name', hasEvents: true },
-            { id: 'expenseSubCategory', type: 'SubCategory', hasEvents: true },
-            { id: 'expenseBranch', type: 'Branch', hasEvents: false }
-            ];
-
-            // Initialize all fields
-            [...incomeFields, ...expenseFields].forEach(field => {
-            const config = {
-                ...(field.hasEvents ? tagsConfig : commonConfig),
-                dropdownParent: $('#cashFlowModal') // Use the actual modal ID
-            };
-
-            initializeSelect2(field.id, config);
-
-            if (field.hasEvents) {
-                addSelect2EventHandlers(field.id, field.type);
-            }
-            });            // Helper function to get categories
-            window.getCategories = function(type = 'expense') {
-                const prefix = type.toLowerCase() === 'income' ? 'income' : 'expense';
-                
-                let category = {
-                    value: $(`#${prefix}Category`).val(),
-                    text: $(`#${prefix}Category`).select2('data')[0]?.text || ''
-                };
-                
-                let subcategory = {
-                    value: $(`#${prefix}SubCategory`).val(),
-                    text: $(`#${prefix}SubCategory`).select2('data')[0]?.text || ''
-                };
-
-                let name = {
-                    value: $(`#${prefix}Name`).val(),
-                    text: $(`#${prefix}Name`).select2('data')[0]?.text || ''
-                };
-
-                return { category, subcategory, name };
-            };
-            
-            // Make the active navigation item highlight based on current page
-            const currentPath = window.location.pathname;
-            document.querySelectorAll('.nav-item').forEach(item => {
-                if (item.getAttribute('href') === currentPath) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
-            });
-        });
-
-
-
-        {% comment %} function recordIncome() {
-            let type = ''
-            const incomeAmount = document.getElementById('incomeAmount').value;
-            const ExpenseAmount = document.getElementById('expenseAmount').value;
-
-            const categories = getCategories(record_type);
-            console.info('Category:', categories.category);
-            console.info('Subcategory:', categories.subcategory);
-            console.info('Expense Name:', categories.expenseName);
-
-            
-            const data = {
-                IncomeAmount: incomeAmount || 0.00,
-                ExpenseAmount: ExpenseAmount || 0.00,
-                incomeCategory: document.getElementById('incomeCategory').value,
-                expenseCategory: document.getElementById('expenseCategory').value,
-                incomeBranch: document.getElementById('incomeBranch').value,
-                expenseBranch: document.getElementById('expenseBranch').value,
-                categories: categories,
-                type: record_type
-            };
-
-            console.log(data)
-
-            fetch('/finance/record_transaction/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(response => {
-                if (response.success) {
-                    location.reload();
-                } else {
-                    alert(response.message);
-                }
-            });
-        } {% endcomment %}
-
-        function recordExpense() {
-            const expenseAmount = document.getElementById('expenseAmount').value;
-            if (!expenseAmount) {
-                alert('Please enter the expense amount');
-                return;
-            }
-
-            const data = {
-                amount: expenseAmount,
-                type: 'expense'
-            };
-
-            fetch('/finance/record_transaction/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(response => {
-                if (response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: 'Expense recorded successfully'
-                    }).then(() => {
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: response.message
-                    });
-                }
-            });
-        }
-
-        function populateCashUpTable() {
-            const tableBody = document.getElementById('cash_up_table');
-            tableBody.innerHTML = '';
-        
-            fetch('/finance/cash_up_list/')
-              .then(res => res.json())
-              .then(response => {
-                if (!response.success) return;
-        
-                const groupedData = {};
-                response.data.forEach(cashup => {
-                  const date = cashup.created_at.split(' ')[0];
-                  groupedData[date] = groupedData[date] || [];
-                  groupedData[date].push(cashup);
-                });
-        
-                Object.keys(groupedData)
-                  .sort().reverse()
-                  .forEach(date => {
-                    // date header row
-                    const dateRow = document.createElement('tr');
-                    dateRow.className = 'table-secondary';
-                    dateRow.innerHTML = `
-                      <td colspan="6" class="fw-bold">
-                        ${new Date(date).toLocaleDateString()}
-                      </td>`;
-                    tableBody.appendChild(dateRow);
-        
-                    // individual cash‑up rows
-                    groupedData[date].forEach(cashup => {
-                      const row = document.createElement('tr');
-                      row.classList.add('cashup-row');
-                      row.setAttribute('data-cashup-id', cashup.id);
-                      row.innerHTML = `
-                        <td><small>${cashup.branch__name}</small></td>
-                        <td><small>$${cashup.expected_cash}</small></td>
-                        <td><small>$${cashup.expense || 0.00}</small></td>
-                        <td><small>$${cashup.received_amount}</small></td>
-                        <td><small>${cashup.created_by__username}</small></td>
-                        <td>
-                          <button class="btn btn-sm btn-outline-primary" onclick="toggleCashUpDetails(${cashup.id}, this)">View</button>
-                          <button class="btn btn-sm btn-outline-success" onclick="checkStatus(${cashup.id}, this)">Mark Done</button>
-                        </td>`;
-                      tableBody.appendChild(row);
-                    });
-                  });
-              })
-              .catch(err => console.error('Failed to load cash‑ups', err));
-          }
-
-        populateCashUpTable() 
-
-        let cashup_id = ''
-
-        function checkStatus(cashUpId, btn) {
-
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = `
-            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            Loading...
-            `;
-            btn.disabled = true;
-
-            fetch(`/finance/check_cash_up_status/${cashUpId}/`)
-              .then(res => res.json())
-              .then(data => {
-                if (!data.success) {
-                  return alert('Error checking status: ' + (data.message || 'unknown'));
-                }
-        
-                if (data.status) {
-                  const row = btn.closest('tr');
-                  row.parentNode.removeChild(row);
-        
-                  const dateRow = row.previousElementSibling;
-                  const next = row.nextElementSibling;
-                  if (next === null || next.classList.contains('table-secondary')) {
-                    dateRow.parentNode.removeChild(dateRow);
-                  }
-                } else {
-                  alert('Cash‑up is not yet complete.');
-                  btn.innerHTML = originalHTML;
-                  btn.disabled = false;
-                }
-              })
-              .catch(err => {
-                console.error(err);
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-            })
-          }
-
-        function toggleCashUpDetails(cashUpId, btn) {
-            const row = btn.closest('tr');
-            cashup_id = cashUpId;
-        
-            if (row.nextElementSibling && row.nextElementSibling.classList.contains('details-row')) {
-                row.nextElementSibling.classList.add('fade-out');
-                setTimeout(() => row.nextElementSibling.remove(), 300);
-                return;
-            }
-        
-            const loaderRow = document.createElement('tr');
-            loaderRow.classList.add('details-row', 'fade-in');
-            loaderRow.innerHTML = `
-                <td colspan="6" class="p-3">
-                    <div class="d-flex justify-content-center">
-                        <div class="spinner-border spinner-border-sm text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <span class="ms-2">Loading details...</span>
-                    </div>
-                </td>
-            `;
-            row.parentNode.insertBefore(loaderRow, row.nextSibling);
-        
-            fetchCashUpDetails(cashUpId, loaderRow);
-        }
-        
-        async function fetchCashUpDetails(cashUpId, loaderRow) {
-            try {
-                const response = await fetch('/finance/get_cash_up_details/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: JSON.stringify({ cash_up_id: cashUpId })
-                });
-                
-                const data = await response.json();
-                
-                if (!data.success) {
-                    showErrorMessage(loaderRow, 'Could not load details. Please try again.');
-                    return;
-                }
-                
-                renderCashUpDetails(data, loaderRow);
-            } catch (error) {
-                console.error('Error fetching cash up details:', error);
-                showErrorMessage(loaderRow, 'An error occurred while loading details.');
-            }
-        }
-        
-        function showErrorMessage(loaderRow, message) {
-            loaderRow.innerHTML = `
-                <td colspan="6" class="p-3">
-                    <div class="alert alert-danger d-flex align-items-center mb-0">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <div>${message}</div>
-                        <button type="button" class="btn-close ms-auto" onclick="this.closest('tr').remove()"></button>
-                    </div>
-                </td>
-            `;
-        }
-        
-        function renderCashUpDetails(data, loaderRow) {
-            const salesSection = createSalesSection(data.data.sales);
-
-            const expensesSection = createExpensesSection(data.data.expenses);
-            
-            // Combine sections into a card-based layout
-            loaderRow.innerHTML = `
-                <td colspan="6" class="p-0">
-                    <div class="container-fluid p-3 bg-light border-top border-bottom">
-                        <div class="row g-3">
-                            <div class="col-12 w-100">
-                                <div class="card shadow-sm">
-                                    <div class="card-body">${salesSection}</div>
-                                </div>
-                            </div>
-                            <div class="col-12 w-100">
-                                <div class="card shadow-sm">
-                                    <div class="card-body">${expensesSection}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-            `;
-        }
-        
-        function createSalesSection(sales) {
-            if (!Array.isArray(sales) || sales.length === 0) {
-                return `
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Sales</h5>
-                    </div>
-                    <div class="text-muted py-3 text-center">No sales data available</div>
-                `;
-            }
-        
-            return `
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title mb-0">Sales</h5>
-                    <div class="d-flex align-items-center gap-2">
-                        <select id="category-all-${cashup_id}" class="form-select form-select-sm">
-                            <option value="">Select Category for All</option>
-                            {% for category in income_categories %}
-                                <option value='{{ category.id }}'>{{ category.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <button class="btn btn-primary btn-sm" onclick="recordAllSales(${cashup_id})">
-                            <i class="bi bi-check2-all me-1"></i>Record All
-                        </button>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Description</th>
-                                <th class="text-end">Amount</th>
-                                <th>Category</th>
-                                <th class="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${sales.map(s => `
-                                <tr data-sale-id="${s.id}" data-branch="${s.invoice__branch}">
-                                    <td>${s.invoice__products_purchased || 'No description'}</td>
-                                    <td class="text-end fw-bold">$${s.total_amount}</td>
-                                    <td>
-                                        <select id="category-${s.id}" class="form-select form-select-sm sale-category">
-                                            <option value="">Select Category</option>
-                                            {% for category in income_categories %}
-                                                <option value='{{ category.id }}'>{{ category.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </td>
-                                    <td class="text-center">
-                                       ${ s.invoice__invoice_items__cash_up_status
-                                            ? `<span class="badge bg-success">Success recorded</span>`
-                                            : `<button
-                                                class="btn btn-sm btn-outline-success record-sale-btn"
-                                                id="btn-${s.id}"
-                                                onclick="recordSale(
-                                                    ${s.id},
-                                                    'sale',
-                                                    ${s.invoice__branch},
-                                                    document.getElementById('category-${s.id}').value
-                                                )"
-                                                >
-                                                <i class="bi bi-check-lg"></i> Record
-                                                </button>`
-                                        }
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-        
-        function createExpensesSection(expenses) {
-            if (!Array.isArray(expenses) || expenses.length === 0) {
-                return `
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Expenses</h5>
-                    </div>
-                    <div class="text-muted py-3 text-center">No expenses data available</div>
-                `;
-            }
-        
-            return `
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title mb-0">Expenses</h5>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Description</th>
-                                <th class="text-end">Amount</th>
-                                <th class="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${expenses.map(e => `
-                                <tr data-expense-id="${e.id}">
-                                    <td>${e.description || 'No description'}</td>
-                                    <td class="text-end fw-bold">$${e.amount}</td>
-                                    <td class="text-center">
-                                        <div class="dropdown">
-                                            <button class="btn btn-sm btn-outline-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="bi bi-receipt"></i> Actions
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li><button class="dropdown-item" onclick="recordExpense(${e.id})">Record Expense</button></li>
-                                                <li><button class="dropdown-item" onclick="splitExpense(${e.id}, '${e.description || 'Expense'}', ${e.amount})">Split Expense</button></li>
-                                                <li><button class="dropdown-item" onclick="markAsReviewed(${e.id})">Mark as Reviewed</button></li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li><button class="dropdown-item text-danger" onclick="flagIssue(${e.id})">Flag Issue</button></li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-        
-                <!-- Split Expense Modal -->
-                <div class="modal fade" id="splitExpenseModal" tabindex="-1" aria-labelledby="splitExpenseModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="splitExpenseModalLabel">Split Expense</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <div>
-                                            <span class="fw-bold" id="expenseDescription"></span>
-                                            <span class="text-muted">- Original Amount: $<span id="originalAmount"></span></span>
-                                        </div>
-                                        <span class="text-muted">Remaining: $<span id="remainingAmount" class="fw-bold"></span></span>
-                                    </div>
-                                    <div class="progress mb-3">
-                                        <div id="splitProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                                    </div>
-                                </div>
-        
-                                <div id="splitItemsContainer">
-                                    <!-- Split items will be added here -->
-                                </div>
-                                
-                                <button type="button" class="btn btn-outline-primary mt-3" id="addSplitItemBtn">
-                                    <i class="bi bi-plus-circle"></i> Add Another Category
-                                </button>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-primary" id="saveSplitExpenseBtn" disabled>Save Splits</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Global variables for expense splitting
-        let currentExpenseId = null;
-        let currentExpenseTotal = 0;
-        let splitItems = [];
-        let splitItemCounter = 0;
-        
-        // Function to open the split expense modal
-        function splitExpense(expenseId, description, amount) {
-            // Reset state
-            currentExpenseId = expenseId;
-            currentExpenseTotal = parseFloat(amount);
-            splitItems = [];
-            splitItemCounter = 0;
-            
-            // Set modal values
-            document.getElementById('expenseDescription').textContent = description;
-            document.getElementById('originalAmount').textContent = amount;
-            document.getElementById('remainingAmount').textContent = amount;
-            document.getElementById('splitProgressBar').style.width = '0%';
-            document.getElementById('splitItemsContainer').innerHTML = '';
-            document.getElementById('saveSplitExpenseBtn').disabled = true;
-            
-            // Add first split item
-            addSplitItem();
-            
-            // Show the modal
-            const splitModal = new bootstrap.Modal(document.getElementById('splitExpenseModal'));
-            splitModal.show();
-        }
-        
-        // Function to add a new split item row
-        function addSplitItem() {
-            splitItemCounter++;
-            const itemId = `split-item-${splitItemCounter}`;
-            
-            const splitItem = document.createElement('div');
-            splitItem.className = 'split-item card mb-3';
-            splitItem.id = itemId;
-            
-            // Get expense categories from Django template context
-            const categoryOptions = `
-                {% for category in expense_categories %}
-                    <option value="{{ category.id }}">{{ category.name }}</option>
-                {% endfor %}
-            `;
-            
-            splitItem.innerHTML = `
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-5">
-                            <label class="form-label">Category</label>
-                            <select class="form-select category-select" data-item-id="${itemId}">
-                                <option value="">Select Category</option>
-                                ${categoryOptions}
-                            </select>
-                        </div>
-                        <div class="col-md-5">
-                            <label class="form-label">Amount</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control amount-input" data-item-id="${itemId}" step="0.01" min="0.01" max="${currentExpenseTotal}">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">&nbsp;</label>
-                            <button class="btn btn-outline-danger w-100 remove-split-btn" data-item-id="${itemId}">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col-12">
-                            <label class="form-label">Note (Optional)</label>
-                            <textarea class="form-control note-input" data-item-id="${itemId}" rows="1"></textarea>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('splitItemsContainer').appendChild(splitItem);
-            
-            // Add event listeners to the new inputs
-            const categorySelect = splitItem.querySelector('.category-select');
-            const amountInput = splitItem.querySelector('.amount-input');
-            const noteInput = splitItem.querySelector('.note-input');
-            const removeButton = splitItem.querySelector('.remove-split-btn');
-            
-            categorySelect.addEventListener('change', updateSplitItem);
-            amountInput.addEventListener('input', updateSplitItem);
-            noteInput.addEventListener('input', updateSplitItem);
-            
-            // Only show remove button if there's more than one item
-            if (document.querySelectorAll('.split-item').length === 1) {
-                removeButton.disabled = true;
-            } else {
-                document.querySelectorAll('.remove-split-btn').forEach(btn => {
-                    btn.disabled = false;
-                });
-            }
-            
-            removeButton.addEventListener('click', function() {
-                removeSplitItem(itemId);
-            });
-            
-            // Scroll to the new item
-            splitItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            
-            // Update split items array
-            splitItems.push({
-                id: itemId,
-                category: '',
-                amount: 0,
-                note: ''
-            });
-            
-            updateTotals();
-        }
-        
-        // Function to update a split item in the items array
-        function updateSplitItem(event) {
-            const itemId = event.target.getAttribute('data-item-id');
-            const itemIndex = splitItems.findIndex(item => item.id === itemId);
-            
-            if (itemIndex === -1) return;
-            
-            const item = document.getElementById(itemId);
-            
-            splitItems[itemIndex] = {
-                id: itemId,
-                category: item.querySelector('.category-select').value,
-                amount: parseFloat(item.querySelector('.amount-input').value) || 0,
-                note: item.querySelector('.note-input').value
-            };
-            
-            updateTotals();
-        }
-        
-        // Function to remove a split item
-        function removeSplitItem(itemId) {
-            document.getElementById(itemId).remove();
-            
-            // Update splitItems array
-            const itemIndex = splitItems.findIndex(item => item.id === itemId);
-            if (itemIndex !== -1) {
-                splitItems.splice(itemIndex, 1);
-            }
-            
-            // If only one item remains, disable its remove button
-            if (document.querySelectorAll('.split-item').length === 1) {
-                document.querySelector('.remove-split-btn').disabled = true;
-            }
-            
-            updateTotals();
-        }
-        
-        // Function to update totals and progress bar
-        function updateTotals() {
-            const totalSplit = splitItems.reduce((sum, item) => sum + (item.amount || 0), 0);
-            const remaining = Math.max(0, (currentExpenseTotal - totalSplit).toFixed(2));
-            const percentage = Math.min(100, (totalSplit / currentExpenseTotal) * 100);
-            
-            // Update UI
-            document.getElementById('remainingAmount').textContent = remaining;
-            
-            const progressBar = document.getElementById('splitProgressBar');
-            progressBar.style.width = `${percentage}%`;
-            
-            // Update progress bar color based on status
-            if (Math.abs(totalSplit - currentExpenseTotal) < 0.01) {
-                progressBar.className = 'progress-bar bg-success';
-                document.getElementById('saveSplitExpenseBtn').disabled = false;
-            } else if (totalSplit > currentExpenseTotal) {
-                progressBar.className = 'progress-bar bg-danger';
-                document.getElementById('saveSplitExpenseBtn').disabled = true;
-            } else {
-                progressBar.className = 'progress-bar bg-primary';
-                document.getElementById('saveSplitExpenseBtn').disabled = true;
-            }
-        }
-        
-        // Initialize event listeners once the DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Event listener for "Add Another Category" button
-            document.getElementById('addSplitItemBtn').addEventListener('click', addSplitItem);
-            
-            // Event listener for "Save Splits" button
-            document.getElementById('saveSplitExpenseBtn').addEventListener('click', saveSplitExpense);
-        });
-        
-        // Function to save the split expense
-        async function saveSplitExpense() {
-            // Validate all splits have categories
-            const invalidSplits = splitItems.filter(item => !item.category);
-            if (invalidSplits.length > 0) {
-                alert('Please select a category for all splits.');
-                return;
-            }
-            
-            // Show loading state
-            const saveButton = document.getElementById('saveSplitExpenseBtn');
-            const originalText = saveButton.innerHTML;
-            saveButton.disabled = true;
-            saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
-            
-            try {
-                // Prepare data for the API
-                const splitItemsForApi = splitItems.map(item => ({
-                    category_id: item.category,
-                    amount: item.amount,
-                    note: item.note
-                }));
-                
-                // Send to backend
-                const response = await fetch('/finance/split_expense/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: JSON.stringify({
-                        expense_id: currentExpenseId,
-                        splits: splitItemsForApi,
-                        cash_up_id: cashup_id
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    // Hide the modal
-                    bootstrap.Modal.getInstance(document.getElementById('splitExpenseModal')).hide();
-                    
-                    // Show success toast
-                    showToast('Success', 'Expense has been split successfully', 'success');
-                    
-                    // Update the UI to show expense has been processed
-                    const expenseRow = document.querySelector(`tr[data-expense-id="${currentExpenseId}"]`);
-                    if (expenseRow) {
-                        expenseRow.classList.add('table-success', 'fade-out');
-                        setTimeout(() => {
-                            expenseRow.remove();
-                        }, 500);
-                    }
-                } else {
-                    throw new Error(result.message || 'Failed to split expense');
-                }
-            } catch (error) {
-                console.error('Error splitting expense:', error);
-                showToast('Error', error.message || 'Failed to split expense', 'danger');
-            } finally {
-                // Reset button state
-                saveButton.disabled = false;
-                saveButton.innerHTML = originalText;
-            }
-        }
-        
-        // Add CSS for the split expense feature
-        document.head.insertAdjacentHTML('beforeend', `
-        <style>
-            .split-item {
-                position: relative;
-                transition: all 0.3s ease;
-            }
-            
-            .split-item:hover {
-                box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
-            }
-            
-            .progress {
-                height: 8px;
-            }
-            
-            .progress-bar {
-                transition: width 0.3s ease, background-color 0.3s ease;
-            }
-            
-            .fade-out {
-                animation: fadeOut 0.5s forwards;
-            }
-            
-            @keyframes fadeOut {
-                from { opacity: 1; }
-                to { opacity: 0; transform: translateY(-10px); }
-            }
-        </style>
-        `);
-        
-        // Toast notification function (if not already defined)
-        function showToast(title, message, type = 'info') {
-            const toastContainer = document.getElementById('toast-container') || createToastContainer();
-            
-            const toast = document.createElement('div');
-            toast.className = `toast align-items-center border-0 show`;
-            toast.classList.add(`bg-${type === 'info' ? 'primary' : type}`);
-            toast.setAttribute('role', 'alert');
-            toast.setAttribute('aria-live', 'assertive');
-            toast.setAttribute('aria-atomic', 'true');
-            
-            toast.innerHTML = `
-                <div class="d-flex">
-                    <div class="toast-body text-white">
-                        <strong>${title}:</strong> ${message}
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-            `;
-            
-            toastContainer.appendChild(toast);
-            
-            // Auto-remove after 5 seconds
-            setTimeout(() => {
-                toast.classList.add('fade-out');
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
-        }
-        
-        function createToastContainer() {
-            const container = document.createElement('div');
-            container.id = 'toast-container';
-            container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-            container.style.zIndex = '1050';
-            document.body.appendChild(container);
-            return container;
-        }
-        
-        function recordAllSales(cashupId) {
-            const categorySelector = document.getElementById(`category-all-${cashupId}`);
-            const selectedCategory = categorySelector.value;
-            
-            if (!selectedCategory) {
-                showToast('Warning', 'Please select a category for all sales', 'warning');
-                return;
-            }
-            
-            // Get all sale rows for this cashup
-            const saleRows = document.querySelectorAll(`tr[data-sale-id]`);
-            let processedCount = 0;
-            
-            // Show processing indicator
-            showToast('Processing', 'Recording all sales...', 'info');
-            
-            // Process each sale
-            saleRows.forEach(row => {
-                const saleId = row.getAttribute('data-sale-id');
-                const branch = row.getAttribute('data-branch');
-                const categoryDropdown = document.getElementById(`category-${saleId}`);
-                
-                if (categoryDropdown) {
-                    categoryDropdown.value = selectedCategory;
-                    recordSale(saleId, 'sale', branch, selectedCategory)
-                        .then(() => {
-                            processedCount++;
-                            if (processedCount === saleRows.length) {
-                                showToast('Success', `All ${processedCount} sales recorded successfully`, 'success');
-                            }
-                        })
-                        .catch(error => {
-                            console.error(`Error recording sale ${saleId}:`, error);
-                        });
-                }
-            });
-        }
-        
-        // Modern toast notification system
-        function showToast(title, message, type = 'info') {
-            const toastContainer = document.getElementById('toast-container') || createToastContainer();
-            
-            const toast = document.createElement('div');
-            toast.className = `toast align-items-center border-0 show`;
-            toast.classList.add(`bg-${type === 'info' ? 'primary' : type}`);
-            toast.setAttribute('role', 'alert');
-            toast.setAttribute('aria-live', 'assertive');
-            toast.setAttribute('aria-atomic', 'true');
-            
-            toast.innerHTML = `
-                <div class="d-flex">
-                    <div class="toast-body text-white">
-                        <strong>${title}:</strong> ${message}
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-            `;
-            
-            toastContainer.appendChild(toast);
-            
-            // Auto-remove after 5 seconds
-            setTimeout(() => {
-                toast.classList.add('fade-out');
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
-        }
-        
-        function createToastContainer() {
-            const container = document.createElement('div');
-            container.id = 'toast-container';
-            container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-            container.style.zIndex = '1050';
-            document.body.appendChild(container);
-            return container;
-        }
-        
-        // Promise-based recordSale function
-        async function recordSale(saleId, type, branch, category) {
-            const button = document.getElementById(`btn-${saleId}`);
-            const originalText = button.innerHTML;
-            
-            // Show loading state
-            button.disabled = true;
-            button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...`;
-            
-            try {
-                console.log(
-                    { 
-                        id: saleId, 
-                        type: type, 
-                        branch: branch,
-                        category: category,
-                        cash_up_id: cashup_id
-                    }
-                )
-                const response = await fetch('/finance/record_cashflow/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: JSON.stringify({ 
-                        id: saleId, 
-                        type: type, 
-                        branch: branch,
-                        category: category,
-                        cash_up_id: cashup_id
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    button.classList.remove('btn-outline-success');
-                    button.classList.add('btn-success');
-                    button.innerHTML = `<i class="bi bi-check-circle"></i> Recorded`;
-                    
-                    const categorySelect = document.getElementById(`category-${saleId}`);
-                    if (categorySelect) categorySelect.disabled = true;
-                    
-                    return result;
-                } else {
-                    throw new Error(result.message || 'Failed to record sale');
-                }
-            } catch (error) {
-                console.error(`Error recording sale ${saleId}:`, error);
-                button.disabled = false;
-                button.innerHTML = originalText;
-                showToast('Error', error.message || 'Failed to record sale', 'danger');
-                throw error;
-            }
-        }
-        
-        // Add some CSS to the page for animations and styling
-        document.head.insertAdjacentHTML('beforeend', `
-        <style>
-            .fade-in {
-                animation: fadeIn 0.3s ease-in;
-            }
-            
-            .fade-out {
-                animation: fadeOut 0.3s ease-out;
-            }
-            
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(-10px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            
-            @keyframes fadeOut {
-                from { opacity: 1; transform: translateY(0); }
-                to { opacity: 0; transform: translateY(-10px); }
-            }
-            
-            .details-row td {
-                transition: all 0.3s ease;
-            }
-            
-            .table-hover tbody tr:hover {
-                background-color: rgba(0,0,0,.03);
-            }
-        </style>
-        `);
-
-        function recordExpense() {
-            const name = document.getElementById('expenseName').value;
-            const amount = document.getElementById('expenseAmount').value;
-            const category = document.getElementById('expenseCategory').value;
-            const branch = document.getElementById('expenseBranch').value;
-            const isRecurring = document.getElementById('expenseRecurringToggle').checked;
-            const recurrenceValue = document.getElementById('expenseRecurrenceValue').value;
-            const recurrenceUnit = document.getElementById('expenseRecurrenceUnit').value;
-            const image = document.getElementById('expenseImage').files[0];
-        
-            if (!name || !amount || !category || !branch) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Missing Fields',
-                    text: 'Please fill in all required fields.',
-                });
-                return;
-            }
-        
-            const formData = new FormData();
-            formData.append('name', name);
-            formData.append('amount', parseFloat(amount));
-            formData.append('category', category);
-            formData.append('branch', branch);
-            formData.append('is_recurring', isRecurring);
-            if (isRecurring) {
-                formData.append('recurrence_value', recurrenceValue);
-                formData.append('recurrence_unit', recurrenceUnit);
-            }
-            if (image) {
-                formData.append('image', image);
-            }
-        
-            fetch("{% url 'finance:expenses' %}", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": getCookie("csrftoken")
-                },
-                body: formData
-            })
-            .then(res => res.json())
-            .then(res => {
-                if (res.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Expense Recorded',
-                        text: res.message || 'Your expense has been recorded successfully.'
-                    });
-                    document.getElementById('expenseName').value = '';
-                    document.getElementById('expenseAmount').value = '';
-                    document.getElementById('expenseCategory').value = '';
-                    document.getElementById('expenseBranch').value = '';
-                    document.getElementById('expenseRecurringToggle').checked = false;
-                    document.getElementById('expenseRecurrenceGroup').style.display = 'none';
-                    document.getElementById('expenseImage').value = '';
-                    document.getElementById('expenseImagePreviewContainer').style.display = 'none';
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: res.message || 'Something went wrong.'
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Server Error',
-                    text: 'Could not connect to server.'
-                });
-            });
-        }
-        
-        
-
-
-        const receiveModal = new bootstrap.Modal(document.getElementById('receiveModal'));
-
-        function receive(id) {
-            cash_up_id = id;
-            receiveModal.show();
-        }
-
-        function createCashFlow() {
-            const amount = document.getElementById('amount-received').value;
-            if (!amount) {
-                alert('Please enter the amount received');
-                return;
-            }
-
-            const data = {
-                amount: amount,
-                cash_up_id: cash_up_id
-            };
-
-            fetch('/finance/create_cash_flow/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert(data.message);
-                }
-            });
-        }
-
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-    </script>
+    <div class="modal fade" id="cashFlowModal" tabindex="-1"></div>
+    
+    <div class="footer-header">
+        <div class="nav-buttons">
+            <ul class="nav nav-tabs" id="cashFlowTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="overview" data-bs-toggle="tab" data-bs-target="#overview-panel" type="button" role="tab" aria-controls="overview-panel" aria-selected="true">
+                        <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="cash" data-bs-toggle="tab" data-bs-target="#cash-panel" type="button" role="tab" aria-controls="cash-panel" aria-selected="false">
+                        <i class="bi bi-wallet2 me-2"></i>Cash Management
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="cashups" data-bs-toggle="tab" data-bs-target="#cashups-panel" type="button" role="tab" aria-controls="cashups-panel" aria-selected="false">
+                        <i class="bi bi-cash-stack me-2"></i>Cashups
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
 </div>
 {% endblock %}
