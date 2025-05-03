@@ -17,14 +17,16 @@
 
     .main-content {
         position: relative;
+        padding: 20px;
         min-height: 100vh;
-        padding-bottom: 60px;
+        padding-bottom: 70px; /
     }
 
     .scrollable-container {
-        max-height: calc(100vh - 200px);
+        max-height: calc(100vh - 180px);
         overflow-y: auto;
         padding: 0 5px;
+        margin-bottom: 20px;
         scrollbar-width: thin;
         scrollbar-color: var(--primary-color) transparent;
     }
@@ -192,13 +194,12 @@
     .footer-header {
         position: fixed;
         bottom: 0;
-        left: 0;
-        right: 0;
         background: white;
         box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
         padding: 12px 0;
         backdrop-filter: blur(8px);
         border-top: 1px solid rgba(0,0,0,0.05);
+        z-index: 100;
     }
 
     .nav-buttons {
@@ -233,15 +234,22 @@
 </style>
 
 <div class='main-content'>
-    <div id="overview-panel" class="tab-pane fade show active" role="tabpanel" aria-labelledby="overview-panel">
-        <div class="scrollable-container">
-            {% include "cashflows/cashflow.html" %}
+    <div class="tab-content">
+        <div id="overview-panel" class="tab-pane fade show active" role="tabpanel" aria-labelledby="overview-tab">
+            <div class="scrollable-container">
+                {% include "cashflows/cashflow.html" %}
+            </div>
         </div>
-    </div>
-    <div id="cash-panel" class="tab-pane fade show" role="tabpanel" aria-labelledby="cash-panel">
-        <div class="scrollable-container">
-            {% include "cashflows/cash_ups.html" %}
+        <div id="cash-panel" class="tab-pane fade" role="tabpanel" aria-labelledby="cash-tab">
+            <div class="scrollable-container">
+                {% include "cashflows/cashmanagement.html" %}
+            </div>
         </div>
+        <!-- <div id="cashups-panel" class="tab-pane fade" role="tabpanel" aria-labelledby="cashups-tab">
+            <div class="scrollable-container">
+                {% include "cashflows/cash_ups.html" %}
+            </div>
+        </div>         -->
     </div>
 
     <div class="modal fade" id="cashFlowModal" tabindex="-1"></div>
@@ -250,17 +258,17 @@
         <div class="nav-buttons">
             <ul class="nav nav-tabs" id="cashFlowTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="overview" data-bs-toggle="tab" data-bs-target="#overview-panel" type="button" role="tab" aria-controls="overview-panel" aria-selected="true">
+                    <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview-panel" type="button" role="tab" aria-controls="overview-panel" aria-selected="true">
                         <i class="bi bi-speedometer2 me-2"></i>Dashboard
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="cash" data-bs-toggle="tab" data-bs-target="#cash-panel" type="button" role="tab" aria-controls="cash-panel" aria-selected="false">
+                    <button class="nav-link" id="cash-tab" data-bs-toggle="tab" data-bs-target="#cash-panel" type="button" role="tab" aria-controls="cash-panel" aria-selected="false">
                         <i class="bi bi-wallet2 me-2"></i>Cash Management
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="cashups" data-bs-toggle="tab" data-bs-target="#cashups-panel" type="button" role="tab" aria-controls="cashups-panel" aria-selected="false">
+                    <button class="nav-link" id="cashups-tab" data-bs-toggle="tab" data-bs-target="#cashups-panel" type="button" role="tab" aria-controls="cashups-panel" aria-selected="false">
                         <i class="bi bi-cash-stack me-2"></i>Cashups
                     </button>
                 </li>

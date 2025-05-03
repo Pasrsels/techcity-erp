@@ -6,6 +6,7 @@
                     <h4 class="mb-1">Cash Flow Management</h4>
                     <p class="text-muted mb-0">Manage your cash operations</p>
                 </div>
+                </div>
                 <div class="px-2">
                     <div class="card-body">                    
                         <!-- Quick filter buttons -->
@@ -17,29 +18,22 @@
                         </div>
                         
                         <!-- Custom date range form, shown only when custom is selected -->
-                        <form method="get" id="dateRangeForm" class="{% if filter_type != 'custom' %}d-none{% endif %}">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <label for="start_date">Start Date:</label>
-                                    <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="form-control">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="end_date">End Date:</label>
-                                    <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="form-control">
-                                </div>
-                                <div class="col-md-4 d-flex align-items-end">
-                                    <input type="hidden" name="filter_type" value="custom">
-                                    <button type="submit" class="btn btn-primary">Apply Filter</button>
-                                </div>
+                        <!-- <form method="get" id="dateRangeForm" class="{% if filter_type != 'custom' %}d-none{% endif %}">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="start_date">Start Date:</label>
+                                <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="form-control">
                             </div>
-                    </div>
+                            <div class="col-md-4">
+                                <label for="end_date">End Date:</label>
+                                <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="form-control">
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <input type="hidden" name="filter_type" value="custom">
+                                <button type="submit" class="btn btn-primary">Apply Filter</button>
+                            </div>
+                        </div> -->
                 </div>
-            </div>
-            <div class="action-buttons">
-                <button class="btn btn-outline-dark" type="button" id="expenseBtn">
-                   <i class='bx bx-plus'></i>
-                   <span>Income/Expense/Cashup(s)</span>
-                </button>
             </div>
         </div>
     </div>
@@ -148,7 +142,7 @@
                     </tr>
                     <tr>
                         <td clas='text-right'>Other Income</td>
-                        <td>{{income_total}}</td>
+                        <td>{{income_total}}</td>ex
                     </tr>
                     <tr>
                         <td>Total Income</td>
@@ -609,7 +603,7 @@
             </div>
           </form>
         </div>
-      </div>
+    </div>
 
     <div class="modal fade" id="receiveModal" tabindex="-1">
         <div class="modal-dialog">

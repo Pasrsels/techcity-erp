@@ -120,6 +120,7 @@ urlpatterns = [
     path('cash-flow/categories/', get_cashflow_categories, name='cashflow_categories'),
     path('get_cash_up_details/', cash_up_list, name='get_cash_up_details'),
     path('check_cash_up_status/<int:cash_up_id>/', check_cashup_status, name='check_cashup_status'),
+    path('add_income_category/', add_income_category, name='add_income_category'),
 
     # user accounts
     path('user_accounts/', user_accounts, name='user_accounts'),
@@ -142,6 +143,7 @@ urlpatterns = [
     path('submit_invoice_data/', submit_invoice_data_zimra, name='submit_invoice'),
     path('record_cashflow/', record_cashflow, name='record_cashflow'),
     path('record_income/', record_income, name='record_income'),
+     path('get-incomes/', get_incomes, name='get_incomes'),
 
     ########################################################################################################################
     # API end points

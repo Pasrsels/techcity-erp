@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Flow Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        .cash-flow-card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        #incomeRecurrenceGroup, #expenseRecurrenceGroup {
+            display: flex;
+            gap: 10px;
+        }
+        .loader {
+            text-align: center;
+            padding: 20px;
+        }
+        .table-container {
+            min-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="mt-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Cash Flow Management</h5>
+            </div>
+
+            <div class="card-body">
+                <!-- Main Tabs Navigation -->
+                <ul class="nav nav-tabs" id="cashFlowTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="cash_income-tab" data-bs-toggle="tab" data-bs-target="#cash_income-panel" 
+                                type="button" role="tab" aria-controls="cash_income-panel" aria-selected="true">Income</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="cash_expense-tab" data-bs-toggle="tab" data-bs-target="#cash_expense-panel" 
+                                type="button" role="tab" aria-controls="cash_expense-panel" aria-selected="false">Expenses</button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content p-3 border border-top-0" id="cashFlowTabsContent">
+                    <!-- Income Tab -->
+                    <div class="tab-pane fade show active" id="cash_income-panel" role="tabpanel" aria-labelledby="cash_income-tab">
+                        <div class="row">
+                            <!-- Form Section -->
+                            <div class="col-md-4">
+                                <div class="card p-3">
+                                    <h5 class="mb-3">Record New Income</h5>
+                                    <div class="mb-3">
+                                        <input type="text" class="form-control" id="inName" name="inName" placeholder="Income Note">
+                                    </div>                                    
+                                    <div class="mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="inAmount" placeholder="Enter amount">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 d-flex gap-2 align-items-start">
+                                        <select class="form-select" id="inCategory" name="inCategory">
+                                            <option value="">Select Category</option>
+                                            {% for cat in income_categories %}
+                                                <option value="{{ cat.id }}">{{ cat }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="button" class="btn btn-outline-primary" id='addCategoryButton'>
+                                            +
+                                        </button>
+                                    </div>
+                                    <div class="mb-3">
+                                        <select class="category-select form-select" id="inBranch">
+                                            {% for branch in branches %}
+                                                <option value="{{ branch.id}}">{{ branch.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="incomeRecurringToggle" onchange="toggleRecurrence('income')">
+                                        <label class="form-check-label" for="incomeRecurringToggle">Recurring Income?</label>
+                                    </div>
+                                    <div class="mb-3 gap-2 align-items-center" id="incomeRecurrenceGroup" style="display: none;">
+                                        <label class="mb-0">Repeat every</label>
+                                        <input type="number" class="form-control w-auto" id="inRecurrenceValue" min="0" value="1">
+                                        <select class="form-select w-auto" id="inRecurrenceUnit">
+                                            <option value="day">Day(s)</option>
+                                            <option value="week">Week(s)</option>
+                                            <option value="month">Month(s)</option>
+                                            <option value="year">Year(s)</option>
+                                        </select>
+                                    </div>
+                                    <div class="text-end">
+                                        <button type="button" class="btn btn-success" onclick="recordIncome()">Record Income</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Income Table Section -->
+                            <div class="col-md-8">
+                                <div class="card shadow-sm">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Income History</h5>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="loadIncomes(true)">
+                                            <i class="bx bx-refresh"></i> Refresh
+                                        </button>
+                                    </div>
+                                    <div class="card-body p-0 table-container">
+                                        <table class="table table-striped table-hover mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Note</th>
+                                                    <th>Category</th>
+                                                    <th>Branch</th>
+                                                    <th>Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="income_table">
+                                                <!-- Income data will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                        <div id="income_loader" class="loader d-none">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Expense Tab -->
+                    <div class="tab-pane fade" id="cash_expense-panel" role="tabpanel" aria-labelledby="cash_expense-tab">
+                        <div class="row">
+                            <!-- Form Section -->
+                            <div class="col-md-4">
+                                <div class="card p-3">
+                                    <h5 class="mb-3">Record New Expense</h5>
+                                    <div class="mb-3">
+                                        <input type="text" class="form-control" id="expenseName" name="expenseName" placeholder="Expense Note">
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="expenseAmount" placeholder="Enter amount">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 d-flex gap-2 align-items-start">
+                                        <select class="form-select" id="expenseCategory">
+                                            <option value="">Select Category</option>
+                                            {% for parent in expenses_categories %}
+                                              {% if not parent.parent %}
+                                                <optgroup label="{{ parent.name }}">
+                                                  <option value="{{ parent.id }}">{{ parent.name }}</option>
+                                                  {% for sub in parent.sub_expenses.all %}
+                                                    <option value="{{ sub.id }}">&nbsp;&nbsp;↳ {{ sub.name }}</option>
+                                                  {% endfor %}
+                                                </optgroup>
+                                              {% endif %}
+                                            {% endfor %}
+                                        </select>                                      
+                                        <button type="button" class="btn btn-outline-primary" id='addExpenseCategoryButton'>
+                                            +
+                                        </button>
+                                    </div>                                
+                                    <div class="mb-3">
+                                        <select class="form-select" id="expenseBranch">
+                                            {% for branch in branches %}
+                                                <option value="{{ branch.id}}">{{ branch.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="expenseRecurringToggle" onchange="toggleRecurrence('expense')">
+                                        <label class="form-check-label" for="expenseRecurringToggle">Recurring Expense?</label>
+                                    </div>
+                                    <div class="mb-3 gap-2 align-items-center" id="expenseRecurrenceGroup" style="display: none;">
+                                        <label class="mb-0">Repeat every</label>
+                                        <input type="number" class="form-control w-auto" id="expenseRecurrenceValue" min="0" value="1">
+                                        <select class="form-select w-auto" id="expenseRecurrenceUnit">
+                                            <option value="day">Day(s)</option>
+                                            <option value="week">Week(s)</option>
+                                            <option value="month">Month(s)</option>
+                                            <option value="year">Year(s)</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="expenseImage" class="form-label">Upload Receipt</label>
+                                        <input type="file" class="form-control" id="expenseImage" accept="image/*" onchange="previewExpenseImage()">
+                                        <img id="expenseImagePreview" src="#" alt="Receipt Preview" class="img-fluid mt-2 d-none" style="max-height: 200px;">
+                                    </div>                                                                                                   
+                                    <div class="text-end">
+                                        <button type="button" class="btn btn-danger" onclick="recordExpense()">Record Expense</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Expense Table Section -->
+                            <div class="col-md-8">
+                                <div class="card shadow-sm">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Expense History</h5>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="loadExpenses(true)">
+                                            <i class="bx bx-refresh"></i> Refresh
+                                        </button>
+                                    </div>
+                                    <div class="card-body p-0 table-container">
+                                        <table class="table table-striped table-hover mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Note</th>
+                                                    <th>Category</th>
+                                                    <th>Branch</th>
+                                                    <th>Amount</th>
+                                                    <th>Receipt</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="expense_table">
+                                                <!-- Expense data will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                        <div id="expense_loader" class="loader d-none">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add income Category Modal -->
+    <div class="modal fade" id="addCatModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <form id="addCategoryForm">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Add Income Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                    <label for="InCategoryName" class="form-label">Category Name</label>
+                    <input type="text" class="form-control" id="InCategoryName" name="name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="parentCategory" class="form-label">Parent (optional)</label>
+                    <select class="form-select" id="parentCategory" name="parent">
+                      <option value="">None</option>
+                      {% for cat in income_categories %}
+                        <option value="{{ cat.id }}">{{ cat }}</option>
+                      {% endfor %}
+                      <option value="__create_new__">+ Add New Parent Category</option>
+                    </select>
+                  </div>
+                  <div class="mb-3 d-none" id="newIncomeParentWrapper">
+                    <label for="newIncomeParentInput" class="form-label">New Parent Category</label>
+                    <input type="text" class="form-control" id="newIncomeParentInput" placeholder="Type new parent category">
+                  </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" id="saveCatBtn" class="btn btn-success">Save</button>
+              </div>
+            </div>
+          </form>
+        </div>
+    </div>
+
+    <!-- Add Expense Category Modal -->
+    <div class="modal fade" id="addExpenseCategoryModal" tabindex="-1" aria-labelledby="addExpenseCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title">Add Expense Category</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+            <div class="mb-3">
+                <label for="expenseCategoryName" class="form-label">Name</label>
+                <input type="text" class="form-control" id="expenseCategoryName" required>
+            </div>
+            <div class="mb-3">
+                <label for="expenseParentCategory" class="form-label">Parent (optional)</label>
+                <select class="form-select" id="expenseParentCategory">
+                <option value="">None</option>
+                {% for cat in expense_categories %}
+                    {% if not cat.parent %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endif %}
+                {% endfor %}
+                <option value="__create_new__">+ Add New Parent</option>
+                </select>
+            </div>
+            <div class="mb-3 d-none" id="expenseNewParentWrapper">
+                <label for="expenseNewParentInput" class="form-label">New Parent Name</label>
+                <input type="text" class="form-control" id="expenseNewParentInput" placeholder="Type new parent category">
+            </div>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-success" id="saveExpenseCategoryBtn">Save</button>
+            </div>
+        </div>
+        </div>
+    </div>
+    
+<script>
+    // Initialize state for tracking data loading and pagination
+    const state = {
+        cash_income: {
+            page: 1,
+            loading: false,
+            hasMore: true
+        },
+        cash_expense: {
+            page: 1,
+            loading: false,
+            hasMore: true
+        }
+    };
+    
+    // Initialize modals
+    const categoryModal = new bootstrap.Modal(document.getElementById('addCatModal'));
+    const expenseCategoryModal = new bootstrap.Modal(document.getElementById('addExpenseCategoryModal'));
+    
+    // Set up event listeners for the category buttons
+    document.getElementById('addCategoryButton').addEventListener('click', () => {
+        categoryModal.show();
+    });
+    
+    document.getElementById('addExpenseCategoryButton').addEventListener('click', () => {
+        expenseCategoryModal.show();
+    });
+
+    // Toggle recurrence inputs visibility
+    function toggleRecurrence(type) {
+        const toggle = document.getElementById(`${type}RecurringToggle`);
+        const group = document.getElementById(`${type}RecurrenceGroup`);
+        
+        if (toggle && group) {
+            group.style.display = toggle.checked ? 'flex' : 'none';
+        }
+    }
+
+    // Preview expense receipt image
+    function previewExpenseImage() {
+        const input = document.getElementById('expenseImage');
+        const preview = document.getElementById('expenseImagePreview');
+    
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.classList.remove('d-none');
+            };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.classList.add('d-none');
+        }
+    }
+
+    // Set up parent category selection for expense categories
+    document.addEventListener('DOMContentLoaded', function () {
+        // Setup parent category selection for income categories
+        const parentCategorySelect = document.getElementById('parentCategory');
+        const newIncomeParentWrapper = document.getElementById('newIncomeParentWrapper');
+        
+        if (parentCategorySelect && newIncomeParentWrapper) {
+            parentCategorySelect.addEventListener('change', function () {
+                if (this.value === '__create_new__') {
+                    newIncomeParentWrapper.classList.remove('d-none');
+                } else {
+                    newIncomeParentWrapper.classList.add('d-none');
+                }
+            });
+        }
+        
+        // Setup parent category selection for expense categories
+        const expenseParentSelect = document.getElementById('expenseParentCategory');
+        const expenseNewParentWrapper = document.getElementById('expenseNewParentWrapper');
+        
+        if (expenseParentSelect && expenseNewParentWrapper) {
+            expenseParentSelect.addEventListener('change', function () {
+                if (this.value === '__create_new__') {
+                    expenseNewParentWrapper.classList.remove('d-none');
+                } else {
+                    expenseNewParentWrapper.classList.add('d-none');
+                }
+            });
+        }
+
+        // Load initial data
+        loadIncomes();
+        
+        // Set up tab change handlers to load data when tab is selected
+        document.getElementById('cash_expense-tab').addEventListener('click', function() {
+            if (document.getElementById('expense_table').children.length === 0) {
+                loadExpenses();
+            }
+        });
+
+        // Set up save handlers for categories
+        document.getElementById('saveCatBtn').addEventListener('click', saveIncomeCategory);
+        document.getElementById('saveExpenseCategoryBtn').addEventListener('click', saveExpenseCategory);
+    });
+
+    // Save income category
+    function saveIncomeCategory() {
+        const nameInput = document.getElementById('InCategoryName');
+        const name = nameInput.value.trim();
+        const parentSelect = document.getElementById('parentCategory');
+        const selectedParent = parentSelect.value;
+        const newParentInput = document.getElementById('newIncomeParentInput');
+        const newParentName = newParentInput.value.trim();
+
+        if (!name) {
+            showToast("Name is required.", "error");
+            return;
+        }
+
+        fetch('{% url "finance:add_income_category" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                name: name,
+                parent_id: selectedParent === '__create_new__' ? null : selectedParent,
+                new_parent_name: selectedParent === '__create_new__' ? newParentName : null
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const select = document.getElementById('inCategory');
+                const option = document.createElement('option');
+                option.value = data.id;
+                option.textContent = data.name;
+                option.selected = true;
+                select.appendChild(option);
+
+                nameInput.value = '';
+                parentSelect.value = '';
+                newParentInput.value = '';
+                document.getElementById('newIncomeParentWrapper').classList.add('d-none');
+                categoryModal.hide();
+
+                showToast("Category added!", "success");
+            } else {
+                showToast(data.error || "Failed to save.", "error");
+            }
+        })
+        .catch(err => {
+            showToast("An error occurred.", "error");
+            console.error(err);
+        });
+    }
+
+    // Save expense category
+    function saveExpenseCategory() {
+        const name = document.getElementById('expenseCategoryName').value.trim();
+        const parentSelect = document.getElementById('expenseParentCategory');
+        const parent = parentSelect.value === '__create_new__' ? null : parentSelect.value;
+        const newParent = parentSelect.value === '__create_new__' ? document.getElementById('expenseNewParentInput').value.trim() : null;
+    
+        if (!name) {
+            showToast("Category name is required", "error");
+            return;
+        }
+    
+        const payload = { name, parent, new_parent: newParent };
+    
+        fetch('/finance/add_expense_category/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast("Expense category added!", "success");
+    
+                const select = document.getElementById('expenseCategory');
+                const option = document.createElement('option');
+                option.value = data.category.id;
+                option.textContent = data.category.name;
+                option.selected = true;
+                select.appendChild(option);
+    
+                document.getElementById('expenseCategoryName').value = '';
+                document.getElementById('expenseParentCategory').value = '';
+                document.getElementById('expenseNewParentInput').value = '';
+                document.getElementById('expenseNewParentWrapper').classList.add('d-none');
+    
+                expenseCategoryModal.hide();
+            } else {
+                showToast(data.error || "Error saving category", "error");
+            }
+        })
+        .catch(() => {
+            showToast("Something went wrong!", "error");
+        });
+    }
+
+    // Load income data with pagination
+    function loadIncomes(refresh = false) {
+        if (state.cash_income.loading || (!state.cash_income.hasMore && !refresh)) return;
+        
+        state.cash_income.loading = true;
+        
+        if (refresh) {
+            state.cash_income.page = 1;
+            state.cash_income.hasMore = true;
+            document.getElementById('income_table').innerHTML = '';
+        }
+    
+        document.getElementById('income_loader').classList.remove('d-none');
+    
+        setTimeout(() => {
+            fetchIncomes(state.cash_income.page)
+                .then(data => {
+                    renderIncomes(data);  
+                    state.cash_income.page++;
+                })
+                .catch(error => {
+                    console.error('Error loading incomes:', error);
+                })
+                .finally(() => {
+                    state.cash_income.loading = false;
+                    document.getElementById('income_loader').classList.add('d-none');
+                });
+        }, 700); 
+    }
+    
+    // Fetch income data from API
+    function fetchIncomes(page = 1) {
+        return fetch(`/finance/get-incomes/?page=${page}&limit=10`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch income data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                state.cash_income.hasMore = data.has_next;  
+                return data.data; 
+            });
+    }
+    
+    // Render income data to table
+    function renderIncomes(incomes) {
+        const table = document.getElementById('income_table');
+        incomes.forEach(income => {
+            const row = document.createElement('tr');
+    
+            row.innerHTML = `
+                <td>${new Date(income.created_at).toLocaleDateString()}</td>
+                <td>${income.note}</td>
+                <td>${income.category}</td>
+                <td>${income.branch}</td>
+                <td>$${income.amount}</td>
+            `;
+    
+            table.appendChild(row);
+        });
+    }
+    
+    // Record new income
+    function recordIncome() {
+        const inName = document.getElementById('inName').value;
+        const inAmount = document.getElementById('inAmount').value;
+        const inCategory = document.getElementById('inCategory').value;
+        const inBranch = document.getElementById('inBranch').value;
+    
+        const isRecurring = document.getElementById('incomeRecurringToggle').checked;
+        const value = isRecurring ? document.getElementById('inRecurrenceValue').value : null;
+        const unit = isRecurring ? document.getElementById('inRecurrenceUnit').value : null;
+    
+        if (!inAmount || inAmount <= 0) {
+            showToast("Please enter a valid amount", "error");
+            return;
+        }
+    
+        if (!inCategory) {
+            showToast("Please select a category", "error");
+            return;
+        }
+    
+        const incomeData = {
+            name: inName,
+            amount: inAmount,
+            category: inCategory,
+            branch: inBranch,
+            r_value: value,
+            r_unit: unit
+        };
+    
+        fetch("/finance/record_income/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken")
+            },
+            body: JSON.stringify(incomeData)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showToast(result.message, "success");
+    
+                document.getElementById('inName').value = '';
+                document.getElementById('inAmount').value = '';
+                document.getElementById('inCategory').value = '';
+                document.getElementById('incomeRecurringToggle').checked = false;
+                toggleRecurrence('income');
+                loadIncomes(true);
+            } else {
+                showToast(result.message || "Failed to record income", "error");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            showToast("An error occurred while saving income", "error");
+        });
+    }
+    
+    // Load expense data with pagination
+    function loadExpenses(refresh = false) {
+        if (state.cash_expense.loading || (!state.cash_expense.hasMore && !refresh)) return;
+        
+        state.cash_expense.loading = true;
+        
+        if (refresh) {
+            state.cash_expense.page = 1;
+            state.cash_expense.hasMore = true;
+            document.getElementById('expense_table').innerHTML = '';
+        }
+    
+        document.getElementById('expense_loader').classList.remove('d-none');
+    
+        setTimeout(() => {
+            fetchExpenses(state.cash_expense.page)
+                .then(data => {
+                    renderExpenses(data);  
+                    state.cash_expense.page++;
+                })
+                .catch(error => {
+                    console.error('Error loading expenses:', error);
+                })
+                .finally(() => {
+                    state.cash_expense.loading = false;
+                    document.getElementById('expense_loader').classList.add('d-none');
+                });
+        }, 700); 
+    }
+    
+    // Fetch expense data from API
+    function fetchExpenses(page = 1) {
+        return fetch(`/finance/get-expenses/?page=${page}&limit=10`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch expense data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                state.cash_expense.hasMore = data.has_next;  
+                return data.data; 
+            })
+            .catch(error => {
+            
+            });
+    }
+    
+  // Render expense data to table
+function renderExpenses(expenses) {
+    const table = document.getElementById('expense_table');
+    expenses.forEach(expense => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${new Date(expense.created_at).toLocaleDateString()}</td>
+            <td>${expense.note}</td>
+            <td>${expense.category}</td>
+            <td>${expense.branch}</td>
+            <td>$${expense.amount}</td>
+            <td>${expense.has_receipt ? 
+                `<a href="${expense.receipt_url}" target="_blank" class="btn btn-sm btn-outline-info">
+                    <i class="bx bx-receipt"></i> View
+                </a>` : 
+                'None'}
+            </td>
+        `;
+
+        table.appendChild(row);
+    });
+}
+
+// Record new expense
+function recordExpense() {
+    const expenseName = document.getElementById('expenseName').value;
+    const expenseAmount = document.getElementById('expenseAmount').value;
+    const expenseCategory = document.getElementById('expenseCategory').value;
+    const expenseBranch = document.getElementById('expenseBranch').value;
+    const expenseImage = document.getElementById('expenseImage').files[0];
+
+    const isRecurring = document.getElementById('expenseRecurringToggle').checked;
+    const value = isRecurring ? document.getElementById('expenseRecurrenceValue').value : null;
+    const unit = isRecurring ? document.getElementById('expenseRecurrenceUnit').value : null;
+
+    if (!expenseAmount || expenseAmount <= 0) {
+        showToast("Please enter a valid amount", "error");
+        return;
+    }
+
+    if (!expenseCategory) {
+        showToast("Please select a category", "error");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('name', expenseName);
+    formData.append('amount', expenseAmount);
+    formData.append('category', expenseCategory);
+    formData.append('branch', expenseBranch);
+    
+    if (isRecurring) {
+        formData.append('r_value', value);
+        formData.append('r_unit', unit);
+    }
+    
+    if (expenseImage) {
+        formData.append('receipt', expenseImage);
+    }
+
+    fetch("/finance/expense/", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showToast(result.message, "success");
+
+            document.getElementById('expenseName').value = '';
+            document.getElementById('expenseAmount').value = '';
+            document.getElementById('expenseCategory').value = '';
+            document.getElementById('expenseImage').value = '';
+            document.getElementById('expenseImagePreview').classList.add('d-none');
+            document.getElementById('expenseRecurringToggle').checked = false;
+            toggleRecurrence('expense');
+            
+            loadExpenses(true);
+        } else {
+            showToast(result.message || "Failed to record expense", "error");
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        showToast("An error occurred while saving expense", "error");
+    });
+}
+
+// Utility function to get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Display toast notifications
+function showToast(message, type = 'info') {
+    // Check if toast container exists, if not create it
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+
+    // Create toast element
+    const toastId = `toast-${Date.now()}`;
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'error' ? 'danger' : type} border-0`;
+    toast.id = toastId;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    // Initialize and show toast
+    const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+    bsToast.show();
+
+    // Remove toast from DOM after it's hidden
+    toast.addEventListener('hidden.bs.toast', function () {
+        toast.remove();
+    });
+}
+
+// Initialize infinite scroll for income and expense tables
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up scroll event listeners for tables
+    const incomeTableContainer = document.querySelector('#cash_income-panel .table-container');
+    const expenseTableContainer = document.querySelector('#cash_expense-panel .table-container');
+    
+    if (incomeTableContainer) {
+        incomeTableContainer.addEventListener('scroll', function() {
+            const { scrollTop, scrollHeight, clientHeight } = this;
+            
+            if (scrollTop + clientHeight >= scrollHeight - 5 && state.cash_income.hasMore && !state.cash_income.loading) {
+                loadIncomes();
+            }
+        });
+    }
+    
+    if (expenseTableContainer) {
+        expenseTableContainer.addEventListener('scroll', function() {
+            const { scrollTop, scrollHeight, clientHeight } = this;
+            
+            if (scrollTop + clientHeight >= scrollHeight - 5 && state.cash_expense.hasMore && !state.cash_expense.loading) {
+                loadExpenses();
+            }
+        });
+    }
+});
+
+// Add keyboard shortcuts for form submission
+document.addEventListener('keydown', function(event) {
+    // Check if in the income tab
+    if (document.getElementById('cash_income-panel').classList.contains('active')) {
+        if (event.ctrlKey && event.key === 'Enter') {
+            recordIncome();
+        }
+    }
+    
+    // Check if in the expense tab
+    if (document.getElementById('cash_expense-panel').classList.contains('active')) {
+        if (event.ctrlKey && event.key === 'Enter') {
+            recordExpense();
+        }
+    }
+});
+
+// Add event listener for the Bootstrap tab events to ensure proper data loading
+document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
+    tab.addEventListener('shown.bs.tab', function (event) {
+        const targetId = event.target.getAttribute('data-bs-target');
+        if (targetId === '#cash_expense-panel') {
+            if (document.getElementById('expense_table').children.length === 0) {
+                loadExpenses();
+            }
+        }
+    });
+});
+</script>
+</body>
+</html>

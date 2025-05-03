@@ -24,7 +24,7 @@
                 reader.readAsDataURL(fileInput.files[0]);
             } else {
                 previewContainer.style.display = 'none';
-                preview.src = '#';
+                preview.src = '#';k
             }
         }
         

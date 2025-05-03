@@ -9,7 +9,8 @@ from .models import (
     CashWithdraw, 
     CustomerDeposits,
     CashDeposit,
-    VATTransaction
+    VATTransaction,
+    IncomeCategory
 )
 
 class ExpenseForm(forms.ModelForm):
@@ -78,3 +79,8 @@ class VatPayForm(forms.ModelForm):
     class Meta:
         model = VATTransaction
         fields = ['paid']
+        
+class IncomeCategoryForm(forms.ModelForm):
+    class Meta:
+        model = IncomeCategory
+        fields = '__all__'

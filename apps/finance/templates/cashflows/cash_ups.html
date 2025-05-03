@@ -39,37 +39,22 @@
                 </div>
             </div>
         </div>
-
-
         <div>
             <ul class="nav nav-tabs" id="cashFlowTabs" role="tablist">
                 {% for branch in branches %}
                 <li class="nav-item" role="presentation">
-                    <button 
-                        class="nav-link" 
-                        id="overview" 
-                        ata-branch-id="{{ branch.id }}" 
-                        data-bs-toggle="tab" 
-                        data-bs-target="#overview-panel" 
-                        type="button" 
-                        role="tab" 
-                        aria-controls="overview-panel" 
-                        aria-selected="true"
-                        onclick="fetchCashUpDetails({{ branch.id }})"
-                    >
+                    <button class="nav-link" data-branch-id="{{ branch.id }}" type="button" onclick="selectTab(this, {{ branch.id }})">
                         {{ branch.name }}
                     </button>
+                    
                 </li>
                 {% endfor %}
             </ul>
 
-            <div class="mt-2" id='details'>
-
-            </div>
+            <div class="mt-2" id='details'></div>
         </div>
 
         <!-- Cash Ups Tab -->
-
         <div class="tab-pane fade card cash-flow-card">
             <div class="card-body p-0">
                 
@@ -102,9 +87,18 @@ let recordedCount = 0;
 totalRecordItems = document.querySelectorAll('.record-sale-btn, .expense-action[data-action="record"]').length;
 recordedCount = 0
 
+function selectTab(button, branchId) {
+    // Remove 'active' from all nav-links
+    document.querySelectorAll('#cashFlowTabs .nav-link').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    button.classList.add('active');
+
+    fetchCashUpDetails(branchId);
+}
+
 async function fetchCashUpDetails(branch_id) {
     try {
-        // Show loading state
         loaderRow.innerHTML = `
             <div class="d-flex justify-content-center py-4">
                 <div class="spinner-border text-primary" role="status">
@@ -121,7 +115,7 @@ async function fetchCashUpDetails(branch_id) {
             },
             body: JSON.stringify({ 
                 branch_id: branch_id,
-                type: 'cash_up'  // Adding this based on your view function
+                type: 'cash_up' 
             })
         });
         
