@@ -14,12 +14,13 @@ urlpatterns = [
     path('', Finance.as_view(), name='finance'),
     
     # expenses
-    path('expenses', expenses, name='expenses'),
+    path('expenses/', expenses, name='expenses'),
     path('get_expense/<int:expense_id>/',get_expense, name='get_expense'),
     path('add/expense/', add_expense_category, name='add_expense_category'),
     path('edit/expense/', add_or_edit_expense, name='add_or_edit_expense'),
     path('delete_expense/<int:expense_id>/', delete_expense, name='delete_expense'),
     path('update_expense_status/', update_expense_status, name='update_expense_status'),
+    path('get_expenses/', get_expenses, name='get_expenses'),
     
     #invoice
     path('invoice/', invoice, name='invoice'),

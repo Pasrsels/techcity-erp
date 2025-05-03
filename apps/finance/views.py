@@ -82,8 +82,9 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Avg, F, Value, CharField
 import datetime
 from itertools import chain
-from django.core.paginator import Paginator
-
+from django.core.paginator import Paginator, EmptyPage
+import imghdr, base64
+from django.core.files.base import ContentFile
  
 # load global zimra instance
 zimra = ZIMRA()
@@ -97,6 +98,27 @@ def get_previous_month():
 
 def get_current_month():
     return datetime.datetime.now().month
+
+#image decoding method
+def decode_base64_file(data):
+    """
+    Decodes a base64 file and returns a ContentFile.
+    Assumes data is in the format: data:<mime>;base64,<data>
+    """
+    if not data:
+        return None
+
+    try:
+        format, imgstr = data.split(';base64,')
+        ext = format.split('/')[-1]
+        if ext == 'jpeg':
+            ext = 'jpg'
+
+        file_name = f"{uuid.uuid4()}.{ext}"
+        return ContentFile(base64.b64decode(imgstr), name=file_name)
+    except Exception as e:
+        logger.error("Failed to decode base64 image:")
+        return None
 
 class Finance(View):
     # authentication loginmixin
@@ -150,25 +172,23 @@ def expenses(request):
         )
     if request.method == 'POST':
         try:
-            data = request.POST
-            image = request.FILES.get('image')
-
-            logger.info(f"Received POST data: {data}")
-            logger.info(f"Received file: {image}")
-
+            data = json.loads(request.body)
+      
             name = data.get('name') 
             amount = data.get('amount')
             category = data.get('category')  
             payment_method = data.get('payment_method', 'cash')
             currency_id = data.get('currency', 'USD')
             branch = data.get('branch')
+            base64_image = data.get('receipt')
+            image = decode_base64_file(base64_image)
 
             is_recurring = data.get('is_recurring') == 'true'
             recurrence_value = data.get('recurrence_value')
             recurrence_unit = data.get('recurrence_unit')
 
             # Validation
-            if not all([name, amount, category, payment_method, currency_id, branch_id]):
+            if not all([name, amount, category, payment_method, currency_id, branch]):
                 return JsonResponse({'success': False, 'message': 'Missing required fields.'})
 
             # Fetch related objects
@@ -242,6 +262,45 @@ def expenses(request):
         except Exception as e:
             logger.exception("Error while recording expense:")
             return JsonResponse({'success': False, 'message': str(e)})
+        
+@login_required
+def get_expenses(request):
+    try:
+        page = int(request.GET.get('page', 1))
+        limit = int(request.GET.get('limit', 10))
+
+        expenses = Expense.objects.select_related('category', 'branch', 'currency') \
+                                  .order_by('-issue_date') 
+        paginator = Paginator(expenses, limit)
+
+        try:
+            paginated_expenses = paginator.page(page)
+        except EmptyPage:
+            return JsonResponse({
+                'data': [],
+                'has_next': False
+            })
+
+        results = []
+        for expense in paginated_expenses:
+            results.append({
+                'id': expense.id,
+                'created_at': expense.issue_date.isoformat(),
+                'note': expense.description,
+                'amount': float(expense.amount),
+                'category': str(expense.category),
+                'branch': expense.branch.name,
+                'has_receipt': bool(expense.receipt),
+                'receipt_url': expense.receipt.url if expense.receipt else None
+            })
+
+        return JsonResponse({
+            'data': results,
+            'has_next': paginated_expenses.has_next()
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 @login_required
 def save_expense_split(request):
@@ -315,40 +374,47 @@ def add_expense_category(request):
 
     logger.info(subcategories)
     
-@transaction.atomic
+
 @login_required
 def add_expense_category(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        category_name = data.get('name', '').strip()
-        parent_name = data.get('parent_name', '').strip()
-        parent_id = data.get('parent_id', '')
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Invalid JSON'}, status=400)
+
+        category_name = data.get('name', '')
+        parent_name = data.get('parent', '')
+        new_parent_name = data.get('new_parent', '')
 
         if not category_name:
             return JsonResponse({'success': False, 'message': 'Category name is required.'}, status=400)
 
         parent_obj = None
-        if parent_name:
-            parent_obj, _ = ExpenseCategory.objects.get_or_create(name=parent_name, parent=None)
-            logger.info(f'Parent created/found by name: {parent_obj}')
+        if new_parent_name:
+            parent_obj, _ = ExpenseCategory.objects.get_or_create(name=new_parent_name, parent=None)
+            logger.info(f'New parent created or found: {parent_obj}')
+        elif parent_name:
+            parent_obj = ExpenseCategory.objects.filter(name=parent_name, parent=None).first()
+            if not parent_obj:
+                return JsonResponse({'success': False, 'message': f'Parent category "{parent_name}" not found.'}, status=404)
+            logger.info(f'Existing parent found: {parent_obj}')
 
-        elif parent_id:
-            try:
-                parent_obj = ExpenseCategory.objects.get(id=int(parent_id))
-                logger.info(f'Parent found by ID: {parent_obj}')
-            except ExpenseCategory.DoesNotExist:
-                return JsonResponse({'success': False, 'message': 'Parent category not found.'}, status=404)
-            
         if ExpenseCategory.objects.filter(name=category_name, parent=parent_obj).exists():
-            return JsonResponse({'success': False, 'message': f'Category "{category_name}" already exists under this parent.'}, status=400)
-        
-        child_obj = ExpenseCategory.objects.create(
-            name=category_name,
-            parent=parent_obj
-        )
+            return JsonResponse({
+                'success': False,
+                'message': f'Category "{category_name}" already exists under this parent.'
+            }, status=400)
 
-        logger.info(f'New category created: {child_obj} under parent: {parent_obj}')
-        return JsonResponse({'success': True, 'id': child_obj.id, 'name': child_obj.name}, status=201)
+        # Create new child category
+        new_category = ExpenseCategory.objects.create(name=category_name, parent=parent_obj)
+        logger.info(f'New category created: {new_category} under parent: {parent_obj}')
+
+        return JsonResponse({
+            'success': True,
+            'id': new_category.id,
+            'name': new_category.name
+        }, status=201)
 
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
@@ -3579,7 +3645,24 @@ def cash_flow(request):
     # categories
     expenses_categories = ExpenseCategory.objects.all()
     income_categories = IncomeCategory.objects.all()
-            
+    
+    cash_ups = CashUp.objects.all().select_related(
+        'branch', 'created_by'
+    ).prefetch_related(
+        'sales', 'expenses'
+    ).values(
+        'expected_cash',
+        'branch__id',
+        'branch__name',
+        'received_amount',
+        'sales',
+        'expenses',
+        'created_by__username',
+        'sales_status',
+        'expenses_status',
+        'status'
+    ).order_by('-created_at')
+    
     context = {
         # Time filter data
         'start_date': start_date,
@@ -3607,7 +3690,10 @@ def cash_flow(request):
 
         # categories 
         'expenses_categories':expenses_categories,
-        'income_categories':income_categories
+        'income_categories':income_categories,
+        
+        # branches
+        'cash_ups':cash_ups,
     }
     
     return render(request, 'cashflow.html', context)
@@ -3676,7 +3762,7 @@ def cash_flow(request):
 def cash_up_list(request):
     if request.method == 'GET':
         cashups = (
-            CashUp.objects.filter() # replace back the status
+            CashUp.objects.filter() 
             .select_related('branch', 'created_by')
             .prefetch_related(
                 'sales',
@@ -3880,6 +3966,7 @@ def record_cashflow(request):
         category = None
         if type == 'sale':
             sale = InvoiceItem.objects.filter(invoice__branch=branch, id=id).first()
+            logger.info(f'sale {sale}')
             category = IncomeCategory.objects.filter(name__iexact=category).first()
 
             if not category:
@@ -3892,7 +3979,6 @@ def record_cashflow(request):
                     name="sales",
                     parent=new_main_category
                 )
-
                 category = new_sub_category
         else:
             # expense = Expense.objects.filter(branch=branch, id=id)

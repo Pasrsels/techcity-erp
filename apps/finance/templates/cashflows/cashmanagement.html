@@ -24,14 +24,14 @@
             min-height: 300px;
         }
     </style>
-</head>
+</head> 
 <body>
     <div class="mt-4">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0">Cash Flow Management</h5>
-            </div>
-
+        <div class="mb-4">
+            <h4 class="mb-1">Cash Management</h4>
+            <p class="text-muted mb-0">Record Income and Expenses</p>
+        </div>
+        <div class="card shadow-sm px-2">
             <div class="card-body">
                 <!-- Main Tabs Navigation -->
                 <ul class="nav nav-tabs" id="cashFlowTabs" role="tablist">
@@ -144,16 +144,16 @@
                                 <div class="card p-3">
                                     <h5 class="mb-3">Record New Expense</h5>
                                     <div class="mb-3">
-                                        <input type="text" class="form-control" id="expenseName" name="expenseName" placeholder="Expense Note">
+                                        <input type="text" class="form-control" id="expName" name="expName" placeholder="Expense Note">
                                     </div>
                                     <div class="mb-3">
                                         <div class="input-group">
                                             <span class="input-group-text">$</span>
-                                            <input type="number" class="form-control" id="expenseAmount" placeholder="Enter amount">
+                                            <input type="number" class="form-control" id="expAmount" placeholder="Enter amount">
                                         </div>
                                     </div>
                                     <div class="mb-3 d-flex gap-2 align-items-start">
-                                        <select class="form-select" id="expenseCategory">
+                                        <select class="form-select" id="expCategory">
                                             <option value="">Select Category</option>
                                             {% for parent in expenses_categories %}
                                               {% if not parent.parent %}
@@ -178,8 +178,8 @@
                                         </select>
                                     </div>
                                     <div class="form-check form-switch mb-2">
-                                        <input class="form-check-input" type="checkbox" id="expenseRecurringToggle" onchange="toggleRecurrence('expense')">
-                                        <label class="form-check-label" for="expenseRecurringToggle">Recurring Expense?</label>
+                                        <input class="form-check-input" type="checkbox" id="expRecurringToggle" onchange="toggleRecurrence('expense')">
+                                        <label class="form-check-label" for="expRecurringToggle">Recurring Expense?</label>
                                     </div>
                                     <div class="mb-3 gap-2 align-items-center" id="expenseRecurrenceGroup" style="display: none;">
                                         <label class="mb-0">Repeat every</label>
@@ -192,12 +192,12 @@
                                         </select>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="expenseImage" class="form-label">Upload Receipt</label>
-                                        <input type="file" class="form-control" id="expenseImage" accept="image/*" onchange="previewExpenseImage()">
-                                        <img id="expenseImagePreview" src="#" alt="Receipt Preview" class="img-fluid mt-2 d-none" style="max-height: 200px;">
+                                        <label for="expImage" class="form-label">Upload Receipt</label>
+                                        <input type="file" class="form-control" id="expImage" accept="image/*" onchange="previewExpenseImage()">
+                                        <img id="expImagePreview" src="#" alt="Receipt Preview" class="img-fluid mt-2 d-none" style="max-height: 200px;">
                                     </div>                                                                                                   
                                     <div class="text-end">
-                                        <button type="button" class="btn btn-danger" onclick="recordExpense()">Record Expense</button>
+                                        <button type="button" class="btn btn-danger" onclick="recordCashExpense()">Record Expense</button>
                                     </div>
                                 </div>
                             </div>
@@ -356,8 +356,8 @@
 
     // Preview expense receipt image
     function previewExpenseImage() {
-        const input = document.getElementById('expenseImage');
-        const preview = document.getElementById('expenseImagePreview');
+        const input = document.getElementById('expImage');
+        const preview = document.getElementById('expImagePreview');
     
         if (input.files && input.files[0]) {
             const reader = new FileReader();
@@ -483,7 +483,7 @@
     
         const payload = { name, parent, new_parent: newParent };
     
-        fetch('/finance/add_expense_category/', {
+        fetch('/finance/add/expense/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -496,7 +496,7 @@
             if (data.success) {
                 showToast("Expense category added!", "success");
     
-                const select = document.getElementById('expenseCategory');
+                const select = document.getElementById('expCategory');
                 const option = document.createElement('option');
                 option.value = data.category.id;
                 option.textContent = data.category.name;
@@ -672,7 +672,7 @@
     
     // Fetch expense data from API
     function fetchExpenses(page = 1) {
-        return fetch(`/finance/get-expenses/?page=${page}&limit=10`)
+        return fetch(`/finance/get_expenses/?page=${page}&limit=10`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Failed to fetch expense data');
@@ -712,62 +712,71 @@ function renderExpenses(expenses) {
 }
 
 // Record new expense
-function recordExpense() {
-    const expenseName = document.getElementById('expenseName').value;
-    const expenseAmount = document.getElementById('expenseAmount').value;
-    const expenseCategory = document.getElementById('expenseCategory').value;
+function recordCashExpense() {
+    const expName = document.getElementById('expName').value;
+    const expAmount = document.getElementById('expAmount').value;
+    const expCategory = document.getElementById('expCategory').value;
     const expenseBranch = document.getElementById('expenseBranch').value;
-    const expenseImage = document.getElementById('expenseImage').files[0];
+    const expImage = document.getElementById('expImage').files[0];
 
-    const isRecurring = document.getElementById('expenseRecurringToggle').checked;
+    const isRecurring = document.getElementById('expRecurringToggle').checked;
     const value = isRecurring ? document.getElementById('expenseRecurrenceValue').value : null;
     const unit = isRecurring ? document.getElementById('expenseRecurrenceUnit').value : null;
 
-    if (!expenseAmount || expenseAmount <= 0) {
+    if (!expAmount || expAmount <= 0) {
         showToast("Please enter a valid amount", "error");
         return;
     }
 
-    if (!expenseCategory) {
+    if (!expCategory) {
         showToast("Please select a category", "error");
         return;
     }
 
-    const formData = new FormData();
-    formData.append('name', expenseName);
-    formData.append('amount', expenseAmount);
-    formData.append('category', expenseCategory);
-    formData.append('branch', expenseBranch);
-    
-    if (isRecurring) {
-        formData.append('r_value', value);
-        formData.append('r_unit', unit);
-    }
-    
-    if (expenseImage) {
-        formData.append('receipt', expenseImage);
-    }
+    const payload = {
+        name: expName,
+        amount: expAmount,
+        category: expCategory,
+        branch: expenseBranch,
+        r_value: isRecurring ? value : null,
+        r_unit: isRecurring ? unit : null,
+        receipt: null, 
+    };
 
-    fetch("/finance/expense/", {
+    if (expImage) {
+        const reader = new FileReader();
+        reader.onloadend = function () {
+            payload.receipt = reader.result; 
+            sendExpenseData(payload);
+        };
+        reader.readAsDataURL(expImage); 
+    } else {
+        sendExpenseData(payload);
+    }
+}
+
+function sendExpenseData(payload) {
+    fetch("/finance/expenses/", {
         method: "POST",
         headers: {
+            "Content-Type": "application/json",
             "X-CSRFToken": getCookie("csrftoken")
         },
-        body: formData
+        body: JSON.stringify(payload)
     })
     .then(response => response.json())
     .then(result => {
         if (result.success) {
             showToast(result.message, "success");
 
-            document.getElementById('expenseName').value = '';
-            document.getElementById('expenseAmount').value = '';
-            document.getElementById('expenseCategory').value = '';
-            document.getElementById('expenseImage').value = '';
-            document.getElementById('expenseImagePreview').classList.add('d-none');
-            document.getElementById('expenseRecurringToggle').checked = false;
+            document.getElementById('expName').value = '';
+            document.getElementById('expAmount').value = '';
+            document.getElementById('expCategory').value = '';
+            document.getElementById('expImage').value = '';
+            document.getElementById('expImagePreview').classList.add('d-none');
+            document.getElementById('expRecurringToggle').checked = false;
             toggleRecurrence('expense');
-            
+
             loadExpenses(true);
         } else {
             showToast(result.message || "Failed to record expense", "error");
@@ -778,6 +787,7 @@ function recordExpense() {
         showToast("An error occurred while saving expense", "error");
     });
 }
+
 
 // Utility function to get CSRF token from cookies
 function getCookie(name) {
@@ -875,7 +885,7 @@ document.addEventListener('keydown', function(event) {
     // Check if in the expense tab
     if (document.getElementById('cash_expense-panel').classList.contains('active')) {
         if (event.ctrlKey && event.key === 'Enter') {
-            recordExpense();
+            recordCashExpense();
         }
     }
 });

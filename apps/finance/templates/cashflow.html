@@ -245,11 +245,11 @@
                 {% include "cashflows/cashmanagement.html" %}
             </div>
         </div>
-        <!-- <div id="cashups-panel" class="tab-pane fade" role="tabpanel" aria-labelledby="cashups-tab">
+        <div id="branch_cashups-panel" class="tab-pane fade" role="tabpanel" aria-labelledby="branch_cashups-tab">
             <div class="scrollable-container">
                 {% include "cashflows/cash_ups.html" %}
             </div>
-        </div>         -->
+        </div>        
     </div>
 
     <div class="modal fade" id="cashFlowModal" tabindex="-1"></div>
@@ -263,12 +263,12 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="cash-tab" data-bs-toggle="tab" data-bs-target="#cash-panel" type="button" role="tab" aria-controls="cash-panel" aria-selected="false">
+                    <button class="nav-link" id="cash-tab" onclick="display(this)"  data-bs-toggle="tab" data-bs-target="#cash-panel" type="button" role="tab" aria-controls="cash-panel" aria-selected="false">
                         <i class="bi bi-wallet2 me-2"></i>Cash Management
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="cashups-tab" data-bs-toggle="tab" data-bs-target="#cashups-panel" type="button" role="tab" aria-controls="cashups-panel" aria-selected="false">
+                    <button class="nav-link" id="branch_cashups-tab" onclick="display(this)" data-bs-toggle="tab" data-bs-target="#branch_cashups-panel" type="button" role="tab" aria-controls="branch_cashups-panel" aria-selected="false">
                         <i class="bi bi-cash-stack me-2"></i>Cashups
                     </button>
                 </li>
@@ -276,4 +276,19 @@
         </div>
     </div>
 </div>
+<script>
+    function display(el){
+        const cash_tab = document.getElementById('cash-panel');
+        const cashups_tab = document.getElementById('branch_cashups-panel');
+
+        id = el.id
+        console.log(typeof(id), id ,id === 'branch_cashups-panel')
+        if(id === 'branch_cashups-tab'){
+            cash_tab.style.display='none'
+            console.log('done')
+        }else{
+            cash_tab.style.display='block'
+        }
+    }
+</script>
 {% endblock %}
