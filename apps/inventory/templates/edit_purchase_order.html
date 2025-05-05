@@ -669,46 +669,58 @@
 
     //check if local storage have anything and populate at the page load
     const checkLocalCart = () => {
-        Swal.fire({
-            title: 'Loading products...',
-            text: 'Please wait while we load your Editcart.',
-            allowOutsideClick: false, 
-            didOpen: () => {
-                Swal.showLoading();
-                const cartData = localStorage.getItem('Editcart');
-
-                if (!cartData){
+      Swal.fire({
+          title: 'Loading products...',
+          text: 'Please wait while we load your Editcart.',
+          allowOutsideClick: false, 
+          didOpen: () => {
+              Swal.showLoading();
+              const cartData = localStorage.getItem('Editcart');
+  
+              if (!cartData || cartData.length == 2) {
                   Swal.close();
                   return;
-                }else{
-                  if (cartData.length == 2) {
-                      Swal.close();
-                      return;
+              }
+  
+              try {
+                  Editcart = JSON.parse(cartData);
+  
+                  const seen = new Set();
+                  Editcart = Editcart.filter(item => {
+                      if (seen.has(item.id)) {
+                          return false; // duplicate
+                      }
+                      seen.add(item.id);
+                      return true;
+                  });
+
+                  console.log('done')
+  
+                  // Save cleaned cart back to localStorage
+                  localStorage.setItem('Editcart', JSON.stringify(Editcart));
+  
+                  // update count if any items exist
+                  if (Editcart.length > 0) {
+                      itemCount = Editcart[Editcart.length - 1].count;
                   }
-                }
-                
-                if (localStorage.getItem('Editcart')) {
-                    Editcart = JSON.parse(localStorage.getItem('Editcart')); 
-
-                    // update count
-                    itemCount = Editcart[Editcart.length - 1].count;
-
-                    updateCartDisplay().then(() => {
-                        Swal.close(); 
-                    }).catch(error => {
-                        console.error('Error updating Editcart:', error);
-                        Swal.fire('Error', 'Failed to load products. Please try again.', 'error');
-                    });
-                } else {
-                    Swal.close(); 
-                    Swal.fire('Info', 'No products found in your Editcart.', 'info');
-                }
-            },
-        });
-    };
+  
+                  updateCartDisplay().then(() => {
+                      Swal.close(); 
+                  }).catch(error => {
+                      console.error('Error updating Editcart:', error);
+                      Swal.fire('Error', 'Failed to load products. Please try again.', 'error');
+                  });
+              } catch (e) {
+                  console.error('Failed to parse cart data:', e);
+                  Swal.close();
+                  Swal.fire('Error', 'Corrupted cart data. Please clear your cart.', 'error');
+              }
+          },
+      });
+  };
+  
 
     checkLocalCart()
-
 
     const clearField = (el) =>{
       el.value=''
@@ -1460,11 +1472,13 @@
 
 
     const removeItem = (el) => {
-        const id = el.dataset.id
-        Editcart = Editcart.filter((item) => item.id !== id);
-        updateCartDisplay();
-    }
+      const id = el.dataset.id;
 
+      Editcart = Editcart.filter((item) => item.id !== id);
+  
+      updateCartDisplay();
+    };
+  
 
     function processCart() {
         const data = {
@@ -1952,20 +1966,29 @@
 
                     //load purchase_order data
                     data.po_items.forEach((item) => {
-                        let cartItem = {
-                            count:itemCount,
-                            price: item.unit_cost,
-                            product_id:item.product__id,
-                            product: item.product__name,
-                            quantity: item.quantity,
-                            id: generateUniqueId(),
-                            supplierName: item.supplier__name,
-                            supplier: item.supplier
-                        }
-                        console.log(cartItem);
-                        Editcart.push(cartItem);
-                        itemCount += 1;
-                    })
+                      const alreadyInCart = Editcart.some(existingItem => 
+                          existingItem.product_id === item.product__id &&
+                          existingItem.supplier === item.supplier
+                      );
+                  
+                      if (!alreadyInCart) {
+                          let cartItem = {
+                              count: itemCount,
+                              price: item.unit_cost,
+                              product_id: item.product__id,
+                              product: item.product__name,
+                              quantity: item.quantity,
+                              id: generateUniqueId(),
+                              supplierName: item.supplier__name,
+                              supplier: item.supplier
+                          };
+                  
+                          console.log(cartItem);
+                          Editcart.push(cartItem);
+                          itemCount += 1;
+                      }
+                  });
+                  
 
                     // load expense data
                     data.expenses.forEach((item) => {

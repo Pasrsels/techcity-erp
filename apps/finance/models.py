@@ -801,7 +801,7 @@ class Income(models.Model):
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
     status = models.BooleanField(default=False)
-    sale = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE, null=True)
+    sale = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True)
     expenses = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True)
     is_recurring = models.BooleanField(default=False)
     recurrence_value = models.PositiveIntegerField(null=True, blank=True)
