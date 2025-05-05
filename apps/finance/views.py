@@ -3571,7 +3571,7 @@ def cash_flow(request):
         parent_category=F('category__parent__name'),
         datetime=F('created_at'),
         source=Value('Income', output_field=CharField())
-    ).values('datetime',  'sale__invoice__invoice_items__item__name', 'amount', 'type_label', 'category_name', 'parent_category', 'source', 'note')
+    ).values('datetime',  'sale__invoice_items__item__name', 'amount', 'type_label', 'category_name', 'parent_category', 'source', 'note')
     
     # Normalize expense entries
     normalized_expenses = expenses.annotate(
@@ -3957,16 +3957,14 @@ def record_cashflow(request):
         id = data.get('id', '')
         branch = int(data.get('branch', ''))
         category = (data.get('category'))
-
-        logger.info(id)
         
         # get branch
         branch = get_object_or_404(Branch, id=branch)
 
         category = None
         if type == 'sale':
-            sale = InvoiceItem.objects.filter(invoice__branch=branch, id=id).first()
-            logger.info(f'sale {sale}')
+            sale = Invoice.objects.filter(id=id).first()
+      
             category = IncomeCategory.objects.filter(name__iexact=category).first()
 
             if not category:
@@ -3987,9 +3985,9 @@ def record_cashflow(request):
         with transaction.atomic():
 
             Income.objects.create(
-                amount = sale.invoice.amount_paid,
-                currency = sale.invoice.currency,
-                note = sale.invoice.products_purchased,
+                amount = sale.amount_paid,
+                currency = sale.currency,
+                note = sale.products_purchased,
                 branch = request.user.branch,
                 status = False,
                 sale = sale,
@@ -3997,45 +3995,22 @@ def record_cashflow(request):
                 category = category
             )
 
-            cash_up = CashUp.objects.get(sales__id=id)
-            
-            logger.info(cash_up)
-            
-            sales = cash_up.sales.all()  
-            logger.info(sales)
-            sale = sales.filter(id=id).first()
             sale.cash_up_status = True
-            sale.save() 
+            sale.save()
             
-            # mark all sales recorded
-            cash_up_status = check_if_all_received(sales)
-            
-            if cash_up_status:
-                cash_up = CashUp.objects.filter(sales__id=id).first()
-                if cash_up:
-                    cash_up.sales_status = True
-                    cash_up.save()
-
             return JsonResponse(
                 {
                     'success':True, 
                     'message':'Sale recorded succesfully', 
                     'id':id,
-                    'cash_up_status':True,
-                    'overal_cash_up_status':check_if_all_received(sales)
+                    'cash_up_status':True
                 }, status=200)
+            
     except Exception as e:
         logger.info(e)
         return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
     
 
-def check_if_all_received(sales):
-    status= True
-    for sale in sales:
-        if not sale.cash_up_status:
-            status = False
-            break
-    return status
 
 @login_required
 def check_cashup_status(request, cash_up_id):

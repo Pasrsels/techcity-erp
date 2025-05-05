@@ -79,6 +79,7 @@ const loaderRow = document.getElementById('details')
 
 let totalRecordItems = 0;
 let recordedCount = 0;
+let branchId = null;
 
 totalRecordItems = document.querySelectorAll('.record-sale-btn, .expense-action[data-action="record"]').length;
 recordedCount = 0
@@ -101,6 +102,7 @@ async function fetchCashUpDetails(branch_id) {
     }
     
     try {
+        branchId = branch_id;
         loaderRow.innerHTML = `
             <div class="d-flex justify-content-center py-4">
                 <div class="spinner-border text-primary" role="status">
@@ -213,51 +215,53 @@ function createSalesSection(sales) {
             </div>
         </div>
         
-        <div class="sales-grid">
-            ${sales.map(s => `
-                <div class="sale-card" data-sale-id="${s.id}" data-branch="${s.branch}">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="sale-description">
-                                <h6 class="mb-1">${s.products_purchased || 'No description'}</h6>
-                                <span class="text-muted small">Invoice number: ${s.invoice_number}</span>
-                                <span class="text-muted small">Branch: ${s.branch__name}</span>
-                            </div>
-                            <div class="sale-amount">
-                                <span class="amount-badge">$${s.amount_paid}</span>
-                            </div>
+       ${sales.map(s => `
+            <div class="sale-card w-100 ${s.cash_up_status ? 'gray-out' : ''}" data-sale-id="${s.id}" data-branch="${s.branch}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="sale-description">
+                            <h6 class="mb-1">${s.products_purchased || 'No description'}</h6>
+                            <span class="text-muted small">Invoice number: ${s.invoice_number}</span>
+                            <span class="text-muted small">Branch: ${s.branch__name}</span>
                         </div>
-                        
-                        <div class="card-footer-actions">
-                            <div class="category-selector">
-                                <select id="category-${s.id}" class="form-select form-select-sm sale-category">
-                                    <option value="sales">sales</option>
-                                    {% for category in income_categories %}
-                                        <option value='{{ category.name }}>{{ category.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="action-area">
-                               ${ s.cash_up_status
-                                    ? `<span class="status-indicator success">
-                                         <i class="bi bi-check-circle-fill me-1"></i> Recorded
-                                       </span>`
-                                    : `<button
-                                        class="btn btn-sm btn-outline-success rounded-pill record-sale-btn"
-                                        id="btn-${s.id}"
-                                        data-sale-id="${s.id}"
-                                        data-branch="${s.branch}"
-                                        >
-                                        <i class="bi bi-check-lg"></i> Record
-                                        </button>`
-                                }
-                            </div>
+                        <div class="sale-amount">
+                            <span class="amount-badge">$${s.amount_paid}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer-actions">
+                        <div class="category-selector">
+                            <select id="category-${s.id}" class="form-select form-select-sm sale-category" ${s.cash_up_status ? 'disabled' : ''}>
+                                <option value="sales">sales</option>
+                                {% for category in income_categories %}
+                                    <option value='{{ category.name }}'>{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="action-area">
+                        ${ s.cash_up_status
+                                ? `
+                                <span class="status-indicator success">
+                                    <i class="bx bx-check-circle me-1"></i> Recorded
+                                </span>
+                                <button class="btn btn-sm btn-dark rounded-pill undo-sale-btn" data-sale-id="${s.id}">
+                                    <i class='bx bx-undo'></i> Undo
+                                </button>`
+                                : `<button
+                                    class="btn btn-sm btn-outline-success rounded-pill record-sale-btn"
+                                    id="btn-${s.id}"
+                                    data-sale-id="${s.id}"
+                                    data-branch="${s.branch}">
+                                    <i class="bi bi-check-lg"></i> Record
+                                </button>`
+                            }
                         </div>
                     </div>
                 </div>
-            `).join('')}
-        </div>
-        
+            </div>
+        `).join('')}
+
+                
         <style>
             .sales-grid {
                 display: grid;
@@ -272,6 +276,7 @@ function createSalesSection(sales) {
                 box-shadow: 0 3px 10px rgba(0,0,0,0.08);
                 transition: all 0.25s ease;
                 border: 1px solid #fff;
+                margig-bottom:10px;
                 overflow: hidden;
             }
             
@@ -349,6 +354,17 @@ function createSalesSection(sales) {
                 margin-bottom: 16px;
                 opacity: 0.5;
             }
+            .gray-out {
+                opacity: 0.6;
+                pointer-events: none;
+                position: relative;
+            }
+            .gray-out .undo-sale-btn {
+                pointer-events: auto;
+                opacity: 1;
+                margin-left: 10px;
+            }
+
         </style>
     `;
 }
@@ -582,11 +598,9 @@ function updateProgressBar(totalItems, recordedItems) {
 
 
 function attachSplitExpenseEventListeners() {
-    // Attach event listeners for split expense modal
     document.getElementById('addSplitItemBtn')?.addEventListener('click', addSplitItem);
     document.getElementById('saveSplitExpenseBtn')?.addEventListener('click', saveSplitExpense);
     
-    // Attach event listeners for recording sales
     document.querySelectorAll('.record-sale-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const saleId = this.getAttribute('data-sale-id');
@@ -933,6 +947,8 @@ async function recordSale(saleId, type, branch, category) {
             if (categorySelect) categorySelect.disabled = true;
             
             showToast('Success', 'Sale recorded successfully', 'success');
+
+            fetchCashUpDetails(branchId)
             return result;
         } else {
             throw new Error(result.message || 'Failed to record sale');

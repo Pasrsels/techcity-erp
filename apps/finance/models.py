@@ -318,13 +318,13 @@ class Invoice(models.Model):
         if last_invoice:
             if str(last_invoice.invoice_number.split('-')[0])[-1] == branch[0]:
                 last_invoice_number = int(last_invoice.invoice_number.split('-')[1]) 
-                new_invoice_number = last_invoice_number + 500   
+                new_invoice_number = last_invoice_number + 1  
             else:
                 new_invoice_number = 1
-            return f"INV{branch[:700]}-{new_invoice_number:04d}"  
+            return f"INV{branch[:0]}-{new_invoice_number:04d}"  
         else:
             new_invoice_number = 1
-            return f"INV{branch[:700]}-{new_invoice_number:04d}"  
+            return f"INV{branch[:0]}-{new_invoice_number:04d}"  
 
     def __str__(self):
         return f"Invoice #{self.invoice_number} - {self.customer.name}"
@@ -801,7 +801,7 @@ class Income(models.Model):
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
     status = models.BooleanField(default=False)
-    sale = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE, null=True)
+    sale = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True)
     expenses = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True)
     is_recurring = models.BooleanField(default=False)
     recurrence_value = models.PositiveIntegerField(null=True, blank=True)
