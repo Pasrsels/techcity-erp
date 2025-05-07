@@ -23,10 +23,10 @@
                     <div class="d-none d-lg-flex">
                         {% if request.user.role == 'admin' %}
                             <div class="mx-2">
-                                <a href='{% url 'inventory:create_purchase_order' %}' class="btn btn-outline-dark btn-sm">
+                                <button class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
                                     <i class='bx bx-plus'></i> 
                                     Product
-                                </a>
+                                </button>
                             </div>
                         {% endif %}
                         <div> 
@@ -217,9 +217,287 @@
         </div>
 
    </div>  
+
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true"
+  data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <h5 class="fw-bold" id="title">Add Product</h5>
+        <form method="post" class='mt-2 p-2'>
+          {% csrf_token %}
+          <div id="div_id_batch_code" class="mb-3 d-none">
+            <label for="id_batch_code" class="form-label requiredField">
+              Batch code<span class="asteriskField">*</span>
+            </label>
+            <div class="d-flex form-group">
+              <select class="select form-select" id='id_code_select'>
+                <option value="">-----</option>
+              </select>
+              <button type="button" class="btn border bx bx-plus" id="add_batch_modal">
+              </button>
+            </div>
+          </div>
+          <div class="d-flex form-group d-none">
+            <select class="select form-select form-select-sm" id='id_search' data-clearable="true"
+              data-searchable="true">
+              <option value="">Search Product</option>
+              {% for product in inventory %}
+              <option value={{product.product.id}}>{{product.product.name}} [{{ product.quantity }}]</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div id="div_id_name" class="mb-3 form-group">
+            <label for="id_name" class="form-label requiredField">
+              Product Image
+              <span class="asteriskField">*</span>
+            </label>
+            <div class="d-flex align-items-center">
+              <input type="file" name="image" maxlength="255" class="textinput form-control" required id="id_image">
+            </div>
+          </div>
+          <div id="div_id_name" class="mb-3 form-group">
+            <label for="id_name" class="form-label requiredField">
+              Name
+              <span class="asteriskField">*</span>
+            </label>
+            <div class="d-flex align-items-center">
+              <input type="text" name="name" maxlength="255" class="textinput form-control" required id="id_name">
+              <button class="btn btn-light border btn-sm" type="button">s</button>
+              <button class="btn btn-light bx bx-edit border mx-1" type="button"></button>
+              <button class="btn btn-light bx bx-trash border" type="button"></button>
+            </div>
+          </div>
+          <div id="div_id_category form-group" class="mb-3">
+            <label for="id_category" class="form-label requiredField">
+              Category<span class="asteriskField">*</span>
+            </label>
+            <div class='d-flex align-items-center'>
+              <select name="category" class="select form-select" required id="id_category">
+                <option value="">---------</option>
+                {% for category in categories %}
+                    <option value="{{ category.name }}">{{ category.name }}</option>
+                {% endfor %}
+              </select>
+              <button class='btn border small' type="button" id='id_add_category'>
+                <i class='bx bx-plus'></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="mb-3 form-group">
+            <label for="id_quantity" class="form-label requiredField">
+              Quantity <span class="asteriskField">*</span>
+            </label>
+            <div class="input-group">
+              <button type="button" class="btn btn-outline-secondary" id="decrease_quantity">−</button>
+              <input type="number" name="quantity" class="form-control text-center" id="id_quantity" value="1" min="1" required>
+              <button type="button" class="btn btn-outline-secondary" id="increase_quantity">+</button>
+            </div>
+          </div>
+
+          <div class="mb-3 form-group">
+            <label for="id_cost_price" class="form-label requiredField">
+              Cost Price <span class="asteriskField">*</span>
+            </label>
+            <input type="number" name="cost_price" class="form-control" id="id_cost_price" step="0.01" required>
+          </div>
+          
+          <div class="mb-3 form-group">
+            <label for="id_selling_price" class="form-label requiredField">
+              Selling Price <span class="asteriskField">*</span>
+            </label>
+            <input type="number" name="selling_price" class="form-control" id="id_selling_price" step="0.01" required>
+          </div>
+          
+          <div class="mb-3 form-group">
+            <label for="id_wholesale_price" class="form-label requiredField">
+              Wholesale Price
+            </label>
+            <input type="number" name="wholesale_price" class="form-control" id="id_wholesale_price" step="0.01">
+          </div>
+          
+          <div id="div_id_tax_type" class="mb-3">
+            <label for="id_tax_type" class="form-label requiredField">
+              Tax type
+              <span class="asteriskField">*</span>
+            </label>
+            <select name="tax_type" class="select form-select" required id="id_tax_type">
+              <option value="" selected>---------</option>
+              <option value="exempted">Exempted</option>
+              <option value="standard">Standard</option>
+              <option value="zero rated">Zero Rated</option>
+            </select>
+          </div>
+          <div id="div_id_min_stock_level" class="mb-3">
+            <label for="id_min_stock_level" class="form-label requiredField">
+              Min stock level
+              <span class="asteriskField">*</span>
+            </label>
+            <input type="number" name="min_stock_level" value="0" class="numberinput form-control" required
+              id="id_min_stock_level">
+          </div>
+          <div id="div_id_description" class="mb-3">
+            <label for="id_description" class="form-label requiredField">
+              Description<span class="asteriskField">*</span>
+            </label>
+            <textarea name="description" cols="20" rows="2" class="textarea form-control" required
+              id="id_description"></textarea>
+          </div>
+          <div class="mb-3">
+            <div id="div_id_end_of_day" class="form-check">
+              <input type="checkbox" name="end_of_day" class="checkboxinput form-check-input" id="id_end_of_day">
+              <label for="id_end_of_day" class="form-check-label">
+                End of day
+              </label>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div id="div_id_service" class="form-check">
+              <input type="checkbox" name="service" class="checkboxinput form-check-input" id="id_service">
+              <label for="id_service" class="form-check-label">
+                Service
+              </label>
+            </div>
+          </div>
+          <p class='text-danger' id='error'></p>
+          <div class="d-flex justify-content-end">
+            <div class="">
+              <button type="reset" class="btn btn-danger btn-sm w-100">
+                <i class='bx bx-reset'></i>
+                Reset
+              </button>
+            </div>
+            <span class="px-1"></span>
+            <div class="">
+              <button type="button" id="id_submit_product" class="btn btn-secondary btn-sm w-100">
+                <i class='bx bx-save'></i>
+                Save
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
-    // new DataTable('#inventory', {
-    //     paging: false,
-    // });
+    function categorySubmit() {
+
+        const data = { name: $('#id_category_name').val() }
+    
+        fetch("{% url 'inventory:add_product_category' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify(data),
+        })
+          .then(response => response.json())
+          .then((response) => {
+            if (response.success) {
+              Swal.fire({
+                title: 'success',
+                text: 'Category successfully saved.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+              })
+              fetchCategories()
+              categoryModal.hide()
+              supplierFormModal.show()
+            } else {
+              Swal.fire({
+                title: 'warning',
+                text: response.message,
+                icon: 'warning',
+              })
+            }
+          })
+          .catch((error) => {
+            console.info(error)
+          });
+    }
+    
+      async function fetchCategories() {
+        try {
+          const response = await fetch('{% url "inventory:add_product_category" %}');
+
+          console.log(response)
+    
+          if (!response.ok) {
+            throw new Error('Network response was not ok.');
+          }
+          const data = await response.json();
+          updateCategory(data);
+        } catch (error) {
+          console.error('Error fetching categories:', error);
+        }
+      }
+    
+      fetchCategories()
+    
+      function updateCategory(data) {
+        const catElement = document.querySelector('#id_category')
+    
+        console.info('loading products')
+    
+        while (catElement.options.length > 1) {
+          catElement.remove(1)
+        }
+        console.log(data, catElement)
+        data.forEach((category) => {
+          catElement.innerHTML += `<option value=${category.id}>${category.name}</option>`
+        })
+      }
+
+      document.getElementById('id_submit_product').addEventListener('click', function () {
+        const form = document.querySelector('#addProductModal form');
+        const formData = new FormData(form);
+      
+        fetch("{% url 'inventory:add-inventory' %}", {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+          },
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            Toastify({
+              text: data.message,
+              duration: 3000,
+              gravity: "top",
+              position: 'right',
+              backgroundColor: "#4fbe87"
+            }).showToast();
+      
+            form.reset();
+            //$('#addProductModal').modal('hide');
+          } else {
+            document.getElementById('error').textContent = data.message;
+          }
+        })
+        .catch(error => {
+          document.getElementById('error').textContent = 'An unexpected error occurred.';
+          console.error(error);
+        });
+      });
+
+      document.getElementById('increase_quantity').addEventListener('click', function () {
+        let quantityInput = document.getElementById('id_quantity');
+        quantityInput.value = parseInt(quantityInput.value || 0) + 1;
+      });
+    
+      document.getElementById('decrease_quantity').addEventListener('click', function () {
+        let quantityInput = document.getElementById('id_quantity');
+        let currentValue = parseInt(quantityInput.value || 0);
+        if (currentValue > 1) {
+          quantityInput.value = currentValue - 1;
+        }
+      });
+    
 </script>
 {% endblock content %}

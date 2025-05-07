@@ -393,6 +393,52 @@ def inventory(request):
     return JsonResponse({'error': 'Product ID is required'}, status=400)
 
 @login_required
+def add_inventory_view(request):
+    try:
+        name = request.POST.get('name')
+        quantity = request.POST.get('quantity')
+        category_name = request.POST.get('category')
+        cost = request.POST.get('cost_price')
+        price = request.POST.get('selling_price')
+        dealer_price = request.POST.get('wholesale_price') or 0
+        tax_type = request.POST.get('tax_type')
+        min_stock = request.POST.get('min_stock_level')
+        description = request.POST.get('description')
+        end_of_day = request.POST.get('end_of_day') == 'on'
+        service = request.POST.get('service') == 'on'
+        image = request.FILES.get('image')
+
+        category, _ = ProductCategory.objects.get_or_create(name=category_name)
+
+        inventory = Inventory.objects.create(
+            branch=request.user.branch,
+            quantity=quantity,
+            name=name,
+            cost=cost,
+            price=price,
+            dealer_price=dealer_price,
+            stock_level_threshold=min_stock,
+            category=category,
+            tax_type=tax_type,
+            description=description,
+            end_of_day=end_of_day,
+            service=service,
+            image=image
+        )
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Product added successfully!',
+            'product': {
+                'id': inventory.id,
+                'name': inventory.name
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+@login_required
 def inventory_index(request):
     form = ServiceForm()
     q = request.GET.get('q', '')  

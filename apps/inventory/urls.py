@@ -25,6 +25,7 @@ urlpatterns = [
     path('detail/<int:id>/', inventory_detail, name='inventory_detail' ),
     path('create/product/', product, name='product'),
     path('delete_product', delete_product, name='delete'),
+    path('add-inventory', add_inventory_view, name="add-inventory"),
 
     #Stocktake
     path('stocktake/', stock_take_index, name= 'stocktake'),
