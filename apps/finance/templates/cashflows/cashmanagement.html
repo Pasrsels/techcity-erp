@@ -743,6 +743,8 @@ function recordCashExpense() {
         receipt: null, 
     };
 
+    console.log(payload)
+
     if (expImage) {
         const reader = new FileReader();
         reader.onloadend = function () {

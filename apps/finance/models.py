@@ -252,6 +252,7 @@ class Expense(models.Model):
         null=True,
         blank=True
     )
+    cash_up_status = models.BooleanField(default=False, null=True)
 
     def __str__(self):
         return f"{self.issue_date} - {self.category} - {self.description} - ${self.amount}"
@@ -316,15 +317,10 @@ class Invoice(models.Model):
     def generate_invoice_number(branch):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
         if last_invoice:
-            if str(last_invoice.invoice_number.split('-')[0])[-1] == branch[0]:
-                last_invoice_number = int(last_invoice.invoice_number.split('-')[1]) 
-                new_invoice_number = last_invoice_number + 1  
-            else:
-                new_invoice_number = 1
-            return f"INV{branch[:0]}-{new_invoice_number:04d}"  
+            return f"INV{branch}-{int(last_invoice.invoice_number ) + 1}"
         else:
             new_invoice_number = 1
-            return f"INV{branch[:0]}-{new_invoice_number:04d}"  
+            return f"INV{branch}-{new_invoice_number}"  
 
     def __str__(self):
         return f"Invoice #{self.invoice_number} - {self.customer.name}"
@@ -815,9 +811,7 @@ class Income(models.Model):
         ],
         null=True,
         blank=True
-    )
-
-    
+    )    
     def __str__(self):
         return f"{self.created_at} - {self.category} - {self.note} - ${self.amount}"
 
@@ -826,7 +820,6 @@ class FinanceLog(models.Model):
         ('income', 'Income'),
         ('expense', 'Expense'),
     ]
-
     type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
     category = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=12, decimal_places=2)

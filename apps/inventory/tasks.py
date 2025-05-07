@@ -39,6 +39,7 @@ def process_transfer(data, user_id, user_branch_id):
         
             # Get branch objects
             branch_objects = []
+            logger.info(branch_objects)
             for branch in branches_data:
                 if branch.get('value'):
                     branch_obj = Branch.objects.get(id=branch['value'])
@@ -81,6 +82,7 @@ def process_transfer(data, user_id, user_branch_id):
             transfer_items = []
             
             for branch_obj in branch_objects:
+                logger.info(f'Branch object: {branch_obj}')
                 for item in cart:
                     if item['branch_name'] == branch_obj.name:
                         product = products_dict.get(int(item['product_id']))

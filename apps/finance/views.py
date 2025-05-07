@@ -179,13 +179,15 @@ def expenses(request):
             category = data.get('category')  
             payment_method = data.get('payment_method', 'cash')
             currency_id = data.get('currency', 'USD')
-            branch = data.get('branch')
+            branch = request.user.branch.id
             base64_image = data.get('receipt')
             image = decode_base64_file(base64_image)
 
             is_recurring = data.get('is_recurring') == 'true'
             recurrence_value = data.get('recurrence_value')
             recurrence_unit = data.get('recurrence_unit')
+            
+            logger.info(branch)
 
             # Validation
             if not all([name, amount, category, payment_method, currency_id, branch]):
@@ -241,7 +243,7 @@ def expenses(request):
                 is_recurring=is_recurring,
                 recurrence_value=int(recurrence_value) if is_recurring and recurrence_value else None,
                 recurrence_unit=recurrence_unit if is_recurring else None,
-                receipt=image
+                receipt=image,
             )
 
             # Create Cashbook entry
@@ -305,11 +307,63 @@ def get_expenses(request):
 @login_required
 def save_expense_split(request):
     try:
-      print(x)
+        data = json.loads(request.body)
+        splits = data.get('splits')
+        branch_id = data.get('branch_id')
+
+        logger.info(f'Split expenses: {splits}, branch_id = {branch_id}')
+
+        expenses = []
+        cash_up = CashUp.objects.filter(date=today, branch__id=int(branch_id)).first() # to put order by
+        logger.info(f'Cash up: {cash_up}')
+
+        if not cash_up:
+            return JsonResponse({'success': False, 'message': 'No cash up record found for today'}, status=404)
+
+        cash_up_expenses = cash_up.expenses.all()
+        categories = ExpenseCategory.objects.all()
+        
+        logger.info(cash_up.expenses)
+
+        for split in splits:
+            logger.info(split)
+            exp_obj = cash_up_expenses.get(id=int(split['expense_id']))  # existing expense object
+            
+            new_expense = Expense(
+                amount=split['amount'],
+                payment_method=exp_obj.payment_method,
+                currency=exp_obj.currency,
+                category=categories.filter(split['category_id']),
+                description=exp_obj.description,
+                user=request.user,  
+                branch_id=request.user.branch,
+                status=False,
+                # purchase_order=exp_obj.purchase_order,
+                receipt=exp_obj.receipt,
+                is_recurring=exp_obj.is_recurring,
+                recurrence_value= exp_obj.recurrence_value if exp_obj.recurrence_value else None,
+                recurrence_unit= exp_obj.recurrence if exp_obj.recurrence_unit else None
+            )
+            
+            exp_obj.cash_up_status = True
+            
+            exp_obj.save()
+            new_expense.save()
+            
+            expenses.append(new_expense.id)
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Expenses split and saved successfully',
+            'expenses': expenses
+        })
+
     except Exception as e:
-      return JsonResponse({
-          'm'
-      })
+        logger.exception("Error in save_expense_split")
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
 
 @login_required  
 def get_expense(request, expense_id):
@@ -805,8 +859,6 @@ def create_invoice(request):
                             branch=request.user.branch
                         )
 
-                        logger.info(layby_obj)
-
                         layby_dates_list = []
                         number_of_dates = len(layby_dates)
                         
@@ -840,11 +892,7 @@ def create_invoice(request):
                     
                 #create a paylater
                 if invoice.payment_terms == 'pay later':
-
                     if amount_due > 0:
-
-                        logger.info(f'Creating paylater object for invoice: {invoice}')
-
                         Paylater.objects.create(
                             invoice=invoice,
                             amount_due=amount_due,
@@ -2428,7 +2476,7 @@ def end_of_day(request):
                 
                 for item in data:
                     try:
-                        inventory = Inventory.objects.get(id=item['item_id'], branch=request.user.branch, status=True)
+                        inventory = Inventory.objects.get(id=int(item['item_id']), branch=request.user.branch, status=True)
                         inventory.physical_count = item['physical_count']
                         inventory.save()
 
@@ -2454,8 +2502,8 @@ def end_of_day(request):
                 paid_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PAID)
             
                 # Expenses
-                expenses = Expense.objects.filter(branch=request.user.branch, issue_date__date=today)
-                logger.info(expenses)
+                expenses = Expense.objects.filter(branch=request.user.branch, issue_date__range=(today_min, today_max))
+                
                 confirmed_expenses = expenses.filter(status=True)
                 unconfirmed_expenses = expenses.filter(status=False)
                 

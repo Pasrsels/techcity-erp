@@ -91,6 +91,8 @@ function selectTab(button, branchId) {
     });
     button.classList.add('active');
 
+    console.log(branchId, 'branch id')
+
     fetchCashUpDetails(branchId);
 }
 
@@ -124,6 +126,8 @@ async function fetchCashUpDetails(branch_id) {
         });
         
         const data = await response.json();
+
+        console.log(data)
         
         if (!data.success) {
             showErrorMessage(loaderRow, data.message || 'Could not load details. Please try again.');
@@ -391,7 +395,7 @@ function createExpensesSection(expenses) {
         
         <div class="expenses-grid">
             ${expenses.map(e => `
-                <div class="expense-card" data-expense-id="${e.id}">
+                <div class="expense-card" data-expense-id="${e.id}" data-branch-id=${e.branch}>
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div class="expense-description">
@@ -408,8 +412,8 @@ function createExpensesSection(expenses) {
                                 <i class="bi bi-journal-check"></i>
                                 <span>Record</span>
                             </button>
-                            <button class="btn btn-action expense-action" data-action="split" data-expense-id="${e.id}" data-description="${e.description || 'Expense'}" data-amount="${e.amount}">
-                                <i class="bi bi-scissors"></i>
+                            <button type="button" class="btn btn-action expense-action" data-action="split" data-branch-id="${e.branch_id}" data-expense-id="${e.id}" data-description="${e.description || 'Expense'}" data-amount="${e.amount}">
+                                <i class="bx bx-scissors"></i>
                                 <span>Split</span>
                             </button>
                             <button class="btn btn-action expense-action" data-action="review" data-expense-id="${e.id}">
@@ -612,7 +616,6 @@ function attachSplitExpenseEventListeners() {
         });
     });
     
-    // Attach event listener for "Record All" button
     document.getElementById('record-all-sales-btn')?.addEventListener('click', function() {
         const categorySelector = document.getElementById('category-all');
         const selectedCategory = categorySelector.value;
@@ -624,13 +627,14 @@ function attachSplitExpenseEventListeners() {
         
         recordAllSales(selectedCategory);
     });
-    
-    // Attach event listeners for expense actions
+                                                        
     document.querySelectorAll('.expense-action').forEach(btn => {
         btn.addEventListener('click', function() {
             const action = this.getAttribute('data-action');
             const expenseId = this.getAttribute('data-expense-id');
-            
+            const branch = this.getAttribute('data-branch-id');
+            console.log(branch, this)
+
             if (action === 'split') {
                 const description = this.getAttribute('data-description');
                 const amount = parseFloat(this.getAttribute('data-amount'));
@@ -651,7 +655,7 @@ let currentExpenseTotal = 0;
 let splitItems = [];
 let splitItemCounter = 0;
 
-function splitExpense(expenseId, description, amount) {
+function splitExpense(expenseId, description, amount, branch_id) {
     currentExpenseId = expenseId;
     currentExpenseTotal = parseFloat(amount);
     splitItems = [];
@@ -704,7 +708,7 @@ function addSplitItem() {
                 <div class="col-md-2">
                     <label class="form-label">&nbsp;</label>
                     <button class="btn btn-outline-danger w-100 remove-split-btn" data-item-id="${itemId}">
-                        <i class="bi bi-trash"></i>
+                        <i class="bx bx-trash"></i>
                     </button>
                 </div>
             </div>
@@ -827,19 +831,22 @@ async function saveSplitExpense() {
             note: item.note
         }));
         
-        const response = await fetch('/finance/split_expense/', {
+        const response = await fetch('/finance/save_expense_split/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
             body: JSON.stringify({
+                branch_id:branchId,
                 expense_id: currentExpenseId,
                 splits: splitItemsForApi
             })
         });
         
         const result = await response.json();
+
+        console.log(result)
         
         if (result.success) {
            
@@ -1113,12 +1120,11 @@ document.head.insertAdjacentHTML('beforeend', `
 </style>
 `);
 
-// Initialize the tab functionality
 document.addEventListener('DOMContentLoaded', function() {
-    // Activate the first branch tab if it exists
     const firstBranchTab = document.querySelector('[data-branch-id]');
     if (firstBranchTab) {
         const branchId = firstBranchTab.getAttribute('data-branch-id');
+        console.log(branchId, 'here is the branch id')
         fetchCashUpDetails(branchId);
         firstBranchTab.classList.add('active');
     }

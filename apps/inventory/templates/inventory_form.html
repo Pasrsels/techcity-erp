@@ -39,7 +39,9 @@
             </label> 
             <div class='d-flex align-items-center'>
                 <select name="category" class="select form-select" value="{{product.category}}" required id="id_category"> 
-                    <option value="">---------</option> 
+                    {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option> 
+                    {% endfor %}
                 </select> 
                 <button class='btn border small' type="button" id='id_add_category'>
                     <i class='bx bx-plus'></i>

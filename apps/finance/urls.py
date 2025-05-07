@@ -21,6 +21,7 @@ urlpatterns = [
     path('delete_expense/<int:expense_id>/', delete_expense, name='delete_expense'),
     path('update_expense_status/', update_expense_status, name='update_expense_status'),
     path('get_expenses/', get_expenses, name='get_expenses'),
+    path('save_expense_split/', save_expense_split, name="save_expense_split"),
     
     #invoice
     path('invoice/', invoice, name='invoice'),
