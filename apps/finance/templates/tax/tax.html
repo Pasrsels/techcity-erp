@@ -456,9 +456,6 @@
         </div>
     </div>
     {% csrf_token %}
-    <script src={% static "js/app_modules/signature_sign.js" %}></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.0/jsrsasign-all-min.js"></script>
 <script>
     const openText = document.getElementById('open');
     const openStatus = document.getElementById('open_status');
@@ -635,7 +632,7 @@
                 text: 'Fiscal Day Closed.'
             }).then(()=>{
 
-                data = run(result.data)
+                sig_string = result.data
 
                 fetch('{% url "finance:close_fiscal" %}', {
                     method: 'POST',
@@ -644,8 +641,7 @@
                         'X-CSRFToken': getCookie('csrftoken')
                     },
                     body: JSON.stringify({
-                        hash:data.hash,
-                        signature:data.signature
+                      sig_string:sig_string
                     })
                 })
                 .then(response => response.json())

@@ -341,11 +341,12 @@
 
     <div class="overlay hidden"></div>
 </body>
+
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.0/jsrsasign-all-min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.8.6/jsrsasign-all-min.js"></script>
 <script src={% static "js/app_modules/signature_sign.js" %}></script>
 
 <script>   
@@ -1209,7 +1210,7 @@
 
             const result = await response.json();
 
-            Swal.close(); // Close the processing Swal once we have a result
+            Swal.close(); 
 
             if (el.dataset.name === 'qoutation') {
                 Swal.fire({
@@ -1233,50 +1234,13 @@
                     }
                 });
             } else {
+                
                 console.log(result, 'result');
 
-                const invoiceId = result.invoice_id;
-
-                if (invoiceId) {
-                    const signature_data = run(result.data);  
-                    const receipt_data = result.receipt_data;              
-                    const hash = signature_data.hash;              
-                    const signature = signature_data.signature;    
-                
-                    fetch('/finance/submit_invoice_data/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken'), 
-                        },
-                        body: JSON.stringify({
-                            hash: hash,
-                            signature: signature,
-                            receipt_data: receipt_data,
-                            invoice_id: invoiceId
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            displayReceipt(data.data);
-                            cart = [];
-                            updateCartDisplay();
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Submission Failed',
-                                text: data.message || 'An error occurred while submitting to ZIMRA.',
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Network Error',
-                            text: error.toString()
-                        });
-                    });
+                if (result.success){
+                    displayReceipt(result.invoice_data);
+                    cart = [];
+                    updateCartDisplay();
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -1286,9 +1250,8 @@
                 }
                 
             }
-
         } catch (error) {
-            Swal.close(); // Close the loading Swal if there's an error
+            Swal.close(); 
             console.error("Error during request:", error);
             Swal.fire({
                 icon: 'error',
