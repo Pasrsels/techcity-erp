@@ -2014,9 +2014,8 @@ def create_purchase_order(request):
         suppliers = Supplier.objects.all()
         note_form = noteStatusForm()
         batch_form = BatchForm()
-        products = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).order_by('name')
-
         admin_branch_id = 78
+
         products = Inventory.objects.filter(
             Q(branch=request.user.branch) | Q(branch_id=admin_branch_id),
             status=True,
@@ -2024,21 +2023,20 @@ def create_purchase_order(request):
         ).order_by('name')
 
         batch_codes = BatchCode.objects.all()
-        return render(request, 'create_purchase_order.html',
-            {
-                'product_form':product_form,
-                'supplier_form':supplier_form,
-                'suppliers':suppliers,
-                'note_form':note_form,
-                'batch_form':batch_form,
-                'batch_codes':batch_codes,
-                'products':products
-            }
-        )
-     
+
+        return render(request, 'create_purchase_order.html', {
+            'product_form': product_form,
+            'supplier_form': supplier_form,
+            'suppliers': suppliers,
+            'note_form': note_form,
+            'batch_form': batch_form,
+            'batch_codes': batch_codes,
+            'products': products
+        })
+
     if request.method == 'POST':
         try:
-            data = json.loads(request.body) 
+            data = json.loads(request.body)
             purchase_order_data = data.get('purchase_order', {})
             purchase_order_items_data = data.get('po_items', [])
             expenses = data.get('expenses', [])
@@ -2048,7 +2046,6 @@ def create_purchase_order(request):
             overide = data.get('overide')
 
             unique_expenses = []
-
             seen = set()
             for expense in expenses:
                 expense_tuple = (expense['name'], expense['amount'])
@@ -2059,7 +2056,6 @@ def create_purchase_order(request):
         except json.JSONDecodeError:
             return JsonResponse({'success': False, 'message': 'Invalid JSON payload'}, status=400)
 
-        # Extract data from purchase_order_data
         batch = purchase_order_data['batch']
         delivery_date = purchase_order_data['delivery_date']
         status = purchase_order_data['status']
@@ -2073,12 +2069,9 @@ def create_purchase_order(request):
         if not all([batch, delivery_date, status, total_cost, payment_method]):
             return JsonResponse({'success': False, 'message': 'Missing required fields'}, status=400)
 
-        logger.info(1)
-
         try:
             with transaction.atomic():
-                logger.info('processing')
-                purchase_order = PurchaseOrder(
+                purchase_order = PurchaseOrder.objects.create(
                     order_number=PurchaseOrder.generate_order_number(),
                     batch=batch,
                     delivery_date=delivery_date,
@@ -2093,14 +2086,10 @@ def create_purchase_order(request):
                     received=False,
                     hold=hold
                 )
-                purchase_order.save()
-
-                logger.info('Po saved')
 
                 purchase_order_items = []
                 for item_data in purchase_order_items_data:
                     product_id = item_data['product_id']
-                    logger.info(product_id)
                     product_name = item_data['product']
                     quantity = int(item_data['quantity'])
                     unit_cost = Decimal(item_data['price'])
@@ -2112,76 +2101,73 @@ def create_purchase_order(request):
                         return JsonResponse({'success': False, 'message': 'Missing fields in item data'}, status=400)
 
                     try:
-                        # Try to get the product from branch 78
-                        from_other_branch = Inventory.objects.filter(
-                            id=product_id, 
-                        ).first() # to be removed
-                        logger.info(from_other_branch.name)
-                        
-                        # Clone the product into the user's branch
-                        cloned_product = Inventory.objects.create(
-                            branch=request.user.branch,
+                        from_other_branch = Inventory.objects.get(id=product_id)
+
+                        existing_product = Inventory.objects.filter(
                             name=from_other_branch.name,
-                            cost=from_other_branch.cost,
-                            price=from_other_branch.price,
-                            dealer_price=from_other_branch.dealer_price,
-                            quantity=0,
-                            status=from_other_branch.status,
-                            stock_level_threshold=from_other_branch.stock_level_threshold,
-                            reorder=from_other_branch.reorder,
-                            alert_notification=from_other_branch.alert_notification,
-                            batch=from_other_branch.batch,
+                            branch=request.user.branch,
                             category=from_other_branch.category,
-                            tax_type=from_other_branch.tax_type,
-                            description=from_other_branch.description,
-                            end_of_day=from_other_branch.end_of_day,
-                            service=from_other_branch.service,
-                            image=from_other_branch.image,
-                            disable=from_other_branch.disable,
-                        )
-                        
-                        logger.info(cloned_product)
+                            disable=False
+                        ).first()
 
-                        cloned_product.suppliers.set(from_other_branch.suppliers.all())
-                        logger.info('3')
-                        product = cloned_product
-                        
+                        if existing_product:
+                            product = existing_product
+                        else:
+                            # Clone product
+                            cloned_product = Inventory.objects.create(
+                                branch=request.user.branch,
+                                name=from_other_branch.name,
+                                cost=from_other_branch.cost,
+                                price=from_other_branch.price,
+                                dealer_price=from_other_branch.dealer_price,
+                                quantity=0,
+                                status=from_other_branch.status,
+                                stock_level_threshold=from_other_branch.stock_level_threshold,
+                                reorder=from_other_branch.reorder,
+                                alert_notification=from_other_branch.alert_notification,
+                                batch=from_other_branch.batch,
+                                category=from_other_branch.category,
+                                tax_type=from_other_branch.tax_type,
+                                description=from_other_branch.description,
+                                end_of_day=from_other_branch.end_of_day,
+                                service=from_other_branch.service,
+                                image=from_other_branch.image,
+                                disable=from_other_branch.disable,
+                            )
+
+                            cloned_product.suppliers.set(from_other_branch.suppliers.all())
+                            product = cloned_product
+
+                        # Use supplier logic
                         supplier = Supplier.objects.get(name__icontains="local")
-                    
-                        logger.info(2)
 
+                        # Create PO item
                         po_item = PurchaseOrderItem.objects.create(
                             purchase_order=purchase_order,
                             product=product,
                             quantity=quantity,
                             unit_cost=actual_unit_cost if overide == 'manual' else unit_cost,
-                            actual_unit_cost=actual_unit_cost, 
+                            actual_unit_cost=actual_unit_cost,
                             received_quantity=0,
                             received=False,
-                            supplier = supplier,
+                            supplier=supplier,
                             price=0,
                             wholesale_price=0
                         )
 
                         purchase_order_items.append(po_item)
-
                         product.suppliers.add(po_item.supplier.id)
                         product.batch += f'{batch}, '
                         product.price = 0
                         product.save()
 
-                        logger.info(3)
-
                     except Inventory.DoesNotExist:
                         transaction.set_rollback(True)
-                        return Response({'message': f'Product with ID {product_id} not found in user branch or branch 31.'}, status=status.HTTP_404_NOT_FOUND)
+                        return JsonResponse({'success': False, 'message': f'Product with ID {product_id} not found.'}, status=404)
 
-
-                    
-                # generete_delivery_note(purchase_order, purchase_order_items, request)
-                          
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
         return JsonResponse({'success': True, 'message': 'Purchase order created successfully'})
 
 @login_required
@@ -2732,17 +2718,11 @@ def process_received_order(request):
             # order_item.check_received()
 
             # Update or create inventory
+            system_quantity = 0 # if new product
             try:
                 inventory = Inventory.objects.get(id = order_item.product.id)
                 logger.info(inventory)
-            except Product.DoesNotExist:
-                return JsonResponse({'success': False, 'message': f'Product with ID: {order_item.product.id} does not exist'}, status=404)
-
-            system_quantity = 0 # if new product
-
-            logger.info(inventory)
-            logger.info(f'')
-            try:          
+                
                 system_quantity = inventory.quantity
                 # Update existing inventory
                 
@@ -2759,17 +2739,11 @@ def process_received_order(request):
                 logger.info(order_item.actual_unit_cost)
 
                 inventory.cost = Decimal(round(cost, 2))
-
-                logger.info(f'Cost {cost}')  
-
-                try:
-                    inventory.save()
-                except Exception as e:
-                    logger.info(e)
-                    return JsonResponse({'success': False, 'message': f'{e}'}, status=400)
                 
-                logger.info(f'Inventory cost: {inventory.cost}')
-            except Inventory.DoesNotExist:
+                inventory.save()
+ 
+            except Product.DoesNotExist:
+                return JsonResponse({'success': False, 'message': f'Product with ID: {order_item.product.id} does not exist'}, status=404)
                 # Create a new inventory object if it does not exist
                 # inventory = Inventory(
                 #     product=inventory,
