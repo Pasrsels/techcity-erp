@@ -2791,6 +2791,26 @@ def qoute_preview(request, qoutation_id):
     return render(request, 'qoute.html', {'qoute':qoute, 'qoute_items':qoute_items})
 
 @login_required
+def qoute_preview_modal(request, qoutation_id):
+    try:
+        qoute = Qoutation.objects.get(id=qoutation_id)
+        logger.info(qoute)
+        qoute_items = QoutationItems.objects.filter(qoute=qoute)
+        logger.info(f'qoute items: {qoute_items.values()}')
+        html = render_to_string('qoutations/partial_preview.html', {
+            'qoute': qoute,
+            'qoute_items': qoute_items
+        }, request=request)  
+        
+        logger.info(html)
+
+        return JsonResponse({'success': True, 'html': html}, status=200)
+        
+    except Exception as e:
+        logger.info(e)
+        return JsonResponse({'success': False, 'message':str(e)}, status=400)
+
+@login_required
 def delete_qoute(request, qoutation_id):
     qoute = get_object_or_404(Qoutation, id=qoutation_id)
     qoute.delete()
