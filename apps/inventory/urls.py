@@ -3,6 +3,7 @@ from . views import *
 from rest_framework import routers
 from . consumer import InventoryConsumer
 from rest_framework.routers import DefaultRouter
+from .api import *
 
 router = DefaultRouter()
 router.register(r'products', InventoryViewset, basename='api_products')
@@ -26,6 +27,7 @@ urlpatterns = [
     path('create/product/', product, name='product'),
     path('delete_product', delete_product, name='delete'),
     path('add-inventory', add_inventory_view, name="add-inventory"),
+    path('logs/page/', logs_page, name='logs-page'),
 
     #Stocktake
     path('stocktake/', stock_take_index, name= 'stocktake'),
@@ -121,6 +123,7 @@ urlpatterns = [
     ################################################################################################
 
     #Categories
+    path('api/v1/inventory/add/', AddInventoryView.as_view(), name='add-inventory'),
     path('api/v1/categories', CategoriesList.as_view(), name = 'api_categories'),
     path('api/v1/categories-add', AddCategories.as_view(), name = 'api_add_categories'),
 

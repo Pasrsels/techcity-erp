@@ -91,6 +91,13 @@ zimra = ZIMRA()
 
 load_dotenv()
 
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.generic import ListView, DetailView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Sum
+from .models import CashUp, Invoice, Expense
+from django.utils import timezone
+
 def get_previous_month():
     first_day_of_current_month = datetime.datetime.now().replace(day=1)
     last_day_of_previous_month = first_day_of_current_month - timedelta(days=1)
@@ -119,6 +126,28 @@ def decode_base64_file(data):
     except Exception as e:
         logger.error("Failed to decode base64 image:")
         return None
+
+def cashflow_list(request): # to be organised
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        branch = request.GET.get('branch')
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        status = request.GET.get('status')
+
+        cashups = CashUp.objects.all()
+        
+        if branch:
+            cashups = cashups.filter(branch__id=int(branch))
+        if start_date:
+            cashups = cashups.filter(date__gte=start_date)
+        if end_date:
+            cashups = cashups.filter(date__lte=end_date)
+        if status in ['true', 'false']:
+            cashups = cashups.filter(status=(status == 'true'))
+
+        html = render_to_string('cashflows/partials/cashup_cards.html', {'cash_ups': cashups})
+        
+        return JsonResponse({'html': html})
 
 class Finance(View):
     # authentication loginmixin
@@ -310,52 +339,58 @@ def save_expense_split(request):
         data = json.loads(request.body)
         splits = data.get('splits')
         branch_id = data.get('branch_id')
-
-        logger.info(f'Split expenses: {splits}, branch_id = {branch_id}')
-
-        expenses = []
+        expense_id = data.get('expense_id', '')
+        
         cash_up = CashUp.objects.filter(date=today, branch__id=int(branch_id)).first() # to put order by
         logger.info(f'Cash up: {cash_up}')
-
-        if not cash_up:
-            return JsonResponse({'success': False, 'message': 'No cash up record found for today'}, status=404)
-
-        cash_up_expenses = cash_up.expenses.all()
-        categories = ExpenseCategory.objects.all()
         
-        logger.info(cash_up.expenses)
+        cash_up_expenses = cash_up.expenses.all()
+        
+        if expense_id:
+            record_expense(expense_id,cash_up_expenses, request)
+            
+        else:
+            logger.info(f'Split expenses: {splits}, branch_id = {branch_id}')
+            expenses = []
+            if not cash_up:
+                return JsonResponse({'success': False, 'message': 'No cash up record found for today'}, status=404)
 
-        for split in splits:
-            logger.info(split)
-            exp_obj = cash_up_expenses.get(id=int(split['expense_id']))  # existing expense object
+            categories = ExpenseCategory.objects.all()
             
-            new_expense = Expense(
-                amount=split['amount'],
-                payment_method=exp_obj.payment_method,
-                currency=exp_obj.currency,
-                category=categories.filter(split['category_id']),
-                description=exp_obj.description,
-                user=request.user,  
-                branch_id=request.user.branch,
-                status=False,
-                # purchase_order=exp_obj.purchase_order,
-                receipt=exp_obj.receipt,
-                is_recurring=exp_obj.is_recurring,
-                recurrence_value= exp_obj.recurrence_value if exp_obj.recurrence_value else None,
-                recurrence_unit= exp_obj.recurrence if exp_obj.recurrence_unit else None
-            )
-            
-            exp_obj.cash_up_status = True
-            
-            exp_obj.save()
-            new_expense.save()
-            
-            expenses.append(new_expense.id)
+            logger.info(cash_up.expenses)
+
+            for split in splits:
+                logger.info(split)
+                logger.info(split['amount'])
+                exp_obj = cash_up_expenses.get(id=int(split['expense_id']))  # existing expense object
+                
+                new_expense = Expense(
+                    amount=split['amount'],
+                    payment_method=exp_obj.payment_method,
+                    currency=exp_obj.currency,
+                    category=categories.filter(id=split['category_id']).first(),
+                    description=exp_obj.description,
+                    user=request.user,  
+                    branch_id=request.user.branch.id,
+                    status=False,
+                    # purchase_order=exp_obj.purchase_order,
+                    receipt=exp_obj.receipt,
+                    is_recurring=exp_obj.is_recurring,
+                    recurrence_value= exp_obj.recurrence_value if exp_obj.recurrence_value else None,
+                    recurrence_unit= exp_obj.recurrence if exp_obj.recurrence_unit else None
+                )
+                
+                exp_obj.cash_up_status = True
+                
+                exp_obj.save()
+                new_expense.save()
+                
+                expenses.append(new_expense.id)
 
         return JsonResponse({
             'success': True,
             'message': 'Expenses split and saved successfully',
-            'expenses': expenses
+            # 'expenses': expenses
         })
 
     except Exception as e:
@@ -364,6 +399,31 @@ def save_expense_split(request):
             'success': False,
             'message': str(e)
         }, status=500)
+        
+def record_expense(expense_id, cash_up_expenses, request):
+    logger.info(f'Straight recording of the expense: {expense_id}')
+    exp_obj = cash_up_expenses.get(id=int(expense_id))  # existing expense object
+            
+    new_expense = Expense(
+        amount=exp_obj.amount,
+        payment_method=exp_obj.payment_method,
+        currency=exp_obj.currency,
+        category=exp_obj.category,
+        description=exp_obj.description,
+        user=request.user,  
+        branch_id=request.user.branch.id,
+        status=False,
+        purchase_order=exp_obj.purchase_order,
+        receipt=exp_obj.receipt,
+        is_recurring=exp_obj.is_recurring,
+        recurrence_value= exp_obj.recurrence_value if exp_obj.recurrence_value else None,
+        recurrence_unit= exp_obj.recurrence if exp_obj.recurrence_unit else None
+    )
+    
+    exp_obj.cash_up_status = True
+    
+    exp_obj.save()
+    new_expense.save()
 
 @login_required  
 def get_expense(request, expense_id):
@@ -3708,7 +3768,8 @@ def cash_flow(request):
         'created_by__username',
         'sales_status',
         'expenses_status',
-        'status'
+        'status',
+        'date'
     ).order_by('-created_at')
     
     context = {

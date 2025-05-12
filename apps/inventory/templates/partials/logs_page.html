@@ -1,0 +1,59 @@
+ <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3" id="log-rows">
+        {% for log in logs %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="card-title mb-0">{{ log.inventory.name }}</h6>
+                        <span class="badge bg-primary rounded-pill">{{ log.action }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <p class="card-text">
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-box"></i> × {{ log.quantity }}
+                            </span>
+                        </p>
+                        <p class="card-text">
+                            <span class="text-muted fw-bold">
+                                {% if log.inventory.cost %}
+                                    ${{ log.inventory.cost }}
+                                {% else %}
+                                    ${{ log.inventory.price }}
+                                {% endif %}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <small class="text-muted">
+                        <i class="bi bi-calendar-event"></i> {{ log.timestamp|date:"M d, Y" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+
+<!-- Infinite scroll trigger -->
+<tr id="loading-indicator"
+    hx-get="{% url 'inventory:logs-page' %}?page={{ next_page }}"
+    hx-trigger="revealed"
+    hx-indicator="#spinner"
+    hx-swap="beforebegin">
+    <td colspan="4" class="text-center">
+        <div id="spinner" class="spinner-border spinner-border-sm" role="status" style="display:none">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <!-- <span class="text-muted">Loading more...</span> -->
+    </td>
+</tr>
+
+<script>
+    document.body.addEventListener('htmx:afterOnLoad', function(event) {
+        if (event.detail.xhr.responseText.trim() === "" || 
+            event.detail.xhr.getResponseHeader('X-No-More-Data') === 'true') {
+            document.getElementById('loading-indicator').remove();
+        }
+    });
+</script>

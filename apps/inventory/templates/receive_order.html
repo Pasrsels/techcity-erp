@@ -231,7 +231,6 @@
         updateConfirmButtonState();
     });
 
-
     document.addEventListener('DOMContentLoaded', function () {
         expectedProfitOnLoad();
         calculateCostDifference();
@@ -247,7 +246,6 @@
                 Swal.showLoading(); 
             },
         });
-
         
         fetch('/inventory/mark_purchase_order_done/{{purchase_order.id }}/', {
             method: 'GET',
