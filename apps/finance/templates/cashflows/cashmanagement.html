@@ -344,13 +344,24 @@
         expenseCategoryModal.show();
     });
 
+    
+
     // Toggle recurrence inputs visibility
     function toggleRecurrence(type) {
+
+        console.log(type)
         const toggle = document.getElementById(`${type}RecurringToggle`);
         const group = document.getElementById(`${type}RecurrenceGroup`);
-        
+
         if (toggle && group) {
-            group.style.display = toggle.checked ? 'flex' : 'none';
+            if(group.style.display === 'none'){
+                console.log(group)
+                group.style.display = 'block'
+            }else{
+                console.log(group)
+                group.style.display = 'none'
+            }
+            
         }
     }
 

@@ -27,6 +27,7 @@ urlpatterns = [
     path('create/product/', product, name='product'),
     path('delete_product', delete_product, name='delete'),
     path('add-inventory', add_inventory_view, name="add-inventory"),
+    path('logs/page/', logs_page, name='logs-page'),
 
     #Stocktake
     path('stocktake/', stock_take_index, name= 'stocktake'),

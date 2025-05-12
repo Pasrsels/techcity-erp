@@ -220,52 +220,7 @@
             <div class="log-container p-3">
                 <h5 class="mb-3"><i class="bx bx-history mr-2"></i>Activity Logs</h5>
                 <div style="height: 70vh; overflow-y: auto;">
-                    <table class="table table-sm log-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Product</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for log in logs %}
-                                <tr>
-                                    <td>
-                                        <small class="text-muted">
-                                            {% with log.timestamp as timestamp %}
-                                                {{ timestamp|date:"M d, Y" }}
-                                            {% endwith %}
-                                        </small>
-                                    </td>
-                                    <td>
-                                        <small>
-                                            {{ log.inventory.name }}
-                                        </small>
-                                    </td>
-                                    <td>
-                                        <small>
-                                            <span class="badge bg-light text-dark">
-                                                {{ log.action }} × {{ log.quantity }}
-                                            </span>
-                                            <br>
-                                            <span class="text-muted">
-                                                {% if log.inventory.cost %}
-                                                    ${{ log.inventory.cost }}
-                                                {% else %}
-                                                    ${{ log.inventory.price }}
-                                                {% endif %}
-                                            </span>
-                                        </small>
-                                    </td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="3" class="text-center">No recent activity</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    {% include "partials/logs_page.html" %}
                 </div>
             </div>
         </div>

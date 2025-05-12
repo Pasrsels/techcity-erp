@@ -496,8 +496,6 @@ def inventory_index(request):
         workbook.save(response)
         return response
 
-    # logs = ActivityLog.objects.filter(branch=request.user.branch).order_by('-timestamp')
-
     context = {
         'form': form,
         'total_cost': inventory.aggregate(total_cost=Sum(F('quantity') * F('cost')))['total_cost'] or 0,
@@ -509,6 +507,18 @@ def inventory_index(request):
     }
 
     return render(request, 'inventory.html', context)
+
+def logs_page(request):
+    page_number = request.GET.get('page', 1)
+    logs = ActivityLog.objects.select_related('inventory').order_by('-timestamp')
+    paginator = Paginator(logs, 10) 
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'partials/logs_page.html', {
+        'logs': page_obj.object_list,
+        'has_next': page_obj.has_next(),
+        'next_page_number': page_obj.next_page_number() if page_obj.has_next() else None
+    })
 
 @login_required
 def edit_service(request, service_id):
@@ -2645,17 +2655,22 @@ def receive_order(request, order_id):
     products = Inventory.objects.filter(branch=request.user.branch).values(
         'dealer_price', 
         'price', 
-        'name'
+        'name',
+        'id',
+        'branch__name'
     )
     logger.info(f'branch: {request.user.branch}')
     # Convert products queryset to a dictionary for easy lookup by product ID
-    product_prices = {product['name']: product for product in products}
+    product_prices = {product['id']: product for product in products}
 
     new_po_items =  []
     for item in purchase_order_items:
         if(item.product):
-            product_name = item.product.name  
+            logger.info(item.product.branch)
+            product_name = item.product.id
+
             product_data = product_prices.get(product_name)
+            logger.info(f'product prices {product_data}')
             if product_data:
                 item.dealer_price = product_data['dealer_price']
                 item.selling_price = product_data['price']
@@ -2687,6 +2702,7 @@ def process_received_order(request):
             expected_profit = data.get('expected_profit', 0)
             dealer_expected_profit = data.get('dealer_expected_profit', 0)
 
+            logger.info('Processing order item')
             logger.info(data)
 
             if edit:
@@ -2717,7 +2733,8 @@ def process_received_order(request):
 
             # Update or create inventory
             try:
-                inventory = Inventory.objects.get(name = order_item.product.name, branch=request.user.branch)
+                inventory = Inventory.objects.get(id = order_item.product.id)
+                logger.info(inventory)
             except Product.DoesNotExist:
                 return JsonResponse({'success': False, 'message': f'Product with ID: {order_item.product.id} does not exist'}, status=404)
 
@@ -2746,7 +2763,7 @@ def process_received_order(request):
                 logger.info(f'Cost {cost}')  
 
                 try:
-                    inventory.save(force_update=True)
+                    inventory.save()
                 except Exception as e:
                     logger.info(e)
                     return JsonResponse({'success': False, 'message': f'{e}'}, status=400)
@@ -2754,19 +2771,20 @@ def process_received_order(request):
                 logger.info(f'Inventory cost: {inventory.cost}')
             except Inventory.DoesNotExist:
                 # Create a new inventory object if it does not exist
-                inventory = Inventory(
-                    product=inventory,
-                    branch=request.user.branch,
-                    cost=cost,
-                    price=selling_price,
-                    dealer_price=dealer_price,
-                    quantity=quantity,
-                    stock_level_threshold=product.min_stock_level,
-                    reorder=False,
-                    alert_notification=True,
-                    batch = f'{order.batch}, '
-                )
-                inventory.save()
+                # inventory = Inventory(
+                #     product=inventory,
+                #     branch=request.user.branch,
+                #     cost=cost,
+                #     price=selling_price,
+                #     dealer_price=dealer_price,
+                #     quantity=quantity,
+                #     stock_level_threshold=product.min_stock_level,
+                #     reorder=False,
+                #     alert_notification=True,
+                #     batch = f'{order.batch}, '
+                # )
+                # inventory.save()
+                pass
 
             # Prepare activity log for this transaction
             log = ActivityLog(
@@ -2786,6 +2804,8 @@ def process_received_order(request):
 
             # Save updated order item
             order_item.save()
+
+            logger.info(f'process order item received: {order_item.product}')
 
             return JsonResponse({'success': True, 'message': 'Inventory updated successfully'}, status=200)
         except Exception as e:
