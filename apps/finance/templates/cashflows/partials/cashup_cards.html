@@ -1,0 +1,75 @@
+{% for cashup in cash_ups %}
+    <div class="mb-4">
+        <div class="card shadow-sm h-100 w-100" style="border:none;">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center" 
+                 style="border:none; cursor:pointer;" 
+                 data-bs-toggle="collapse" 
+                 data-bs-target="#details-{{ forloop.counter }}" 
+                 aria-expanded="false" 
+                 aria-controls="details-{{ forloop.counter }}">
+                 
+                <h6 class="m-0 font-weight-bold text-dark">
+                    <i class="bx bx-store-alt me-1"></i> {{ cashup.branch__name }} - {{ cashup.date }}
+                    <small class="text-muted d-block">
+                        <i class="bx bx-user me-1"></i> Created by {{ cashup.created_by.username }}
+                    </small>
+                </h6>
+                
+                <span class="badge {% if cashup.status %}bg-success{% else %}bg-warning{% endif %}">
+                    {% if cashup.status %}Completed{% else %}Pending{% endif %}
+                </span>
+            </div>
+
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">Expected Cash</div>
+                        <div class="h5 mb-0 font-weight-bold">${{ cashup.expected_cash|floatformat:2 }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">Received Cash</div>
+                        <div class="h5 mb-0 font-weight-bold">${{ cashup.received_amount|floatformat:2 }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">Balance</div>
+                        <div class="h5 mb-0 font-weight-bold {% if cashup.balance < 0 %}text-danger{% elif cashup.balance > 0 %}text-success{% endif %}">
+                            ${{ cashup.balance|floatformat:2 }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden collapsible child content -->
+                <div class="collapse" id="details-{{ forloop.counter }}">
+                    <hr>
+                    <h6 class="text-dark"><i class="bx bx-money"></i> Sales</h6>
+                    <ul class="list-group list-group-flush mb-3">
+                        {% for sale in cashup.sales.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ sale.products_purchased }}
+                                <span>${{ sale.amount|floatformat:2 }}</span>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">No sales recorded.</li>
+                        {% endfor %}
+                    </ul>
+
+                    <h6 class="text-dark"><i class="bx bx-credit-card"></i> Expenses</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for expense in cashup.expenses.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ expense.description }}
+                                <span>${{ expense.amount|floatformat:2 }}</span>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">No expenses recorded.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <div class="col-12">
+        <p class="text-center text-muted">No records found.</p>
+    </div>
+{% endfor %}

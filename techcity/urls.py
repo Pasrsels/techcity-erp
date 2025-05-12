@@ -5,6 +5,21 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 from django.views import defaults as default_views
 from apps.company.views import verify_email
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from django.urls import path, re_path
+
+schema_view = get_schema_view(
+   openapi.Info(
+      title="Posflow",
+      default_version='v1',
+      description="Pos flows apis",
+   ),
+   public=True,
+   permission_classes=(permissions.AllowAny,),
+)
+
 
 urlpatterns = [
     path('pos/', include('apps.pos.urls', namespace='pos')),
@@ -19,6 +34,10 @@ urlpatterns = [
     path('booking', include('apps.booking.urls', namespace='booking')),
     path('verify/<uidb64>/<token>/', verify_email, name='verify_email'),
     # path('__reload__/', include('django_browser_reload.urls')),
+    
+    re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

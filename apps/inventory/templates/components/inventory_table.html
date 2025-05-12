@@ -3,9 +3,12 @@
    <div class="table-responsive mt-2" style="height: 70vh; overflow-y: auto;">
         <!-- inventory table -->
         {% include 'components/loader.html' %}
-        <div class='product p-1 rounded' style="background: #fff;">
-            <table class='table border table-bordered table-striped table-hover table-responsive table-sm rounded p-2 w-100 ' style="width:100%" id='inventory'>
-                <thead class="table-dark">
+        <div class='product table-container p-1 rounded' style="background: #fff; position: relative;">
+            <div class="" id="fixed-search" style="position: sticky; top: 0; z-index: 2; background: white;">
+                <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search products...">
+            </div>
+            <table class='table border table-bordered table-striped table-hover table-responsive table-sm rounded p-2 ' style="width:100%;" id='inventory'>
+                <thead class="table-dark" style="position: sticky; top: 28px; background-color: #fff; z-index: 1;">
                     <th>#</th>
                     <th>Image</th>
                     <th>Description</th>
@@ -17,7 +20,7 @@
                     <th>W/Price</th>
                     <th>Actions</th>
                 </thead>
-                <tbody id='inventory_table' >
+                <tbody id='inventory_table'>
                     {% for product in inventory %}
                         <tr>
                             <td>{{ forloop.counter }}</td>
@@ -212,10 +215,6 @@
     
 <script src="{% static 'js/jquery.js'%}"></script>
 <script>
-    new DataTable('#inventory', {
-        paging:false
-    })
-
     let product_id = ''
     let accessory = [];
     const inventoryData = [];
@@ -249,7 +248,24 @@
         )
     })
 
-    
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const table = document.getElementById('inventory');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        searchInput.addEventListener('keyup', function () {
+            const filter = searchInput.value.toLowerCase();
+
+            for (let i = 0; i < rows.length; i++) {
+                let rowText = rows[i].innerText.toLowerCase();
+                if (rowText.includes(filter)) {
+                    rows[i].style.display = '';
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+        });
+    });
 
     function addAccessory() {
         const accessorySelect = document.getElementById("accessorries");

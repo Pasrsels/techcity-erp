@@ -41,6 +41,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "channels",
     # 'debug_toolbar',
+    'drf_yasg',
     "crispy_forms",
     "crispy_bootstrap5",
     'phonenumber_field',
