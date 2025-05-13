@@ -1,0 +1,36 @@
+<div class="table-responsive">
+  <table class="table table-hover table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>Date</th>
+        <th>Category</th>
+        <th>Description</th>
+        <th>Payment Method</th>
+        <th>Currency</th>
+        <th class="text-end">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for expense in expenses %}
+        <tr>
+          <td>{{ expense.issue_date|date:"Y-m-d H:i" }}</td>
+          <td>{{ expense.category.name }}</td>
+          <td>{{ expense.description }}</td>
+          <td>{{ expense.payment_method|title }}</td>
+          <td>{{ expense.currency.code }}</td>
+          <td class="text-end">{{ expense.amount|floatformat:2 }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="6" class="text-center text-muted">No expenses recorded for this period.</td>
+        </tr>
+      {% endfor %}
+      {% if expenses %}
+        <tr class="fw-bold border-top">
+          <td colspan="5" class="text-end">Total Expenses</td>
+          <td class="text-end">{{ total_expenses|floatformat:2 }}</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>

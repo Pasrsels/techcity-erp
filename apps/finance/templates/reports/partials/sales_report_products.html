@@ -1,0 +1,59 @@
+<div class="mb-4">
+  <h5 class="fw-bold mb-3">Sales Summary</h5>
+  <div class="row row-cols-2 row-cols-md-4 g-3 text-center">
+    <div class="col">
+      <div class="bg-primary text-white p-3 rounded-3 shadow-sm">
+        <div class="small">Total Sales</div>
+        <div class="fs-5 fw-semibold">${{ total_sales }}</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="bg-success text-white p-3 rounded-3 shadow-sm">
+        <div class="small">Total Paid</div>
+        <div class="fs-5 fw-semibold">${{ total_paid }}</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="bg-warning text-dark p-3 rounded-3 shadow-sm">
+        <div class="small">Total Unpaid</div>
+        <div class="fs-5 fw-semibold">${{ total_unpaid }}</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="bg-secondary text-white p-3 rounded-3 shadow-sm">
+        <div class="small">Invoice Count</div>
+        <div class="fs-5 fw-semibold">{{ invoice_count }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="my-4" />
+
+<div class="table-responsive">
+  <h5 class="fw-bold mb-3">Products Sold</h5>
+  <table class="table table-striped align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Product</th>
+        <th>Quantity Sold</th>
+        <th>Total Sales</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for product in products %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ product.name }}</td>
+        <td>{{ product.quantity_sold }}</td>
+        <td>${{ product.total_sales }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4" class="text-center">No products found in this period.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

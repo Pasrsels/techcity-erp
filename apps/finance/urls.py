@@ -12,6 +12,7 @@ router.register(r'api/v1/quotation', QuatationCrud, basename= 'api_quotation')
 
 urlpatterns = [
     path('', Finance.as_view(), name='finance'),
+    path('generate-report/', generate_financial_report, name='generate-report'),
     
     # expenses
     path('expenses/', expenses, name='expenses'),

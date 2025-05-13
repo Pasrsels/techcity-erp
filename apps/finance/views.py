@@ -80,7 +80,7 @@ from utils.zimra import ZIMRA
 from utils.zimra_sig_hash import run
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Avg, F, Value, CharField
+from django.db.models import Sum, Avg, F, Value, CharField, ExpressionWrapper
 import datetime
 from itertools import chain
 from django.core.paginator import Paginator, EmptyPage
@@ -4743,6 +4743,130 @@ def send_quote_email(request, quote_id):
     if request.method == 'POST':
         return send_quotation_email(request, quote_id)
     return JsonResponse({'success': False, 'error': 'Only POST method is allowed'})
+
+
+#reporting
+@login_required
+def generate_financial_report(request):
+    report_type = request.POST.get('reportType')
+    time_frame = request.POST.get('timeFrame')
+    report_format = request.POST.get('reportFormat')
+    start_date, end_date = get_date_range_from_time_frame(time_frame, request)
+    
+    invoices = Invoice.objects.filter(
+        cancelled=False,
+        invoice_return=False,
+        status=True,
+        issue_date__date__range=[start_date, end_date]
+    )
+    
+    expenses = Expense.objects.filter(
+        status=False, # to be change if confirm feature is ready
+        issue_date__date__range=[start_date, end_date]
+    ).select_related('category', 'currency')
+    
+    logger.info(expenses)
+
+    total_sales = invoices.aggregate(total=Sum('amount'))['total'] or 0
+    total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or 0
+
+    if report_type == 'sales':
+        total_paid = invoices.aggregate(total=Sum('amount_paid'))['total'] or 0
+        total_unpaid = total_sales - total_paid
+        invoice_count = invoices.count()
+
+        invoice_items = InvoiceItem.objects.filter(invoice__in=invoices)
+        
+        total_cost = invoice_items.aggregate(
+            cost=Sum(
+                ExpressionWrapper(
+                    F('quantity') * F('item__price'),
+                    output_field=DecimalField(max_digits=15, decimal_places=2)
+                )
+            )
+        )['cost'] or 0
+
+        gross_profit = total_sales - total_cost
+
+        product_summary = invoice_items.values(
+            name=F('item__name')
+        ).annotate(
+            quantity_sold=Sum('quantity'),
+            total_sales=Sum('total_amount'),
+        ).order_by('-total_sales')
+
+        html = render_to_string('reports/partials/sales_report_products.html', {
+            'products': product_summary,
+            'total_sales': round(total_sales, 2),
+            'total_paid': round(total_paid, 2),
+            'total_unpaid': round(total_unpaid, 2),
+            'invoice_count': invoice_count,
+        })
+
+        return JsonResponse({
+            'success': True,
+            'html': html,
+            'start_date': start_date,
+            'end_date': end_date,
+        })
+        
+    elif report_type == 'expenses':
+        # Render partial HTML
+        html = render_to_string('reports/partials/expense_report_table.html', {
+            'expenses': expenses,
+            'total_expenses': total_expenses,
+            'start_date': start_date,
+            'end_date': end_date,
+        }, request=request)
+        
+        logger.info(html)
+
+        return JsonResponse({
+            'success': True,
+            'report_type': report_type,
+            'time_frame': time_frame,
+            'start_date': str(start_date),
+            'end_date': str(end_date),
+            'total_expenses': float(total_expenses),
+            'html': html,
+        })
+        
+    elif report_type == "profit_loss":
+        html = render_to_string('reports/partials/p_l_report.html')
+        
+        return JsonResponse({
+            'success':True,
+            'sales': total_sales,
+            'expense': total_expenses,
+            'cost_of_sales': total_cost
+        })
+
+    return JsonResponse({'status': 'error', 'message': 'Unsupported report type'}, status=400)
+
+
+def get_date_range_from_time_frame(time_frame, request):
+
+    if time_frame == 'today':
+        return today, today
+
+    elif time_frame == 'weekly':
+        start = today - timedelta(days=today.weekday())
+        end = start + timedelta(days=6)
+        return start, end
+
+    elif time_frame == 'monthly':
+        return today.replace(day=1), today
+
+    elif time_frame == 'yearly':
+        return today.replace(month=1, day=1), today
+
+    elif time_frame == 'custom':
+        start_date = parse_date(request.POST.get('startDate'))
+        end_date = parse_date(request.POST.get('endDate'))
+        return start_date, end_date
+
+    return today, today
+
     
 
 #API 

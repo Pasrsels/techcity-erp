@@ -1,376 +1,813 @@
 {% extends "base.html" %}
-{% load static%}
-{% block title%} Dashboard {% endblock title %}
+{% load static %}
+{% block title %} Dashboard {% endblock title %}
 {% block content %}
-<div class="finance d-flex">
-    <div class="main-content">
-        <div class='px-2 py-2 bg-dark text-light align-items-center rounded'>
-            <div class='h5'>
-                <i class='bx bxs-dashboard'></i>
-                Dashboard
-            </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col">
-                <div class="card border rounded shadow bg">
-                    <div class="card-body d-flex align-items-center justify-content-center flex-column">
-                        <h6 class='text-center'>TOTAL INVOICE</h6>
-                        <h6 class='text-center'>{{invoice_count}}</h6>
-                        <h6 class='text-center'>TOTAL INVOICE TODAY</h6>
-                        <h6 class='text-center'>{{invoice_today_count}}</h6>
-                        <small>
-                            <a href="{% url 'finance:invoice' %}">
-                                <span>Details</span>
-                                <i class=' mt-1 bx bx-right-arrow-circle'></i>
-                            </a>
-                        </small>
-                    </div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card border rounded shadow bg">
-                    <div class="card-body d-flex align-items-center justify-content-center flex-column">
-                        <h6 class='text-center'>TOTAL CUSTOMERS</h6>
-                        <h6 class='text-center'>{{customers_count}}</h6>
-                        <h6 class='text-center'>TOTAL CUSTOMERS TODAY</h6>
-                        <h6 class='text-center'>{{customers_today_count}}</h6>
-                        <small>
-                            <a href="">
-                                <span>Details</span>
-                                <i class=' mt-1 bx bx-right-arrow-circle'></i>
-                            </a>
-                        </small>
-                    </div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card border rounded shadow bg">
-                   <div class="card-body d-flex align-items-center justify-content-center flex-column">
-                        <h6 class='text-center'>TOTAL PRODUCTS</h6>
-                        <h6 class='text-center'>{{products_count}}</h6>
-                        <h6 class='text-center'>TOTAL PRODUCTS TODAY</h6>
-                        <h6 class='text-center'>0</h6>
-                        <small>
-                            <a href="{% url 'inventory:inventory' %}">
-                                <span>Details</span>
-                                <i class=' mt-1 bx bx-right-arrow-circle'></i>
-                            </a>
-                        </small>
-                   </div>
-               </div>
-           </div>
-        </div>
-
-
-        {% block recent_transactions %}
-            <div class="mt-3 border rounded p-2">
-                <nav class='recent-nav navbar navbar-expand-lg navbar-light bg-dark text-light px-2'>
-                    <ul class='navbar-nav items  mr-auto'>
-                        <li class='nav-item active' data-name="sales">Sales</li>
-                        <li class='nav-item px-2' data-name="quotations">Qoutations</li>
-                        <li class='nav-item' data-name="transfers">Transfers</li>
-                        <li class='nav-item px-2' data-name="customers">Customers</li>
-                    </ul>
-                </nav>
-                <div class='content'>
-                    <div class='sales border p-2'>
-                        <table class='table'>
-                            <thead>
-                                <th>Invoive #</th>
-                                <th>Date</th>
-                                <th>Customer</th>
-                                <th>Amount</th>
-                                <th class="text-center">Payment Status</th>
-                            </thead>
-                            <tbody>
-                                {% for sale in sales %}
-                                    <tr>
-                                        <td>
-                                            <a href="{% url 'finance:invoice_preview' sale.transaction.id %}">
-                                                <small>{{sale.transaction.invoice_number}}</small>
-                                            </a>
-                                        </td>
-                                        <td><small>{{sale.date}}</small></td>
-                                        <td>{{sale.transaction.customer}}</td>
-                                        <td>{{sale.total_amount}}</td>
-                                        <td class="text-center">
-                                            {% if sale.transaction.payment_status == 'Paid' %}
-                                                <small class='border rounded bg-success p-1 text-light'><small>Paid</small></small>
-                                            {% else %}
-                                                <small class='border rounded bg-danger p-1 text-light'><small>Due</small></small>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        <a href="{% url 'pos:pos' %}" class='btn btn-outline-dark btn-sm'>
-                            <i class="bx bx-plus"></i>
-                            Add Sale
-                        </a>
-                        <span class="px-1"></span>
-                        <a href="{% url 'finance:invoice' %}" class='btn btn-success btn-flat btn-sm'>
-                            <i class='bx bx-list-ul' ></i>
-                            Sales List
-                        </a>
-                    </div>
-                    <div class='quotations hidden border  p-2'>
-                        <table class='table'>
-                            <thead>
-                                <th>Qoute #</th>
-                                <th>Date</th>
-                                <th>Customer</th>
-                                <th>Products</th>
-                                <th>Amount</th>
-                                <!-- <th class="text-center">Status</th> -->
-                            </thead>
-                            <tbody>
-                                {% for qoute in qoutations %}
-                                    <tr>
-                                        <td>
-                                            <a href="{% url 'finance:quotation_preview' qoute.id %}">
-                                                <small>{{qoute.qoute_reference}}</small>
-                                            </a>
-                                        </td>
-                                        <td><small>{{qoute.date}}</small></td>
-                                        <td>{{qoute.customer.name}}</td>
-                                        <td>{{qoute.products}}</td>
-                                        <td>{{qoute.amount}}</td>
-                                        <!-- <td class="text-center">
-                                            {% if qoute.status == True %}
-                                                <small class='border rounded bg-success p-1 text-light'><small>Processed</small></small>
-                                            {% else %}
-                                                <small class='border rounded bg-danger p-1 text-light'><small>Not yet processed</small></small>
-                                            {% endif %}
-                                        </td> -->
-                                    </tr> 
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        <a href="{% url 'pos:pos' %}" class='btn btn-outline-dark btn-sm'>
-                            <i class="bx bx-plus"></i>
-                            Add qoute
-                        </a>
-                        <span class="px-1"></span>
-                        <a href="{% url 'finance:qoutation_list' %}" class='btn btn-success btn-flat btn-sm'>
-                            <i class='bx bx-list-ul' ></i>
-                            Qoute List
-                        </a>
-                    </div>
-                    <div class='transfers hidden border p-2'>
-                        <table class='table table-striped border rounded p-2'>
-                            <tr>
-                                <thead>
-                                    <th>Date</th>
-                                    <th>Trans Ref</th>
-                                    <th>Destination</th>
-                                    <th>Action</th>
-                                </thead>
-                            </tr>
-                            <tbody>
-                                {% for transfer in transfers %}
-                                    <tr>
-                                        <td><small>{{transfer.date}}</small></td>
-                                        <td><small>{{transfer.transfer_ref}}</small></td>
-                                        <td><small>{{transfer.transfer_to}}</small></td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        {% comment %} <a href="{% url 'inventory:add_transfer' %}" class='btn btn-outline-dark btn-sm'>
-                            <i class="bx bx-plus"></i>
-                            Add Transfer
-                        </a> {% endcomment %}
-                        <span class="px-1"></span>
-                        <a href="{% url 'inventory:transfers' %}" class='btn btn-success btn-flat btn-sm'>
-                            <i class='bx bx-list-ul' ></i>
-                            Transfers List
-                        </a>
-                    </div>
-                    <div class='customers hidden border p-2'>
-                        <table class='table'>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone Number</th>
-                                <th>Address</th>
-                            </tr>
-                            <tbody>
-                                {% for customer in customers %}
-                                    <tr>
-                                        <td>{{customer.name}}</td>
-                                        <td>{{customer.email}}</td>
-                                        <td>{{customer.phone_number}}</td>
-                                        <td>{{customer.address}}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        <span class="px-1"></span>
-                        <a href="" class='btn btn-success btn-flat btn-sm'>
-                            <i class='bx bx-list-ul' ></i>
-                            Customer List
-                        </a>
-                    </div>
-                </div>
-            </div>
-        {% endblock recent_transactions %}
+<div class="dashboard-container">
+  <div class="main-content p-4">
+    <div class="header-row d-flex justify-content-between align-items-center mb-4">
+      <div class="page-title">
+        <h4 class="fw-bold mb-0">Dashboard Overview</h4>
+        <p class="text-muted">Welcome back! Here's what's happening today</p>
+      </div>
     </div>
 
-    <div class="sidebar mt-1 px-2 shadow">
-        <h6 class="mt-2 fw-bold">Pay Later(s)</h6>
-        <table class="table table-striped">
-            {% for partial_transaction in partial_invoices %}  
-                <tr>
-                    <td><small>{{ partial_transaction.due_date }}</small></td>
-                    <td id="partialTr" data-id='{{partial_transaction.id}}' style='cursor:pointer;'><small>{{ partial_transaction.customer }}</small></td>
-                    <td><small>{{partial_transaction.currency.symbol}}{{ partial_transaction.amount_due}}</small></td>
+    <!-- Stats Cards Row -->
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <span class="text-muted">Total Sales</span>
+                <h3 class="mt-2 mb-0">{{invoice_count}}</h3>
+                <div class="mt-2 d-flex align-items-center">
+                  <span class="badge bg-success-subtle text-success p-1 me-1">
+                    <i class="bx bx-up-arrow-alt"></i> 12.5%
+                  </span>
+                  <small class="text-muted">vs last month</small>
+                </div>
+              </div>
+              <div class="icon-bg bg-primary-subtle rounded p-3">
+                <i class="bx bx-receipt text-primary fs-3"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Revenue Card -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <span class="text-muted">Total Revenue</span>
+                <h3 class="mt-2 mb-0">$36,254</h3>
+                <div class="mt-2 d-flex align-items-center">
+                  <span class="badge bg-success-subtle text-success p-1 me-1">
+                    <i class="bx bx-up-arrow-alt"></i> 8.2%
+                  </span>
+                  <small class="text-muted">vs last month</small>
+                </div>
+              </div>
+              <div class="icon-bg bg-success-subtle rounded p-3">
+                <i class="bx bx-dollar-circle text-success fs-3"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Customers Card -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <span class="text-muted">Total Customers</span>
+                <h3 class="mt-2 mb-0">{{customers_count}}</h3>
+                <div class="mt-2 d-flex align-items-center">
+                  <span class="badge bg-success-subtle text-success p-1 me-1">
+                    <i class="bx bx-up-arrow-alt"></i> 5.3%
+                  </span>
+                  <small class="text-muted">vs last month</small>
+                </div>
+              </div>
+              <div class="icon-bg bg-info-subtle rounded p-3">
+                <i class="bx bx-user text-info fs-3"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Products Card -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <span class="text-muted">Total Products</span>
+                <h3 class="mt-2 mb-0">{{products_count}}</h3>
+                <div class="mt-2 d-flex align-items-center">
+                  <span class="badge bg-warning-subtle text-warning p-1 me-1">
+                    <i class="bx bx-right-arrow-alt"></i> 0%
+                  </span>
+                  <small class="text-muted">vs last month</small>
+                </div>
+              </div>
+              <div class="icon-bg bg-warning-subtle rounded p-3">
+                <i class="bx bx-package text-warning fs-3"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts and Analytics Row -->
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Sales Overview</h5>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                This Month
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">Today</a></li>
+                <li><a class="dropdown-item" href="#">This Week</a></li>
+                <li><a class="dropdown-item" href="#">This Month</a></li>
+                <li><a class="dropdown-item" href="#">This Year</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-body">
+            <canvas id="salesChart" height="250"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Top Selling Products -->
+      <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white border-0">
+            <h5 class="mb-0">Top Selling Products</h5>
+          </div>
+          <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item border-0 d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center">
+                  <div class="product-icon bg-primary-subtle p-2 rounded me-3">
+                    <i class="bx bx-laptop text-primary"></i>
+                  </div>
+                  <div>
+                    <h6 class="mb-0">Product A</h6>
+                    <small class="text-muted">Electronics</small>
+                  </div>
+                </div>
+                <div class="text-end">
+                  <h6 class="mb-0">$1,280</h6>
+                  <small class="text-success">152 sales</small>
+                </div>
+              </li>
+              <li class="list-group-item border-0 d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center">
+                  <div class="product-icon bg-success-subtle p-2 rounded me-3">
+                    <i class="bx bx-mobile text-success"></i>
+                  </div>
+                  <div>
+                    <h6 class="mb-0">Product B</h6>
+                    <small class="text-muted">Mobile</small>
+                  </div>
+                </div>
+                <div class="text-end">
+                  <h6 class="mb-0">$967</h6>
+                  <small class="text-success">98 sales</small>
+                </div>
+              </li>
+              <li class="list-group-item border-0 d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center">
+                  <div class="product-icon bg-info-subtle p-2 rounded me-3">
+                    <i class="bx bx-headphone text-info"></i>
+                  </div>
+                  <div>
+                    <h6 class="mb-0">Product C</h6>
+                    <small class="text-muted">Accessories</small>
+                  </div>
+                </div>
+                <div class="text-end">
+                  <h6 class="mb-0">$845</h6>
+                  <small class="text-success">74 sales</small>
+                </div>
+              </li>
+              <li class="list-group-item border-0 d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center">
+                  <div class="product-icon bg-warning-subtle p-2 rounded me-3">
+                    <i class="bx bx-camera text-warning"></i>
+                  </div>
+                  <div>
+                    <h6 class="mb-0">Product D</h6>
+                    <small class="text-muted">Photography</small>
+                  </div>
+                </div>
+                <div class="text-end">
+                  <h6 class="mb-0">$645</h6>
+                  <small class="text-success">62 sales</small>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activities & Low Stock Section -->
+    <div class="row g-3">
+      <!-- Recent Transactions -->
+      <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Recent Transactions</h5>
+            <ul class="nav nav-tabs card-header-tabs border-0">
+              <li class="nav-item">
+                <a class="nav-link active" href="#" data-tab="sales">Sales</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#" data-tab="quotations">Quotations</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#" data-tab="transfers">Transfers</a>
+              </li>
+            </ul>
+          </div>
+          <div class="card-body p-0">
+            <!-- Sales Tab -->
+            <div class="tab-content active" id="sales-tab">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Invoice #</th>
+                      <th>Date</th>
+                      <th>Customer</th>
+                      <th>Amount</th>
+                      <th class="text-center">Status</th>
+                      <th class="text-end">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for sale in sales %}
+                    <tr>
+                      <td>
+                        <a href="{% url 'finance:invoice_preview' sale.transaction.id %}" class="text-decoration-none">
+                          {{sale.transaction.invoice_number}}
+                        </a>
+                      </td>
+                      <td>{{sale.date}}</td>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="avatar me-2 bg-light rounded-circle">
+                            <span class="avatar-text">{{sale.transaction.customer.name|slice:":1"}}</span>
+                          </div>
+                          {{sale.transaction.customer}}
+                        </div>
+                      </td>
+                      <td>{{sale.total_amount}}</td>
+                      <td class="text-center">
+                        {% if sale.transaction.payment_status == 'Paid' %}
+                        <span class="badge bg-success-subtle text-success">Paid</span>
+                        {% else %}
+                        <span class="badge bg-danger-subtle text-danger">Due</span>
+                        {% endif %}
+                      </td>
+                      <td class="text-end">
+                        <div class="dropdown">
+                          <button class="btn btn-sm px-0" type="button" data-bs-toggle="dropdown">
+                            <i class="bx bx-dots-vertical-rounded"></i>
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'finance:invoice_preview' sale.transaction.id %}">View</a></li>
+                            <li><a class="dropdown-item" href="#">Print</a></li>
+                            <li><a class="dropdown-item" href="#">Email</a></li>
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <div class="p-3">
+                <a href="{% url 'pos:pos' %}" class="btn btn-primary btn-sm">
+                  <i class="bx bx-plus"></i> New Sale
+                </a>
+                <a href="{% url 'finance:invoice' %}" class="btn btn-outline-secondary btn-sm ms-2">
+                  <i class="bx bx-list-ul"></i> All Sales
+                </a>
+              </div>
+            </div>
+            
+            <!-- Quotations Tab (Hidden by default) -->
+            <div class="tab-content" id="quotations-tab" style="display: none;">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Quote #</th>
+                      <th>Date</th>
+                      <th>Customer</th>
+                      <th>Products</th>
+                      <th>Amount</th>
+                      <th class="text-end">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for qoute in qoutations %}
+                    <tr>
+                      <td>
+                        <a href="{% url 'finance:quotation_preview' qoute.id %}" class="text-decoration-none">
+                          {{qoute.qoute_reference}}
+                        </a>
+                      </td>
+                      <td>{{qoute.date}}</td>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="avatar me-2 bg-light rounded-circle">
+                            <span class="avatar-text">{{qoute.customer.name|slice:":1"}}</span>
+                          </div>
+                          {{qoute.customer.name}}
+                        </div>
+                      </td>
+                      <td>{{qoute.products}}</td>
+                      <td>{{qoute.amount}}</td>
+                      <td class="text-end">
+                        <div class="dropdown">
+                          <button class="btn btn-sm px-0" type="button" data-bs-toggle="dropdown">
+                            <i class="bx bx-dots-vertical-rounded"></i>
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'finance:quotation_preview' qoute.id %}">View</a></li>
+                            <li><a class="dropdown-item" href="#">Convert to Sale</a></li>
+                            <li><a class="dropdown-item" href="#">Print</a></li>
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <div class="p-3">
+                <a href="#" class="btn btn-primary btn-sm">
+                  <i class="bx bx-plus"></i> New Quotation
+                </a>
+                <a href="{% url 'finance:qoutation_list' %}" class="btn btn-outline-secondary btn-sm ms-2">
+                  <i class="bx bx-list-ul"></i> All Quotations
+                </a>
+              </div>
+            </div>
+            
+            <!-- Transfers Tab (Hidden by default) -->
+            <div class="tab-content" id="transfers-tab" style="display: none;">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Date</th>
+                      <th>Reference</th>
+                      <th>From</th>
+                      <th>To</th>
+                      <th>Items</th>
+                      <th class="text-end">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for transfer in transfers %}
+                    <tr>
+                      <td>{{transfer.date}}</td>
+                      <td>{{transfer.transfer_ref}}</td>
+                      <td>Main Warehouse</td>
+                      <td>{{transfer.transfer_to}}</td>
+                      <td>3 items</td>
+                      <td class="text-end">
+                        <div class="dropdown">
+                          <button class="btn btn-sm px-0" type="button" data-bs-toggle="dropdown">
+                            <i class="bx bx-dots-vertical-rounded"></i>
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#">View</a></li>
+                            <li><a class="dropdown-item" href="#">Print</a></li>
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <div class="p-3">
+                <a href="#" class="btn btn-primary btn-sm">
+                  <i class="bx bx-plus"></i> New Transfer
+                </a>
+                <a href="{% url 'inventory:transfers' %}" class="btn btn-outline-secondary btn-sm ms-2">
+                  <i class="bx bx-list-ul"></i> All Transfers
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Alerts and Low Stock -->
+      <div class="col-12 col-lg-4">
+        <!-- Alerts Section -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-white border-0">
+            <h5 class="mb-0">Alerts</h5>
+          </div>
+          <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item border-0 d-flex py-3">
+                <div class="alert-icon me-3 bg-danger-subtle rounded-circle p-2">
+                  <i class="bx bx-error text-danger"></i>
+                </div>
+                <div>
+                  <h6 class="mb-0">5 products are out of stock</h6>
+                  <small class="text-muted">Inventory alert</small>
+                </div>
+              </li>
+              <li class="list-group-item border-0 d-flex py-3">
+                <div class="alert-icon me-3 bg-warning-subtle rounded-circle p-2">
+                  <i class="bx bx-time text-warning"></i>
+                </div>
+                <div>
+                  <h6 class="mb-0">3 invoices are due today</h6>
+                  <small class="text-muted">Payment alert</small>
+                </div>
+              </li>
+              <li class="list-group-item border-0 d-flex py-3">
+                <div class="alert-icon me-3 bg-info-subtle rounded-circle p-2">
+                  <i class="bx bx-refresh text-info"></i>
+                </div>
+                <div>
+                  <h6 class="mb-0">System update available</h6>
+                  <small class="text-muted">New version 2.3.0</small>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        
+        <!-- Pay Later Section (from your original code) -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Pay Later Invoices</h5>
+            <button class="btn btn-sm btn-light">
+              <i class="bx bx-filter"></i>
+            </button>
+          </div>
+          <div class="card-body p-0">
+            {% if partial_invoices %}
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <tbody>
+                  {% for partial_transaction in partial_invoices %}
+                  <tr>
                     <td>
-                        <span type="button" id="whatsappBtn" data-id='{{partial_transaction.id}}'>
-                            <i class='bx bxl-whatsapp text-dark'></i>
-                        </span>
+                      <div class="d-flex align-items-center">
+                        <div class="avatar me-2 bg-light rounded-circle">
+                          <span class="avatar-text">{{partial_transaction.customer|slice:":1"}}</span>
+                        </div>
+                        <div>
+                          <h6 class="mb-0" id="partialTr" data-id='{{partial_transaction.id}}' style='cursor:pointer;'>
+                            {{partial_transaction.customer}}
+                          </h6>
+                          <small class="text-muted">Due: {{partial_transaction.due_date}}</small>
+                        </div>
+                      </div>
                     </td>
-                </tr>
-            {% endfor %}
-        </table>
-    </div>
-
-    <div class="modal fade" id="paylaterModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body text-center">
-                    <ul id="partial_details"></ul>
-                </div>
+                    <td class="text-end">
+                      <div class="d-flex align-items-center justify-content-end">
+                        <h6 class="mb-0 me-3">{{partial_transaction.currency.symbol}}{{partial_transaction.amount_due}}</h6>
+                        <button class="btn btn-sm btn-success rounded-circle" id="whatsappBtn" data-id='{{partial_transaction.id}}'>
+                          <i class="bx bxl-whatsapp"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="loaderModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body text-center">
-                    <div class="spinner-border text-success" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2">Sending invoice to WhatsApp...</p>
-                </div>
+            {% else %}
+            <div class="text-center p-4">
+              <div class="empty-state">
+                <i class="bx bx-receipt fs-1 text-muted"></i>
+                <p class="mt-2 mb-0">No pay later invoices found</p>
+              </div>
             </div>
+            {% endif %}
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 </div>
 
-<script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>  
-<script src="{% static 'js/jquery.js'%}"></script>  
+<!-- Modals -->
+<!-- Pay Later Modal -->
+<div class="modal fade" id="paylaterModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title">Invoice Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-unstyled" id="partial_details"></ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Process Payment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loader Modal -->
+<div class="modal fade" id="loaderModal" tabindex="-1" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0">
+      <div class="modal-body text-center p-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 mb-0">Sending invoice to WhatsApp...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Required Scripts -->
+<script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/jquery.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
 <script>
-    const navButtons = document.querySelectorAll('.nav-item')
-    const sales = $('.sales')
-    const quotations = $('.quotations')
-    const customers = $('.customers')
-    const transfers = $('.transfers')
+// Tab Navigation
+// Tab Navigation
+const tabLinks = document.querySelectorAll('.card-header-tabs .nav-link');
+const tabContents = document.querySelectorAll('.tab-content');
 
-    navButtons.forEach((btn)=>{
-        btn.addEventListener(
-            'click', ()=>{
-                let name = event.target.getAttribute('data-name')
-
-                navButtons.forEach(b => b.classList.remove('active')); 
-                event.target.classList.add('active'); 
-
-                show(name)
-            }
-        )
-    })
-
-    function show(name) {
-        sales.addClass('hidden');
-        quotations.addClass('hidden'); 
-        customers.addClass('hidden');
-        transfers.addClass('hidden');
-
-        $(`.${name}`).removeClass('hidden'); 
-    }
-
-    const paylaterModal = new bootstrap.Modal(document.getElementById('paylaterModal'));
-    const partialDetailsList = document.getElementById('partial_details');
-    const trElements = document.querySelectorAll('#partialTr');
-
-    trElements.forEach(td => {
-        td.addEventListener('click', () => {
-            const invoiceId = td.dataset.id;
-            console.log(invoiceId)
-            partialDetailsList.innerHTML = ''; 
-
-            fetch(`/dashboard/get_partial_invoice_details/${invoiceId}/`)  
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok.');
-                    }
-                    return response.json();
-                })
-                .then(invoice => {
-                    console.log(invoice)
-                    paylaterModal.show();
-
-                    const items = [
-                        `Invoice amount: ${invoice[0].amount}`,
-                        `Invoice amount due: ${invoice[0].amount_due}`,
-                        `Invoice items: ${invoice[0].products_purchased}`
-                    ];
-                    items.forEach(itemText => {
-                        const li = document.createElement('li');
-                        li.textContent = itemText;
-                        li.classList.add('fw-bold')
-                        partialDetailsList.appendChild(li);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching invoice details:', error);
-                });
-        });
-    });
-
-    const whatsappBtn = document.getElementById('whatsappBtn');
-    const loaderModal = new bootstrap.Modal(document.getElementById('loaderModal'));
-
-    whatsappBtn.addEventListener('click', function() {
-        loaderModal.show(); 
-        whatsappBtn.disabled = true; 
-
-        const invoiceId = this.dataset.id;
-
-        fetch(`/finance/send_invoice_whatsapp/${invoiceId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            loaderModal.hide();
-            whatsappBtn.disabled = false;
-        })
-        .catch(error => {
-            loaderModal.hide();
-            whatsappBtn.disabled = false; 
-            console.error('Error:', error);
-        });
-    });
+tabLinks.forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
     
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";");
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === name + "=") {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-            }
-        }
-        }
-        return cookieValue;
-    } 
+    // Remove active class from all tabs
+    tabLinks.forEach(tab => tab.classList.remove('active'));
+    
+    // Add active class to clicked tab
+    link.classList.add('active');
+    
+    // Hide all tab contents
+    tabContents.forEach(content => content.style.display = 'none');
+    
+    // Show selected tab content
+    const targetTab = link.getAttribute('data-tab');
+    document.getElementById(`${targetTab}-tab`).style.display = 'block';
+  });
+});
 
-    </script>
-{% endblock content %}
+// Initialize Sales Chart
+const salesCtx = document.getElementById('salesChart').getContext('2d');
+const salesChart = new Chart(salesCtx, {
+  type: 'line',
+  data: {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    datasets: [{
+      label: 'Sales',
+      data: [12, 19, 15, 20, 22, 18, 24, 25, 28, 30, 32, 35],
+      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+      borderColor: '#3b82f6',
+      borderWidth: 2,
+      pointBackgroundColor: '#3b82f6',
+      pointBorderColor: '#fff',
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      tension: 0.3,
+      fill: true
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        padding: 10,
+        titleColor: '#fff',
+        titleFont: {
+          size: 14
+        },
+        bodyColor: '#fff',
+        bodyFont: {
+          size: 12
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          color: '#6b7280'
+        }
+      },
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.03)'
+        },
+        ticks: {
+          color: '#6b7280',
+          callback: function(value) {
+            return '$' + value;
+          }
+        }
+      }
+    }
+  }
+});
+
+// Pay Later Invoice Details
+$(document).on('click', '#partialTr', function() {
+  const transactionId = $(this).data('id');
+  
+  // Show modal
+  $('#paylaterModal').modal('show');
+  
+  // Get and display transaction details
+  $.ajax({
+    url: `/finance/partial-invoice-details/${transactionId}/`,
+    type: 'GET',
+    success: function(response) {
+      let detailsHtml = '';
+      
+      detailsHtml += `<li class="mb-3">
+        <small class="text-muted d-block">Customer</small>
+        <span class="fw-medium">${response.customer_name}</span>
+      </li>`;
+      
+      detailsHtml += `<li class="mb-3">
+        <small class="text-muted d-block">Invoice Number</small>
+        <span class="fw-medium">${response.invoice_number}</span>
+      </li>`;
+      
+      detailsHtml += `<li class="mb-3">
+        <small class="text-muted d-block">Total Amount</small>
+        <span class="fw-medium">${response.currency_symbol}${response.total_amount}</span>
+      </li>`;
+      
+      detailsHtml += `<li class="mb-3">
+        <small class="text-muted d-block">Amount Paid</small>
+        <span class="fw-medium">${response.currency_symbol}${response.amount_paid}</span>
+      </li>`;
+      
+      detailsHtml += `<li class="mb-3">
+        <small class="text-muted d-block">Amount Due</small>
+        <span class="fw-medium text-danger">${response.currency_symbol}${response.amount_due}</span>
+      </li>`;
+      
+      detailsHtml += `<li class="mb-3">
+        <small class="text-muted d-block">Due Date</small>
+        <span class="fw-medium">${response.due_date}</span>
+      </li>`;
+      
+      $('#partial_details').html(detailsHtml);
+    },
+    error: function(error) {
+      console.error('Error fetching invoice details:', error);
+      $('#partial_details').html('<p class="text-danger">Failed to load invoice details.</p>');
+    }
+  });
+});
+
+// WhatsApp Invoice Sharing
+$(document).on('click', '#whatsappBtn', function() {
+  const transactionId = $(this).data('id');
+  
+  // Show loader
+  $('#loaderModal').modal('show');
+  
+  // Send invoice via WhatsApp
+  $.ajax({
+    url: `/finance/send-invoice-whatsapp/${transactionId}/`,
+    type: 'GET',
+    success: function(response) {
+      // Hide loader
+      $('#loaderModal').modal('hide');
+      
+      // Show success alert
+      const alertHtml = `
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          Invoice sent successfully!
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      `;
+      
+      $('.main-content').prepend(alertHtml);
+      
+      // Auto dismiss alert after 5 seconds
+      setTimeout(() => {
+        $('.alert').alert('close');
+      }, 5000);
+    },
+    error: function(error) {
+      // Hide loader
+      $('#loaderModal').modal('hide');
+      
+      // Show error alert
+      const alertHtml = `
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          Failed to send invoice. Please try again.
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      `;
+      
+      $('.main-content').prepend(alertHtml);
+    }
+  });
+});
+
+// Initialize tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new bootstrap.Tooltip(tooltipTriggerEl)
+});
+
+// Responsive sidebar toggle for mobile
+document.addEventListener('DOMContentLoaded', function() {
+  const sidebarToggleBtn = document.createElement('button');
+  sidebarToggleBtn.className = 'btn btn-primary sidebar-toggle-btn position-fixed d-lg-none';
+  sidebarToggleBtn.style.bottom = '20px';
+  sidebarToggleBtn.style.right = '20px';
+  sidebarToggleBtn.style.zIndex = '1030';
+  sidebarToggleBtn.style.borderRadius = '50%';
+  sidebarToggleBtn.style.width = '45px';
+  sidebarToggleBtn.style.height = '45px';
+  sidebarToggleBtn.innerHTML = '<i class="bx bx-menu"></i>';
+  
+  document.body.appendChild(sidebarToggleBtn);
+  
+  sidebarToggleBtn.addEventListener('click', function() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('show-mobile-sidebar');
+    
+    // Add necessary styles if not already in CSS
+    if (!sidebar.classList.contains('mobile-styles-added')) {
+      sidebar.classList.add('mobile-styles-added');
+      
+      // Add styles for mobile view
+      if (window.innerWidth < 992) {
+        sidebar.style.position = 'fixed';
+        sidebar.style.left = '-250px';
+        sidebar.style.top = '0';
+        sidebar.style.bottom = '0';
+        sidebar.style.width = '250px';
+        sidebar.style.zIndex = '1040';
+        sidebar.style.transition = 'left 0.3s ease';
+        sidebar.style.boxShadow = '0 0 15px rgba(0,0,0,0.2)';
+      }
+    }
+    
+    // Toggle sidebar position
+    if (sidebar.classList.contains('show-mobile-sidebar')) {
+      sidebar.style.left = '0';
+    } else {
+      sidebar.style.left = '-250px';
+    }
+  });
+  
+  // Close sidebar when clicking outside
+  document.addEventListener('click', function(event) {
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarToggleBtn = document.querySelector('.sidebar-toggle-btn');
+    
+    if (sidebar.classList.contains('show-mobile-sidebar') && 
+        !sidebar.contains(event.target) && 
+        event.target !== sidebarToggleBtn && 
+        !sidebarToggleBtn.contains(event.target)) {
+      sidebar.classList.remove('show-mobile-sidebar');
+      sidebar.style.left = '-250px';
+    }
+  });
+  
+  // Adjust on window resize
+  window.addEventListener('resize', function() {
+    const sidebar = document.querySelector('.sidebar');
+    
+    if (window.innerWidth >= 992) {
+      sidebar.style.position = '';
+      sidebar.style.left = '';
+      sidebar.style.top = '';
+      sidebar.style.bottom = '';
+      sidebar.style.width = '';
+      sidebar.style.zIndex = '';
+      sidebar.style.transition = '';
+      sidebar.style.boxShadow = '';
+      sidebar.classList.remove('show-mobile-sidebar');
+    } else {
+      if (sidebar.classList.contains('mobile-styles-added') && !sidebar.classList.contains('show-mobile-sidebar')) {
+        sidebar.style.left = '-250px';
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

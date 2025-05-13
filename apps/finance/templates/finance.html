@@ -5,10 +5,8 @@
 <div class="finance-dashboard">
     <div class="container-fluid p-0">
       <div class="row g-0">
-        <!-- Collapsible Sidebar -->
         <aside class="col-lg-3 finance-sidebar" id="finance-sidebar">
           <div class="sidebar-content p-3 shadow-sm">
-            <!-- Date Filter Card -->
             <div class="card border-0 shadow-sm mb-3">
               <div class="card-body">
                 <div class="d-flex justify-content-between mb-2">
@@ -24,7 +22,6 @@
               </div>
             </div>
   
-            <!-- Overview Cards -->
             <div class="card border-0 shadow-sm mb-3">
               <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -44,8 +41,7 @@
                 <h3 id="id_expense" class="fw-bold mb-0">$0.00</h3>
               </div>
             </div>
-  
-            <!-- P&L Overview Card -->
+
             <div class="card border-0 shadow-sm mb-3">
               <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -89,10 +85,8 @@
           </div>
         </aside>
   
-        <!-- Main Content -->
         <main role="main" class="col-lg-9 ps-lg-4 pe-lg-4">
           <div class="p-3">
-            <!-- Header Section -->
             <div class="d-flex justify-content-between align-items-center mb-4">
               <div>
                 <h4 class="mb-1">Finance Dashboard</h4>
@@ -103,7 +97,6 @@
               </button>
             </div>
   
-            <!-- Finance Actions Grid -->
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
               {% if request.user.branch.name == 'ADMINS' %}
               <div class="col">
@@ -148,20 +141,6 @@
                 </a>
               </div>
               {% endif %}
-
-              <div class="col">
-                <a href="{% url 'finance:cash_flow' %}" class="card h-100 border-0 shadow-sm text-decoration-none">
-                  <div class="card-body d-flex align-items-center p-3">
-                    <div class="icon-container bg-primary bg-opacity-10 p-3 rounded-3 me-3">
-                      <i class="bi bi-cash-stack text-primary fs-4"></i>
-                    </div>
-                    <div>
-                      <h6 class="card-title mb-1">Cash Flow</h6>
-                      <p class="card-text text-muted small mb-0">Track money movement</p>
-                    </div>
-                  </div>
-                </a>
-              </div>
   
               <div class="col">
                 <a href="{% url 'finance:expenses' %}" class="card h-100 border-0 shadow-sm text-decoration-none">
@@ -218,21 +197,6 @@
                   </div>
                 </a>
               </div>
-              
-              <div class="col">
-                <a href="{% url 'finance:vat' %}" class="card h-100 border-0 shadow-sm text-decoration-none">
-                  <div class="card-body d-flex align-items-center p-3">
-                    <div class="icon-container bg-success bg-opacity-10 p-3 rounded-3 me-3">
-                      <i class="bi bi-percent text-success fs-4"></i>
-                    </div>
-                    <div>
-                      <h6 class="card-title mb-1">VAT</h6>
-                      <p class="card-text text-muted small mb-0">Tax management</p>
-                    </div>
-                  </div>
-                </a>
-              </div>
-  
               <div class="col">
                 <a href="{% url 'finance:currency' %}" class="card h-100 border-0 shadow-sm text-decoration-none">
                   <div class="card-body d-flex align-items-center p-3">
@@ -308,51 +272,83 @@
         </main>
       </div>
     </div>
-  
-    <!-- Modal for Time Frame -->
-    <div class="modal fade" id="timeFrameModal" tabindex="-1" aria-labelledby="timeFrameModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-          <div class="modal-header border-0">
-            <h5 class="modal-title" id="timeFrameModalLabel">Generate Financial Report</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form id="timeFrameForm">
-              <div class="mb-3">
-                <label for="timeFrame" class="form-label">Report Period</label>
-                <select class="form-select" id="timeFrame" name="timeFrame" required onchange="toggleCustomDates()">
-                  <option value="today">Today</option>
-                  <option value="weekly">This Week</option>
-                  <option value="monthly">This Month</option>
-                  <option value="yearly">This Year</option>
-                  <option value="custom">Custom Date Range</option>
-                </select>
-              </div>
-              <div class="row d-none" id="customTimeFrame">
-                <div class="col-md-6 mb-3">
-                  <label for="startDate" class="form-label">Start Date</label>
-                  <input type="date" class="form-control" id="startDate" name="startDate">
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="endDate" class="form-label">End Date</label>
-                  <input type="date" class="form-control" id="endDate" name="endDate">
-                </div>
-              </div>
-              <div class="mb-3">
-                <label for="reportFormat" class="form-label">Report Format</label>
-                <select class="form-select" id="reportFormat" name="reportFormat">
-                  <option value="pdf">PDF Document</option>
-                  <option value="excel">Excel Spreadsheet</option>
-                  <option value="csv">CSV File</option>
-                </select>
-              </div>
-              <button type="submit" class="btn btn-primary w-100">Generate Report</button>
-            </form>
-          </div>
+
+  <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content rounded-4 shadow">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title">Report Details</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="reportBodyContent">
+          <!-- Rendered HTML will be injected here -->
         </div>
       </div>
     </div>
+  </div>
+
+  
+  <div class="modal fade" id="timeFrameModal" tabindex="-1" aria-labelledby="timeFrameModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content rounded-4 shadow-lg border-0">
+        <div class="modal-header bg-light border-bottom-0 rounded-top-4 px-4 py-3">
+          <h5 class="modal-title fw-semibold" id="timeFrameModalLabel">📊 Generate Financial Report</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body px-4 py-4">
+          <form id="timeFrameForm" onsubmit="showLoader(this)">
+            <div class="mb-3">
+              <label for="reportType" class="form-label fw-medium">Type of Report</label>
+              <select class="form-select" id="reportType" name="reportType" required>
+                <option value="" disabled selected>Select Report Type</option>
+                <option value="sales">Sales</option>
+                <option value="expenses">Expenses</option>
+                <option value="trading">Trading</option>
+                <option value="profit_loss">Profit and Loss</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="timeFrame" class="form-label fw-medium">Report Period</label>
+              <select class="form-select" id="timeFrame" name="timeFrame" required onchange="toggleCustomDates()">
+                <option value="today">Today</option>
+                <option value="weekly">This Week</option>
+                <option value="monthly">This Month</option>
+                <option value="yearly">This Year</option>
+                <option value="custom">Custom Date Range</option>
+              </select>
+            </div>
+
+            <div class="row d-none" id="customTimeFrame">
+              <div class="col-md-6 mb-3">
+                <label for="startDate" class="form-label">Start Date</label>
+                <input type="date" class="form-control" id="startDate" name="startDate">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="endDate" class="form-label">End Date</label>
+                <input type="date" class="form-control" id="endDate" name="endDate">
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label for="reportFormat" class="form-label fw-medium">Report Format</label>
+              <select class="form-select" id="reportFormat" name="reportFormat">
+                <option value="pdf">PDF Document</option>
+                <option value="excel">Excel Spreadsheet</option>
+                <option value="csv">CSV File</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 d-flex justify-content-center align-items-center" id="generateBtn">
+              <span class="spinner-border spinner-border-sm me-2 d-none" id="loader" role="status" aria-hidden="true"></span>
+              <span>Generate Report</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
   </div>
   
   <style>
@@ -402,13 +398,11 @@
   </style>
   
   <script>
-    // Toggle sidebar on mobile
     function toggleSidebar() {
       const sidebar = document.getElementById('finance-sidebar');
       sidebar.classList.toggle('show');
     }
     
-    // Toggle custom date fields based on selection
     function toggleCustomDates() {
       const timeFrame = document.getElementById('timeFrame');
       const customTimeFrame = document.getElementById('customTimeFrame');
@@ -422,94 +416,34 @@
     
   </script>
 <script>
-    function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar-section');
-    sidebar.classList.toggle('d-none');
-}
-fetch('/finance/days_data')
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log(data)
-        populateTable(data);
-    })
-    .catch(error => {
-        console.error('There was a problem with the fetch operation:', error);
-    });
+  function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar-section');
+      sidebar.classList.toggle('d-none');
+  }
 
-function getWeekday(dateStr) {
-    const date = new Date(dateStr);
-    return date.toLocaleString('en-us', { weekday: 'long' });
-}
-function populateTable(data) {
-    const tbody = document.getElementById('table-body');
+   function showLoader(form) {
+    event.preventDefault();
+    const btn = form.querySelector('#generateBtn');
+    const spinner = form.querySelector('#loader');
+    btn.disabled = true;
+    spinner.classList.remove('d-none');
+    
+    setTimeout(() => {
+      btn.disabled = false;
+      spinner.classList.add('d-none');
 
-    for (const week in data) {
-        const weekData = data[week];
+    }, 3000); 
+  }
 
-        const dailySales = { "Monday": 0, "Tuesday": 0, "Wednesday": 0, "Thursday": 0, "Friday": 0, "Saturday": 0, "Sunday": 0 };
-        const dailyCOGS = { "Monday": 0, "Tuesday": 0, "Wednesday": 0, "Thursday": 0, "Friday": 0, "Saturday": 0, "Sunday": 0 };
-
-        weekData.sales.forEach(sale => {
-            const day = getWeekday(sale.date);
-            dailySales[day] += parseFloat(sale.total_amount);
-        });
-
-        weekData.cogs.forEach(cogs => {
-            const day = getWeekday(cogs.date);
-            dailyCOGS[day] += parseFloat(cogs.product__cost);
-        });
-
-        const totalSales = Object.values(dailySales).reduce((a, b) => a + b, 0);
-        const totalCOGS = Object.values(dailyCOGS).reduce((a, b) => a + b, 0);
-        const grossProfit = totalSales - totalCOGS;
-
-        const salesRow = document.createElement('tr');
-        const cogsRow = document.createElement('tr');
-        const grossProfitRow = document.createElement('tr');
-        const gapRow = document.createElement('tr');
-        const daysRow = document.createElement('tr');
-
-        salesRow.innerHTML = `<td></td><td class=''>Sales</td>`;
-        cogsRow.innerHTML = `<td class='fw-bold'>${week}</td><td class='text-danger'>COS</td>`;
-        grossProfitRow.innerHTML = `<td></td><td class=''>Gross Profit</td>`;
-        gapRow.innerHTML += `<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>`;
-        daysRow.innerHTML += `
-                <td class="bg-primary text-light"></td>
-                <td class="bg-primary text-light"></td>
-                <td class="bg-primary text-light">Monday</td>
-                <td class="bg-primary text-light">Tuesday</td>
-                <td class="bg-primary text-light">Wednesday</td>
-                <td class="bg-primary text-light">Thursday</td>
-                <td class="bg-primary text-light">Friday</td>
-                <td class="bg-primary text-light">Saturday</td>
-                <td class="bg-primary text-light">Sunday</td>
-                <td class="bg-primary text-light"></td>
-            `;
-
-        ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach(day => {
-            salesRow.innerHTML += `<td>${dailySales[day].toFixed(2)}</td>`;
-            cogsRow.innerHTML += `<td class='text-danger'>${dailyCOGS[day].toFixed(2)}</td>`;
-            grossProfitRow.innerHTML += `<td>${(dailySales[day] - dailyCOGS[day]).toFixed(2)}</td>`;
-        });
-
-        salesRow.innerHTML += `<td class='fw-bold'>${totalSales.toFixed(2)}</td>`;
-        cogsRow.innerHTML += `<td class='fw-bold  text-danger'>${totalCOGS.toFixed(2)}</td>`;
-        grossProfitRow.innerHTML += `<td class='fw-bold' style='background#fcd298'>${grossProfit.toFixed(2)}</td>`;
-
-        tbody.appendChild(salesRow);
-        tbody.appendChild(cogsRow);
-        tbody.appendChild(grossProfitRow);
-
-        if (['week 1', 'week 2', 'week 3'].includes(week)) {
-            tbody.appendChild(daysRow);
-        }
+  function toggleCustomDates() {
+    const timeFrame = document.getElementById("timeFrame").value;
+    const customTimeFrame = document.getElementById("customTimeFrame");
+    if (timeFrame === "custom") {
+      customTimeFrame.classList.remove("d-none");
+    } else {
+      customTimeFrame.classList.add("d-none");
     }
-}
+  }
 
 document.getElementById('timeFrame').addEventListener('change', function () {
     const customTimeFrame = document.getElementById('customTimeFrame');
@@ -520,36 +454,38 @@ document.getElementById('timeFrame').addEventListener('change', function () {
     }
 });
 
-document.getElementById('timeFrameForm').addEventListener('submit', function (event) {
-    event.preventDefault();
+document.getElementById("timeFrameForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+  const form = e.target;
+  const submitBtn = form.querySelector("button[type='submit']");
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Generating...`;
 
-    const timeFrame = document.getElementById('timeFrame').value;
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-
-    let queryParams = new URLSearchParams({ timeFrame });
-
-    if (timeFrame === 'custom') {
-        queryParams.append('startDate', startDate);
-        queryParams.append('endDate', endDate);
-    }
-
-    fetch(`generate-report/?${queryParams.toString()}`)
-        .then(response => response.blob())
-        .then(blob => {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `income_statement_${timeFrame}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-        })
-        .catch(error => console.error('Error generating report:', error));
-
-    const timeFrameModal = new bootstrap.Modal(document.getElementById('timeFrameModal'));
-    timeFrameModal.hide();
+  fetch('/finance/generate-report/', {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": getCookie('csrftoken'),
+      "Accept": "application/json"
+    },
+    body: new FormData(form)
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById("reportBodyContent").innerHTML = data.html;
+        new bootstrap.Modal(document.getElementById("reportModal")).show();
+        Toastify({ text: "Report generated!", duration: 3000, gravity: "top", position: "right", backgroundColor: "#28a745" }).showToast();
+      } else {
+        Toastify({ text: data.message, backgroundColor: "#dc3545" }).showToast();
+      }
+    })
+    .catch(() => {
+      Toastify({ text: "Something went wrong!", backgroundColor: "#dc3545" }).showToast();
+    })
+    .finally(() => {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = "Generate Report";
+    });
 });
 
 function fetchData(filter) {
@@ -586,135 +522,21 @@ function fetchData(filter) {
         });
 }
 fetchData('today');
-document.addEventListener('DOMContentLoaded', function () {
 
-    {% comment %} const monthSelect = document.createElement('select');
-    const months = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-
-    const currentMonth = new Date().getMonth();
-
-    const currentMonthOption = document.createElement('option');
-    currentMonthOption.value = currentMonth + 1;
-    currentMonthOption.text = months[currentMonth];
-    currentMonthOption.selected = true;
-    monthSelect.appendChild(currentMonthOption);
-
-    months.forEach((month, index) => {
-        if (index !== currentMonth) {
-            const option = document.createElement('option');
-            option.value = index + 1;
-            option.text = month;
-            monthSelect.appendChild(option);
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
         }
-    });
-
-    const incomeMonthElement = document.getElementById('id_income_month');
-    incomeMonthElement.innerHTML = '';
-    incomeMonthElement.appendChild(monthSelect);
-
-    monthSelect.addEventListener('change', function () {
-        const selectedMonth = monthSelect.value;
-
-        fetch(`/finance/income_json?month=${selectedMonth}`)
-            .then(response => response.json())
-            .then(data => {
-                total_sales = parseFloat(data.sales_total)
-                document.getElementById('id_income').innerText = `$${total_sales.toFixed(2)}`;
-            });
-
-        fetch(`/finance/expense_json?month=${selectedMonth}`)
-            .then(response => response.json())
-            .then(data => {
-                total_expenses = parseFloat(data.expense_total)
-                document.getElementById('id_expense').innerText = `$${total_expenses.toFixed(2)}`;
-            });
-    });
-    monthSelect.dispatchEvent(new Event('change'));
-    {% endcomment %}
-
-    // graphs
-
-    Chart.register({
-        id: 'customCanvasBackgroundColor',
-        beforeDraw: (chart) => {
-            const ctx = chart.canvas.getContext('2d');
-            ctx.save();
-            ctx.globalCompositeOperation = 'destination-over';
-            ctx.fillStyle = chart.config.options.plugins.customCanvasBackgroundColor.color || '#ffffff';
-            ctx.fillRect(0, 0, chart.width, chart.height);
-            ctx.color
-            ctx.restore();
-        }
-    });
-
-    const monthLabels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-    function fetchAndRenderChart(url, ctx, chartLabel) {
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                const chartData = monthLabels.map((label, index) => data[index + 1] || 0);
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: monthLabels,
-                        datasets: [{
-                            label: chartLabel,
-                            data: chartData,
-                            backgroundColor: 'transparent',
-                            borderColor: '#dedede',
-                            borderWidth: 1,
-                            pointRadius: 0,
-                            pointHoverRadius: 0
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    color: 'white'
-                                },
-                                grid: {
-                                    color: '#111'
-                                }
-                            },
-                            x: {
-                                ticks: {
-                                    color: '#fff'
-                                },
-                                grid: {
-                                    color: '#111'
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color: 'white' // Color of legend text
-                                }
-                            },
-                            customCanvasBackgroundColor: {
-                                color: '#111' // Background color of the chart area
-                            }
-                        },
-                        responsive: true,
-                        maintainAspectRatio: false
-                    }
-                });
-            });
+      }
     }
-
-    const incomeCtx = document.getElementById('incomeChart').getContext('2d');
-    fetchAndRenderChart('/finance/income_graph/', incomeCtx, 'Monthly Income');
-
-    const expenseCtx = document.getElementById('expenseChart').getContext('2d');
-    fetchAndRenderChart('/finance/expense_graph/', expenseCtx, 'Monthly Expenses');
-
-});
-
+    return cookieValue;
+  }
+  
 </script>
 {% endblock %}
