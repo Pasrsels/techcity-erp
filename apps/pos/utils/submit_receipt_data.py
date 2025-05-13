@@ -6,6 +6,10 @@ import qrcode
 from io import BytesIO
 from apps.settings.models import FiscalCounter
 from apps.finance.models import Invoice
+import hashlib
+import os
+import base64
+import binascii
 
 def submit_receipt_data(request, receipt_data, hash, signature):
     try:
@@ -13,7 +17,7 @@ def submit_receipt_data(request, receipt_data, hash, signature):
         receipt = OfflineReceipt(receipt_data=receipt_data)
         receipt.save()
         logger.info(f'Receipt saved offline: {receipt}')
-
+    
         zimra_instance = ZIMRA()
         response = zimra_instance.submit_receipt({"receipt":receipt_data}, hash, signature)
         logger.info(f"Receipt submission response: {response}")
@@ -26,20 +30,43 @@ def submit_receipt_data(request, receipt_data, hash, signature):
             invoice.receiptServerSignature = signature
             invoice.receipt_hash = hash
 
-            qr = qrcode.make(hash)
+            base_url = "https://fdmstest.zimra.co.zw"
+            
+            device_id = f'00000{os.getenv('DEVICE_ID')}'
+            receipt_date = datetime.strptime(receipt_data['receiptDate'], "%Y-%m-%dT%H:%M:%S").strftime('%d%m%Y')
+            receipt_global_no = str(receipt_data['receiptGlobalNo']).zfill(10) #to fix
+            receipt_qr_data = generate_verification_code(signature).replace('-', '')
+            
+            logger.info(f'{device_id}, {receipt_date}, {receipt_global_no} {receipt_qr_data}')
+
+            # qr_url = "https://invoice.zimra.co.zw"  
+            full_url = f"{base_url}/{device_id}{receipt_date}{receipt_global_no}{receipt_qr_data}"
+
+            # Generate QR code
+            qr = qrcode.make(full_url)
+
+            qr = qrcode.make(full_url)
             qr_io = BytesIO()
             qr.save(qr_io, format='PNG')
             qr_io.seek(0)
-
+                        
             from django.core.files.base import ContentFile
-            invoice.qr_code.save(f"qr_{invoice.invoice_number}.png", ContentFile(qr_io.getvalue()), save=False)
-            try:
-                invoice.save()
-            except Exception as e:
-                print(e)
-
+            
             fiscal_day = FiscalDay.objects.filter(created_at__date=datetime.today(), is_open=True).first()
             logger.info(f'fiscal_day: {fiscal_day}')
+
+            invoice.qr_code.save(f"qr_{invoice.invoice_number}.png", ContentFile(qr_io.getvalue()), save=False)
+            code = generate_verification_code(signature)
+            logger.info(code)
+            
+            try:
+                invoice.code=code
+                invoice.fiscal_day=fiscal_day.day_no
+                invoice.invoice_number = f"{receipt_data['receiptGlobalNo']}"
+                invoice.save()
+                logger.info(f'invoice saved: {invoice}')
+            except Exception as e:
+                logger.info(e)
 
             if fiscal_day:
 
@@ -60,7 +87,7 @@ def submit_receipt_data(request, receipt_data, hash, signature):
                 defaults={
                     "fiscal_counter_tax_percent":15,
                     "fiscal_counter_tax_id":3,
-                    "fiscal_counter_money_type":"Cash", #to be dynamic
+                    "fiscal_counter_money_type":invoice.payment_terms,
                     "fiscal_counter_value":invoice.amount
                 }
             )
@@ -99,7 +126,7 @@ def submit_receipt_data(request, receipt_data, hash, signature):
                         "fiscal_counter_tax_percent": None,
                         "fiscal_counter_tax_id": 0,
                         "fiscal_counter_tax_percent": 0,
-                        "fiscal_counter_money_type": "Cash", # payment type to be dynamic
+                        "fiscal_counter_money_type": invoice.payment_terms,
                         "fiscal_counter_value": invoice.amount
                     }
                 )
@@ -116,3 +143,15 @@ def submit_receipt_data(request, receipt_data, hash, signature):
     except KeyError as e:
         logger.error(f"KeyError: Missing key in invoice data: {e}")
         raise ValueError(f"Invalid invoice data: {e}")
+    
+def generate_verification_code(base64_signature):
+    decoded_bytes = base64.b64decode(base64_signature)
+    hex_string = decoded_bytes.hex()
+    
+    md5 = hashlib.md5()
+    md5.update(binascii.unhexlify(hex_string))
+    md5_hash = md5.hexdigest()
+    
+    verification_code = md5_hash[:16]
+
+    return verification_code.upper()

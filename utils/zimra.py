@@ -22,7 +22,6 @@ class DateTimeEncoder(json.JSONEncoder):
             return obj.isoformat()
         return super().default(obj)
 
-
 class ZIMRA:
 
     device_identification = os.getenv("DEVICE_ID")
@@ -48,6 +47,7 @@ class ZIMRA:
             "deviceModelName": self.device_model_name,
             "deviceModelVersion": self.device_model_version
         }
+        
         try:
             response = requests.post(f"{self.registration_url}/RegisterDevice", json=payload, headers=headers)
             response.raise_for_status()
@@ -178,27 +178,35 @@ class ZIMRA:
 
     def submit_receipt(
             self, 
-            receipt_data, 
+            receipt_data,
             hash,
             signature
         ):
         """
             Submits a single receipt to the FDMS.
         """
-
-        logger.info(receipt_data)
-
-        receipt_data['receipt']['receiptDeviceSignature'] = {
-            "hash": hash,
-            "signature": signature
-        }
+        
+        try:
+        
+            logger.info(receipt_data)
+            
+            receipt_data['receipt']['receiptDeviceSignature'] = {
+                "hash": hash,
+                "signature": signature
+            }
+            
+            logger.info(receipt_data)
+            
+        except Exception as e:
+            logger.info(e)
+        
 
         headers = {
             "Content-Type": "application/json",
             "deviceModelName": self.device_model_name,
             "deviceModelVersion": self.device_model_version
         }
-        logger.info(receipt_data)
+        
     
         try:
             response = requests.post(f"{self.base_url}/SubmitReceipt", json=receipt_data, headers=headers, cert=(self.certificate_path, self.certificate_key))
@@ -282,8 +290,8 @@ class ZIMRA:
         logger.info(f'signature: {counters}')
 
         regular_counters = []
-        sale_tax_by_tax_counter = None  
-        balance_by_money_counter = None  
+        sale_tax_by_tax_counter = [] 
+        balance_by_money_counter = [] 
 
         for counter in counters:
             fiscal_counter_data = {
@@ -296,19 +304,18 @@ class ZIMRA:
             }
 
             if counter.fiscal_counter_type == "SaleTaxByTax":
-                sale_tax_by_tax_counter = fiscal_counter_data  
+                sale_tax_by_tax_counter.append(fiscal_counter_data)  
             elif counter.fiscal_counter_type == "BalanceByMoneyType":
-                balance_by_money_counter = fiscal_counter_data  
+                balance_by_money_counter.append(fiscal_counter_data) 
             else:
+                logger.info(fiscal_counter_data)
                 regular_counters.append(fiscal_counter_data)
 
-        fiscal_day_counters = regular_counters.copy()  
+        fiscal_day_counters = regular_counters + sale_tax_by_tax_counter + balance_by_money_counter
         
-        if sale_tax_by_tax_counter:
-            fiscal_day_counters.append(sale_tax_by_tax_counter)
+        logger.debug(fiscal_day_counters)
         
-        if balance_by_money_counter:
-            fiscal_day_counters.append(balance_by_money_counter)
+        
         
         payload = {
             "fiscalDayNo": active_day.day_no,

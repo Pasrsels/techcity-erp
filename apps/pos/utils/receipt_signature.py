@@ -103,13 +103,13 @@ def get_last_receipt_numbers():
 
 def generate_receipt_data(invoice, invoice_items, request):
     """
-    Transform invoice data to receipt format, save offline, and submit to FDMS.
+        Transform invoice data to receipt format, save offline, and submit to FDMS.
     """
     try:
         logger.info(f"Processing Invoice: {invoice.invoice_number}")
 
         fiscal_day = FiscalDay.objects.filter(is_open=True, created_at__date=datetime.today()).first()
-
+        logger.info(fiscal_day)
         if not fiscal_day:
             zimra = ZIMRA()
             zimra.open_day()
@@ -155,7 +155,7 @@ def generate_receipt_data(invoice, invoice_items, request):
             "receiptCurrency": invoice.currency.name.upper(),
             "receiptCounter":fiscal_day.receipt_count + 1,
             "receiptGlobalNo":new_receipt_global_no,
-            "invoiceNo": invoice.invoice_number,
+            "invoiceNo": f"{new_receipt_global_no}",
             "receiptNotes": "Thank you for shopping with us!",
             "receiptDate": datetime.now().replace(microsecond=0).isoformat(),
             "receiptLinesTaxInclusive": True,
@@ -192,6 +192,9 @@ def generate_receipt_data(invoice, invoice_items, request):
             receipt_data['receiptTaxes'],
             receipt_data['previousReceiptHash'],
         )
+        
+        logger.info(f'Signature data: {signature_data}')
+        logger.info(f'Receipt_data: {receipt_data}')
 
         return signature_data, receipt_data
     except Exception as e:

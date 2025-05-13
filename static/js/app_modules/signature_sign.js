@@ -23,33 +23,34 @@ function run(signature) {
     console.log("Hash:", hash);
 
     var privateKey = `-----BEGIN PRIVATE KEY-----
-    MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDwEH8sSxrJip/A
-    j1JtrmPRlIMdqx/qg6W0WM91MaGj876PcFwsIxCBCa4RWSdBH4AX7qfYoVx8UmPP
-    Ck8Ni1mt4duCCPEEULxg11rcivy6RY375yNbKJ5LcoXlkVn9nGWJ39p7Oj/Y95nU
-    4a5dE2s04ppq4KH72/hQCSkRxS9vUR9hS8Y8ZgNyQ/4buTZmm2TPYRBMDv9pgFm1
-    pgYi7+XpC7f/F3yZMoPtouCF3SwscUJ8YSnc4SBjPV6bGQxcqMG3NoaopHNmDmGh
-    E2ogjG/I454hDm3rzazKz3sef2HE2hGGm6rNK0GS6FYyfqwYiARvVfs6EcSgz9Vr
-    ck6MFEWXAgMBAAECgf9u9zEm8uXEQ0+UsqsSB99xVjSaginpPPEGFrHOeiKSpm3E
-    ioC7O3oQK2lKm5Xe2bCxX0o2gwqSbNhghg4Eig/p+tHRnvserjMP5dEaIHoG9XUB
-    UNYG97+JIGbEDBaMzr4gp64AnUGQs41n2ZRqHDpx4kzTxQHFvugIwYiPrkCUMwYf
-    EysgpY2OT/oMNjJJK/a33P4QVSeFCvCWZ2zIwGcxMHB2a7CKnvRLs6s7MJGT+gU4
-    2tNOjCmRTvJixGLIC21m28Cnf7Kxjih384ulK4MyCc/n0W8+chg0kUWmiHln4vex
-    qIpoxP72vCn/jUId34FyLEiPrySsYsFEhANw5YECgYEA+PnSvjlVIw5L2CB9nQr8
-    M93US0+TK+/qlr/RbCCIaFAkrfS6Tvto09AARAQWUYa6CbJbAd5XjuVof6YlZ7Hm
-    9ciGzEKvZPqvO5WxxJUbvnTXPe3as9r7fn5jTRYJrc2IKTPXT7+8MD82pUZyqbHS
-    RfdPBE3S6VNRKRXmVz5pb9cCgYEA9tZQBWklCccOEnP5cshvxy0OeiWbFWq8bfIz
-    w214ZHrGqims5N1L3Ejs9srqn0vWYL4I8B4uaZScOzOWZAVopXfNrnjiRBZzqTzn
-    BlPO0bWmrjQAgyA5SnTQ02us9biFvfaNCtxyhJAhMGrb3C108EHqtG7W7riE9TJY
-    4QrMIEECgYEA1YvZMOUV28qATPCZLOBmLspeMvYeofnWeNQveJFyzh2nSDj2r5W9
-    dKccAzqKNgTbfkOnATRGXz7u4UWNIaKaGUeULpAnxfGp6O5dGeJWeIXYs7pV8hup
-    x/X5j/2N8a+u0MAxNaqba7pcUWfaIyhs1SvobyWc+BlJLHcnKL9USeMCgYBw63fu
-    EbzE7VANtwptrS4dgwo1bNC2in6rGXr+syy5YsVRgQE8LdSPcLke6ZNNzmbDGQyD
-    tHrtB/Q0zRPGrAbEc7sfTuPL3C2LRXY2mc5qd1xKIzX8xpgO7MO/hGm6e3CLh6fc
-    SR8Gb90PBkOQRSdS5gTWCELBMJ56gU7RnJvnQQKBgQDyjPPgVwEmAgCSX2AGacfJ
-    yB2GBZsy5NwWUboR+D+eSoD9U3EiggjlmPaHKwVsOm9UZ2WTuQY5+4G3Vo3QJv5p
-    99uAWZM476cHo3GMJyofOMSzhP+zoTajsMKVwZreVfSkBP3bkgPv/Pa0Eo6pnQoc
-    LSlpirFwsvVBf/SGHszN5Q==
-    -----END PRIVATE KEY-----`;
+        MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCPJ4/16KEOVaao
+        2VDen9oSS+lh272ohJINqtU93db5qdQMUGldlJrYvkuBY9Xo0iEeYO/eL/IAyPOp
+        WVLqufE9jmp03U5uvsJn9VxPw9dCDJo9r5jcmq0XZtLN6SE1adfWlpTiSxvSIJY9
+        CeE8YiwS+wN3gbESBmPLzs1jew6iwjkF2nla70fYZ27gt44CqzUw/qC2IG+sIsha
+        8pvCiTms7OQYWQuF1g21FQJtm4JTAPF59pv8H6SGE6i81Y6QCchts8XwCj+JZ/JK
+        2KBuH26Z2CkDZSSvLWYdiqW+wEBqgFAWEfhIj0dpCP5wsiYe1aGwpIIytXdym9kN
+        hE7tg6x7AgMBAAECggEACbB3/ivRNDWtkpx8QfKYNt3RfZtQcnwKoLHb6L8/rOVc
+        TLsSmVAUzQUlpNaGOici27oG8kcqKPhxBEOJ/l44iwiSgbd1oWmi90NfDKe+RaJc
+        Zul1k2pFZfdCice074xq8gN+L0o90f1SU0OnGEhddalsxNAlP97pLqMgOWgGXRNm
+        EHpKCxlp4QbhUA+CuzGeAq/OtMjEZOHUJC511pwnffluCbx0LD5Cs66L5eV2MIMj
+        s/GEpfxALv05YdUhfraAD7IM8plUk7IWWmV4Cjjiv7CQzdfZ8RgRm14TOICWCl+K
+        q9BVsC/UkQIPQYNhQ9OHhze9cHC4lnU4jry7CmiUyQKBgQDBW1zM3A96U8qgmIB5
+        jXgpw6++01HF76ccqjUp7NW4YD0D3zjmaLfxIf5FypCK31ONPwDutWgE8+0T+wqW
+        jtIs+/icm8O6TAR4+kR+/vkGWQwBRG9Hju1JOgtAdtYCrFASzqzJxIMGrYkPq584
+        J4HMUhw2v3yYcMmS7NRWanVmQwKBgQC9iIRH1VknHAOeeKVDh3vJyA+UJJJJQyj1
+        aqmSSLO4bRjBu2uKhXH4VboQ+fSPUm+AnqdY1YMCXorc38/WDOT/A8OvVkeCulM+
+        kx76stJIyUSNVWf48jv5kCa51++2Mw9LAN798zgPjVKwzWfMR4Ux8amue5c6c2ZQ
+        P7g++FQpaQKBgGfDgd+mUOASy3C3pmqU0uGG1G+RtBaG76Vgajtfj6nsa5ICXuS3
+        Wc8bsPr/I+aCxrHMF9ICpBnUVWwdkqcNahkd92MD7Fuzo8rQc6W7ayRO8TRU52r9
+        drWPYq5rl5nDow0UwIFe5fnVcvJn5YAbI3rkraNry497J5GjaqgdZXdFAoGAU+cf
+        R/12Xg3UvE6EOoS7k/PwkZAvAies9helwZBVnwsMrpadYND6RwkMOX+td9Tyb2nM
+        g1LhkCbyKh0aEJPcu9eaxP/Y4FJDj6vpRunqlTYkFrz8LgRt8GiT/ClPgMTRvE5C
+        aQFGi/vv4zzK+m+e0yE8EHW92K5FWLkcgyPDfiECgYEAjn8BMNT0fDiqtqmm4mhq
+        Yj9xLgFbLtfVX0QY6MpPjaKzGIuTe26hdxPuJwwdeUduoxEWJYrPVLjaheTQ/nSP
+        8jbqzaZaV+IWstI/Gy0PkcgF57fbjebnwBkLA6MQvuSmRDXqXTHbOY8Hx4AvEnRa
+        t6dk2ozSDhyz6DAkFhtaoHU=
+        -----END PRIVATE KEY-----
+    `;
 
     var signature = signData(stringToSign, privateKey);
     console.log("Signature:", signature);

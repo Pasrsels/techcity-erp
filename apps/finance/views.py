@@ -77,6 +77,7 @@ from django.utils.dateparse import parse_date
 from dotenv import load_dotenv
 from apps.settings.models import OfflineReceipt, FiscalDay, FiscalCounter
 from utils.zimra import ZIMRA
+from utils.zimra_sig_hash import run
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Avg, F, Value, CharField
@@ -877,7 +878,6 @@ def create_invoice(request):
             
             with transaction.atomic():
                 invoice = Invoice.objects.create(
-                    invoice_number=Invoice.generate_invoice_number(request.user.branch.name),  
                     customer=customer,
                     issue_date=timezone.now(),
                     amount=invoice_total_amount,
@@ -987,12 +987,12 @@ def create_invoice(request):
                             quantity=item_data['quantity'],
                             unit_price=item_data['price'],
                             vat_rate = vat_rate,
-                            total_amount = int(item_data['quantity']) * float(item_data['price'])
+                            total_amount = int(item_data['quantity']) * float(item_data['price']),
+                            cash_up_status = False
                         )
                     )
 
                     print(invoice_items)
-                    
                     
                     # cost of sales item
                     COGSItems.objects.get_or_create(
@@ -1075,16 +1075,23 @@ def create_invoice(request):
                 # for tax purpose Zimra
                 logger.info(invoice_items)
 
-                # try:
-                #     sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
-                #     logger.info(f'sig data: {sig_data} {receipt_data}')
-                # except Exception as e:
-                #     logger.info(e)
-                #     return JsonResponse({'success': False, 'error': str(e)})
+                try:
+                    sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
+                    logger.info(sig_data)
+                    hash_sig_data = run(sig_data)
+                    
+                    logger.info(hash_sig_data)
+                    submit_receipt_data(request, receipt_data, hash_sig_data['hash'], hash_sig_data['signature'])
+                    
+                    invoice_data = invoice_preview_json(request, invoice.id)
 
-                # logger.info(f'inventory creation successfully done: {invoice}')
+                except Exception as e:
+                    logger.info(e)
+                    return JsonResponse({'success': False, 'error': str(e)})
 
-                return JsonResponse({'success':True, 'invoice_id': invoice.id, 'data':[], 'receipt_data':[]})
+                logger.info(f'inventory creation successfully done: {invoice}')
+
+                return JsonResponse({'success':True, 'invoice_id': invoice.id, 'invoice_data':invoice_data})
 
         except (KeyError, json.JSONDecodeError, Customer.DoesNotExist, Inventory.DoesNotExist, Exception) as e:
             return JsonResponse({'success': False, 'error': str(e)})
@@ -1135,6 +1142,7 @@ def submit_invoice_data_zimra(request):
         hash = data.get('hash', '')
         signature = data.get('signature', '') 
         receipt_data = data.get('receipt_data')
+        invoice_id = data.get('invoice_id')
 
         logger.info(receipt_data)
 
@@ -1143,10 +1151,24 @@ def submit_invoice_data_zimra(request):
 
         if not signature:
             return JsonResponse({'success':False,'message':f'Signature data is missing!'}, status=400)
+        
+        try:
+            submit_receipt_data(request, receipt_data, hash, signature)
+            logger.info('done')
+        except Exception as e:
+            logger.info(e)
+            return JsonResponse(
+                {
+                    'success':False,
+                    'messsage':f'{e}'
+                },
+                status=400
+            )
+        
+        invoice_data = invoice_preview_json(request, invoice_id)
+        logger.info(invoice_data)
 
-        submit_receipt_data(request, receipt_data, hash, signature)
-
-        return JsonResponse({'success':True, 'message':'data received'}, status=200)
+        return JsonResponse({'success':True, 'message':'data received', 'data':invoice_data}, status=200)
     except Exception as e:
         return JsonResponse({'message':f'{e}', 'success':False}, status=200)
 
@@ -2287,20 +2309,20 @@ def replace_item(request, item_id):
             return JsonResponse({'success': True})
         except (InvoiceItem.DoesNotExist, ValueError):
             return JsonResponse({'success': False, 'error': 'Invalid item'}, status=404)
-
-@login_required
+        
 def invoice_preview_json(request, invoice_id):
+    from django.core.serializers.json import DjangoJSONEncoder
     try:
         invoice = Invoice.objects.get(id=invoice_id)
     except Invoice.DoesNotExist:
-        return JsonResponse({"error": "Invoice not found"}, status=404) 
-    
+        return JsonResponse({"error": "Invoice not found"}, status=404)
+
     dates = {}
     if invoice.payment_terms == 'layby':
         dates = laybyDates.objects.filter(layby__invoice=invoice).values('due_date')
-     
+
     invoice_items = InvoiceItem.objects.filter(invoice=invoice).values(
-        'item__name', 
+        'item__name',
         'quantity',
         'item__description',
         'total_amount',
@@ -2308,7 +2330,6 @@ def invoice_preview_json(request, invoice_id):
     )
 
     invoice_dict = {}
-
     invoice_dict['customer_name'] = invoice.customer.name
     invoice_dict['customer_email'] = invoice.customer.email
     invoice_dict['customer_cell'] = invoice.customer.phone_number
@@ -2320,36 +2341,40 @@ def invoice_preview_json(request, invoice_id):
     invoice_dict['invoice_number'] = invoice.invoice_number
     invoice_dict['receipt_hash'] = invoice.receipt_hash
     invoice_dict['subtotal'] = invoice.subtotal
-    invoice_dict['vat'] =  invoice.vat
+    invoice_dict['vat'] = round(invoice.vat, 2)
     invoice_dict['device_id'] = os.getenv("DEVICE_ID")
     invoice_dict['device_serial_number'] = os.getenv("DEVICE_SERIAL_NUMBER")
-    
+    invoice_dict['code'] =  invoice.code
+    invoice_dict['fiscal_day'] = invoice.fiscal_day
+
     if invoice.branch:
         invoice_dict['branch_name'] = invoice.branch.name
         invoice_dict['branch_phone'] = invoice.branch.phonenumber
         invoice_dict['branch_email'] = invoice.branch.email
-        
-    invoice_dict['user_username'] = invoice.user.username  
 
-    # invoice_dict['receipt_signature'] = invoice.receiptServerSignature if invoice.receiptServerSignature else None
-    
-    # if invoice.qr_code and invoice.qr_code.name:
-    #     try:
-    #         invoice_dict['receipt_qr_code_url'] = request.build_absolute_uri(invoice.qr_code.url)
-    #     except Exception as e:
-    #         invoice_dict['receipt_qr_code_url'] = None
-    #         logger.info(f"Error getting QR code URL: {e}")  
-    # else:
-    #     invoice_dict['receipt_qr_code_url'] = None
+    invoice_dict['user_username'] = invoice.user.username
+    invoice_dict['receipt_signature'] = invoice.receiptServerSignature if invoice.receiptServerSignature else None
 
-    # logger.info(invoice.qr_code)
-    
+    # Safely serialize qr_code
+    if invoice.qr_code and hasattr(invoice.qr_code, 'url'):
+        try:
+            invoice_dict['qr_code'] = request.build_absolute_uri(invoice.qr_code.url)
+            logger.info(invoice_dict['qr_code'])
+        except Exception as e:
+            invoice_dict['qr_code'] = None
+            logger.info(f"Error generating QR code URL: {e}")
+    else:
+        invoice_dict['qr_code'] = None
+
     invoice_data = {
         'invoice': invoice_dict,
         'invoice_items': list(invoice_items),
         'dates': list(dates)
     }
-    return JsonResponse(invoice_data)
+    
+    logger.info(invoice_data)
+
+    return invoice_data
 
 @login_required
 def invoice_pdf(request):
@@ -2962,6 +2987,26 @@ def qoute_preview(request, qoutation_id):
     qoute = Qoutation.objects.get(id=qoutation_id)
     qoute_items = QoutationItems.objects.filter(qoute=qoute)
     return render(request, 'qoute.html', {'qoute':qoute, 'qoute_items':qoute_items})
+
+@login_required
+def qoute_preview_modal(request, qoutation_id):
+    try:
+        qoute = Qoutation.objects.get(id=qoutation_id)
+        logger.info(qoute)
+        qoute_items = QoutationItems.objects.filter(qoute=qoute)
+        logger.info(f'qoute items: {qoute_items.values()}')
+        html = render_to_string('qoutations/partial_preview.html', {
+            'qoute': qoute,
+            'qoute_items': qoute_items
+        }, request=request)  
+        
+        logger.info(html)
+
+        return JsonResponse({'success': True, 'html': html}, status=200)
+        
+    except Exception as e:
+        logger.info(e)
+        return JsonResponse({'success': False, 'message':str(e)}, status=400)
 
 @login_required
 def delete_qoute(request, qoutation_id):
@@ -4563,79 +4608,128 @@ def check_fiscal_status(request):
 
 @login_required
 def close_fiscal_day(request):
-
+    """
+    Close the fiscal day and generate a report with counter values following the FDMS signature format.
+    Handles two currencies (USD and ZIG) and three counter types
+    (BalanceByMoneyType, SaleByTax, SaleTaxByTax) with currency information.
+    """
     if request.method == 'GET':
-
         try:
             fiscal_day = FiscalDay.objects.filter(created_at__date=datetime.datetime.today(), is_open=True).first()
+            if not fiscal_day:
+                return JsonResponse({'success': False, 'message': 'No open fiscal day found for today'}, status=404)
+                
             fiscal_day_counters = FiscalCounter.objects.filter(created_at__date=datetime.datetime.today())
             
-            print(f'fiscal counters: {fiscal_day_counters.values('fiscal_counter_type', 'fiscal_counter_money_type')}')
+            logger.debug(f'fiscal counters: {fiscal_day_counters.values("fiscal_counter_type", "fiscal_counter_money_type", "fiscal_counter_currency")}')
 
-            saleByTax_string = ""  
-            saleTaxByTax_string = ""
-            balance_money_string = ""  
-            counters_string = ""
+            sale_by_tax_string = ""  
+            sale_tax_by_tax_string = ""
+            balance_money_string = ""
+            
+            sale_by_tax_dict = {}
+            sale_tax_by_tax_dict = {}
+            balance_by_currency_and_type = {}
+            
 
             for counter in fiscal_day_counters:
                 counter_type = counter.fiscal_counter_type.upper()
-                counter_currency = counter.fiscal_counter_currency.upper()
+                counter_currency = counter.fiscal_counter_currency.upper().replace("ZWL", "ZIG")
                 counter_value = int(counter.fiscal_counter_value * 100)
-
-                if counter.fiscal_counter_type == "Balancebymoneytype":
+                
+                if counter_type == "BALANCEBYMONEYTYPE":
                     money_type = counter.fiscal_counter_money_type.upper()
-                    balance_money_string = f"{counter_type}{counter_currency}{money_type}{counter_value}"
-                else:
-                    if counter.fiscal_counter_type == 'SaleByTax':
-                        tax_percent = float(counter.fiscal_counter_tax_percent)
+                    
+                    key = f"{counter_currency}_{money_type}"
+                    
+                    if key not in balance_by_currency_and_type:
+                        balance_by_currency_and_type[key] = {
+                            "type": counter_type,
+                            "currency": counter_currency,
+                            "money_type": money_type,
+                            "value": 0
+                        }
+                    
+                    balance_by_currency_and_type[key]["value"] += counter_value
+                
+                elif counter_type == "SALEBYTAX":
+                    tax_percent = float(counter.fiscal_counter_tax_percent)
+                    key = f"{counter_currency}_{tax_percent}"
+                    
+                    if key not in sale_by_tax_dict:
+                        sale_by_tax_dict[key] = {
+                            "type": counter_type,
+                            "currency": counter_currency,
+                            "tax_percent": tax_percent,
+                            "value": 0
+                        }
+                    
+                    sale_by_tax_dict[key]["value"] += counter_value
+                
+                elif counter_type == "SALETAXBYTAX":
+                    tax_percent = float(counter.fiscal_counter_tax_percent)
+                    key = f"{counter_currency}_{tax_percent}"
+                    
+                    if key not in sale_tax_by_tax_dict:
+                        sale_tax_by_tax_dict[key] = {
+                            "type": counter_type,
+                            "currency": counter_currency,
+                            "tax_percent": tax_percent,
+                            "value": 0
+                        }
+                    
+                    sale_tax_by_tax_dict[key]["value"] += counter_value
+            
+            for key, data in sale_by_tax_dict.items():
+                tax_percent = format_tax_percent(data["tax_percent"])
+                sale_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
+            
+            for key, data in sale_tax_by_tax_dict.items():
+                tax_percent = format_tax_percent(data["tax_percent"])
+                sale_tax_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
 
-                        if tax_percent == int(tax_percent):
-                            tax_percent_str = f"{int(tax_percent)}.00"
-                        else:
-                            tax_percent_str = f"{tax_percent:.2f}"
+            for key, data in balance_by_currency_and_type.items():
+                balance_money_string += f"{data['type']}{data['currency']}{data['money_type']}{data['value']}"
 
-                        saleByTax_string += f"{counter_type}{counter_currency}{tax_percent_str}{counter_value}"
-                    elif counter.fiscal_counter_type == 'SaleTaxByTax':
-                        tax_percent = float(counter.fiscal_counter_tax_percent)
+            fiscal_day_counters_string = sale_by_tax_string + sale_tax_by_tax_string + balance_money_string
 
-                        if tax_percent == int(tax_percent):
-                            tax_percent_str = f"{int(tax_percent)}.00"
-                        else:
-                            tax_percent_str = f"{tax_percent:.2f}"
-
-                        saleTaxByTax_string += f"{counter_type}{counter_currency}{tax_percent_str}{counter_value}"
-
-            counters_string += saleByTax_string + saleTaxByTax_string + balance_money_string
-
-            final_counters_string = f"{ZIMRA.device_identification}{fiscal_day.day_no}{datetime.datetime.today().date()}{counters_string}"
-
-            logger.info(f'fiscal_counter_values: {final_counters_string.strip(' ')}')
-            # close_day_response = zimra.close_day()
-            return JsonResponse({'success': True, 'data': final_counters_string}, status=200)
+            hash_input = f"{ZIMRA.device_identification}{fiscal_day.day_no}{datetime.datetime.today().date()}{fiscal_day_counters_string}"
+            
+            logger.info(f'Hash input for fiscal day signature: {hash_input}')
+           
+            return JsonResponse({
+                'success': True, 
+                'data': hash_input
+            }, status=200)
+        
         except Exception as e:
-            return JsonResponse({'success': False, 'message': f'{e}'}, status=400)
-    
+            logger.error(f"Error closing fiscal day: {str(e)}", exc_info=True)
+            return JsonResponse({'success': False, 'message': f'{str(e)}'}, status=400)
+        
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            hash = data.get('hash', '')
-            signature = data.get('signature', '')
+            signature_string = data.get('sig_string')
 
-            if not hash:
+            if not signature_string:
                 return JsonResponse({'message':'Hash data missing.', 'success':False})
             
-            if not signature:
-                return JsonResponse({'message':'Signature data missing.', 'success':False})
-            
             fiscal_day_counters = FiscalCounter.objects.filter(created_at__date=datetime.datetime.today())
+            
+            day_signature = run(signature_string)
 
-            close_day_response = zimra.close_day(hash, signature, fiscal_day_counters)
+            close_day_response = zimra.close_day(day_signature['hash'], day_signature['signature'], fiscal_day_counters)
 
             return JsonResponse({'message':close_day_response, 'success':True})
 
         except Exception as e:
             return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
-
+def format_tax_percent(tax_percent):
+        """Format tax percent to have 2 decimal places as required by the documentation."""
+        if tax_percent == int(tax_percent):
+            return f"{int(tax_percent)}.00"
+        else:
+            return f"{tax_percent:.2f}"
 @login_required
 def submit_z_report(request):
     try:
