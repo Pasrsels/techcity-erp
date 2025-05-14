@@ -123,7 +123,7 @@ urlpatterns = [
     ################################################################################################
 
     #Categories
-    path('api/v1/inventory/add/', AddInventoryView.as_view(), name='add-inventory'),
+    # path('api/v1/inventory/add/', AddInventoryView.as_view(), name='add-inventory'),
     path('api/v1/categories', CategoriesList.as_view(), name = 'api_categories'),
     path('api/v1/categories-add', AddCategories.as_view(), name = 'api_add_categories'),
 

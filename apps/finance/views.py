@@ -4750,8 +4750,17 @@ def send_quote_email(request, quote_id):
 def generate_financial_report(request):
     report_type = request.POST.get('reportType')
     time_frame = request.POST.get('timeFrame')
-    report_format = request.POST.get('reportFormat')
+    report_branch = request.POST.get('reportBranch')
+    print(report_branch)
     start_date, end_date = get_date_range_from_time_frame(time_frame, request)
+    
+    
+    if report_branch == "all":
+        branch = None
+    else:
+        branch = Branch.objects.filter(id=report_branch).first()
+        
+    logger.info(branch)
     
     invoices = Invoice.objects.filter(
         cancelled=False,
@@ -4760,17 +4769,69 @@ def generate_financial_report(request):
         issue_date__date__range=[start_date, end_date]
     )
     
-    expenses = Expense.objects.filter(
-        status=False, # to be change if confirm feature is ready
-        issue_date__date__range=[start_date, end_date]
-    ).select_related('category', 'currency')
+    if branch:
+        invoices = invoices.filter(branch=branch)
     
-    logger.info(expenses)
-
+    logger.info(invoices)
+    
+    expenses = Expense.objects.filter(
+        status=False,  # to be changed if confirm feature is ready
+        # branch=branch,
+        issue_date__date__range=[start_date, end_date]
+    ).select_related('category', 'category__parent', 'currency')
+    
     total_sales = invoices.aggregate(total=Sum('amount'))['total'] or 0
     total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or 0
 
-    if report_type == 'sales':
+    if report_type == 'profit_loss':
+        invoice_items = InvoiceItem.objects.filter(invoice__in=invoices)
+        total_cost = invoice_items.aggregate(
+            cost=Sum(
+                ExpressionWrapper(
+                    F('quantity') * F('item__price'),
+                    output_field=DecimalField(max_digits=15, decimal_places=2)
+                )
+            )
+        )['cost'] or 0
+        
+        gross_profit = total_sales - total_cost
+        net_profit = gross_profit - total_expenses
+        
+        expenses_by_category = {}
+        for expense in expenses:
+            parent_category = expense.category.parent or expense.category
+            parent_id = parent_category.id
+            
+            if parent_id not in expenses_by_category:
+                expenses_by_category[parent_id] = {
+                    'category': parent_category,
+                    'items': [],
+                    'total': 0
+                }
+            
+            if expense.category.parent is not None:
+                expenses_by_category[parent_id]['items'].append(expense)
+            
+            expenses_by_category[parent_id]['total'] += expense.amount
+
+        html = render_to_string('reports/partials/p_l_report.html', {
+            'sales': total_sales,
+            'expenses_by_category': expenses_by_category.values(),
+            'total_expenses': total_expenses,
+            'cost_of_sales': total_cost,
+            'gross_profit': gross_profit,
+            'net_profit': net_profit,
+            'start_date': start_date,
+            'end_date': end_date,
+            'branch':branch
+        })
+        
+        return JsonResponse({
+            'success': True,
+            'html': html,
+        })
+        
+    elif report_type == 'sales':
         total_paid = invoices.aggregate(total=Sum('amount_paid'))['total'] or 0
         total_unpaid = total_sales - total_paid
         invoice_count = invoices.count()
@@ -4801,6 +4862,7 @@ def generate_financial_report(request):
             'total_paid': round(total_paid, 2),
             'total_unpaid': round(total_unpaid, 2),
             'invoice_count': invoice_count,
+            'branch': branch
         })
 
         return JsonResponse({
@@ -4811,16 +4873,14 @@ def generate_financial_report(request):
         })
         
     elif report_type == 'expenses':
-        # Render partial HTML
         html = render_to_string('reports/partials/expense_report_table.html', {
             'expenses': expenses,
             'total_expenses': total_expenses,
             'start_date': start_date,
             'end_date': end_date,
+            'branch': branch
         }, request=request)
         
-        logger.info(html)
-
         return JsonResponse({
             'success': True,
             'report_type': report_type,
@@ -4830,19 +4890,8 @@ def generate_financial_report(request):
             'total_expenses': float(total_expenses),
             'html': html,
         })
-        
-    elif report_type == "profit_loss":
-        html = render_to_string('reports/partials/p_l_report.html')
-        
-        return JsonResponse({
-            'success':True,
-            'sales': total_sales,
-            'expense': total_expenses,
-            'cost_of_sales': total_cost
-        })
 
     return JsonResponse({'status': 'error', 'message': 'Unsupported report type'}, status=400)
-
 
 def get_date_range_from_time_frame(time_frame, request):
 

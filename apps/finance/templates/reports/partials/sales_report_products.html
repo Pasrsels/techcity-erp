@@ -1,5 +1,5 @@
 <div class="mb-4">
-  <h5 class="fw-bold mb-3">Sales Summary</h5>
+  <h5 class="fw-bold mb-3">Sales Summary for {% if branch == "all" %} branches {% else %} {{ branch.name }} {% endif %}</h5>
   <div class="row row-cols-2 row-cols-md-4 g-3 text-center">
     <div class="col">
       <div class="bg-primary text-white p-3 rounded-3 shadow-sm">

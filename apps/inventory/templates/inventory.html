@@ -1,4 +1,4 @@
-<!-- {% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
 {% load crispy_forms_tags %}
 {% block title %} Inventory {% endblock %}
@@ -379,7 +379,7 @@
   document.getElementById('id_submit_product').addEventListener('click', function () {
     const form = document.querySelector('#addProductModal form');
     const formData = new FormData(form);
-  
+  //a
     fetch("{% url 'inventory:add-inventory' %}", {
       method: 'POST',
       headers: {
@@ -439,4 +439,4 @@
         }
     });
 </script>
-{% endblock content %} -->
+{% endblock content %} 

@@ -3004,18 +3004,20 @@ def edit_purchase_order(request, po_id):
                 logs_dict = {log.inventory_id: log.quantity for log in logs}
 
                 supplier = Supplier.objects.get(id=1)
+                
+                logger.info(supplier)
 
                 purchase_order_items_bulk = []
                 for item_data in purchase_order_items_data:
                     product = products_dict.get(int(item_data['product_id']))
-                    supplier = suppliers_dict.get(item_data.get('supplier'))
+                    # supplier = suppliers_dict.get(item_data.get('supplier'))
                     log_quantity = logs_dict.get(product.id, 0)
 
                     if not product:
                         return JsonResponse({'success': False, 'message': 'Invalid product'}, status=400)
                     
-                    if not supplier:
-                        return JsonResponse({'success': False, 'message': 'Invalid supplier'}, status=400)
+                    # if not supplier:
+                    #     return JsonResponse({'success': False, 'message': 'Invalid supplier'}, status=400)
 
                     purchase_order_items_bulk.append(
                         PurchaseOrderItem(
