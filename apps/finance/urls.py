@@ -55,6 +55,7 @@ urlpatterns = [
     path('qoutation/add/', create_quotation, name='add_qoutation'),
     path('qoutation/delete/<int:qoutation_id>/', delete_qoute, name='delete_qoutation'),
     path('qoutation/preview/<int:qoutation_id>/', qoute_preview, name='quotation_preview'),
+    path('qoutation/preview/modal/<int:qoutation_id>/', qoute_preview_modal, name='quotation_preview_modal'),
     path('send_quote_email/<int:quote_id>/', send_quote_email, name='send_quote_email'),
     
     # transfers
