@@ -367,5 +367,12 @@ EMAIL_USE_TLS = False
 
 #ZIMRA
 DEVICE_REGISTER = False
+REPORTING_FREQUENCY = 5
 
 
+CELERY_BEAT_SCHEDULE = {
+    'ping-every-5-seconds': {
+        'task': 'utils.zimra.ping',
+        'schedule': REPORTING_FREQUENCY * 60
+    },
+}
