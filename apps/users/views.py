@@ -208,7 +208,7 @@ def login_view(request):
 def user_edit(request, user_id):
 
     with transaction.atomic:
-        user = User.objects.select_for_update().get(id=user_id)
+        user = User.objects.get(id=user_id)
 
         logger.info(f'User details: {user.first_name + " " + user.email}')
 
