@@ -207,21 +207,20 @@ def login_view(request):
 @transaction.atomic
 def user_edit(request, user_id):
 
-    with transaction.atomic:
-        user = User.objects.get(id=user_id)
+    user = User.objects.select_for_update().get(id=user_id)
 
-        logger.info(f'User details: {user.first_name + " " + user.email}')
+    logger.info(f'User details: {user.first_name + " " + user.email}')
 
-        if request.method == 'POST':
-            form = UserDetailsForm2(request.POST, instance=user)
+    if request.method == 'POST':
+        form = UserDetailsForm2(request.POST, instance=user)
 
-            if form.is_valid():
-                form.save()
-                messages.success(request, 'User details updated successfully')
-                return redirect('users:user_detail', user_id=user.id)
-            
-            messages.error(request, 'Invalid form data')
-            form = UserDetailsForm2(instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'User details updated successfully')
+            return redirect('users:user_detail', user_id=user.id)
+        
+        messages.error(request, 'Invalid form data')
+        form = UserDetailsForm2(instance=user)
 
     return render(request, 'auth/users.html', {'user': user, 'form': form})
 

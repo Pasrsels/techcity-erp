@@ -12,8 +12,8 @@
     </div>
 
     <!-- Stats Cards Row -->
-    <div class="row g-3 mb-4">
-      <div class="col-12 col-md-6 col-lg-3">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-4">
+      <div class="col">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
@@ -36,7 +36,7 @@
       </div>
       
       <!-- Revenue Card -->
-      <div class="col-12 col-md-6 col-lg-3">
+      <div class="col-12">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
@@ -59,7 +59,7 @@
       </div>
       
       <!-- Customers Card -->
-      <div class="col-12 col-md-6 col-lg-3">
+      <div class="col-12">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
@@ -82,7 +82,7 @@
       </div>
       
       <!-- Products Card -->
-      <div class="col-12 col-md-6 col-lg-3">
+      <div class="col-12">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
@@ -627,7 +627,7 @@ const salesChart = new Chart(salesCtx, {
 
 // Pay Later Invoice Details
 $(document).on('click', '#partialTr', function() {
-  const transactionId = $(this).data('id');
+  const transactionId = $(this).data('id');<div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-4">
   
   // Show modal
   $('#paylaterModal').modal('show');
