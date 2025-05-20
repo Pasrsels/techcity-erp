@@ -23,7 +23,6 @@ def pos(request):
         'count':held_invoices_count,
     })
 
-
 @login_required
 def last_due_invoice(request, customer_id):
     invoice = Invoice.objects.filter(customer__id=customer_id, payment_status=Invoice.PaymentStatus.PARTIAL)\

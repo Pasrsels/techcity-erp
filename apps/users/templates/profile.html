@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="">
+    <div class="row justify-content-center">
+        <div>
+            <!-- Card -->
+            <div class="card shadow-none">
+                <div class="card-body">
+                    <!-- Header -->
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            <i class="bi bi-person-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">{{ user.get_full_name }}</h5>
+                            <small class="text-muted">{{ user.role|capfirst }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Profile Details -->
+                    <h6 class="text-secondary fw-bold mb-3">Personal Information</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <p class="form-control-plaintext">{{ user.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <p class="form-control-plaintext">{{ user.phonenumber }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Username</label>
+                            <p class="form-control-plaintext">{{ user.username }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Current Role</label>
+                            <p class="form-control-plaintext">{{ user.role|capfirst }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Company Details -->
+                    <h6 class="text-secondary fw-bold mb-3">Company Details</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Company</label>
+                            <p class="form-control-plaintext">{{ user.company.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Branch</label>
+                            <p class="form-control-plaintext">{{ user.branch.name }}</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

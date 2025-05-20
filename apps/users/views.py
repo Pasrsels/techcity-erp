@@ -82,25 +82,6 @@ def UserPermission_UD(request,id):
         
 @login_required
 def users(request):
-    """
-        View function to handle user management.
-        This view handles the display and registration of users. It supports both
-        GET and POST requests. On a GET request, it displays a list of users filtered
-        by a search query if provided. On a POST request, it processes the user
-        registration form and adds a new user if the form is valid.
-        Args:
-            request (HttpRequest): The HTTP request object.
-        Returns:
-            HttpResponse: The rendered 'auth/users.html' template with the context
-            containing the list of users, user registration form, user details form,
-            and user permissions form.
-        Context:
-            users (QuerySet): A queryset of User objects filtered by the search query.
-            form (UserRegistrationForm): The user registration form.
-            user_details_form (UserDetailsForm2): The user details form.
-            PermData (UserPermissionsForm): The user permissions form.
-    """
-
     form = UserRegistrationForm()
     user_details_form = UserDetailsForm2()
     formPermissions = UserPermissionsForm()
@@ -108,9 +89,8 @@ def users(request):
     search_query = request.GET.get('q', '')
 
     users = User.objects.filter(
-        Q(username__icontains=search_query) | 
-        Q(email__icontains=search_query)
-
+        Q(username__icontains=search_query) | Q(email__icontains=search_query),
+        is_deleted=False
     ).select_related(
         'branch', 
         'company'
@@ -120,47 +100,41 @@ def users(request):
     )
     
     if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
+        try:
+            data = request.POST
+            user = User()
 
-        if form.is_valid():
-            user = form.save(commit=False)
+            user.first_name = data.get('first_name')
+            user.email = data.get('email')
+            user.phonenumber = data.get('phonenumber')
+            user.username = data.get('username')
+            user.role = data.get('role')  
+            user.company_id = data.get('company')  
+            user.branch_id = data.get('branch')  
             
-            # branches = form.cleaned_data['branches']
-            # user.branch.set(branches)
-            
-            # hash the user password
-            user.password = make_password(form.cleaned_data['password'])
+            raw_password = data.get('password')
+            if not raw_password:
+                return JsonResponse({'success': False, 'message': 'Password is required'}, status=400)
+
+            user.set_password(raw_password)
+            user.is_active = True
             user.save()
 
-            messages.success(request, 'User successfully added')
-        else:
-            messages.error(request, 'Invalid form data')
+            return JsonResponse({'success': True, 'message': 'User registered successfully'})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
     return render(request, 'auth/users.html', {
-        'users': users,
-        'form': form, 
-        'user_details_form': user_details_form, 
-        'PermData':formPermissions
+            'users': users,
+            'form': form, 
+            'user_details_form': user_details_form, 
+            'PermData':formPermissions
         }
     )
 
 
 def login_view(request):
-    """
-    Handle user login requests.
-    This view handles both GET and POST requests for user login. On a GET request,
-    it renders the login page. On a POST request, it processes the login form,
-    validates the email, authenticates the user, and logs them in if the credentials
-    are correct and the account is active.
-    Args:
-        request (HttpRequest): The HTTP request object.
-    Returns:
-        HttpResponse: The HTTP response object. It returns the login page on GET requests,
-                      and on POST requests, it either redirects to the next URL or the POS
-                      page if login is successful, or re-renders the login page with an
-                      error message if login fails.
-    """
-
     if request.method == 'GET':
         return render(request, 'auth/login.html')
     
@@ -168,7 +142,6 @@ def login_view(request):
         email_address = request.POST['email_address']
         password = request.POST['password']
 
-        # Validate email
         try:
             validate_email(email_address)
         except ValidationError:
@@ -184,15 +157,15 @@ def login_view(request):
                 logger.info(f'User: {user.first_name + " " + user.email} logged in')
                 logger.info(f'User role: {user.role}')
 
-                # next_url = request.POST.get('next') or request.GET.get('next') or request.session.get('next_url')
+                next_url = request.POST.get('next') or request.GET.get('next') or request.session.get('next_url')
                 
-                # if 'next_url' in request.session:
-                #     del request.session['next_url']
+                if 'next_url' in request.session:
+                    del request.session['next_url']
                 
-                # if next_url:
-                #     # Validate the URL to prevent open redirect vulnerability
-                #     if is_safe_url(next_url, allowed_hosts={request.get_host()}):
-                #         return redirect(next_url)
+                if next_url:
+                    # Validate the URL to prevent open redirect vulnerability
+                    if is_safe_url(next_url, allowed_hosts={request.get_host()}):
+                        return redirect(next_url)
                     
                 return redirect('pos:pos')
             else:
@@ -209,7 +182,7 @@ def user_edit(request, user_id):
 
     user = User.objects.select_for_update().get(id=user_id)
 
-    logger.info(f'User details: {user.first_name + " " + user.email}')
+    logger.info(f'Editing User: {user.first_name + " " + user.email}')
 
     if request.method == 'POST':
         form = UserDetailsForm2(request.POST, instance=user)
@@ -260,34 +233,16 @@ def register(request):
                 with transaction.atomic():
                     user = form.save(commit=False)
                     
-                    user.password = make_password(form.cleaned_data['password'])
-                    user.is_active = False
+                    user.set_password(form.cleaned_data['password'])
+                    user.is_active = True
                     
                     user.last_login = None
                     user.failed_login_attempts = 0
                     
                     user.save()
-
-                    # Send verification email
-                    # try:
-                    #     send_verification_email(user, request)
-                    #     messages.success(
-                    #         request, 
-                    #         f'Account created successfully. Please notify {user.first_name} to check their email to verify their account.'
-                    #     )
-                    # except EmailRateLimitExceeded:
-                    #     messages.error(
-                    #         request,
-                    #         'Too many verification emails sent. Please try again tomorrow.'
-                    #     )
-                    # except Exception as e:
-                    #     logger.error(f"Error in registration process: {str(e)}")
-                    #     messages.error(
-                    #         request,
-                    #         'An error occurred during registration. Please try again.'
-                    #     )
-                    #     raise
-            
+                    
+                    messages.success(request, "User registered successfully.")
+                    
             except Exception as e:
                 logger.error(f"Registration failed: {str(e)}")
                 messages.error(request, 'Registration failed. Please try again.')
@@ -387,9 +342,30 @@ def get_user_data(request, user_id):
     return JsonResponse(user_data)
 
 @login_required
+def delete_user(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        user.is_active = False  
+        user.is_deleted = True
+
+        user.save()
+        return JsonResponse({'success': True, 'message': 'User deleted successfully'})
+
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'User not found'})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error: {str(e)}'})
+
+@login_required
 def logout_view(request):
     logout(request)
     return redirect('users:login')
+
+@login_required
+def user_profile(request):
+    user = request.user  
+    return render(request, 'profile.html', {'user': user})
 
 ##############################################################################################################################################################
 """ User API End points """

@@ -13,10 +13,13 @@ urlpatterns = [
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
     path('register/', register, name='register'),
+    path('delete/user/<int:user_id>/', delete_user, name='delete'),
     path('user/edit/<int:user_id>/', user_edit, name='user_edit'),
     path('user/detail/<int:user_id>/', user_detail, name='user_detail'),
     path('ajax/load-branches/', load_branches, name='ajax_load_branches'),
     path('ajax/get-user-data/<int:user_id>/', get_user_data, name='ajax_get_user_data'),
+    
+    path('profile/', user_profile, name='profile'),
     
     #User Permissions
     path('permissions/create-and-read/', UserPermission_CR, name= 'userPermissionsCR'),

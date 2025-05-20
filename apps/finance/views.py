@@ -1076,14 +1076,15 @@ def create_invoice(request):
                 logger.info(invoice_items)
 
                 try:
-                    sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
-                    logger.info(sig_data)
-                    hash_sig_data = run(sig_data)
+                    # sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
+                    # logger.info(sig_data)
+                    # hash_sig_data = run(sig_data)
                     
-                    logger.info(hash_sig_data)
-                    submit_receipt_data(request, receipt_data, hash_sig_data['hash'], hash_sig_data['signature'])
+                    # logger.info(hash_sig_data)
+                    # submit_receipt_data(request, receipt_data, hash_sig_data['hash'], hash_sig_data['signature'])
                     
                     invoice_data = invoice_preview_json(request, invoice.id)
+                    logger.info(invoice_data)
 
                 except Exception as e:
                     logger.info(e)
@@ -2371,9 +2372,6 @@ def invoice_preview_json(request, invoice_id):
         'invoice_items': list(invoice_items),
         'dates': list(dates)
     }
-    
-    logger.info(invoice_data)
-
     return invoice_data
 
 @login_required
