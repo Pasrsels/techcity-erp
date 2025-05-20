@@ -3,8 +3,10 @@ import rsa
 import requests
 import datetime
 import json, base64
+from celery import shared_task
 from loguru import logger
 from dotenv import load_dotenv
+from django.conf import settings
 from apps.settings.models import OfflineReceipt, FiscalDay, FiscalCounter
 
 load_dotenv()
@@ -358,3 +360,37 @@ class ZIMRA:
         except requests.RequestException as e:
             logger.error(f"Error closing fiscal day: {e}")
             return f"Error closing fiscal day: {e}"
+    
+    @shared_task(bind=True)
+    def ping(self):
+        headers = {
+            "Content-Type": "application/json",
+            "deviceModelName": os.getenv("DEVICE_MODEL_NAME"),
+            "deviceModelVersion": os.getenv("DEVICE_MODEL_VERSION")
+        }
+        try:    
+            response = requests.post(
+                f"https://fdmsapitest.zimra.co.zw/Device/v1/23265/Ping", 
+                headers=headers, 
+                cert=(os.getenv("CERTIFICATE_PATH", "cert.pem"), os.getenv("CERTIFICATE_KEY", "cert_private.pem"))
+            )
+            
+            logger.info(response)
+            
+            response.raise_for_status()
+            
+            data = response.json()
+
+            reporting_frequency = int(data.get("reportingFrequency"))  
+            
+            settings.REPORTING_FREQUENCY = reporting_frequency * 60
+
+            logger.info(f"Fdms online. Next ping in {reporting_frequency * 300} seconds.")
+            logger.info(f'Fdms online')
+            
+            self.apply_async(countdown=reporting_frequency)
+            
+            return response.json()
+        except requests.RequestException as e:
+            logger.error(f"Ping error: {e}")
+            return f"Error: {e}"
