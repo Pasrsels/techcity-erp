@@ -172,6 +172,7 @@ class Finance(View):
             'recent_transactions': recent_sales,
             'expenses_by_category': expenses_by_category,
         }
+        
         return render(request, self.template_name, context)
 
 @login_required
@@ -845,12 +846,15 @@ def create_invoice(request):
 
             # accounts_receivable
             accounts_receivable, _ = ChartOfAccounts.objects.get_or_create(name="Accounts Receivable")
+            
+            
 
             # VAT rate
             vat_rate = VATRate.objects.get(status=True)
 
             # customer
             customer = Customer.objects.get(id=int(invoice_data['client_id'])) 
+            logger.info(customer)
             
             # customer account
             customer_account = CustomerAccount.objects.get(customer=customer)
@@ -861,6 +865,8 @@ def create_invoice(request):
                 currency=currency, 
                 defaults={'balance': 0}
             )
+            
+            
             
             amount_paid = update_latest_due(customer, Decimal(invoice_data['amount_paid']), request, invoice_data['paymentTerms'], customer_account_balance)
 
@@ -1094,8 +1100,10 @@ def create_invoice(request):
 
                 return JsonResponse({'success':True, 'invoice_id': invoice.id, 'invoice_data':invoice_data})
 
-        except (KeyError, json.JSONDecodeError, Customer.DoesNotExist, Inventory.DoesNotExist, Exception) as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+        # except (KeyError, json.JSONDecodeError, Customer.DoesNotExist, Inventory.DoesNotExist, Exception) as e:
+        #     return JsonResponse({'success': False, 'error': str(e)})
+        except Exception as e:
+            logger.info(e)
 
     return render(request, 'invoices/add_invoice.html')
 
@@ -1618,12 +1626,15 @@ def customer(request):
                 branch=request.user.branch
             )
             account = CustomerAccount.objects.create(customer=customer)
+            
+            logger.info(account)
 
         balances_to_create = [
             CustomerAccountBalances(account=account, currency=currency, balance=0) 
             for currency in Currency.objects.all()
         ]
         CustomerAccountBalances.objects.bulk_create(balances_to_create)
+    
 
         return JsonResponse({'success': True, 'message': 'Customer successfully created'})
 
@@ -3754,7 +3765,7 @@ def cash_flow(request):
     sales_total = invoice_items.aggregate(total=Sum('total_amount'))['total'] or 0
     income_total = income.aggregate(total=Sum('amount'))['total'] or 0
     expenses_total = expenses.aggregate(total=Sum('amount'))['total'] or 0
-    total_income = sales_total + income_total
+    total_income = sales_total 
     balance = total_income - expenses_total
     
     # Group expenses by category for summary

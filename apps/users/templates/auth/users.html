@@ -33,8 +33,8 @@
                     <div class="d-flex align-items-center">
                         <!-- Profile Picture -->
                         <div class="me-3">
-                            {% if user.profile.profile_image %} 
-                                <img src="{{ user.profile.profile_image.url }}" alt="Profile Picture" class="rounded-circle" style="width: 50px; height: 50px;">
+                            {% if user.profile_image %} 
+                                <img src="{{ user.profile_image.url }}" alt="Profile Picture" class="rounded-circle" style="width: 50px; height: 50px;">
                             {% else %}
                                 <img src="{% static 'assets/avatar.png' %}" alt="Default Profile Picture" class="rounded-circle" style="width: 50px; height: 50px;">
                             {% endif %}
@@ -83,22 +83,16 @@
                         </a>
 
                         {% if user != request.user %}
-                        <button data-toggle="tooltip" data-placement="top" title="Edit user profile"
-                                class="btn btn-light btn-sm me-2 editUserBtn"
-                                id="editUser" data-user-id="{{ user.id }}">
-                            <i class="bx bx-edit text-warning" style="opacity: 0.7;"></i>
-                        </button>
+                            <button data-toggle="tooltip" data-placement="top" title="Edit user profile" class="btn btn-light btn-sm me-2 editUserBtn" id="editUser" data-user-id="{{ user.id }}">
+                                <i class="bx bx-edit text-warning" style="opacity: 0.7;"></i>
+                            </button>
                         {% endif %}
 
-                        <button data-toggle="tooltip" data-placement="top" title="Add permissions"
-                                class="btn btn-light btn-sm me-2"
-                                id="add-permissions" data-user-id="{{ user.id }}">
+                        <button data-toggle="tooltip" data-placement="top" title="Add permissions" class="btn btn-light btn-sm me-2" id="add-permissions" data-user-id="{{ user.id }}">
                             <i class="bx bx-lock-alt text-success" style="opacity: 0.7;"></i>
                         </button>
 
-                        <button data-toggle="tooltip" data-placement="top" title="Delete user"
-                                class="btn btn-light btn-sm"
-                                id="delete-user" data-user-id="{{ user.id }}">
+                        <button data-toggle="tooltip" data-placement="top" title="Delete user" class="btn btn-light btn-sm" id="delete-user" data-user-id="{{ user.id }}">
                             <i class="bx bx-trash-alt text-danger" style="opacity: 0.7;"></i>
                         </button>
                     </div>
@@ -223,9 +217,7 @@
                         <th>Category</th>
                         <th>Actions</th>
                     </tr>
-                    <tbody id="PermissionsTableBody">
-                        
-                    </tbody>
+                    <tbody id="PermissionsTableBody"></tbody>
                 </table>
                 <div>
                     <button class="btn btn-outline-dark btn-sm bx bx-plus d-flex justify-content-end align-items-end" type="button" id="addPermission">Add Permission</button>
@@ -240,7 +232,7 @@
                 <h6 class="fw-bold">Add User</h6>
                 <form method="POST" action="{% url 'users:userPermissionsCR' %}">
                     {% csrf_token %}
-                    {{PermData | crispy}}
+                    {{ PermData | crispy}}
                     <div>
                         <button class="btn btn-secondary bx bx-plus" type="submit">Add</button>
                     </div>
@@ -276,6 +268,7 @@
             </div>
         </div>
     </div>
+
 </div>
 
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>  
@@ -372,7 +365,7 @@
         });
     });
      
-     //load branch based on selected company on edit user form 
+    // load branch based on selected company on edit user form 
     $('#id_edit_company').change(function() {
         var url = "{% url 'users:ajax_load_branches' %}";
         var companyId = $(this).val();

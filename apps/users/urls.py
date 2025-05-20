@@ -20,6 +20,7 @@ urlpatterns = [
     path('ajax/get-user-data/<int:user_id>/', get_user_data, name='ajax_get_user_data'),
     
     path('profile/', user_profile, name='profile'),
+    path('upload-profile/', upload_profile, name='upload-profile'),
     
     #User Permissions
     path('permissions/create-and-read/', UserPermission_CR, name= 'userPermissionsCR'),

@@ -20,6 +20,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from utils.send_verification_email import *
 from django.db import transaction
+from django.contrib.auth import authenticate
 
 @login_required
 def UserPermission_CR(request):
@@ -47,7 +48,7 @@ def UserPermission_CR(request):
 
 @login_required
 def UserPermission_UD(request,id):
-
+    
     if request.method == 'GET':
         permissions_data = User.objects.filter(id = id).values()
         logger.info(permissions_data)
@@ -147,8 +148,12 @@ def login_view(request):
         except ValidationError:
             messages.error(request, 'Invalid email format')
             return render(request, 'auth/login.html')
-
-        user = authenticate_user(email=email_address, password=password)
+        
+        try:
+            user_obj = User.objects.get(email=email_address)
+            user = authenticate(request, username=user_obj.username, password=password)
+        except User.DoesNotExist:
+            user = None
         
         if user is not None:
             if user.is_active:
@@ -197,6 +202,47 @@ def user_edit(request, user_id):
 
     return render(request, 'auth/users.html', {'user': user, 'form': form})
 
+@login_required
+def upload_profile(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+
+    if 'profile_image' not in request.FILES:
+        logger.warning('No profile_image key in request.FILES')
+        return JsonResponse({'success': False, 'message': 'No image uploaded'}, status=400)
+
+    image_file = request.FILES['profile_image']
+    logger.info(f"Uploaded file: {image_file.name}, type: {image_file.content_type}, size: {image_file.size}")
+
+    if not image_file.content_type.startswith('image/'):
+        return JsonResponse({'success': False, 'message': 'Invalid file type. Only images are allowed.'}, status=400)
+    
+    print('here')
+    
+    if image_file.size > 5 * 1024 * 1024:
+        return JsonResponse({'success': False, 'message': 'Image too large (max 5MB)'}, status=400)
+    
+    print('here')
+
+    try:
+        # profile = getattr(request.user, 'profile_image', None)
+        user = request.user
+        
+        user.profile_image = image_file
+        user.save()
+        
+        print('saved')
+
+        return JsonResponse({
+            'success': True,
+            'image_url': user.profile_image.url
+        })
+    except Exception as e:
+        logger.error(f"Error uploading profile image: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'message': 'An error occurred while uploading the image.'
+        }, status=500)
 
 @login_required
 def user_detail(request, user_id):
@@ -207,7 +253,7 @@ def user_detail(request, user_id):
     logger.info(f'User details: {user.first_name + " " + user.email}')
 
     if request.method == 'GET':
-        return render(request, 'user_detail.html', {'user': user, 'form': form})
+        return render(request, 'profile.html', {'user': user, 'form': form})
     
     if request.method == 'POST':
         form = UserDetailsForm(request.POST, instance=user)
@@ -218,7 +264,7 @@ def user_detail(request, user_id):
         else:
             messages.error(request, 'Invalid form data')
 
-        return render(request, 'users/user_detail.html', {'user': user, 'form': form})
+        return render(request, 'users/profile.html', {'user': user, 'form': form})
 
 @login_required
 @transaction.atomic
