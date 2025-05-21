@@ -87,9 +87,9 @@
             inventoryData.forEach(item => {
                 const row = stockTable.insertRow();
                 row.insertCell().textContent = item.name;
-                row.insertCell().textContent = item.initial_quantity;
-                row.insertCell().textContent = item.quantity_sold;
                 row.insertCell().textContent = item.remaining_quantity;
+                row.insertCell().textContent = item.quantity_sold;
+                row.insertCell().textContent = item.initial_quantity;
 
                 const inputCell = row.insertCell();
                 const input = document.createElement('input');

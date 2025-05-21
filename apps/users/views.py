@@ -194,6 +194,8 @@ def user_edit(request, user_id):
 
         if form.is_valid():
             form.save()
+            
+            logger.info('provide')
             messages.success(request, 'User details updated successfully')
             return redirect('users:user_detail', user_id=user.id)
         

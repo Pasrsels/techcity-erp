@@ -245,7 +245,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content w-100 p-4">
                 <h6 class="fw-bold">Edit User</h6>
-                <form method="post" id="editUserForm" action="{% url 'users:user_edit' 0 %}">
+                <form method="post" id="editUserForm">
                     {% csrf_token %}
                     <input type="hidden" name="user_id" id="editUserId">
                     {{ user_details_form|crispy }}
@@ -268,7 +268,6 @@
             </div>
         </div>
     </div>
-
 </div>
 
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>  
@@ -287,6 +286,8 @@
     editUserBtn.addEventListener('click', ()=>{
         editModal.show()
     })
+
+
 
     document.querySelector('#addForm').addEventListener('submit', async function (e) {
         e.preventDefault();

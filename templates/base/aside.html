@@ -1,5 +1,7 @@
 {% load static %}
 {% block content %}
+<style>
+</style>
 <aside class="d-flex flex-column" style="background: #242140 !important;">
     <div class="menu mt-5 px-4 d-flex justify-content-center align-items-center">
         <ul class="menu list-unstyled">
@@ -15,7 +17,10 @@
             <li class="menu-link mb-4">
                 <a href="{% url 'finance:finance' %}">
                     <i class='bx bx-credit-card-front'></i>
-                    <span class='px-2'>Finance</span>
+                    <span class='px-2'>Finance</span><br>
+                    <span class='badge circle-rounded bg-success'>
+                        <small></small>
+                    </span>
                 </a>
             </li>
             <li class="menu-link mb-4">
@@ -93,6 +98,9 @@
                 <a href="{% url 'finance:finance' %}">
                     <i class='bx bx-credit-card-front'></i>
                     <span class='px-2'>Finance</span>
+                    <span class='badge circle-rounded bg-success'>
+                        <small class="text-success">0</small>
+                    </span>
                 </a>
             </li>
             <li class="menu-link mb-4">

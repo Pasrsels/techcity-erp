@@ -25,6 +25,8 @@
 
     <!-- use-bootstrao-select css -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/use-bootstrap-select@2.2.0/dist/use-bootstrap-select.min.css">
+    <!-- Calculator CSS -->
+    <link rel="stylesheet" href="{% static 'css/calculator.css' %}">
     {% endblock css %}
 
     <script src="https://unpkg.com/slim-select@latest/dist/slimselect.min.js"></script>
@@ -395,5 +397,8 @@
             return cookieValue;
           }  
     </script> -->
+    {% block js %}
+    <script src="{% static 'js/calculator.js' %}"></script>
+    {% endblock js %}
 </body>
 </html>
