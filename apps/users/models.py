@@ -136,7 +136,6 @@ class EmailVerificationToken(models.Model):
         self.attempts += 1
         self.save()
 
-
 def assign_admin_group(sender, instance, created, **kwargs):
     if created and instance.is_superuser:
         admin_group = Group.objects.get(name=ADMIN_GROUP_NAME)
