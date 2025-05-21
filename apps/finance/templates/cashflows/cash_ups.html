@@ -1,16 +1,27 @@
 {% load static %}
+<style>
+    .nv-active{
+        background-color: rgb(78, 76, 76) !important;
+        color: #fff !important;
+    }
+
+    .b-active{
+        background-color: rgb(78, 76, 76) !important;
+        color: #fff !important;
+    }
+
+    .b-active:hover{
+        background-color: #000 !important;
+        color: #fff !important;
+    }
+</style>
 <div>
-    <div class="container-fluid py-4">
-        <div class="mb-4">
-          <h4 class="mb-1">Cash Ups</h4>
-          <p class="text-muted mb-0">Record and review cash ups across branches</p>
-        </div>
-      
-        <!-- Tabs -->
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
         <div class="d-flex justify-content-between align-items-center bg-white p-2">
             <ul class="nav nav-tabs" id="cashFlowTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                  <button class="nav-link active" id="record-tab" data-bs-toggle="tab" data-bs-target="#record-content" type="button" role="tab">
+                  <button class="nav-link active nv-active" id="record-tab" data-bs-toggle="tab" data-bs-target="#record-content" type="button" role="tab">
                     Record Cashup
                   </button>
                 </li>
@@ -21,21 +32,69 @@
                   </li>              
             </ul>
         </div>
+            <!-- <form id="cashup-form">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <select id="branch-select" class="form-select" class="nav-link" data-branch-id="{{ branch.id }}" type="button" onclick="selectTab(this, this.value)" required>
+                            <option value="" >Select Branch</option>
+                            {% for branch in branches %}
+                            <option value="{{ branch.id }}">{{ branch.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>  
+            </form> -->
+        </div>
+
+        <div id="branchButton" class="d-flex gap-2 align-items-center mt-2">
+            <button class="btn btn-sm btn-light b-active" data-branch-id="">
+                All
+            </button>
+            {% for branch in branches %}
+                <button class="btn btn-sm btn-light me-2" data-branch-id="{{ branch.id }}" onclick="selectTab(this, {{ branch.id }})">
+                    {{ branch.name }}
+                </button>
+            {% endfor %}
+        </div>
+
+        <div class="cash-up summary mt-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card border-1 border-success  rounded-3 shadow-none">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <h5 class="card-title">Cash Ups Value</h5>
+                            <p class="card-text" style="font-size: 1.5rem;">
+                                <span class="text-success">
+                                    $400.00
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card border-1 border-danger rounded-3 shadow-none">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <h5 class="card-title">Pending Cash Ups
+                                <span class="badge badge-sm bg-danger">
+                                    {{ pending_cash_ups }}1
+                                </span>
+                            </h5>
+                            <p class="card-text" style="font-size: 1.5rem;">
+                                <span class="text-danger">
+                                    $400.00
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      
         
         <div class="tab-content">
             <div class="tab-pane fade show active" id="record-content" role="tabpanel">
-                <form id="cashup-form">
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <select id="branch-select" class="form-select" class="nav-link" data-branch-id="{{ branch.id }}" type="button" onclick="selectTab(this, this.value)" required>
-                                <option value="" >Select Branch</option>
-                                {% for branch in branches %}
-                                <option value="{{ branch.id }}">{{ branch.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>  
-                </form>
+                
                 <div class="mt-3" id="details"></div>
             </div>
     
@@ -57,11 +116,45 @@ let totalRecordItems = 0;
 let recordedCount = 0;
 let branchId = null;
 
+const recordCashUpBtn = document.getElementById('record-tab')
+const cashUpListBtn = document.getElementById('list-tab')
+const branchButton = document.querySelectorAll('#branchButton button')
+
+branchButton.forEach(button => {
+    button.addEventListener('click', () => {
+        if(button.classList.contains('b-active')){
+            return;
+        }
+        button.classList.add('b-active')
+        branchButton.forEach(b => {
+            if(b !== button) b.classList.remove('b-active')
+        })
+    })
+})
+
+
+recordCashUpBtn.addEventListener('click', () => {
+    if (recordCashUpBtn.classList.contains('nv-active')) {
+        return;
+    }
+    recordCashUpBtn.classList.add('nv-active')
+    cashUpListBtn.classList.remove('nv-active')
+})
+
+cashUpListBtn.addEventListener('click', () => {
+    if (cashUpListBtn.classList.contains('nv-active')) {
+        return;
+    }
+    cashUpListBtn.classList.add('nv-active')
+    recordCashUpBtn.classList.remove('nv-active')
+})
+
 totalRecordItems = document.querySelectorAll('.record-sale-btn, .expense-action[data-action="record"]').length;
 recordedCount = 0
 
 function selectTab(button, branchId) {
-    // Remove 'active' from all nav-links
+    console.log(button, 'button')
+
     document.querySelectorAll('#cashFlowTabs .nav-link').forEach(tab => {
         tab.classList.remove('active');
     });
@@ -134,7 +227,7 @@ function renderCashUpDetails(data, container) {
     const expensesSection = createExpensesSection(expensesData);
     
     container.innerHTML = `
-        <div class="w-100 p-3 bg-light border-top border-bottom">
+        <div class="w-100 p-1 bg-light border-top border-bottom">
             <div class="row g-3 w-100">
                 <div class="w-100">
                         {% comment %} <!-- Progress bar -->
@@ -1129,4 +1222,18 @@ document.addEventListener('DOMContentLoaded', function() {
         firstBranchTab.classList.add('active');
     }
 });
+
+function showRecordCashUp() {
+    document.getElementById('recordCashUpSection').style.display = 'block';
+    document.getElementById('cashUpListSection').style.display = 'none';
+    document.getElementById('recordCashUpBtn').classList.add('active', 'bg-secondary');
+    document.getElementById('cashUpListBtn').classList.remove('active', 'bg-secondary');
+}
+
+function showCashUpList() {
+    document.getElementById('recordCashUpSection').style.display = 'none';
+    document.getElementById('cashUpListSection').style.display = 'block';
+    document.getElementById('cashUpListBtn').classList.add('active', 'bg-secondary');
+    document.getElementById('recordCashUpBtn').classList.remove('active', 'bg-secondary');
+}
 </script>

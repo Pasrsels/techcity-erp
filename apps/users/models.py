@@ -86,6 +86,7 @@ class User(AbstractUser):
     user_permissions = models.ManyToManyField(UserPermissions)
     phonenumber = models.CharField(max_length=13)
     role = models.CharField(choices=USER_ROLES, max_length=50)
+    is_deleted = models.BooleanField(default=False)
 
     def tokens(self):
         refresh = RefreshToken.for_user(self)

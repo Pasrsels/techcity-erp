@@ -224,7 +224,7 @@
     </div>
 
     <div class="modal fade" id="endOfDayModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
                     {% include 'end_of_day_modal.html' %}
@@ -1234,8 +1234,6 @@
                     }
                 });
             } else {
-                
-                console.log(result, 'result');
 
             const invoiceId = result.invoice_id;
 
@@ -1246,29 +1244,17 @@
                     allowOutsideClick: false,
                     didOpen: () => {
                         Swal.showLoading();
-                        fetch(`/finance/invoice/preview/json/${invoiceId}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                console.log("Invoice data:", data);
-                                displayReceipt(data);
-                                cart = [];
-                                updateCartDisplay();
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Receipt Printed',
-                                    text: 'The receipt has been successfully generated!',
-                                    timer: 2000,
-                                    showConfirmButton: false
-                                });
-                            })
-                            .catch(error => {
-                                console.error("Error fetching invoice data:", error);
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Oops...',
-                                    text: 'Failed to generate receipt!',
-                                });
-                            });
+                        console.log("Invoice data:", result.invoice_data);
+                        displayReceipt(result.invoice_data);
+                        cart = [];
+                        updateCartDisplay();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Receipt Printed',
+                            text: 'The receipt has been successfully generated!',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
                     }
                 });
             } else {

@@ -108,6 +108,11 @@ urlpatterns = [
     path('cashbook/note/<int:entry_id>/', cashbook_note_view, name='cashbook_note_view'),
     path('update_transaction_status/<int:pk>/', update_transaction_status, name='update_transaction_status'),
 
+    # # New report endpoints
+    # path('get-transactions-preview/', get_transactions_preview, name='get_transactions_preview'),
+    # path('export-transactions/pdf/', export_transactions_pdf, name='export_transactions_pdf'),
+    # path('export-transactions/excel/', export_transactions_excel, name='export_transactions_excel'),
+
     # days data
     path('days_data', days_data, name='days_data'),
 

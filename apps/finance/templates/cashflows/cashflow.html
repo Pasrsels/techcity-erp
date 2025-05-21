@@ -111,7 +111,7 @@
         <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="false">Overview</button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab" aria-controls="timeline" aria-selected="true">Timeline</button>
+        <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab" aria-controls="timeline" aria-selected="true">Transactions</button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab" aria-controls="products" aria-selected="false">Product Sales</button>
@@ -218,7 +218,7 @@
                             {% if item.type_label == 'expense'%}
                                 {{ item.description }}
                             {% else %}
-                                {{ item.sale__invoice__invoice_items__item__name }}
+                                {{ item.note }}
                             {% endif %}
                         </td>
                         <td>{{ item.type_label|title }}</td>

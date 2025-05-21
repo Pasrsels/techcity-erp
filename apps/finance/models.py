@@ -566,7 +566,7 @@ class QoutationItems(models.Model):
     unit_price = models.DecimalField(max_digits=15, decimal_places=2)
     
     def __str__(self):
-        return f'{self.qoute.qoute_reference} {self.product.product.name}'
+        return f'{self.qoute.qoute_reference} {self.product.name}'
 
 class CashWithdraw(models.Model):
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)

@@ -50,137 +50,398 @@
             justify-content: center;
         }
     }
-    </style>
+    .report{
+        margin-left: 6px;
+    }
+
+    .form-label{
+        font-size: 12px !important;
+    }
+    
+    .custom-filter-modal .modal-dialog,
+    .cash-in-modal .modal-dialog,
+    .cash-out-modal .modal-dialog {
+        position: fixed;
+        right: 0;
+        margin: 0;
+        height: 100%;
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .custom-filter-modal.show .modal-dialog,
+    .cash-in-modal.show .modal-dialog,
+    .cash-out-modal.show .modal-dialog {
+        transform: translateX(0);
+    }
+
+    .custom-filter-modal .modal-content {
+        height: 100%;
+        border-radius: 0;
+        border: none;
+    }
+
+    .custom-filter-modal .modal-header {
+        border-bottom: 1px solid #dee2e6;
+        padding: 1rem;
+    }
+
+    .custom-filter-modal .modal-body {
+        padding: 1.5rem;
+    }
+
+    .filter-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-section h6 {
+        margin-bottom: 1rem;
+        color: #495057;
+    }
+
+    .date-range-inputs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .date-range-inputs .form-group {
+        flex: 1;
+    }
+
+    /* Modern Table Styles */
+    .modern-table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .modern-table thead th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .modern-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .modern-table tbody tr:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .modern-table td {
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .status-badge {
+        padding: 0.35rem 0.65rem;
+        border-radius: 50rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-badge.pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .status-badge.approved {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .status-badge.cancelled {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .transaction-modal .modal-content {
+        border: none;
+        border-radius: 1rem;
+    }
+
+    .transaction-modal .modal-header {
+        border-bottom: 1px solid #f0f0f0;
+        padding: 1.5rem;
+    }
+
+    .transaction-modal .modal-body {
+        padding: 1.5rem;
+    }
+
+    .transaction-modal .form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .transaction-modal .form-control {
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .transaction-modal .form-control:focus {
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+
+    .cash-in-modal .modal-dialog,
+    .cash-out-modal .modal-dialog {
+        position: fixed;
+        right: 0;
+        margin: 0;
+        height: 100%;
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+        max-width: 500px !important; 
+    }
+
+    .cash-in-modal.show .modal-dialog,
+    .cash-out-modal.show .modal-dialog {
+        transform: translateX(0);
+    }
+
+    .cash-in-modal .modal-content,
+    .cash-out-modal .modal-content {
+        height: 100%;
+        border-radius: 0;
+        border: none;
+    }
+
+    .cash-in-modal{
+        width: 500px !important;
+    }
+
+    /* Calculator styles */
+    .calculator-container {
+        position: relative;
+    }
+
+    .calculator-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6c757d;
+        cursor: pointer;
+    }
+
+    .calculator-popup {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        display: none;
+        width: 250px;
+        padding: 1rem;
+    }
+
+    .calculator-popup.show {
+        display: block;
+    }
+
+    .calculator-display {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        text-align: right;
+        font-size: 1.25rem;
+    }
+
+    .calculator-buttons {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+    }
+
+    .calculator-buttons button {
+        padding: 0.5rem;
+        border: 1px solid #dee2e6;
+        background: white;
+        border-radius: 0.25rem;
+        cursor: pointer;
+    }
+
+    .calculator-buttons button:hover {
+        background: #f8f9fa;
+    }
+
+    /* Category styles */
+    .category-select-container {
+        position: relative;
+    }
+
+    .add-category-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #0d6efd;
+        cursor: pointer;
+    }
+
+    .category-modal .modal-dialog {
+        max-width: 400px;
+    }
+</style>
 <div class="finance">
     <div class="cashbook">
         <!-- Header Section with Navigation and Filters -->
-        <header class="bg-white shadow-sm rounded p-3 mb-4">
-            <div>
-                <div class="row align-items-center">
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center">
-                            <a href='{% url "finance:finance"%}' class='btn btn-outline-secondary me-2'>
-                                <i class='bx bx-arrow-back'></i>
-                            </a>
-                            <a href='/' class='btn btn-outline-secondary me-3'>
-                                <i class='bx bx-home'></i>
-                            </a>
-                            <h5 class="mb-0">Cashbook</h5>
-                        </div>
-                    </div>
-                    <div class="col-md-8">
+        <header class="rounded p-2 mb-2">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="">
+                    <h4 class="mb-0">Cashbook</h4>
+                    <p>Create and manage daily cash transactions</p>
+                </div>
+                <div>
+                    <div class="row">
                         <div class="d-flex flex-wrap justify-content-md-end gap-2">
-                            <div class="d-flex align-items-center">
-                                <select class="form-select shadow-none" id="filterSelect" onchange="filterCashBook()">
-                                    <option value="today" {% if filter_option == 'today' %}selected{% endif %}>Today</option>
-                                    <option value="this_week" {% if filter_option == 'this_week' %}selected{% endif %}>This Week</option>
-                                    <option value="yesterday" {% if filter_option == 'yesterday' %}selected{% endif %}>Yesterday</option>
-                                    <option value="this_month" {% if filter_option == 'this_month' %}selected{% endif %}>This Month</option>
-                                    <option value="last_month" {% if filter_option == 'last_month' %}selected{% endif %}>Last Month</option>
-                                    <option value="this_year" {% if filter_option == 'this_year' %}selected{% endif %}>This Year</option>
-                                    <option value="custom" {% if filter_option == 'custom' %}selected{% endif %}>Custom Range</option>
-                                </select>
+                            <div class="card-body">                    
+                                <a href="{% url 'finance:cashbook' %}?filter_type=today" class="btn btn-outline-dark {% if filter_type == 'today' %}active{% endif %}">Today</a>
+                                <a href="{% url 'finance:cashbook' %}?filter_type=weekly" class="btn btn-outline-dark {% if filter_type == 'weekly' %}active{% endif %}">Weekly</a>
+                                <a href="{% url 'finance:cashbook' %}?filter_type=monthly" class="btn btn-outline-dark {% if filter_type == 'monthly' %}active{% endif %}">Monthly</a>
+                                <a href="{% url 'finance:cashbook' %}?filter_type=yearly" class="btn btn-outline-dark {% if filter_type == 'yearly' %}active{% endif %}">Yearly</a>
+                                <button class="btn btn-outline-dark {% if filter_type == 'custom' %}active{% endif %}" data-bs-toggle="modal" data-bs-target="#customFilterModal">
+                                    <i class="bi bi-funnel"></i> Custom Filter
+                                </button>
+                                <button class="btn btn-outline-primary report ">
+                                    <i class="bi bi-download"></i>
+                                    Reports
+                                </button>
                             </div>
-                            
-                            <div id="customDateRange" class="d-flex align-items-center gap-2">
-                                <input type="date" id="startDate" value="{{ start_date }}" class="form-control" placeholder="Start Date">
-                                <input type="date" id="endDate" value="{{ end_date}}" class="form-control" placeholder="End Date">
-                                <button class="btn btn-primary" onclick="applyCustomFilter()">Apply</button>
-                            </div>
-                            
-                            <button class="btn btn-secondary ms-md-2" onclick="downloadReport()">
-                                <i class="bx bx-download me-1"></i> Export
-                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         </header>
         
-        <!-- Main Content - Cashbook Table -->
+        <div class="card shadow-none border-0 mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="search-container" style="flex: 1; min-width: 300px;">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0" id="searchInput" placeholder="Search transactions...">
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#cashUpModal">
+                            <i class="bi bi-plus-circle me-1"></i> Record Cash Up
+                        </>
+                        <button class="btn btn-success">
+                            <i class="bx bx-plus-circle me-1"></i> Cash In
+                        </button>
+                        <button class="btn btn-danger">
+                            <i class="bx bx-dash-circle me-1"></i> Cash Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="card-title">Cash In</h5>
+                        <p class="card-text">Total cash in for the selected period: $</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="card-title">Cash Out</h5>
+                        <p class="card-text">Total cash out for the selected period: $</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="card-title">Balance</h5>
+                        <p class="card-text">Total balance for the selected period: $</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="card shadow-sm border-0">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table id="financialTable" class="table table-hover mb-0">
-                        <thead class="table-light">
+                    <table id="financialTable" class="table modern-table mb-0">
+                        <thead>
                             <tr>
-                                <th class="border-0">Date</th>
-                                <th class="border-0">Details</th>
-                                <th class="border-0">Note</th>
-                                <th class="border-0 text-end">Expenses</th>
-                                <th class="border-0 text-end">Income</th>
-                                <th class="border-0 text-end">Balance</th>
-                                <th class="border-0 text-center">Accountant</th>
-                                <th class="border-0 text-center">Manager</th>
-                                <th class="border-0 text-center">Action</th>
+                                <th>Date</th>
+                                <th>Details</th>
+                                <th>Note</th>
+                                <th class="text-end">Expenses</th>
+                                <th class="text-end">Income</th>
+                                <th class="text-end">Balance</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr class="bg-light">
                                 <td colspan="5"><strong>Balance B/F</strong></td>
                                 <td class="text-end fw-bold" id="initialBalance">{{ balance_bf|floatformat:2 }}</td>
-                                <td class="text-center" id="accountant">{{ balance_bf|floatformat:2 }}</td>
-                                <td class="text-center" id="manager">{{ balance_bf|floatformat:2 }}</td>
-                                <td class="text-center" id="director">{{ balance_bf|floatformat:2 }}</td>
+                                <td colspan="2"></td>
                             </tr>
                             
                             {% for entry in entries %}
                             <tr class="{% if entry.cancelled %}text-muted{% endif %}">
-                                <td class="{% if entry.cancelled %}text-decoration-line-through{% endif %}">
-                                    {{ entry.issue_date }}
-                                </td>
+                                <td>{{ entry.issue_date }}</td>
                                 <td>
-                                    <a href='' class="text-reset text-decoration-none {% if entry.cancelled %}text-decoration-line-through{% endif %}">
-                                        <span class="hint--bottom" aria-label="{% if entry.debit %}{{ entry.invoice.products_purchased }}{% endif %}">
-                                            {{ entry.description }}
-                                        </span>
-                                    </a>
+                                    <div class="d-flex align-items-center">
+                                        <div>
+                                            <h6 class="mb-0">{{ entry.description }}</h6>
+                                            <small class="text-muted">{{ entry.reference }}</small>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="text-center">
                                     <button class="btn btn-sm btn-light rounded-circle" onclick="openChat({{ entry.id }})">
                                         <i class="bx bx-message-rounded-dots text-primary"></i>
                                     </button>
                                 </td>
-                                <td class="text-end expense {% if entry.cancelled %}text-decoration-line-through{% endif %}">
+                                <td class="text-end expense">
                                     {% if entry.credit %}
                                         {{ entry.amount }}
                                     {% endif %}
                                 </td>
-                                <td class="text-end income {% if entry.cancelled %}text-decoration-line-through{% endif %}">
+                                <td class="text-end income">
                                     {% if entry.debit %}
                                         {{ entry.amount }}
-                                    {% endif %}                                                          
+                                    {% endif %}
                                 </td>
-                                <td class="text-end balance {% if entry.cancelled %}text-decoration-line-through{% endif %}"></td>
+                                <td class="text-end balance"></td>
                                 <td class="text-center">
-                                    <div class="form-check d-flex justify-content-center">
-                                        <input type="checkbox" 
-                                               class="form-check-input status-checkbox shadow-none" 
-                                               data-id="{{ entry.id }}" 
-                                               data-field="accountant" 
-                                               {% if entry.accountant %}checked{% endif %}>
-                                    </div>
-                                </td>
-                                <td class="text-center">
-                                    <div class="form-check d-flex justify-content-center">
-                                        <input type="checkbox" 
-                                               class="form-check-input status-checkbox shadow-none" 
-                                               data-id="{{ entry.id }}" 
-                                               data-field="manager" 
-                                               {% if entry.manager %}checked{% endif %}>
-                                    </div>
+                                    <span class="status-badge {% if entry.cancelled %}cancelled{% elif entry.approved %}approved{% else %}pending{% endif %}">
+                                        {% if entry.cancelled %}Cancelled{% elif entry.approved %}Approved{% else %}Pending{% endif %}
+                                    </span>
                                 </td>
                                 <td>
                                     <div class="d-flex justify-content-center gap-2">
-                                        <div class="form-check">
-                                            <input type="checkbox" 
-                                                   class="form-check-input status-checkbox shadow-none" 
-                                                   data-id="{{ entry.id }}" 
-                                                   data-field="director" 
-                                                   {% if entry.director %}checked{% endif %}>
-                                        </div>
-                                        <button class="btn btn-sm btn-outline-danger rounded-circle {% if entry.cancelled %}opacity-50{% endif %}" 
-                                                onclick="cancel({{ entry.id }});">
+                                        <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="editEntry({{ entry.id }})">
+                                            <i class="bx bx-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger rounded-circle" onclick="cancel({{ entry.id }})">
                                             <i class="bx bx-x"></i>
                                         </button>
                                     </div>
@@ -188,15 +449,6 @@
                             </tr>
                             {% endfor %}
                         </tbody>
-                        <tfoot class="table-light">
-                            <tr>
-                                <td colspan="3"><strong>Total</strong></td>
-                                <td class="text-end fw-bold">{{ total_credit|floatformat:2 }}</td>
-                                <td class="text-end fw-bold">{{ total_debit|floatformat:2 }}</td>
-                                <td class="text-end fw-bold">{{ total_balance|floatformat:2 }}</td>
-                                <td colspan="3"></td>
-                            </tr>
-                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -229,25 +481,255 @@
         </div>
     </div>
 </div>
+
+<!-- Cash Up Modal -->
+<div class="modal fade" id="cashUpModal" tabindex="-1" aria-labelledby="cashupModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0 shadow">
+            {% include 'cashflows/cash_ups.html' %}
+        </div>
+    </div>
+</div>
+
+<!-- Custom Filter Modal -->
+<div class="modal fade custom-filter-modal" id="customFilterModal" tabindex="-1" aria-labelledby="customFilterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customFilterModalLabel">Custom Filter</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="customFilterForm">
+                    <div class="filter-section">
+                        <h6>Date Range</h6>
+                        <div class="date-range-inputs">
+                            <div class="form-group">
+                                <label for="startDate">Start Date</label>
+                                <input type="date" class="form-control" id="startDate" name="startDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="endDate">End Date</label>
+                                <input type="date" class="form-control" id="endDate" name="endDate">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-section">
+                        <h6>Amount Range</h6>
+                        <div class="date-range-inputs">
+                            <div class="form-group">
+                                <label for="minAmount">Min Amount</label>
+                                <input type="number" class="form-control" id="minAmount" name="minAmount" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="maxAmount">Max Amount</label>
+                                <input type="number" class="form-control" id="maxAmount" name="maxAmount" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-section">
+                        <h6>Transaction Type</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showIncome" name="showIncome" checked>
+                            <label class="form-check-label" for="showIncome">Income</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showExpenses" name="showExpenses" checked>
+                            <label class="form-check-label" for="showExpenses">Expenses</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-section">
+                        <h6>Status</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showPending" name="showPending" checked>
+                            <label class="form-check-label" for="showPending">Pending</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showApproved" name="showApproved" checked>
+                            <label class="form-check-label" for="showApproved">Approved</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showCancelled" name="showCancelled">
+                            <label class="form-check-label" for="showCancelled">Cancelled</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="applyCustomFilters()">Apply Filters</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="resetFilters()">Reset</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cash In Modal -->
+<div class="modal fade cash-in-modal custom-filter-modal" id="cashInModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog  modal-xl">
+        <div class="modal-content" style="width: 500px !important;">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Cash In</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="cashInForm">
+                    <div class="mb-3">
+                        <label class="form-label fs-6">Amount<span class="text-danger">*</span></label>
+                        <div class="calculator-container">
+                            <input type="number" class="form-control" name="amount" required step="0.01">
+                            <button type="button" class="calculator-btn" onclick="toggleCalculator('cashIn')">
+                                <i class="bx bx-calculator">+</i>
+                            </button>
+                            <div class="calculator-popup" id="cashInCalculator">
+                                <div class="calculator-display">0</div>
+                                <div class="calculator-buttons">
+                                    <button type="button">7</button>
+                                    <button type="button">8</button>
+                                    <button type="button">9</button>
+                                    <button type="button">÷</button>
+                                    <button type="button">4</button>
+                                    <button type="button">5</button>
+                                    <button type="button">6</button>
+                                    <button type="button">×</button>
+                                    <button type="button">1</button>
+                                    <button type="button">2</button>
+                                    <button type="button">3</button>
+                                    <button type="button">-</button>
+                                    <button type="button">0</button>
+                                    <button type="button">.</button>
+                                    <button type="button">=</button>
+                                    <button type="button">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fs-6">Description</label>
+                        <input type="text" class="form-control" name="description" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fs-6">Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fs-6">Category <span class="text-danger">*</span></label>
+                        <div class="category-select-container">
+                            <select class="form-select" name="category" required>
+                                <option value="">Select Category</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="add-category-btn" onclick="showAddCategoryModal()">
+                                <i class="bx bx-plus-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fs-6">Reference</label>
+                        <input type="text" class="form-control" name="reference">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="submitCashIn()">Add Cash In</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cash Out Modal -->
+<div class="modal fade transaction-modal" id="cashOutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Cash Out</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="cashOutForm">
+                    <div class="mb-3">
+                        <label class="form-label">Amount</label>
+                        <input type="number" class="form-control" name="amount" required step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <input type="text" class="form-control" name="description" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control" name="date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" name="category" required>
+                            <option value="">Select Category</option>
+                            <option value="salary">Salary</option>
+                            <option value="utilities">Utilities</option>
+                            <option value="rent">Rent</option>
+                            <option value="supplies">Supplies</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reference</label>
+                        <input type="text" class="form-control" name="reference">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="submitCashOut()">Add Cash Out</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal fade category-modal" id="addCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addCategoryForm">
+                    <div class="mb-3">
+                        <label class="form-label">Category Name</label>
+                        <input type="text" class="form-control" name="categoryName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="categoryDescription" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitNewCategory()">Add Category</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const filterSelect = document.getElementById('filterSelect');
     const customDateRange = document.getElementById('customDateRange');
-
-    customDateRange.style.display = filterSelect.value === 'custom' ? 'flex' : 'none';
     
-    filterSelect.addEventListener('change', function() {
-        customDateRange.style.display = this.value === 'custom' ? 'flex' : 'none';
-        if (this.value !== 'custom') {
-            filterCashBook();
-        }
-    });
-    
-    // Calculate balance for each row
     calculateBalances();
 });
 
-// Calculate running balance
 function calculateBalances() {
     let balance = parseFloat(document.getElementById('initialBalance').textContent);
     const balanceCells = document.querySelectorAll('td.balance');
@@ -261,7 +743,6 @@ function calculateBalances() {
         balance = balance - expense + income;
         balanceCells[i].textContent = balance.toFixed(2);
         
-        // Apply color based on balance
         if (balance < 0) {
             balanceCells[i].classList.add('text-danger');
         } else {
@@ -477,32 +958,45 @@ function calculateBalances() {
         window.location.href = `?filter=${filter}`;
     }
 
-    function applyCustomFilter() {
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        if (startDate && endDate) {
-            window.location.href = `?filter=custom&start_date=${startDate}&end_date=${endDate}`;
-        } else {
-            Swal.fire({
-                title: "Error",
-                text: "Please select both start and end dates.",
-                icon: "error"
-            });
-        }
+    function applyCustomFilters() {
+        const formData = new FormData(document.getElementById('customFilterForm'));
+        const filters = {
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate'),
+            showIncome: document.getElementById('showIncome').checked,
+            showExpenses: document.getElementById('showExpenses').checked,
+            minAmount: formData.get('minAmount'),
+            maxAmount: formData.get('maxAmount'),
+            showPending: document.getElementById('showPending').checked,
+            showApproved: document.getElementById('showApproved').checked,
+            showCancelled: document.getElementById('showCancelled').checked
+        };
+
+        // Convert filters to URL parameters
+        const params = new URLSearchParams();
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value) {
+                params.append(key, value);
+            }
+        });
+
+        // Redirect to filtered view
+        window.location.href = `{% url 'finance:cash_flow' %}?${params.toString()}`;
     }
 
-    function downloadReport() {
-        const filter = document.getElementById('filterSelect').value;
-        let url = `/finance/report/?filter=${filter}/`;
-
-        if (filter === 'custom') {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            url += `&start_date=${startDate}&end_date=${endDate}`;
-        }
-
-        window.location.href = url;
+    function resetFilters() {
+        document.getElementById('customFilterForm').reset();
     }
+
+    // Initialize date inputs with current date range if available
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDate = urlParams.get('startDate');
+        const endDate = urlParams.get('endDate');
+        
+        if (startDate) document.getElementById('startDate').value = startDate;
+        if (endDate) document.getElementById('endDate').value = endDate;
+    });
 
     document.addEventListener('DOMContentLoaded', function() {
         const checkboxes = document.querySelectorAll('.status-checkbox');
@@ -538,7 +1032,7 @@ function calculateBalances() {
         let runningBalance = parseFloat(document.getElementById("initialBalance").textContent);
     
         tableRows.forEach((row, index) => {
-            if (index === 0) return; // Skip the balance B/F row
+            if (index === 0) return; 
     
             const expenseCell = row.querySelector(".expense");
             const incomeCell = row.querySelector(".income");
@@ -569,5 +1063,194 @@ function calculateBalances() {
         }
         return cookieValue;
     }
+
+    // Add search functionality
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#financialTable tbody tr');
+        
+        tableRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Update the button click handlers
+    document.querySelector('.btn-success').addEventListener('click', function() {
+        new bootstrap.Modal(document.getElementById('cashInModal')).show();
+    });
+
+    document.querySelector('.btn-danger').addEventListener('click', function() {
+        new bootstrap.Modal(document.getElementById('cashOutModal')).show();
+    });
+
+    function submitCashIn() {
+        const form = document.getElementById('cashInForm');
+        const formData = new FormData(form);
+        
+        fetch('/finance/cash-in/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                Swal.fire({
+                    title: 'Error!',
+                    text: data.message || 'Failed to add cash in entry',
+                    icon: 'error'
+                });
+            }
+        });
+    }
+
+    function submitCashOut() {
+        const form = document.getElementById('cashOutForm');
+        const formData = new FormData(form);
+        
+        fetch('/finance/cash-out/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                Swal.fire({
+                    title: 'Error!',
+                    text: data.message || 'Failed to add cash out entry',
+                    icon: 'error'
+                });
+            }
+        });
+    }
+
+    function editEntry(entryId) {
+        // Implement edit functionality
+        console.log('Edit entry:', entryId);
+    }
+
+    // Calculator functionality
+    function toggleCalculator(formType) {
+        const calculator = document.getElementById(`${formType}Calculator`);
+        calculator.classList.toggle('show');
+    }
+
+    function initializeCalculator(calculatorId, inputField) {
+        const calculator = document.getElementById(calculatorId);
+        const display = calculator.querySelector('.calculator-display');
+        const buttons = calculator.querySelectorAll('.calculator-buttons button');
+        let currentValue = '0';
+        let previousValue = null;
+        let operation = null;
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                const value = button.textContent;
+
+                if (value >= '0' && value <= '9' || value === '.') {
+                    if (currentValue === '0' && value !== '.') {
+                        currentValue = value;
+                    } else {
+                        currentValue += value;
+                    }
+                } else if (value === '=') {
+                    if (previousValue !== null && operation !== null) {
+                        currentValue = calculate(previousValue, currentValue, operation);
+                        previousValue = null;
+                        operation = null;
+                    }
+                } else {
+                    if (previousValue === null) {
+                        previousValue = currentValue;
+                        currentValue = '0';
+                    } else {
+                        currentValue = calculate(previousValue, currentValue, operation);
+                        previousValue = currentValue;
+                        currentValue = '0';
+                    }
+                    operation = value;
+                }
+
+                display.textContent = currentValue;
+                inputField.value = currentValue;
+            });
+        });
+    }
+
+    function calculate(a, b, operation) {
+        a = parseFloat(a);
+        b = parseFloat(b);
+        switch (operation) {
+            case '+': return (a + b).toString();
+            case '-': return (a - b).toString();
+            case '×': return (a * b).toString();
+            case '÷': return (a / b).toString();
+            default: return b.toString();
+        }
+    }
+
+    // Category functionality
+    function showAddCategoryModal() {
+        new bootstrap.Modal(document.getElementById('addCategoryModal')).show();
+    }
+
+    function submitNewCategory() {
+        const form = document.getElementById('addCategoryForm');
+        const formData = new FormData(form);
+        
+        fetch('/finance/add-category/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Add new category to select
+                const select = document.querySelector('select[name="category"]');
+                const option = new Option(data.category.name, data.category.id);
+                select.add(option);
+                select.value = data.category.id;
+                
+                // Close modal and reset form
+                bootstrap.Modal.getInstance(document.getElementById('addCategoryModal')).hide();
+                form.reset();
+            } else {
+                Swal.fire({
+                    title: 'Error!',
+                    text: data.message || 'Failed to add category',
+                    icon: 'error'
+                });
+            }
+        });
+    }
+
+    // Initialize calculators when modals are shown
+    document.getElementById('cashInModal').addEventListener('shown.bs.modal', function () {
+        initializeCalculator('cashInCalculator', this.querySelector('input[name="amount"]'));
+    });
+
+    document.getElementById('cashOutModal').addEventListener('shown.bs.modal', function () {
+        initializeCalculator('cashOutCalculator', this.querySelector('input[name="amount"]'));
+    });
 </script>
 {% endblock %}

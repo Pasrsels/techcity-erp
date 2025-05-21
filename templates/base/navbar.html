@@ -30,7 +30,7 @@
                     <small class="dropdown-toggle">{{request.user}}</small>
                     <ul class="dropdown-menu shadow w-50 bg-light">
                         <li class="dropdown-link">
-                            <a href="" class="px-3 fs-6">Profile</a>
+                        <a href="{% url 'users:profile' %}" class="px-3 fs-6">Profile</a>
                         </li>
                         <li class="dropdown-link">
                             <a href="{% url 'users:logout' %}" class="px-3 fs-6">Logout</a>
