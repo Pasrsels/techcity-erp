@@ -1,8 +1,202 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %} Dashboard {% endblock title %}
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/modern-dashboard.css' %}">
+{% endblock extra_head %}
 {% block content %}
-<div class="dashboard-container">
+<div class="">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --accent: #10b981;
+      --danger: #ef4444;
+      --bg: #f7f8fa;
+      --card-bg: #fff;
+      --text: #22223b;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --shadow: 0 2px 8px rgba(0,0,0,0.06);
+      --radius: 16px;
+      --font: 'Inter', Arial, sans-serif;
+    }
+    
+    body, .dashboard-container {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+    }
+    
+    .dashboard-container {
+      padding: 2rem 1rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .header-row {
+      margin-bottom: 2rem;
+    }
+    
+    .page-title h4 {
+      font-weight: 700;
+      font-size: 2rem;
+      color: var(--primary);
+    }
+    
+    .page-title p {
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+    
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: none;
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+    
+    .card:hover {
+      box-shadow: 0 4px 16px rgba(37,99,235,0.08);
+      transform: translateY(-2px) scale(1.01);
+    }
+    
+    .card-header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    
+    .icon-bg {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--bg);
+      box-shadow: var(--shadow);
+    }
+    
+    .badge {
+      border-radius: 999px;
+      font-size: 0.95rem;
+      padding: 0.3em 0.8em;
+    }
+    
+    .btn, .dropdown-menu, .form-select, .form-control {
+      border-radius: var(--radius);
+      font-family: var(--font);
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      box-shadow: var(--shadow);
+      transition: background 0.15s;
+    }
+    
+    .btn-primary:hover {
+      background: var(--accent);
+    }
+    
+    .btn-outline-secondary {
+      border: 1px solid var(--border);
+      color: var(--primary);
+      background: var(--bg);
+    }
+    
+    .btn-outline-secondary:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+    
+    .table {
+      background: transparent;
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    
+    .table th, .table td {
+      border: none;
+      padding: 0.75rem 0.5rem;
+      font-size: 1rem;
+    }
+    
+    .table thead {
+      background: var(--bg);
+    }
+    
+    .table-hover tbody tr:hover {
+      background: #f1f5f9;
+    }
+    
+    .avatar {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--bg);
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 1.1rem;
+    }
+    
+    .avatar-text {
+      font-size: 1.1rem;
+    }
+    
+    .product-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 1.3rem;
+    }
+    
+    .list-group-item {
+      background: var(--card-bg);
+      border: none;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s;
+    }
+    
+    .list-group-item:last-child {
+      border-bottom: none;
+    }
+    
+    .list-group-item:hover {
+      background: var(--bg);
+    }
+    
+    @media (max-width: 900px) {
+      .dashboard-container {
+        padding: 1rem 0.2rem;
+      }
+      .header-row {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .card {
+        margin-bottom: 1rem;
+      }
+    }
+    
+    ::-webkit-scrollbar {
+      width: 8px;
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 8px;
+    } 
+  </style>
   <div class="main-content p-4">
     <div class="header-row d-flex justify-content-between align-items-center mb-4">
       <div class="page-title">
@@ -12,8 +206,8 @@
     </div>
 
     <!-- Stats Cards Row -->
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-4">
-      <div class="col">
+    <div class="row g-3 mb-4">
+      <div class="col-4">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
@@ -34,9 +228,7 @@
           </div>
         </div>
       </div>
-      
-      <!-- Revenue Card -->
-      <div class="col-12">
+      <div class="col-4">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
@@ -57,9 +249,7 @@
           </div>
         </div>
       </div>
-      
-      <!-- Customers Card -->
-      <div class="col-12">
+      <div class="col-4">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
@@ -80,9 +270,7 @@
           </div>
         </div>
       </div>
-      
-      <!-- Products Card -->
-      <div class="col-12">
+      <div class="col-4">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
