@@ -1,6 +1,7 @@
 from django.urls import path, include
 from . views import *
 from rest_framework.routers import DefaultRouter
+# from apps.finance.custom_views.cashbook_views import cashbook_data
 
 app_name = 'finance'
 
@@ -104,7 +105,7 @@ urlpatterns = [
     path('cashbook/', cashbook_view, name='cashbook'),
     path('cashbook/note/', cashbook_note, name='cashbook_note'),
     path('report/', download_cashbook_report, name='download_cashbook_report'),
-    path('cancel-entry/', cancel_transaction, name='cancel-entry'),
+    path('finance/cashbook/data/', cashbook_data, name='cashbook_data'),
     path('cashbook/note/<int:entry_id>/', cashbook_note_view, name='cashbook_note_view'),
     path('update_transaction_status/<int:pk>/', update_transaction_status, name='update_transaction_status'),
 

@@ -26,7 +26,7 @@
     <!-- use-bootstrao-select css -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/use-bootstrap-select@2.2.0/dist/use-bootstrap-select.min.css">
     <!-- Calculator CSS -->
-    <link rel="stylesheet" href="{% static 'css/calculator.css' %}">
+    {% comment %} <link rel="stylesheet" href="{% static 'css/calculator.css' %}"> {% endcomment %}
     {% endblock css %}
 
     <script src="https://unpkg.com/slim-select@latest/dist/slimselect.min.js"></script>
@@ -235,170 +235,162 @@
     <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>    
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <!-- <script>
-        const notisModal = new bootstrap.Modal(document.querySelector('#notificationModal'))
-        const notisButton = document.querySelector('#notisBtn')
+    {% comment %} <script>
+        // Function to format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
 
-        const branchModal = new bootstrap.Modal(document.querySelector('#branchModal'))
-        const branchButton = document.querySelector('#branchButton')
+        // Function to format date
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
 
-        const tableWrapper = document.querySelector('#detailTable_wrapper')
-
-        // document.addEventListener("DOMContentLoaded", function () {
-        //     const loader = document.getElementById("loader");
-        //     loader.style.display = "none"; // Hide the loader after the page loads
-        // });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // fetchNotifications();
-        });
-
-        
-        document.querySelector('.col-12')?.classList.add('w-100') 
-        // document.addEventListener("DOMContentLoaded", function () {
-        //     const buttons = document.querySelectorAll(".toggle-btn");
-
-        //     buttons.forEach((button) => {
-        //         button.addEventListener("click", function () {
-        //             const span = button.nextElementSibling;
-        //             button.classList.add("fade-out");
-        //             span.classList.remove("d-none");
-        //             span.classList.add("show");
-        //         });
-        //     });
-        // });
-
-        // function fetchNotifications() {
-        //     fetch('{% url "inventory:reorder_from_notifications" %}')
-        //         .then(response => response.json())
-        //         .then(data => {
-        //             console.log(data)
-        //             const tableBody = document.querySelector('#notificationTable tbody');
-        //             tableBody.innerHTML = ''; 
-        //             data.forEach(notification => {
-        //                 const row = document.createElement('tr');
-        //                 row.innerHTML = `
-        //                     <td>${notification.inventory__product__name}</td>
-        //                     <td>${notification.inventory__quantity}</td>
-        //                     <td>${notification.quantity}</td>
-        //                     <td>
-        //                         <button class="btn bx bx-list-plus" data-id="${notification.inventory__id}" onclick="addToOrderList(this);"></button>
-        //                         <button class="btn bx bx-x text-danger" data-id="${notification.inventory__id}" onclick="dontAddToOrderList(this);"></button>
-        //                     </td>
-        //                 `;
-        //                 tableBody.appendChild(row);
-        //             });
-        //         })
-        //         .catch(error => console.error('Error fetching notifications:', error));
-        // }
-
-        // function addToOrderList(button) {
-        //     const inventoryId = button.getAttribute('data-id');
-        //     fetch('{% url "inventory:reorder_from_notifications" %}', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'X-CSRFToken': getCookie('csrftoken')
-        //         },
-        //         body: JSON.stringify({ inventory_id: inventoryId, action_type:'add' })
-        //     })
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         if (data.success) {
-        //             alert('Added to order list successfully!');
-        //             fetchNotifications(); 
-        //         } else {
-        //             alert('Error: ' + data.message);
-        //         }
-        //     })
-        //     .catch(error => console.error('Error adding to order list:', error));
-        // }
-
-        // function dontAddToOrderList(button) {
-        //     const inventoryId = button.getAttribute('data-id');
-        //     fetch('{% url "inventory:reorder_from_notifications" %}', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'X-CSRFToken': getCookie('csrftoken')
-        //         },
-        //         body: JSON.stringify({ inventory_id: inventoryId, action_type:'remove' })
-        //     })
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         if (data.success) {
-        //             alert('Added to order list successfully!');
-        //             fetchNotifications(); 
-        //         } else {
-        //             alert('Error: ' + data.message);
-        //         }
-        //     })
-        //     .catch(error => console.error('Error adding to order list:', error));
+        // Function to populate monthly installments table
+        function populateMonthlyInstallments(data) {
+            const tbody = document.querySelector('#monthlyInstallmentsTable tbody');
+            tbody.innerHTML = '';
             
-        // }
+            data.forEach(installment => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${installment.invoice.invoice_number}</td>
+                    <td>${installment.invoice.customer.name}</td>
+                    <td>${formatCurrency(installment.amount_due)}</td>
+                    <td>${formatCurrency(installment.amount_paid)}</td>
+                    <td>${formatDate(installment.due_date)}</td>
+                    <td>
+                        <span class="badge ${installment.paid ? 'bg-success' : 'bg-warning'}">
+                            ${installment.paid ? 'Paid' : 'Pending'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewInstallmentDetails(${installment.id})">
+                            View Details
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
 
-        branchButton.addEventListener('click', ()=>{
-            branchModal.show()
-        })
-
-        notisButton.addEventListener('click', ()=>{
-            notisModal.show()
-        })
-
-        // // $.ajax({
-        // //     url: '{% url "finance:finance_notifications_json" %}',
-        // //     type: 'GET',
-        // //     }).done(function(response) {
-        // //         const data = response;
-        // //         displayFinanceNotifications(data)
-        // //     })
-        
-        // // function displayFinanceNotifications(data) {
-        // //     const ul = document.querySelector('#finance_notifications');
-        // //     const notificationTypes = {};
+        // Function to populate laybys table
+        function populateLaybys(data) {
+            const tbody = document.querySelector('#laybysTable tbody');
+            tbody.innerHTML = '';
             
-        // //     data.forEach((notification) => {
-        // //         if (!notificationTypes[notification.notification_type]) {
-        // //         notificationTypes[notification.notification_type] = [];
-        // //         }
-        // //         notificationTypes[notification.notification_type].push(notification);
-        // //     });
-            
-        // //     Object.keys(notificationTypes).forEach((type) => {
-                
-        // //         notificationTypes[type].forEach((notification) => {
-        // //         const li = document.createElement('li');
-        // //         if(notification.transfer__to === {{request.user.branch.id}}){
-        // //             li.innerHTML = `<small><a href='{% url "finance:cash_transfer_list" %}'>${notification.notification}</a></small>`;
-        // //         }
-        // //         if(notification.expense__branch === {{request.user.branch.id}}){
-        // //             li.innerHTML = `<small><a>${notification.notification}</a></small>`;
-        // //         }
-        // //         if(notification.invoice__branch === {{request.user.branch.id}}){
-        // //             li.innerHTML = `<small><a>${notification.notification}</a></small>`;
-        // //         }
-        // //         ul.appendChild(li);
-        // //         });
-        // //     });
-        // }
+            data.forEach(layby => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${layby.invoice.invoice_number}</td>
+                    <td>${layby.invoice.customer.name}</td>
+                    <td>${formatCurrency(layby.invoice.amount)}</td>
+                    <td>${formatCurrency(layby.invoice.amount_paid)}</td>
+                    <td>
+                        <span class="badge ${layby.fully_paid ? 'bg-success' : 'bg-warning'}">
+                            ${layby.fully_paid ? 'Fully Paid' : 'In Progress'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewLaybyDetails(${layby.id})">
+                            View Details
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
 
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== "") {
-              const cookies = document.cookie.split(";");
-              for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === name + "=") {
-                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                  break;
-                }
-              }
+        // Function to populate credit table
+        function populateCredits(data) {
+            const tbody = document.querySelector('#creditsTable tbody');
+            tbody.innerHTML = '';
+            
+            data.forEach(credit => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${credit.invoice.invoice_number}</td>
+                    <td>${credit.invoice.customer.name}</td>
+                    <td>${formatCurrency(credit.amount_due)}</td>
+                    <td>${formatCurrency(credit.amount_paid)}</td>
+                    <td>${formatDate(credit.due_date)}</td>
+                    <td>
+                        <span class="badge ${credit.paid ? 'bg-success' : 'bg-warning'}">
+                            ${credit.paid ? 'Paid' : 'Pending'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewCreditDetails(${credit.id})">
+                            View Details
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Function to fetch and populate all tables
+        async function fetchAndPopulateTables() {
+            try {
+                const installmentsResponse = await fetch('/finance/monthly-installments/');
+                const installmentsData = await installmentsResponse.json();
+                populateMonthlyInstallments(installmentsData);
+
+                // Fetch laybys
+                const laybysResponse = await fetch('/finance/laybys/');
+                const laybysData = await laybysResponse.json();
+                populateLaybys(laybysData);
+
+                // Fetch credits
+                const creditsResponse = await fetch('/finance/credits/');
+                const creditsData = await creditsResponse.json();
+                populateCredits(creditsData);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                // Show error notification
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to fetch data. Please try again later.'
+                });
             }
-            return cookieValue;
-          }  
-    </script> -->
-    {% block js %}
+        }
+
+        // Function to view installment details
+        function viewInstallmentDetails(id) {
+            // Implement view details functionality
+            console.log('Viewing installment details:', id);
+        }
+
+        // Function to view layby details
+        function viewLaybyDetails(id) {
+            // Implement view details functionality
+            console.log('Viewing layby details:', id);
+        }
+
+        // Function to view credit details
+        function viewCreditDetails(id) {
+            // Implement view details functionality
+            console.log('Viewing credit details:', id);
+        }
+
+        // Initialize tables when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchAndPopulateTables();
+            
+            // Set up refresh interval (every 5 minutes)
+            setInterval(fetchAndPopulateTables, 300000);
+        });
+    </script> {% endcomment %}
+    {% comment %} {% block js %}
     <script src="{% static 'js/calculator.js' %}"></script>
-    {% endblock js %}
+    {% endblock js %} {% endcomment %}
 </body>
 </html>

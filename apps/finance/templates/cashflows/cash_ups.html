@@ -1,8 +1,9 @@
 {% load static %}
 <style>
     .nv-active{
-        background-color: rgb(78, 76, 76) !important;
+        background-color: #5c8989 !important;
         color: #fff !important;
+        transition: all 0.5s ease-in-out direction: all;
     }
 
     .b-active{
@@ -14,99 +15,132 @@
         background-color: #000 !important;
         color: #fff !important;
     }
+    #cashFlowTabs{
+        padding: -1.5rem -1.5rem  !important;
+    }
+    #cashFlowTabs .nav-item{
+        padding:0px;
+    }
+    .amount-border{
+        border: 0.5px solid red !important;
+    }
+    .bg-secondary-cash{
+        background: #e4ebf9 !important;
+    }
+    .branch-details-box {
+        min-width: 180px; 
+    }
+    {% comment %} .branch-name{
+        margin-left: 20px !important;
+    }
+    .branch-input{
+        margin-left: -15px !important; {% endcomment %}
+    {% comment %} } {% endcomment %}
+    .active-card{
+        background-color:#5c8989  !important;
+        color: #fff !important;
+    }
+    .active-card .active-button{
+        background-color: #fff !important;
+        color: #198754 !important;
+    }
+    .nor-active-card{
+        background-color: gray;
+    }
+    .table-td-text{
+        font-size: 12px;
+    }
 </style>
 <div>
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center">
-        <div class="d-flex justify-content-between align-items-center bg-white p-2">
-            <ul class="nav nav-tabs" id="cashFlowTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                  <button class="nav-link active nv-active" id="record-tab" data-bs-toggle="tab" data-bs-target="#record-content" type="button" role="tab">
+        <div class="d-flex justify-content-center align-items-center bg-white p-2 mb-3">
+            <ul class="nav nav-tabs border p-0 rounded-4 " id="cashFlowTabs" role="tablist">
+                <li class="nav-item  m-2"  role="presentation">
+                  <button class="nav-link rounded-4 active nv-active fs-6" id="record-tab" data-bs-toggle="tab" data-bs-target="#record-content" type="button" role="tab">
                     Record Cashup
                   </button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-content" type="button" role="tab">
+                <li class="nav-item m-2" role="presentation">
+                    <button class="nav-link rounded-4 fs-6" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-content" type="button" role="tab">
                       Cashups List
                     </button>
                   </li>              
             </ul>
-        </div>
-            <!-- <form id="cashup-form">
-                <div class="row g-3">
-                    <div class="col-md-12">
-                        <select id="branch-select" class="form-select" class="nav-link" data-branch-id="{{ branch.id }}" type="button" onclick="selectTab(this, this.value)" required>
-                            <option value="" >Select Branch</option>
-                            {% for branch in branches %}
-                            <option value="{{ branch.id }}">{{ branch.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>  
-            </form> -->
-        </div>
-
-        <div id="branchButton" class="d-flex gap-2 align-items-center mt-2">
-            <button class="btn btn-sm btn-light b-active" data-branch-id="">
-                All
-            </button>
-            {% for branch in branches %}
-                <button class="btn btn-sm btn-light me-2" data-branch-id="{{ branch.id }}" onclick="selectTab(this, {{ branch.id }})">
-                    {{ branch.name }}
-                </button>
-            {% endfor %}
-        </div>
-
-        <div class="cash-up summary mt-4">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card border-1 border-success  rounded-3 shadow-none">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <h5 class="card-title">Cash Ups Value</h5>
-                            <p class="card-text" style="font-size: 1.5rem;">
-                                <span class="text-success">
-                                    $400.00
-                                </span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card border-1 border-danger rounded-3 shadow-none">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <h5 class="card-title">Pending Cash Ups
-                                <span class="badge badge-sm bg-danger">
-                                    {{ pending_cash_ups }}1
-                                </span>
-                            </h5>
-                            <p class="card-text" style="font-size: 1.5rem;">
-                                <span class="text-danger">
-                                    $400.00
-                                </span>
-                            </p>
-                        </div>
-                    </div>
+            <div class="card border-1 border-danger rounded-3 shadow-none">
+                <div class="card-body d-flex justify-content-between align-items-center">
                 </div>
             </div>
         </div>
-      
+
+        <div class="d-flex justify-content-between flex-column align-items-center w-100 mb-3">
+            <h5 class="card-title">
+                Pending Cash Ups
+                <span class="">
+                    {{ pending_cash_ups }} <small> x20</small>
+                </span>
+            </h5>
+            <div class="text-muted">
+                <span class="fw-bold" style="font-size: 12px;">From</span>
+                <span style="font-size: 12px;">5/23/2025</span>
+                <span class="fw-bold" style="font-size: 12px;">To</span>
+                <span style="font-size: 12px;">5/24/2025</span>
+            </div>
+        </div>
         
-        <div class="tab-content">
+        <div class="tab-content px-1">
             <div class="tab-pane fade show active" id="record-content" role="tabpanel">
-                
+                <div>
+                    <div id="branchButton" class="d-flex align-items-center w-100">
+                        <div class="row w-100 bg-secondary-cash rounded-1">
+                            <div class="col bg-white border rounded-4">
+                                <div class="d-flex align-items-center justify-content-between mt-2">
+                                    <span class="branch-name text-dark">All</span>
+                                    <div class="border-none rounded-1 text-center text-danger">
+                                        <span class="">
+                                            $8000.00
+                                        </span>
+                                    </div>
+                                    <span class="w-25 text-end">
+                                        <input style="width: 1rem; height: 1rem;" type="checkbox" id='allBranchesCheckbox' checked class="btn btn-sm btn-light me-2 branch-checkbox" data-branch-id=""  onchange="selectTab(this, '')"/>
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-center">
+                                    
+                                </div>
+                            </div>
+                            {% for branch in branches %}
+                                <div class="col mb-2">
+                                    <div class="d-flex align-items-center justify-content-between gap-2 mt-2">
+                                        <span class="branch-name text-dark">{{ branch.name }}</span>
+                                        <span class="border-none rounded-1">
+                                            <span class="">
+                                                $8000.00
+                                            </span>
+                                        </span>
+                                        <span class="w-25 text-end branch-input">
+                                            <input style="width: 1rem; height: 1rem;" type="checkbox" class="btn btn-sm btn-light me-2 branch-checkbox" data-branch-id="{{ branch.id }}" onchange="selectTab(this, {{ branch.id }})"/>
+                                        </span>
+                                    </div>
+                                <div class="d-flex justify-content-center">
+                                    
+                                </div>
+
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
                 <div class="mt-3" id="details"></div>
             </div>
     
-            <div class="tab-pane fade" id="list-content" role="tabpanel" aria-labelledby="list-tab">
-                <div class="col-md-12">
+            <div class="tab-pane fade mt-3" id="list-content" role="tabpanel" aria-labelledby="list-tab">
+                <div class="col-md-12" style="height: calc(100vh - 200px); overflow-y: auto;">
                     {% include "cashflows/cashflow_tab.html" %}    
                 </div>
             </div> 
         </div>  
-
     </div>
-        {% csrf_token %}
+    {% csrf_token %}
 </div>
 
 <script>
@@ -119,6 +153,15 @@ let branchId = null;
 const recordCashUpBtn = document.getElementById('record-tab')
 const cashUpListBtn = document.getElementById('list-tab')
 const branchButton = document.querySelectorAll('#branchButton button')
+
+document.addEventListener('DOMContentLoaded', () => {
+    const allCheckbox = document.getElementById('allBranchesCheckbox');
+    if (allCheckbox) {
+        allCheckbox.checked = true;
+        selectTab(allCheckbox, '');
+        fetchCashUpDetails('')
+    }
+});
 
 branchButton.forEach(button => {
     button.addEventListener('click', () => {
@@ -152,26 +195,40 @@ cashUpListBtn.addEventListener('click', () => {
 totalRecordItems = document.querySelectorAll('.record-sale-btn, .expense-action[data-action="record"]').length;
 recordedCount = 0
 
-function selectTab(button, branchId) {
-    console.log(button, 'button')
-
-    document.querySelectorAll('#cashFlowTabs .nav-link').forEach(tab => {
-        tab.classList.remove('active');
+function selectAllBranches(button) {
+    const checkboxes = document.querySelectorAll('.branch-checkbox');
+    const isAllSelected = button.classList.contains('b-active');
+    
+    button.classList.toggle('b-active');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = !isAllSelected;
+    
+        const event = new Event('change');
+        checkbox.dispatchEvent(event);
     });
-    button.classList.add('active');
+}
+
+function selectTab(checkbox, branchId) {
+    const allButton = document.querySelector('[data-branch-id=""]');
+    const checkboxes = document.querySelectorAll('.branch-checkbox');
 
     console.log(branchId, 'branch id')
-
-    fetchCashUpDetails(branchId);
+    
+    if (!checkbox.checked) {
+        allButton.classList.remove('b-active');
+        allBUtton.checked=false
+    } else {
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        if (allChecked) {
+            allButton.classList.add('b-active');
+        }
+    }
+    loadCashbookData(1, false)
+    {% comment %} fetchCashUpDetails(branchId); {% endcomment %}
 }
 
 async function fetchCashUpDetails(branch_id) {
-
-    if(!branch_id){
-        loaderRow.innerHTML = 'No cash up data';
-        return;
-    }
-    
     try {
         branchId = branch_id;
         loaderRow.innerHTML = `
@@ -220,46 +277,141 @@ function showErrorMessage(container, message) {
 }
 
 function renderCashUpDetails(data, container) {
-    const salesData = data.data.sales || [];
-    const expensesData = data.data.expenses || [];
-    
-    const salesSection = createSalesSection(salesData);
-    const expensesSection = createExpensesSection(expensesData);
+    const allSalesData = data.data.sales || [];
+    const allExpensesData = data.data.expenses || [];
+
+    console.log(allSalesData, allExpensesData, data.cash_up, 'data')
     
     container.innerHTML = `
-        <div class="w-100 p-1 bg-light border-top border-bottom">
-            <div class="row g-3 w-100">
+        <div class="w-100 p-1">
+            <div class="row g-3 mt-2 w-100">
                 <div class="w-100">
-                        {% comment %} <!-- Progress bar -->
-                        <div class="progress mb-4" style="height: 20px;">
-                            <div id="recordProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
-                                role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                                0%
-                            </div>
-                        </div>
-                    </div> {% endcomment %}
-                <div class="w-100">
-                    <div class="card shadow-sm" style="border:none;">
-                        <div class="card-body">${salesSection}</div>
-                    </div>
-                </div>
-                <div class="w-100 mt-4">
-                    <div class="card shadow-sm" style="border:none;">
-                        <div class="card-body">${expensesSection}</div>
-                    </div>
+                    <div class="row shadow-sm" style="border:none;">
+                        ${data.cash_up.map((c, index) => {
+                            
+                            const salesData = allSalesData.filter(sale => sale.cash_id === c.id);
+                            const expensesData = allExpensesData.filter(expense => expense.cash_id === c.id);
+                        
+                            return `
+                                <div class="col-4 mb-2" onclick="toggleChildSection(${index}, this)">
+                                    <div class="rounded-3 shadow-sm border p-2 main-card" data-index="${index}" id="main-card-${index}">
+                                        <div class="d-flex flex-column h-100">
+                                        <!-- Header Section -->
+                                        <div class="d-flex align-items-start justify-content-between mb-3">
+                                            <div class="">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="bx bx-building"></i>
+                                                    <span class="mb-0">${c.branch__name}</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <small class="mt-1 d-block">${new Date(c.created_at).toLocaleDateString()}</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <i class="bx bx-user"></i>
+                                                    <span class="">${c.created_by__username}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Stats Section -->
+                                        <div class="row p-2">
+                                            <table>
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="table-td-text">
+                                                            Income
+                                                        </td>
+                                                        <td>__________________</td>
+                                                        <td class="table-td-text">
+                                                            <span class="table-td-text">${c.total_sales_amount || '$0.00'}</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="table-td-text">
+                                                           Expenses
+                                                        </td>
+                                                        <td>__________________</td>
+                                                        <td class="table-td-text">${c.total_expense_amount || '$0.00'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="table-td-text">
+                                                            Expected Cash
+                                                        </td>
+                                                        <td>__________________</td>
+                                                        <td class="table-td-text border-top">${c.total_sales_amount || '$0.00'}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                         <div class="p-2 mt-2">
+                                            <button class="btn btn-sm btn-success active-button w-100" onclick="toggleChildSection(${index})">
+                                                <i class="bx bx-check-lg"></i> Receive Cash
+                                            </button>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    <!-- Collapsible section for sales/expenses -->
+                                    <div class="child-section mt-2 d-none" id="child-section-${index}">
+                                        <div class="card shadow-sm mb-2">
+                                            <div class="card-body">${createSalesSection(salesData)}</div>
+                                        </div>
+                                        <div class="card shadow-sm">
+                                            <div class="card-body">${createExpensesSection(expensesData)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
                 </div>
             </div>
         </div>
+    </div>
     `;
-    
     attachSplitExpenseEventListeners();
+}
+
+function toggleChildSection(index, el) {
+    const childSection = document.getElementById(`child-section-${index}`);
+    const mainCard = document.getElementById(`main-card-${index}`);
+    const isExpanding = childSection.classList.contains('d-none');
+
+    document.querySelectorAll('.main-card').forEach(card => {
+        card.classList.remove('active-card');
+    });
+
+    mainCard.classList.add('active-card');
+    
+    document.querySelectorAll('.child-section:not(.d-none)').forEach(section => {
+        if (section.id !== `child-section-${index}`) {
+            section.classList.add('d-none');
+        }
+    });
+    
+    if (isExpanding) {
+        childSection.style.position = 'absolute';
+        childSection.style.left = '0';
+        childSection.style.right = '0';
+        childSection.style.width = '100%';
+        childSection.style.zIndex = '1000';
+    } else {
+        childSection.style.position = '';
+        childSection.style.left = '';
+        childSection.style.right = '';
+        childSection.style.width = '';
+        childSection.style.zIndex = '';
+    }
+    
+    childSection.classList.toggle('d-none');
 }
 
 function createSalesSection(sales) {
     if (!Array.isArray(sales) || sales.length === 0) {
         return `
-            <div class="section-header d-flex justify-content-between align-items-center">
-                <h5 class="section-title">Sales</h5>
+            <div class="section-header d-flex justify-content-between align-items-center mb-4">
+                <h5 class="section-title">
+                    <i class="bx bx-cart me-2 text-primary"></i>Sales
+                </h5>
             </div>
             <div class="empty-state">
                 <div class="empty-icon">
@@ -271,8 +423,10 @@ function createSalesSection(sales) {
     }
 
     return `
-        <div class="section-header d-flex justify-content-between align-items-center mb-4">
-            <h5 class="section-title">Sales</h5>
+        {% comment %} <div class="section-header d-flex justify-content-between align-items-center mb-4">
+            <h5 class="section-title">
+                <i class="bx bx-cart me-2 text-primary"></i>Sales
+            </h5>
             <div class="d-flex align-items-center gap-3">
                 <select id="category-all" class="form-select form-select-sm rounded-pill">
                     <option value="">Select Category for All</option>
@@ -280,162 +434,191 @@ function createSalesSection(sales) {
                         <option value='{{ category.id }}'>{{ category.name }}</option>
                     {% endfor %}
                 </select>
-                <button class="btn btn-primary btn-sm rounded-pill" id="record-all-sales-btn">
-                    <i class="bi bi-check2-all me-1"></i>Record All
-                </button>
             </div>
+        </div> {% endcomment %}
+        
+        <div class="table-responsive">
+            <table class="table modern-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col">Invoice</th>
+                        <th scope="col">Branch</th>
+                        <th scope="col">Amount</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${sales.map(s => s.sales.map(sale => `
+                        <tr class="table-row ${sale.cash_up_status ? 'recorded' : ''}" data-sale-id="${sale.id}" data-branch="${sale.branch}">
+                            <td>
+                                <div class="item-info">
+                                    <span class="item-name">${sale.products_purchased || 'No description'}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="invoice-number">#${sale.invoice_number}</span>
+                            </td>
+                            <td>
+                                <span class="branch-name">${sale.branch__name}</span>
+                            </td>
+                            <td>
+                                <span class="amount-display income">$${sale.amount_paid}</span>
+                            </td>
+                            <td>
+                                <select id="category-${sale.id}" class="form-select form-select-sm sale-category" ${sale.cash_up_status ? 'disabled' : ''}>
+                                    <option value="sales">sales</option>
+                                    {% for category in income_categories %}
+                                        <option value='{{ category.name }}'>{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                ${sale.cash_up_status 
+                                    ? `<span class="status-badge recorded">
+                                        <i class="bx bx-check-double me-1"></i>Recorded
+                                       </span>`
+                                    : `<span class="status-badge pending">
+                                        <i class="bx bx-clock me-1"></i>Pending
+                                       </span>`
+                                }
+                            </td>
+                            <td>
+                                <div class="actions-cell">
+                                    ${sale.cash_up_status
+                                        ? `<button class="btn btn-sm btn-outline-secondary rounded-pill undo-sale-btn" data-sale-id="${sale.id}">
+                                            <i class='bx bx-undo me-1'></i>Undo
+                                           </button>`
+                                        : `<button class="btn btn-sm btn-success rounded-pill record-sale-btn" 
+                                            id="btn-${sale.id}" data-sale-id="${sale.id}" data-branch="${sale.branch}">
+                                            <i class="bi bi-check-lg me-1"></i>Record
+                                           </button>`
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    `)).join('')}
+                </tbody>
+            </table>
+             <button class="btn btn-primary btn-sm w-100" id="record-all-sales-btn">
+                <i class="bi bi-check2-all me-1"></i>Record All
+            </button>
         </div>
         
-       ${sales.map(s => `
-            <div class="sale-card w-100 ${s.cash_up_status ? 'gray-out' : ''}" data-sale-id="${s.id}" data-branch="${s.branch}">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="sale-description">
-                            <h6 class="mb-1">${s.products_purchased || 'No description'}</h6>
-                            <span class="text-muted small">Invoice number: ${s.invoice_number}</span>
-                            <span class="text-muted small">Branch: ${s.branch__name}</span>
-                        </div>
-                        <div class="sale-amount">
-                            <span class="amount-badge">$${s.amount_paid}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="card-footer-actions">
-                        <div class="category-selector">
-                            <select id="category-${s.id}" class="form-select form-select-sm sale-category" ${s.cash_up_status ? 'disabled' : ''}>
-                                <option value="sales">sales</option>
-                                {% for category in income_categories %}
-                                    <option value='{{ category.name }}'>{{ category.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="action-area">
-                        ${ s.cash_up_status
-                                ? `
-                                <span class="status-indicator success">
-                                    <i class="bx bx-check-double me-1"></i> Recorded
-                                </span>
-                                <button class="btn btn-sm btn-dark rounded-pill undo-sale-btn" data-sale-id="${s.id}">
-                                    <i class='bx bx-undo'></i> Undo
-                                </button>`
-                                : `<button
-                                    class="btn btn-sm btn-outline-success rounded-pill record-sale-btn"
-                                    id="btn-${s.id}"
-                                    data-sale-id="${s.id}"
-                                    data-branch="${s.branch}">
-                                    <i class="bi bi-check-lg"></i> Record
-                                </button>`
-                            }
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join('')}
-
-                
         <style>
-            .sales-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                gap: 16px;
-                margin-bottom: 24px;
-            }
-            
-            .sale-card {
-                background: white;
+            .modern-table {
+                border: none;
                 border-radius: 12px;
-                box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-                transition: all 0.25s ease;
-                border: 1px solid #fff;
-                margig-bottom:10px;
                 overflow: hidden;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                background: white;
             }
             
-            .sale-card:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-            }
-            
-            .card-body {
-                padding: 20px;
-                border:none;
-            }
-            
-            .sale-description h6 {
+            .modern-table thead th {
+                background: #f8fafc;
+                border: none;
+                padding: 16px 20px;
                 font-weight: 600;
-                line-height: 1.3;
-                color: #3a3a3a;
+                color: #475569;
+                font-size: 0.875rem;
+                text-transform: uppercase;
+                letter-spacing: 0.025em;
             }
             
-            .amount-badge {
-                background: #edf2ff;
-                color: #4361ee;
-                font-weight: 600;
-                padding: 6px 12px;
-                border-radius: 100px;
-                font-size: 0.9rem;
+            .modern-table tbody td {
+                border: none;
+                border-bottom: 1px solid #f1f5f9;
+                padding: 16px 20px;
+                vertical-align: middle;
             }
             
-            .card-footer-actions {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-top: 8px;
-                gap: 12px;
+            .table-row {
+                transition: all 0.2s ease;
             }
             
-            .category-selector {
-                flex: 1;
+            .table-row:hover {
+                background-color: #f8fafc;
             }
             
-            .status-indicator {
-                font-size: 0.8rem;
+            .table-row.recorded {
+                background-color: #f0fdf4;
+                opacity: 0.8;
+            }
+            $
+            .item-info .item-name {
                 font-weight: 500;
-                padding: 6px 12px;
-                border-radius: 100px;
+                color: #1e293b;
+            }
+            
+            .invoice-number {
+                font-family: 'SFMono-Regular', Consolas, monospace;
+                background: #f1f5f9;
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-size: 0.875rem;
+                color: #475569;
+            }
+            
+            .branch-name {
+                color: #64748b;
+                font-weight: 500;
+            }
+            
+            .amount-display {
+                font-weight: 600;
+                font-size: 1rem;
+            }
+            
+            .amount-display.income {
+                color: #059669;
+            }
+            
+            .status-badge {
                 display: inline-flex;
                 align-items: center;
+                padding: 6px 12px;
+                border-radius: 100px;
+                font-size: 0.75rem;
+                font-weight: 500;
             }
             
-            .status-indicator.success {
-                background: #d1f8d9;
-                color: #18a849;
+            .status-badge.recorded {
+                background: #dcfce7;
+                color: #166534;
             }
             
-            .section-header {
-                margin-bottom: 16px;
+            .status-badge.pending {
+                background: #fef3c7;
+                color: #92400e;
+            }
+            
+            .actions-cell {
+                white-space: nowrap;
             }
             
             .section-title {
                 font-weight: 600;
-                color: #2d3748;
+                color: #1e293b;
                 margin: 0;
+                display: flex;
+                align-items: center;
             }
             
             .empty-state {
                 text-align: center;
-                padding: 36px;
+                padding: 48px 24px;
                 background: #f9fafb;
                 border-radius: 12px;
                 color: #64748b;
             }
             
             .empty-icon {
-                font-size: 2.5rem;
+                font-size: 3rem;
                 margin-bottom: 16px;
-                opacity: 0.5;
+                opacity: 0.4;
             }
-            .gray-out {
-                opacity: 0.6;
-                pointer-events: none;
-                position: relative;
-            }
-            .gray-out .undo-sale-btn {
-                pointer-events: auto;
-                opacity: 1;
-                margin-left: 10px;
-            }
-
         </style>
     `;
 }
@@ -443,8 +626,10 @@ function createSalesSection(sales) {
 function createExpensesSection(expenses) {
     if (!Array.isArray(expenses) || expenses.length === 0) {
         return `
-            <div class="section-header d-flex justify-content-between align-items-center">
-                <h5 class="section-title">Expenses</h5>
+            <div class="section-header d-flex justify-content-between align-items-center mb-4">
+                <h5 class="section-title">
+                    <i class="bx bx-receipt me-2 text-danger"></i>Expenses
+                </h5>
             </div>
             <div class="empty-state">
                 <div class="empty-icon">
@@ -456,138 +641,98 @@ function createExpensesSection(expenses) {
     }
 
     return `
-        <div class="section-header d-flex justify-content-between align-items-center mb-4">
-            <h5 class="section-title">Expenses</h5>
+        <div class="table-responsive">
+            <table class="table modern-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Description</th>
+                        <th scope="col">Expense ID</th>
+                        <th scope="col">Amount</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${expenses.map(e => `
+                        <tr class="table-row ${e.cash_up_status ? 'recorded' : ''}" data-expense-id="${e.id}" data-branch-id="${e.branch}">
+                            <td>
+                                <div class="item-info">
+                                    <span class="item-name">${e.description || 'No description'}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="expense-id">#${e.id}</span>
+                            </td>
+                            <td>
+                                <span class="amount-display expense">$${e.amount}</span>
+                            </td>
+                            <td>
+                                ${e.cash_up_status 
+                                    ? `<span class="status-badge recorded">
+                                        <i class="bx bx-check-double me-1"></i>Recorded
+                                       </span>`
+                                    : `<span class="status-badge pending">
+                                        <i class="bx bx-clock me-1"></i>Pending
+                                       </span>`
+                                }
+                            </td>
+                            <td>
+                                <div class="actions-cell">
+                                    ${e.cash_up_status ? `
+                                        <span class="text-muted small">Already recorded</span>
+                                    ` : `
+                                        <div class="btn-group gap-2">
+                                            <button type="button" class="btn btn-sm btn-success rounded-pill expense-action" 
+                                                data-action="record" data-expense-id="${e.id}">
+                                                <i class="bx bx-journal-check me-1"></i>Record
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill expense-action" 
+                                                data-action="split" data-branch-id="${e.branch_id}" data-expense-id="${e.id}"
+                                                data-description="${e.description || 'Expense'}" data-amount="${e.amount}">
+                                                <i class="bx bx-scissors me-1"></i>Split
+                                            </button>
+                                        </div>
+                                    `}
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            <div class="d-flex justify-content-center mt-2">
+                <button class="btn btn-primary btn-sm w-100" id="record-all-sales-btn">
+                    <i class="bi bi-check2-all me-1"></i>Record All expenses
+                </button>
+                <br>
+                <button class="btn btn-success btn-sm w-100" id="record-all-sales-btn">
+                    <i class="bi bi-check2-all me-1"></i>Accept Cash up
+                </button>
+            </div>
         </div>
-        
-        <div class="expenses-grid">
-            ${expenses.map(e => `
-                <div class="expense-card ${e.cash_up_status ? 'gray-out' : ''}" data-expense-id="${e.id}" data-branch-id="${e.branch}">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="expense-description">
-                                <h6 class="mb-1">${e.description || 'No description'}</h6>
-                                <span class="text-muted small">Expense #${e.id}</span>
-                            </div>
-                            <div class="expense-amount">
-                                <span class="amount-badge expense">$${e.amount}</span>
-                            </div>
-                        </div>
 
-                        <div class="expense-actions">
-                            ${e.cash_up_status ? `
-                                <span class="status-indicator success">
-                                    <i class="bx bx-check-double me-1"></i> Recorded
-                                </span>
-                            ` : `
-                                <button type="button" class="btn btn-action expense-action" data-action="record" data-expense-id="${e.id}">
-                                    <i class="bx bx-journal-check"></i>
-                                    <span>Record</span>
-                                </button>
-                                <button type="button" class="btn btn-action expense-action" data-action="split"
-                                    data-branch-id="${e.branch_id}" data-expense-id="${e.id}"
-                                    data-description="${e.description || 'Expense'}" data-amount="${e.amount}">
-                                    <i class="bx bx-scissors"></i>
-                                    <span>Split</span>
-                                </button>
-                            `}
-                        </div>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-
-        
         <style>
-            .gray-out {
-                background-color: #f3f4f6;
-                opacity: 0.6;
-                pointer-events: none;
-            }
-            .expenses-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                gap: 16px;
-                margin-bottom: 24px;
+            .amount-display.expense {
+                color: #dc2626;
             }
             
-            .expense-card {
-                background: white;
-                border-radius: 12px;
-                box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-                transition: all 0.25s ease;
-                border: 1px solid rgba(0,0,0,0.05);
-                overflow: hidden;
+            .expense-id {
+                font-family: 'SFMono-Regular', Consolas, monospace;
+                background: #fef2f2;
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-size: 0.875rem;
+                color: #dc2626;
             }
             
-            .expense-card:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-            }
-            
-            .amount-badge.expense {
-                background: #fff5f5;
-                color: #e53e3e;
-            }
-
-            .status-indicator {
-                font-size: 0.8rem;
-                font-weight: 500;
-                padding: 6px 12px;
-                border-radius: 100px;
-                display: inline-flex;
-                align-items: center;
-            }
-            
-            .status-indicator.success {
-                background: #d1f8d9;
-                color: #18a849;
-            }
-            
-            .expense-actions {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 8px;
-                margin-top: 12px;
-            }
-            
-            .btn-action {
+            .btn-group {
                 display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: 10px 0;
-                border-radius: 8px;
-                transition: all 0.2s ease;
-                background: #f8fafc;
-                border: none;
-                color: #475569;
-            }
-            
-            .btn-action:hover {
-                background: #f1f5f9;
-                color: #334155;
-            }
-            
-            .btn-action i {
-                font-size: 1.2rem;
-                margin-bottom: 4px;
-            }
-            
-            .btn-action span {
-                font-size: 0.7rem;
-                font-weight: 500;
-            }
-            
-            .btn-action.warning:hover {
-                background: #fff1f2;
-                color: #e11d48;
+                gap: 8px;
             }
         </style>
 
         <!-- Split Expense Modal -->
         <div class="modal fade" id="splitExpenseModal" tabindex="-1" aria-labelledby="splitExpenseModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 95%; width: 95%;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="splitExpenseModalLabel">Split Expense</h5>
@@ -1043,6 +1188,7 @@ async function recordSale(saleId, type, branch, category) {
             showToast('Success', 'Sale recorded successfully', 'success');
 
             fetchCashUpDetails(branchId)
+
             return result;
         } else {
             throw new Error(result.message || 'Failed to record sale');
@@ -1221,6 +1367,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fetchCashUpDetails(branchId);
         firstBranchTab.classList.add('active');
     }
+    fetchCashUpDetails('')
 });
 
 function showRecordCashUp() {

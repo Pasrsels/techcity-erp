@@ -385,7 +385,7 @@ class layby(models.Model):
                     amount_due=Decimal('0.00'),
                     user=self.invoice.user
                 )
-                s
+                
                 self.fully_paid = True
                 self.save()
                 # Log the activity
@@ -468,6 +468,11 @@ class Payment(models.Model):
 
 
 class Cashbook(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', _('Pending')
+        APPROVED = 'approved', _('Approved')
+        CANCELLED = 'cancelled', _('Cancelled')
+
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True)
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True)
     issue_date = models.DateField(auto_now_add=True)
@@ -475,14 +480,18 @@ class Cashbook(models.Model):
     debit = models.BooleanField(default=False)
     credit = models.BooleanField(default=False)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    currency = models.ForeignKey(Currency, on_delete=models.CASCADE)
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, null=True)
     branch = models.ForeignKey('company.branch', on_delete=models.CASCADE)
     manager = models.BooleanField(default=False)
     accountant = models.BooleanField(default=False, null=True)
     director = models.BooleanField(default=False, null=True)
     cancelled = models.BooleanField(default=False, null=True)
     note = models.TextField(default='', null=True)
-
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    created_by = models.ForeignKey('users.user', on_delete=models.CASCADE, related_name='created_cashbook')
+    updated_by = models.ForeignKey('users.user', on_delete=models.CASCADE, related_name='updated_cashbook')
+    updated_at = models.DateTimeField(auto_now=True)
+    
     def __str__(self):
         return f'{self.issue_date}'
 

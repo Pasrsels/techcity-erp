@@ -4,15 +4,123 @@ from decimal import Decimal
 from django.db import transaction
 from io import BytesIO
 from django.template.loader import get_template
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from xhtml2pdf import pisa  
 from django.shortcuts import get_object_or_404
 from apps.finance.models import Qoutation, QoutationItems
 from django.conf import settings
+from django.core.cache import cache
+from functools import wraps
+import logging
+
+logger = logging.getLogger(__name__)
+
+class APIError(Exception):
+    """Custom exception for API errors."""
+    def __init__(self, message, status_code=400):
+        self.message = message
+        self.status_code = status_code
+        super().__init__(self.message)
+
+def handle_api_error(view_func):
+    """Decorator to handle API errors."""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        try:
+            return view_func(request, *args, **kwargs)
+        except APIError as e:
+            logger.warning(f"API Error in {view_func.__name__}: {str(e)}")
+            return JsonResponse({'error': str(e)}, status=e.status_code)
+        except Exception as e:
+            logger.error(f"Unexpected error in {view_func.__name__}: {str(e)}")
+            return JsonResponse({'error': 'An unexpected error occurred'}, status=500)
+    return wrapper
+
+def validate_request_data(data, required_fields):
+    """Validate request data against required fields."""
+    missing_fields = [field for field in required_fields if field not in data]
+    if missing_fields:
+        raise APIError(f"Missing required fields: {', '.join(missing_fields)}")
+    return data
+
+def rate_limit(limit=100, period=3600):
+    """Rate limiting decorator."""
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapper(request, *args, **kwargs):
+            key = f'rate_limit_{request.user.id}_{view_func.__name__}'
+            count = cache.get(key, 0)
+            
+            if count >= limit:
+                raise APIError('Rate limit exceeded', status_code=429)
+                
+            cache.set(key, count + 1, timeout=period)
+            return view_func(request, *args, **kwargs)
+        return wrapper
+    return decorator
+
+def format_currency(amount):
+    """Format amount as currency."""
+    try:
+        return f"${amount:,.2f}"
+    except (ValueError, TypeError):
+        return "$0.00"
+
+def get_pagination_data(page, per_page, total_items):
+    """Get pagination data."""
+    total_pages = (total_items + per_page - 1) // per_page
+    has_next = page < total_pages
+    has_previous = page > 1
+    
+    return {
+        'current_page': page,
+        'total_pages': total_pages,
+        'has_next': has_next,
+        'has_previous': has_previous,
+        'total_items': total_items
+    }
+
+def clear_cache_pattern(pattern):
+    """Clear cache entries matching pattern."""
+    try:
+        cache.delete_pattern(pattern)
+    except Exception as e:
+        logger.error(f"Error clearing cache pattern {pattern}: {str(e)}")
+
+def validate_date_range(start_date, end_date):
+    """Validate date range."""
+    if start_date and end_date and start_date > end_date:
+        raise APIError('Start date must be before end date')
+    return True
+
+def validate_amount(amount):
+    """Validate amount."""
+    try:
+        amount = float(amount)
+        if amount <= 0:
+            raise APIError('Amount must be greater than 0')
+        return amount
+    except ValueError:
+        raise APIError('Invalid amount value')
+
+def validate_transaction_type(transaction_type):
+    """Validate transaction type."""
+    if transaction_type not in ['in', 'out']:
+        raise APIError('Invalid transaction type')
+    return transaction_type
+
+def get_user_permissions(user):
+    """Get user permissions."""
+    return {
+        'can_add_transaction': user.has_perm('finance.add_cashbookentry'),
+        'can_edit_transaction': user.has_perm('finance.change_cashbookentry'),
+        'can_delete_transaction': user.has_perm('finance.delete_cashbookentry'),
+        'can_view_reports': user.has_perm('finance.view_report'),
+        'can_manage_categories': user.has_perm('finance.manage_category')
+    }
 
 def calculate_expenses_totals(expense_queryset):
     """Calculates the total cost of all expenses in a queryset."""
-
     total_cost = 0
     for item in expense_queryset:
         total_cost += item.amount
@@ -27,7 +135,6 @@ def update_latest_due(customer, amount_received, request, payment_method, custom
 
         with transaction.atomic():
             if invoice:
-
                 logger.info(f'Invoice amount due: {invoice.amount_due}')
 
                 if invoice.amount_due < amount_received:
@@ -90,8 +197,6 @@ def update_latest_due(customer, amount_received, request, payment_method, custom
                 return balance
     except Exception as e:
         return amount_received
-    
-
 
 def generate_quote_pdf(quote_id, request):
     """

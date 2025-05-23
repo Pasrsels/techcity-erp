@@ -174,6 +174,16 @@ class Finance(View):
         }
         
         return render(request, self.template_name, context)
+    
+@login_required
+def monthly_installments(request):
+    installments = MonthlyInstallment.objects.all().select_related('invoice').order_by('-date')
+    return JsonResponse({'installments': list(installments)})
+
+@login_required
+def laybys(request):
+    laybys = layby.objects.all().select_related('invoice').order_by('-date')
+    return JsonResponse({'laybys': list(laybys)})
 
 @login_required
 def expenses(request):
@@ -3025,10 +3035,134 @@ def delete_qoute(request, qoutation_id):
 
 @login_required
 def cashbook_view(request):
-    filter_option = request.GET.get('filter', 'today')
-    now = datetime.datetime.now()
-    end_date = now
+    """Main view to render the cashbook page"""
+    return render(request, 'cashbook.html')
+
+
+# @login_required
+# def cashbook_data(request):
+#     """AJAX endpoint for cashbook data with filters and pagination"""
+#     logger.info('Processing cashbook data request')
     
+#     page = int(request.GET.get('page', 1))
+#     per_page = int(request.GET.get('per_page', 20))
+#     filter_option = request.GET.get('filter', 'this_week')
+#     start_date = request.GET.get('start_date')
+#     end_date = request.GET.get('end_date')
+#     search_query = request.GET.get('search', '')
+    
+#     logger.info(f'filter: {filter_option}')
+
+#     now = timezone.now()
+#     end_date = now
+
+#     if filter_option == 'today':
+#         start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+#     elif filter_option == 'this_week':
+#         start_date = now - timedelta(days=now.weekday())
+#     elif filter_option == 'yesterday':
+#         start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+#     elif filter_option == 'this_month':
+#         start_date = now.replace(day=1)
+#     elif filter_option == 'last_month':
+#         start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
+#     elif filter_option == 'this_year':
+#         start_date = now.replace(month=1, day=1)
+#     elif filter_option == 'custom':
+#         if start_date and end_date:
+#             start_date = datetime.strptime(start_date, '%Y-%m-%d')
+#             end_date = datetime.strptime(end_date, '%Y-%m-%d')
+#         else:
+#             start_date = now - timedelta(days=now.weekday())
+#             end_date = now
+
+#     entries = Cashbook.objects.filter(
+#         issue_date__gte=start_date,
+#         issue_date__lte=end_date,
+#         branch=request.user.branch
+#     )
+    
+#     logger.info(f'Found {entries.count()} entries')
+
+#     if search_query:
+#         entries = entries.filter(
+#             Q(description__icontains=search_query) |
+#             Q(accountant__icontains=search_query) |
+#             Q(manager__icontains=search_query) |
+#             Q(director__icontains=search_query)
+#         )
+
+#     entries = entries.order_by('-issue_date')
+
+#     total_entries = entries.count()
+#     total_pages = (total_entries + per_page - 1) // per_page
+#     start_index = (page - 1) * per_page
+#     end_index = start_index + per_page
+
+#     paginated_entries = entries[start_index:end_index]
+
+#     balance = 0
+#     entries_data = []
+#     for entry in paginated_entries:
+#         if entry.debit:
+#             balance += entry.amount
+#         elif entry.credit:
+#             balance -= entry.amount
+
+#         entries_data.append({
+#             'id': entry.id,
+#             'date': entry.issue_date.strftime('%Y-%m-%d %H:%M'),
+#             'description': entry.description,
+#             'debit': float(entry.amount) if entry.debit else None,
+#             'credit': float(entry.amount) if entry.credit else None,
+#             'balance': float(balance),
+#             'accountant': entry.accountant,
+#             'manager': entry.manager,
+#             'director': entry.director,
+#             'status': entry.status
+#         })
+
+#     return JsonResponse({
+#         'entries': entries_data,
+#         'pagination': {
+#             'current_page': page,
+#             'total_pages': total_pages,
+#             'total_entries': total_entries,
+#             'has_next': page < total_pages,
+#             'has_previous': page > 1
+#         }
+#     })
+
+@login_required
+def cashbook_data(request):
+    """AJAX endpoint for cashbook data with filters and pagination"""
+    logger.info('Processing cashbook data request')
+    
+    # Get parameters from either GET or POST request
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            page = int(data.get('page', 1))
+            per_page = int(data.get('per_page', 20))
+            filter_option = data.get('filter', 'this_week')
+            start_date = data.get('start_date')
+            end_date = data.get('end_date')
+            search_query = data.get('search', '')
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    else:
+        page = int(request.GET.get('page', 1))
+        per_page = int(request.GET.get('per_page', 20))
+        filter_option = request.GET.get('filter', 'this_week')
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        search_query = request.GET.get('search', '')
+    
+    logger.info(f'filter: {filter_option}')
+
+    now = timezone.now()
+    end_date = now
+
     if filter_option == 'today':
         start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
     elif filter_option == 'this_week':
@@ -3042,43 +3176,81 @@ def cashbook_view(request):
     elif filter_option == 'this_year':
         start_date = now.replace(month=1, day=1)
     elif filter_option == 'custom':
-        start_date = request.GET.get('start_date')
-        end_date = request.GET.get('end_date')
-        start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-    else:
-        start_date = now - timedelta(days=now.weekday())
-        end_date = now
+        if start_date and end_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        else:
+            start_date = now - timedelta(days=now.weekday())
+            end_date = now
 
-    entries = Cashbook.objects.filter(issue_date__gte=start_date, issue_date__lte=end_date, branch=request.user.branch).order_by('issue_date')
+    entries = Cashbook.objects.filter(
+        issue_date__gte=start_date,
+        issue_date__lte=end_date,
+        branch=request.user.branch
+    ).select_related('created_by', 'branch', 'updated_by', 'currency', 'invoice', 'expense').order_by('-issue_date')
     
-    total_debit = entries.filter(debit=True, cancelled=False).aggregate(Sum('amount'))['amount__sum'] or 0
-    total_credit = entries.filter(credit=True, cancelled=False).aggregate(Sum('amount'))['amount__sum'] or 0
+    logger.info(f'Found {entries.count()} entries')
+
+    if search_query:
+        entries = entries.filter(
+            Q(description__icontains=search_query) |
+            Q(accountant__icontains=search_query) |
+            Q(manager__icontains=search_query) |
+            Q(director__icontains=search_query)
+        )
+
+    entries = entries.order_by('-issue_date')
     
-    balance_bf = 0 
+    # Calculate totals
+    total_cash_in = entries.filter(debit=True, cancelled=False).aggregate(total=Sum('amount'))['total'] or 0
+    total_cash_out = entries.filter(credit=True, cancelled=False).aggregate(total=Sum('amount'))['total'] or 0
+    total_balance = total_cash_in - total_cash_out
+
+    total_entries = entries.count()
+    total_pages = (total_entries + per_page - 1) // per_page
+    start_index = (page - 1) * per_page
+    end_index = start_index + per_page
+
+    paginated_entries = entries[start_index:end_index]
+
+    balance = 0
+    entries_data = []
+    for entry in paginated_entries:
+        if entry.debit:
+            balance += entry.amount
+        elif entry.credit:
+            balance -= entry.amount
+        logger.info(f'Entry: {entry.issue_date.strftime('%Y-%m-%d %H:%M')}')
+        entries_data.append({
+            'id': entry.id,
+            'date': entry.issue_date.strftime('%Y-%m-%d %H:%M'),
+            'description': entry.description,
+            'debit': float(entry.amount) if entry.debit else None,
+            'credit': float(entry.amount) if entry.credit else None,
+            'balance': float(balance),
+            'accountant': entry.accountant,
+            'manager': entry.manager,
+            'director': entry.director,
+            'status': entry.status,
+            'created_by': entry.created_by.first_name
+        })
+
+    return JsonResponse({
+        'entries': entries_data,
+        'totals': {
+            'cash_in': float(total_cash_in),
+            'cash_out': float(total_cash_out),
+            'balance': float(total_balance)
+        },
+        'pagination': {
+            'current_page': page,
+            'total_pages': total_pages,
+            'total_entries': total_entries,
+            'has_next': page < total_pages,
+            'has_previous': page > 1
+        }
+    }) 
     
-    previous_entries = Cashbook.objects.filter(issue_date__lt=start_date, branch=request.user.branch)
-
-    previous_debit = previous_entries.filter(debit=True).aggregate(Sum('amount'))['amount__sum'] or 0
-    previous_credit = previous_entries.filter(credit=True).aggregate(Sum('amount'))['amount__sum'] or 0
-    balance_bf = previous_debit - previous_credit
-
-    total_balance = total_debit - total_credit
-    logger.info(total_balance)
-    invoice_items = InvoiceItem.objects.all()
-
-    return render(request, 'cashbook.html', {
-        'filter_option': filter_option,
-        'entries': entries,
-        'balance_bf': balance_bf,
-        'total_debit': total_debit,
-        'total_credit': total_credit,
-        'total_balance': total_balance,
-        'end_date': end_date,
-        'start_date': start_date,
-        'invoice_items': invoice_items
-    })
-
 @login_required
 def download_cashbook_report(request):
     filter_option = request.GET.get('filter', 'this_week')
@@ -3921,7 +4093,10 @@ def cash_flow(request):
 
 #     return render(request, 'cashflow.html', context)
 
-@login_required
+# @login_required
+
+from django.views.decorators.csrf import csrf_exempt
+@csrf_exempt
 def cash_up_list(request):
     if request.method == 'GET':
         cashups = (
@@ -3960,22 +4135,23 @@ def cash_up_list(request):
             cash_up_type = data.get('type', '')
             branch_id = data.get('branch_id', '')
             
-            logger.info(f'Cash up type:{cash_up_type}')
+            logger.info(f'branch id:{branch_id}')
+            
+            cash_up=None
 
             if not branch_id:
-                return JsonResponse(
-                    {
-                        'message': 'Branch ID missing',
-                        'success': False
-                    },
-                    status=400
+                cash_up = CashUp.objects.filter(
+                    status=False,
                 )
-
-            cash_up = CashUp.objects.filter(
-                branch__id=branch_id,
-                status=False,
-                created_at__date=today
-            ).annotate(
+                logger.info(f'Cash up:{cash_up}')
+            else:
+                cash_up = CashUp.objects.filter(
+                    branch__id=branch_id,
+                    status=False,
+                    created_at__date=today
+                )
+            
+            cash_up = cash_up.annotate(
                 total_sales_amount=Coalesce(
                     Sum('sales__amount_paid', output_field=models.DecimalField(max_digits=10, decimal_places=2)), 
                     Value(0, output_field=models.DecimalField(max_digits=10, decimal_places=2))
@@ -3984,36 +4160,60 @@ def cash_up_list(request):
                     Sum('expenses__amount', output_field=models.DecimalField(max_digits=10, decimal_places=2)), 
                     Value(0, output_field=models.DecimalField(max_digits=10, decimal_places=2))
                 )
-            ).prefetch_related(
-                'sales',
-                'expenses'
-            ).select_related(
-                'branch',
-                'created_by'
-            ).order_by('-created_at__time').first()
-
-            logger.info(f'Sales total:{cash_up.total_sales_amount}')
+                ).prefetch_related(
+                    'sales',
+                    'expenses'
+                ).select_related(
+                    'branch',
+                    'created_by'
+                ).order_by('-created_at__time')
+                
+            logger.info(f'Cashs:{cash_up.values('sales')}')
 
             if not cash_up:
                 return JsonResponse({'message': 'Cash up not found', 'success': False}, status=404)
-
-            sales = list(cash_up.sales.values(
-                'id',
-                'invoice_number',
-                'products_purchased',
-                'amount_paid',
-                'branch',
-                'branch__name',
-                'cash_up_status'
-            ))  
-
-            expenses = list(cash_up.expenses.values())
+            
+            sales = []
+            expenses = []
+            for cash in cash_up:
+                sales.append(
+                    {
+                        'cash_id': cash.id,
+                        'sales': list(cash.sales.values(
+                            'id',
+                            'invoice_number',
+                            'products_purchased',
+                            'amount_paid',
+                            'branch',
+                            'branch__name',
+                            'cash_up_status'
+                        )),
+                        'expenses': list(cash.expenses.values(
+                            'id',
+                            'amount',
+                            'category__name',
+                            'category__parent__name',
+                            'issue_date'
+                        ))
+                    }
+                )
+     
             logger.info(sales)
             
             logger.info(expenses)
 
             return JsonResponse({
                 'success': True,
+                'cash_up': list(cash_up.values(
+                    'id',
+                    'branch__name',
+                    'expected_cash',
+                    'created_by__username',
+                    'created_at',
+                    'received_amount',
+                    'total_sales_amount',
+                    'total_expenses_amount'
+                )),
                 'data': {
                     'sales': sales if sales else [],
                     'expenses': expenses if expenses else []
@@ -4247,11 +4447,13 @@ def record_income(request):
         category, _ = IncomeCategory.objects.get_or_create(name=category_name, parent=parent_category)
 
         branch = Branch.objects.get(id=branch_id)
-        currency = Currency.objects.first() 
+        currency = Currency.objects.filter(name__icontains="usd").first() #to be dynamic
+        
+        logger.info(currency)
 
         Income.objects.create(
             amount=amount,
-            currency=currency,
+            currency_id=currency.id,
             category=category,
             note=name,
             user=request.user,
@@ -4260,6 +4462,19 @@ def record_income(request):
             recurrence_value=r_value if r_value else None,
             recurrence_unit=r_unit if r_unit else None
         )
+        
+        Cashbook.objects.create(
+            amount=amount,
+            description=f"Income: {name} -> {category.name}",
+            debit=True,
+            credit=False,
+            branch=branch,
+            created_by=request.user,
+            updated_by=request.user,
+            issue_date=timezone.now()
+        )
+        
+        logger.info(f'Income recorded successfully: {Income.objects.last()}')
 
         return JsonResponse({'success': True, 'message': 'Income recorded successfully'}, status=200)
     except Exception as e:
@@ -5171,21 +5386,21 @@ class EditCustomerDeposit(views.APIView):
                 account_balance.balance += adj_amount 
                 debit, credit = False, True
 
-            Cashbook.objects.create(
-                issue_date=datetime.date.today(),
-                description=f'{deposit.payment_method.upper()} deposit adjustment ({deposit.customer_account.account.customer.name})',
-                debit=debit,
-                credit=credit,
-                amount=abs(adj_amount),
-                currency=deposit.currency,
-                branch=deposit.branch
-            )
+        Cashbook.objects.create(
+            issue_date=datetime.date.today(),
+            description=f'{deposit.payment_method.upper()} deposit adjustment ({deposit.customer_account.account.customer.name})',
+            debit=debit,
+            credit=credit,
+            amount=abs(adj_amount),
+            currency=deposit.currency,
+            branch=deposit.branch
+        )
 
-            account_balance.save()
-            deposit.amount = amount
-            deposit.save()
-            #messages.success(request, 'Customer deposit successfully updated')
-            return Response({deposit.customer_account.account.customer.id}, status.HTTP_200_OK)
+        account_balance.save()
+        deposit.amount = amount
+        deposit.save()
+        #messages.success(request, 'Customer deposit successfully updated')
+        return Response({deposit.customer_account.account.customer.id}, status.HTTP_200_OK)
 
 class CustomerAccountJson(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -5589,7 +5804,7 @@ class EndOfDay(views.APIView):
                     'name': item['inventory__name'],
                     'initial_quantity': item['quantity_sold'] + sold_info['quantity'] if sold_info else 0,
                     'quantity_sold':  item['quantity_sold'],
-                    'remaining_quantity':sold_info['quantity'] if sold_info else 0,
+                    'remaining_quantity': sold_info['quantity'] if sold_info else 0,
                     'physical_count': None
                 })
         logger.info(inventory_data)
@@ -5969,8 +6184,8 @@ class DeleteExpense(views.APIView):
             
             Cashbook.objects.create(
                 amount=expense.amount,
-                debit=True,
-                credit=False,
+            debit=True,
+            credit=False,
                 description=f'Expense ({expense.description}): cancelled'
             )
             return Response({'message': 'Expense successfully deleted'}, status.HTTP_200_OK)
@@ -5991,7 +6206,7 @@ class UpdateExpenseStatus(views.APIView):
 
             return Response(status.HTTP_202_ACCEPTED)
         except Exception as e:
-            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+                return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
 
 class InvoicePDF(views.APIView):  
     permission_classes = [IsAuthenticated]   

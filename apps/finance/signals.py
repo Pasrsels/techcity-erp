@@ -70,28 +70,34 @@ logger = logging.getLogger(__name__)
 #         notification.save()
 #     except FinanceNotifications.DoesNotExist:
 #         logger.warning(f"No active FinanceNotification found for Invoice #{instance.id}.")
-
-def create_cashbook_entry(instance, debit, credit):
+@receiver(post_save, sender=Invoice)
+def create_cashbook_entry(sender, instance, **kwargs):
     if instance.cancelled or instance.invoice_return:
         Cashbook.objects.create(
                 issue_date=instance.issue_date,
-                description=f'Sales returns ({instance.invoice_number})',
-                debit=credit,
-                credit=debit,
+                description=f'Sales returns ({instance.invoice_number}: {instance.products_purchased})',
+                debit=False,
+                credit=True,
                 amount=instance.amount_paid,
                 currency=instance.currency,
-                branch=instance.branch
+                branch=instance.branch,
+                created_by=instance.user,
+                updated_by=instance.user
             )
     else:
         Cashbook.objects.create(
             issue_date=instance.issue_date,
-            description=f'Sale  ({instance.invoice_number})',
-            debit=debit,
-            credit=credit,
+            description=f'Sale  ({instance.invoice_number}: {instance.products_purchased})',
+            debit=True,
+            credit=False,
             amount=instance.amount_paid,
             currency=instance.currency,
-            branch=instance.branch
+            branch=instance.branch,
+            created_by=instance.user,
+            updated_by=instance.user
         )
+        
+        logger.info(f'Cashbook entry created: {instance}')
 
 # @receiver(post_save, sender=Invoice)
 # def create_invoice_cashbook_entry(sender, instance, **kwargs):
