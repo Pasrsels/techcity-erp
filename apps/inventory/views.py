@@ -1177,8 +1177,8 @@ def edit_transfer_item(request, transfer_item_id):
             if new_quantity is None:
                 return JsonResponse({'success': False, 'message': 'Quantity is required'}, status=400)
 
-            if new_quantity < 0:
-                return JsonResponse({'success': False, 'message': 'Quantity cannot be negative'}, status=400)
+            # if new_quantity < 0:
+            #     return JsonResponse({'success': False, 'message': 'Quantity cannot be negative'}, status=400)
 
             with transaction.atomic():
                 old_quantity = transfer_item.quantity

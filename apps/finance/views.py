@@ -866,8 +866,6 @@ def create_invoice(request):
                 defaults={'balance': 0}
             )
             
-            
-            
             amount_paid = update_latest_due(customer, Decimal(invoice_data['amount_paid']), request, invoice_data['paymentTerms'], customer_account_balance)
 
             invoice_total_amount = Decimal(invoice_data['payable'])
@@ -881,6 +879,8 @@ def create_invoice(request):
             amount_due = invoice_total_amount - amount_paid  
 
             cogs = COGS.objects.create(amount=Decimal(0))
+            
+            products_purchased = """, '.join([f'{item['product_name']} x {item['quantity']} ' for item in items_data])"""
             
             with transaction.atomic():
                 invoice = Invoice.objects.create(
@@ -896,7 +896,7 @@ def create_invoice(request):
                     currency=currency,
                     subtotal=invoice_data['subtotal'],
                     reocurring = invoice_data['recourring'],
-                    products_purchased = ', '.join([f'{item['product_name']} x {item['quantity']} ' for item in items_data]),
+                    products_purchased = products_purchased,
                     payment_terms = invoice_data['paymentTerms'],
                     hold_status = invoice_data['hold_status'],
                     amount_received = amount_paid
