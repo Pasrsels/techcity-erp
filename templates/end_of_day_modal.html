@@ -64,6 +64,7 @@
             const input = document.createElement('input');
             input.type = 'number';
             input.className = 'form-control';
+            input.id = 'cashInput';
 
             inputCell.appendChild(input);
 
@@ -115,31 +116,35 @@
 
     saveStockBtn.addEventListener('click', () => {
         const physicalCounts = [];
+        const cashInput = document.getElementById('cashInput');
+        
         stockTable.querySelectorAll('input').forEach(input => {
             physicalCounts.push({
                 item_id: input.dataset.itemId,
                 physical_count: parseInt(input.value, 10) || 0 
             });
         });
-
+        data = {
+            'physical_counts': physicalCounts,
+            'cash_input': cashInput.value
+        }
         fetch('/finance/end_of_day/', { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 "X-CSRFToken": getCookie("csrftoken"), 
             },
-            body: JSON.stringify(physicalCounts)
+            body: JSON.stringify(data)
         })
         .then(response => response.json())
         .then(data => {
-            console.log(data)
-            <!-- if (data.success) {
+            if (data.success) {
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
                     text: 'Stock take saved successfully!',
                     timer: 2000,
-                    showConfirmButton: false
+                    showConfirmButton: true
                 });
                 location.reload();
             } else {
@@ -148,7 +153,7 @@
                     title: 'Error!',
                     text: 'Error saving stock take.',
                 });
-            } -->
+            } 
         })
         .catch(error => {
             Swal.fire({
@@ -213,7 +218,6 @@
         }
         return cookieValue;
     } 
-    
 </script>
 </body>
 </html>

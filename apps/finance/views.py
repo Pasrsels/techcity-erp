@@ -857,8 +857,6 @@ def create_invoice(request):
             # accounts_receivable
             accounts_receivable, _ = ChartOfAccounts.objects.get_or_create(name="Accounts Receivable")
             
-            
-
             # VAT rate
             vat_rate = VATRate.objects.get(status=True)
 
@@ -890,7 +888,7 @@ def create_invoice(request):
 
             cogs = COGS.objects.create(amount=Decimal(0))
             
-            products_purchased = """, '.join([f'{item['product_name']} x {item['quantity']} ' for item in items_data])"""
+            products_purchased = f"""{', '.join([f'{item['product_name']} x {item['quantity']} ' for item in items_data])}"""
             
             with transaction.atomic():
                 invoice = Invoice.objects.create(
@@ -2575,10 +2573,17 @@ def end_of_day(request):
             data = json.loads(request.body)
             logger.info(data)
             inventory_data = []
+            cashed_amount = data['cash_input']
+            physical_counts = data['physical_counts']
+            
+            if not cashed_amount:
+                return JsonResponse({'success': False, 'error': 'Cash input is required.'})
+            
+            if not physical_counts:
+                return JsonResponse({'success': False, 'error': 'Physical counts are required.'})
 
             with transaction.atomic():
-                
-                for item in data:
+                for item in physical_counts:
                     try:
                         inventory = Inventory.objects.get(id=int(item['item_id']), branch=request.user.branch, status=True)
                         inventory.physical_count = item['physical_count']
@@ -2615,15 +2620,18 @@ def end_of_day(request):
                 total_sales = paid_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0 
                 total_partial = partial_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0
                 total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
-
                 expected_cash = total_sales - total_expenses
+                
+                short_fall = expected_cash - Decimal(cashed_amount) # to take into account the total_partial sales 
                 
                 # Create CashUp entry
                 cashup = CashUp.objects.create(
                     date=today,
                     branch=request.user.branch,
                     expected_cash=expected_cash,
+                    cashed_amount=cashed_amount,
                     received_amount=0,  
+                    short_fall=short_fall,
                     balance=0,  
                     created_by=request.user,
                     status=False 
@@ -2637,14 +2645,7 @@ def end_of_day(request):
                     branch=request.user.branch
                 )
                 
-                logger.info(items)
-                
-                for item in items:
-                    logger.info(f'Item: {item.id} {item.payment_status}')
-
                 cashup.sales.set(items)
-
-                logger.info(cashup.sales.all())
 
                 cashup.expenses.set(expenses) #to change to confirmed expenses (later)
 
@@ -2659,7 +2660,6 @@ def end_of_day(request):
                     }
                 )
 
-                
                 # Create UserTransaction object
                 user_transaction = UserTransaction.objects.create(
                     account=user_account,
@@ -4093,10 +4093,20 @@ def cash_flow(request):
 
 #     return render(request, 'cashflow.html', context)
 
-# @login_required
+@login_required
+def confirm_cash_up(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            cash_up_id = data.get('cash_up_id', '')
+            cash_up = CashUp.objects.get(id=cash_up_id)
+            cash_up.status = True
+            cash_up.save()
+            return JsonResponse({'success': True, 'message': 'Cash up confirmed'}, status=200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
-from django.views.decorators.csrf import csrf_exempt
-@csrf_exempt
+@login_required
 def cash_up_list(request):
     if request.method == 'GET':
         cashups = (
@@ -4114,9 +4124,13 @@ def cash_up_list(request):
                 'expected_cash',
                 'created_by__username',
                 'created_at',
-                'received_amount'
+                'received_amount',
+                'cashed_ammout',
+                'short_fall'
             ).order_by('-created_at')
         )
+        
+        logger.info(f'cashup details:{cashups}')
 
         data = []
         for cashup in cashups:
@@ -4167,8 +4181,6 @@ def cash_up_list(request):
                     'branch',
                     'created_by'
                 ).order_by('-created_at__time')
-                
-            logger.info(f'Cashs:{cash_up.values('sales')}')
 
             if not cash_up:
                 return JsonResponse({'message': 'Cash up not found', 'success': False}, status=404)
@@ -4212,7 +4224,9 @@ def cash_up_list(request):
                     'created_at',
                     'received_amount',
                     'total_sales_amount',
-                    'total_expenses_amount'
+                    'total_expenses_amount',
+                    'cashed_amount',
+                    'short_fall'
                 )),
                 'data': {
                     'sales': sales if sales else [],

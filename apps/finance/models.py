@@ -744,6 +744,8 @@ class CashUp(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     sales_status = models.BooleanField(default=False)
     expenses_status = models.BooleanField(default=False)
+    cashed_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    short_fall = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
     def save(self, *args, **kwargs):
         # Calculate balance (received_amount - expected_cash)
