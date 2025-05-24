@@ -55,7 +55,6 @@
             const cashData = data.total_cash_amounts;
 
             const cashTbody = document.getElementById('cashTable'); 
-            console.log(cashTbody)
             const row = cashTbody.insertRow(); 
             row.insertCell().textContent = cashData[0].total_invoices_amount;
             row.insertCell().textContent = cashData[0].total_withdrawals_amount;
@@ -133,7 +132,8 @@
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
+            console.log(data)
+            <!-- if (data.success) {
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
@@ -148,7 +148,7 @@
                     title: 'Error!',
                     text: 'Error saving stock take.',
                 });
-            }
+            } -->
         })
         .catch(error => {
             Swal.fire({
@@ -167,7 +167,6 @@
         
             const productsByCategory = {};
             inventoryData.forEach(item => {
-                console.log(item.end_of_day)
                 if(item.end_of_day){
                     const category = item.category_name; 
                     if (!productsByCategory[category]) {
