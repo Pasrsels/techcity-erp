@@ -126,6 +126,7 @@ TEMPLATES = [
                 "finance.context_processors.client_list",
                 "finance.context_processors.currency_list",
                 "finance.context_processors.expense_category_list",
+                "finance.context_processors.salespeople_list",
                 
                 #finance
                 # "settings.context_processors.tax_method",

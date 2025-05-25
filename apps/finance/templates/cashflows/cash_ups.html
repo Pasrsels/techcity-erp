@@ -33,26 +33,31 @@
         height: 2.4rem !important;
     }
     .active-card{
-        background-color:#80bbbb   !important;
+        background-color: orange  !important;
         color: #fff !important;
+        transition: all 0.3s ease-in-out;
     }
     .active-card .active-button{
         height: 50px !important;
         border: 1px solid #fff !important;
-        background-color: #198754 !important;
+        background-color: #5c8989 !important;
         color: #fff !important;
         font-size: 14px !important;
         font-weight: bold !important;
     }
     .active-card .branch-admin-header{
-        border: 1px solid #aaaaaa !important;
+        border: 1px solid #5c8989 !important;
         color: #000 !important;
         background-color: #fff !important;
         padding: 5px !important;
         border-radius: 10px !important;
     }
-    .nor-active-card{
-        background-color: gray;
+    .not-active-card{
+        background-color: #edf0f2;
+        opacity: 0.7;
+        filter: blur(2px);
+        transition: all 0.3s ease-in-out;
+        pointer-events: none;
     }
     .table-td-text{
         font-size: 12px;
@@ -73,7 +78,9 @@
         width: 1.5rem !important;
         border-radius: .25em;
         height: 1.5rem !important;
+        background-color: #198754 !important;
     }
+    
 </style>
 <div>
     <div class="container-fluid">
@@ -163,11 +170,94 @@
             </div>
     
             <div class="tab-pane fade mt-3" id="list-content" role="tabpanel" aria-labelledby="list-tab">
-                <div class="col-md-12" style="height: calc(100vh - 200px); overflow-y: auto;">
-                    {% include "cashflows/cashflow_tab.html" %}    
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Branch</label>
+                                <select class="form-select" id="branchFilter">
+                                    <option value="">All Branches</option>
+                                    {% for branch in branches %}
+                                        <option value="{{ branch.id }}">{{ branch.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date Range</label>
+                                <select class="form-select" id="dateRangeFilter">
+                                    <option value="today">Today</option>
+                                    <option value="yesterday">Yesterday</option>
+                                    <option value="this_week">This Week</option>
+                                    <option value="last_week">Last Week</option>
+                                    <option value="this_month">This Month</option>
+                                    <option value="last_month">Last Month</option>
+                                    <option value="custom">Custom Range</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 d-none" id="customDateRange">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">From</label>
+                                        <input type="date" class="form-control" id="startDate">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">To</label>
+                                        <input type="date" class="form-control" id="endDate">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12" id="recordedCashUps">
+                    <!-- Cash ups will be loaded here -->
                 </div>
             </div> 
         </div>  
+    </div>
+    <div class="modal fade" id="acceptCashUpModal" tabindex="-1" aria-labelledby="acceptCashUpModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="acceptCashUpModalLabel">Accept Cash Up</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="acceptCashUpForm">
+                        <input type="hidden" id="cashUpId" name="cashUpId">
+                        <div class="mb-3">
+                            <label class="form-label">Expected Amount</label>
+                            <input type="text" class="form-control" id="expectedAmount" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Amount Received</label>
+                            <input type="number" class="form-control" id="amountReceived" required step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Shortfall</label>
+                            <input type="text" class="form-control" id="shortfall" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Assign Shortfall To</label>
+                            <select class="form-select" id="assignTo" required>
+                                <option value="">Select Salesperson</option>
+                                {% for user in salespeople %}
+                                    <option value="{{ user.id }}">{{ user.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitAcceptCashUp()">Accept</button>
+                </div>
+            </div>
+        </div>
     </div>
     {% csrf_token %}
 </div>
@@ -308,7 +398,7 @@ function renderCashUpDetails(data, container) {
     const allSalesData = data.data.sales || [];
     const allExpensesData = data.data.expenses || [];
 
-    console.log(allSalesData, allExpensesData, data.cash_up, 'data')
+    console.log(data, 'data')
     
     container.innerHTML = `
         <div class="w-100 p-1">
@@ -326,7 +416,7 @@ function renderCashUpDetails(data, container) {
                         
                             return `
                                 <div class="col-4 mb-2" onclick="toggleChildSection(${index}, this)">
-                                    <div class="rounded-3 shadow-sm border p-2 main-card" data-index="${index}" id="main-card-${index}">
+                                    <div class="rounded-3 shadow-sm border p-2 main-card" data-index="${index}" id="main-card-${index}" data-cash-up-id="${c.id}">
                                         <div class="d-flex flex-column h-100">
                                         <!-- Header Section -->
                                         <div class="d-flex align-items-start justify-content-between mb-3">
@@ -371,14 +461,14 @@ function renderCashUpDetails(data, container) {
                                                             Cash Up Amount
                                                         </td>
                                                         <td>__________________</td>
-                                                        <td class="table-td-text">${c.total_sales_amount || '$0.00'}</td>
+                                                        <td class="table-td-text">$${c.cashed_amount || '$0.00'}</td>
                                                     </tr>
                                                     <tr>
                                                         <td class="table-td-text">
                                                             Balance
                                                         </td>
                                                         <td>__________________</td>
-                                                        <td class="table-td-text border-top">${balance || '$0.00'}</td>
+                                                        <td class="table-td-text border-top text-danger expected-amount">$${c.short_fall || '$0.00'}</td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -388,10 +478,7 @@ function renderCashUpDetails(data, container) {
                                     <!-- Collapsible section for sales/expenses -->
                                     <div class="child-section mt-2 d-none" id="child-section-${index}">
                                         <div class="card shadow-sm m-2 mb-2" style="border: 1px solid #5c8989 !important;">
-                                            <div class="card-body">${createSalesSection(salesData)}</div>
-                                        </div>
-                                        <div class="card shadow-sm m-2" style="border: 1px solid #5c8989 !important;">
-                                            <div class="card-body">${createExpensesSection(expensesData)}</div>
+                                            <div class="card-body">${createSalesExpensesSection(salesData, expensesData, c.id)}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -411,10 +498,14 @@ function toggleChildSection(index, el) {
     const isExpanding = childSection.classList.contains('d-none');
 
     document.querySelectorAll('.main-card').forEach(card => {
-        card.classList.remove('active-card');
+        if (card.id !== `main-card-${index}`) {
+            card.classList.remove('active-card');
+            card.classList.add('not-active-card');
+        }
     });
 
     mainCard.classList.add('active-card');
+    mainCard.classList.remove('not-active-card');
     
     document.querySelectorAll('.child-section:not(.d-none)').forEach(section => {
         if (section.id !== `child-section-${index}`) {
@@ -439,10 +530,10 @@ function toggleChildSection(index, el) {
     childSection.classList.toggle('d-none');
 }
 
-function createSalesSection(sales) {
+function createSalesExpensesSection(sales, expenses, cash_up_id) {
     if (!Array.isArray(sales) || sales.length === 0) {
         return `
-            <div class="section-header d-flex justify-content-between align-items-center mb-4">
+            <div class="section-header d-flex justify-content-between align-items-center">
                 <h5 class="section-title">
                     <i class="bx bx-cart me-2 text-primary"></i>Sales
                 </h5>
@@ -456,26 +547,19 @@ function createSalesSection(sales) {
         `;
     }
 
-    return `
-        {% comment %} <div class="section-header d-flex justify-content-between align-items-center mb-4">
-            <h5 class="section-title">
-                <i class="bx bx-cart me-2 text-primary"></i>Sales
-            </h5>
-            <div class="d-flex align-items-center gap-3">
-                <select id="category-all" class="form-select form-select-sm rounded-pill">
-                    <option value="">Select Category for All</option>
-                    {% for category in income_categories %}
-                        <option value='{{ category.id }}'>{{ category.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div> {% endcomment %}
-        
+    let counter = 1; 
+
+    return `     
         <div class="table-responsive">
             <table class="table modern-table">
                 <tbody>
                     ${sales.map(s => s.sales.map(sale => `
                         <tr class="table-row ${sale.cash_up_status ? 'recorded' : ''}" data-sale-id="${sale.id}" data-branch="${sale.branch}">
+                            <td>
+                                <div class="item-info">
+                                    <span class="item-name">${counter++}</span>
+                                </div>
+                            </td>
                             <td>
                                 <div class="item-info">
                                     <span class="item-name">${sale.products_purchased || 'No description'}</span>
@@ -488,7 +572,7 @@ function createSalesSection(sales) {
                                 <span class="branch-name">${sale.branch__name}</span>
                             </td>
                             <td>
-                                <span class="amount-display income">$${sale.amount_paid}</span>
+                                <span class="income">$${sale.amount_paid}</span>
                             </td>
                             <td>
                                 <select id="category-${sale.id}" class="form-select form-select-sm sale-category" ${sale.cash_up_status ? 'disabled' : ''}>
@@ -525,9 +609,9 @@ function createSalesSection(sales) {
                     `)).join('')}
                 </tbody>
             </table>
-             <div class="d-flex justify-content-end">
+            <div class="d-flex justify-content-end">
                 <button class="btn btn-primary btn-sm" id="record-all-sales-btn">
-                    <i class="bi bi-check2-all me-1"></i>Record All
+                    <i class="bx bx-check2-all me-1" onclick="confirmCashUp(${cash_up_id})"></i>Record All
                 </button>
              </div>
         </div>
@@ -537,7 +621,6 @@ function createSalesSection(sales) {
                 border: none;
                 border-radius: 12px;
                 overflow: hidden;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                 background: white;
             }
             
@@ -571,7 +654,7 @@ function createSalesSection(sales) {
                 background-color: #f0fdf4;
                 opacity: 0.8;
             }
-            $
+            
             .item-info .item-name {
                 font-weight: 500;
                 color: #1e293b;
@@ -645,26 +728,24 @@ function createSalesSection(sales) {
                 opacity: 0.4;
             }
         </style>
+        ${createExpensesSection(expenses, cash_up_id)}
     `;
 }
 
-function createExpensesSection(expenses) {
+function createExpensesSection(expenses, cash_up_id) {
     if (!Array.isArray(expenses) || expenses.length === 0) {
         return `
-            <div class="section-header d-flex justify-content-between align-items-center mb-4">
-                <h5 class="section-title">
-                    <i class="bx bx-receipt me-2 text-danger"></i>Expenses
-                </h5>
-            </div>
-            <div class="empty-state">
+            <div>
                 <div class="empty-icon">
-                    <i class="bi bi-receipt-cutoff"></i>
+                    <i class="bx bx-receipt-cutoff"></i>
                 </div>
                 <p>No expenses data available</p>
+                <button class="btn btn-success btn-sm w-100" onclick="showAcceptCashUpModal(${cash_up_id})">
+                    <i class="bi bi-check2-all me-1"></i>Accept Cash up
+                </button>
             </div>
         `;
     }
-
     return `
         <div class="table-responsive">
             <table class="table modern-table">
@@ -715,12 +796,11 @@ function createExpensesSection(expenses) {
                     `).join('')}
                 </tbody>
             </table>
-            <div class="d-flex justify-content-center mt-2">
-                <button class="btn btn-primary btn-sm w-100" id="record-all-sales-btn">
-                    <i class="bi bi-check2-all me-1"></i>Record All expenses
+             <div class="d-flex justify-content-end">
+                <button class="btn btn-primary btn-sm" id="record-all-sales-btn">
+                    <i class="bi bi-check2-all me-1"></i>Record All
                 </button>
-                <br>
-                <button class="btn btn-success btn-sm w-100" id="record-all-sales-btn">
+                <button class="btn btn-success btn-sm" id="record-all-sales-btn">
                     <i class="bi bi-check2-all me-1"></i>Accept Cash up
                 </button>
             </div>
@@ -1332,6 +1412,28 @@ function flagIssue(expenseId) {
     }
 }
 
+async function confirmCashUp(cash_up_id) {
+    const response = await fetch('/finance/confirm_cash_up/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            cash_up_id: cash_up_id
+        })
+    });
+    
+    const result = await response.json();
+
+    if (result.success) {
+        fetchCashUpDetails(branchId)
+        showToast('Success', 'Cash up confirmed successfully', 'success');
+    } else {
+        throw new Error(result.message || 'Failed to confirm cash up');
+    }
+}
+
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -1347,7 +1449,6 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// Add this style to the document
 document.head.insertAdjacentHTML('beforeend', `
 <style>
     .fade-in {
@@ -1421,7 +1522,7 @@ function showCashUpList() {
 }
 
 let currentScrollPosition = 0;
-const scrollAmount = 250; // Adjust this value based on your needs
+const scrollAmount = 250;
 
 function scrollBranches() {
     const container = document.querySelector('.branches-scroll-container');
@@ -1437,15 +1538,221 @@ function scrollBranches() {
     wrapper.style.transform = `translateX(-${currentScrollPosition}px)`;
 }
 
-// Add this to your existing DOMContentLoaded event listener
 document.addEventListener('DOMContentLoaded', function() {
-    // ... existing code ...
-    
-    // Initialize scroll position
+ 
     currentScrollPosition = 0;
     const wrapper = document.querySelector('.branches-wrapper');
     if (wrapper) {
         wrapper.style.transform = 'translateX(0)';
     }
+});
+
+
+function showAcceptCashUpModal(cashUpId) {
+    document.querySelectorAll('.child-section:not(.d-none)').forEach(section => {
+        section.classList.add('d-none');
+    });
+
+    document.querySelectorAll('.main-card').forEach(card => {
+        card.classList.remove('active-card');
+        card.classList.add('not-active-card');
+    });
+
+    const cashupModal = new bootstrap.Modal(document.getElementById('cashUpModal'));
+    cashupModal.hide();
+
+    const cashUp = document.querySelector(`[data-cash-up-id="${cashUpId}"]`);
+    const expectedAmount = cashUp.querySelector('.expected-amount').textContent;
+
+    document.getElementById('cashUpId').value = cashUpId;
+    document.getElementById('expectedAmount').value = expectedAmount;
+    document.getElementById('amountReceived').value = '';
+    document.getElementById('shortfall').value = '';
+    document.getElementById('assignTo').value = '';
+    document.getElementById('notes').value = '';
+  
+    const amountReceivedInput = document.getElementById('amountReceived');
+    const newAmountReceivedInput = amountReceivedInput.cloneNode(true);
+    amountReceivedInput.parentNode.replaceChild(newAmountReceivedInput, amountReceivedInput);
+    
+    newAmountReceivedInput.addEventListener('input', function() {
+        const expected = parseFloat(expectedAmount.replace('$', ''));
+        const received = parseFloat(this.value) || 0;
+        const shortfall = expected - received;
+        document.getElementById('shortfall').value = `$${shortfall.toFixed(2)}`;
+    });
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('acceptCashUpModal'));
+    modal.show();
+}
+
+async function submitAcceptCashUp() {
+    const form = document.getElementById('acceptCashUpForm');
+    const cashUpId = document.getElementById('cashUpId').value;
+    const amountReceived = document.getElementById('amountReceived').value;
+    const assignTo = document.getElementById('assignTo').value;
+    const notes = document.getElementById('notes').value;
+
+    console.log(cashUpId, amountReceived, assignTo, notes)
+    
+    if (!amountReceived || !assignTo) {
+        showToast('Error', 'Please fill in all required fields', 'danger');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/finance/confirm_cash_up/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                cash_up_id: cashUpId,
+                amount_received: amountReceived,
+                assigned_to: assignTo,
+                notes: notes
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const acceptModal = bootstrap.Modal.getInstance(document.getElementById('acceptCashUpModal'));
+            acceptModal.hide();
+            
+            await fetchCashUpDetails(branchId);
+            
+            showToast('Success', 'Cash up accepted successfully', 'success');
+            
+            const cashUp = document.querySelector(`[data-cash-up-id="${cashUpId}"]`);
+            if (cashUp) {
+                const index = cashUp.getAttribute('data-index');
+                toggleChildSection(index, cashUp.parentElement);
+            }
+        } else {
+            throw new Error(result.message || 'Failed to accept cash up');
+        }
+    } catch (error) {
+        console.error('Error accepting cash up:', error);
+        showToast('Error', error.message || 'Failed to accept cash up', 'danger');
+    }
+}
+
+function loadRecordedCashUps() {
+    const branchId = document.getElementById('branchFilter').value;
+    const dateRange = document.getElementById('dateRangeFilter').value;
+    let startDate = '';
+    let endDate = '';
+
+    if (dateRange === 'custom') {
+        startDate = document.getElementById('startDate').value;
+        endDate = document.getElementById('endDate').value;
+    }
+
+    fetch('/finance/get_recorded_cash_ups/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            branch_id: branchId,
+            date_range: dateRange,
+            start_date: startDate,
+            end_date: endDate
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            renderRecordedCashUps(data.cash_ups);
+        } else {
+            showToast('Error', data.message || 'Failed to load cash ups', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading recorded cash ups:', error);
+        showToast('Error', 'Failed to load cash ups', 'danger');
+    });
+}
+
+function renderRecordedCashUps(cashUps) {
+    const container = document.getElementById('recordedCashUps');
+    
+    if (!cashUps || cashUps.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <div class="empty-icon mb-3">
+                    <i class="bx bx-receipt-cutoff" style="font-size: 3rem; color: #ccc;"></i>
+                </div>
+                <p class="text-muted">No recorded cash ups found</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="row g-3">
+            ${cashUps.map((cashUp, index) => `
+                <div class="col-md-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-1">${cashUp.branch__name}</h6>
+                                    <small class="text-muted">${new Date(cashUp.created_at).toLocaleDateString()}</small>
+                                </div>
+                                <span class="badge bg-success">Recorded</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td>Expected Amount</td>
+                                            <td class="text-end">$${cashUp.expected_cash}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Amount Received</td>
+                                            <td class="text-end">$${cashUp.received_amount}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Shortfall</td>
+                                            <td class="text-end text-danger">$${cashUp.short_fall}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-3">
+                                <small class="text-muted">Recorded by: ${cashUp.recorded_by__username}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const dateRangeFilter = document.getElementById('dateRangeFilter');
+    const customDateRange = document.getElementById('customDateRange');
+    
+    dateRangeFilter.addEventListener('change', function() {
+        if (this.value === 'custom') {
+            customDateRange.classList.remove('d-none');
+        } else {
+            customDateRange.classList.add('d-none');
+            loadRecordedCashUps();
+        }
+    });
+
+    document.getElementById('branchFilter').addEventListener('change', loadRecordedCashUps);
+    document.getElementById('startDate').addEventListener('change', loadRecordedCashUps);
+    document.getElementById('endDate').addEventListener('change', loadRecordedCashUps);
+
+    // Load initial data
+    loadRecordedCashUps();
 });
 </script>
