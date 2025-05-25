@@ -132,14 +132,13 @@
         })
         .then(response => response.json())
         .then(data => {
-            console.log(data)
-            <!-- if (data.success) {
+            if (data.success) {
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
                     text: 'Stock take saved successfully!',
                     timer: 2000,
-                    showConfirmButton: false
+                    showConfirmButton: true
                 });
                 location.reload();
             } else {
@@ -148,7 +147,7 @@
                     title: 'Error!',
                     text: 'Error saving stock take.',
                 });
-            } -->
+            } 
         })
         .catch(error => {
             Swal.fire({
