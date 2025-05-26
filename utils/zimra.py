@@ -271,6 +271,85 @@ class ZIMRA:
             return response.json()
         except Exception as e:
             logger.error(f"Error submitting file: {e}")
+    
+    def submit_credit_note(request):
+    # Replace with actual values
+    device_id = 1234
+    original_receipt_id = 5678
+    fiscal_day_no = 5
+    original_global_no = 1122
+
+    payload = {
+        "deviceID": device_id,
+        "receipt": {
+            "receiptType": "CreditNote",
+            "receiptCurrency": "USD",
+            "receiptCounter": 10,
+            "receiptGlobalNo": 1130,
+            "invoiceNo": "CN-2025/0003",
+            "receiptNotes": "Customer returned items",
+            "receiptDate": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+            "creditDebitNote": {
+                "receiptID": original_receipt_id,
+                "deviceID": device_id,
+                "receiptGlobalNo": original_global_no,
+                "fiscalDayNo": fiscal_day_no
+            },
+            "receiptLinesTaxInclusive": True,
+            "receiptLines": [
+                {
+                    "receiptLineType": "Sale",
+                    "receiptLineNo": 1,
+                    "receiptLineName": "Chicken Wrap",
+                    "receiptLinePrice": -5.00,  # Negative value
+                    "receiptLineQuantity": 1,
+                    "receiptLineTotal": -5.00,
+                    "taxCode": "A",
+                    "taxPercent": 15,
+                    "taxID": 1
+                }
+            ],
+            "receiptTaxes": [
+                {
+                    "taxCode": "A",
+                    "taxPercent": 15,
+                    "taxID": 1,
+                    "taxAmount": -0.65,  # Negative
+                    "salesAmountWithTax": -5.65
+                }
+            ],
+            "receiptPayments": [
+                {
+                    "moneyTypeCode": "Cash",
+                    "paymentAmount": -5.65  # Negative
+                }
+            ],
+            "receiptTotal": -5.65,
+            "receiptDeviceSignature": {
+                "hash": "base64_encoded_hash",  # You must sign it properly
+                "signature": "base64_encoded_signature"
+            },
+            "receiptPrintForm": "Receipt48",
+            "username": "cashier",
+            "userNameSurname": "Jane Doe"
+        }
+    }
+
+    headers = {
+        'Content-Type': 'application/json',
+        'DeviceModelName': 'ModelX',
+        'DeviceModelVersionNo': '1.0'
+    }
+
+    response = requests.post(
+        FISCAL_API_URL,
+        data=json.dumps(payload),
+        headers=headers,
+        cert=(CERT_PATH, KEY_PATH),
+        verify=True
+    )
+
+    return JsonResponse(response.json(), status=response.status_code)
 
     def close_day(
             self,
