@@ -228,7 +228,7 @@
             <h4>Layby Terms</h4>
             <p><strong>Deposited:</strong> <span id="id_deposited"></span></p>
             <p>
-                <strong>Period:</strong>
+                <strong>Intervals:</strong>
                 <input type="number" name="interval" id="id_period" form="control">
             </p>
             <p id="payment_date"></p>
@@ -251,9 +251,16 @@
         <!--paylater-->
         <div class="paylater">
             <h4>Pay later terms</h4>
+            <p><strong>Deposited:</strong> <span id="id_deposited"></span></p>
             <p>
-                <strong>Date:</strong>
-                <input type="date" id="paylater_date">
+                <strong>Intervals:</strong>
+                <input type="number" name="interval" id="id_paylater_period" form="control">
+                <small class="text-muted">(Leave empty for manual date)</small>
+            </p>
+            <p id="paylater_payment_date"></p>
+            <p class="manual-date d-none">
+                <strong>Manual Due Date:</strong>
+                <input type="date" id="manual_paylater_date" class="form-control">
             </p>
         </div>
 

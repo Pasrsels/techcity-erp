@@ -209,6 +209,13 @@ input[type="checkbox"] {
                                     </span>
                                     {% endif %}
                                 </span>
+                                {% if invoice.payment_terms == 'pay later' %}
+                                <span class='px-2'>
+                                    <span style='cursor:pointer;' class="text-dark" data-bs-toggle="modal" data-bs-target="#paylaterModal{{ invoice.id }}">
+                                        <i class='bx bx-calendar'></i>
+                                    </span>
+                                </span>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -338,6 +345,99 @@ input[type="checkbox"] {
             </div>
         </div>
 </div>
+
+<!-- Paylater Modals -->
+{% for date_heading, invoices in grouped_invoices.items %}
+    {% for invoice in invoices %}
+        {% if invoice.payment_terms == 'pay later' %}
+        <div class="modal fade" id="paylaterModal{{ invoice.id }}" tabindex="-1" aria-labelledby="paylaterModalLabel{{ invoice.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="paylaterModalLabel{{ invoice.id }}">Pay Later Details - Invoice #{{ invoice.invoice_number }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="nav nav-tabs" id="paylaterTabs{{ invoice.id }}" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="dates-tab{{ invoice.id }}" data-bs-toggle="tab" data-bs-target="#dates{{ invoice.id }}" type="button" role="tab">Payment Dates</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="payments-tab{{ invoice.id }}" data-bs-toggle="tab" data-bs-target="#payments{{ invoice.id }}" type="button" role="tab">Payment History</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="paylaterTabContent{{ invoice.id }}">
+                            <div class="tab-pane fade show active" id="dates{{ invoice.id }}" role="tabpanel">
+                                <div class="table-responsive mt-3">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Due Date</th>
+                                                <th>Amount</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for paylater_date in invoice.paylater.paylaterdates_set.all %}
+                                            <tr>
+                                                <td>{{ paylater_date.due_date|date:"d/m/Y" }}</td>
+                                                <td>{{ invoice.currency.symbol }} {{ paylater_date.amount }}</td>
+                                                <td>
+                                                    <span class="badge {% if paylater_date.paid %}bg-success{% else %}bg-warning{% endif %}">
+                                                        {% if paylater_date.paid %}Paid{% else %}Pending{% endif %}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% if not paylater_date.paid %}
+                                                    <button class="btn btn-sm btn-primary" onclick="processPaylaterPayment({{ paylater_date.id }})">
+                                                        Pay Now
+                                                    </button>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="payments{{ invoice.id }}" role="tabpanel">
+                                <div class="table-responsive mt-3">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Payment Date</th>
+                                                <th>Amount</th>
+                                                <th>Payment Method</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for payment in invoice.paylater.paylaterdates_set.all %}
+                                            {% if payment.paid %}
+                                            <tr>
+                                                <td>{{ payment.payment_date|date:"d/m/Y" }}</td>
+                                                <td>{{ invoice.currency.symbol }} {{ payment.amount }}</td>
+                                                <td>{{ payment.payment_method }}</td>
+                                                <td>
+                                                    <span class="badge bg-success">Paid</span>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
 <script type="text/javascript">
 
     let invoiceId = '';
@@ -798,6 +898,66 @@ input[type="checkbox"] {
             }
         }
         return cookieValue;
+    }
+
+    function processPaylaterPayment(paylaterDateId) {
+        Swal.fire({
+            title: 'Process Payment',
+            html: `
+                <div class="mb-3">
+                    <label class="form-label">Payment Method</label>
+                    <select class="form-select" id="paymentMethod">
+                        <option value="cash">Cash</option>
+                        <option value="card">Card</option>
+                        <option value="bank">Bank Transfer</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Amount</label>
+                    <input type="number" class="form-control" id="paymentAmount" step="0.01" readonly>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Process Payment',
+            cancelButtonText: 'Cancel',
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                const paymentMethod = document.getElementById('paymentMethod').value;
+                const amount = document.getElementById('paymentAmount').value;
+                
+                return fetch(`/finance/process-paylater-payment/${paylaterDateId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        payment_method: paymentMethod,
+                        amount: amount
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Payment processing failed');
+                    }
+                    return response.json();
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(`Request failed: ${error}`);
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Payment processed successfully',
+                    icon: 'success'
+                }).then(() => {
+                    location.reload();
+                });
+            }
+        });
     }
 </script>
 {% endblock content %}

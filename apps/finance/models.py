@@ -433,13 +433,28 @@ class Paylater(models.Model):
 
     def __str__(self):
         return f'{self.invoice}: {self.due_date}'
+class paylaterDates(models.Model):
+    paylater = models.ForeignKey(Paylater, on_delete=models.CASCADE)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    due_date = models.DateField(auto_now_add=True)
+    paid = models.BooleanField(default=False)
+    payment_method = models.CharField(max_length=50, choices=[
+        ('cash', 'Cash'),
+        ('bank', 'Bank Transfer'),
+        ('ecocash', 'EcoCash'),
+    ], null=True)
     
+    def __str__(self):
+        return f'{self.paylater}: {self.due_date}'
+
 class MonthlyInstallment(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     due_date = models.DateField()  
     paid = models.BooleanField(default=False)
+    
     payment_method = models.CharField(max_length=50, choices=[
         ('cash', 'Cash'),
         ('bank', 'Bank Transfer'),
@@ -504,7 +519,6 @@ class CashBookNote(models.Model):
     def __str__(self):
         return f"Note by {self.user.username} on {self.timestamp}"
     
-
 class CashTransfers(models.Model):
     class TransferMethod(models.TextChoices):
         BANK = ('Bank'), _('Bank')
