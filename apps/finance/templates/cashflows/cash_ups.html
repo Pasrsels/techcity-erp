@@ -238,13 +238,34 @@
                             <input type="text" class="form-control" id="shortfall" readonly>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Assign Shortfall To</label>
-                            <select class="form-select" id="assignTo" required>
-                                <option value="">Select Salesperson</option>
-                                {% for user in salespeople %}
-                                    <option value="{{ user.id }}">{{ user.username }}</option>
-                                {% endfor %}
-                            </select>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="flex-grow-1">
+                                    <label for="assignAccount" class="form-label">Choose Account</label>
+                                    <select name="account" class="form-select" id="assignAccount" onchange="toggleAssignmentFields()">
+                                        <option value="">----------</option>
+                                        <option value="employee">Employee</option>
+                                        <option value="company">Company</option>
+                                    </select>
+                                </div>
+
+                                <div id="employeeAssignment" class="flex-grow-1 d-none">
+                                    <label class="form-label">Assign Shortfall To Employee</label>
+                                    <select class="form-select" id="assignToEmployee" required>
+                                        <option value="">Select Salesperson</option>
+                                        {% for user in salespeople %}
+                                            <option value="{{ user.id }}">{{ user.username }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div id="companyAssignment" class="flex-grow-1 d-none">
+                                    <label class="form-label">Assign Shortfall To Company Account</label>
+                                    <select class="form-select" id="assignToCompany" required>
+                                        <option value="">Select Account</option>
+                                        <option value="loss">Loss Account</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Notes</label>
@@ -1564,13 +1585,21 @@ function showAcceptCashUpModal(cashUpId) {
     const cashUp = document.querySelector(`[data-cash-up-id="${cashUpId}"]`);
     const expectedAmount = cashUp.querySelector('.expected-amount').textContent;
 
+    // Reset form fields
     document.getElementById('cashUpId').value = cashUpId;
     document.getElementById('expectedAmount').value = expectedAmount;
     document.getElementById('amountReceived').value = '';
     document.getElementById('shortfall').value = '';
-    document.getElementById('assignTo').value = '';
+    document.getElementById('assignAccount').value = '';
+    document.getElementById('assignToEmployee').value = '';
+    document.getElementById('assignToCompany').value = '';
     document.getElementById('notes').value = '';
+
+    // Hide both assignment fields initially
+    document.getElementById('employeeAssignment').classList.add('d-none');
+    document.getElementById('companyAssignment').classList.add('d-none');
   
+    // Setup amount received input handler
     const amountReceivedInput = document.getElementById('amountReceived');
     const newAmountReceivedInput = amountReceivedInput.cloneNode(true);
     amountReceivedInput.parentNode.replaceChild(newAmountReceivedInput, amountReceivedInput);
@@ -1587,19 +1616,59 @@ function showAcceptCashUpModal(cashUpId) {
     modal.show();
 }
 
+function toggleAssignmentFields() {
+    const accountSelect = document.getElementById('assignAccount');
+    const employeeDiv = document.getElementById('employeeAssignment');
+    const companyDiv = document.getElementById('companyAssignment');
+    
+    // Hide both divs initially
+    employeeDiv.classList.add('d-none');
+    companyDiv.classList.add('d-none');
+    
+    // Show the appropriate div based on selection
+    if (accountSelect.value === 'employee') {
+        employeeDiv.classList.remove('d-none');
+    } else if (accountSelect.value === 'company') {
+        companyDiv.classList.remove('d-none');
+    }
+}
+
 async function submitAcceptCashUp() {
     const form = document.getElementById('acceptCashUpForm');
     const cashUpId = document.getElementById('cashUpId').value;
     const amountReceived = document.getElementById('amountReceived').value;
-    const assignTo = document.getElementById('assignTo').value;
+    const accountType = document.getElementById('assignAccount').value;
     const notes = document.getElementById('notes').value;
 
-    console.log(cashUpId, amountReceived, assignTo, notes)
-    
-    if (!amountReceived || !assignTo) {
-        showToast('Error', 'Please fill in all required fields', 'danger');
+    if (!amountReceived) {
+        showToast('Error', 'Please enter the amount received', 'danger');
         return;
     }
+
+    if (!accountType) {
+        showToast('Error', 'Please select an account type', 'danger');
+        return;
+    }
+
+    let assignTo;
+    if (accountType === 'employee') {
+        assignTo = document.getElementById('assignToEmployee').value;
+        if (!assignTo) {
+            showToast('Error', 'Please select an employee', 'danger');
+            return;
+        }
+    } else if (accountType === 'company') {
+        assignTo = document.getElementById('assignToCompany').value;
+        if (!assignTo) {
+            showToast('Error', 'Please select a company account', 'danger');
+            return;
+        }
+    }
+
+    const saveButton = document.querySelector('#acceptCashUpModal .modal-footer .btn-primary');
+    const originalText = saveButton.innerHTML;
+    saveButton.disabled = true;
+    saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
     
     try {
         const response = await fetch('/finance/confirm_cash_up/', {
@@ -1611,6 +1680,7 @@ async function submitAcceptCashUp() {
             body: JSON.stringify({
                 cash_up_id: cashUpId,
                 amount_received: amountReceived,
+                account_type: accountType,
                 assigned_to: assignTo,
                 notes: notes
             })
@@ -1637,6 +1707,9 @@ async function submitAcceptCashUp() {
     } catch (error) {
         console.error('Error accepting cash up:', error);
         showToast('Error', error.message || 'Failed to accept cash up', 'danger');
+    } finally {
+        saveButton.disabled = false;
+        saveButton.innerHTML = originalText;
     }
 }
 
@@ -1667,6 +1740,7 @@ function loadRecordedCashUps() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            console.log(data.cash_ups)
             renderRecordedCashUps(data.cash_ups);
         } else {
             showToast('Error', data.message || 'Failed to load cash ups', 'danger');
@@ -1738,10 +1812,10 @@ function renderRecordedCashUps(cashUps) {
 document.addEventListener('DOMContentLoaded', function() {
     const dateRangeFilter = document.getElementById('dateRangeFilter');
     const customDateRange = document.getElementById('customDateRange');
-    
+    loadRecordedCashUps()
     dateRangeFilter.addEventListener('change', function() {
         if (this.value === 'custom') {
-            customDateRange.classList.remove('d-none');
+            customDateRange.classList.remove('d-none')
         } else {
             customDateRange.classList.add('d-none');
             loadRecordedCashUps();

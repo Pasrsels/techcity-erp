@@ -53,17 +53,25 @@
                             <!-- Form Section -->
                             <div class="col-md-4">
                                 <div class="card p-3">
-                                    <h5 class="mb-3">Record New Income</h5>
-                                    <div class="mb-3">
+                                    <h5 class="mb-4">Record New Income</h5>
+                                    <div class="mb-4">
                                         <input type="text" class="form-control" id="inName" name="inName" placeholder="Income Note">
                                     </div>                                    
-                                    <div class="mb-3">
+                                    <div class="mb-4">
                                         <div class="input-group">
                                             <span class="input-group-text">$</span>
                                             <input type="number" class="form-control" id="inAmount" placeholder="Enter amount">
                                         </div>
                                     </div>
-                                    <div class="mb-3 d-flex gap-2 align-items-start">
+                                    <div class="mb-4 d-flex gap-2 align-items-start">
+                                        <select class="form-select" id="currency" name="currency">
+                                            <option value="">Select Currency</option>
+                                            {% for currency in currencies %}
+                                                <option value="{{ currency.id }}">{{ currency.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-4 d-flex gap-2 align-items-start">
                                         <select class="form-select" id="inCategory" name="inCategory">
                                             <option value="">Select Category</option>
                                             {% for cat in income_categories %}
@@ -74,7 +82,7 @@
                                             +
                                         </button>
                                     </div>
-                                    <div class="mb-3">
+                                    <div class="mb-4">
                                         <select class="category-select form-select" id="inBranch">
                                             {% for branch in branches %}
                                                 <option value="{{ branch.id}}">{{ branch.name }}</option>

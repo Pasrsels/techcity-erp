@@ -244,7 +244,6 @@
             }).format(amount);
         }
 
-        // Function to format date
         function formatDate(dateString) {
             return new Date(dateString).toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -253,7 +252,6 @@
             });
         }
 
-        // Function to populate monthly installments table
         function populateMonthlyInstallments(data) {
             const tbody = document.querySelector('#monthlyInstallmentsTable tbody');
             tbody.innerHTML = '';

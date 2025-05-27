@@ -433,7 +433,8 @@
     }
     
     .modal-content {
-        min-height: 80vh;
+        min-height: 100vh;
+        overflow-y: auto;
     }
 </style>
 
@@ -471,21 +472,30 @@
         <div class="card shadow-none border-0 mb-4">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#cashUpModal">
-                            <i class="bi bi-plus-circle me-1"></i> Record Cash Up
-                        </button>
-                        <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#cashOutModal">
+                    <div class="d-flex gap-2 w-25">
+                        <button class="btn btn-outline-dark w-50" data-bs-toggle="modal" data-bs-target="#cashOutModal">
                             <i class="bx bx-plus-circle me-1"></i> Record Transaction
                         </button>
+                        <button class="btn btn-outline-dark w-50" data-bs-toggle="modal" data-bs-target="#cashUpModal">
+                            <i class="bi bi-plus-circle me-1"></i> Record Cash Up
+                        </button>
                     </div>
-                    <div class="search-container" style="flex: 1; min-width: 300px;">
+                    
+                    <div class="search-container w-50" style="flex: 1; min-width: 300px;">
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0">
                                 <i class="bx bx-search"></i>
                             </span>
                             <input type="text" class="form-control border-start-0" id="searchInput" placeholder="Search transactions..." onkeyup="handleSearch(event)">
                         </div>
+                    </div>
+                    <div class="d-flex gap-2 w-25">
+                        <a href="{% url 'finance:banking' %}" class="btn btn-outline-dark w-50">
+                            <i class="bi bi-plus-circle me-1"></i> Banking
+                        </a>
+                        <button class="btn btn-outline-dark w-50" data-bs-toggle="modal" data-bs-target="#cashOutModal">
+                            <i class="bx bx-plus-circle me-1"></i> Transfers
+                        </button>
                     </div>
                 </div>
             </div>
@@ -518,36 +528,63 @@
             </div>
         </div>
 
-        <div class="row">
-            <div class="col">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table modern-table" id="cashbookTable">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Description</th>
-                                        <th>Amount</th>
-                                        <th>Balance</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cashbookTableBody">
-                                    <!-- Table content will be loaded dynamically -->
-                                </tbody>
-                            </table>
-                        </div>
-                        <div id="loadingSpinner" class="text-center d-none">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
+        <ul class="nav nav-tabs bg-white p-2" id="cashbookTabs" role="tablist">
+            {% for currency in currencies %}
+                <li class="nav-item" role="presentation">
+                    <button 
+                        class="nav-link {% if forloop.first %}active{% endif %}" id="tab-{{ currency.name }}" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#{{ currency.name }}" 
+                        type="button" 
+                        role="tab" 
+                        aria-controls="{{ currency.name }}" 
+                        aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                        onclick="loadCashbookData(1, false, '{{ currency.id }}')"
+                        >
+                        {{ currency.name }}
+                    </button>
+                </li>
+            {% endfor %}
+        </ul>
+        
+        <div class="tab-content">
+            {% for currency in currencies %}
+            <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="{{ currency.name }}" role="tabpanel" aria-labelledby="tab-{{ currency.name }}">
+                <div class="row">
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table modern-table" id="cashbookTable-{{ currency.name }}">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Description</th>
+                                                <th>Amount</th>
+                                                <th>Balance</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="cashbookTableBody-{{ currency.id }}">
+                                            <!-- Table content will be loaded dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div id="loadingSpinner-{{ currency.id }}" class="text-center d-none">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-    
+        
+        
+        
         <!-- Chat Modal -->
         <div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
@@ -648,6 +685,7 @@ let currentFilters = {
     end_date: null,
     search: ''
 };
+let currency = {{ currency.id }};
 
 //cashmanagement
 const state = {
@@ -956,7 +994,7 @@ function recordIncome() {
             document.getElementById('incomeRecurringToggle').checked = false;
             toggleRecurrence('income');
             loadIncomes(true);
-            loadCashbookData(1, false)
+            loadCashbookData(1, false, {{ currency.id }})
         } else {
             showToast(result.message || "Failed to record income", "error");
         }
@@ -1232,11 +1270,13 @@ function getCookie(name) {
     return cookieValue;
 }
 
-async function loadCashbookData(page = 1, append = false) {
+async function loadCashbookData(page = 1, append = false, currency = null) {
     try {
+        console.log(currency, 'currency')
         showLoading();
-        const tableBody = document.getElementById('cashbookTableBody');
-        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        const tableBody = document.getElementById(`cashbookTableBody-${currency}`);
+        const loadingSpinner = document.getElementById(`loadingSpinner-${currency}`);
         
         if (!append) {
             tableBody.innerHTML = '';
@@ -1246,6 +1286,7 @@ async function loadCashbookData(page = 1, append = false) {
         loadingSpinner.style.display = 'block';
         
         const requestData = {
+            currency: currency,
             page: page,
             per_page: 20,
             filter: currentFilters.filter,
@@ -1253,6 +1294,8 @@ async function loadCashbookData(page = 1, append = false) {
             end_date: currentFilters.end_date,
             search: currentFilters.search || ''
         };
+
+        console.log(requestData, 'requestData')
 
         const response = await fetch('{% url "finance:cashbook_data" %}', {
             method: 'POST',
@@ -1268,15 +1311,31 @@ async function loadCashbookData(page = 1, append = false) {
         }
 
         const data = await response.json();
-        
         if (!append) {
+            console.log(data, 'data')
             tableBody.innerHTML = '';
-            document.getElementById('totalCashIn').textContent = formatCurrency(data.totals.cash_in);
-            document.getElementById('totalCashOut').textContent = formatCurrency(data.totals.cash_out);
-            document.getElementById('totalBalance').textContent = formatCurrency(data.totals.balance);
+            cash_in_element = document.getElementById('totalCashIn');
+            cash_in_element.innerHTML = ''
+            data.totals.cash_in.forEach(currency => {
+                cash_in_element.innerHTML += `<div class="fs-6">${currency.name.toLowerCase()}: ${formatCurrency(currency.amount)}</div>`
+            })
+
+            cash_out_element = document.getElementById('totalCashOut');
+            cash_out_element.innerHTML = ''
+            data.totals.cash_out.forEach(currency => {
+                cash_out_element.innerHTML += `<div class="fs-6">${currency.name.toLowerCase()}: ${formatCurrency(currency.amount)}</div>`
+            })
+
+            balance_element = document.getElementById('totalBalance');
+            balance_element.innerHTML = ''
+            data.totals.balance.forEach(currency => {   
+                balance_element.innerHTML += `<div class="fs-6">${currency.name.toLowerCase()}: ${formatCurrency(currency.amount)}</div>`
+            })
         }
 
         if (data.entries.length === 0 && !append) {
+            console.log('no entries')
+            tableBody.innerHTML = '';
             tableBody.innerHTML = `
                 <tr>
                     <td colspan="5" class="text-center py-4">
@@ -1287,6 +1346,7 @@ async function loadCashbookData(page = 1, append = false) {
                     </td>
                 </tr>
             `;
+            console.log(tableBody, 'tableBody')
         } else {
             data.entries.forEach(entry => {
                 const row = document.createElement('tr');
@@ -1327,9 +1387,12 @@ async function loadCashbookData(page = 1, append = false) {
         showToast('Failed to load transactions. Please try again.', 'danger');
     } finally {
         hideLoading();
+        const loadingSpinner = document.getElementById(`loadingSpinner-${currency}`);
         loadingSpinner.style.display = 'none';
     }
 }
+
+
 
 function handleSearch(event) {
     clearTimeout(searchTimeout);
@@ -1338,7 +1401,7 @@ function handleSearch(event) {
         currentFilters.search = searchValue;
         currentPage = 1;
         hasMorePages = true;
-        loadCashbookData(1, false);
+        loadCashbookData(1, false, currency);
     }, 500);
 }
 
@@ -1359,7 +1422,7 @@ function applyFilter(filterType) {
     
     currentPage = 1;
     hasMorePages = true;
-    loadCashbookData(1, false);
+    loadCashbookData(1, false, currency);
 }
 
 function showCustomFilter() {
@@ -1388,7 +1451,7 @@ function applyCustomFilter() {
     
     currentPage = 1;
     hasMorePages = true;
-    loadCashbookData(1, false);
+    loadCashbookData(1, false, '');
     
     const modal = bootstrap.Modal.getInstance(document.getElementById('filterModal'));
     modal.hide();
@@ -1415,7 +1478,7 @@ function resetFilters() {
     
     currentPage = 1;
     hasMorePages = true;
-    loadCashbookData(1, false);
+    loadCashbookData(1, false, '');
 }
 
 
@@ -1479,7 +1542,7 @@ function cancelTransaction(entryId) {
                         icon: 'success',
                         confirmButtonText: 'OK'
                     }).then(() => {
-                        loadCashbookData(currentPage, false);
+                        loadCashbookData(currentPage, false, '');
                     });
                 } else {
                     Swal.fire({
@@ -1505,7 +1568,7 @@ function handleScroll() {
     const tableHeight = table.scrollHeight;
     
     if (tableHeight - tableBottom < 200 && !isLoading && hasMorePages) {
-        loadCashbookData(currentPage + 1, true);
+        loadCashbookData(currentPage + 1, true, '');
     }
 }
 
@@ -1579,7 +1642,7 @@ document.addEventListener('keydown', (e) => {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadCashbookData();
+    loadCashbookData(1, false, {{ currency.id }});
     document.querySelector('.table-responsive').addEventListener('scroll', handleScroll);
 
     document.querySelectorAll('input[required], select[required]').forEach(field => {
