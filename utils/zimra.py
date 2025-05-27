@@ -272,7 +272,7 @@ class ZIMRA:
         except Exception as e:
             logger.error(f"Error submitting file: {e}")
     
-    def submit_credit_note(request):
+def submit_credit_note(request):
     # Replace with actual values
     device_id = 1234
     original_receipt_id = 5678

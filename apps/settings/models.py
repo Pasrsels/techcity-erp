@@ -3,6 +3,7 @@ from cryptography.fernet import Fernet
 from django.conf import settings
 
 class OfflineReceipt(models.Model):
+    invoice = models.ForeignKey("finance.Invoice", on_delete=models.CASCADE, null=True, blank=True)
     receipt_data = models.JSONField()  
     created_at = models.DateTimeField(auto_now_add=True) 
     submitted = models.BooleanField(default=False)  
