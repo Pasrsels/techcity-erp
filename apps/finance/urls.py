@@ -161,6 +161,9 @@ urlpatterns = [
     path('banking/', banking, name='banking'),
     path('create_bank_account/', create_bank_account, name='create_bank_account'),
     path('banking_data/', banking_data, name='banking_data'),
+    
+    path('paylater/', paylater, name='paylater'),
+    path('paylater/details/<int:paylater_id>/', paylater_details, name='paylater_details'),
 
     ########################################################################################################################
     # API end points

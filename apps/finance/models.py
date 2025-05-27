@@ -420,11 +420,11 @@ class laybyDates(models.Model):
         return f'{self.invoice}: {self.due_date}'
 
 class Paylater(models.Model):
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='paylater')
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='paylater', null=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
-    due_date = models.DateField()   
-    paid = models.BooleanField(default=False)
+    due_date = models.DateField(null=True)   
+    paid = models.BooleanField(default=False, null=True)
     payment_method = models.CharField(max_length=50, choices=[
         ('cash', 'Cash'),
         ('bank', 'Bank Transfer'),
@@ -434,10 +434,10 @@ class Paylater(models.Model):
     def __str__(self):
         return f'{self.invoice}: {self.due_date}'
 class paylaterDates(models.Model):
-    paylater = models.ForeignKey(Paylater, on_delete=models.CASCADE)
+    paylater = models.ForeignKey(Paylater, on_delete=models.CASCADE, null=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
-    due_date = models.DateField(auto_now_add=True)
+    due_date = models.DateField(null=True)
     paid = models.BooleanField(default=False)
     payment_method = models.CharField(max_length=50, choices=[
         ('cash', 'Cash'),

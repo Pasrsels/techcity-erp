@@ -2952,6 +2952,7 @@ def edit_purchase_order(request, po_id):
             cost_allocations = data.get('cost_allocations', [])
             overide = data.get('overide')
 
+            logger.info(purchase_order_items_data)
 
             # remove duplicates
             unique_expenses = []
@@ -3007,6 +3008,8 @@ def edit_purchase_order(request, po_id):
                 products_dict = {product.id: product for product in products}
                 suppliers_dict = {supplier.id: supplier for supplier in suppliers}
                 logs_dict = {log.inventory_id: log.quantity for log in logs}
+                
+                logger.info(products_dict)
 
                 supplier = Supplier.objects.get(id=1)
                 

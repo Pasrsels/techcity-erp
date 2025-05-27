@@ -432,6 +432,8 @@
             const sellingPrice = document.getElementById(`selling_${itemId}`)?.value || 0;
             const dealerPrice = document.getElementById(`dealer_${itemId}`)?.value || 0;
 
+            const submitButton = document.querySelector(`button[onclick="submitItem('${itemId}')"]`);
+
             const itemData = {
                 id: itemId,
                 name: document.getElementById(`name_${itemId}`).textContent,
@@ -442,6 +444,8 @@
                 expected_profit: parseFloat(expectedProfitAmnt),
                 dealer_expected_profit: parseFloat(dealerExpectedProfitAmnt)
             };
+
+            submitButton.disabled = true;
 
             const response = await fetch(`{% url "inventory:process_received_order" %}`, {
                 method: 'POST',
@@ -455,6 +459,16 @@
             const data = await response.json();
 
             if (data.success) {
+
+                Toastify({
+                    text: "Item submitted successfully",
+                    duration: 3000, // 3 seconds
+                    gravity: "top", // top or bottom
+                    position: "right", // left, center or right
+                    backgroundColor: "#4BB543", // green for success
+                    close: true
+                  }).showToast();
+                
                 editStatus = false;
                 const orderedQnty = parseInt(document.getElementById(`purchased_quantity_${itemId}`).textContent);
                 const tableRow = document.getElementById(`tr_${itemId}`);
@@ -470,11 +484,10 @@
                 document.getElementById(`dealer_${itemId}`).replaceWith(`${itemData.dealer_price}`);
 
                 // Update the button
-                const submitButton = document.querySelector(`button[onclick="submitItem('${itemId}')"]`);
                 submitButton.textContent = 'Submitted';
                 submitButton.classList.remove('btn-outline-dark');
                 submitButton.classList.add('bg-success', 'text-light', 'btn-sm');
-                submitButton.disabled = true;
+                
 
                 // Hide the submit and cancel buttons, show edit button
                 const cancelBtn = document.getElementById(`cancel_${itemId}`);
@@ -487,6 +500,7 @@
                     icon: 'error',
                     text: data.message
                 });
+                submitButton.disabled = false;
             }
         } catch (error) {
             console.error('Error:', error);
@@ -495,6 +509,7 @@
                 icon: 'error',
                 text: 'An error occurred. Please try again.'
             });
+            submitButton.disabled = false;
         }
     }
 
