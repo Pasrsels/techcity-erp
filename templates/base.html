@@ -181,62 +181,184 @@
 
     <div class="modal fade" id="creditModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            
-            <div class="modal-header-info">
-              <div>
-                <span class="text-muted">Total</span>
-              </div>
-              <div>
-                <span class="badge-total">
-                  Total: $24,328.00
-                </span>
-              </div>
-            </div>
-            
-            <div class="modal-body">
-              <div class="table-container">
-                <div class="search-container">
-                  <i class="fas fa-search"></i>
-                  <input type="search" class="form-control search-input" placeholder="Search invoices...">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel">Credit Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
-                <div class="table-responsive">
-                  <table class="table" id="parentTable">
-                    <thead>
-                      <tr>
-                        <th width="50"></th>
-                        <th>Customer</th>
-                        <th>Invoice Date</th>
-                        <th>Status</th>
-                        <th>Total Amount</th>
-                        <th class="text-end">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <!-- Parent rows will be populated here -->
-                    </tbody>
-                  </table>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="creditTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="laybys-tab" data-bs-toggle="tab" data-bs-target="#laybys" type="button" role="tab">Laybys</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="paylaters-tab" data-bs-toggle="tab" data-bs-target="#paylaters" type="button" role="tab">Paylaters</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="monthly-tab" data-bs-toggle="tab" data-bs-target="#monthly" type="button" role="tab">Monthly Installments</button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content mt-3" id="creditTabsContent">
+                        <!-- Laybys Tab -->
+                        <div class="tab-pane fade show active" id="laybys" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table" id="laybysTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Customer</th>
+                                            <th>Total Amount</th>
+                                            <th>Amount Paid</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Paylaters Tab -->
+                        <div class="tab-pane fade" id="paylaters" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table" id="paylatersTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Customer</th>
+                                            <th>Due Date</th>
+                                            <th>Amount Due</th>
+                                            <th>Amount Paid</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Monthly Installments Tab -->
+                        <div class="tab-pane fade" id="monthly" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table" id="monthlyInstallmentsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Customer</th>
+                                            <th>Amount Due</th>
+                                            <th>Amount Paid</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="exportData()">Export Data</button>
+                </div>
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-              <button type="button" class="btn btn-primary btn-sm">Export Data</button>
-            </div>
-          </div>
         </div>
-      </div>
+    </div>
+
+    <!-- Paylater Details Modal -->
+    <div class="modal fade" id="paylaterDetailsModal" tabindex="-1" aria-labelledby="paylaterDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paylaterDetailsModalLabel">Paylater Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>Invoice Information</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Invoice #:</th>
+                                    <td id="detail-invoice-number"></td>
+                                </tr>
+                                <tr>
+                                    <th>Customer:</th>
+                                    <td id="detail-customer-name"></td>
+                                </tr>
+                                <tr>
+                                    <th>Total Amount:</th>
+                                    <td id="detail-total-amount"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Payment Summary</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Amount Paid:</th>
+                                    <td id="detail-amount-paid"></td>
+                                </tr>
+                                <tr>
+                                    <th>Amount Due:</th>
+                                    <td id="detail-amount-due"></td>
+                                </tr>
+                                <tr>
+                                    <th>Status:</th>
+                                    <td id="detail-status"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <h6>Payment Schedule</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm" id="paymentScheduleTable">
+                            <thead>
+                                <tr>
+                                    <th>Due Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Payment Date</th>
+                                    <th>Payment Method</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <h6 class="mt-4">Cash Flow History</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm" id="cashFlowTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Type</th>
+                                    <th>Processed By</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="printPaylaterDetails()">Print Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>    
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    {% comment %} <script>
-        // Function to format currency
+    <script>
         function formatCurrency(amount) {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
@@ -244,7 +366,6 @@
             }).format(amount);
         }
 
-        // Function to format date
         function formatDate(dateString) {
             return new Date(dateString).toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -253,7 +374,6 @@
             });
         }
 
-        // Function to populate monthly installments table
         function populateMonthlyInstallments(data) {
             const tbody = document.querySelector('#monthlyInstallmentsTable tbody');
             tbody.innerHTML = '';
@@ -281,7 +401,6 @@
             });
         }
 
-        // Function to populate laybys table
         function populateLaybys(data) {
             const tbody = document.querySelector('#laybysTable tbody');
             tbody.innerHTML = '';
@@ -308,7 +427,6 @@
             });
         }
 
-        // Function to populate credit table
         function populateCredits(data) {
             const tbody = document.querySelector('#creditsTable tbody');
             tbody.innerHTML = '';
@@ -336,25 +454,168 @@
             });
         }
 
-        // Function to fetch and populate all tables
+        function populatePaylaters(data) {
+            const tbody = document.querySelector('#paylatersTable tbody');
+            tbody.innerHTML = '';
+
+            console.log(data, 'data')
+            
+            data.data.forEach(paylater => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${paylater.invoice__invoice_number}</td>
+                    <td>${paylater.invoice__customer__name}</td>
+                    <td>${formatDate(paylater.due_date)}</td>
+                    <td>${formatCurrency(paylater.amount_due)}</td>
+                    <td>${formatCurrency(paylater.amount_paid)}</td>
+                    <td>
+                        <span class="badge ${paylater.paid ? 'bg-success' : 'bg-warning'}">
+                            ${paylater.paid ? 'Paid' : 'Pending'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewPaylaterDetails(${paylater.id})">
+                            View Details
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function viewInstallmentDetails(id) {
+            console.log('Viewing installment details:', id);
+        }
+
+        function viewLaybyDetails(id) {
+            console.log('Viewing layby details:', id);
+        }
+
+        function viewCreditDetails(id) {
+            console.log('Viewing credit details:', id);
+        }
+
+        async function viewPaylaterDetails(id) {
+            try {
+                const response = await fetch(`/finance/paylater/details/${id}/`);
+                const data = await response.json();
+                
+                // Update invoice information
+                document.getElementById('detail-invoice-number').textContent = data.invoice.invoice_number;
+                document.getElementById('detail-customer-name').textContent = data.invoice.customer_name;
+                document.getElementById('detail-total-amount').textContent = formatCurrency(data.invoice.amount);
+                document.getElementById('detail-amount-paid').textContent = formatCurrency(data.invoice.amount_paid);
+                document.getElementById('detail-amount-due').textContent = formatCurrency(data.invoice.amount_due);
+                document.getElementById('detail-status').innerHTML = `
+                    <span class="badge ${data.invoice.paid ? 'bg-success' : 'bg-warning'}">
+                        ${data.invoice.paid ? 'Paid' : 'Pending'}
+                    </span>
+                `;
+
+                // Populate payment schedule
+                const scheduleTable = document.querySelector('#paymentScheduleTable tbody');
+                scheduleTable.innerHTML = '';
+                data.payment_schedule.forEach(schedule => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${formatDate(schedule.due_date)}</td>
+                        <td>${formatCurrency(schedule.amount)}</td>
+                        <td>
+                            <span class="badge ${schedule.paid ? 'bg-success' : 'bg-warning'}">
+                                ${schedule.paid ? 'Paid' : 'Pending'}
+                            </span>
+                        </td>
+                        <td>${schedule.payment_date ? formatDate(schedule.payment_date) : '-'}</td>
+                        <td>${schedule.payment_method || '-'}</td>
+                    `;
+                    scheduleTable.appendChild(row);
+                });
+
+                // Populate cash flow history
+                const cashFlowTable = document.querySelector('#cashFlowTable tbody');
+                cashFlowTable.innerHTML = '';
+                data.cash_flow.forEach(flow => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${formatDate(flow.date)}</td>
+                        <td>${flow.description}</td>
+                        <td>${formatCurrency(flow.amount)}</td>
+                        <td>
+                            <span class="badge ${flow.type === 'credit' ? 'bg-success' : 'bg-danger'}">
+                                ${flow.type}
+                            </span>
+                        </td>
+                        <td>${flow.processed_by}</td>
+                    `;
+                    cashFlowTable.appendChild(row);
+                });
+
+                // Show the modal
+                const modal = new bootstrap.Modal(document.getElementById('paylaterDetailsModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error fetching paylater details:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to fetch paylater details. Please try again later.'
+                });
+            }
+        }
+
+        function printPaylaterDetails() {
+            const printWindow = window.open('', '_blank');
+            const modalContent = document.querySelector('#paylaterDetailsModal .modal-content').cloneNode(true);
+            
+            // Remove buttons from print view
+            const footer = modalContent.querySelector('.modal-footer');
+            footer.remove();
+            
+            // Add print-specific styles
+            const styles = `
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    .table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+                    .table th, .table td { border: 1px solid #dee2e6; padding: 0.5rem; }
+                    .badge { padding: 0.25rem 0.5rem; border-radius: 0.25rem; }
+                    .bg-success { background-color: #28a745; color: white; }
+                    .bg-warning { background-color: #ffc107; color: black; }
+                    .bg-danger { background-color: #dc3545; color: white; }
+                    h6 { margin-top: 1rem; margin-bottom: 0.5rem; }
+                </style>
+            `;
+            
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Paylater Details</title>
+                        ${styles}
+                    </head>
+                    <body>
+                        ${modalContent.innerHTML}
+                    </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.print();
+        }
+
         async function fetchAndPopulateTables() {
             try {
-                const installmentsResponse = await fetch('/finance/monthly-installments/');
+                {% comment %} const installmentsResponse = await fetch('/finance/monthly-installments/');
                 const installmentsData = await installmentsResponse.json();
                 populateMonthlyInstallments(installmentsData);
 
-                // Fetch laybys
                 const laybysResponse = await fetch('/finance/laybys/');
                 const laybysData = await laybysResponse.json();
-                populateLaybys(laybysData);
+                populateLaybys(laybysData); {% endcomment %}
 
-                // Fetch credits
-                const creditsResponse = await fetch('/finance/credits/');
-                const creditsData = await creditsResponse.json();
-                populateCredits(creditsData);
+                const paylaterResponse = await fetch('/finance/paylater/');
+                const paylaterData = await paylaterResponse.json();
+                populatePaylaters(paylaterData);
             } catch (error) {
                 console.error('Error fetching data:', error);
-                // Show error notification
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -363,34 +624,32 @@
             }
         }
 
-        // Function to view installment details
-        function viewInstallmentDetails(id) {
-            // Implement view details functionality
-            console.log('Viewing installment details:', id);
+        function exportData() {
+            const activeTab = document.querySelector('.tab-pane.active');
+            const table = activeTab.querySelector('table');
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            
+            const csvContent = rows.map(row => {
+                const cells = Array.from(row.querySelectorAll('td'));
+                return cells.map(cell => cell.textContent.trim()).join(',');
+            }).join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${document.querySelector('.nav-link.active').textContent.trim()}_export.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
         }
 
-        // Function to view layby details
-        function viewLaybyDetails(id) {
-            // Implement view details functionality
-            console.log('Viewing layby details:', id);
-        }
-
-        // Function to view credit details
-        function viewCreditDetails(id) {
-            // Implement view details functionality
-            console.log('Viewing credit details:', id);
-        }
-
-        // Initialize tables when the page loads
         document.addEventListener('DOMContentLoaded', function() {
             fetchAndPopulateTables();
             
-            // Set up refresh interval (every 5 minutes)
             setInterval(fetchAndPopulateTables, 300000);
         });
-    </script> {% endcomment %}
-    {% comment %} {% block js %}
-    <script src="{% static 'js/calculator.js' %}"></script>
-    {% endblock js %} {% endcomment %}
+    </script>
 </body>
 </html>

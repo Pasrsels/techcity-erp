@@ -558,6 +558,7 @@
         const id_amount_paid = document.getElementById('id_amount_paid');
         const depositedAmount = document.getElementById('id_deposited');
         const period = document.getElementById('id_period')
+        const paylaterPeriod = document.getElementById('id_paylater_period')
         const availableBalance = document.getElementById('availableBalance')
         const availableBal = document.getElementById('availableBal')
         const previousDue = document.getElementById('previous_due')
@@ -577,6 +578,25 @@
                 return;
             }
             displayDueDates(period.value)
+        })
+
+        paylaterPeriod.addEventListener('input', ()=>{
+            if(paylaterPeriod.value < 0){
+                Swal.fire({
+                    icon:'error',
+                    text:'Period interval can be less than 0', 
+                    title: 'error'
+                })
+                return;
+            }
+            const manualDateSection = document.querySelector('.manual-date');
+            if (paylaterPeriod.value === '') {
+                manualDateSection.classList.remove('d-none');
+                document.getElementById('paylater_payment_date').innerHTML = '';
+            } else {
+                manualDateSection.classList.add('d-none');
+                displayPaylaterDates(paylaterPeriod.value);
+            }
         })
 
         id_amount_paid.addEventListener('input', ()=>{
@@ -605,7 +625,6 @@
             return dueDates;
         };
 
-        
         const displayDueDates = (period) => {
             const dueDates = calculateNextDueDate(period);
             const paymentDateElement = document.getElementById('payment_date');
@@ -620,6 +639,27 @@
                 dateFields += `
                     <label for="payment_date_${index}">Payment ${index + 1}:</label>
                     <input type="date" id="payment_date_${index}" value="${formattedDate}">
+                    <br>
+                `;
+            });
+
+            paymentDateElement.innerHTML = dateFields; 
+        };
+
+        const displayPaylaterDates = (period) => {
+            const dueDates = calculateNextDueDate(period);
+            const paymentDateElement = document.getElementById('paylater_payment_date');
+
+            let dateFields = ''; 
+
+            dueDates.forEach((date, index) => {
+                // Format the date as yyyy-mm-dd for the date input field
+                const formattedDate = date.toISOString().split('T')[0];
+
+                // Create input fields for each payment date
+                dateFields += `
+                    <label for="paylater_date_${index}">Payment ${index + 1}:</label>
+                    <input type="date" id="paylater_date_${index}" value="${formattedDate}">
                     <br>
                 `;
             });
@@ -1155,10 +1195,30 @@
             if (Number((amountReceived.value) <= 0) && (paymentTerms === 'cash')) {
                 Swal.fire({
                     icon: 'error',
-                    text: 'Amount can’t be zero when payment method is cash.',
+                    text: 'Amount cannot be zero when payment method is cash.',
                     title: 'Error'
                 }).then(() => {
                     amountReceived.focus()
+                });
+                return;
+            }
+        }
+
+        let pay_later_dates = [];
+        if (paymentTerms === 'pay later') {
+            const paylaterPeriod = document.getElementById('id_paylater_period');
+            const manualDateInput = document.getElementById('manual_paylater_date');
+            
+            if (paylaterPeriod.value) {
+                const paylaterDateInputs = document.querySelectorAll('[id^="paylater_date_"]');
+                pay_later_dates = Array.from(paylaterDateInputs).map(input => input.value);
+            } else if (manualDateInput.value) {
+                pay_later_dates = [manualDateInput.value];
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    text: 'Please either enter a period or select a manual due date',
+                    title: 'Error'
                 });
                 return;
             }
@@ -1176,10 +1236,12 @@
                 recourring: document.getElementById('id_reoccuring').checked,
                 paymentTerms: paymentTerms,
                 hold_status: holdStatus,
-                pay_later_date: document.getElementById('paylater_date').value
+                pay_later_dates: pay_later_dates
             }
         ];
 
+        console.log(pay_later_dates, 'pay_later_dates')
+    
         const url = el.dataset.name === 'qoutation' 
             ? "{% url 'finance:add_qoutation' %}" 
             : "{% url 'finance:create_invoice' %}";

@@ -828,8 +828,6 @@ def create_invoice(request):
             invoice_data = data['data'][0]  
             items_data = data['items']
             layby_dates = data.get('layby_dates')
-
-            # logger.info(f'Invoice data: {data}')
            
             # get currency
             currency = Currency.objects.get(id=invoice_data['currency'])
@@ -967,12 +965,25 @@ def create_invoice(request):
                 #create a paylater
                 if invoice.payment_terms == 'pay later':
                     if amount_due > 0:
-                        Paylater.objects.create(
+                        paylater_obj = Paylater.objects.create(
                             invoice=invoice,
                             amount_due=amount_due,
-                            due_date=parse_date(invoice_data['pay_later_date']),
-                            paid=False
+                            due_date=invoice_data['pay_later_dates'][0] if invoice_data['pay_later_dates'] else timezone.now().date(),
+                            payment_method=invoice_data['payment_method']
                         )
+                        
+                        # Create paylater dates for each interval
+                        if invoice_data['pay_later_dates']:
+                            logger.info(f'amount_due: {amount_due}')
+                            amount_per_interval = round(amount_due / len(invoice_data['pay_later_dates']), 2)
+                            logger.info(f'amount_per_interval: {amount_per_interval}')
+                            for date in invoice_data['pay_later_dates']:
+                                paylaterDates.objects.create(
+                                    paylater=paylater_obj,
+                                    due_date=date,
+                                    amount_due=amount_per_interval,
+                                    payment_method=invoice_data['payment_method']
+                                )
 
                 # #create transaction
                 Transaction.objects.create(
@@ -1150,6 +1161,45 @@ def held_invoice(items_data, invoice, request, vat_rate):
             action='Sale',
             invoice=invoice
         )
+        
+#credits
+
+@login_required
+def paylater(request):
+    paylaters = Paylater.objects.all().select_related('invoice', 'invoice__customer').values(
+        'id',
+        'invoice__invoice_number',
+        'invoice__customer__name',
+        'due_date',
+        'amount_due',
+        'amount_paid',
+        'paid'
+    )
+    return JsonResponse({'success':True, 'data':list(paylaters)})
+
+def paylater_details(request, paylater_id):
+    logger.info(f'paylater_id: {paylater_id}')
+    paylater = Paylater.objects.filter(id=paylater_id).select_related('invoice', 'invoice__customer').values(
+        'id',
+        'invoice__invoice_number',
+        'invoice__customer__name',
+        'due_date',
+        'amount_due',
+        'amount_paid',
+        'paid'
+    )
+    
+    paylater_dates = paylaterDates.objects.filter(paylater=paylater_id).values(
+        'id',
+        'due_date',
+        'amount_due',
+        'amount_paid',
+        'paid'
+    )
+    
+    logger.info(paylater_dates)
+    
+    return JsonResponse({'success':True, 'data':list(paylater)})
 
 @login_required
 def submit_invoice_data_zimra(request):
@@ -1529,86 +1579,6 @@ def layby_payment(request, layby_date_id):
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'{e}'})
     
-
-@login_required
-def paylater(request):
-    if request.method == 'GET':
-        paylater_data = Paylater.objects.all().select_related(
-            'invoice',
-            'branch'
-        ).values()
-        return JsonResponse(list(paylater_data), safe=False)
-    
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            amount_paid = data.get('amount_paid')
-            payment_method = data.get('payment_method')
-            invoice_id = data.get('invoice_id')
-            paylater_id = data.get('paylater_id')
-
-            paylater = Paylater.objects.get(id=paylater_id)
-            
-            invoice = Invoice.objects.get(id=invoice_id)
-            account = CustomerAccount.objects.get(customer=invoice.customer)
-            customer_account_balance = CustomerAccountBalances.objects.get(account=account, currency=invoice.currency)
-            
-            account_types = {
-                'cash': Account.AccountType.CASH,
-                'bank': Account.AccountType.BANK,
-                'ecocash': Account.AccountType.ECOCASH,
-            }
-            
-            customer_account_balance.balance -= amount_paid
-            
-            account_name = f"{request.user.branch} {invoice.currency.name} {'cash'.capitalize()} Account"
-            account = Account.objects.get(name=account_name, type=account_types['cash'])
-            account_balance = AccountBalance.objects.get(account=account, currency=invoice.currency, branch=request.user.branch)
-            account_balance.balance -= amount_paid
-            
-            amount_due = invoice.total_amount - invoice.amount_paid
-            
-            with transaction.atomic():
-                account_balance.save()
-                customer_account_balance.save()
-                
-                # Create a payment object
-                Payment.objects.create(
-                    invoice=invoice,
-                    amount_paid=amount_paid,
-                    amount_due=amount_due,
-                    payment_method=payment_method,
-                    user=request.user
-                )
-                
-                # Create a cash book object
-                Cashbook.objects.create(
-                    issue_date=timezone.now(),
-                    description=f'Payment ({invoice.invoice_number})',
-                    debit=False,
-                    credit=True,
-                    amount=amount_paid,
-                    currency=invoice.currency,
-                    branch=request.user.branch
-                )
-                
-                # Update invoice payment status if fully paid
-                if amount_paid >= amount_due:
-                    invoice.payment_status = Invoice.PaymentStatus.PAID
-                    invoice.save()
-
-                    paylater.amount_paid = amount_paid
-
-                    if paylater.amount_paid < paylater.amount_due:
-                        paylater.amount_due = abs(amount_due - amount_paid)
-
-                    paylater.paid = True
-                    paylater.save()
-                    
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
-    
-    return JsonResponse({'status': 'success'})
 
 @login_required
 def customer(request):
@@ -5679,8 +5649,10 @@ def create_invoice(request):
                 defaults={'balance': 0}
             )
             
-            amount_paid = update_latest_due(customer, Decimal(invoice_data['amount_paid']), request, invoice_data['paymentTerms'], customer_account_balance)
-
+            amount_paid = invoice_data['amount_paid']
+            
+            # amount_paid = update_latest_due(customer, Decimal(invoice_data['amount_paid']), request, invoice_data['paymentTerms'], customer_account_balance)
+            # to be revised a lot
             invoice_total_amount = Decimal(invoice_data['payable'])
 
             # prevent to record greater amount paid than the invoice amount 
@@ -5689,7 +5661,9 @@ def create_invoice(request):
             else:
                 amount_paid = amount_paid
 
-            amount_due = invoice_total_amount - amount_paid  
+            amount_due = invoice_total_amount - invoice_data['amount_paid'] 
+            
+            logger.info(f'amount_due: {amount_due}, amount_paid: {amount_paid}, invoice_total_amount: {invoice_total_amount}')
 
             cogs = COGS.objects.create(amount=Decimal(0))
             
@@ -5772,12 +5746,23 @@ def create_invoice(request):
                 #create a paylater
                 if invoice.payment_terms == 'pay later':
                     if amount_due > 0:
-                        Paylater.objects.create(
+                        paylater_obj = Paylater.objects.create(
                             invoice=invoice,
                             amount_due=amount_due,
-                            due_date=parse_date(invoice_data['pay_later_date']),
-                            paid=False
+                            due_date=invoice_data['pay_later_dates'][0] if invoice_data['pay_later_dates'] else timezone.now().date(),
+                            payment_method=invoice_data['payment_method']
                         )
+                        
+                        # Create paylater dates for each interval
+                        if invoice_data['pay_later_dates']:
+                            amount_per_interval = amount_due / len(invoice_data['pay_later_dates'])
+                            for date in invoice_data['pay_later_dates']:
+                                paylaterDates.objects.create(
+                                    paylater=paylater_obj,
+                                    due_date=date,
+                                    amount_due=amount_per_interval,
+                                    payment_method=invoice_data['payment_method']
+                                )
 
                 # #create transaction
                 Transaction.objects.create(
@@ -5810,8 +5795,6 @@ def create_invoice(request):
                             cash_up_status = False
                         )
                     )
-
-                    print(invoice_items)
                     
                     # cost of sales item
                     COGSItems.objects.get_or_create(
@@ -6335,86 +6318,128 @@ def layby_payment(request, layby_date_id):
         return JsonResponse({'success': False, 'message': f'{e}'})
     
 
-@login_required
-def paylater(request):
-    if request.method == 'GET':
-        paylater_data = Paylater.objects.all().select_related(
-            'invoice',
-            'branch'
-        ).values()
-        return JsonResponse(list(paylater_data), safe=False)
+# @login_required
+# def paylater(request):
+#     if request.method == 'GET':
+#         paylater_data = Paylater.objects.all().select_related(
+#             'invoice',
+#             'branch'
+#         ).values()
+#         return JsonResponse(list(paylater_data), safe=False)
     
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            amount_paid = data.get('amount_paid')
-            payment_method = data.get('payment_method')
-            invoice_id = data.get('invoice_id')
-            paylater_id = data.get('paylater_id')
+#     if request.method == 'POST':
+#         try:
+#             data = json.loads(request.body)
+#             amount_paid = data.get('amount_paid')
+#             payment_method = data.get('payment_method')
+#             invoice_id = data.get('invoice_id')
+#             paylater_id = data.get('paylater_id')
 
-            paylater = Paylater.objects.get(id=paylater_id)
+#             paylater = Paylater.objects.get(id=paylater_id)
             
-            invoice = Invoice.objects.get(id=invoice_id)
-            account = CustomerAccount.objects.get(customer=invoice.customer)
-            customer_account_balance = CustomerAccountBalances.objects.get(account=account, currency=invoice.currency)
+#             invoice = Invoice.objects.get(id=invoice_id)
+#             account = CustomerAccount.objects.get(customer=invoice.customer)
+#             customer_account_balance = CustomerAccountBalances.objects.get(account=account, currency=invoice.currency)
             
-            account_types = {
-                'cash': Account.AccountType.CASH,
-                'bank': Account.AccountType.BANK,
-                'ecocash': Account.AccountType.ECOCASH,
-            }
+#             account_types = {
+#                 'cash': Account.AccountType.CASH,
+#                 'bank': Account.AccountType.BANK,
+#                 'ecocash': Account.AccountType.ECOCASH,
+#             }
             
-            customer_account_balance.balance -= amount_paid
+#             customer_account_balance.balance -= amount_paid
             
-            account_name = f"{request.user.branch} {invoice.currency.name} {'cash'.capitalize()} Account"
-            account = Account.objects.get(name=account_name, type=account_types['cash'])
-            account_balance = AccountBalance.objects.get(account=account, currency=invoice.currency, branch=request.user.branch)
-            account_balance.balance -= amount_paid
+#             account_name = f"{request.user.branch} {invoice.currency.name} {'cash'.capitalize()} Account"
+#             account = Account.objects.get(name=account_name, type=account_types['cash'])
+#             account_balance = AccountBalance.objects.get(account=account, currency=invoice.currency, branch=request.user.branch)
+#             account_balance.balance -= amount_paid
             
-            amount_due = invoice.total_amount - invoice.amount_paid
+#             amount_due = invoice.total_amount - invoice.amount_paid
             
-            with transaction.atomic():
-                account_balance.save()
-                customer_account_balance.save()
+#             with transaction.atomic():
+#                 account_balance.save()
+#                 customer_account_balance.save()
                 
-                # Create a payment object
-                Payment.objects.create(
-                    invoice=invoice,
-                    amount_paid=amount_paid,
-                    amount_due=amount_due,
-                    payment_method=payment_method,
-                    user=request.user
-                )
+#                 # Create a payment object
+#                 Payment.objects.create(
+#                     invoice=invoice,
+#                     amount_paid=amount_paid,
+#                     amount_due=amount_due,
+#                     payment_method=payment_method,
+#                     user=request.user
+#                 )
                 
-                # Create a cash book object
-                Cashbook.objects.create(
-                    issue_date=timezone.now(),
-                    description=f'Payment ({invoice.invoice_number})',
-                    debit=False,
-                    credit=True,
-                    amount=amount_paid,
-                    currency=invoice.currency,
-                    branch=request.user.branch
-                )
+#                 # Create a cash book object
+#                 Cashbook.objects.create(
+#                     issue_date=timezone.now(),
+#                     description=f'Payment ({invoice.invoice_number})',
+#                     debit=False,
+#                     credit=True,
+#                     amount=amount_paid,
+#                     currency=invoice.currency,
+#                     branch=request.user.branch
+#                 )
                 
-                # Update invoice payment status if fully paid
-                if amount_paid >= amount_due:
-                    invoice.payment_status = Invoice.PaymentStatus.PAID
-                    invoice.save()
+#                 # Update invoice payment status if fully paid
+#                 if amount_paid >= amount_due:
+#                     invoice.payment_status = Invoice.PaymentStatus.PAID
+#                     invoice.save()
 
-                    paylater.amount_paid = amount_paid
+#                     # paylater.amount_paid = amount_paid
 
-                    if paylater.amount_paid < paylater.amount_due:
-                        paylater.amount_due = abs(amount_due - amount_paid)
+#                     # if paylater.amount_paid < paylater.amount_due:
+#                     #     paylater.amount_due = abs(amount_due - amount_paid)
 
-                    paylater.paid = True
-                    paylater.save()
+#                     # paylater.paid = True
+#                     # paylater.save()
                     
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
+#                     # create paylater dates
+#                     create_paylater(request, paylater_dates, invoice_id)
+#                     return JsonResponse({'status': 'success', 'message': 'Paylater payment successfully completed.'})
+#         except Exception as e:
+#             return JsonResponse({'status': 'error', 'message': str(e)})
     
-    return JsonResponse({'status': 'success'})
+#     return JsonResponse({'status': 'success'})
 
+# how many days before
+# remimder every how many days 5 days or 20
+# reminder days before 
+
+def create_paylater(request, paylater_dates, invoice_id):
+    invoice = Invoice.objects.get(id=invoice_id)
+    
+    paid = check_paylater_payments(invoice_id)
+    
+    if paid:
+        return JsonResponse({'status': 'success', 'message': 'Paylater already paid.'})
+    
+    paylater = Paylater.objects.create(
+        invoice=invoice,
+        amount_due=invoice.total_amount,
+        due_date=invoice.issue_date + timedelta(days=5),
+        payment_method=invoice.payment_method,
+        amount_paid = invoice.amount_paid,
+        paid = paid
+    )
+    
+    for paylater_date in paylater_dates:
+        paylater_date = paylaterDates.objects.create(
+            paylater=paylater,
+            amount_due=paylater_date.amount_due,
+            due_date=paylater_date.due_date,
+            payment_method=paylater_date.payment_method,
+        )
+    
+    return JsonResponse({'status': 'success', 'message': 'Paylater created successfully.'})
+
+def check_paylater_payments(paylater_id):
+    
+    paylater_dates = paylaterDates.objects.filter(paylater=paylater_id)
+    paylater_total = paylater_dates.aggregate(total_amount=Sum('amount_paid'))['total_amount']
+    paid = paylater_total == paylater.invoice.total_amount
+    
+    return paid
+        
 @login_required
 def customer(request):
     if request.method == 'GET':

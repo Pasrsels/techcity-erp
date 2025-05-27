@@ -157,7 +157,11 @@ urlpatterns = [
     path('submit_invoice_data/', submit_invoice_data_zimra, name='submit_invoice'),
     path('record_cashflow/', record_cashflow, name='record_cashflow'),
     path('record_income/', record_income, name='record_income'),
-     path('get-incomes/', get_incomes, name='get_incomes'),
+    path('get-incomes/', get_incomes, name='get_incomes'),
+    
+    # credits
+    path('paylater/', paylater, name='paylater'),
+    path('paylater/details/<int:paylater_id>/', paylater_details, name='paylater_details'),
 
     ########################################################################################################################
     # API end points
