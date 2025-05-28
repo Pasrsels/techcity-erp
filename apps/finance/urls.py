@@ -159,8 +159,10 @@ urlpatterns = [
     path('record_cashflow/', record_cashflow, name='record_cashflow'),
     path('record_income/', record_income, name='record_income'),
     path('get-incomes/', get_incomes, name='get_incomes'),
+    path('banking/', banking, name='banking'),
+    path('create_bank_account/', create_bank_account, name='create_bank_account'),
+    path('banking_data/', banking_data, name='banking_data'),
     
-    # credits
     path('paylater/', paylater, name='paylater'),
     path('paylater/details/<int:paylater_id>/', paylater_details, name='paylater_details'),
 

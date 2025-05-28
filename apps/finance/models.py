@@ -419,7 +419,7 @@ class laybyDates(models.Model):
         return f'{self.invoice}: {self.due_date}'
 
 class Paylater(models.Model):
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='paylater')
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='paylater', null=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     due_date = models.DateField()   
@@ -434,9 +434,10 @@ class Paylater(models.Model):
     def __str__(self):
         return f'{self.invoice}: {self.due_date}'
 class paylaterDates(models.Model):
-    paylater = models.ForeignKey(Paylater, on_delete=models.CASCADE)
+    paylater = models.ForeignKey(Paylater, on_delete=models.CASCADE, null=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    due_date = models.DateField(null=True)
     due_date = models.DateField(null=True)
     paid = models.BooleanField(default=False)
     payment_method = models.CharField(max_length=50, choices=[
@@ -855,3 +856,35 @@ class FinanceLog(models.Model):
 
     def __str__(self):
         return f"{self.get_type_display()} | {self.category} | ${self.amount}"
+    
+
+class LossAccount(models.Model):
+    name = models.CharField(max_length=100)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_transaction_date = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.name} - {self.balance}"
+
+
+class BankAccount(models.Model):
+    name = models.CharField(max_length=100)
+    branch = models.CharField(max_length=100)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.balance}"
+    
+class BankAccountTransaction(models.Model):
+    bank_account = models.ForeignKey(BankAccount, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    transaction_type = models.CharField(max_length=10)
+    description = models.TextField()
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.bank_account} - {self.amount} - {self.transaction_type} - {self.description} - {self.date}"
