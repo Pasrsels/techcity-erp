@@ -433,6 +433,7 @@ class Paylater(models.Model):
 
     def __str__(self):
         return f'{self.invoice}: {self.due_date}'
+    
 class paylaterDates(models.Model):
     paylater = models.ForeignKey(Paylater, on_delete=models.CASCADE, null=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
