@@ -340,6 +340,7 @@ class InvoiceItem(models.Model):
     vat_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0, editable=False)  
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
     cash_up_status = models.BooleanField(default=False, null=True)
+    credit_note_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0, editable=False, null=True)
     
     @property
     def subtotal(self):
@@ -486,6 +487,10 @@ class Cashbook(models.Model):
     director = models.BooleanField(default=False, null=True)
     cancelled = models.BooleanField(default=False, null=True)
     note = models.TextField(default='', null=True)
+    created_by = models.ForeignKey('users.user', on_delete=models.CASCADE, null=True)
+    updated_by = models.ForeignKey('users.user', on_delete=models.CASCADE, related_name='updated_cashbook')
+    updated_at = models.DateTimeField(auto_now=True)
+    # status = models.BooleanField(default=True, null=True)
 
     def __str__(self):
         return f'{self.issue_date}'
@@ -837,3 +842,67 @@ class FinanceLog(models.Model):
 
     def __str__(self):
         return f"{self.get_type_display()} | {self.category} | ${self.amount}"
+
+class CreditNote(models.Model):
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='credit_notes')
+    credit_note_number = models.CharField(max_length=50, unique=True)
+    issue_date = models.DateField(auto_now_add=True)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE)
+    reason = models.TextField()
+    status = models.CharField(max_length=20, choices=[
+        ('draft', 'Draft'),
+        ('issued', 'Issued'),
+        ('cancelled', 'Cancelled')
+    ], default='draft')
+    created_by = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Credit Note #{self.credit_note_number} for Invoice #{self.invoice.invoice_number}"
+
+    def save(self, *args, **kwargs):
+        if not self.credit_note_number:
+            last_credit_note = CreditNote.objects.filter(
+                branch=self.branch
+            ).order_by('-id').first()
+            
+            if last_credit_note:
+                last_number = int(last_credit_note.credit_note_number.split('-')[2])
+                new_number = last_number + 1
+            else:
+                new_number = 1
+                
+            self.credit_note_number = f"{self.branch.name}-CN-{new_number:06d}"
+            
+        super().save(*args, **kwargs)
+
+class CreditNoteItem(models.Model):
+    credit_note = models.ForeignKey(CreditNote, on_delete=models.CASCADE, related_name='items')
+    invoice_item = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    vat_rate = models.DecimalField(max_digits=5, decimal_places=2)
+    vat_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    is_return = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        base_amount = self.quantity * self.unit_price
+        
+        if not self.is_return and self.discount > 0:
+            base_amount = base_amount - self.discount
+        
+        if self.is_return:
+            self.vat_amount = base_amount * (self.vat_rate / 100)
+        else:
+            self.vat_amount = Decimal('0.00')
+        
+        self.total_amount = base_amount + self.vat_amount
+        
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.credit_note.credit_note_number} - {self.invoice_item.item.product.name}"

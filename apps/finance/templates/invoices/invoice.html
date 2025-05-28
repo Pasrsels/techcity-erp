@@ -194,13 +194,18 @@ input[type="checkbox"] {
                                 <span class='px-2'>
                                     {% if invoice.amount_due > 0 %}
                                     <span style='cursor:pointer;' data-id="{{ invoice.id }}" data-amount="{{ invoice.amount_due }}" id='id_update' class="text-dark">
-                                        <i class='bx bx-right-arrow bg-success'></i>
+                                        <i class='bx bx-right-arrow'></i>
                                     </span>
                                     {% else %}
                                     <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Invoice fully paid'>
                                         <i class='bx bx-bx-right-arrow bg-danger'></i>
                                     </span>
                                     {% endif %}
+                                </span>
+                                <span class='px-2'>
+                                    <span style='cursor:pointer;' data-id="{{ invoice.id }}" id='id_credit_note' class="text-dark hint--bottom" aria-label='Issue Credit Note'>
+                                        <i class='bx bx-credit-card'></i>
+                                    </span>
                                 </span>
                                 <span>
                                     {% if request.user.role == 'admin' %}
@@ -337,6 +342,62 @@ input[type="checkbox"] {
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="creditNoteModal" tabindex="-1" aria-labelledby="creditNoteModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="creditNoteModalLabel">Issue Credit Note</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="creditNoteForm">
+                            <div class="mb-3">
+                                <label for="reason" class="form-label">Reason for Credit Note</label>
+                                <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Available Qty</th>
+                                            <th>Unit Price</th>
+                                            <th>Credit Qty</th>
+                                            <th>Discount Amount</th>
+                                            <th>Return</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="creditNoteItems">
+                                        <!-- Items will be populated here -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="6" class="text-end"><strong>Subtotal:</strong></td>
+                                            <td id="creditNoteSubtotal">0.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="6" class="text-end"><strong>VAT:</strong></td>
+                                            <td id="creditNoteVAT">0.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="6" class="text-end"><strong>Total:</strong></td>
+                                            <td id="creditNoteTotal">0.00</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="submitCreditNote">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 </div>
 <script type="text/javascript">
 
@@ -364,6 +425,10 @@ input[type="checkbox"] {
     const loaderSpin = document.querySelector('#loader');
 
     const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+
+    const creditNoteModal = new bootstrap.Modal(document.getElementById('creditNoteModal'));
+    const creditNoteBtns = document.querySelectorAll('#id_credit_note');
+    let currentInvoiceId = null;
 
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const searchValue = this.value.toLowerCase();
@@ -413,11 +478,11 @@ input[type="checkbox"] {
     });
 
     
-    setTimeout(()=>{
+    {% comment %} setTimeout(()=>{
         loaderSpin.classList.add('hidden');
         loaderSpin.classList.remove('d-flex')
         // tableEl.classList.remove('hidden')
-    }, 300)
+    }, 300) {% endcomment %}
 
     // payment methods
     document.querySelectorAll('.pm').forEach(button => {
@@ -764,10 +829,6 @@ input[type="checkbox"] {
         const laybyTerms = document.getElementById('laybyTerms');
         const installmentTerms = document.getElementById('installmentTerms');
 
-        
-        //modal.classList.add("hidden");
-        //overlay.classList.add("hidden");
-
         Swal.fire({
             icon: 'success',
             title: 'success',
@@ -799,5 +860,176 @@ input[type="checkbox"] {
         }
         return cookieValue;
     }
+
+    creditNoteBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentInvoiceId = btn.dataset.id;
+            console.log('Credit note button clicked for invoice:', currentInvoiceId); // Debug log
+            fetchInvoiceItems(currentInvoiceId);
+        });
+    });
+
+    function fetchInvoiceItems(invoice_id) {
+        invoiceId = invoice_id;
+        fetch(`/finance/credit-note/items/${invoice_id}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const itemsContainer = document.getElementById('creditNoteItems');
+                    itemsContainer.innerHTML = '';
+                    
+                    data.items.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${item.name}</td>
+                            <td>${item.quantity}</td>
+                            <td>${item.unit_price}</td>
+                            <td>
+                                <input type="number" class="form-control credit-qty" 
+                                       min="0" max="${item.quantity}" value="0"
+                                       data-unit-price="${item.unit_price}"
+                                       data-vat-rate="${item.vat_rate}"
+                                       data-item-id="${item.id}"
+                                ">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control discount-amount" 
+                                       min="0" step="0.01" value="0"
+                                       placeholder="Enter discount amount">
+                            </td>
+                            <td>
+                                <div class="form-check">
+                                    <input class="form-check-input return-item" type="checkbox" value="">
+                                </div>
+                            </td>
+                            <td class="item-total">0.00</td>
+                        `;
+                        itemsContainer.appendChild(row);
+                    });
+                    
+                    document.querySelectorAll('.credit-qty, .discount-amount, .return-item').forEach(input => {
+                        input.addEventListener('change', updateTotals);
+                    });
+                    creditNoteModal.show();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Failed to fetch invoice items', 'error');
+            });
+    }
+
+    function updateTotals() {
+        let subtotal = 0;
+        let vat = 0;
+        
+        document.querySelectorAll('#creditNoteItems tr').forEach(row => {
+            const qtyInput = row.querySelector('.credit-qty');
+            const discountInput = row.querySelector('.discount-amount');
+            const returnCheckbox = row.querySelector('.return-item');
+            const unitPrice = parseFloat(qtyInput.dataset.unitPrice);
+            const vatRate = parseFloat(qtyInput.dataset.vatRate);
+            const quantity = parseInt(qtyInput.value) || 0;
+            const discount = parseFloat(discountInput.value) || 0;
+            const isReturn = returnCheckbox.checked;
+            
+            if (quantity > 0) {
+                let itemTotal = quantity * unitPrice;
+                
+                if (!isReturn && discount > 0) {
+                    itemTotal = itemTotal - discount;
+                }
+                
+                if (isReturn) {
+                    const vatAmount = itemTotal * (vatRate / 100);
+                    vat += vatAmount;
+                }
+                
+                subtotal += itemTotal;
+                row.querySelector('.item-total').textContent = itemTotal.toFixed(2);
+            } else {
+                row.querySelector('.item-total').textContent = '0.00';
+            }
+        });
+        
+        document.getElementById('creditNoteSubtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('creditNoteVAT').textContent = vat.toFixed(2);
+        document.getElementById('creditNoteTotal').textContent = (subtotal + vat).toFixed(2);
+    }
+
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('credit-qty') || 
+            e.target.classList.contains('discount-amount') || 
+            e.target.classList.contains('return-item')) {
+            updateTotals();
+        }
+    });
+
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('credit-qty') || 
+            e.target.classList.contains('discount-amount') || 
+            e.target.classList.contains('return-item')) {
+            updateTotals();
+        }
+    });
+
+    document.getElementById('submitCreditNote').addEventListener('click', function() {
+        const form = document.getElementById('creditNoteForm');
+        const reason = document.getElementById('reason').value;
+        
+        const items = [];
+
+        document.querySelectorAll('#creditNoteItems tr').forEach(row => {
+            const qtyInput = row.querySelector('.credit-qty');
+            const discountInput = row.querySelector('.discount-amount');
+            const returnCheckbox = row.querySelector('.return-item');
+            const quantity = parseInt(qtyInput.value) || 0;
+            
+            if (quantity > 0) {
+                items.push({
+                    item_id: qtyInput.dataset.itemId,
+                    quantity: quantity,
+                    unit_price: parseFloat(qtyInput.dataset.unitPrice),
+                    discount: parseFloat(discountInput.value) || 0,
+                    is_return: returnCheckbox.checked
+                });
+            }
+        });
+        
+        if (items.length === 0) {
+            Swal.fire('Error', 'Please select at least one item', 'error');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('invoice_id', invoiceId);
+        formData.append('reason', reason);
+        formData.append('items', JSON.stringify(items));
+
+        console.log(invoiceId, 'invoiceId');
+        
+        fetch('/finance/credit-note/create/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire('Success', 'Credit note issued successfully', 'success')
+                .then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire('Error', data.message || 'Failed to issue credit note', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Failed to issue credit note', 'error');
+        });
+    });
 </script>
 {% endblock content %}

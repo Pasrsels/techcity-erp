@@ -76,7 +76,13 @@ def receipt_signature(
     return ''.join(signature_components)
 
 
-def generate_receipt_signature(signature_string, private_key):
+def generate_credit_note_number(credit_note):
+    last_credit_note = CreditNote.objects.filter(branch=credit_note.branch).order_by('-id').first()
+    if last_credit_note:
+        last_number = int(last_credit_note.credit_note_number.split('-')[2])
+        new_number = last_number + 1
+        return f"{credit_note.branch.name}-CN-{new_number:06d}"
+    return f"{credit_note.branch.name}-CN-000001"
     
     logger.info(signature_string)
     
@@ -135,24 +141,29 @@ def generate_receipt_data(invoice, invoice_items, request):
 
         logger.info(f'Previous Invoice: {previous_invoice}')
 
-
+        total_tax_amount = 0
+        total_line_amount = 0
         for index, item in enumerate(invoice_items, start=1):
             line_total = float(item.unit_price) * item.quantity
             tax_amount = round(line_total / 1.15, 2)
             total_tax_amount += tax_amount
+            
+            if item.credit_note_amount > 0:
 
-            receipt_lines.append({
-                "receiptLineType": "Sale",
-                "receiptLineNo": index,
-                "receiptLineHSCode": "01010101",
-                "receiptLineName": item.item.name,
-                "receiptLinePrice": float(item.unit_price),
-                "receiptLineQuantity": item.quantity,
-                "receiptLineTotal": line_total,
-                "taxCode": "C",
-                "taxPercent": 15.00,
-                "taxID": 3
-            })
+                receipt_lines.append({
+                    "receiptLineType": "Sale",
+                    "receiptLineNo": index,
+                    "receiptLineHSCode": "01010101",
+                    "receiptLineName": item.item.name,
+                    "receiptLinePrice": -float(item.credit_note_amount),
+                    "taxCode": "C",
+                    "taxPercent": 15.00,
+                    "taxID": 3
+                })
+
+                tax_amount = round(item.credit_note_amount / 1.15, 2)
+                total_line_amount += item.credit_note_amount
+                total_tax_amount += tax_amount
 
         receipt_data = {
             "receiptType": "FiscalInvoice",
@@ -175,17 +186,17 @@ def generate_receipt_data(invoice, invoice_items, request):
                     "taxCode": "C",
                     "taxID": 3,
                     "taxPercent": 15.00,
-                    "taxAmount": round(float(invoice.vat), 2),
-                    "salesAmountWithTax": float(invoice.amount)
+                    "taxAmount": -float(total_tax_amount),
+                    "salesAmountWithTax": -(float(total_line_amount) - float(total_tax_amount))
                 }
             ],
             "receiptPayments": [
                 {
                     "moneyTypeCode": invoice.payment_terms,
-                    "paymentAmount": float(invoice.amount_paid)
+                    "paymentAmount": -(float(total_line_amount) - float(total_tax_amount))
                 }
             ],
-            "receiptTotal": float(invoice.amount),
+            "receiptTotal": -(float(total_line_amount) - float(total_tax_amount)),
             "receiptPrintForm": "Receipt48",
             "previousReceiptHash": "" if fiscal_day.receipt_count == 0 else previous_invoice.receipt_hash,
         }

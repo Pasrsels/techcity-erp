@@ -77,6 +77,7 @@ from dotenv import load_dotenv
 from apps.settings.models import OfflineReceipt, FiscalDay, FiscalCounter
 from utils.zimra import ZIMRA
 from utils.zimra_sig_hash import run
+from django.views.decorators.http import require_http_methods
  
 # load global zimra instance
 zimra = ZIMRA()
@@ -1595,7 +1596,139 @@ def customer_account(request, customer_id):
         'paid': invoices.filter(payment_status='Paid').count(),  
         'due': invoices.filter(payment_status='Partial').count(), 
     })
+    
+@login_required
+def create_credit_note(request):
+    from apps.pos.utils.process_credit_note import generate_receipt_data
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+        
+    try:
+        invoice_id = request.POST.get('invoice_id')
+        reason = request.POST.get('reason')
+        items_data = json.loads(request.POST.get('items', '[]'))
 
+        invoice = Invoice.objects.get(id=invoice_id)
+        invoice_items = InvoiceItem.objects.filter(invoice=invoice)
+        
+        logger.info(f'Items data: {items_data}')
+        
+        with transaction.atomic():  
+        
+            credit_note = CreditNote.objects.create(
+                invoice=invoice,
+                amount=0,  
+                currency=invoice.currency,
+                reason=reason,
+                created_by=request.user,
+                branch=request.user.branch,
+                status='issued'
+            )
+
+            total_amount = Decimal('0.00')
+            
+            for item_data in items_data:
+                invoice_item = InvoiceItem.objects.get(id=item_data['item_id'])
+                
+                credit_note_item = CreditNoteItem.objects.create(
+                    credit_note=credit_note,
+                    invoice_item=invoice_item,
+                    quantity=item_data['quantity'],
+                    unit_price=item_data['unit_price'],
+                    discount=item_data.get('discount', 0),
+                    vat_rate=invoice_item.vat_rate.rate,
+                    is_return=item_data.get('is_return', False)
+                )
+                
+                invoice_item.credit_not_amount = -item_data['discount']
+                
+                total_amount += credit_note_item.discount
+                
+            logger.info(f'Total amount: {total_amount}')
+            
+
+            credit_note.amount = total_amount
+            credit_note.save()
+
+            invoice.amount_due -= total_amount
+            invoice.save()
+
+            Cashbook.objects.create(
+                invoice=invoice,
+                description=f"Credit Note #{credit_note.credit_note_number} - {reason}",
+                credit=True,
+                amount=total_amount,
+                currency=invoice.currency,
+                branch=request.user.branch,
+                created_by=request.user,
+                updated_by=request.user
+            )
+            
+            signature_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
+            logger.info(f'Signature data: {signature_data}')
+            logger.info(f'Receipt data: {receipt_data}')
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Credit note issued successfully',
+                'credit_note_number': credit_note.credit_note_number
+            })
+
+    except Invoice.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Invoice not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
+
+@login_required
+def get_credit_note_items(request, invoice_id):
+    try:
+        invoice = Invoice.objects.get(id=invoice_id)
+        invoice_items = InvoiceItem.objects.filter(invoice=invoice)
+        
+        items_data = []
+        for item in invoice_items:
+            items_data.append({
+                'id': item.id,
+                'name': item.item.name,
+                'description': item.item.description,
+                'quantity': item.quantity,
+                'unit_price': float(item.unit_price),
+                'vat_rate': float(item.vat_rate.rate),
+                'total_amount': float(item.total_amount)
+            })
+            
+        logger.info(f'Items data: {items_data}')
+            
+        return JsonResponse({
+            'success': True,
+            'invoice': {
+                'id': invoice.id,
+                'invoice_number': invoice.invoice_number,
+                'currency': invoice.currency.code,
+                'currency_symbol': invoice.currency.symbol,
+                'total_amount': float(invoice.amount),
+                'amount_paid': float(invoice.amount_paid),
+                'amount_due': float(invoice.amount_due)
+            },
+            'items': items_data
+        })
+    except Invoice.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Invoice not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
 
 @login_required
 @transaction.atomic

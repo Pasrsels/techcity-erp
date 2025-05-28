@@ -32,6 +32,8 @@ urlpatterns = [
     path('invoice/preview/<int:invoice_id>/', invoice_preview, name='invoice_preview'),
     path('invoice/preview/json/<int:invoice_id>/', invoice_preview_json, name='invoice_preview_json'),
     path('held/invoices', held_invoice_view, name='held_invoice'),
+    path('credit-note/create/', create_credit_note, name='create_credit_note'),
+    path('credit-note/items/<int:invoice_id>/', get_credit_note_items, name='get_credit_note_items'),
     
     #customer
     path('customers/', customer, name='customers'),
