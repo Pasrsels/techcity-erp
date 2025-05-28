@@ -872,7 +872,10 @@ def create_invoice(request):
                 defaults={'balance': 0}
             )
             
-            amount_paid = update_latest_due(customer, Decimal(invoice_data['amount_paid']), request, invoice_data['paymentTerms'], customer_account_balance)
+            # amount_paid = update_latest_due(customer, Decimal(invoice_data['amount_paid']), request, invoice_data['paymentTerms'], customer_account_balance)
+            amount_paid = Decimal(invoice_data['amount_paid'])
+            
+            logger.info(f'Amount paid: {amount_paid}')
 
             invoice_total_amount = Decimal(invoice_data['payable'])
 
@@ -1183,9 +1186,11 @@ def paylater_details(request, paylater_id):
         'id',
         'invoice__invoice_number',
         'invoice__customer__name',
+        'invoice__amount',
         'due_date',
         'amount_due',
-        'amount_paid',
+        'invoice__amount_paid',
+        'invoice__currency__symbol',
         'paid'
     )
     
@@ -1197,9 +1202,7 @@ def paylater_details(request, paylater_id):
         'paid'
     )
     
-    logger.info(paylater_dates)
-    
-    return JsonResponse({'success':True, 'data':list(paylater)})
+    return JsonResponse({'success':True, 'data':list(paylater), 'payment_schedule':list(paylater_dates)})
 
 @login_required
 def submit_invoice_data_zimra(request):
@@ -2299,6 +2302,70 @@ def replace_item(request, item_id):
             return JsonResponse({'success': True})
         except (InvoiceItem.DoesNotExist, ValueError):
             return JsonResponse({'success': False, 'error': 'Invalid item'}, status=404)
+        
+@login_required
+def invoice_preview_data(request, invoice_id):
+    from django.core.serializers.json import DjangoJSONEncoder
+    try:
+        invoice = Invoice.objects.get(id=invoice_id)
+    except Invoice.DoesNotExist:
+        return JsonResponse({"error": "Invoice not found"}, status=404)
+
+    dates = {}
+    if invoice.payment_terms == 'layby':
+        dates = laybyDates.objects.filter(layby__invoice=invoice).values('due_date')
+
+    invoice_items = InvoiceItem.objects.filter(invoice=invoice).values(
+        'item__name',
+        'quantity',
+        'item__description',
+        'total_amount',
+        'unit_price'
+    )
+
+    invoice_dict = {}
+    invoice_dict['customer_name'] = invoice.customer.name
+    invoice_dict['customer_email'] = invoice.customer.email
+    invoice_dict['customer_cell'] = invoice.customer.phone_number
+    invoice_dict['customer_address'] = invoice.customer.address
+    invoice_dict['currency_symbol'] = invoice.currency.symbol
+    invoice_dict['amount_paid'] = invoice.amount_paid
+    invoice_dict['payment_terms'] = invoice.payment_terms
+    invoice_dict['amount'] = invoice.amount
+    invoice_dict['invoice_number'] = invoice.invoice_number
+    invoice_dict['receipt_hash'] = invoice.receipt_hash
+    invoice_dict['subtotal'] = invoice.subtotal
+    invoice_dict['vat'] = round(invoice.vat, 2)
+    invoice_dict['device_id'] = os.getenv("DEVICE_ID")
+    invoice_dict['device_serial_number'] = os.getenv("DEVICE_SERIAL_NUMBER")
+    invoice_dict['code'] =  invoice.code
+    invoice_dict['fiscal_day'] = invoice.fiscal_day
+
+    if invoice.branch:
+        invoice_dict['branch_name'] = invoice.branch.name
+        invoice_dict['branch_phone'] = invoice.branch.phonenumber
+        invoice_dict['branch_email'] = invoice.branch.email
+
+    invoice_dict['user_username'] = invoice.user.username
+    invoice_dict['receipt_signature'] = invoice.receiptServerSignature if invoice.receiptServerSignature else None
+
+    # Safely serialize qr_code
+    if invoice.qr_code and hasattr(invoice.qr_code, 'url'):
+        try:
+            invoice_dict['qr_code'] = request.build_absolute_uri(invoice.qr_code.url)
+            logger.info(invoice_dict['qr_code'])
+        except Exception as e:
+            invoice_dict['qr_code'] = None
+            logger.info(f"Error generating QR code URL: {e}")
+    else:
+        invoice_dict['qr_code'] = None
+
+    invoice_data = {
+        'invoice': invoice_dict,
+        'invoice_items': list(invoice_items),
+        'dates': list(dates)
+    }
+    return JsonResponse(invoice_data, safe=False)
         
 def invoice_preview_json(request, invoice_id):
     from django.core.serializers.json import DjangoJSONEncoder
@@ -10184,6 +10251,8 @@ def create_invoice(request):
             
             amount_paid = invoice_data['amount_paid']
             
+            logger.info(f'Amount paid: {amount_paid}')
+            
             # amount_paid = update_latest_due(customer, Decimal(invoice_data['amount_paid']), request, invoice_data['paymentTerms'], customer_account_balance)
             # to be revised a lot
             invoice_total_amount = Decimal(invoice_data['payable'])
@@ -10204,6 +10273,7 @@ def create_invoice(request):
             
             with transaction.atomic():
                 invoice = Invoice.objects.create(
+                    invoice_number=Invoice.generate_invoice_number(request.user.branch.name),
                     customer=customer,
                     issue_date=timezone.now(),
                     amount=invoice_total_amount,
@@ -10290,6 +10360,7 @@ def create_invoice(request):
                         if invoice_data['pay_later_dates']:
                             amount_per_interval = amount_due / len(invoice_data['pay_later_dates'])
                             for date in invoice_data['pay_later_dates']:
+                                logger.info(date)
                                 paylaterDates.objects.create(
                                     paylater=paylater_obj,
                                     due_date=date,

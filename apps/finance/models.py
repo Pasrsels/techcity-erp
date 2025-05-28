@@ -16,8 +16,6 @@ from django.db import transaction
 import os
 
 today = localdate()
-
-
 class PaymentMethod(models.Model):
     name = models.CharField(max_length=255)
     
@@ -318,8 +316,9 @@ class Invoice(models.Model):
     
     def generate_invoice_number(branch):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
+        
         if last_invoice:
-            return f"INV{branch}-{int(last_invoice.invoice_number ) + 1}"
+            return f"INV{branch}-{int(last_invoice.invoice_number.split('-')[1]) + 1}"
         else:
             new_invoice_number = 1
             return f"INV{branch}-{new_invoice_number}"  
@@ -423,8 +422,9 @@ class Paylater(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='paylater', null=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
-    due_date = models.DateField(null=True)   
-    paid = models.BooleanField(default=False, null=True)
+    due_date = models.DateField()   
+    paid = models.BooleanField(default=False)
+    branch = models.ForeignKey('company.branch', on_delete=models.CASCADE, null=True)
     payment_method = models.CharField(max_length=50, choices=[
         ('cash', 'Cash'),
         ('bank', 'Bank Transfer'),
@@ -438,6 +438,7 @@ class paylaterDates(models.Model):
     paylater = models.ForeignKey(Paylater, on_delete=models.CASCADE, null=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    due_date = models.DateField(null=True)
     due_date = models.DateField(null=True)
     paid = models.BooleanField(default=False)
     payment_method = models.CharField(max_length=50, choices=[
