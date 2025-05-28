@@ -1183,6 +1183,7 @@ def paylater_details(request, paylater_id):
         'id',
         'invoice__invoice_number',
         'invoice__customer__name',
+        'invoice__amount',
         'due_date',
         'amount_due',
         'amount_paid',
@@ -1198,8 +1199,8 @@ def paylater_details(request, paylater_id):
     )
     
     logger.info(paylater_dates)
-    
-    return JsonResponse({'success':True, 'data':list(paylater)})
+
+    return JsonResponse({'success':True, 'data':list(paylater), 'payment_schedule':list(paylater_dates)})
 
 @login_required
 def submit_invoice_data_zimra(request):
@@ -5757,6 +5758,7 @@ def create_invoice(request):
                         if invoice_data['pay_later_dates']:
                             amount_per_interval = amount_due / len(invoice_data['pay_later_dates'])
                             for date in invoice_data['pay_later_dates']:
+                                logger.info(date)
                                 paylaterDates.objects.create(
                                     paylater=paylater_obj,
                                     due_date=date,

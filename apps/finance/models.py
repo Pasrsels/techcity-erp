@@ -16,8 +16,6 @@ from django.db import transaction
 import os
 
 today = localdate()
-
-
 class PaymentMethod(models.Model):
     name = models.CharField(max_length=255)
     
@@ -425,6 +423,7 @@ class Paylater(models.Model):
     amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     due_date = models.DateField()   
     paid = models.BooleanField(default=False)
+    branch = models.ForeignKey('company.branch', on_delete=models.CASCADE, null=True)
     payment_method = models.CharField(max_length=50, choices=[
         ('cash', 'Cash'),
         ('bank', 'Bank Transfer'),
@@ -437,7 +436,7 @@ class paylaterDates(models.Model):
     paylater = models.ForeignKey(Paylater, on_delete=models.CASCADE)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
-    due_date = models.DateField(auto_now_add=True)
+    due_date = models.DateField(null=True)
     paid = models.BooleanField(default=False)
     payment_method = models.CharField(max_length=50, choices=[
         ('cash', 'Cash'),

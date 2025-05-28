@@ -499,27 +499,25 @@
             try {
                 const response = await fetch(`/finance/paylater/details/${id}/`);
                 const data = await response.json();
-                
-                // Update invoice information
-                document.getElementById('detail-invoice-number').textContent = data.invoice.invoice_number;
-                document.getElementById('detail-customer-name').textContent = data.invoice.customer_name;
-                document.getElementById('detail-total-amount').textContent = formatCurrency(data.invoice.amount);
-                document.getElementById('detail-amount-paid').textContent = formatCurrency(data.invoice.amount_paid);
-                document.getElementById('detail-amount-due').textContent = formatCurrency(data.invoice.amount_due);
+                console.log(data.data, 'data')
+                document.getElementById('detail-invoice-number').textContent = data.data[0].invoice__invoice_number;
+                document.getElementById('detail-customer-name').textContent = data.data[0].invoice__customer_name;
+                document.getElementById('detail-total-amount').textContent = formatCurrency(data.data[0].invoice__amount);
+                document.getElementById('detail-amount-paid').textContent = formatCurrency(data.data[0].amount_paid);
+                document.getElementById('detail-amount-due').textContent = formatCurrency(data.data[0].amount_due);
                 document.getElementById('detail-status').innerHTML = `
-                    <span class="badge ${data.invoice.paid ? 'bg-success' : 'bg-warning'}">
-                        ${data.invoice.paid ? 'Paid' : 'Pending'}
+                        <span class="badge ${data.data[0].paid ? 'bg-success' : 'bg-warning'}">
+                        ${data.data[0].paid ? 'Paid' : 'Pending'}
                     </span>
                 `;
-
-                // Populate payment schedule
+                console.log(data.payment_schedule, 'data')
                 const scheduleTable = document.querySelector('#paymentScheduleTable tbody');
                 scheduleTable.innerHTML = '';
                 data.payment_schedule.forEach(schedule => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${formatDate(schedule.due_date)}</td>
-                        <td>${formatCurrency(schedule.amount)}</td>
+                        <td>${formatCurrency(schedule.amount_paid)}</td>
                         <td>
                             <span class="badge ${schedule.paid ? 'bg-success' : 'bg-warning'}">
                                 ${schedule.paid ? 'Paid' : 'Pending'}
@@ -532,7 +530,7 @@
                 });
 
                 // Populate cash flow history
-                const cashFlowTable = document.querySelector('#cashFlowTable tbody');
+                {% comment %} const cashFlowTable = document.querySelector('#cashFlowTable tbody');
                 cashFlowTable.innerHTML = '';
                 data.cash_flow.forEach(flow => {
                     const row = document.createElement('tr');
@@ -548,7 +546,7 @@
                         <td>${flow.processed_by}</td>
                     `;
                     cashFlowTable.appendChild(row);
-                });
+                }); {% endcomment %}
 
                 // Show the modal
                 const modal = new bootstrap.Modal(document.getElementById('paylaterDetailsModal'));
