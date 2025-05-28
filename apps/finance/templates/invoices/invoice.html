@@ -138,18 +138,16 @@ input[type="checkbox"] {
             </div>
             {% for date_heading, invoices in grouped_invoices.items %}
                 <h4 class="mt-3">{{ date_heading }}</h4>
-                <table class="sticky-header table-stripped" id="invoiceTable">
+                <table class="sticky-header table-stripped w-100" id="invoiceTable">
                     <thead>
                         <tr>
                             <th>Customer Name &#9650;</th>
                             <th>Reference &#9650;</th>
                             <th>Date &#9650;</th>
                             <th>Products</th>
-                            <th>Status &#9650;</th>
                             <th>Grand Total &#9650;</th>
                             <th>Paid &#9650;</th>
                             <th>Due &#9650;</th>
-                            <th>Payment</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -160,31 +158,21 @@ input[type="checkbox"] {
                             <td><small>#{{ invoice.invoice_number }}</small></td>
                             <td><small>{{ invoice.issue_date|date:"d/m/y H:i" }}</small></td>
                             <td><small>{{ invoice.products_purchased }}</small></td>
-                            <td>
-                                <span class="status {% if invoice.payment_status == 'Paid' %}completed{% else %}pending{% endif %}">
-                                    {% if invoice.hold_status %}
-                                            Onhold
-                                        {% else %}
-                                        {% if invoice.payment_status == 'Paid' %}
-                                            Completed
-                                        {% else %}
-                                            Pending
-                                        {% endif %}
-                                    {% endif %}
-                                </span>
-                            </td>
                             <td><small>{{ invoice.currency.symbol }} {{ invoice.amount }}</small></td>
                             <td id="tr" data-invoiceID="{{ invoice.id }}"><small>{{ invoice.currency.symbol }} {{ invoice.amount_paid }}</small></td>
-                            <td><small>{{ invoice.currency.symbol }} {{ invoice.amount_due }}</small></td>
-                            <td>
-                                <button class="payment-btn">
+                            <td><small>
+                                <td>
                                     {% if invoice.amount_due > 0 %}
-                                    Due
+                                    <small class="text-danger">
+                                        {{ invoice.currency.symbol }} {{ invoice.amount_due }}
+                                    </small>
                                     {% else %}
-                                    Paid
+                                    <small class="text-success">
+                                        {{ invoice.currency.symbol }} {{ invoice.amount_paid }}
+                                    </small>
                                     {% endif %}
-                                </button>
-                            </td>
+                                </td>
+                            </small></td>
                             <td>
                                 <span class='px-2'>
                                     <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Preview Invoice' data-id="{{ invoice.id }}" id='previewBtn'>

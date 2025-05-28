@@ -76,6 +76,8 @@ urlpatterns = [
     path('mark_purchase_order_done/<int:po_id>/', mark_purchase_order_done, name='mark_done'),
     path('sales_price_list_pdf/<int:order_id>/', sales_price_list_pdf, name='sales_price_list'),
     path('confirm-purchase-order/<int:po_id>/', confirm_purchase_order_items, name='confirm_purchase_order'),
+    path('temporary_purchase_order/', temporary_purchase_order, name='temporary_purchase_order'),
+    path('get_temporary_purchase_order_items/<int:temp_po_id>/', get_temporary_purchase_order_items, name='get_temporary_purchase_order_items'),
 
     # delivery note
     path('download_delivery_note/<int:po_id>/', download_delivery_note, name='download_delivery_note'),
@@ -197,4 +199,6 @@ urlpatterns = [
 
     #Accessories
     path('api/v1/accessories_view/<int:product_id>/', AccessoriesView.as_view(), name='api_accessories_view'),
+
+    path('get-cart-items/', get_cart_items, name='get_cart_items'),
 ]

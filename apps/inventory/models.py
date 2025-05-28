@@ -24,6 +24,69 @@ class BatchCode(models.Model):
     def __str__(self) -> str:
         return self.code
     
+class TemporaryPurchaseOrder(models.Model):
+    name = models.CharField(max_length=255, null=True, unique=True)
+    date = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    order_number = models.CharField(max_length=100, unique=True, null=True)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True)
+    
+    def generate_order_number():
+        return f'PO-{uuid.uuid4().hex[:10].upper()}'
+    
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            self.order_number = self.generate_order_number()
+        super(TemporaryPurchaseOrder, self).save(*args, **kwargs)
+    def __str__(self):
+        self.name
+        
+class TemporaryPurchaseOrderItem(models.Model):
+    temporary_purchase_order = models.ForeignKey(TemporaryPurchaseOrder, on_delete=models.CASCADE)
+    product = models.ForeignKey('inventory.Inventory', on_delete=models.SET_NULL, null=True)
+    quantity = models.IntegerField(null=True)
+    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    actual_unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    received_quantity = models.IntegerField(default=0, null=True) 
+    received = models.BooleanField(default=False, null=True)
+    expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    dealer_expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    supplier = models.ForeignKey('inventory.Supplier', on_delete=models.CASCADE, null=True, blank=True, default=1)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    wholesale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+
+    class Meta:
+        models.Index(fields=['product', 'supplier'])
+
+    def receive_items(self, quantity):
+    
+        self.received_quantity += quantity
+        if self.received_quantity >= self.quantity:
+            self.received = True
+        self.save()
+        self.purchase_order.check_partial_status()  
+
+    def check_received(self):
+        """
+        Checks if all related items in the purchase order with the same order_number are received and updates the purchase order's "received" flag.
+        """
+        order_number = self.purchase_order.order_number
+        purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order__order_number=order_number)
+
+        all_received = True
+        for item in purchase_order_items:
+            if not item.received:
+                all_received = False
+            break
+
+        logger.info(f'Received status ={all_received}')
+
+        purchase_order = PurchaseOrder.objects.get(order_number=order_number)
+        purchase_order.received = all_received
+        purchase_order.save()
+    
+    def __str__(self) -> str:
+        return self.product.name
 
 class ProductCategory(models.Model):
     """Model for product categories."""

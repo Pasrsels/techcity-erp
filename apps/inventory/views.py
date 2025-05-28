@@ -103,6 +103,51 @@ def batch_code(request):
             return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
 
 @login_required
+def temporary_purchase_order(request):
+    logger.info('done')
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        name = data.get('name')
+        product_id = data.get('product_id')
+        quantity = data.get('quantity')
+        price = data.get('price')
+        supplier_id = data.get('supplier')
+        
+        temp_purchase_order = None
+        
+        with transaction.atomic():
+        
+            temp_purchase_order, created = TemporaryPurchaseOrder.objects.get_or_create(
+            name=name,
+                defaults={
+                    'name': name,
+                    'order_number': temp_purchase_order.generate_order_number(),
+                    'branch': request.user.branch,
+                    'user': request.user
+                }
+            )
+            if created:
+                temp_purchase_order.save()
+
+            TemporaryPurchaseOrderItem.objects.create(
+                temporary_purchase_order=temp_purchase_order,
+                product_id=product_id,
+                quantity=quantity,
+                price=price,
+                supplier_id=supplier_id, 
+                unit_cost=price
+            )
+        
+        return JsonResponse({'success':True, 'message':'Temporary purchase order created successfully'})
+
+@login_required
+def get_temporary_purchase_order_items(request, temp_po_id):
+    if request.method == 'GET':
+        temp_purchase_order_items = TemporaryPurchaseOrderItem.objects.filter(temporary_purchase_order=temp_po_id)
+        return JsonResponse({'success':True, 'message':'Temporary purchase order items fetched successfully', 'temp_purchase_order_items':list(temp_purchase_order_items)})
+
+
+@login_required
 def product_list(request):
     """ for the pos """
     queryset = Inventory.objects.filter(branch=request.user.branch, status=True).select_related('branch')
@@ -4183,3 +4228,30 @@ def create_write_off(request):
             return JsonResponse({'success': True, 'message': 'Write-off item created successfully'}, status=201)
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+@login_required
+def get_cart_items(request):
+    try:
+        items = TemporaryPurchaseOrderItem.objects.filter(
+            temporary_purchase_order__user=request.user,
+            temporary_purchase_order__branch=request.user.branch
+        ).select_related('product', 'supplier')
+
+        items_data = [{
+            'id': item.id,
+            'product': item.product.name,
+            'product_id': item.product.id,
+            'supplier': item.supplier.name,
+            'quantity': item.quantity,
+            'price': float(item.price) if item.price else 0.0
+        } for item in items]
+
+        return JsonResponse({
+            'success': True,
+            'items': items_data
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)

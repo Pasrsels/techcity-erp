@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from apps.finance.models import Invoice  
-from company.models import Branch  # Adjust import path as needed
+from apps.company.models import Branch  # Adjust import path as needed
 
 
 class Command(BaseCommand):
