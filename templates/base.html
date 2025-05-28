@@ -355,6 +355,52 @@
         </div>
     </div>
 
+    <!-- Add Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentModalLabel">Process Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="paymentForm">
+                        <div class="mb-3">
+                            <label for="paymentAmount" class="form-label">Amount Due</label>
+                            <input type="text" class="form-control" id="paymentAmount" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="paymentMethod" class="form-label">Payment Method</label>
+                            <select class="form-select" id="paymentMethod" required>
+                                <option value="">Select Payment Method</option>
+                                <option value="cash">Cash</option>
+                                <option value="card">Card</option>
+                                <option value="bank">Bank Transfer</option>
+                                <option value="ecocash">EcoCash</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="amountPaid" class="form-label">Amount to Pay</label>
+                            <input type="number" class="form-control" id="amountPaid" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="paymentDate" class="form-label">Payment Date</label>
+                            <input type="date" class="form-control" id="paymentDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="paymentNotes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="paymentNotes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="processPayment()">Process Payment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>    
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -458,7 +504,7 @@
             const tbody = document.querySelector('#paylatersTable tbody');
             tbody.innerHTML = '';
 
-            console.log(data, 'data')
+            console.log(data, 'data data')
             
             data.data.forEach(paylater => {
                 const row = document.createElement('tr');
@@ -467,16 +513,23 @@
                     <td>${paylater.invoice__customer__name}</td>
                     <td>${formatDate(paylater.due_date)}</td>
                     <td>${formatCurrency(paylater.amount_due)}</td>
-                    <td>${formatCurrency(paylater.amount_paid)}</td>
+                    <td>${formatCurrency(paylater.invoice__amount_paid)}</td>
                     <td>
                         <span class="badge ${paylater.paid ? 'bg-success' : 'bg-warning'}">
                             ${paylater.paid ? 'Paid' : 'Pending'}
                         </span>
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-primary" onclick="viewPaylaterDetails(${paylater.id})">
-                            View Details
-                        </button>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-primary me-1" onclick="viewPaylaterDetails(${paylater.id})">
+                                View Details
+                            </button>
+                            ${!paylater.paid ? `
+                                <button class="btn btn-sm btn-success" onclick="showPaymentModal('${paylater.id}', ${paylater.amount_due})">
+                                    Pay Now
+                                </button>
+                            ` : ''}
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -501,9 +554,9 @@
                 const data = await response.json();
                 console.log(data.data, 'data')
                 document.getElementById('detail-invoice-number').textContent = data.data[0].invoice__invoice_number;
-                document.getElementById('detail-customer-name').textContent = data.data[0].invoice__customer_name;
+                document.getElementById('detail-customer-name').textContent = data.data[0].invoice__customer__name;
                 document.getElementById('detail-total-amount').textContent = formatCurrency(data.data[0].invoice__amount);
-                document.getElementById('detail-amount-paid').textContent = formatCurrency(data.data[0].amount_paid);
+                document.getElementById('detail-amount-paid').textContent = formatCurrency(data.data[0].invoice__amount_paid);
                 document.getElementById('detail-amount-due').textContent = formatCurrency(data.data[0].amount_due);
                 document.getElementById('detail-status').innerHTML = `
                         <span class="badge ${data.data[0].paid ? 'bg-success' : 'bg-warning'}">
@@ -565,11 +618,9 @@
             const printWindow = window.open('', '_blank');
             const modalContent = document.querySelector('#paylaterDetailsModal .modal-content').cloneNode(true);
             
-            // Remove buttons from print view
             const footer = modalContent.querySelector('.modal-footer');
             footer.remove();
-            
-            // Add print-specific styles
+
             const styles = `
                 <style>
                     body { font-family: Arial, sans-serif; }
@@ -648,6 +699,142 @@
             
             setInterval(fetchAndPopulateTables, 300000);
         });
+
+        // Add Payment Modal
+        const paymentModalHtml = `
+        <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="paymentModalLabel">Process Payment</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="paymentForm">
+                            <div class="mb-3">
+                                <label for="paymentAmount" class="form-label">Amount Due</label>
+                                <input type="text" class="form-control" id="paymentAmount" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="paymentMethod" class="form-label">Payment Method</label>
+                                <select class="form-select" id="paymentMethod" required>
+                                    <option value="">Select Payment Method</option>
+                                    <option value="cash">Cash</option>
+                                    <option value="card">Card</option>
+                                    <option value="bank">Bank Transfer</option>
+                                    <option value="ecocash">EcoCash</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="amountPaid" class="form-label">Amount to Pay</label>
+                                <input type="number" class="form-control" id="amountPaid" step="0.01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="paymentDate" class="form-label">Payment Date</label>
+                                <input type="date" class="form-control" id="paymentDate" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="paymentNotes" class="form-label">Notes</label>
+                                <textarea class="form-control" id="paymentNotes" rows="2"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="processPayment()">Process Payment</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+        document.body.insertAdjacentHTML('beforeend', paymentModalHtml);
+
+        let currentPaylaterId = null;
+
+        function showPaymentModal(paylaterId, amountDue) {
+            currentPaylaterId = paylaterId;
+            document.getElementById('paymentAmount').value = formatCurrency(amountDue);
+            document.getElementById('amountPaid').value = amountDue;
+            document.getElementById('paymentDate').valueAsDate = new Date();
+            
+            const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            paymentModal.show();
+        }
+
+        function processPayment() {
+            const amountPaid = document.getElementById('amountPaid').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const paymentDate = document.getElementById('paymentDate').value;
+            const paymentNotes = document.getElementById('paymentNotes').value;
+            
+            if (!paymentMethod) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Please select a payment method',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            if (!amountPaid || amountPaid <= 0) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Please enter a valid amount',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            Swal.fire({
+                title: 'Processing Payment',
+                text: 'Please wait...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            fetch('/finance/process-paylater-payment/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    paylater_id: currentPaylaterId,
+                    amount_paid: amountPaid,
+                    payment_method: paymentMethod,
+                    payment_date: paymentDate,
+                    notes: paymentNotes
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Payment processed successfully',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        const paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+                        paymentModal.hide();
+                        fetchAndPopulateTables();
+                    });
+                } else {
+                    throw new Error(data.message || 'Failed to process payment');
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message || 'Failed to process payment',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            });
+        }
     </script>
 </body>
 </html>

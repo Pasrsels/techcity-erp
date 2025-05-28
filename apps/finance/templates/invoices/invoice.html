@@ -186,12 +186,12 @@ input[type="checkbox"] {
                                 </button>
                             </td>
                             <td>
-                                <span>
-                                    <a href="{% url 'finance:invoice_preview' invoice.id %}" class='text-dark'>
-                                        <i class='bx bx-show'></i>
-                                    </a>
-                                </span>
                                 <span class='px-2'>
+                                    <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Preview Invoice' data-id="{{ invoice.id }}" id='previewBtn'>
+                                        <i class='bx bx-file'></i>
+                                    </span>
+                                </span>
+                                <span>
                                     {% if invoice.amount_due > 0 %}
                                     <span style='cursor:pointer;' data-id="{{ invoice.id }}" data-amount="{{ invoice.amount_due }}" id='id_update' class="text-dark">
                                         <i class='bx bx-right-arrow bg-success'></i>
@@ -438,6 +438,89 @@ input[type="checkbox"] {
     {% endfor %}
 {% endfor %}
 
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">Invoice Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="invoice-preview">
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <h4>Invoice #<span id="preview-invoice-number"></span></h4>
+                            <p class="mb-1">Date: <span id="preview-date"></span></p>
+                            <p class="mb-1">Customer: <span id="preview-customer"></span></p>
+                            <p class="mb-1">Email: <span id="preview-email"></span></p>
+                            <p class="mb-1">Phone: <span id="preview-phone"></span></p>
+                            <p class="mb-1">Address: <span id="preview-address"></span></p>
+                        </div>
+                        <div class="col-6 text-end">
+                            <h4>TechCity</h4>
+                            <p class="mb-1">Branch: <span id="preview-branch"></span></p>
+                            <p class="mb-1">Status: <span id="preview-status"></span></p>
+                            <p class="mb-1">Payment Terms: <span id="preview-payment-terms"></span></p>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Description</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="preview-items">
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+                                    <td id="preview-subtotal"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>VAT:</strong></td>
+                                    <td id="preview-vat"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                                    <td id="preview-total"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Amount Paid:</strong></td>
+                                    <td id="preview-paid"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Amount Due:</strong></td>
+                                    <td id="preview-due"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="d-flex justify-content-between w-100">
+                    <div>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary me-2" onclick="printInvoice()">
+                            <i class='bx bx-printer'></i> Print
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="sendInvoiceEmail()">
+                            <i class='bx bx-envelope'></i> Send Email
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="text/javascript">
 
     let invoiceId = '';
@@ -464,6 +547,9 @@ input[type="checkbox"] {
     const loaderSpin = document.querySelector('#loader');
 
     const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+
+    const previewBtn = document.querySelectorAll('#previewBtn');
+    const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
 
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const searchValue = this.value.toLowerCase();
@@ -512,12 +598,12 @@ input[type="checkbox"] {
         });
     });
 
-    
+{% comment %}     
     setTimeout(()=>{
         loaderSpin.classList.add('hidden');
         loaderSpin.classList.remove('d-flex')
         // tableEl.classList.remove('hidden')
-    }, 300)
+    }, 300) {% endcomment %}
 
     // payment methods
     document.querySelectorAll('.pm').forEach(button => {
@@ -958,6 +1044,156 @@ input[type="checkbox"] {
                 });
             }
         });
+    }
+
+    previewBtn.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const invoiceId = btn.dataset.id;
+            fetchInvoicePreview(invoiceId);
+        });
+    });
+
+    async function fetchInvoicePreview(invoiceId) {
+        currentInvoiceId = invoiceId; // Store the current invoice ID
+        try {
+            const response = await fetch(`/finance/invoice/preview/data/${invoiceId}/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+            const { invoice, invoice_items: invoiceItems } = data;
+            
+            // Update modal content
+            document.getElementById('preview-invoice-number').textContent = invoice.invoice_number;
+            document.getElementById('preview-date').textContent = new Date(invoice.issue_date).toLocaleDateString();
+            document.getElementById('preview-customer').textContent = invoice.customer_name;
+            document.getElementById('preview-email').textContent = invoice.customer_email;
+            document.getElementById('preview-phone').textContent = invoice.customer_cell;
+            document.getElementById('preview-address').textContent = invoice.customer_address;
+            document.getElementById('preview-branch').textContent = invoice.branch_name;
+            document.getElementById('preview-status').textContent = invoice.payment_status;
+            document.getElementById('preview-payment-terms').textContent = invoice.payment_terms;
+
+            // Update items table
+            const itemsTable = document.getElementById('preview-items');
+            itemsTable.innerHTML = '';
+            invoiceItems.forEach(item => {
+                const row = itemsTable.insertRow();
+                row.insertCell().textContent = item.item__product__name;
+                row.insertCell().textContent = item.item__product__description;
+                row.insertCell().textContent = item.quantity;
+                row.insertCell().textContent = `${invoice.currency_symbol} ${item.unit_price}`;
+                row.insertCell().textContent = `${invoice.currency_symbol} ${item.total_amount}`;
+            });
+
+            // Update totals
+            document.getElementById('preview-subtotal').textContent = `${invoice.currency_symbol} ${invoice.subtotal}`;
+            document.getElementById('preview-vat').textContent = `${invoice.currency_symbol} ${invoice.vat}`;
+            document.getElementById('preview-total').textContent = `${invoice.currency_symbol} ${invoice.amount}`;
+            document.getElementById('preview-paid').textContent = `${invoice.currency_symbol} ${invoice.amount_paid}`;
+            document.getElementById('preview-due').textContent = `${invoice.currency_symbol} ${invoice.amount_due}`;
+
+            previewModal.show();
+        } catch (error) {
+            console.error('Error fetching invoice preview:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: 'Failed to load invoice preview',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    }
+
+    async function sendInvoiceEmail() {
+        const email = document.getElementById('preview-email').textContent;
+        const invoiceNumber = document.getElementById('preview-invoice-number').textContent;
+        
+        if (!email) {
+            Swal.fire({
+                title: 'Error!',
+                text: 'No email address found for this customer',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+
+        try {
+            const response = await fetch(`/finance/send-invoice-email/${currentInvoiceId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to send email');
+            }
+
+            const data = await response.json();
+            
+            if (data.success) {
+                Swal.fire({
+                    title: 'Success!',
+                    text: `Invoice #${invoiceNumber} has been sent to ${email}`,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                throw new Error(data.message || 'Failed to send email');
+            }
+        } catch (error) {
+            Swal.fire({
+                title: 'Error!',
+                text: error.message || 'Failed to send email',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    }
+
+    function printInvoice() {
+        const printContent = document.querySelector('.invoice-preview').innerHTML;
+        const originalContent = document.body.innerHTML;
+        
+        // Create a print-friendly version
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Invoice Preview</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <style>
+                        body { padding: 20px; }
+                        .table { width: 100%; margin-bottom: 1rem; }
+                        .table th, .table td { padding: 0.75rem; border: 1px solid #dee2e6; }
+                        .text-end { text-align: right; }
+                        @media print {
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        ${printContent}
+                    </div>
+                    <div class="no-print text-center mt-3">
+                        <button onclick="window.print()" class="btn btn-primary">Print</button>
+                    </div>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
     }
 </script>
 {% endblock content %}

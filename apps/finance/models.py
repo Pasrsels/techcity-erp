@@ -316,8 +316,9 @@ class Invoice(models.Model):
     
     def generate_invoice_number(branch):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
+        
         if last_invoice:
-            return f"INV{branch}-{int(last_invoice.invoice_number ) + 1}"
+            return f"INV{branch}-{int(last_invoice.invoice_number.split('-')[1]) + 1}"
         else:
             new_invoice_number = 1
             return f"INV{branch}-{new_invoice_number}"  
