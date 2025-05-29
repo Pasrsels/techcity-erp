@@ -696,9 +696,6 @@
         Swal.showLoading();
         const cartData = localStorage.getItem('cart');
 
-        console.info(cartData, 'cart data');
-        console.info(JSON.stringify(cartData), 'cart data');
-
         if (!cartData) {
           Swal.close();
           return;
@@ -1355,10 +1352,9 @@
       prodElement.appendChild(option);
     });
 
-
+    // Automatically select the newly added product
     if (newProductId) {
       prodElement.value = newProductId;
-      
     }
 
   }
@@ -1463,51 +1459,61 @@
   }
 
   function updateCartDisplay() {
-    fetch('/inventory/get-cart-items/')
-        .then(response => response.json())
-        .then(data => {
-            const cartTable = document.getElementById('cartTable');
-            const tbody = cartTable.querySelector('tbody');
-            tbody.innerHTML = '';
+    return new Promise((resolve, reject) => {
+      try {
+        const cartItemsList = document.getElementById("cart-items");
+        cartItemsList.innerHTML = "";
+        let items = JSON.parse(localStorage.getItem('cart'))
 
-            data.items.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.product}</td>
-                    <td>${item.supplier}</td>
-                    <td>
-                        <input type="number" value="${item.quantity}" 
-                               onchange="updateItemQuantity(${item.id}, this.value)" 
-                               min="1" class="form-control">
-                    </td>
-                    <td>
-                        <input type="number" value="${item.price}" 
-                               onchange="updateItemPrice(${item.id}, this.value)" 
-                               min="0" step="0.01" class="form-control">
-                    </td>
-                    <td>${(item.quantity * item.price).toFixed(2)}</td>
-                    <td>
-                        <button onclick="removeItem(${item.id})" class="btn btn-danger btn-sm">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-
-            calculateTotals();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Toastify({
-                text: "An error occurred while updating the cart display",
-                duration: 3000,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "red",
-            }).showToast();
+        items.reverse().forEach((item, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+              <td><small>${item.count}</small></td>
+              <td>
+                <small>
+                    <button class="btn" data-id=${item.id} onclick="removeItem(this);">
+                        <i class='bx bx-trash-alt'></i>
+                    </button>
+                </small>
+              </td>
+              <td>
+                <small>
+                  ${item.product}
+                </small>
+              </td>
+              <td>
+                <small>
+                  ${item.supplierName}
+                </small>
+              </td>
+              <td>
+                <small>
+                  <input type="number" class="form-control form-control-sm" id="quantity-${item.id}" value="${item.quantity}" min="1" 
+                      onchange="updateItemQuantity('${item.id}', this.value)">
+                </small>
+              </td>
+              <td>
+                <small>
+                  <input type="number" class="form-control form-control-sm" id="price-${item.id}" value="${item.price}" min="0" step="0.01" 
+                      onchange="updateItemPrice('${item.id}', this.value)">
+                </small>
+              </td>
+              <td class='text-center' id="total-${item.id}">
+                <small>
+                  ${(item.quantity * item.price).toFixed(2)}
+                  </small>
+              </td>
+          `;
+          cartItemsList.appendChild(row);
         });
-}
+
+        calculateTotals();
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
 
   function updateItemPrice(id, newPrice) {
     const item = cart.find((item) => item.id === id);
@@ -1515,32 +1521,6 @@
       item.price = parseFloat(newPrice);
       updateItemTotal(item);
       calculateTotals();
-      
-      // Update in database
-      fetch(`{% url 'inventory:temporary_purchase_order' %}${id}/`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCookie("csrftoken"),
-        },
-        body: JSON.stringify({ price: newPrice }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (!data.success) {
-          Toastify({
-            text: "Failed to update price in database",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "#dc3545",
-            stopOnFocus: true,
-          }).showToast();
-        }
-      })
-      .catch(error => {
-        console.error('Error updating price:', error);
-      });
     }
   }
 
@@ -1550,33 +1530,9 @@
       item.quantity = Number(newQuantity);
       updateItemTotal(item);
       calculateTotals();
-      
-      // Update in database
-      fetch(`{% url 'inventory:temporary_purchase_order' %}${id}/`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCookie("csrftoken"),
-        },
-        body: JSON.stringify({ quantity: newQuantity }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (!data.success) {
-          Toastify({
-            text: "Failed to update quantity in database",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "#dc3545",
-            stopOnFocus: true,
-          }).showToast();
-        }
-      })
-      .catch(error => {
-        console.error('Error updating quantity:', error);
-      });
     }
+    console.info('updated cart', cart)
+    localStorage.setItem('cart', cart)
   }
 
   function updateItemTotal(item) {
@@ -1627,236 +1583,114 @@
         supplierName: supplierName,
         supplier: supplier.value,
       };
-      
-      // Add to database
-      addTemporaryPurchaseOrderItem(newTransfer);
+      cart.push(newTransfer);
     }
-}
 
-  function addTemporaryPurchaseOrderItem(item) {
-    fetch('/inventory/temporary-purchase-order/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({
-            name: item.product,
-            product_id: item.product_id,
-            quantity: item.quantity,
-            price: item.price,
-            supplier: item.supplier
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            updateCartDisplay();
-            Toastify({
-                text: "Purchase order item saved successfully",
-                duration: 3000,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "green",
-            }).showToast();
-        } else {
-            Toastify({
-                text: data.message || "Failed to save purchase order item",
-                duration: 3000,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "red",
-            }).showToast();
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Toastify({
-            text: "An error occurred while saving the item",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "red",
-        }).showToast();
-    });
-}
+    localStorage.setItem('cart', JSON.stringify(cart));
 
-  function updateItemPrice(itemId, newPrice) {
-    fetch(`/inventory/update-purchase-order-item/${itemId}/`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({
-            price: newPrice
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            updateCartDisplay();
-            calculateTotals();
-        } else {
-            Toastify({
-                text: data.message || "Failed to update price",
-                duration: 3000,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "red",
-            }).showToast();
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Toastify({
-            text: "An error occurred while updating the price",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "red",
-        }).showToast();
-    });
-}
+    updateCartDisplay();
+    calculateTotals();
+    // isCartEmpty();
 
-  function updateItemQuantity(itemId, newQuantity) {
-    fetch(`/inventory/update-purchase-order-item/${itemId}/`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({
-            quantity: newQuantity
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            updateCartDisplay();
-            calculateTotals();
-        } else {
-            Toastify({
-                text: data.message || "Failed to update quantity",
-                duration: 3000,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "red",
-            }).showToast();
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Toastify({
-            text: "An error occurred while updating the quantity",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "red",
-        }).showToast();
+    Swal.fire({
+      icon: 'success',
+      title: 'Item Added',
+      text: 'The item was successfully added to your cart!',
+      timer: 1500,
+      showConfirmButton: false
     });
-}
+  }
 
-  function removeItem(itemId) {
-    fetch(`/inventory/delete-purchase-order-item/${itemId}/`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            updateCartDisplay();
-            calculateTotals();
-            Toastify({
-                text: "Item removed successfully",
-                duration: 3000,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "green",
-            }).showToast();
-        } else {
-            Toastify({
-                text: data.message || "Failed to remove item",
-                duration: 3000,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "red",
-            }).showToast();
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Toastify({
-            text: "An error occurred while removing the item",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "red",
-        }).showToast();
-    });
-}
+  const removeItem = (el) => {
+    const id = el.dataset.id
+    cart = cart.filter((item) => item.id !== id);
+    localStorage.setItem('cart', JSON.stringify(cart))
+    updateCartDisplay();
+    calculateTotals();
+  }
 
   function processCart() {
-    const purchaseOrderData = {
-        batch: document.getElementById('batch').value,
-        delivery_date: document.getElementById('delivery_date').value,
-        status: document.getElementById('status').value,
-        notes: document.getElementById('notes').value,
-        total_cost: document.getElementById('total').textContent,
-        discount: document.getElementById('discount').value || 0,
-        tax_amount: document.getElementById('tax').value || 0,
-        other_amount: document.getElementById('other_amount').value || 0,
-        payment_method: document.getElementById('payment_method').value
-    };
+    suppliers_payment_data = []
 
-    fetch('/inventory/create-purchase-order/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({
-            purchase_order: purchaseOrderData,
-            po_items: cartItems,
-            expenses: expenses,
-            cost_allocations: costAllocations
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            Toastify({
-                text: "Purchase order created successfully",
-                duration: 3000,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "green",
-            }).showToast();
-            window.location.href = '/inventory/purchase-orders/';
-        } else {
-            Toastify({
-                text: data.message || "Failed to create purchase order",
-                duration: 3000,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "red",
-            }).showToast();
+    for (let i = 1; i <= count; i++) {
+      suppliers_payment_data.push(
+        {
+          'id': document.getElementById(`other_form_supplier_${count}`).value,
+          'payment_method': document.getElementById(`other_form_pmethod_${count}`).value,
+          'amount': parseFloat(document.getElementById(`other_form_amount_${count}`).value),
+          'currency': document.getElementById(`other_form_currency_${count}`).value
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Toastify({
-            text: "An error occurred while creating the purchase order",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "red",
-        }).showToast();
+      )
+    }
+
+    console.info('supplier paymetnt data: ', suppliers_payment_data)
+
+    const data = {
+      'po_items': cart,
+      'supplier_data': suppliers_payment_data,
+      'hold': holdPurchaseOrder,
+      'expenses': expensesData,
+      'overide': overide,
+      'cost_allocations': formData,
+      'purchase_order': {
+        'batch': document.getElementById('id_batch').value.trim(),
+        'payment_method': document.getElementById('id_payment_method').value,
+        'supplier': document.getElementById('id_supplier').value,
+        'delivery_date': document.getElementById('id_delivery_date').value,
+        'total_cost': finalTotal,
+        'status': document.getElementById('id_status').value,
+        'notes': document.getElementById('id_notes').value.trim(),
+        'discount': parseFloat(document.getElementById('id_discount').value) || 0,
+        'tax_amount': parseFloat(document.getElementById('tax').textContent) || 0,
+        'other_amount': parseFloat(document.getElementById('id_other').value) || 0,
+      }
+    }
+
+    // Show processing Swal
+    Swal.fire({
+      title: 'Processing...',
+      text: 'Please wait while your purchase order is being created.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
     });
-}
+
+    fetch("{% url 'inventory:create_purchase_order' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+      body: JSON.stringify(data),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          localStorage.clear('cart')
+          Swal.fire({
+            icon: 'success',
+            title: 'success',
+            text: 'Purchase Order Successfully Created',
+          }).then(() => {
+            window.location.href = '{% url "inventory:purchase_orders" %}'
+          })
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.message,
+          });
+        }
+      })
+      .catch((error) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error,
+        });
+      });
+  }
 
   function calculateTotals() {
     let subtotal = 0;
@@ -2453,6 +2287,155 @@
     }
     return cookieValue;
   }    
+
+  // Initialize cart from localStorage
+  function initializeCart() {
+    try {
+        const savedCart = localStorage.getItem('cart');
+        if (savedCart) {
+            cart = JSON.parse(savedCart);
+            updateCartDisplay();
+            calculateTotals();
+        }
+    } catch (error) {
+        console.error('Error initializing cart:', error);
+        cart = [];
+        localStorage.removeItem('cart');
+    }
+  }
+
+  // Call initialization when page loads
+  document.addEventListener('DOMContentLoaded', initializeCart);
+
+  function addItem() {
+    try {
+        const pElement = document.getElementById('id_product');
+        const pSelectedOption = pElement.options[pElement.selectedIndex];
+        let product = pSelectedOption.textContent.split(' [')[0];
+
+        const supplier = document.getElementById('id_supplier');
+        const sSelectedOption = supplier.options[supplier.selectedIndex];
+        const supplierName = sSelectedOption.textContent;
+
+        const price = parseFloat(document.getElementById('id_p_price').value);
+        const quantity = Number(document.getElementById('id_p_quantity').value);
+
+        if (!product || !quantity || !price || !supplier) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Missing Information',
+                text: 'Please fill in all the fields: Product, Quantity, Price, and Supplier.',
+            });
+            return;
+        }
+
+        const existingItem = cart.find((item) => item.product === product);
+
+        if (existingItem) {
+            Swal.fire({
+                icon: 'error',
+                text: 'Product Exists',
+                title: 'error'
+            });
+            return;
+        }
+
+        itemCount += 1;
+        const newTransfer = {
+            count: itemCount,
+            id: generateUniqueId(),
+            product_id: pElement.value,
+            product: product,
+            quantity: quantity,
+            price: price,
+            supplierName: supplierName,
+            supplier: supplier.value,
+        };
+        
+        cart.push(newTransfer);
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartDisplay();
+        calculateTotals();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Item Added',
+            text: 'The item was successfully added to your cart!',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    } catch (error) {
+        console.error('Error adding item:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to add item to cart. Please try again.'
+        });
+    }
+  }
+
+  function updateItemQuantity(id, newQuantity) {
+    try {
+        const item = cart.find((item) => item.id === id);
+        if (item) {
+            item.quantity = Number(newQuantity);
+            updateItemTotal(item);
+            calculateTotals();
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+    } catch (error) {
+        console.error('Error updating quantity:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to update quantity. Please try again.'
+        });
+    }
+  }
+
+  const removeItem = (el) => {
+    try {
+        const id = el.dataset.id;
+        cart = cart.filter((item) => item.id !== id);
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartDisplay();
+        calculateTotals();
+    } catch (error) {
+        console.error('Error removing item:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to remove item. Please try again.'
+        });
+    }
+  }
+
+  function updateCartDisplay() {
+    return new Promise((resolve, reject) => {
+        try {
+            const cartItemsList = document.getElementById("cart-items");
+            if (!cartItemsList) {
+                throw new Error('Cart items container not found');
+            }
+            
+            cartItemsList.innerHTML = "";
+            if (!cart || cart.length === 0) {
+                resolve();
+                return;
+            }
+
+            cart.reverse().forEach((item, index) => {
+                const row = document.createElement("tr");
+                // ... existing row creation code ...
+                cartItemsList.appendChild(row);
+            });
+            resolve();
+        } catch (error) {
+            console.error('Error updating cart display:', error);
+            reject(error);
+        }
+    });
+  }
 </script>
 
 {% endblock content %}
