@@ -1244,7 +1244,6 @@
       catElement.innerHTML += `<option value=${category.id}>${category.name}</option>`
     })
   }
-
   const processProdData = async (file) => {
 
     const readFile = (file) =>
@@ -1904,7 +1903,6 @@
             const expenseName = document.getElementById(`expense-name-${i}`).value;
             const expenseAmount = parseFloat(document.getElementById(`expense-amount-${i}`).value) || 0;
 
-            // Push each expense as an object to the expensesData array
             let expenseExist = expensesData.filter((exp) => exp.name === expenseName)
 
             expensesData.push({
@@ -1914,7 +1912,6 @@
 
             console.info(expensesData)
 
-            // Create and append the expense row to the footer
             const expenseRow = document.createElement('tr');
             expenseRow.innerHTML += `
               <td>${expenseName}</td>
