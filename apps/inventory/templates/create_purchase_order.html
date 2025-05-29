@@ -663,6 +663,36 @@
 
   calculateExpression('id_p_price', errorId = null) // calculator for price field
 
+  const LocalStorageHelper = {
+    // Get cart from localStorage
+    getCart: function() {
+      try {
+        const cartData = localStorage.getItem('cart');
+        if (!cartData || cartData === 'null' || cartData === '[]') {
+          return [];
+        }
+        return JSON.parse(cartData);
+      } catch (error) {
+        console.error('Error parsing cart from localStorage:', error);
+        return [];
+      }
+    },
+  
+    // Save cart to localStorage
+    saveCart: function(cartData) {
+      try {
+        if (!Array.isArray(cartData)) {
+          throw new Error('Cart data must be an array');
+        }
+        localStorage.setItem('cart', JSON.stringify(cartData));
+        return true;
+      } catch (error) {
+        console.error('Error saving cart to localStorage:', error);
+        return false;
+      }
+    },
+  }
+
   // event listener to sort the table
   document.getElementById('sort-number').addEventListener('click', () => {
     sortTable();
@@ -1542,36 +1572,38 @@
   }
 
   function addItem() {
-    const pElement = document.getElementById('id_product');
-    const pSelectedOption = pElement.options[pElement.selectedIndex];
-    let product = pSelectedOption.textContent.split(' [')[0];
+    try {
+      const pElement = document.getElementById('id_product');
+      const pSelectedOption = pElement.options[pElement.selectedIndex];
+      let product = pSelectedOption.textContent.split(' [')[0];
 
-    const supplier = document.getElementById('id_supplier');
-    const sSelectedOption = supplier.options[supplier.selectedIndex];
-    const supplierName = sSelectedOption.textContent;
+      const supplier = document.getElementById('id_supplier');
+      const sSelectedOption = supplier.options[supplier.selectedIndex];
+      const supplierName = sSelectedOption.textContent;
 
-    const price = parseFloat(document.getElementById('id_p_price').value);
-    const quantity = Number(document.getElementById('id_p_quantity').value);
+      const price = parseFloat(document.getElementById('id_p_price').value);
+      const quantity = Number(document.getElementById('id_p_quantity').value);
 
-    if (!product || !quantity || !price || !supplier) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Missing Information',
-        text: 'Please fill in all the fields: Product, Quantity, Price, and Supplier.',
-      });
-      return;
-    }
+      if (!product || !quantity || !price || !supplier) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Missing Information',
+          text: 'Please fill in all the fields: Product, Quantity, Price, and Supplier.',
+        });
+        return;
+      }
 
-    const existingItem = cart.find((item) => item.product === product);
+      const existingItem = cart.find((item) => item.product === product);
 
-    if (existingItem) {
-      Swal.fire({
-        icon: 'error',
-        text: 'Product Exists',
-        title: 'error'
-      })
-      return;
-    } else {
+      if (existingItem) {
+        Swal.fire({
+          icon: 'error',
+          text: 'Product Exists',
+          title: 'error'
+        });
+        return;
+      }
+
       itemCount += 1;
       const newTransfer = {
         count: itemCount,
@@ -1583,30 +1615,54 @@
         supplierName: supplierName,
         supplier: supplier.value,
       };
+
       cart.push(newTransfer);
+      
+      // Save to localStorage
+      if (!LocalStorageHelper.saveCart(cart)) {
+        throw new Error('Failed to save cart to localStorage');
+      }
+
+      updateCartDisplay();
+      calculateTotals();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Item Added',
+        text: 'The item was successfully added to your cart!',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('Error adding item:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to add item to cart. Please try again.'
+      });
     }
-
-    localStorage.setItem('cart', JSON.stringify(cart));
-
-    updateCartDisplay();
-    calculateTotals();
-    // isCartEmpty();
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Item Added',
-      text: 'The item was successfully added to your cart!',
-      timer: 1500,
-      showConfirmButton: false
-    });
   }
 
   const removeItem = (el) => {
-    const id = el.dataset.id
-    cart = cart.filter((item) => item.id !== id);
-    localStorage.setItem('cart', JSON.stringify(cart))
-    updateCartDisplay();
-    calculateTotals();
+    try {
+      const id = el.dataset.id;
+      cart = cart.filter((item) => item.id !== id);
+      
+      // Save updated cart to localStorage
+      if (!LocalStorageHelper.saveCart(cart)) {
+        throw new Error('Failed to save cart to localStorage');
+      }
+      
+      updateCartDisplay();
+      calculateTotals();
+    } catch (error) {
+      console.error('Error removing item:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to remove item. Please try again.'
+      });
+    }
   }
 
   function processCart() {
@@ -2287,6 +2343,13 @@
     }
     return cookieValue;
   }    
+
+  // Initialize cart from localStorage on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    cart = LocalStorageHelper.getCart();
+    itemCount = LocalStorageHelper.updateItemCount(cart);
+    updateCartDisplay();
+  });
 </script>
 
 {% endblock content %}
