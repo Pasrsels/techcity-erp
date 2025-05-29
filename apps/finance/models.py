@@ -490,7 +490,7 @@ class Cashbook(models.Model):
     created_by = models.ForeignKey('users.user', on_delete=models.CASCADE, null=True)
     updated_by = models.ForeignKey('users.user', on_delete=models.CASCADE, related_name='updated_cashbook')
     updated_at = models.DateTimeField(auto_now=True)
-    # status = models.BooleanField(default=True, null=True)
+    status = models.BooleanField(default=True, null=True)
 
     def __str__(self):
         return f'{self.issue_date}'

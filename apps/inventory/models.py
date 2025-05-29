@@ -72,7 +72,6 @@ class SupplierAccountsPayments(models.Model):
     def __str__(self):
         return f'{self.account.supplier.name} amount paid {self.amount}'
 
-
 class Product(models.Model):
     """Model for products."""
     

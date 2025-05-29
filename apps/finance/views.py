@@ -1599,7 +1599,7 @@ def customer_account(request, customer_id):
     
 @login_required
 def create_credit_note(request):
-    from apps.pos.utils.process_credit_note import generate_receipt_data
+    from apps.pos.utils.process_credit_note import generate_credit_note_data
     
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
@@ -1665,9 +1665,9 @@ def create_credit_note(request):
                 updated_by=request.user
             )
             
-            signature_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
-            logger.info(f'Signature data: {signature_data}')
-            logger.info(f'Receipt data: {receipt_data}')
+            generate_credit_note_data(invoice, invoice_items, request)
+            # logger.info(f'Signature data: {signature_data}')
+            # logger.info(f'Receipt data: {receipt_data}')
 
             return JsonResponse({
                 'success': True,

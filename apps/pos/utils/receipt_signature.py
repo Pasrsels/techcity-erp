@@ -106,13 +106,14 @@ def generate_receipt_data(invoice, invoice_items, request):
         Transform invoice data to receipt format, save offline, and submit to FDMS.
     """
     try:
-        logger.info(f"Processing Invoice: {invoice.invoice_number}")
-
         fiscal_day = FiscalDay.objects.filter(is_open=True, created_at__date=datetime.today()).first()
         logger.info(fiscal_day)
-        if not fiscal_day:
-            zimra = ZIMRA()
-            zimra.open_day()
+        logger.info(f"Processing Invoice: {invoice.invoice_number}")
+
+       
+        # if not fiscal_day:
+        #     zimra = ZIMRA()
+        #     zimra.open_day()
 
         last_global_no = get_last_receipt_numbers()
 

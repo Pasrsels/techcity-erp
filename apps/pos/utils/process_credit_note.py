@@ -111,7 +111,7 @@ def get_receipt_global_no(invoice):
     receipt = OfflineReceipt.objects.filter(invoice=invoice).first()
     return receipt.receipt_data["receiptGlobalNo"] if receipt else 0
 
-def generate_receipt_data(invoice, invoice_items, request):
+def generate_credit_note_data(invoice, invoice_items, request):
     """
         Transform invoice data to receipt format, save offline, and submit to FDMS.
     """
