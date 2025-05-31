@@ -397,12 +397,6 @@ def inventory_index(request):
     form = ServiceForm()
     q = request.GET.get('q', '')  
     category = request.GET.get('category', '')    
-    
-    from utils.zimra import ZIMRA
-    
-    zimra = ZIMRA
-    zimra.ping()
-    
     accessories = Accessory.objects.all()
     inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).select_related(
         'category',

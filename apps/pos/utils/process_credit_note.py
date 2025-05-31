@@ -13,6 +13,7 @@ from loguru import logger
 from utils.zimra import ZIMRA
 import qrcode, os
 from io import BytesIO
+from decimal import Decimal
 from apps.finance.models import Invoice
 
 load_dotenv()
@@ -117,12 +118,11 @@ def generate_credit_note_data(invoice, invoice_items, request):
     """
     try:
         logger.info(f"Processing Invoice: {invoice.invoice_number}")
+        logger.info(f'Invoice items: {invoice_items}')
 
-        fiscal_day = FiscalDay.objects.filter(is_open=True, created_at__date=datetime.today()).first()
+        fiscal_day = FiscalDay.objects.filter(is_open=True).first()
+        # fiscal_day = FiscalDay.objects.filter(is_open=True, created_at__date=datetime.today()).first()
         logger.info(fiscal_day)
-        if not fiscal_day:
-            zimra = ZIMRA()
-            zimra.open_day()
 
         last_global_no = get_last_receipt_numbers()
 
@@ -130,51 +130,50 @@ def generate_credit_note_data(invoice, invoice_items, request):
 
         logger.info(f'Global number: {new_receipt_global_no}, Receipt_counter:{fiscal_day.receipt_count}')
 
-        receipt_lines = []
-        total_tax_amount = 0
-
         previous_invoice = Invoice.objects.filter(branch=request.user.branch, issue_date__date=datetime.today())\
             .exclude(id=invoice.id)\
             .order_by('-id')\
             .first()  
         
-
         logger.info(f'Previous Invoice: {previous_invoice}')
 
+        tax_amount = 0
         total_tax_amount = 0
         total_line_amount = 0
-        for index, item in enumerate(invoice_items, start=1):
-            line_total = float(item.unit_price) * item.quantity
-            tax_amount = round(line_total / 1.15, 2)
-            total_tax_amount += tax_amount
-            
-            if item.credit_note_amount > 0:
+        receipt_lines = []
 
+        for index, item in enumerate(invoice_items, start=1):         
+            if item.credit_note_issued:
+                logger.info(item.item.name)
+                tax_amount = (item.credit_note_amount - round(item.credit_note_amount / Decimal(1.15), 2)) #tax to be dynamic
+                total_line_amount += float(item.credit_note_amount)
+                total_tax_amount += float(tax_amount)
+                
                 receipt_lines.append({
                     "receiptLineType": "Sale",
                     "receiptLineNo": index,
                     "receiptLineHSCode": "01010101",
                     "receiptLineName": item.item.name,
-                    "receiptLinePrice": -float(item.credit_note_amount),
+                    "receiptLinePrice": float(item.credit_note_amount),
+                    "receiptLineQuantity":item.quantity,
+                    "receiptLineTotal":float(item.credit_note_amount),
                     "taxCode": "C",
                     "taxPercent": 15.00,
                     "taxID": 3
                 })
 
-                tax_amount = round(item.credit_note_amount / 1.15, 2)
-                total_line_amount += item.credit_note_amount
-                total_tax_amount += tax_amount
+        logger.info(f'processing totals -> tax amount {tax_amount } total line amount: {total_line_amount} total_tax_amount: {total_tax_amount}')
 
         receipt_data = {
-            "receiptType": "FiscalInvoice",
+            "receiptType": "CreditNote",
             "receiptCurrency": invoice.currency.name.upper(),
             "receiptCounter":fiscal_day.receipt_count + 1,
             "receiptGlobalNo":new_receipt_global_no,
-            "invoiceNo": invoice.invoice_number,
+            "invoiceNo": f"a{new_receipt_global_no}",
             "receiptNotes": "Customer returned items",
             "receiptDate": datetime.now().replace(microsecond=0).isoformat(),
             "creditDebitNote": {
-                "receiptID": invoice.id,
+                "receiptID": invoice.zimra_inv_id,
                 "deviceID": os.getenv('DEVICE_ID'),
                 "receiptGlobalNo": get_receipt_global_no(invoice),
                 "fiscalDayNo": fiscal_day.id
@@ -185,23 +184,21 @@ def generate_credit_note_data(invoice, invoice_items, request):
                 {
                     "taxCode": "C",
                     "taxID": 3,
-                    "taxPercent": 15.00,
-                    "taxAmount": -float(total_tax_amount),
-                    "salesAmountWithTax": -(float(total_line_amount) - float(total_tax_amount))
+                    "taxPercent": 15.00, # to be dynamic
+                    "taxAmount": float(total_tax_amount),
+                    "salesAmountWithTax": float(total_line_amount)
                 }
             ],
             "receiptPayments": [
                 {
                     "moneyTypeCode": invoice.payment_terms,
-                    "paymentAmount": -(float(total_line_amount) - float(total_tax_amount))
+                    "paymentAmount": float(total_line_amount)
                 }
             ],
-            "receiptTotal": -(float(total_line_amount) - float(total_tax_amount)),
+            "receiptTotal": float(total_line_amount),
             "receiptPrintForm": "Receipt48",
             "previousReceiptHash": "" if fiscal_day.receipt_count == 0 else previous_invoice.receipt_hash,
         }
-
-        print(receipt_data)
 
         signature_data = receipt_signature(
             os.getenv('DEVICE_ID'), 

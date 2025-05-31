@@ -314,7 +314,9 @@ class Invoice(models.Model):
     code = models.CharField(max_length=50, null=True)
     fiscal_day = models.CharField(max_length=50, null=True)
     cash_up_status = models.BooleanField(default=False, null=True)
-    
+    zimra_inv_id = models.CharField(max_length=255, null=True)
+    fiscal_day = models.IntegerField(null=True)
+
     def generate_invoice_number(branch):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
         if last_invoice:
@@ -341,6 +343,7 @@ class InvoiceItem(models.Model):
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
     cash_up_status = models.BooleanField(default=False, null=True)
     credit_note_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0, editable=False, null=True)
+    credit_note_issued = models.BooleanField(default=False)
     
     @property
     def subtotal(self):
@@ -803,7 +806,7 @@ class Income(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     currency = models.ForeignKey('Currency', on_delete=models.CASCADE)
-    category = models.ForeignKey('IncomeCategory', on_delete=models.PROTECT)
+    category = models.ForeignKey('IncomeCategory', on_delete=models.PROTECT,  null=True)
     note = models.CharField(max_length=200)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)

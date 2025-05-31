@@ -6,6 +6,7 @@ import json, base64
 from celery import shared_task
 from loguru import logger
 from dotenv import load_dotenv
+from apps.finance.models import Invoice
 from django.conf import settings
 from apps.settings.models import OfflineReceipt, FiscalDay, FiscalCounter
 
@@ -182,16 +183,13 @@ class ZIMRA:
             self, 
             receipt_data,
             hash,
-            signature
+            signature,
         ):
         """
             Submits a single receipt to the FDMS.
         """
         
         try:
-        
-            logger.info(receipt_data)
-            
             receipt_data['receipt']['receiptDeviceSignature'] = {
                 "hash": hash,
                 "signature": signature
@@ -209,14 +207,11 @@ class ZIMRA:
             "deviceModelVersion": self.device_model_version
         }
         
-    
         try:
             response = requests.post(f"{self.base_url}/SubmitReceipt", json=receipt_data, headers=headers, cert=(self.certificate_path, self.certificate_key))
             logger.info(response)
             r=response
             response.raise_for_status()
-            logger.info("Receipt submitted successfully.")
-            logger.info(response.json())
             return response.json()
         except Exception as e:
             logger.error(f"Error submitting receipt: {e}, {r}")
@@ -272,84 +267,44 @@ class ZIMRA:
         except Exception as e:
             logger.error(f"Error submitting file: {e}")
     
-def submit_credit_note(request):
-    # Replace with actual values
-    device_id = 1234
-    original_receipt_id = 5678
-    fiscal_day_no = 5
-    original_global_no = 1122
+    def submit_credit_note(
+            self,
+            credit_note_data,
+            hash,
+            signature
+        ):
 
-    payload = {
-        "deviceID": device_id,
-        "receipt": {
-            "receiptType": "CreditNote",
-            "receiptCurrency": "USD",
-            "receiptCounter": 10,
-            "receiptGlobalNo": 1130,
-            "invoiceNo": "CN-2025/0003",
-            "receiptNotes": "Customer returned items",
-            "receiptDate": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-            "creditDebitNote": {
-                "receiptID": original_receipt_id,
-                "deviceID": device_id,
-                "receiptGlobalNo": original_global_no,
-                "fiscalDayNo": fiscal_day_no
-            },
-            "receiptLinesTaxInclusive": True,
-            "receiptLines": [
-                {
-                    "receiptLineType": "Sale",
-                    "receiptLineNo": 1,
-                    "receiptLineName": "Chicken Wrap",
-                    "receiptLinePrice": -5.00,  # Negative value
-                    "receiptLineQuantity": 1,
-                    "receiptLineTotal": -5.00,
-                    "taxCode": "A",
-                    "taxPercent": 15,
-                    "taxID": 1
-                }
-            ],
-            "receiptTaxes": [
-                {
-                    "taxCode": "A",
-                    "taxPercent": 15,
-                    "taxID": 1,
-                    "taxAmount": -0.65,  # Negative
-                    "salesAmountWithTax": -5.65
-                }
-            ],
-            "receiptPayments": [
-                {
-                    "moneyTypeCode": "Cash",
-                    "paymentAmount": -5.65  # Negative
-                }
-            ],
-            "receiptTotal": -5.65,
-            "receiptDeviceSignature": {
-                "hash": "base64_encoded_hash",  # You must sign it properly
-                "signature": "base64_encoded_signature"
-            },
-            "receiptPrintForm": "Receipt48",
-            "username": "cashier",
-            "userNameSurname": "Jane Doe"
+        try:
+            credit_note_data['receipt']['receiptDeviceSignature'] = {
+                "hash": hash,
+                "signature": signature
+            }
+            logger.info(credit_note_data)
+            
+        except Exception as e:
+            logger.info(e)
+
+        payload = {
+            "deviceID": self.device_id,
+            
         }
-    }
 
-    headers = {
-        'Content-Type': 'application/json',
-        'DeviceModelName': 'ModelX',
-        'DeviceModelVersionNo': '1.0'
-    }
+        headers = {
+            'Content-Type': 'application/json',
+            'DeviceModelName': self.device_model_name,
+            'DeviceModelVersionNo': self.device_model_version
+        }
 
-    response = requests.post(
-        FISCAL_API_URL,
-        data=json.dumps(payload),
-        headers=headers,
-        cert=(CERT_PATH, KEY_PATH),
-        verify=True
-    )
-
-    return JsonResponse(response.json(), status=response.status_code)
+        try:
+            response = requests.post(f"{self.base_url}/SubmitReceipt", json=credit_note_data , headers=headers, cert=(self.certificate_path, self.certificate_key))
+            logger.info(response)
+            response.raise_for_status()
+            logger.info("Credit note submitted successfully.")
+            logger.info(response.json())
+            return response.json()
+        except Exception as e:
+            logger.error(f"Error submitting receipt: {e},")
+            return e
 
     def close_day(
             self,
