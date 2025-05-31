@@ -22,6 +22,11 @@ urlpatterns = [
     path('profile/', user_profile, name='profile'),
     path('upload-profile/', upload_profile, name='upload-profile'),
     
+    # Password Reset Flow
+    path('request-password-reset/', request_password_reset, name='request_password_reset'),
+    path('verify-otp/', verify_otp, name='verify_otp'),
+    path('reset-password/', reset_password, name='reset_password'),
+    
     #User Permissions
     path('permissions/create-and-read/', UserPermission_CR, name= 'userPermissionsCR'),
     path('permission/update-and-delete/<int:id>/', UserPermission_UD, name= 'userPermissionsUD'),

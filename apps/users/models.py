@@ -87,6 +87,8 @@ class User(AbstractUser):
     phonenumber = models.CharField(max_length=13)
     role = models.CharField(choices=USER_ROLES, max_length=50)
     is_deleted = models.BooleanField(default=False)
+    email_verified = models.BooleanField(default=False)
+    email_verified_at = models.DateTimeField(null=True, blank=True)
 
     def tokens(self):
         refresh = RefreshToken.for_user(self)
@@ -121,20 +123,51 @@ class User(AbstractUser):
 
 class EmailVerificationToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    token = models.UUIDField(default=uuid.uuid4, editable=False)
+    token = models.CharField(max_length=100, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
-    attempts = models.IntegerField(default=0) 
+    is_verified = models.BooleanField(default=False)
+    verification_attempts = models.IntegerField(default=0)
 
     def is_valid(self):
         return (
-            timezone.now() <= self.expires_at,
-            self.attempts < settings.MAX_VERIFICATION_ATTEMPTS
+            not self.is_verified and
+            self.verification_attempts < 3 and
+            timezone.now() <= self.expires_at
         )
 
     def increment_attempts(self):
-        self.attempts += 1
+        self.verification_attempts += 1
         self.save()
+
+
+class PasswordResetOTP(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    verification_attempts = models.IntegerField(default=0)
+
+    @classmethod
+    def generate_otp(cls):
+        return ''.join(random.choices(string.digits, k=6))
+
+    def is_valid(self):
+        return (
+            not self.is_used and
+            self.verification_attempts < 3 and
+            timezone.now() <= self.expires_at
+        )
+
+    def increment_attempts(self):
+        self.verification_attempts += 1
+        self.save()
+
+    def mark_as_used(self):
+        self.is_used = True
+        self.save()
+
 
 def assign_admin_group(sender, instance, created, **kwargs):
     if created and instance.is_superuser:
