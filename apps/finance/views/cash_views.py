@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.db import transaction
-from ..models import Cashbook, CashWithdrawals, CashTransfer
+from ..models import Cashbook, CashWithdrawals
 from ..forms import CashWithdrawForm, TransferForm, cashDepositForm
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated

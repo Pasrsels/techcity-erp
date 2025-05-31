@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db import transaction
-from ..models import Customer, CustomerAccount, CustomerDeposit
+from ..models import Customer, CustomerAccount
 from ..forms import CustomerForm, customerDepositsForm, customerDepositsRefundForm
 from rest_framework import viewsets
 from rest_framework.views import APIView
