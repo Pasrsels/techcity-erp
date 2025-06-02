@@ -10,7 +10,7 @@ from .models import (
     CustomerDeposits,
     CashDeposit,
     VATTransaction,
-    CreditNote
+    IncomeCategory
 )
 
 class ExpenseForm(forms.ModelForm):
@@ -79,18 +79,8 @@ class VatPayForm(forms.ModelForm):
     class Meta:
         model = VATTransaction
         fields = ['paid']
-
-class CreditNoteForm(forms.ModelForm):
+        
+class IncomeCategoryForm(forms.ModelForm):
     class Meta:
-        model = CreditNote
-        fields = ['amount', 'currency', 'reason']
-        widgets = {
-            'reason': forms.Textarea(attrs={'rows': 3}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        self.invoice = kwargs.pop('invoice', None)
-        super().__init__(*args, **kwargs)
-        if self.invoice:
-            self.fields['currency'].initial = self.invoice.currency
-            self.fields['amount'].initial = self.invoice.amount_due
+        model = IncomeCategory
+        fields = '__all__'

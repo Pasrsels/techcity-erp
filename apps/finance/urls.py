@@ -1,14 +1,14 @@
 from django.urls import path, include
-from . views import *
+from .views import *
 from rest_framework.routers import DefaultRouter
 
 app_name = 'finance'
 
 router = DefaultRouter()
 router.register(r'api/v1/customers_list', CustomersViewset, basename='customers_list')
-# router.register(r'api/v1/currency', CurrencyViewset, basename= 'api_currency_crud')
+router.register(r'api/v1/currency', CurrencyViewset, basename= 'api_currency_crud')
 router.register(r'api/v1/Cashwithrawals', CashWithdrawalsViewset, basename= 'api_cash_withrawals')
-# router.register(r'api/v1/quotation', QuatationCrud, basename= 'api_quotation')
+router.register(r'api/v1/quotation', QuatationCrud, basename= 'api_quotation')
 
 urlpatterns = [
     path('', Finance.as_view(), name='finance'),
@@ -32,8 +32,8 @@ urlpatterns = [
     path('invoice/preview/<int:invoice_id>/', invoice_preview, name='invoice_preview'),
     path('invoice/preview/json/<int:invoice_id>/', invoice_preview_json, name='invoice_preview_json'),
     path('held/invoices', held_invoice_view, name='held_invoice'),
-    path('credit-note/create/', create_credit_note, name='create_credit_note'),
-    path('credit-note/items/<int:invoice_id>/', get_credit_note_items, name='get_credit_note_items'),
+    # path('credit-note/create/', create_credit_note, name='create_credit_note'),
+    # path('credit-note/items/<int:invoice_id>/', get_credit_note_items, name='get_credit_note_items'),
     
     #customer
     path('customers/', customer, name='customers'),
