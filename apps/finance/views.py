@@ -882,10 +882,13 @@ def create_invoice(request):
             # prevent to record greater amount paid than the invoice amount 
             if amount_paid > invoice_total_amount:
                 amount_paid = invoice_total_amount
+                amount_due = 0
             else:
                 amount_paid = amount_paid
-
-            amount_due = invoice_total_amount - amount_paid  
+                amount_due = invoice_total_amount - amount_paid  
+                
+            logger.info(f'amount due: {amount_due}')
+        
 
             cogs = COGS.objects.create(amount=Decimal(0))
             
@@ -2368,7 +2371,6 @@ def invoice_preview_data(request, invoice_id):
     return JsonResponse(invoice_data, safe=False)
         
 def invoice_preview_json(request, invoice_id):
-    from django.core.serializers.json import DjangoJSONEncoder
     try:
         invoice = Invoice.objects.get(id=invoice_id)
     except Invoice.DoesNotExist:
@@ -5707,10 +5709,14 @@ def create_invoice(request):
             # prevent to record greater amount paid than the invoice amount 
             if amount_paid > invoice_total_amount:
                 amount_paid = invoice_total_amount
+                amount_due = 0
             else:
                 amount_paid = amount_paid
-
-            amount_due = invoice_total_amount - amount_paid  
+                amount_due = invoice_total_amount - amount_paid  
+                
+            logger.info(f'amount due: {amount_due}')
+            
+            return
 
             cogs = COGS.objects.create(amount=Decimal(0))
             
@@ -7316,7 +7322,6 @@ def end_of_day(request):
     elif request.method == 'POST':
         try:
             data = json.loads(request.body)
-            logger.info(data)
             inventory_data = []
             cashed_amount = data['cash_input']
             physical_counts = data['physical_counts']
@@ -10012,7 +10017,6 @@ def update_expense_status(request):
             return JsonResponse({'success': False, 'message': str(e)})
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
 
-
 @login_required
 def invoice(request):
     form = InvoiceForm()
@@ -10066,27 +10070,53 @@ def invoice(request):
     total_paid = invoices.filter(payment_status='Paid').aggregate(Sum('amount'))['amount__sum'] or 0
     total_amount = invoices.aggregate(Sum('amount'))['amount__sum'] or 0
 
-    grouped_invoices = defaultdict(list)
+    grouped_invoices = defaultdict(lambda: {'invoices': [], 'total_amount': 0, 'amount_due': 0})
 
     for invoice in invoices:
-
         issue_date = invoice.issue_date.date() 
 
         if issue_date == today:
-            grouped_invoices['Today'].append(invoice)
+            date_key = 'Today'
         elif issue_date == today - timedelta(days=1):
-            grouped_invoices['Yesterday'].append(invoice)
+            date_key = 'Yesterday'
         else:
-            grouped_invoices[issue_date.strftime('%A, %d %B %Y')].append(invoice)
+            date_key = issue_date.strftime('%A, %d %B %Y')
+        
+        grouped_invoices[date_key]['invoices'].append(invoice)
+
+        grouped_invoices[date_key]['total_amount'] += invoice.amount_paid
+        
+        if invoice.payment_status == 'Paid':
+            amount_due = 0
+        elif invoice.payment_status == 'Partial':
+            paid_amount = getattr(invoice, 'amount_paid', 0)
+            amount_due = invoice.amount - paid_amount
+        else:  
+            amount_due = invoice.amount
+            
+        grouped_invoices[date_key]['amount_due'] += amount_due
+
+    ordered_grouped_invoices = {}
+    
+    if 'Today' in grouped_invoices:
+        ordered_grouped_invoices['Today'] = grouped_invoices['Today']
+
+    if 'Yesterday' in grouped_invoices:
+        ordered_grouped_invoices['Yesterday'] = grouped_invoices['Yesterday']
+    
+    remaining_dates = [(k, v) for k, v in grouped_invoices.items() if k not in ['Today', 'Yesterday']]
+   
+    for date_key, data in remaining_dates:
+        ordered_grouped_invoices[date_key] = data
 
     return render(request, 'invoices/invoice.html', {
         'form': form,
-        'grouped_invoices': dict(grouped_invoices),
+        'grouped_invoices': ordered_grouped_invoices,
         'total_paid': total_paid,
         'total_due': total_partial,
         'total_amount': total_amount,
     })
-
+    
 @login_required
 @transaction.atomic 
 def update_invoice(request, invoice_id):
@@ -10260,12 +10290,13 @@ def create_invoice(request):
             # prevent to record greater amount paid than the invoice amount 
             if amount_paid > invoice_total_amount:
                 amount_paid = invoice_total_amount
+                amount_due = 0
             else:
                 amount_paid = amount_paid
-
-            amount_due = invoice_total_amount - invoice_data['amount_paid'] 
-            
-            logger.info(f'amount_due: {amount_due}, amount_paid: {amount_paid}, invoice_total_amount: {invoice_total_amount}')
+                amount_due = invoice_total_amount - amount_paid  
+                
+            logger.info(f'amount due: {amount_due}')
+        
 
             cogs = COGS.objects.create(amount=Decimal(0))
             
@@ -12581,7 +12612,7 @@ def cashbook_data(request):
             balance += entry.amount
         elif entry.credit:
             balance -= entry.amount
-        logger.info(f'Entry: {entry.issue_date.strftime('%Y-%m-%d %H:%M')}')
+        
         entries_data.append({
             'id': entry.id,
             'date': entry.issue_date.strftime('%Y-%m-%d %H:%M'),
@@ -13249,7 +13280,6 @@ def cash_flow(request):
         date__lt=end_date_query.date()
     )
     
-    # Normalize invoice items for timeline
     normalized_sales = invoice_items.annotate(
         type_label=Value('sale', output_field=CharField()),
         category_name=F('item__description'), 
@@ -13259,7 +13289,6 @@ def cash_flow(request):
         amount=F('total_amount')  
     ).values('datetime', 'amount', 'type_label', 'category_name', 'parent_category', 'source')
     
-    # Normalize income entries
     normalized_incomes = income.annotate(
         type_label=Value('income', output_field=CharField()),
         category_name=F('category__name'),
@@ -13267,8 +13296,7 @@ def cash_flow(request):
         datetime=F('created_at'),
         source=Value('Income', output_field=CharField())
     ).values('datetime',  'sale__invoice_items__item__name', 'amount', 'type_label', 'category_name', 'parent_category', 'source', 'note')
-    
-    # Normalize expense entries
+
     normalized_expenses = expenses.annotate(
         type_label=Value('expense', output_field=CharField()),
         category_name=F('category__name'),
@@ -13277,7 +13305,6 @@ def cash_flow(request):
         source=Value('Expense', output_field=CharField())
     ).values('datetime', 'amount', 'description', 'type_label', 'category_name', 'parent_category', 'source')
     
-    # Combine and sort by datetime (chronological timeline of all financial activity)
     combined_cashflow = sorted(
         chain(normalized_incomes, normalized_expenses),
         key=lambda x: x['datetime']
@@ -13294,21 +13321,18 @@ def cash_flow(request):
         total_vat=Sum('vat_amount')
     ).order_by('-total_revenue')
     
-    # Calculate totals
     sales_total = invoice_items.aggregate(total=Sum('total_amount'))['total'] or 0
-    income_total = income.aggregate(total=Sum('amount'))['total'] or 0
+    income_total = income.filter(category__name="other").aggregate(total=Sum('amount'))['total'] or 0
     expenses_total = expenses.aggregate(total=Sum('amount'))['total'] or 0
     total_income = sales_total 
     balance = total_income - expenses_total
     
-    # Group expenses by category for summary
     expenses_by_category = expenses.values(
         'category__name'
     ).annotate(
         total=Sum('amount')
     ).order_by('-total')
     
-    # Group income by category for summary
     income_by_category = income.values(
         'category__name'
     ).annotate(
@@ -13316,28 +13340,24 @@ def cash_flow(request):
     ).order_by('-total')
 
 
-     # Add percentage to each expense category
     for category in expenses_by_category:
         if expenses_total > 0:
             category['percentage'] = (category['total'] / expenses_total) * 100
         else:
             category['percentage'] = 0
     
-    # Group income by category for summary
     income_by_category = income.values(
         'category__name'
     ).annotate(
         total=Sum('amount')
     ).order_by('-total')
     
-    # Add percentage to each income category
     for category in income_by_category:
         if income_total > 0:
             category['percentage'] = (category['total'] / income_total) * 100
         else:
             category['percentage'] = 0
 
-    # categories
     expenses_categories = ExpenseCategory.objects.all()
     income_categories = IncomeCategory.objects.all()
     
@@ -13360,35 +13380,29 @@ def cash_flow(request):
     ).order_by('-created_at')
     
     context = {
-        # Time filter data
         'start_date': start_date,
         'end_date': end_date,
         'filter_type': filter_type,
         
-        # Raw data
         'sales': invoice_items,
         'income': income,
         'expenses': expenses,
         'logs': logs,
         
-        # Summaries
         'product_sales': product_sales,
         'expenses_by_category': expenses_by_category,
         'income_by_category': income_by_category,
         'combined_cashflow': combined_cashflow,
         
-        # Totals
         'sales_total': sales_total,
         'income_total': income_total,
         'expenses_total': expenses_total,
         'total_income': total_income,
         'balance': balance,
 
-        # categories 
         'expenses_categories':expenses_categories,
         'income_categories':income_categories,
         
-        # branches
         'cash_ups':cash_ups,
     }
     
@@ -15654,11 +15668,15 @@ class CreateInvoice(views.APIView):
 
 
             logger.info(f'amount paid: {amount_paid}')
-
-            #if amount_paid > invoice_total_amount:
-            #   amount_paid = invoice_total_amount
-            
-            amount_due = invoice_total_amount - amount_paid  
+            if amount_paid > invoice_total_amount:
+                amount_paid = invoice_total_amount
+                amount_due = 0
+            else:
+                amount_paid = amount_paid
+                amount_due = invoice_total_amount - amount_paid  
+                
+            logger.info(f'amount due: {amount_due}')
+                    
 
             cogs = COGS.objects.create(amount=Decimal(0))
             

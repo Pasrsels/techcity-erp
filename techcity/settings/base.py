@@ -282,22 +282,21 @@ LOGGING = {
 }
 
 
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-#         'LOCATION': 'unique-snowflake',
-#     }
-# }
-
+# CACHES
+# ------------------------------------------------------------------------------
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",  # or your Redis URL
+        "LOCATION": "redis://127.0.0.1:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "SERIALIZER": "django_redis.serializers.json.JSONSerializer",
         }
     }
 }
+
+# Cache time to live is 15 minutes
+CACHE_TTL = 60 * 15
 
 # celery
 CELERY_BROKER_URL = 'redis://localhost:6379'

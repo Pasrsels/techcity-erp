@@ -3,6 +3,31 @@
 {% block title%} Invoices {% endblock%}
 {% block content %}
 <style>
+
+:root {
+    --primary: #11998e;
+    --primary-no-gradient: #11998e;
+    --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    --secondary: orange;
+    --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+    --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    --dark: #1a1a2e;
+    --dark-alt: #16213e;
+    --text-light: rgba(228, 230, 234, 1);
+    --text-dark: black;
+    --text-muted: black;
+    --glass: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+    --border-radius: 16px;
+    --border-radius-sm: 8px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --m-bottom: 20px;
+}
+
 .table-container {
     max-width: 100%;
     margin: auto;
@@ -92,7 +117,7 @@ input[type="checkbox"] {
     position: sticky;
     top: 56px; 
     z-index: 99;
-    background-color: #007bff; 
+    background-color: var(--primary); 
     color: white;
 }
 
@@ -136,80 +161,88 @@ input[type="checkbox"] {
                     <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search invoices...">
                 </div>
             </div>
-            {% for date_heading, invoices in grouped_invoices.items %}
-                <h4 class="mt-3">{{ date_heading }}</h4>
-                <table class="sticky-header table-stripped w-100" id="invoiceTable">
-                    <thead>
-                        <tr>
-                            <th>Customer Name &#9650;</th>
-                            <th>Reference &#9650;</th>
-                            <th>Date &#9650;</th>
-                            <th>Products</th>
-                            <th>Grand Total &#9650;</th>
-                            <th>Paid &#9650;</th>
-                            <th>Due &#9650;</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for invoice in invoices %}
-                        <tr>
-                            <td><small><a href="{% url 'finance:customer' invoice.customer.id %}">{{ invoice.customer.name }}</a></small></td>
-                            <td><small>#{{ invoice.invoice_number }}</small></td>
-                            <td><small>{{ invoice.issue_date|date:"d/m/y H:i" }}</small></td>
-                            <td><small>{{ invoice.products_purchased }}</small></td>
-                            <td><small>{{ invoice.currency.symbol }} {{ invoice.amount }}</small></td>
-                            <td id="tr" data-invoiceID="{{ invoice.id }}"><small>{{ invoice.currency.symbol }} {{ invoice.amount_paid }}</small></td>
-                            <td><small>
-                                <td>
-                                    {% if invoice.amount_due > 0 %}
-                                    <small class="text-danger">
-                                        {{ invoice.currency.symbol }} {{ invoice.amount_due }}
-                                    </small>
-                                    {% else %}
-                                    <small class="text-success">
-                                        {{ invoice.currency.symbol }} {{ invoice.amount_paid }}
-                                    </small>
-                                    {% endif %}
-                                </td>
-                            </small></td>
-                            <td>
-                                <span class='px-2'>
-                                    <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Preview Invoice' data-id="{{ invoice.id }}" id='previewBtn'>
-                                        <i class='bx bx-file'></i>
-                                    </span>
-                                </span>
-                                <span>
-                                    {% if invoice.amount_due > 0 %}
-                                    <span style='cursor:pointer;' data-id="{{ invoice.id }}" data-amount="{{ invoice.amount_due }}" id='id_update' class="text-dark">
-                                        <i class='bx bx-right-arrow bg-success'></i>
-                                    </span>
-                                    {% else %}
-                                    <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Invoice fully paid'>
-                                        <i class='bx bx-bx-right-arrow bg-danger'></i>
-                                    </span>
-                                    {% endif %}
-                                </span>
-                                <span>
-                                    {% if request.user.role == 'admin' %}
-                                    <span id='id_delete' data-id="{{ invoice.id }}" class="text-dark hint--bottom" aria-label='sales return'>
-                                        <img width="18px" src="{% static 'assets/return.png' %}" />
-                                    </span>
-                                    {% endif %}
-                                </span>
-                                {% if invoice.payment_terms == 'pay later' %}
-                                <span class='px-2'>
-                                    <span style='cursor:pointer;' class="text-dark" data-bs-toggle="modal" data-bs-target="#paylaterModal{{ invoice.id }}">
-                                        <i class='bx bx-calendar'></i>
-                                    </span>
-                                </span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% endfor %}
+            {% for date_heading, data in grouped_invoices.items %}
+    <div class="mb-4">
+        <h4 class="mt-3 d-flex flex-column justify-content-center">
+            <span>{{ date_heading }}</span>
+            <div class="d-flex gap-3 text-muted">
+                <small class="fs-6">{{ data.invoices|length }} invoice{{ data.invoices|length|pluralize }}</small>
+                <small class="fs-6">Total: {{ data.invoices.0.currency.symbol }}{{ data.total_amount }}</small>
+                <small class="fs-6">Due: {{ data.invoices.0.currency.symbol }}{{ data.amount_due }}</small>
+            </div>
+        </h4>
+        
+        <table class="sticky-header table-stripped w-100" id="invoiceTable">
+            <thead>
+                <tr>
+                    <th>Customer Name &#9650;</th>
+                    <th>Reference &#9650;</th>
+                    <th>Date &#9650;</th>
+                    <th>Products</th>
+                    <th>Grand Total &#9650;</th>
+                    <th>Paid &#9650;</th>
+                    <th>Due &#9650;</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in data.invoices %}
+                <tr>
+                    <td><small><a href="{% url 'finance:customer' invoice.customer.id %}">{{ invoice.customer.name }}</a></small></td>
+                    <td><small>#{{ invoice.invoice_number }}</small></td>
+                    <td><small>{{ invoice.issue_date|date:"d/m/y H:i" }}</small></td>
+                    <td><small>{{ invoice.products_purchased }}</small></td>
+                    <td><small>{{ invoice.currency.symbol }} {{ invoice.amount }}</small></td>
+                    <td id="tr" data-invoiceID="{{ invoice.id }}"><small>{{ invoice.currency.symbol }} {{ invoice.amount_paid }}</small></td>
+                    <td>
+                        {% if invoice.amount_due > 0 %}
+                        <small class="text-danger">
+                            {{ invoice.currency.symbol }} {{ invoice.amount_due }}
+                        </small>
+                        {% else %}
+                        <small class="text-success">
+                            {{ invoice.currency.symbol }} {{ invoice.amount_paid }}
+                        </small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class='px-2'>
+                            <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Preview Invoice' data-id="{{ invoice.id }}" id='previewBtn'>
+                                <i class='bx bx-file'></i>
+                            </span>
+                        </span>
+                        <span>
+                            {% if invoice.amount_due > 0 %}
+                            <span style='cursor:pointer;' data-id="{{ invoice.id }}" data-amount="{{ invoice.amount_due }}" id='id_update' class="text-dark">
+                                <i class='bx bx-right-arrow bg-success'></i>
+                            </span>
+                            {% else %}
+                            <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Invoice fully paid'>
+                                <i class='bx bx-bx-right-arrow bg-danger'></i>
+                            </span>
+                            {% endif %}
+                        </span>
+                        <span>
+                            {% if request.user.role == 'admin' %}
+                            <span id='id_delete' data-id="{{ invoice.id }}" class="text-dark hint--bottom" aria-label='sales return'>
+                                <img width="18px" src="{% static 'assets/return.png' %}" />
+                            </span>
+                            {% endif %}
+                        </span>
+                        {% if invoice.payment_terms == 'pay later' %}
+                        <span class='px-2'>
+                            <span style='cursor:pointer;' class="text-dark" data-bs-toggle="modal" data-bs-target="#paylaterModal{{ invoice.id }}">
+                                <i class='bx bx-calendar'></i>
+                            </span>
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endfor %}
         </div>
         
 

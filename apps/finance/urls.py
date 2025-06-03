@@ -246,6 +246,7 @@ urlpatterns = [
     path('api/v1/vat/', VAT.as_view(), name='api_vat'),
 
     path('api/v1/pl_overview/', PLOverview.as_view(), name='api_pl_overview'),
+    
     path('api/v1/income_json/', IncomeJson.as_view(), name='api_income_json'),
     path('api/v1/expense_json/', ExpenseJson.as_view(), name='api_expense_json'),
 

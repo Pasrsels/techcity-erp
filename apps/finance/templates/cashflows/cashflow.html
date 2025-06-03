@@ -16,23 +16,6 @@
                             <a href="{% url 'finance:cash_flow' %}?filter_type=yearly" class="btn btn-outline-primary {% if filter_type == 'yearly' %}active{% endif %}">Yearly</a>
                             <a href="{% url 'finance:cash_flow' %}?filter_type=custom" class="btn btn-outline-primary {% if filter_type == 'custom' %}active{% endif %}">Custom</a>
                         </div>
-                        
-                        <!-- Custom date range form, shown only when custom is selected -->
-                        <!-- <form method="get" id="dateRangeForm" class="{% if filter_type != 'custom' %}d-none{% endif %}">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <label for="start_date">Start Date:</label>
-                                <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="form-control">
-                            </div>
-                            <div class="col-md-4">
-                                <label for="end_date">End Date:</label>
-                                <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="form-control">
-                            </div>
-                            <div class="col-md-4 d-flex align-items-end">
-                                <input type="hidden" name="filter_type" value="custom">
-                                <button type="submit" class="btn btn-primary">Apply Filter</button>
-                            </div>
-                        </div> -->
                 </div>
             </div>
         </div>
@@ -68,7 +51,7 @@
 
      <!-- Financial Summary Cards -->
      <div class="row mb-4">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <h6 class="text-muted mb-1">Total Sales</h6>
@@ -76,15 +59,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <h6 class="text-muted mb-1">Other Income</h6>
-                    <h2 class="fw-bold text-dark">{{ income_total|floatformat:2 }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <h6 class="text-muted mb-1">Total Expenses</h6>
@@ -92,7 +67,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <h6 class="text-muted mb-1">Net Balance</h6>

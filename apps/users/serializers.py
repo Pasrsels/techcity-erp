@@ -4,6 +4,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import Group
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+from loguru import logger
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -37,7 +38,12 @@ class LoginSerializer(serializers.ModelSerializer):
     tokens = serializers.SerializerMethodField()
 
     def get_tokens(self, obj):
+        from loguru import logger
+
         user = User.objects.get(username=obj['username'])
+
+
+        logger.info(f'User: {user}')
         return {
             'refresh': user.tokens()['refresh'],
             'access': user.tokens()['access']
@@ -50,9 +56,12 @@ class LoginSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         username = attrs.get('username', '')
         password = attrs.get('password', '')
+        print(username, password, 'password')
         user = auth.authenticate(username=username, password=password)
 
+
         if not user:
+            logger.info('failed')
             raise AuthenticationFailed('Invalid credentials, try again')
         if not user.is_active:
             raise AuthenticationFailed('Account disabled, contact admin')
