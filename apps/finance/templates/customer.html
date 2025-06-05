@@ -4,20 +4,112 @@
 {% load static%}
 {% block title%} Customer {% endblock%}
 {% block content %}
-<div class="finance-dashboard">
+<style>
+     :root {
+        --primary: #11998e;
+        --primary-no-gradient: #11998e;
+        --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        --secondary: orange;
+        --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+        --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        --dark: #1a1a2e;
+        --dark-alt: #16213e;
+        --text-light: rgba(228, 230, 234, 1);
+        --text-dark: black;
+        --text-muted: black;
+        --glass: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+        --border-radius: 16px;
+        --border-radius-sm: 8px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --m-bottom: 20px;
+    }
+
+    .header {
+        grid-area: header;
+        padding: 20px 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: var(--shadow);
+    }
+
+    .logo {
+        font-size: 24px;
+        font-weight: 700;
+        background: var(--primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .customer {
+        font-family: 'Inter', sans-serif !important;
+        min-height: 100vh;
+        color: var(--text-light);
+        overflow-x: hidden;
+    }
+
+    /* Animated background */
+    .customer::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        z-index: -1;
+    }
+
+    .header-btn {
+        padding: 8px 16px;
+        border-radius: var(--border-radius-sm);
+        background: var(--primary-no-gradient);
+        border: 1px solid var(--glass-border);
+        color: var(--text-light);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .header h5{
+        color: var(--text-dark);
+    }
+
+    .header-btn:hover {
+        background: var(--primary);
+        transform: translateY(-1px);
+    }
+    .customer .avatar{
+        background: var(--primary);
+    }
+</style>
+<div class="customer">
     <div class="main-content">
         <!-- Header Section -->
-        <div class="header-card bg-primary text-white rounded shadow-sm mb-4 p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Customer Account</h5>
-                <button class="btn btn-light btn-sm" id="id_add_deposit">
-                    <i class='bx bx-plus me-1'></i>Add Deposit
-                </button>
+        <div class="header">
+            <h5 class="mb-0">Customer Account</h5>
+            <div class="header-actions">
+                <div class="header-btn" id="id_add_deposit">
+                   <i class='bx bx-plus me-1'></i>Add Deposit
+                </div>
             </div>
         </div>
         
         <!-- Customer Info Section -->
-        <div class="row mb-4">
+        <div class="row mb-4 mt-4">
             <!-- Customer Profile Card -->
             <div class="col-md-7">
                 <div class="card shadow-sm rounded border-0 h-100">
@@ -26,7 +118,7 @@
                             <div class="customer-avatar me-3">
                                 {% with name_parts=customer.name|split_name %}
                                     {% if name_parts.first_name and name_parts.last_name %}
-                                        <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 20px;">
+                                        <div class="avatar text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 20px;">
                                             {{ name_parts.first_name.0 }}{{ name_parts.last_name.0 }}
                                         </div>
                                     {% else %}

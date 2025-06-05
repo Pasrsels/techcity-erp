@@ -2308,7 +2308,6 @@ def replace_item(request, item_id):
         
 @login_required
 def invoice_preview_data(request, invoice_id):
-    from django.core.serializers.json import DjangoJSONEncoder
     try:
         invoice = Invoice.objects.get(id=invoice_id)
     except Invoice.DoesNotExist:
@@ -2662,7 +2661,20 @@ def end_of_day(request):
                 expected_cash = total_sales - total_expenses
                 
                 short_fall = expected_cash - Decimal(cashed_amount) # to take into account the total_partial sales 
+               
+                sales_person_cash_up = CashUp.objects.filter(
+                    created_by=request.user, 
+                    branch=request.user.branch, 
+                    created_at__date=today, 
+                    status=False
+                ).first()
                 
+                logger.info(sales_person_cash_up)
+                
+                if sales_person_cash_up:
+                    logger.info(f'Deleting cash up for salesperson: {request.user.username}')
+                    sales_person_cash_up.delete()
+                    
                 # Create CashUp entry
                 cashup = CashUp.objects.create(
                     date=today,
@@ -4141,16 +4153,9 @@ def confirm_cash_up(request):
         account_type = data.get('account_type')
         assigned_to = data.get('assigned_to')
         notes = data.get('notes', '')
-        
-        logger.info(f'cash up id: {cash_up_id}')
-        logger.info(f'amount received: {amount_received}')
-        logger.info(f'account type: {account_type}')
-        logger.info(f'assigned to: {assigned_to}')
-        logger.info(f'notes: {notes}')
-        
+ 
         cash_up = CashUp.objects.get(id=cash_up_id)
         
-        # Calculate shortfall
         shortfall = cash_up.expected_cash - amount_received
         
         with transaction.atomic():
@@ -4161,7 +4166,6 @@ def confirm_cash_up(request):
             cash_up.save()
 
             if shortfall > 0 and assigned_to:
-                #create employee transaction
                 if account_type == 'employee':
                     try:
                         salesperson = User.objects.get(id=assigned_to)
@@ -4231,132 +4235,7 @@ def confirm_cash_up(request):
             'message': str(e)
         }, status=400)
 
-@login_required
-def cash_up_list(request):
-    if request.method == 'GET':
-        cashups = (
-            CashUp.objects.filter() 
-            .select_related('branch', 'created_by')
-            .prefetch_related(
-                'sales',
-                'expenses'
-            ).select_related(
-                'branch',
-                'created_by'
-            ).values(
-                'id',
-                'branch__name',
-                'expected_cash',
-                'created_by__username',
-                'created_at',
-                'received_amount',
-                'cashed_ammout',
-                'short_fall'
-            ).order_by('-created_at')
-        )
-        
-        logger.info(f'cashup details:{cashups}')
 
-        data = []
-        for cashup in cashups:
-            cashup_dict = dict(cashup)
-            cashup_dict['created_at'] = cashup['created_at'].strftime('%Y-%m-%d %H:%M:%S')
-            data.append(cashup_dict)
-
-        return JsonResponse({
-            'success': True,
-            'data': data
-        })
-   
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            cash_up_type = data.get('type', '')
-            branch_id = data.get('branch_id', '')
-            
-            logger.info(f'branch id:{branch_id}')
-            
-            cash_up=None
-
-            if not branch_id:
-                cash_up = CashUp.objects.filter(
-                    status=False,
-                )
-                logger.info(f'Cash up:{cash_up}')
-            else:
-                cash_up = CashUp.objects.filter(
-                    branch__id=branch_id,
-                    status=False,
-                    created_at__date=today
-                )
-            
-            cash_up = cash_up.annotate(
-                total_sales_amount=Coalesce(
-                    Sum('sales__amount_paid', output_field=models.DecimalField(max_digits=10, decimal_places=2)), 
-                    Value(0, output_field=models.DecimalField(max_digits=10, decimal_places=2))
-                ),
-                total_expenses_amount=Coalesce(
-                    Sum('expenses__amount', output_field=models.DecimalField(max_digits=10, decimal_places=2)), 
-                    Value(0, output_field=models.DecimalField(max_digits=10, decimal_places=2))
-                )
-                ).prefetch_related(
-                    'sales',
-                    'expenses'
-                ).select_related(
-                    'branch',
-                    'created_by'
-                ).order_by('-created_at__time')
-
-            if not cash_up:
-                return JsonResponse({'message': 'Cash up not found', 'success': False}, status=404)
-            
-            sales = []
-            expenses = []
-            for cash in cash_up:
-                sales.append(
-                    {
-                        'cash_id': cash.id,
-                        'sales': list(cash.sales.values(
-                            'id',
-                            'invoice_number',
-                            'products_purchased',
-                            'amount_paid',
-                            'branch',
-                            'branch__name',
-                            'cash_up_status'
-                        )),
-                        'expenses': list(cash.expenses.values(
-                            'id',
-                            'amount',
-                            'category__name',
-                            'category__parent__name',
-                            'issue_date'
-                        ))
-                    }
-                )
-            return JsonResponse({
-                'success': True,
-                'cash_up': list(cash_up.values(
-                    'id',
-                    'branch__name',
-                    'expected_cash',
-                    'created_by__username',
-                    'created_at',
-                    'received_amount',
-                    'total_sales_amount',
-                    'total_expenses_amount',
-                    'cashed_amount',
-                    'short_fall'
-                )),
-                'data': {
-                    'sales': sales if sales else [],
-                    'expenses': expenses if expenses else []
-                }
-            }, status=200)
-
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
-        
 @login_required
 def get_recorded_cash_ups(request):
     try:
@@ -7262,217 +7141,6 @@ def send_invoice_whatsapp(request, invoice_id):
         return JsonResponse({"error": "Error sending invoice via WhatsApp"})
     
 @login_required
-@transaction.atomic()
-def end_of_day(request):
-    today = timezone.now().date()
-    
-    user_timezone_str = request.user.timezone if hasattr(request.user, 'timezone') else 'UTC'
-    user_timezone = pytz_timezone(user_timezone_str)  
-
-    def filter_by_date_range(start_date, end_date):
-        start_datetime = user_timezone.localize(
-            timezone.datetime.combine(start_date, timezone.datetime.min.time())
-        )
-        end_datetime = user_timezone.localize(
-            timezone.datetime.combine(end_date, timezone.datetime.max.time())
-        )
-        return Invoice.objects.filter(branch=request.user.branch, issue_date__range=[start_datetime, end_datetime])
-
-    now = timezone.now().astimezone(user_timezone)
-    today = now.date()
-    
-    invoices = filter_by_date_range(today, today)
-    withdrawals = CashWithdraw.objects.filter(user__branch=request.user.branch, date=today, status=False)
-    
-    total_cash_amounts = [
-        {
-            'total_invoices_amount': invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
-            'total_withdrawals_amount': withdrawals.aggregate(Sum('amount'))['amount__sum'] or 0
-        }
-    ]
-
-    sold_inventory = (
-        ActivityLog.objects
-        .filter(invoice__branch=request.user.branch, timestamp__date=today, action='Sale')
-        .values('inventory__id', 'inventory__name')
-        .annotate(quantity_sold=Sum('quantity'))
-    )
-
-    if request.method == 'GET':
-        all_inventory = Inventory.objects.filter(branch=request.user.branch, status=True).values(
-            'id', 'name', 'quantity'
-        )
-
-        inventory_data = []
-        for item in sold_inventory:
-            sold_info = next((inv for inv in all_inventory if item['inventory__id'] == inv['id']), None)
-            
-            if sold_info:
-                inventory_data.append({
-                    'id': item['inventory__id'],
-                    'name': item['inventory__name'],
-                    'initial_quantity': item['quantity_sold'] + sold_info['quantity'] if sold_info else 0,
-                    'quantity_sold': item['quantity_sold'],
-                    'remaining_quantity': sold_info['quantity'] if sold_info else 0,
-                    'physical_count': None
-                })
-           
-        return JsonResponse({'inventory': inventory_data, 'total_cash_amounts': total_cash_amounts})
-    
-    elif request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            inventory_data = []
-            cashed_amount = data['cash_input']
-            physical_counts = data['physical_counts']
-            
-            if not cashed_amount:
-                return JsonResponse({'success': False, 'error': 'Cash input is required.'})
-            
-            if not physical_counts:
-                return JsonResponse({'success': False, 'error': 'Physical counts are required.'})
-
-            with transaction.atomic():
-                for item in physical_counts:
-                    try:
-                        inventory = Inventory.objects.get(id=int(item['item_id']), branch=request.user.branch, status=True)
-                        inventory.physical_count = item['physical_count']
-                        inventory.save()
-
-                        sold_info = next((i for i in sold_inventory if i['inventory__id'] == inventory.id), None)
-                        inventory_data.append({
-                            'id': inventory.id,
-                            'name': inventory.name,
-                            'initial_quantity': inventory.quantity,
-                            'quantity_sold': sold_info['quantity_sold'] if sold_info else 0,
-                            'remaining_quantity': inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0),
-                            'physical_count': inventory.physical_count,
-                            'difference': inventory.physical_count - (inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0))
-                        })
-                    except Inventory.DoesNotExist:
-                        return JsonResponse({'success': False, 'error': f'Inventory item with id {item["inventory_id"]} does not exist.'})
-
-                today_min = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-                today_max = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
-                
-                # Invoice data
-                invoices = Invoice.objects.filter(branch=request.user.branch, issue_date__range=(today_min, today_max))
-                partial_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PARTIAL)
-                paid_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PAID)
-            
-                # Expenses
-                expenses = Expense.objects.filter(branch=request.user.branch, issue_date__range=(today_min, today_max))
-                
-                confirmed_expenses = expenses.filter(status=True)
-                unconfirmed_expenses = expenses.filter(status=False)
-                
-                # Calculate totals for CashUp
-                total_sales = paid_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0 
-                total_partial = partial_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0
-                total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
-                expected_cash = total_sales - total_expenses
-                
-                short_fall = expected_cash - Decimal(cashed_amount) # to take into account the total_partial sales 
-                
-                # Create CashUp entry
-                cashup = CashUp.objects.create(
-                    date=today,
-                    branch=request.user.branch,
-                    expected_cash=expected_cash,
-                    cashed_amount=cashed_amount,
-                    received_amount=0,  
-                    short_fall=short_fall,
-                    balance=0,  
-                    created_by=request.user,
-                    status=False 
-                )
-
-                logger.info(cashup.expected_cash)
-
-                items = Invoice.objects.filter(
-                    payment_status=Invoice.PaymentStatus.PAID, 
-                    issue_date__range=(today_min, today_max),
-                    branch=request.user.branch
-                )
-                
-                cashup.sales.set(items)
-
-                cashup.expenses.set(expenses) #to change to confirmed expenses (later)
-
-                # Create UserAccount object
-                user_account, _ = UserAccount.objects.get_or_create(
-                    user=request.user,
-                    defaults={
-                        'balance': Decimal('0.00'),
-                        'total_credits': Decimal('0.00'),
-                        'total_debits': Decimal('0.00'),
-                        'last_transaction_date': timezone.now()
-                    }
-                )
-
-                # Create UserTransaction object
-                user_transaction = UserTransaction.objects.create(
-                    account=user_account,
-                    transaction_type='Cash',
-                    amount=total_cash_amounts[0]['total_invoices_amount'] - total_cash_amounts[0]['total_withdrawals_amount'],
-                    description='End of day transaction',
-                    debit = expected_cash,
-                    credit = 0,
-                )
-
-                # Update UserAccount balance
-                user_account.balance += user_transaction.amount
-                user_account.total_debits += user_transaction.amount
-                user_account.last_transaction_date = timezone.now()
-                user_account.save()
-
-
-                # # Generate PDF report
-                # html_string = render_to_string('day_report.html', {
-                #     'request': request,
-                #     'invoices': invoices,
-                #     'expenses': expenses,
-                #     'date': today,
-                #     'inventory_data': inventory_data,
-                #     'total_sales': total_sales,
-                #     'partial_payments': total_partial,
-                #     'total_paid_invoices': paid_invoices.count(),
-                #     'total_partial_invoices': partial_invoices.count(),
-                #     'total_expenses': total_expenses,
-                #     'confirmed_expenses': confirmed_expenses,
-                #     'unconfirmed_expenses': unconfirmed_expenses,
-                #     'account_balances': AccountBalance.objects.filter(branch=request.user.branch),
-                #     'cashup': cashup
-                # })
-                
-                # pdf_buffer = BytesIO()
-                # pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
-                
-                # if not pisa_status.err:
-                #     filename = f"{request.user.branch.name}_today_report_{today}.pdf"
-                #     return JsonResponse({
-                #         "success": True,
-                #         "cashup_id": cashup.id,
-                #         "expected_cash": float(expected_cash)
-                #     })
-                # else:
-                #     return JsonResponse({"success": False, "error": "Error generating PDF."}
-
-                return JsonResponse({
-                        "success": True,
-                        "cashup_id": cashup.id,
-                        # "expected_cash": float(expected_cash)
-                })
-
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'error': 'Invalid JSON data.'})
-        except Exception as e:
-            logger.exception(f"Error processing request: {e}")
-            return JsonResponse({'success': False, 'error': str(e)})
-    
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
-@login_required
 def invoice_payment_track(request):
     invoice_id = request.GET.get('invoice_id', '')
     
@@ -8747,137 +8415,6 @@ def cash_flow(request):
 
 #     return render(request, 'cashflow.html', context)
 
-@login_required
-def cash_up_list(request):
-    if request.method == 'GET':
-        cashups = (
-            CashUp.objects.filter() 
-            .select_related('branch', 'created_by')
-            .prefetch_related(
-                'sales',
-                'expenses'
-            ).select_related(
-                'branch',
-                'created_by'
-            ).values(
-                'id',
-                'branch__name',
-                'expected_cash',
-                'created_by__username',
-                'created_at',
-                'received_amount',
-                'cashed_ammout',
-                'short_fall'
-            ).order_by('-created_at')
-        )
-        
-        logger.info(f'cashup details:{cashups}')
-
-        data = []
-        for cashup in cashups:
-            cashup_dict = dict(cashup)
-            cashup_dict['created_at'] = cashup['created_at'].strftime('%Y-%m-%d %H:%M:%S')
-            data.append(cashup_dict)
-
-        return JsonResponse({
-            'success': True,
-            'data': data
-        })
-   
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            cash_up_type = data.get('type', '')
-            branch_id = data.get('branch_id', '')
-            
-            logger.info(f'branch id:{branch_id}')
-            
-            cash_up=None
-
-            if not branch_id:
-                cash_up = CashUp.objects.filter(
-                    status=False,
-                )
-                logger.info(f'Cash up:{cash_up}')
-            else:
-                cash_up = CashUp.objects.filter(
-                    branch__id=branch_id,
-                    status=False,
-                    created_at__date=today
-                )
-            
-            cash_up = cash_up.annotate(
-                total_sales_amount=Coalesce(
-                    Sum('sales__amount_paid', output_field=models.DecimalField(max_digits=10, decimal_places=2)), 
-                    Value(0, output_field=models.DecimalField(max_digits=10, decimal_places=2))
-                ),
-                total_expenses_amount=Coalesce(
-                    Sum('expenses__amount', output_field=models.DecimalField(max_digits=10, decimal_places=2)), 
-                    Value(0, output_field=models.DecimalField(max_digits=10, decimal_places=2))
-                )
-                ).prefetch_related(
-                    'sales',
-                    'expenses'
-                ).select_related(
-                    'branch',
-                    'created_by'
-                ).order_by('-created_at__time')
-
-            if not cash_up:
-                return JsonResponse({'message': 'Cash up not found', 'success': False}, status=404)
-            
-            sales = []
-            expenses = []
-            for cash in cash_up:
-                sales.append(
-                    {
-                        'cash_id': cash.id,
-                        'sales': list(cash.sales.values(
-                            'id',
-                            'invoice_number',
-                            'products_purchased',
-                            'amount_paid',
-                            'branch',
-                            'branch__name',
-                            'cash_up_status'
-                        )),
-                        'expenses': list(cash.expenses.values(
-                            'id',
-                            'amount',
-                            'category__name',
-                            'category__parent__name',
-                            'issue_date'
-                        ))
-                    }
-                )
-     
-            logger.info(sales)
-            
-            logger.info(expenses)
-
-            return JsonResponse({
-                'success': True,
-                'cash_up': list(cash_up.values(
-                    'id',
-                    'branch__name',
-                    'expected_cash',
-                    'created_by__username',
-                    'created_at',
-                    'received_amount',
-                    'total_sales_amount',
-                    'total_expenses_amount',
-                    'cashed_amount',
-                    'short_fall'
-                )),
-                'data': {
-                    'sales': sales if sales else [],
-                    'expenses': expenses if expenses else []
-                }
-            }, status=200)
-
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
-        
 @login_required
 def get_recorded_cash_ups(request):
     try:
@@ -11976,218 +11513,6 @@ def send_invoice_whatsapp(request, invoice_id):
         return JsonResponse({"error": "Error sending invoice via WhatsApp"})
     
 @login_required
-@transaction.atomic()
-def end_of_day(request):
-    today = timezone.now().date()
-    
-    user_timezone_str = request.user.timezone if hasattr(request.user, 'timezone') else 'UTC'
-    user_timezone = pytz_timezone(user_timezone_str)  
-
-    def filter_by_date_range(start_date, end_date):
-        start_datetime = user_timezone.localize(
-            timezone.datetime.combine(start_date, timezone.datetime.min.time())
-        )
-        end_datetime = user_timezone.localize(
-            timezone.datetime.combine(end_date, timezone.datetime.max.time())
-        )
-        return Invoice.objects.filter(branch=request.user.branch, issue_date__range=[start_datetime, end_datetime])
-
-    now = timezone.now().astimezone(user_timezone)
-    today = now.date()
-    
-    invoices = filter_by_date_range(today, today)
-    withdrawals = CashWithdraw.objects.filter(user__branch=request.user.branch, date=today, status=False)
-    
-    total_cash_amounts = [
-        {
-            'total_invoices_amount': invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
-            'total_withdrawals_amount': withdrawals.aggregate(Sum('amount'))['amount__sum'] or 0
-        }
-    ]
-
-    sold_inventory = (
-        ActivityLog.objects
-        .filter(invoice__branch=request.user.branch, timestamp__date=today, action='Sale')
-        .values('inventory__id', 'inventory__name')
-        .annotate(quantity_sold=Sum('quantity'))
-    )
-
-    if request.method == 'GET':
-        all_inventory = Inventory.objects.filter(branch=request.user.branch, status=True).values(
-            'id', 'name', 'quantity'
-        )
-
-        inventory_data = []
-        for item in sold_inventory:
-            sold_info = next((inv for inv in all_inventory if item['inventory__id'] == inv['id']), None)
-            
-            if sold_info:
-                inventory_data.append({
-                    'id': item['inventory__id'],
-                    'name': item['inventory__name'],
-                    'initial_quantity': item['quantity_sold'] + sold_info['quantity'] if sold_info else 0,
-                    'quantity_sold': item['quantity_sold'],
-                    'remaining_quantity': sold_info['quantity'] if sold_info else 0,
-                    'physical_count': None
-                })
-           
-        return JsonResponse({'inventory': inventory_data, 'total_cash_amounts': total_cash_amounts})
-    
-    elif request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            logger.info(data)
-            inventory_data = []
-            cashed_amount = data['cash_input']
-            physical_counts = data['physical_counts']
-            
-            if not cashed_amount:
-                return JsonResponse({'success': False, 'error': 'Cash input is required.'})
-            
-            if not physical_counts:
-                return JsonResponse({'success': False, 'error': 'Physical counts are required.'})
-
-            with transaction.atomic():
-                for item in physical_counts:
-                    try:
-                        inventory = Inventory.objects.get(id=int(item['item_id']), branch=request.user.branch, status=True)
-                        inventory.physical_count = item['physical_count']
-                        inventory.save()
-
-                        sold_info = next((i for i in sold_inventory if i['inventory__id'] == inventory.id), None)
-                        inventory_data.append({
-                            'id': inventory.id,
-                            'name': inventory.name,
-                            'initial_quantity': inventory.quantity,
-                            'quantity_sold': sold_info['quantity_sold'] if sold_info else 0,
-                            'remaining_quantity': inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0),
-                            'physical_count': inventory.physical_count,
-                            'difference': inventory.physical_count - (inventory.quantity - (sold_info['quantity_sold'] if sold_info else 0))
-                        })
-                    except Inventory.DoesNotExist:
-                        return JsonResponse({'success': False, 'error': f'Inventory item with id {item["inventory_id"]} does not exist.'})
-
-                today_min = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-                today_max = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
-                
-                # Invoice data
-                invoices = Invoice.objects.filter(branch=request.user.branch, issue_date__range=(today_min, today_max))
-                partial_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PARTIAL)
-                paid_invoices = invoices.filter(payment_status=Invoice.PaymentStatus.PAID)
-            
-                # Expenses
-                expenses = Expense.objects.filter(branch=request.user.branch, issue_date__range=(today_min, today_max))
-                
-                confirmed_expenses = expenses.filter(status=True)
-                unconfirmed_expenses = expenses.filter(status=False)
-                
-                # Calculate totals for CashUp
-                total_sales = paid_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0 
-                total_partial = partial_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0
-                total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
-                expected_cash = total_sales - total_expenses
-                
-                short_fall = expected_cash - Decimal(cashed_amount) # to take into account the total_partial sales 
-                
-                # Create CashUp entry
-                cashup = CashUp.objects.create(
-                    date=today,
-                    branch=request.user.branch,
-                    expected_cash=expected_cash,
-                    cashed_amount=cashed_amount,
-                    received_amount=0,  
-                    short_fall=short_fall,
-                    balance=0,  
-                    created_by=request.user,
-                    status=False 
-                )
-
-                logger.info(cashup.expected_cash)
-
-                items = Invoice.objects.filter(
-                    payment_status=Invoice.PaymentStatus.PAID, 
-                    issue_date__range=(today_min, today_max),
-                    branch=request.user.branch
-                )
-                
-                cashup.sales.set(items)
-
-                cashup.expenses.set(expenses) #to change to confirmed expenses (later)
-
-                # Create UserAccount object
-                user_account, _ = UserAccount.objects.get_or_create(
-                    user=request.user,
-                    defaults={
-                        'balance': Decimal('0.00'),
-                        'total_credits': Decimal('0.00'),
-                        'total_debits': Decimal('0.00'),
-                        'last_transaction_date': timezone.now()
-                    }
-                )
-
-                # Create UserTransaction object
-                user_transaction = UserTransaction.objects.create(
-                    account=user_account,
-                    transaction_type='Cash',
-                    amount=total_cash_amounts[0]['total_invoices_amount'] - total_cash_amounts[0]['total_withdrawals_amount'],
-                    description='End of day transaction',
-                    debit = expected_cash,
-                    credit = 0,
-                )
-
-                # Update UserAccount balance
-                user_account.balance += user_transaction.amount
-                user_account.total_debits += user_transaction.amount
-                user_account.last_transaction_date = timezone.now()
-                user_account.save()
-
-
-                # # Generate PDF report
-                # html_string = render_to_string('day_report.html', {
-                #     'request': request,
-                #     'invoices': invoices,
-                #     'expenses': expenses,
-                #     'date': today,
-                #     'inventory_data': inventory_data,
-                #     'total_sales': total_sales,
-                #     'partial_payments': total_partial,
-                #     'total_paid_invoices': paid_invoices.count(),
-                #     'total_partial_invoices': partial_invoices.count(),
-                #     'total_expenses': total_expenses,
-                #     'confirmed_expenses': confirmed_expenses,
-                #     'unconfirmed_expenses': unconfirmed_expenses,
-                #     'account_balances': AccountBalance.objects.filter(branch=request.user.branch),
-                #     'cashup': cashup
-                # })
-                
-                # pdf_buffer = BytesIO()
-                # pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
-                
-                # if not pisa_status.err:
-                #     filename = f"{request.user.branch.name}_today_report_{today}.pdf"
-                #     return JsonResponse({
-                #         "success": True,
-                #         "cashup_id": cashup.id,
-                #         "expected_cash": float(expected_cash)
-                #     })
-                # else:
-                #     return JsonResponse({"success": False, "error": "Error generating PDF."}
-
-                return JsonResponse({
-                        "success": True,
-                        "cashup_id": cashup.id,
-                        # "expected_cash": float(expected_cash)
-                })
-
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'error': 'Invalid JSON data.'})
-        except Exception as e:
-            logger.exception(f"Error processing request: {e}")
-            return JsonResponse({'success': False, 'error': str(e)})
-    
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
-@login_required
 def invoice_payment_track(request):
     invoice_id = request.GET.get('invoice_id', '')
     
@@ -12501,9 +11826,30 @@ def delete_qoute(request, qoutation_id):
 @login_required
 def cashbook_view(request):
     """Main view to render the cashbook page"""
-    currency= Currency.objects.filter(default=True).first()
-    logger.info(currency)
-    return render(request, 'cashbook.html', {'currency':currency})
+    currency = Currency.objects.filter(default=True).first()
+    cash_up = CashUp.objects.filter(status=False)
+
+    branches_pending_totals = defaultdict(float)
+    total = 0
+    branches_data = {}
+
+    for cash in cash_up:
+        total += cash.expected_cash
+        branches_pending_totals[cash.branch.name] += float(cash.expected_cash)
+        branches_data[cash.branch.id] = {
+            'id': cash.branch.id,
+            'name': cash.branch.name,
+            'total': branches_pending_totals[cash.branch.name]
+        }
+
+    return render(request, 'cashbook.html', {
+        'currency': currency,
+        'all_totals': total,
+        'cash_up_count': cash_up.count(),
+        'to_date':cash_up.last().created_at.date,
+        'from_date':cash_up.first().created_at.date,
+        'branches_data': list(branches_data.values())
+    })
 
 @login_required
 def cashbook_data(request):
@@ -13230,7 +12576,6 @@ def cash_flow(request):
     today = datetime.datetime.today()
     income_form = IncomeCategoryForm()
     
-
     filter_type = request.GET.get('filter_type', 'today')
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
@@ -13378,6 +12723,7 @@ def cash_flow(request):
         'status',
         'date'
     ).order_by('-created_at')
+
     
     context = {
         'start_date': start_date,
@@ -13511,15 +12857,13 @@ def cash_up_list(request):
             cash_up_type = data.get('type', '')
             branch_id = data.get('branch_id', '')
             
-            logger.info(f'branch id:{branch_id}')
-            
             cash_up=None
 
             if not branch_id:
+                logger.info('here')
                 cash_up = CashUp.objects.filter(
                     status=False,
-                )
-                logger.info(f'Cash up:{cash_up}')
+                )                        
             else:
                 cash_up = CashUp.objects.filter(
                     branch__id=branch_id,
@@ -13571,10 +12915,6 @@ def cash_up_list(request):
                         ))
                     }
                 )
-     
-            logger.info(sales)
-            
-            logger.info(expenses)
 
             return JsonResponse({
                 'success': True,
@@ -13593,7 +12933,7 @@ def cash_up_list(request):
                 'data': {
                     'sales': sales if sales else [],
                     'expenses': expenses if expenses else []
-                }
+                },
             }, status=200)
 
         except Exception as e:
