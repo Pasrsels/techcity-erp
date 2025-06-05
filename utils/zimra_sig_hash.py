@@ -3,6 +3,7 @@ import hashlib
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 import argparse
+from loguru import logger
 
 def get_hash(request):
     """Generate SHA-256 hash of input data and encode as base64"""
