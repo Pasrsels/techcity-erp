@@ -13,7 +13,7 @@ from loguru import logger
 from utils.zimra import ZIMRA
 import qrcode, os
 from io import BytesIO
-from apps.finance.models import Invoice
+from apps.finance.models import Invoice, CreditNote
 
 load_dotenv()
 
