@@ -106,9 +106,9 @@ def generate_receipt_data(invoice, invoice_items, request):
         Transform invoice data to receipt format, save offline, and submit to FDMS.
     """
     try:
-        fiscal_day = FiscalDay.objects.filter(is_open=True, created_at__date=datetime.today()).first()
+        fiscal_day = FiscalDay.objects.filter(is_open=True).first()
         logger.info(fiscal_day)
-        logger.info(f"Processing Invoice: {invoice.invoice_number}")
+        logger.info(f"Processing Invoice: {invoice.invoice_number} {invoice}")
 
        
         # if not fiscal_day:
@@ -116,10 +116,10 @@ def generate_receipt_data(invoice, invoice_items, request):
         #     zimra.open_day()
 
         last_global_no = get_last_receipt_numbers()
-
         new_receipt_global_no = last_global_no + 1
 
-        logger.info(f'Global number: {new_receipt_global_no}, Receipt_counter:{fiscal_day.receipt_count}')
+
+        logger.info(f'Global number: {new_receipt_global_no}')
 
         receipt_lines = []
         total_tax_amount = 0
@@ -128,10 +128,6 @@ def generate_receipt_data(invoice, invoice_items, request):
             .exclude(id=invoice.id)\
             .order_by('-id')\
             .first()  
-        
-
-        logger.info(f'Previous Invoice: {previous_invoice}')
-
 
         for index, item in enumerate(invoice_items, start=1):
             line_total = float(item.unit_price) * item.quantity
@@ -150,13 +146,15 @@ def generate_receipt_data(invoice, invoice_items, request):
                 "taxPercent": 15.00,
                 "taxID": 3
             })
+        
+        logger.info(receipt_lines)
 
         receipt_data = {
             "receiptType": "FiscalInvoice",
             "receiptCurrency": invoice.currency.name.upper(),
             "receiptCounter":fiscal_day.receipt_count + 1,
             "receiptGlobalNo":new_receipt_global_no,
-            "invoiceNo": f"{new_receipt_global_no}",
+            "invoiceNo": f"a{new_receipt_global_no}",
             "receiptNotes": "Thank you for shopping with us!",
             "receiptDate": datetime.now().replace(microsecond=0).isoformat(),
             "receiptLinesTaxInclusive": True,

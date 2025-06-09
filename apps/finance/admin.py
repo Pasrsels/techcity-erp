@@ -31,4 +31,5 @@ admin.site.register(MainExpenseCategory)
 admin.site.register(ExpenseSubCategory)
 admin.site.register(Income)
 admin.site.register(IncomeCategory)
+admin.site.register(CreditNote)
 

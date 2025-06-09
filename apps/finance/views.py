@@ -888,8 +888,9 @@ def create_invoice(request):
                     logger.info(sig_data)
                     hash_sig_data = run(sig_data)
                     
-                    logger.info(hash_sig_data)
-                    submit_receipt_data(request, receipt_data, hash_sig_data['hash'], hash_sig_data['signature'])
+                    # logger.info(hash_sig_data)
+                    credit_note_data = []
+                    submit_receipt_data(request, receipt_data, credit_note_data, hash_sig_data['hash'], hash_sig_data['signature'], invoice.id)
                     
                     invoice_data = invoice_preview_json(request, invoice.id)
 
@@ -1641,7 +1642,10 @@ def create_credit_note(request):
                     is_return=item_data.get('is_return', False)
                 )
                 
-                invoice_item.credit_not_amount = -item_data['discount']
+                invoice_item.credit_note_amount = -item_data['discount']
+                invoice_item.credit_note_issued = True
+                invoice_item.save()
+                invoice.save() # optimise for perfomance
                 
                 total_amount += credit_note_item.discount
                 
@@ -1665,10 +1669,16 @@ def create_credit_note(request):
                 updated_by=request.user
             )
             
-            generate_credit_note_data(invoice, invoice_items, request)
-            # logger.info(f'Signature data: {signature_data}')
-            # logger.info(f'Receipt data: {receipt_data}')
+            sig_data, credit_note_data = generate_credit_note_data(invoice, invoice_items, request)
+            logger.info(f'Signature data: {credit_note_data}')
+            logger.info(f'{sig_data}')
+            
+            hash_sig_data = run(sig_data)
+            logger.info(f'hash_sig_data: {hash_sig_data}')
 
+            receipt_data = []
+            submit_receipt_data(request, receipt_data, credit_note_data, hash_sig_data['hash'], hash_sig_data['signature'], invoice.id)
+                    
             return JsonResponse({
                 'success': True,
                 'message': 'Credit note issued successfully',

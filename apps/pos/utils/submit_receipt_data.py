@@ -11,16 +11,23 @@ import os
 import base64
 import binascii
 
-def submit_receipt_data(request, receipt_data, hash, signature):
+def submit_receipt_data(request, receipt_data, credit_note, hash, signature, invoice__id):
+    logger.info(invoice__id)
     try:
 
-        receipt = OfflineReceipt(receipt_data=receipt_data)
+        receipt = OfflineReceipt(
+            invoice_id=invoice__id,
+            receipt_data=receipt_data
+        )
         receipt.save()
         logger.info(f'Receipt saved offline: {receipt}')
     
         zimra_instance = ZIMRA()
-        response = zimra_instance.submit_receipt({"receipt":receipt_data}, hash, signature)
+        response = zimra_instance.submit_receipt({"receipt":receipt_data}, {"receipt":credit_note}, hash, signature)
         logger.info(f"Receipt submission response: {response}")
+
+        invoiceId = response.get('receiptID')
+        logger.info(f'Zimra invoice id: {invoiceId}')
 
         if response:
             logger.info('here')
@@ -63,6 +70,10 @@ def submit_receipt_data(request, receipt_data, hash, signature):
                 invoice.code=code
                 invoice.fiscal_day=fiscal_day.day_no
                 invoice.invoice_number = f"{receipt_data['receiptGlobalNo']}"
+
+                if invoiceId:
+                    invoice.zimra_inv_id = invoiceId
+                
                 invoice.save()
                 logger.info(f'invoice saved: {invoice}')
             except Exception as e:
