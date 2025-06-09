@@ -913,7 +913,7 @@ def create_invoice(request):
                     payment_terms = invoice_data['paymentTerms'],
                     hold_status = invoice_data['hold_status'],
                     amount_received = amount_paid,
-                    products_purchased = json.dumps([products_purchased])
+                    products_purchased = ''
                 )
                 
            
@@ -9325,6 +9325,10 @@ def invoice(request):
         'user'
     ).order_by('-invoice_number')
 
+    invoice_items = InvoiceItem.objects.filter(invoice__branch=request.user.branch).select_related(
+        'invoice',
+    )
+
     query_params = request.GET
     if query_params.get('q'):
         search_query = query_params['q']
@@ -9414,6 +9418,7 @@ def invoice(request):
         'total_paid': total_paid,
         'total_due': total_partial,
         'total_amount': total_amount,
+        'invoice_items':invoice_items
     })
     
 @login_required

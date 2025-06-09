@@ -31,10 +31,12 @@ from apps.finance.models import (
     layby, 
     laybyDates, 
     Paylater,
+    paylaterDates,
     Currency
 )
 from apps.inventory.models import ActivityLog
 from datetime import timedelta
+from django.template.loader import render_to_string
 
 @login_required
 @transaction.atomic
@@ -80,6 +82,26 @@ def new_pos(request):
             'tax_rate': tax_rate
         }
     )
+
+@login_required
+def paylaters(request):
+    paylaters = Paylater.objects.all()
+    paylaters_dates = paylaterDates.objects.all()
+    
+    html = render_to_string('partials/paylaters.html')
+    
+    return JsonResponse({'success':True, 'html':html})
+
+@login_required
+def laybyes(request):
+    laybys= layby.objects.all()
+    layby_dates = laybyDates.objects.all()
+    
+    html = render_to_string('partials/paylaters.html')
+    
+    return JsonResponse({'success':True, 'html':html})
+
+
 
 @login_required
 @transaction.atomic 

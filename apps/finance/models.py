@@ -744,7 +744,7 @@ class Cashflow(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     cash_up = models.ForeignKey('finance.CashUp', on_delete=models.CASCADE, null=True)
-
+ 
     def save(self, *args, **kwargs):
         # Calculate total (income - expense)
         self.total = self.income - self.expense

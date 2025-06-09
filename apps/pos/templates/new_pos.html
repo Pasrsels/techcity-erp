@@ -62,11 +62,11 @@
 
     .pos-container {
         display: grid;
-        grid-template-columns: 80px 1fr 420px;
+        grid-template-columns: 80px 1fr;
         grid-template-rows: auto 1fr;
         grid-template-areas: 
-            "sidebar header header"
-            "sidebar products cart";
+            "sidebar header"
+            "sidebar content";
         height: 100vh;
         gap: 20px;
         padding: 20px;
@@ -81,6 +81,7 @@
         align-items: center;
         gap: 20px;
         box-shadow: var(--shadow);
+        background: #000;
     }
 
     .sidebar-item {
@@ -123,7 +124,7 @@
 
     .sidebar-item i {
         font-size: 20px;
-        color: #000;
+        color: #fff;
     }
 
     /* Header */
@@ -803,25 +804,22 @@
     <div class="pos-container">
         <!-- Sidebar -->
         <div class="sidebar">
-            <div class="sidebar-item" title="Dashboard">
+            <div class="sidebar-item active" data-target="home" title="Dashboard">
                 <i class="fas fa-home"></i>
             </div>
-            <div class="sidebar-item" title="Products">
-                <i class="fas fa-box"></i>
-            </div>
-            <div class="sidebar-item" title="Customers">
+            <div class="sidebar-item" data-target="customers" title="Customers">
                 <i class="fas fa-users"></i>
             </div>
-            <div class="sidebar-item" title="Reports">
+            <div class="sidebar-item" data-target="reports" title="Reports">
                 <i class="fas fa-chart-bar"></i>
             </div>
-            <div class="sidebar-item" title="Settings">
+            <div class="sidebar-item" data-target="settings" title="Settings">
                 <i class="fas fa-cog"></i>
             </div>
-            <div class="sidebar-item" title="Layby">
+            <div class="sidebar-item" data-target="layby" title="Layby">
                 <i class="fas fa-clock"></i>
             </div>
-            <div class="sidebar-item" title="Pay Later">
+            <div class="sidebar-item" data-target="paylater" title="Pay Later">
                 <i class="fas fa-credit-card"></i>
             </div>
         </div>
@@ -851,101 +849,139 @@
                 </div>
             </div>
         </div>
-          <!-- Products Section -->
-        <div class="products-section">
-            <div class="search-container">
-                <input type="text" class="search-input" placeholder="Search products..." id="product-search">
-                <i class="fas fa-search search-icon"></i>
-            </div>
-            
-            <div class="filter-tabs">
-                <div class="filter-tab active" data-category="all">All Products</div>
-                {% for product_category in product_categories %}
-                    <div class="filter-tab" data-category="{{ product_category.name }}">{{ product_category.name }}</div>
-                {% endfor %}
-            </div>
 
-            <div class="products-grid" id="products-grid">
-                {% for product in products %}
-                    <div class="product-card animate-in" data-category="{{ product.category__name }}" 
-                         data-id="{{ product.id }}"
-                         data-price="{{ product.price }}"
-                         data-stock="{{ product.quantity }}"
-                         onclick="addToCart('{{ product.id }}', '{{ product.name }}', {{ product.price }}, {{ product.quantity }})">
-                        <div class="product-image">
-                            {% if product.image %}
-                                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
-                            {% else %}
-                                <img src="{% static 'placeholder.png' %}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
-                            {% endif %}
-                        </div>
-                        <div class="product-name">{{ product.name }}</div>
-                        <div class="product-price">${{ product.unit_price }}</div>
-                        <div class="product-stock">In Stock: {{ product.quantity }}</div>
+        <!-- Pages Container -->
+        <div class="pages-container" style="grid-area: content; display: flex; gap: 20px; height: 100vh; padding: 30px; overflow-y: auto;">
+            <!-- Home Page: combines products and cart -->
+            <div class="page active" id="home" style="flex: 1; display: flex; gap: 20px;">
+                <!-- Products Section -->
+                <div class="products-section" style="flex: 2; background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--border-radius); padding: 30px; overflow-y: auto; box-shadow: var(--shadow);">
+                    <div class="search-container">
+                        <input type="text" class="search-input" placeholder="Search products..." id="product-search">
+                        <i class="fas fa-search search-icon"></i>
                     </div>
-                {% endfor %}
-            </div>
-            
-        </div>
+                    
+                    <div class="filter-tabs">
+                        <div class="filter-tab active" data-category="all">All Products</div>
+                        {% for product_category in product_categories %}
+                            <div class="filter-tab" data-category="{{ product_category.name }}">{{ product_category.name }}</div>
+                        {% endfor %}
+                    </div>
 
-         <!-- Cart Section -->
-         <div class="cart-section">
-            <div class="cart-header">
-                <div class="cart-title">
-                    <i class="fas fa-shopping-cart"></i> Cart
+                    <div class="products-grid" id="products-grid">
+                        {% for product in products %}
+                            <div class="product-card animate-in" data-category="{{ product.category__name }}" 
+                                data-id="{{ product.id }}"
+                                data-price="{{ product.price }}"
+                                data-stock="{{ product.quantity }}"
+                                onclick="addToCart('{{ product.id }}', '{{ product.name }}', {{ product.price }}, {{ product.quantity }})">
+                                <div class="product-image">
+                                    {% if product.image %}
+                                        <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                        <img src="{% static 'placeholder.png' %}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% endif %}
+                                </div>
+                                <div class="product-name">{{ product.name }}</div>
+                                <div class="product-price">${{ product.unit_price }}</div>
+                                <div class="product-stock">In Stock: {{ product.quantity }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
-                <div class="d-flex align-items-center w-100">
-                    <select class="customer-select"></select>
-                    <i class="fas fa-plus"></i>
+
+                <!-- Cart Section -->
+                <div class="cart-section" style="flex: 1; background: var(--glass); backdrop-filter: blur(20px); border-radius: var(--border-radius); padding: 30px; display: flex; flex-direction: column; box-shadow: var(--shadow);">
+                    <div class="cart-header">
+                        <div class="cart-title">
+                            <i class="fas fa-shopping-cart"></i> Cart
+                        </div>
+                        <div class="d-flex align-items-center w-100">
+                            <select class="customer-select"></select>
+                            <i class="fas fa-plus"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <button class="quick-action-btn" id="layby-btn" onclick="showPaymentModal('layby')">
+                            <i class="fas fa-clock"></i> Layby
+                        </button>
+                        <button class="quick-action-btn" id="paylater-btn" onclick="showPaymentModal('paylater')">
+                            <i class="fas fa-credit-card"></i> Pay Later
+                        </button>
+                        <button class="quick-action-btn" id="quote-btn" onclick="showPaymentModal('quote')">
+                            <i class="fas fa-file-alt"></i> Quote
+                        </button>
+                    </div>
+                    
+                    <div class="cart-items" id="cart-items">
+                        <div class="text-center" style="color: var(--text-muted); padding: 40px 0;">
+                            <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 10px; opacity: 0.3;"></i>
+                            <div>Your cart is empty</div>
+                            <div style="font-size: 14px;">Add products to get started</div>
+                        </div>
+                    </div>
+                    
+                    <input type="number" class="discount-input" placeholder="Enter discount amount" id="discount-input">
+                    
+                    <div class="cart-totals">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Tax:</span>
+                            <span id="tax">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Discount:</span>
+                            <span id="discount">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Total:</span>
+                            <span id="total">$0.00</span>
+                        </div>
+                    </div>
+                    
+                    <button class="checkout-btn" onclick="openProcessPaymentModal()">
+                        <i class="fas fa-credit-card"></i> Confirm Payment
+                    </button>
                 </div>
             </div>
-            
-            <div class="quick-actions">
-                <button class="quick-action-btn" id="layby-btn" onclick="showPaymentModal('layby')">
-                    <i class="fas fa-clock"></i> Layby
-                </button>
-                <button class="quick-action-btn" id="paylater-btn" onclick="showPaymentModal('paylater')">
-                    <i class="fas fa-credit-card"></i> Pay Later
-                </button>
-                <button class="quick-action-btn" id="quote-btn" onclick="showPaymentModal('quote')">
-                    <i class="fas fa-file-alt"></i> Quote
-                </button>
+
+            <!-- Customers Page -->
+            <div class="page" id="customers" style="display: none;">
+                <!-- Existing customers content here -->
+                <h2>Customers</h2>
+                <!-- Add your customers content here -->
             </div>
-            
-            <div class="cart-items" id="cart-items">
-                <div class="text-center" style="color: var(--text-muted); padding: 40px 0;">
-                    <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 10px; opacity: 0.3;"></i>
-                    <div>Your cart is empty</div>
-                    <div style="font-size: 14px;">Add products to get started</div>
-                </div>
+
+            <!-- Reports Page -->
+            <div class="page" id="reports" style="display: none;">
+                <h2>Reports</h2>
+                <!-- Add your reports content here -->
             </div>
-            
-            <input type="number" class="discount-input" placeholder="Enter discount amount" id="discount-input">
-            
-            <div class="cart-totals">
-                <div class="total-row">
-                    <span>Subtotal:</span>
-                    <span id="subtotal">$0.00</span>
-                </div>
-                <div class="total-row">
-                    <span>Tax:</span>
-                    <span id="tax">$0.00</span>
-                </div>
-                <div class="total-row">
-                    <span>Discount:</span>
-                    <span id="discount">$0.00</span>
-                </div>
-                <div class="total-row">
-                    <span>Total:</span>
-                    <span id="total">$0.00</span>
-                </div>
+
+            <!-- Settings Page -->
+            <div class="page" id="settings" style="display: none;">
+                <h2>Settings</h2>
+                <!-- Add your settings content here -->
             </div>
-            
-            <button class="checkout-btn" onclick="openProcessPaymentModal()">
-                <i class="fas fa-credit-card"></i> Confirm Payment
-            </button>
+
+            <!-- Layby Page -->
+            <div class="page" id="layby" style="display: none;">
+                <h2>Layby</h2>
+                <!-- Add your layby content here -->
+            </div>
+
+            <!-- Paylater Page -->
+            <div class="page" id="paylater" style="display: none;">
+                {% include 'partials/paylaters.html' %}
+            </div>
         </div>
     </div>
+
+
 
     <!-- process payment modal -->
     <div id="process-payment-modal" class="modal" style="display: none;">
@@ -1118,6 +1154,26 @@
                 }
             });
         });
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const sidebarItems = document.querySelectorAll(".sidebar-item");
+        const pages = document.querySelectorAll(".page");
+
+        sidebarItems.forEach(item => {
+            item.addEventListener("click", () => {
+                sidebarItems.forEach(i => i.classList.remove("active"));
+                item.classList.add("active");
+                pages.forEach(page => page.style.display = "none");
+                const targetId = item.getAttribute("data-target");
+                const targetPage = document.getElementById(targetId);
+                if (targetPage) {
+                    targetPage.style.display = "flex";
+                }
+            });
+        });
+
+        document.querySelector(".sidebar-item.active")?.click();
     });
 
     function showToast(message, type = 'success') {

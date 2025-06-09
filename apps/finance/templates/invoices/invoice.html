@@ -314,7 +314,13 @@ input[type="checkbox"] {
                     <td><small><a href="{% url 'finance:customer' invoice.customer.id %}">{{ invoice.customer.name }}</a></small></td>
                     <td><small>#{{ invoice.invoice_number }}</small></td>
                     <td><small>{{ invoice.issue_date|date:"d/m/y H:i" }}</small></td>
-                    <td><small>{{ invoice.products_purchased }}</small></td>
+                    <td><small>
+                        {% for item in invoice_items %}
+                            {% if item.invoice == invoice %}
+                                <span style="margin-right:5px;">{{item.item.name }} x {{item.quantity}}</span>
+                            {% endif %}
+                        {% endfor %}
+                    </small></td>
                     <td><small>{{ invoice.currency.symbol }} {{ invoice.amount }}</small></td>
                     <td id="tr" data-invoiceID="{{ invoice.id }}"><small>{{ invoice.currency.symbol }} {{ invoice.amount_paid }}</small></td>
                     <td>
