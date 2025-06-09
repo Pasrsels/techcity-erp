@@ -889,7 +889,8 @@ def create_invoice(request):
                     hash_sig_data = run(sig_data)
                     
                     # logger.info(hash_sig_data)
-                    submit_receipt_data(request, receipt_data, hash_sig_data['hash'], hash_sig_data['signature'], invoice.id)
+                    credit_note_data = []
+                    submit_receipt_data(request, receipt_data, credit_note_data, hash_sig_data['hash'], hash_sig_data['signature'], invoice.id)
                     
                     invoice_data = invoice_preview_json(request, invoice.id)
 
@@ -1600,7 +1601,6 @@ def customer_account(request, customer_id):
 @login_required
 def create_credit_note(request):
     from apps.pos.utils.process_credit_note import generate_credit_note_data
-    from apps.pos.utils.submit_credit_note import submit_receipt_data
     
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
@@ -1676,10 +1676,9 @@ def create_credit_note(request):
             hash_sig_data = run(sig_data)
             logger.info(f'hash_sig_data: {hash_sig_data}')
 
-            submit_receipt_data(request, credit_note_data, hash_sig_data['hash'], hash_sig_data['signature'], invoice.id)
-
-            # submit_credit_note()
-
+            receipt_data = []
+            submit_receipt_data(request, receipt_data, credit_note_data, hash_sig_data['hash'], hash_sig_data['signature'], invoice.id)
+                    
             return JsonResponse({
                 'success': True,
                 'message': 'Credit note issued successfully',

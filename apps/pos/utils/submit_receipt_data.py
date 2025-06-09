@@ -11,7 +11,7 @@ import os
 import base64
 import binascii
 
-def submit_receipt_data(request, receipt_data, hash, signature, invoice__id):
+def submit_receipt_data(request, receipt_data, credit_note, hash, signature, invoice__id):
     logger.info(invoice__id)
     try:
 
@@ -23,7 +23,7 @@ def submit_receipt_data(request, receipt_data, hash, signature, invoice__id):
         logger.info(f'Receipt saved offline: {receipt}')
     
         zimra_instance = ZIMRA()
-        response = zimra_instance.submit_receipt({"receipt":receipt_data}, hash, signature)
+        response = zimra_instance.submit_receipt({"receipt":receipt_data}, {"receipt":credit_note}, hash, signature)
         logger.info(f"Receipt submission response: {response}")
 
         invoiceId = response.get('receiptID')

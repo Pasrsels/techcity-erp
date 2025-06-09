@@ -182,35 +182,45 @@ class ZIMRA:
     def submit_receipt(
             self, 
             receipt_data,
+            credit_note_data,
             hash,
             signature,
         ):
         """
             Submits a single receipt to the FDMS.
         """
-        
-        try:
-            receipt_data['receipt']['receiptDeviceSignature'] = {
-                "hash": hash,
-                "signature": signature
-            }
-            
-            logger.info(receipt_data)
-            
-        except Exception as e:
-            logger.info(e)
-        
-
         headers = {
             "Content-Type": "application/json",
             "deviceModelName": self.device_model_name,
             "deviceModelVersion": self.device_model_version
         }
+        try:
+            request = None
+            if receipt_data['receipt']:
+                logger.info('here')
+                receipt_data['receipt']['receiptDeviceSignature'] = {
+                    "hash": hash,
+                    "signature": signature
+                }
+                logger.info(receipt_data)
+
+                request = requests.post(f"{self.base_url}/SubmitReceipt/", json=receipt_data, headers=headers, cert=(self.certificate_path, self.certificate_key))
+            else:
+                credit_note_data['receipt']['receiptDeviceSignature'] = {
+                    "hash": hash,
+                    "signature": signature
+                }
+                logger.info(f'credit note data: {credit_note_data}')
+
+                request = requests.post(f"{self.base_url}/SubmitReceipt/", json=credit_note_data, headers=headers, cert=(self.certificate_path, self.certificate_key))
+            
+        except Exception as e:
+            logger.info(e)
         
         try:
-            response = requests.post(f"{self.base_url}/SubmitReceipt", json=receipt_data, headers=headers, cert=(self.certificate_path, self.certificate_key))
-            logger.info(response)
+            response = request
             r=response
+            logger.info(r)
             response.raise_for_status()
             return response.json()
         except Exception as e:
@@ -284,11 +294,6 @@ class ZIMRA:
         except Exception as e:
             logger.info(e)
 
-        payload = {
-            "deviceID": self.device_id,
-            
-        }
-
         headers = {
             'Content-Type': 'application/json',
             'DeviceModelName': self.device_model_name,
@@ -296,11 +301,10 @@ class ZIMRA:
         }
 
         try:
-            response = requests.post(f"{self.base_url}/SubmitReceipt", json=credit_note_data , headers=headers, cert=(self.certificate_path, self.certificate_key))
-            logger.info(response)
+            response = requests.post(f"{self.base_url}/SubmitReceipt/", json=credit_note_data , headers=headers, cert=(self.certificate_path, self.certificate_key))
+            logger.info(response.json())
             response.raise_for_status()
             logger.info("Credit note submitted successfully.")
-            logger.info(response.json())
             return response.json()
         except Exception as e:
             logger.error(f"Error submitting receipt: {e},")
