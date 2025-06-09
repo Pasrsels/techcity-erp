@@ -1,4 +1,4 @@
-import csv
+import csv, json
 from .models import *
 from decimal import Decimal
 from io import BytesIO
@@ -894,6 +894,8 @@ def create_invoice(request):
             
             products_purchased = f"""{', '.join([f'{item['product_name']} x {item['quantity']} ' for item in items_data])}"""
             
+            logger.info(products_purchased)
+            
             with transaction.atomic():
                 invoice = Invoice.objects.create(
                     customer=customer,
@@ -908,11 +910,34 @@ def create_invoice(request):
                     currency=currency,
                     subtotal=invoice_data['subtotal'],
                     reocurring = invoice_data['recourring'],
-                    products_purchased = products_purchased,
                     payment_terms = invoice_data['paymentTerms'],
                     hold_status = invoice_data['hold_status'],
-                    amount_received = amount_paid
+                    amount_received = amount_paid,
+                    products_purchased = json.dumps([products_purchased])
                 )
+                
+           
+                category = IncomeCategory.objects.filter(name='sales').first() #to change
+                
+                income = Income.objects.create(
+                    amount=invoice.amount_paid,
+                    currency=invoice.currency,
+                    category=category,
+                    note=invoice.products_purchased,
+                    user=invoice.user,
+                    branch=invoice.branch,
+                    status=False,
+                )
+                logger.info(f'Income created: {income}')
+
+                # Create Finance Log
+                FinanceLog.objects.create(
+                    type='income',
+                    category='sales',
+                    amount=invoice.amount_paid,
+                    description=invoice.products_purchased
+                )
+                logger.info(f'Finance log created for invoice: {invoice}')
 
                 logger.info(f'Invoice created for customer: {invoice}')
 
@@ -4382,13 +4407,48 @@ def cashflow_create(request):
             return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
         
 
+@login_required
+@transaction.atomic
+def undo_record_cashflow(request):
+    try:
+        data = json.loads(request.body)
+        sale_type = data.get('type', '')
+        sale_id = data.get('id', '')
+        branch_id = int(data.get('branch', ''))
 
+        branch = get_object_or_404(Branch, id=branch_id)
+
+        if sale_type != 'sale':
+            return JsonResponse({'success': False, 'message': 'Unsupported type'}, status=400)
+
+        sale = Invoice.objects.filter(id=sale_id).first()
+        if not sale:
+            return JsonResponse({'success': False, 'message': 'Sale not found'}, status=404)
+
+        income = Income.objects.filter(sale=sale, branch=branch).first()
+        if income:
+            income.delete()
+
+        sale.cash_up_status = False
+        sale.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Cashflow undo successful',
+            'id': sale_id,
+            'cash_up_status': False
+        }, status=200)
+
+    except Exception as e:
+        logger.exception("Error undoing cashflow")
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+        
 @login_required
 @transaction.atomic
 def record_cashflow(request):
     try:
         data = json.loads(request.body)
-        logger.info(data)
         type = data.get('type', '')
         id = data.get('id', '')
         branch = int(data.get('branch', ''))
@@ -4414,9 +4474,7 @@ def record_cashflow(request):
                     parent=new_main_category
                 )
                 category = new_sub_category
-        else:
-            # expense = Expense.objects.filter(branch=branch, id=id)
-            pass
+
 
         with transaction.atomic():
 
@@ -5524,307 +5582,6 @@ def update_invoice_amounts(invoice, amount_paid):
         for payment in invoice_payments:
             amount_paid -= payment.amount_due
             payment.save()
-
-
-@login_required
-@transaction.atomic 
-def create_invoice(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            invoice_data = data['data'][0]  
-            items_data = data['items']
-            layby_dates = data.get('layby_dates')
-
-            # logger.info(f'Invoice data: {data}')
-           
-            # get currency
-            currency = Currency.objects.get(id=invoice_data['currency'])
-            
-            # create or get accounts
-            account_types = {
-                'cash': Account.AccountType.CASH,
-                'bank': Account.AccountType.BANK,
-                'ecocash': Account.AccountType.ECOCASH,
-            }
-
-            account_name = f"{request.user.branch} {currency.name} {invoice_data['payment_method'].capitalize()} Account"
-            
-            account, _ = Account.objects.get_or_create(name=account_name, type=account_types[invoice_data['payment_method']])
-            
-            account_balance, _ = AccountBalance.objects.get_or_create(
-                account=account,
-                currency=currency,
-                branch=request.user.branch,
-                defaults={'balance': 0}  
-            )
-
-            logger.info(f"Account Balance: {account_balance}")
-
-            # accounts_receivable
-            accounts_receivable, _ = ChartOfAccounts.objects.get_or_create(name="Accounts Receivable")
-            
-            # VAT rate
-            vat_rate = VATRate.objects.get(status=True)
-
-            # customer
-            customer = Customer.objects.get(id=int(invoice_data['client_id'])) 
-            logger.info(customer)
-            
-            # customer account
-            customer_account = CustomerAccount.objects.get(customer=customer)
-
-            # customer Account + Balances
-            customer_account_balance, _ = CustomerAccountBalances.objects.get_or_create(
-                account=customer_account,
-                currency=currency, 
-                defaults={'balance': 0}
-            )
-            
-            amount_paid = update_latest_due(customer, Decimal(invoice_data['amount_paid']), request, invoice_data['paymentTerms'], customer_account_balance)
-
-            invoice_total_amount = Decimal(invoice_data['payable'])
-
-            # prevent to record greater amount paid than the invoice amount 
-            if amount_paid > invoice_total_amount:
-                amount_paid = invoice_total_amount
-                amount_due = 0
-            else:
-                amount_paid = amount_paid
-                amount_due = invoice_total_amount - amount_paid  
-                
-            logger.info(f'amount due: {amount_due}')
-            
-            return
-
-            cogs = COGS.objects.create(amount=Decimal(0))
-            
-            products_purchased = f"""{', '.join([f'{item['product_name']} x {item['quantity']} ' for item in items_data])}"""
-            
-            with transaction.atomic():
-                invoice = Invoice.objects.create(
-                    customer=customer,
-                    issue_date=timezone.now(),
-                    amount=invoice_total_amount,
-                    amount_paid=amount_paid,
-                    amount_due=amount_due,
-                    vat=Decimal(invoice_data['vat_amount']),
-                    payment_status = Invoice.PaymentStatus.PARTIAL if amount_due > 0 else Invoice.PaymentStatus.PAID,
-                    branch = request.user.branch,
-                    user=request.user,
-                    currency=currency,
-                    subtotal=invoice_data['subtotal'],
-                    reocurring = invoice_data['recourring'],
-                    products_purchased = products_purchased,
-                    payment_terms = invoice_data['paymentTerms'],
-                    hold_status = invoice_data['hold_status'],
-                    amount_received = amount_paid
-                )
-
-                logger.info(f'Invoice created for customer: {invoice}')
-
-                # check if invoice status is hold
-                if invoice.hold_status == True:
-
-                    logger.info(f'Processing held invoice: {invoice}')
-
-                    held_invoice(items_data, invoice, request, vat_rate)
-
-                    return JsonResponse({'hold':True, 'message':'Invoice succesfully on hold'})
-
-                # create layby object
-                if invoice.payment_terms == 'layby':
-
-                    if amount_due > 0:
-
-                        logger.info(f'Creating layby object for invoice: {invoice}')
-                        
-                        layby_obj = layby.objects.create(
-                            invoice=invoice, 
-                            branch=request.user.branch
-                        )
-
-                        layby_dates_list = []
-                        number_of_dates = len(layby_dates)
-                        
-                        # calculate amount to be paid for each month
-                        amount_per_due_date = (amount_due / number_of_dates) if number_of_dates > 0 else 0
-
-                        logger.info(f'Amount per due date: {amount_per_due_date} : {number_of_dates} : {layby_dates}')
-
-                        for date in layby_dates:
-
-                            obj = laybyDates(
-                                layby=layby_obj,
-                                due_date=date,
-                                amount_due=round(amount_per_due_date, 2),
-                            )
-
-                            layby_dates_list.append(obj)
-                        
-                        laybyDates.objects.bulk_create(layby_dates_list)
-
-                        logger.info(f'Layby object created for invoice: {invoice}')
-                
-                # create monthly installment object
-                if invoice.payment_terms == 'installment':
-
-                    if invoice.reocurring:
-                        MonthlyInstallment.objects.create(
-                            invoice = invoice,
-                            status = False
-                        )
-                    
-                #create a paylater
-                if invoice.payment_terms == 'pay later':
-                    if amount_due > 0:
-                        Paylater.objects.create(
-                            invoice=invoice,
-                            amount_due=amount_due,
-                            due_date=parse_date(invoice_data['pay_later_date']),
-                            paid=False
-                        )
-
-                # #create transaction
-                Transaction.objects.create(
-                    date=timezone.now(),
-                    description=invoice.products_purchased,
-                    account=accounts_receivable,
-                    debit=Decimal(invoice_data['payable']),
-                    credit=Decimal('0.00'),
-                    customer=customer
-                )
-
-                logger.info(f'Creating transaction obj for invoice: {invoice}')
-            
-                # Create InvoiceItem objects
-                invoice_items = []
-                for item_data in items_data:
-                    item = Inventory.objects.get(pk=item_data['inventory_id'])
-                    
-                    item.quantity -= item_data['quantity']
-                    item.save()
-
-                    invoice_items.append(
-                        InvoiceItem.objects.create(
-                            invoice=invoice,
-                            item=item,
-                            quantity=item_data['quantity'],
-                            unit_price=item_data['price'],
-                            vat_rate = vat_rate,
-                            total_amount = int(item_data['quantity']) * float(item_data['price']),
-                            cash_up_status = False
-                        )
-                    )
-
-                    print(invoice_items)
-                    
-                    # cost of sales item
-                    COGSItems.objects.get_or_create(
-                        invoice=invoice,
-                        defaults={'cogs': cogs, 'product': Inventory.objects.get(id=item.id, branch=request.user.branch)}
-                    )
-                
-                    # stock log  
-                    ActivityLog.objects.create(
-                        branch=request.user.branch,
-                        inventory=item,
-                        user=request.user,
-                        quantity = -item_data['quantity'],
-                        total_quantity = item.quantity,
-                        action='Sale',
-                        invoice=invoice
-                    )
-
-                    accessories = Accessory.objects.filter(main_product=item).values('accessory_product', 'accessory_product__quantity')
-
-                    # for acc in accessories:
-                    #     COGSItems.objects.get_or_create(
-                    #         invoice=invoice,
-                    #         defaults={'cogs': cogs, 'product': Inventory.objects.get(id=acc['accessory_product'], branch=request.user.branch)}
-                    #     )
-                    #     prod_acc = Inventory.objects.get(id = acc['accessory_product'] )
-                    #     prod_acc.quantity -= acc.quantity
-
-                    #     logger.info(f'accessory quantity: {acc['accessory_product__quantity']}')
-
-                    #     ActivityLog.objects.create(
-                    #         branch=request.user.branch,
-                    #         inventory=prod_acc,
-                    #         user=request.user,
-                    #         quantity=1,
-                    #         total_quantity = acc['accessory_product__quantity'],
-                    #         action='Sale',
-                    #         invoice=invoice
-                    #     )
-                    #     prod_acc.save()
-                        
-                # # Create VATTransaction
-                VATTransaction.objects.create(
-                    invoice=invoice,
-                    vat_type=VATTransaction.VATType.OUTPUT,
-                    vat_rate=VATRate.objects.get(status=True).rate,
-                    tax_amount=invoice_data['vat_amount']
-                )                                                          
-                # Create Sale object
-                sale = Sale.objects.create(
-                    date=timezone.now(),
-                    transaction=invoice,
-                    total_amount=invoice_total_amount
-                )
-                sale.save()
-                
-                #payment
-                Payment.objects.create(
-                    invoice=invoice,
-                    amount_paid=amount_paid,
-                    payment_method=invoice_data['payment_method'],
-                    amount_due=invoice_total_amount - amount_paid,
-                    user=request.user
-                )
-
-                # calculate total cogs amount
-                cogs.amount = COGSItems.objects.filter(cogs=cogs, cogs__date=datetime.datetime.today())\
-                                               .aggregate(total=Sum('product__cost'))['total'] or 0
-                cogs.save()
-                
-                # updae account balance
-                if invoice.payment_status == 'Partial':
-                    customer_account_balance.balance += -amount_due
-                    customer_account_balance.save()
-                    
-                # Update customer balance
-                account_balance.balance = Decimal(invoice_data['payable']) + Decimal(account_balance.balance)
-                account_balance.save()
-                
-                # for tax purpose Zimra
-                logger.info(invoice_items)
-
-                try:
-                    # sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
-                    # logger.info(sig_data)
-                    # hash_sig_data = run(sig_data)
-                    
-                    # logger.info(hash_sig_data)
-                    # submit_receipt_data(request, receipt_data, hash_sig_data['hash'], hash_sig_data['signature'])
-                    
-                    invoice_data = invoice_preview_json(request, invoice.id)
-                    logger.info(invoice_data)
-
-                except Exception as e:
-                    logger.info(e)
-                    return JsonResponse({'success': False, 'error': str(e)})
-
-                logger.info(f'inventory creation successfully done: {invoice}')
-
-                return JsonResponse({'success':True, 'invoice_id': invoice.id, 'invoice_data':invoice_data})
-
-        # except (KeyError, json.JSONDecodeError, Customer.DoesNotExist, Inventory.DoesNotExist, Exception) as e:
-        #     return JsonResponse({'success': False, 'error': str(e)})
-        except Exception as e:
-            logger.info(e)
-
-    return render(request, 'invoices/add_invoice.html')
 
 def held_invoice(items_data, invoice, request, vat_rate):
     for item_data in items_data:
@@ -8424,12 +8181,17 @@ def get_recorded_cash_ups(request):
         start_date = data.get('start_date')
         end_date = data.get('end_date')
         
-        queryset = CashUp.objects.filter(status='recorded')
+        queryset = CashUp.objects.filter(status=True)
+
+        logger.info(f'cash ups: {queryset}')
+        logger.info(f'date ranger: {date_range}')
+        logger.info(f'start date: {start_date}')
+        logger.info(f'end date: {end_date}')
         
         if branch_id:
             queryset = queryset.filter(branch_id=branch_id)
 
-        now = datetime.now()
+        now = datetime.datetime.now()
         if date_range == 'today':
             queryset = queryset.filter(created_at__date=now.date())
         elif date_range == 'yesterday':
@@ -8461,7 +8223,7 @@ def get_recorded_cash_ups(request):
             'expected_cash',
             'received_amount',
             'short_fall',
-            'recorded_by__username'
+            'created_by__username'
         ))
 
         return JsonResponse({
@@ -9761,317 +9523,319 @@ def update_invoice_amounts(invoice, amount_paid):
             payment.save()
 
 
-@login_required
-@transaction.atomic 
-def create_invoice(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            invoice_data = data['data'][0]  
-            items_data = data['items']
-            layby_dates = data.get('layby_dates')
+# @login_required
+# @transaction.atomic 
+# def create_invoice(request):
+#     if request.method == 'POST':
+#         try:
+#             data = json.loads(request.body)
+#             invoice_data = data['data'][0]  
+#             items_data = data['items']
+#             layby_dates = data.get('layby_dates')
 
-            # logger.info(f'Invoice data: {data}')
+#             # logger.info(f'Invoice data: {data}')
            
-            # get currency
-            currency = Currency.objects.get(id=invoice_data['currency'])
+#             # get currency
+#             currency = Currency.objects.get(id=invoice_data['currency'])
             
-            # create or get accounts
-            account_types = {
-                'cash': Account.AccountType.CASH,
-                'bank': Account.AccountType.BANK,
-                'ecocash': Account.AccountType.ECOCASH,
-            }
+#             # create or get accounts
+#             account_types = {
+#                 'cash': Account.AccountType.CASH,
+#                 'bank': Account.AccountType.BANK,
+#                 'ecocash': Account.AccountType.ECOCASH,
+#             }
 
-            account_name = f"{request.user.branch} {currency.name} {invoice_data['payment_method'].capitalize()} Account"
+#             account_name = f"{request.user.branch} {currency.name} {invoice_data['payment_method'].capitalize()} Account"
             
-            account, _ = Account.objects.get_or_create(name=account_name, type=account_types[invoice_data['payment_method']])
+#             account, _ = Account.objects.get_or_create(name=account_name, type=account_types[invoice_data['payment_method']])
             
-            account_balance, _ = AccountBalance.objects.get_or_create(
-                account=account,
-                currency=currency,
-                branch=request.user.branch,
-                defaults={'balance': 0}  
-            )
+#             account_balance, _ = AccountBalance.objects.get_or_create(
+#                 account=account,
+#                 currency=currency,
+#                 branch=request.user.branch,
+#                 defaults={'balance': 0}  
+#             )
 
-            logger.info(f"Account Balance: {account_balance}")
+#             logger.info(f"Account Balance: {account_balance}")
 
-            # accounts_receivable
-            accounts_receivable, _ = ChartOfAccounts.objects.get_or_create(name="Accounts Receivable")
+#             # accounts_receivable
+#             accounts_receivable, _ = ChartOfAccounts.objects.get_or_create(name="Accounts Receivable")
             
-            # VAT rate
-            vat_rate = VATRate.objects.get(status=True)
+#             # VAT rate
+#             vat_rate = VATRate.objects.get(status=True)
 
-            # customer
-            customer = Customer.objects.get(id=int(invoice_data['client_id'])) 
-            logger.info(customer)
+#             # customer
+#             customer = Customer.objects.get(id=int(invoice_data['client_id'])) 
+#             logger.info(customer)
             
-            # customer account
-            customer_account = CustomerAccount.objects.get(customer=customer)
+#             # customer account
+#             customer_account = CustomerAccount.objects.get(customer=customer)
 
-            # customer Account + Balances
-            customer_account_balance, _ = CustomerAccountBalances.objects.get_or_create(
-                account=customer_account,
-                currency=currency, 
-                defaults={'balance': 0}
-            )
+#             # customer Account + Balances
+#             customer_account_balance, _ = CustomerAccountBalances.objects.get_or_create(
+#                 account=customer_account,
+#                 currency=currency, 
+#                 defaults={'balance': 0}
+#             )
             
-            amount_paid = invoice_data['amount_paid']
+#             amount_paid = invoice_data['amount_paid']
             
-            logger.info(f'Amount paid: {amount_paid}')
+#             logger.info(f'Amount paid: {amount_paid}')
             
-            # amount_paid = update_latest_due(customer, Decimal(invoice_data['amount_paid']), request, invoice_data['paymentTerms'], customer_account_balance)
-            # to be revised a lot
-            invoice_total_amount = Decimal(invoice_data['payable'])
+#             # amount_paid = update_latest_due(customer, Decimal(invoice_data['amount_paid']), request, invoice_data['paymentTerms'], customer_account_balance)
+#             # to be revised a lot
+#             invoice_total_amount = Decimal(invoice_data['payable'])
 
-            # prevent to record greater amount paid than the invoice amount 
-            if amount_paid > invoice_total_amount:
-                amount_paid = invoice_total_amount
-                amount_due = 0
-            else:
-                amount_paid = amount_paid
-                amount_due = invoice_total_amount - amount_paid  
+#             # prevent to record greater amount paid than the invoice amount 
+#             if amount_paid > invoice_total_amount:
+#                 amount_paid = invoice_total_amount
+#                 amount_due = 0
+#             else:
+#                 amount_paid = amount_paid
+#                 amount_due = invoice_total_amount - amount_paid  
                 
-            logger.info(f'amount due: {amount_due}')
+#             logger.info(f'amount due: {amount_due}')
         
 
-            cogs = COGS.objects.create(amount=Decimal(0))
+#             cogs = COGS.objects.create(amount=Decimal(0))
             
-            products_purchased = f"""{', '.join([f'{item['product_name']} x {item['quantity']} ' for item in items_data])}"""
+#             products_purchased = f"""{', '.join([f'{item['product_name']} x {item['quantity']} ' for item in items_data])}"""
             
-            with transaction.atomic():
-                invoice = Invoice.objects.create(
-                    invoice_number=Invoice.generate_invoice_number(request.user.branch.name),
-                    customer=customer,
-                    issue_date=timezone.now(),
-                    amount=invoice_total_amount,
-                    amount_paid=amount_paid,
-                    amount_due=amount_due,
-                    vat=Decimal(invoice_data['vat_amount']),
-                    payment_status = Invoice.PaymentStatus.PARTIAL if amount_due > 0 else Invoice.PaymentStatus.PAID,
-                    branch = request.user.branch,
-                    user=request.user,
-                    currency=currency,
-                    subtotal=invoice_data['subtotal'],
-                    reocurring = invoice_data['recourring'],
-                    products_purchased = products_purchased,
-                    payment_terms = invoice_data['paymentTerms'],
-                    hold_status = invoice_data['hold_status'],
-                    amount_received = amount_paid
-                )
-
-                logger.info(f'Invoice created for customer: {invoice}')
-
-                # check if invoice status is hold
-                if invoice.hold_status == True:
-
-                    logger.info(f'Processing held invoice: {invoice}')
-
-                    held_invoice(items_data, invoice, request, vat_rate)
-
-                    return JsonResponse({'hold':True, 'message':'Invoice succesfully on hold'})
-
-                # create layby object
-                if invoice.payment_terms == 'layby':
-
-                    if amount_due > 0:
-
-                        logger.info(f'Creating layby object for invoice: {invoice}')
-                        
-                        layby_obj = layby.objects.create(
-                            invoice=invoice, 
-                            branch=request.user.branch
-                        )
-
-                        layby_dates_list = []
-                        number_of_dates = len(layby_dates)
-                        
-                        # calculate amount to be paid for each month
-                        amount_per_due_date = (amount_due / number_of_dates) if number_of_dates > 0 else 0
-
-                        logger.info(f'Amount per due date: {amount_per_due_date} : {number_of_dates} : {layby_dates}')
-
-                        for date in layby_dates:
-
-                            obj = laybyDates(
-                                layby=layby_obj,
-                                due_date=date,
-                                amount_due=round(amount_per_due_date, 2),
-                            )
-
-                            layby_dates_list.append(obj)
-                        
-                        laybyDates.objects.bulk_create(layby_dates_list)
-
-                        logger.info(f'Layby object created for invoice: {invoice}')
-                
-                # create monthly installment object
-                if invoice.payment_terms == 'installment':
-
-                    if invoice.reocurring:
-                        MonthlyInstallment.objects.create(
-                            invoice = invoice,
-                            status = False
-                        )
-                    
-                #create a paylater
-                if invoice.payment_terms == 'pay later':
-                    if amount_due > 0:
-                        paylater_obj = Paylater.objects.create(
-                            invoice=invoice,
-                            amount_due=amount_due,
-                            due_date=invoice_data['pay_later_dates'][0] if invoice_data['pay_later_dates'] else timezone.now().date(),
-                            payment_method=invoice_data['payment_method']
-                        )
-                        
-                        # Create paylater dates for each interval
-                        if invoice_data['pay_later_dates']:
-                            amount_per_interval = amount_due / len(invoice_data['pay_later_dates'])
-                            for date in invoice_data['pay_later_dates']:
-                                logger.info(date)
-                                paylaterDates.objects.create(
-                                    paylater=paylater_obj,
-                                    due_date=date,
-                                    amount_due=amount_per_interval,
-                                    payment_method=invoice_data['payment_method']
-                                )
-
-                # #create transaction
-                Transaction.objects.create(
-                    date=timezone.now(),
-                    description=invoice.products_purchased,
-                    account=accounts_receivable,
-                    debit=Decimal(invoice_data['payable']),
-                    credit=Decimal('0.00'),
-                    customer=customer
-                )
-
-                logger.info(f'Creating transaction obj for invoice: {invoice}')
+#             logger.info(products_purchased)
             
-                # Create InvoiceItem objects
-                invoice_items = []
-                for item_data in items_data:
-                    item = Inventory.objects.get(pk=item_data['inventory_id'])
-                    
-                    item.quantity -= item_data['quantity']
-                    item.save()
+#             with transaction.atomic():
+#                 invoice = Invoice.objects.create(
+#                     invoice_number=Invoice.generate_invoice_number(request.user.branch.name),
+#                     customer=customer,
+#                     issue_date=timezone.now(),
+#                     amount=invoice_total_amount,
+#                     amount_paid=amount_paid,
+#                     amount_due=amount_due,
+#                     vat=Decimal(invoice_data['vat_amount']),
+#                     payment_status = Invoice.PaymentStatus.PARTIAL if amount_due > 0 else Invoice.PaymentStatus.PAID,
+#                     branch = request.user.branch,
+#                     user=request.user,
+#                     currency=currency,
+#                     subtotal=invoice_data['subtotal'],
+#                     reocurring = invoice_data['recourring'],
+#                     products_purchased = products_purchased,
+#                     payment_terms = invoice_data['paymentTerms'],
+#                     hold_status = invoice_data['hold_status'],
+#                     amount_received = amount_paid
+#                 )
 
-                    invoice_items.append(
-                        InvoiceItem.objects.create(
-                            invoice=invoice,
-                            item=item,
-                            quantity=item_data['quantity'],
-                            unit_price=item_data['price'],
-                            vat_rate = vat_rate,
-                            total_amount = int(item_data['quantity']) * float(item_data['price']),
-                            cash_up_status = False
-                        )
-                    )
-                    
-                    # cost of sales item
-                    COGSItems.objects.get_or_create(
-                        invoice=invoice,
-                        defaults={'cogs': cogs, 'product': Inventory.objects.get(id=item.id, branch=request.user.branch)}
-                    )
-                
-                    # stock log  
-                    ActivityLog.objects.create(
-                        branch=request.user.branch,
-                        inventory=item,
-                        user=request.user,
-                        quantity = -item_data['quantity'],
-                        total_quantity = item.quantity,
-                        action='Sale',
-                        invoice=invoice
-                    )
+#                 logger.info(f'Invoice created for customer: {invoice}')
 
-                    accessories = Accessory.objects.filter(main_product=item).values('accessory_product', 'accessory_product__quantity')
+#                 # check if invoice status is hold
+#                 if invoice.hold_status == True:
 
-                    # for acc in accessories:
-                    #     COGSItems.objects.get_or_create(
-                    #         invoice=invoice,
-                    #         defaults={'cogs': cogs, 'product': Inventory.objects.get(id=acc['accessory_product'], branch=request.user.branch)}
-                    #     )
-                    #     prod_acc = Inventory.objects.get(id = acc['accessory_product'] )
-                    #     prod_acc.quantity -= acc.quantity
+#                     logger.info(f'Processing held invoice: {invoice}')
 
-                    #     logger.info(f'accessory quantity: {acc['accessory_product__quantity']}')
+#                     held_invoice(items_data, invoice, request, vat_rate)
 
-                    #     ActivityLog.objects.create(
-                    #         branch=request.user.branch,
-                    #         inventory=prod_acc,
-                    #         user=request.user,
-                    #         quantity=1,
-                    #         total_quantity = acc['accessory_product__quantity'],
-                    #         action='Sale',
-                    #         invoice=invoice
-                    #     )
-                    #     prod_acc.save()
+#                     return JsonResponse({'hold':True, 'message':'Invoice succesfully on hold'})
+
+#                 # create layby object
+#                 if invoice.payment_terms == 'layby':
+
+#                     if amount_due > 0:
+
+#                         logger.info(f'Creating layby object for invoice: {invoice}')
                         
-                # # Create VATTransaction
-                VATTransaction.objects.create(
-                    invoice=invoice,
-                    vat_type=VATTransaction.VATType.OUTPUT,
-                    vat_rate=VATRate.objects.get(status=True).rate,
-                    tax_amount=invoice_data['vat_amount']
-                )                                                          
-                # Create Sale object
-                sale = Sale.objects.create(
-                    date=timezone.now(),
-                    transaction=invoice,
-                    total_amount=invoice_total_amount
-                )
-                sale.save()
+#                         layby_obj = layby.objects.create(
+#                             invoice=invoice, 
+#                             branch=request.user.branch
+#                         )
+
+#                         layby_dates_list = []
+#                         number_of_dates = len(layby_dates)
+                        
+#                         # calculate amount to be paid for each month
+#                         amount_per_due_date = (amount_due / number_of_dates) if number_of_dates > 0 else 0
+
+#                         logger.info(f'Amount per due date: {amount_per_due_date} : {number_of_dates} : {layby_dates}')
+
+#                         for date in layby_dates:
+
+#                             obj = laybyDates(
+#                                 layby=layby_obj,
+#                                 due_date=date,
+#                                 amount_due=round(amount_per_due_date, 2),
+#                             )
+
+#                             layby_dates_list.append(obj)
+                        
+#                         laybyDates.objects.bulk_create(layby_dates_list)
+
+#                         logger.info(f'Layby object created for invoice: {invoice}')
                 
-                #payment
-                Payment.objects.create(
-                    invoice=invoice,
-                    amount_paid=amount_paid,
-                    payment_method=invoice_data['payment_method'],
-                    amount_due=invoice_total_amount - amount_paid,
-                    user=request.user
-                )
+#                 # create monthly installment object
+#                 if invoice.payment_terms == 'installment':
 
-                # calculate total cogs amount
-                cogs.amount = COGSItems.objects.filter(cogs=cogs, cogs__date=datetime.datetime.today())\
-                                               .aggregate(total=Sum('product__cost'))['total'] or 0
-                cogs.save()
+#                     if invoice.reocurring:
+#                         MonthlyInstallment.objects.create(
+#                             invoice = invoice,
+#                             status = False
+#                         )
+                    
+#                 #create a paylater
+#                 if invoice.payment_terms == 'pay later':
+#                     if amount_due > 0:
+#                         paylater_obj = Paylater.objects.create(
+#                             invoice=invoice,
+#                             amount_due=amount_due,
+#                             due_date=invoice_data['pay_later_dates'][0] if invoice_data['pay_later_dates'] else timezone.now().date(),
+#                             payment_method=invoice_data['payment_method']
+#                         )
+                        
+#                         # Create paylater dates for each interval
+#                         if invoice_data['pay_later_dates']:
+#                             amount_per_interval = amount_due / len(invoice_data['pay_later_dates'])
+#                             for date in invoice_data['pay_later_dates']:
+#                                 logger.info(date)
+#                                 paylaterDates.objects.create(
+#                                     paylater=paylater_obj,
+#                                     due_date=date,
+#                                     amount_due=amount_per_interval,
+#                                     payment_method=invoice_data['payment_method']
+#                                 )
+
+#                 # #create transaction
+#                 Transaction.objects.create(
+#                     date=timezone.now(),
+#                     description=invoice.products_purchased,
+#                     account=accounts_receivable,
+#                     debit=Decimal(invoice_data['payable']),
+#                     credit=Decimal('0.00'),
+#                     customer=customer
+#                 )
+
+#                 logger.info(f'Creating transaction obj for invoice: {invoice}')
+            
+#                 # Create InvoiceItem objects
+#                 invoice_items = []
+#                 for item_data in items_data:
+#                     item = Inventory.objects.get(pk=item_data['inventory_id'])
+                    
+#                     item.quantity -= item_data['quantity']
+#                     item.save()
+
+#                     invoice_items.append(
+#                         InvoiceItem.objects.create(
+#                             invoice=invoice,
+#                             item=item,
+#                             quantity=item_data['quantity'],
+#                             unit_price=item_data['price'],
+#                             vat_rate = vat_rate,
+#                             total_amount = int(item_data['quantity']) * float(item_data['price']),
+#                             cash_up_status = False
+#                         )
+#                     )
+                    
+#                     # cost of sales item
+#                     COGSItems.objects.get_or_create(
+#                         invoice=invoice,
+#                         defaults={'cogs': cogs, 'product': Inventory.objects.get(id=item.id, branch=request.user.branch)}
+#                     )
                 
-                # updae account balance
-                if invoice.payment_status == 'Partial':
-                    customer_account_balance.balance += -amount_due
-                    customer_account_balance.save()
-                    
-                # Update customer balance
-                account_balance.balance = Decimal(invoice_data['payable']) + Decimal(account_balance.balance)
-                account_balance.save()
+#                     # stock log  
+#                     ActivityLog.objects.create(
+#                         branch=request.user.branch,
+#                         inventory=item,
+#                         user=request.user,
+#                         quantity = -item_data['quantity'],
+#                         total_quantity = item.quantity,
+#                         action='Sale',
+#                         invoice=invoice
+#                     )
+
+#                     accessories = Accessory.objects.filter(main_product=item).values('accessory_product', 'accessory_product__quantity')
+
+#                     # for acc in accessories:
+#                     #     COGSItems.objects.get_or_create(
+#                     #         invoice=invoice,
+#                     #         defaults={'cogs': cogs, 'product': Inventory.objects.get(id=acc['accessory_product'], branch=request.user.branch)}
+#                     #     )
+#                     #     prod_acc = Inventory.objects.get(id = acc['accessory_product'] )
+#                     #     prod_acc.quantity -= acc.quantity
+
+#                     #     logger.info(f'accessory quantity: {acc['accessory_product__quantity']}')
+
+#                     #     ActivityLog.objects.create(
+#                     #         branch=request.user.branch,
+#                     #         inventory=prod_acc,
+#                     #         user=request.user,
+#                     #         quantity=1,
+#                     #         total_quantity = acc['accessory_product__quantity'],
+#                     #         action='Sale',
+#                     #         invoice=invoice
+#                     #     )
+#                     #     prod_acc.save()
+                        
+#                 # # Create VATTransaction
+#                 VATTransaction.objects.create(
+#                     invoice=invoice,
+#                     vat_type=VATTransaction.VATType.OUTPUT,
+#                     vat_rate=VATRate.objects.get(status=True).rate,
+#                     tax_amount=invoice_data['vat_amount']
+#                 )                                                          
+#                 # Create Sale object
+#                 sale = Sale.objects.create(
+#                     date=timezone.now(),
+#                     transaction=invoice,
+#                     total_amount=invoice_total_amount
+#                 )
+#                 sale.save()
                 
-                # for tax purpose Zimra
-                logger.info(invoice_items)
+#                 #payment
+#                 Payment.objects.create(
+#                     invoice=invoice,
+#                     amount_paid=amount_paid,
+#                     payment_method=invoice_data['payment_method'],
+#                     amount_due=invoice_total_amount - amount_paid,
+#                     user=request.user
+#                 )
 
-                try:
-                    # sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
-                    # logger.info(sig_data)
-                    # hash_sig_data = run(sig_data)
+#                 # calculate total cogs amount
+#                 cogs.amount = COGSItems.objects.filter(cogs=cogs, cogs__date=datetime.datetime.today())\
+#                                                .aggregate(total=Sum('product__cost'))['total'] or 0
+#                 cogs.save()
+                
+#                 # updae account balance
+#                 if invoice.payment_status == 'Partial':
+#                     customer_account_balance.balance += -amount_due
+#                     customer_account_balance.save()
                     
-                    # logger.info(hash_sig_data)
-                    # submit_receipt_data(request, receipt_data, hash_sig_data['hash'], hash_sig_data['signature'])
+#                 # Update customer balance
+#                 account_balance.balance = Decimal(invoice_data['payable']) + Decimal(account_balance.balance)
+#                 account_balance.save()
+                
+#                 # for tax purpose Zimra
+#                 logger.info(invoice_items)
+
+#                 try:
+#                     # sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
+#                     # logger.info(sig_data)
+#                     # hash_sig_data = run(sig_data)
                     
-                    invoice_data = invoice_preview_json(request, invoice.id)
-                    logger.info(invoice_data)
+#                     # logger.info(hash_sig_data)
+#                     # submit_receipt_data(request, receipt_data, hash_sig_data['hash'], hash_sig_data['signature'])
+                    
+#                     invoice_data = invoice_preview_json(request, invoice.id)
+#                     logger.info(invoice_data)
 
-                except Exception as e:
-                    logger.info(e)
-                    return JsonResponse({'success': False, 'error': str(e)})
+#                 except Exception as e:
+#                     logger.info(e)
+#                     return JsonResponse({'success': False, 'error': str(e)})
 
-                logger.info(f'inventory creation successfully done: {invoice}')
+#                 logger.info(f'inventory creation successfully done: {invoice}')
 
-                return JsonResponse({'success':True, 'invoice_id': invoice.id, 'invoice_data':invoice_data})
+#                 return JsonResponse({'success':True, 'invoice_id': invoice.id, 'invoice_data':invoice_data})
 
-        # except (KeyError, json.JSONDecodeError, Customer.DoesNotExist, Inventory.DoesNotExist, Exception) as e:
-        #     return JsonResponse({'success': False, 'error': str(e)})
-        except Exception as e:
-            logger.info(e)
+#         # except (KeyError, json.JSONDecodeError, Customer.DoesNotExist, Inventory.DoesNotExist, Exception) as e:
+#         #     return JsonResponse({'success': False, 'error': str(e)})
+#         except Exception as e:
+#             logger.info(e)
 
     return render(request, 'invoices/add_invoice.html')
 
@@ -12863,12 +12627,13 @@ def cash_up_list(request):
                 logger.info('here')
                 cash_up = CashUp.objects.filter(
                     status=False,
-                )                        
+                )   
+                logger.info(f'cash up: {cash_up}')                     
+
             else:
                 cash_up = CashUp.objects.filter(
                     branch__id=branch_id,
-                    status=False,
-                    created_at__date=today
+                    status=False
                 )
             
             cash_up = cash_up.annotate(
@@ -12893,6 +12658,8 @@ def cash_up_list(request):
             
             sales = []
             expenses = []
+
+            logger.info(f'cash up: {cash_up}')
             for cash in cash_up:
                 sales.append(
                     {
@@ -12915,7 +12682,7 @@ def cash_up_list(request):
                         ))
                     }
                 )
-
+            logger.info(f'cash up: {cash_up}')
             return JsonResponse({
                 'success': True,
                 'cash_up': list(cash_up.values(

@@ -197,6 +197,7 @@
                             <div class="col-md-3">
                                 <label class="form-label">Date Range</label>
                                 <select class="form-select" id="dateRangeFilter">
+                                    <option value="">Select range</option>
                                     <option value="today">Today</option>
                                     <option value="yesterday">Yesterday</option>
                                     <option value="this_week">This Week</option>
@@ -362,20 +363,21 @@ function selectAllBranches(button) {
 }
 
 function selectTab(checkbox, branchId) {
-    const allButton = document.querySelector('[data-branch-id=""]');
     const checkboxes = document.querySelectorAll('.branch-checkbox');
 
-    console.log(branchId, 'branch id')
-    
+    checkboxes.forEach(cb => {
+        if (cb !== checkbox) {
+            cb.checked = false;
+        }
+    });
+
     if (!checkbox.checked) {
         allButton.classList.remove('b-active');
-        allBUtton.checked=false
+        allButton.checked = false;
     } else {
         const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-        if (allChecked) {
-            allButton.classList.add('b-active');
-        }
     }
+
     fetchCashUpDetails(branchId);
 }
 
@@ -479,7 +481,7 @@ function renderCashUpDetails(data, container) {
                                                         </td>
                                                         <td>__________________</td>
                                                         <td class="table-td-text">
-                                                            <span class="table-td-text">${c.total_sales_amount || '$0.00'}</span>
+                                                            <span class="table-td-text expected-amount">${c.total_sales_amount || '$0.00'}</span>
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -501,7 +503,7 @@ function renderCashUpDetails(data, container) {
                                                             Balance
                                                         </td>
                                                         <td>__________________</td>
-                                                        <td class="table-td-text border-top text-danger expected-amount">$${c.short_fall || '$0.00'}</td>
+                                                        <td class="table-td-text border-top text-danger">$${c.short_fall || '$0.00'}</td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -629,7 +631,7 @@ function createSalesExpensesSection(sales, expenses, cash_up_id) {
                             <td>
                                 <div class="actions-cell">
                                     ${sale.cash_up_status
-                                        ? `<button class="btn btn-sm btn-outline-secondary rounded-pill undo-sale-btn" data-sale-id="${sale.id}">
+                                        ? `<button class="btn btn-sm btn-outline-secondary rounded-pill undo-record-sale-btn" data-sale-id="${sale.id}">
                                             <i class='bx bx-undo me-1'></i>Undo
                                            </button>`
                                         : `<button class="btn btn-sm btn-success rounded-pill record-sale-btn" 
@@ -997,6 +999,17 @@ function attachSplitExpenseEventListeners() {
             recordSale(saleId, 'sale', branch, category);
         });
     });
+
+    document.querySelectorAll('.undo-record-sale-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const saleId = this.getAttribute('data-sale-id');
+            const branch = this.getAttribute('data-branch');
+            const categoryElement = document.getElementById(`category-${saleId}`);
+            const category = categoryElement ? categoryElement.value : '';
+            
+            recordSale(saleId, 'sale', branch, category);
+        });
+    });
     
     document.getElementById('record-all-sales-btn')?.addEventListener('click', function() {
         const categorySelector = document.getElementById('category-all');
@@ -1336,6 +1349,65 @@ async function recordSale(saleId, type, branch, category) {
             if (categorySelect) categorySelect.disabled = true;
             
             showToast('Success', 'Sale recorded successfully', 'success');
+
+            fetchCashUpDetails(branchId)
+
+            return result;
+        } else {
+            throw new Error(result.message || 'Failed to record sale');
+        }
+    } catch (error) {
+        console.error(`Error recording sale ${saleId}:`, error);
+        button.disabled = false;
+        button.innerHTML = originalText;
+        showToast('Error', error.message || 'Failed to record sale', 'danger');
+        throw error;
+    }
+}
+
+async function UndoRecordSale(saleId, type, branch, category) {
+    if (!category) {
+        showToast('Warning', 'Please select a category first', 'warning');
+        throw new Error('Category not selected');
+    }
+
+    console.log(saleId, type, branch, category)
+    
+    const button = document.getElementById(`btn-${saleId}`);
+    if (!button) return Promise.reject(new Error('Button not found'));
+    
+    const originalText = button.innerHTML;
+    
+    button.disabled = true;
+    button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...`;
+    
+    try {
+        const response = await fetch('/finance/undo_record_cashflow/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ 
+                id: saleId, 
+                type: type, 
+                branch: branch,
+                category: category
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            button.classList.remove('btn-outline-success');
+            button.classList.add('btn-success');
+            button.innerHTML = `<i class="bi bi-check-circle"></i> Recorded`;
+            button.disabled = true;
+            
+            const categorySelect = document.getElementById(`category-${saleId}`);
+            if (categorySelect) categorySelect.disabled = true;
+            
+            showToast('Success', 'Sale successfully undone', 'success');
 
             fetchCashUpDetails(branchId)
 
@@ -1767,6 +1839,8 @@ function loadRecordedCashUps() {
 
 function renderRecordedCashUps(cashUps) {
     const container = document.getElementById('recordedCashUps');
+
+    console.log(container, cashUps, 'cash ups ups ups')
     
     if (!cashUps || cashUps.length === 0) {
         container.innerHTML = `
@@ -1812,7 +1886,7 @@ function renderRecordedCashUps(cashUps) {
                                 </table>
                             </div>
                             <div class="mt-3">
-                                <small class="text-muted">Recorded by: ${cashUp.recorded_by__username}</small>
+                                <small class="text-muted">Recorded by: ${cashUp.created_by__username}</small>
                             </div>
                         </div>
                     </div>

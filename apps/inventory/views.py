@@ -427,7 +427,7 @@ def inventory(request):
             id=product_id,
             status=True
         ).filter(
-            Q(branch=request.user.branch) | Q(branch_id=78)
+            branch=request.user.branch
         ).values()
 
         if inventory_items:
@@ -2067,7 +2067,7 @@ def create_purchase_order(request):
         admin_branch_id = 78
 
         products = Inventory.objects.filter(
-            Q(branch=request.user.branch) | Q(branch_id=admin_branch_id),
+            branch=request.user.branch,
             status=True,
             disable=False
         ).order_by('name')
@@ -3668,9 +3668,8 @@ def product(request):
         return JsonResponse({'success':True}, status=200)
 
     if request.method == 'GET':
-        admin_branch_id = 78  # to be dynamic
         products = Inventory.objects.filter(
-            Q(branch=request.user.branch) | Q(branch_id=admin_branch_id),
+            Q(branch=request.user.branch),
             status=True,
             disable=False
         ).values(

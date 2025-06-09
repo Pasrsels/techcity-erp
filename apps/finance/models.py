@@ -297,7 +297,7 @@ class Invoice(models.Model):
     subtotal =  models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     note = models.TextField(null=True)
     cancelled = models.BooleanField(default=False)
-    products_purchased = models.TextField()
+    products_purchased = models.TextField(null=True)
     invoice_return = models.BooleanField(default=False)
     payment_terms = models.CharField(choices=(
         ('cash', 'cash'),
@@ -829,7 +829,7 @@ class Income(models.Model):
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     currency = models.ForeignKey('Currency', on_delete=models.CASCADE)
     category = models.ForeignKey('IncomeCategory', on_delete=models.PROTECT)
-    note = models.CharField(max_length=200)
+    note = models.CharField(max_length=200, null=True)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
     status = models.BooleanField(default=False)
