@@ -78,6 +78,7 @@ from apps.settings.models import OfflineReceipt, FiscalDay, FiscalCounter
 from utils.zimra import ZIMRA
 from utils.zimra_sig_hash import run
 from django.views.decorators.http import require_http_methods
+from apps.pos.utils.process_credit_note import generate_credit_note_data, submit_credit_note
  
 # load global zimra instance
 zimra = ZIMRA()
@@ -1599,9 +1600,7 @@ def customer_account(request, customer_id):
     })
     
 @login_required
-def create_credit_note(request):
-    from apps.pos.utils.process_credit_note import generate_credit_note_data
-    
+def create_credit_note(request):  
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
         
@@ -1677,7 +1676,7 @@ def create_credit_note(request):
             logger.info(f'hash_sig_data: {hash_sig_data}')
 
             receipt_data = []
-            submit_receipt_data(request, receipt_data, credit_note_data, hash_sig_data['hash'], hash_sig_data['signature'], invoice.id)
+            submit_credit_note(request, receipt_data, credit_note_data, hash_sig_data['hash'], hash_sig_data['signature'], invoice.id)
                     
             return JsonResponse({
                 'success': True,

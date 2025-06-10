@@ -18,6 +18,13 @@ from apps.finance.models import Invoice, CreditNote
 from django.core.files.base import ContentFile
 
 load_dotenv()
+#global variables 
+
+tax_amount = 0
+total_tax_amount = 0
+total_line_amount = 0
+receipt_lines = []
+
 
 def load_private_key(file_path, password=None):
     with open(file_path, "rb") as key_file:
@@ -137,10 +144,6 @@ def generate_credit_note_data(invoice, invoice_items, request):
 
         logger.info(f'previous hash: {previous_invoice.receipt_hash}')
 
-        tax_amount = 0
-        total_tax_amount = 0
-        total_line_amount = 0
-        receipt_lines = []
 
         for index, item in enumerate(invoice_items, start=1):         
             if item.credit_note_issued:
@@ -276,7 +279,7 @@ def submit_credit_note(request, receipt_data, credit_note, hash, signature, invo
                     logger.info('Fiscale day incremented.')
                     
                 
-                    # salesbytax
+                # salesbytax -receip data
                 fiscal_sale_counter_obj, _sbt = FiscalCounter.objects.get_or_create(
                     fiscal_counter_type='SaleByTax',
                     created_at__date=datetime.today(),
@@ -304,15 +307,13 @@ def submit_credit_note(request, receipt_data, credit_note, hash, signature, invo
                         "fiscal_counter_tax_percent":15,
                         "fiscal_counter_tax_id":3,
                         "fiscal_counter_money_type":None,
-                        "fiscal_counter_value":credit_note.vat_amount
+                        "fiscal_counter_value":total_tax_amount
                     }
                 )
                 
                 if not _stbt:
                     fiscal_counter_obj.fiscal_counter_value += credit_note.vat_amount
                     fiscal_counter_obj.save()
-
-                
           
                     # Balance By Money Type
                     fiscal_counter_bal_obj, _ = FiscalCounter.objects.get_or_create(
@@ -325,14 +326,16 @@ def submit_credit_note(request, receipt_data, credit_note, hash, signature, invo
                             "fiscal_counter_tax_id": 0,
                             "fiscal_counter_tax_percent": 0,
                             "fiscal_counter_money_type": invoice.payment_terms,
-                            "fiscal_counter_value": invoice.amount
+                            "fiscal_counter_value": credit_note.amount
                         }
                     )
 
                     if not _:
                         fiscal_counter_bal_obj.fiscal_count
-                        er_value += credit_note.vat_amount
+                        er_value += total_tax_amount
                         fiscal_counter_bal_obj.save()
+                        
+                return True
             except Exception as e:
                 logger.info(e)
                     
