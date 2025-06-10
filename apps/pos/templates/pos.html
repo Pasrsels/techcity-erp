@@ -79,124 +79,121 @@
 </style>
 <body class="techcity">
     <div class="pos">
-        <div class="top-bar">
-          <div class="nav-bar">{% include "pos_navbar.html" %}</div>
-        </div>
-        {% if messages %}
-          {% for message in messages %}
-          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-          {% endfor %}
-        {% endif %}
-        <div class="row g-0">
-          <div class="aside-bar col-1 text-light">{% include "base/aside.html" %}</div>
-          <div class="col-7 mt-2">
-            <div class="main-pos-area px-2">
-              <div class="position-absolute start-0 ms-3">
-                <button class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#laybyModal">L</button>
-                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#PaylaterModal">P</button>
-              </div>
-              <div class="d-flex justify-content-between align-items-center w-100 mb-3">
-                <div class="d-flex align-items-center product-search flex-grow-1">
-                  <button id="menu-type" class="btn border me-1"><i class="bx bx-menu"></i></button>
-                  <div class="search-container d-flex align-items-center flex-grow-1 border rounded">
-                    <i class="bx bx-search ms-2"></i>
-                    <input type="search" name="q" class="form-control border-0" id="id_search" placeholder="Search..." />
-                  </div>
-                  <button class="btn btn-light btn-sm border ms-2" id="out_of_stock">Out of Stock</button>
-                </div>
-                <div class="ms-3">
-                  <select name="category" id="id_category" class="form-select">
-                    <option value="0">All Categories</option>
-                    {% for category in categories %}
-                    <option value="{{ category.id }}">{{ category.name }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </div>
-              <div class="products">
-                {% include 'components/loader.html' %}
-                <div class="row g-2" id="product-list"></div>
-              </div>
+        <div>
+            <div class="top-bar">
+            <div class="nav-bar">{% include "pos_navbar.html" %}</div>
             </div>
-          </div>
-          <div class="col-4 mt-2">
-            <div class="cart-container rounded shadow-sm bg-white h-100">
-              <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
-                <div class="customer-search flex-grow-1">
-                  <select type="text" id="search-input" class="form-select">
-                    <option value=""></option>
-                  </select>
+            {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
-                <div class="avatar-container ms-2">
-                  <img src="{% static 'assets/avatar.png' %}" alt="Avatar" class="avatar rounded-circle" width="40">
+            {% endfor %}
+            {% endif %}
+            <div class="row g-0">
+            <div class="aside-bar col-1 text-light">{% include "base/aside.html" %}</div>
+            <div class="col-7 mt-2">
+                <div class="main-pos-area px-2">
+                <div class="position-absolute start-0 ms-3">
+                    <button class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#laybyModal">L</button>
+                    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#PaylaterModal">P</button>
                 </div>
-                <div class="d-flex align-items-center ms-2">
-                  <div class="text-end">
-                    <small class="text-muted">Due</small>
-                    <div id="due_balance" class="fw-bold"></div>
-                  </div>
-                  <button class="btn btn-sm btn-primary ms-2" id="id_add_client">
-                    <i class="bx bx-plus"></i> Customer
-                  </button>
+                <div class="d-flex justify-content-between align-items-center w-100 mb-3">
+                    <div class="d-flex align-items-center product-search flex-grow-1">
+                    <button id="menu-type" class="btn border me-1"><i class="bx bx-menu"></i></button>
+                    <div class="search-container d-flex align-items-center flex-grow-1 border rounded">
+                        <i class="bx bx-search ms-2"></i>
+                        <input type="search" name="q" class="form-control border-0" id="id_search" placeholder="Search..." />
+                    </div>
+                    <button class="btn btn-light btn-sm border ms-2" id="out_of_stock">Out of Stock</button>
+                    </div>
+                    <div class="ms-3">
+                    <select name="category" id="id_category" class="form-select">
+                        <option value="0">All Categories</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    </div>
                 </div>
-              </div>
-              <small class="text-danger id_client_error"></small>
-              <div class="cart-items bg-light rounded m-2">
-                <div class="table-responsive">
-                  <table class="table table-sm">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Qty</th>
-                        <th>Product</th>
-                        <th>Price</th>
-                        <th>Subtotal</th>
-                      </tr>
-                    </thead>
-                    <tbody id="cart_items"></tbody>
-                  </table>
+                <div class="products">
+                    {% include 'components/loader.html' %}
+                    <div class="row g-2" id="product-list"></div>
                 </div>
-              </div>
-              <div class="p-2">
-                <div class="row g-2 mb-3">
-                  <div class="col-6">
-                    <label for="id_discount" class="form-label small">Discount</label>
-                    <input id="id_discount" type="number" class="form-control text-center" placeholder="Discount" value="0" />
-                  </div>
-                  <div class="col-6">
-                    <label for="id_dc_input" class="form-label small">Delivery Charge</label>
-                    <input id="id_dc_input" type="number" class="form-control text-center" placeholder="Delivery Charge" value="0" />
-                  </div>
                 </div>
-                <div class="totals bg-light rounded p-2 mb-3">
-                  <table class="table table-sm mb-0">
-                    <tr>
-                      <td>Total Amount</td>
-                      <td class="text-end fw-bold" id="id_total_amount">0.00</td>
-                    </tr>
-                    <tr>
-                      <td>Tax Amount</td>
-                      <td class="text-end" id="id_vat_amount">0.00</td>
-                    </tr>
-                    <tr class="table-active">
-                      <td>Payable Amount</td>
-                      <td class="text-end fw-bold" id="id_payable">0.00</td>
-                    </tr>
-                  </table>
-                </div>
-                <button class="btn btn-primary w-100" id="id_pay">Proceed to Payment</button>
-              </div>
             </div>
-          </div>
-        </div>
-      </div>
+            <div class="col-4 cartSection mt-2">
+                <div class="cart-container rounded shadow-sm bg-white h-100">
+                    <div class="d-flex justify-content-between align-items-center w-100 p-1">
+                    <select type="text" id="search-input" class="form-select">
+                        <option value=""></option>
+                    </select>
+                    <button class="btn btn-sm btn-light" id="id_add_client">
+                            <i class="bx bx-plus"></i>
+                        </button>
+                </div>
 
-    <div class="modal fade" id="payment-modal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-fullscreen modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
+                    <div class="d-flex justify-content-between w-100 p-1">
+                        <div class="text-muted">Due</div>
+                        <div id="due_balance" class="fw-bold text-muted">$0.00</div>
+                    </div>
+
+
+                <div class="cart-items bg-light rounded m-2 mt-1">
+                    <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Qty</th>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Subtotal</th>
+                        </tr>
+                        </thead>
+                        <tbody id="cart_items"></tbody>
+                    </table>
+                    </div>
+                </div>
+                <div class="p-2">
+                    <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label for="id_discount" class="form-label small">Discount</label>
+                        <input id="id_discount" type="number" class="form-control text-center" placeholder="Discount" value="0" />
+                    </div>
+                    <div class="col-6">
+                        <label for="id_dc_input" class="form-label small">Delivery Charge</label>
+                        <input id="id_dc_input" type="number" class="form-control text-center" placeholder="Delivery Charge" value="0" />
+                    </div>
+                    </div>
+                    <div class="totals bg-light rounded p-2 mb-3">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                        <td>Total Amount</td>
+                        <td class="text-end fw-bold" id="id_total_amount">0.00</td>
+                        </tr>
+                        <tr>
+                        <td>Tax Amount</td>
+                        <td class="text-end" id="id_vat_amount">0.00</td>
+                        </tr>
+                        <tr class="table-active">
+                        <td>Payable Amount</td>
+                        <td class="text-end fw-bold" id="id_payable">0.00</td>
+                        </tr>
+                    </table>
+                    </div>
+                    <button class="btn btn-primary w-100" id="id_pay">Proceed to Payment</button>
+                </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fade d-none" id="payment-modal">
+        <div class="">
+            <div>
+                <div>
                     {% include 'pay_modal.html' %}
                 </div>
             </div>
@@ -304,8 +301,7 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="laybyTableBody">
-                            </tbody>
+                            <tbody id="laybyTableBody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -330,8 +326,7 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="PaylaterTableBody">
-                            </tbody>
+                            <tbody id="PaylaterTableBody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -339,6 +334,38 @@
        </div>
     </div>   
 
+    <div class="modal fade" id="confirmPaymentModal" tabindex="-1" aria-labelledby="confirmPaymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header d-flex align-items-center justify-content-between w-100 py-2 mb-4">
+                    <h5 class="modal-title">Confirm Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                 </div>
+                    <div class="modal-body">
+                       <div class="mb-4">
+                            <label for="paid_amount">Amount paid</label>
+                            <input class="paid_amount form-control" id="paid_amount" readonly/>
+                       </div>
+                       <div class="mb-4">
+                            <label for="change_amount">Change</label>
+                            <input class="change_amount form-control" id="change_amount" readonly/>
+                       </div>
+                        <div class="mb-4">
+                            <label for="change_given">Change Given</label>
+                            <input class="change_amount form-control" id="change_given"/>
+                       </div>
+                       <div class="mb-4">
+                            <textarea name="note" id="invoice_note" class="form-control" placeholder="Notes (optional)"></textarea>
+                       </div>
+                       <div class="text-end">
+                            <button class="btn btn-success" id="processCart" data-name="invoice" onclick="processCart(this)">Confirm Sale</button>
+                       </div>
+                    </div>
+                </div>
+            </div>
+       </div>
+
+    </div> 
     <div class="overlay hidden"></div>
 </body>
 
@@ -392,6 +419,9 @@
     const loaderModal = new bootstrap.Modal(document.getElementById('loaderModal'));
     const qouteModal = new bootstrap.Modal(document.getElementById('qouteModal'));
     const chooseCustomerModal= new bootstrap.Modal(document.getElementById('chooseCustomerModal'))
+    const modal = document.querySelector('#payment-modal');
+    const products = document.querySelector('.col-7')
+    const cartSection = document.querySelector('.col-4')
 
     const customerModal = new bootstrap.Modal(document.getElementById('customerModal'));
     const menuType = document.getElementById('menu-type');
@@ -401,10 +431,43 @@
     const loaderSpin = document.querySelector('#loader');
     const previousDueEl = document.querySelector('#previous_due');
     const holdBtn = document.getElementById('id_hold');
+    const confirmPayment = document.getElementById('confirm_payment');
+    const confirmPaymentModal = new bootstrap.Modal(document.getElementById('confirmPaymentModal'))
+    const paidAmount = document.getElementById('paid_amount')
+    const changeGiven = document.getElementById('change_given');
+    const  invoiceNote = document.getElementById('invoice_note')
+    let changeToBeDeposited = 0;
+
+    changeGiven.addEventListener('input', ()=>{
+        let totalAmount = calculateTotalAmount(cart);
+        console.log(totalAmount, parseFloat(changeGiven.value))
+
+        changeToBeDeposited = parseFloat(changeAmount - changeGiven.value)
+        console.log(parseFloat(changeAmount), changeGiven.value)
+        if(parseFloat(changeGiven.value) > totalAmount ){
+            Swal.fire({
+                icon:'error',
+                text:'Given change must not be more than the initial change', 
+                title: 'error'
+            })
+            return;
+        }
+    })
+
+    confirmPayment.addEventListener('click', ()=>{
+        const changeInput = document.getElementById('change_amount');
+        const amountPaidInput = document.getElementById('id_amount_paid');
+        let totalAmount = calculateTotalAmount(cart);
+
+        changeInput.value = parseFloat(amountPaidInput.value - totalAmount) || 0.00
+        paidAmount.value = parseFloat(amountPaidInput.value);
+        changeAmount = parseFloat(changeInput.value)
+        confirmPaymentModal.show()
+    })
 
     holdBtn.addEventListener('click', () => {
-            holdStatus = true;
-            processCart(holdBtn);
+        holdStatus = true;
+        processCart(holdBtn);
     })
 
     // set receipt items
@@ -451,6 +514,8 @@
     document.getElementById('payment_modal_btn').addEventListener('click', () => {
         document.querySelector('.payment-modal').classList.add('hidden');
     })
+
+    paidAmount.value = 0.00
 
     function calculateBalance() {
         let total = parseFloat(totalBalanceDueElement.textContent.split(' ')[1]); 
@@ -753,7 +818,7 @@
 
     // modals
     const overlay = document.querySelector(".overlay");
-    const modal = new bootstrap.Modal(document.querySelector('#payment-modal'));
+    <!-- const modal = new bootstrap.Modal(document.querySelector('#payment-modal')); -->
     const clientModal = new bootstrap.Modal(document.querySelector('#clientModal'));
     const closeModalBtn = document.querySelectorAll(".btn-close");
     const closebtn = document.getElementById('closebtn')
@@ -769,7 +834,12 @@
             if(clientName){
                 updateCartDisplay();
                 setReceiptItems()
-                modal.show()
+                const posEl = document.querySelector('.pos-content')
+                if (modal.classList.contains('d-none')){
+                    modal.classList.remove('d-none');
+                    products.classList.add('d-none');
+                    cartSection.classList.add('d-none');
+                }
             }else{
                 Swal.fire({
                     icon:'error',
@@ -921,7 +991,6 @@
         });
     }
 
-
     // Cart 
     async function fetchProductData (product){
         if(initialCurrencyValue){
@@ -959,12 +1028,16 @@
     }
 
     function addItem(product, value) {
-        const existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
+        let existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
+
         console.log(value, 'value')
-        let priceType = ''
+
+        let priceType = '';
+
         if(value === 'wp'){
             price = product[0].dealer_price
             priceType = `${product[0].dealer_price * parseFloat(currencyData[0][0]?.exchange_rate)}`
+            existingItem = false;
         }else{
             price = product[0].price
             priceType = `${product[0].price * parseFloat(currencyData[0][0]?.exchange_rate)}`
@@ -974,12 +1047,12 @@
             existingItem.quantity += 1;
         } else {
             const newTransfer = {
-            id:generateUniqueId(),
-            inventory_id:product[0].inventory_id, 
-            product_name: product[0].product_name,
-            product_description: product[0].description,
-            quantity:1,
-            price:priceType
+                id:generateUniqueId(),
+                inventory_id:product[0].inventory_id, 
+                product_name: product[0].product_name,
+                product_description: product[0].description,
+                quantity:1,
+                price:priceType
             };
             cart.push(newTransfer);
         }
@@ -1236,9 +1309,15 @@
                 recourring: document.getElementById('id_reoccuring').checked,
                 paymentTerms: paymentTerms,
                 hold_status: holdStatus,
-                pay_later_dates: pay_later_dates
+                pay_later_dates: pay_later_dates,
+                change_deposit: changeToBeDeposited,
+                note: invoiceNote.value
             }
         ];
+
+        console.log(data)
+
+        return 
 
         console.log(pay_later_dates, 'pay_later_dates')
     

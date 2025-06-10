@@ -112,7 +112,6 @@
 
     .side{
         display: flex;
-        justify-content:end;
         align-items: center;
 
     }
@@ -128,32 +127,30 @@
     </style>
 <div class="receipt-el">
     <div class="receipt">
-        <div class="d-flex w-100">
-            <div class="d-flex">
+        <div class="d-flex w-100 justify-content-between">
+            <div class="d-flex align-items-center">
                 <button id="payment_modal_btn" class="btn btn-sm btn-danger" data-bs-dismiss="modal">Back</button>
                 <div class="d-flex mx-1">
                     <span style="font-weight:bolder" class="text-success rounded p-2">Process Invoice For</span><span class="rounded p-2" id="customerName" class="bg-light text-dark"></span>
                 </div>
+                <div>
+                <div class="px-2">
+                    <strong>Previous bal:</strong>
+                    <span class="text-primary" style="cursor:pointer;" onclick="customerAccount()" id="id_last_invoice"></span>
+                    <span id="previous_due" class="prv_due text-danger"></span>
+                    <strong>Available bal:</strong> <span id="availableBalance">0.00</span>
+                </div>
             </div>
-            <div class="side w-100">
-                <p class="payment-method mx-5">
-                    <span class="fw-bold" style="font-weight:700;">Payment:</span>
-                    <button class="btn btn-outline-dark btn-pm btn-sm border text-muted active" id="pCash" data-name="cash">Cash</button>
-                    <button class="btn btn-outline-dark btn-pm btn-sm border text-muted" id="pBank" data-name="bank">Bank</button>
-                    <button class="btn btn-outline-dark btn-pm btn-sm border text-muted" id="pEcocash" data-name="ecocash">Ecocash</button>
-                </p>
-                <p class="terms">
-                    <span class="fw-bold" style="font-weight:700;">Terms:</span>
-                    <button class="btn btn-outline-dark btn-sm btn-terms border active text-muted" id="cash">Cash</button>
-                    <button class="btn btn-outline-dark btn-sm btn-terms border text-muted" id="pay_later">Pay later</button>
-                    <button class="btn btn-outline-dark btn-sm btn-terms border text-muted" id="layby">Layby</button>
-                    <button class="btn btn-outline-dark btn-sm btn-terms border text-muted" id="Installment">Monthly Installment</button>
+            </div>
+            <div class="account-summary">
+                <p>
+                    <input type="number" id="id_amount_paid" style="width:300px;" name="amount_received" class="form-control" placeholder="Enter Amount Received:">
                 </p>
             </div>
         </div>
-        <!-- Payment Details -->
-        <div class="payment-detail mt-2 d-none">
 
+        <!-- Payment Details -->
+        <!-- <div class="payment-detail mt-2 d-none">
             <div class="side">
                 <p class="payment-method">
                     <span class="fw-bold">Payment:</span>
@@ -169,26 +166,25 @@
                     <button class="btn btn-outline-dark btn-sm btn-terms border text-muted" id="Installment">Monthly Installment</button>
                 </p>
             </div>
-        </div>
+        </div> -->
 
         <hr>
 
-        <!-- Customer Info -->
-
         <div class="customer-info">
-            <div class="account-summary">
-                <p>
-                    <!--<strong>Payment by <span id="customerName"></span></strong>-->
-                    <input type="number" id="id_amount_paid" style="width:300px;" name="amount_received" class="form-control" placeholder="Enter Amount Received:">
+            <div class="side w-100">
+                <p class="payment-method d-none mx-5">
+                    <span class="fw-bold" style="font-weight:700;">Payment:</span>
+                    <button class="btn btn-outline-dark btn-pm btn-sm border p-method text-muted active" id="pCash" data-name="cash">Cash</button>
+                    <button class="btn btn-outline-dark btn-pm btn-sm border p-method text-muted" id="pBank" data-name="bank">Bank</button>
+                    <button class="btn btn-outline-dark btn-pm btn-sm border p-method text-muted" id="pEcocash" data-name="ecocash">Ecocash</button>
                 </p>
-            </div>
-            <div>
-                <p>
-                    <strong>Previous bal:</strong>
-                    <span class="text-primary" style="cursor:pointer;" onclick="customerAccount()" id="id_last_invoice"></span>
-                    <span id="previous_due" class="prv_due text-danger"></span>
+                <p class="terms d-none">
+                    <span class="fw-bold" style="font-weight:700;">Terms:</span>
+                    <button class="btn btn-outline-dark btn-sm btn-terms border active text-muted" id="cash">Cash</button>
+                    <button class="btn btn-outline-dark btn-sm btn-terms border text-muted" id="pay_later">Pay later</button>
+                    <button class="btn btn-outline-dark btn-sm btn-terms border text-muted" id="layby">Layby</button>
+                    <button class="btn btn-outline-dark btn-sm btn-terms border text-muted" id="Installment">Monthly Installment</button>
                 </p>
-                <p><strong>Available bal:</strong> <span id="availableBalance">0.00</span></p>
             </div>
         </div>
 
@@ -268,8 +264,29 @@
             <button class="btn btn-danger btn-sm" id="closebtn" data-bs-dismiss="modal">Cancel</button>
             <button class="btn btn-outline-dark btn-sm mx-2" id="id_hold" data-name="invoice">Hold</button>
             <button class="btn btn-outline" data-name="qoutation" onclick="processCart(this)">Qouatation</button>
-            <button class="btn btn-success btn-sm " id="processCart" data-name="invoice" onclick="processCart(this)">Process Receipt</button>
+            <button class="btn btn-success btn-sm" id="confirm_payment">Process Receipt</button>
         </div>
     </div>
+    <script>
+        const amountInput = document.getElementById('id_amount_paid');
+        const pMButtons = document.querySelectorAll('.p-method');
+
+        pMButtons.forEach((btn)=>{
+            btn.addEventListener('click', ()=>{
+                console.log(btn)
+                const termsDiv = document.querySelector('.terms');
+                if(termsDiv.classList.contains('d-none')){
+                    termsDiv.classList.remove('d-none')
+                }
+            })
+        })
+
+        amountInput.addEventListener('input', ()=>{
+            const paymentDiv = document.querySelector('.payment-method')
+            if(paymentDiv.classList.contains('d-none')){
+                paymentDiv.classList.remove('d-none')
+            }
+        })
+    </script>
 </body>
 </html>
