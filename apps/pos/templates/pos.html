@@ -76,126 +76,130 @@
         color: #fff !important;
     }
 
+    .pos{
+        padding: 10px;
+        background-color: white;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    #payment-modal {
+        padding: 20px;
+        background: #fff;
+        min-height: 100vh;
+    }
+
 </style>
 <body class="techcity">
-    <div class="pos">
+    <div class="">
         <div>
             <div class="top-bar">
             <div class="nav-bar">{% include "pos_navbar.html" %}</div>
             </div>
             {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
+                {% for message in messages %}
+                    <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
             {% endif %}
-            <div class="row g-0">
-            <div class="aside-bar col-1 text-light">{% include "base/aside.html" %}</div>
-            <div class="col-7 mt-2">
-                <div class="main-pos-area px-2">
-                <div class="position-absolute start-0 ms-3">
-                    <button class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#laybyModal">L</button>
-                    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#PaylaterModal">P</button>
-                </div>
-                <div class="d-flex justify-content-between align-items-center w-100 mb-3">
-                    <div class="d-flex align-items-center product-search flex-grow-1">
-                    <button id="menu-type" class="btn border me-1"><i class="bx bx-menu"></i></button>
-                    <div class="search-container d-flex align-items-center flex-grow-1 border rounded">
-                        <i class="bx bx-search ms-2"></i>
-                        <input type="search" name="q" class="form-control border-0" id="id_search" placeholder="Search..." />
+            <div class="row  g-0">
+                <div class="aside-bar col-1 text-light">{% include "base/aside.html" %}</div>
+                <div class="col-7 mt-2">
+                        <div class="main-pos-area px-2">
+                            <div class="position-absolute start-0 ms-3">
+                                <button class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#laybyModal">L</button>
+                                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#PaylaterModal">P</button>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center w-100 mb-3">
+                                <div class="d-flex align-items-center product-search flex-grow-1">
+                                    <button id="menu-type" class="btn border me-1"><i class="bx bx-menu"></i></button>
+                                    <div class="search-container d-flex align-items-center flex-grow-1 border rounded">
+                                        <i class="bx bx-search ms-2"></i>
+                                        <input type="search" name="q" class="form-control border-0" id="id_search" placeholder="Search..." />
+                                    </div>
+                                    <button class="btn btn-light btn-sm border ms-2" id="out_of_stock">Out of Stock</button>
+                                </div>
+                                <div class="ms-3">
+                                    <select name="category" id="id_category" class="form-select">
+                                        <option value="0">All Categories</option>
+                                        {% for category in categories %}
+                                            <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="products">
+                                {% include 'components/loader.html' %}
+                                <div class="row g-2" id="product-list"></div>
+                            </div>
+                        </div>
+                        <div class="d-none" id="payment-modal">
+                                {% include 'pay_modal.html' %}
+                            </div>
                     </div>
-                    <button class="btn btn-light btn-sm border ms-2" id="out_of_stock">Out of Stock</button>
-                    </div>
-                    <div class="ms-3">
-                    <select name="category" id="id_category" class="form-select">
-                        <option value="0">All Categories</option>
-                        {% for category in categories %}
-                            <option value="{{ category.id }}">{{ category.name }}</option>
-                        {% endfor %}
-                    </select>
-                    </div>
-                </div>
-                <div class="products">
-                    {% include 'components/loader.html' %}
-                    <div class="row g-2" id="product-list"></div>
-                </div>
-                </div>
-            </div>
-            <div class="col-4 cartSection mt-2">
-                <div class="cart-container rounded shadow-sm bg-white h-100">
-                    <div class="d-flex justify-content-between align-items-center w-100 p-1">
-                    <select type="text" id="search-input" class="form-select">
-                        <option value=""></option>
-                    </select>
-                    <button class="btn btn-sm btn-light" id="id_add_client">
-                            <i class="bx bx-plus"></i>
-                        </button>
-                </div>
+                    <div class="col-4 cartSection mt-2">
+                        <div class="cart-container rounded shadow-sm bg-white h-100">
+                            <div class="d-flex justify-content-between align-items-center w-100 p-1">
+                            <select type="text" id="search-input" class="form-select">
+                                <option value=""></option>
+                            </select>
+                            <button class="btn btn-sm btn-light" id="id_add_client">
+                                <i class="bx bx-plus"></i>
+                            </button>
+                        </div>
 
-                    <div class="d-flex justify-content-between w-100 p-1">
-                        <div class="text-muted">Due</div>
-                        <div id="due_balance" class="fw-bold text-muted">$0.00</div>
-                    </div>
+                        <div class="d-flex justify-content-between w-100 p-1">
+                            <div class="text-muted">Due</div>
+                            <div id="due_balance" class="fw-bold text-muted">$0.00</div>
+                        </div>
 
-
-                <div class="cart-items bg-light rounded m-2 mt-1">
-                    <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead class="table-light">
-                        <tr>
-                            <th>Qty</th>
-                            <th>Product</th>
-                            <th>Price</th>
-                            <th>Subtotal</th>
-                        </tr>
-                        </thead>
-                        <tbody id="cart_items"></tbody>
-                    </table>
-                    </div>
-                </div>
-                <div class="p-2">
-                    <div class="row g-2 mb-3">
-                    <div class="col-6">
-                        <label for="id_discount" class="form-label small">Discount</label>
-                        <input id="id_discount" type="number" class="form-control text-center" placeholder="Discount" value="0" />
-                    </div>
-                    <div class="col-6">
-                        <label for="id_dc_input" class="form-label small">Delivery Charge</label>
-                        <input id="id_dc_input" type="number" class="form-control text-center" placeholder="Delivery Charge" value="0" />
-                    </div>
-                    </div>
-                    <div class="totals bg-light rounded p-2 mb-3">
-                    <table class="table table-sm mb-0">
-                        <tr>
-                        <td>Total Amount</td>
-                        <td class="text-end fw-bold" id="id_total_amount">0.00</td>
-                        </tr>
-                        <tr>
-                        <td>Tax Amount</td>
-                        <td class="text-end" id="id_vat_amount">0.00</td>
-                        </tr>
-                        <tr class="table-active">
-                        <td>Payable Amount</td>
-                        <td class="text-end fw-bold" id="id_payable">0.00</td>
-                        </tr>
-                    </table>
-                    </div>
-                    <button class="btn btn-primary w-100" id="id_pay">Proceed to Payment</button>
-                </div>
-                </div>
-            </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="fade d-none" id="payment-modal">
-        <div class="">
-            <div>
-                <div>
-                    {% include 'pay_modal.html' %}
-                </div>
+                        <div class="cart-items bg-light rounded m-2 mt-1">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>Qty</th>
+                                        <th>Product</th>
+                                        <th>Price</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="cart_items"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="p-2">
+                            <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label for="id_discount" class="form-label small">Discount</label>
+                                <input id="id_discount" type="number" class="form-control text-center" placeholder="Discount" value="0" />
+                            </div>
+                            <div class="col-6">
+                                <label for="id_dc_input" class="form-label small">Delivery Charge</label>
+                                <input id="id_dc_input" type="number" class="form-control text-center" placeholder="Delivery Charge" value="0" />
+                            </div>
+                            </div>
+                            <div class="totals bg-light rounded p-2 mb-3">
+                            <table class="table table-sm mb-0">
+                                <tr>
+                                <td>Total Amount</td>
+                                <td class="text-end fw-bold" id="id_total_amount">0.00</td>
+                                </tr>
+                                <tr>
+                                <td>Tax Amount</td>
+                                <td class="text-end" id="id_vat_amount">0.00</td>
+                                </tr>
+                                <tr class="table-active">
+                                <td>Payable Amount</td>
+                                <td class="text-end fw-bold" id="id_payable">0.00</td>
+                                </tr>
+                            </table>
+                            </div>
+                            <button class="btn btn-primary w-100" id="id_pay">Proceed to Payment</button>
+                        </div>
+                        </div>
+                    </div>   
             </div>
         </div>
     </div>
@@ -420,7 +424,7 @@
     const qouteModal = new bootstrap.Modal(document.getElementById('qouteModal'));
     const chooseCustomerModal= new bootstrap.Modal(document.getElementById('chooseCustomerModal'))
     const modal = document.querySelector('#payment-modal');
-    const products = document.querySelector('.col-7')
+    const products = document.querySelector('.main-pos-area ')
     const cartSection = document.querySelector('.col-4')
 
     const customerModal = new bootstrap.Modal(document.getElementById('customerModal'));
@@ -437,6 +441,7 @@
     const changeGiven = document.getElementById('change_given');
     const  invoiceNote = document.getElementById('invoice_note')
     let changeToBeDeposited = 0;
+
 
     changeGiven.addEventListener('input', ()=>{
         let totalAmount = calculateTotalAmount(cart);
@@ -512,7 +517,14 @@
     let paymentTerm = 'cash'; 
 
     document.getElementById('payment_modal_btn').addEventListener('click', () => {
-        document.querySelector('.payment-modal').classList.add('hidden');
+        const posEl = document.querySelector('.col-12')
+        if (!modal.classList.contains('d-none')){
+            posEl.classList.add('col-7')
+            posEl.classList.remove('col-12')
+            modal.classList.add('d-none');
+            products.classList.remove('d-none');
+            cartSection.classList.remove('d-none');
+        }
     })
 
     paidAmount.value = 0.00
@@ -834,8 +846,10 @@
             if(clientName){
                 updateCartDisplay();
                 setReceiptItems()
-                const posEl = document.querySelector('.pos-content')
+                const posEl = document.querySelector('.col-7')
                 if (modal.classList.contains('d-none')){
+                    posEl.classList.remove('col-7')
+                    posEl.classList.add('col-12')
                     modal.classList.remove('d-none');
                     products.classList.add('d-none');
                     cartSection.classList.add('d-none');

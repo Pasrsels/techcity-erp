@@ -269,12 +269,39 @@
         </div>
     </div>
 
+    <div class="modal fade" id="branchModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-right">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div>
+                        <p class='fw-bold'>Choose Branch</p>
+                    </div>
+                    <div class="row row-cols-3 g-3"> 
+                        {% for branch in branches %}
+                            <div class="col">
+                                <a class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center" 
+                                   href="{% url 'company:switch_branch' branch.id %}">
+                                    {{ branch.name }}
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
   
 
     <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>    
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        const branchModal = new bootstrap.Modal(document.querySelector('#branchModal'))
+        const branchBtn = document.querySelector('#branchBtn')
+
+        branchBtn.addEventListener('click', ()=>{
+            branchModal.show()
+        })
         function formatCurrency(amount) {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
