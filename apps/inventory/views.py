@@ -2740,23 +2740,15 @@ def process_received_order(request):
 
             logger.info('Processing order item')
             logger.info(data)
+            
+            order_item = PurchaseOrderItem.objects.get(id=order_item_id)
+            cost = order_item.actual_unit_cost
 
             if edit:
-                return edit_purchase_order_item(order_item_id, selling_price, dealer_price, expected_profit, dealer_expected_profit, quantity, request)
-
-            # if quantity == 0:
-            #     return JsonResponse({'success': False, 'message': 'Quantity cannot be zero.'}, status=400)
-
-            order_item = PurchaseOrderItem.objects.get(id=order_item_id)
-
+                return edit_purchase_order_item(order_item_id, selling_price, dealer_price, expected_profit, dealer_expected_profit, quantity, cost, request)
+            
             logger.info(order_item)
             order = PurchaseOrder.objects.get(id=order_item.purchase_order.id)
-
-            # Update expected profit and check quantity
-            cost = order_item.actual_unit_cost
-            
-            #if quantity > order_item.quantity:
-            #    return JsonResponse({'success': False, 'message': 'Quantity cannot be more than ordered quantity.'})
 
             # Update the order item with received quantity
             order_item.receive_items(quantity)
@@ -2770,68 +2762,54 @@ def process_received_order(request):
             # Update or create inventory
             system_quantity = 0 # if new product
             try:
-                inventory = Inventory.objects.get(id = order_item.product.id)
-                logger.info(inventory)
                 
-                system_quantity = inventory.quantity
-                # Update existing inventory
-                
-                inventory.price = selling_price
-                inventory.dealer_price = dealer_price or 0
-                inventory.quantity += quantity
+                with transaction.atomic():
+                    inventory = Inventory.objects.get(id = order_item.product.id)
+                    logger.info(inventory)
+                    
+                    system_quantity = inventory.quantity
+                    
+                    inventory.price = selling_price
+                    inventory.dealer_price = dealer_price or 0
+                    inventory.quantity += quantity
 
-                if inventory.batch:
-                    inventory.batch += f'{order.batch}, '
-                else:
-                    inventory.batch = f'{order.batch}, '
+                    if inventory.batch:
+                        inventory.batch += f'{order.batch}, '
+                    else:
+                        inventory.batch = f'{order.batch}, '      
 
-                cost = average_inventory_cost(inventory.id, order_item.actual_unit_cost, quantity, request.user.branch.id)
-                logger.info(order_item.actual_unit_cost)
+                    cost = average_inventory_cost(inventory.id, order_item.actual_unit_cost, quantity, request.user.branch.id)
+                    logger.info(order_item.actual_unit_cost)
 
-                inventory.cost = Decimal(round(cost, 2))
-                
-                inventory.save()
- 
+                    inventory.cost = Decimal(round(cost, 2))
+                    
+                    logger.info(f'Inventory cost: {inventory.cost}')
+                    
+                    inventory.save()
+                    
+                    log = ActivityLog(
+                        purchase_order=order_item.purchase_order,
+                        branch=request.user.branch,
+                        user=request.user,
+                        action='stock in',
+                        dealer_price = dealer_price,
+                        selling_price = selling_price,
+                        inventory=inventory,
+                        quantity=quantity,
+                        system_quantity=system_quantity,
+                        description=f'Stock in from {order_item.purchase_order.batch}',
+                        total_quantity=inventory.quantity
+                    )
+                    log.save()
+                    
+              
+                    order_item.save()
+
+                    logger.info(f'process order item received: {order_item.product}')
+
+                    return JsonResponse({'success': True, 'message': 'Inventory updated successfully'}, status=200)
             except Product.DoesNotExist:
                 return JsonResponse({'success': False, 'message': f'Product with ID: {order_item.product.id} does not exist'}, status=404)
-                # Create a new inventory object if it does not exist
-                # inventory = Inventory(
-                #     product=inventory,
-                #     branch=request.user.branch,
-                #     cost=cost,
-                #     price=selling_price,
-                #     dealer_price=dealer_price,
-                #     quantity=quantity,
-                #     stock_level_threshold=product.min_stock_level,
-                #     reorder=False,
-                #     alert_notification=True,
-                #     batch = f'{order.batch}, '
-                # )
-                # inventory.save()
-                pass
-
-            # Prepare activity log for this transaction
-            log = ActivityLog(
-                purchase_order=order_item.purchase_order,
-                branch=request.user.branch,
-                user=request.user,
-                action='stock in',
-                dealer_price = dealer_price,
-                selling_price = selling_price,
-                inventory=inventory,
-                quantity=quantity,
-                system_quantity=system_quantity,
-                description=f'Stock in from {order_item.purchase_order.batch}',
-                total_quantity=inventory.quantity
-            )
-            log.save()
-
-            # Save updated order item
-            order_item.save()
-
-            logger.info(f'process order item received: {order_item.product}')
-
-            return JsonResponse({'success': True, 'message': 'Inventory updated successfully'}, status=200)
         except Exception as e:
             logger.info(e)
             return JsonResponse({'success': False, 'message': f'{e}'}, status=400)
@@ -2840,23 +2818,15 @@ def process_received_order(request):
 
 
 
-def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expected_profit, dealer_expected_profit, quantity, request):
+def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expected_profit, dealer_expected_profit, quantity, cost, request):
     try:
         po_item = PurchaseOrderItem.objects.get(id=order_item_id)
-
-        # Update the related product's price and dealer price
         product = po_item.product.id
-
-        # Update the inventory, assuming this item already exists in inventory
         try:
             inventory = Inventory.objects.get(id=product, branch=po_item.purchase_order.branch)
-            
-
             system_quantity = inventory.quantity
             quantity_adjustment = 0
-
             description = ''
-
             if po_item.quantity == quantity:
                 if inventory.quantity != quantity:
                     # adjust quantity
@@ -2903,30 +2873,36 @@ def edit_purchase_order_item(order_item_id, selling_price, dealer_price, expecte
                     description = f'Price adjustment ({po_item.purchase_order.batch})'
             
             # Update fields in the PurchaseOrderItem
-            po_item.selling_price = selling_price
-            po_item.dealer_price = dealer_price
-            po_item.expected_profit = expected_profit
-            po_item.dealer_expected_profit = dealer_expected_profit
-            po_item.received_quantity = quantity
-            po_item.save()
+            with transaction.atomic():
+                po_item.selling_price = selling_price
+                po_item.dealer_price = dealer_price
+                po_item.expected_profit = expected_profit
+                po_item.dealer_expected_profit = dealer_expected_profit
+                po_item.received_quantity = quantity
+                po_item.save()
 
-            inventory.price = selling_price
-            inventory.dealer_price = dealer_price
-            inventory.save()
+                inventory.price = selling_price
+                inventory.dealer_price = dealer_price
+                
+                # cost = average_inventory_cost(inventory.id, po_item.unit_cost, quantity, request.user.branch.id)
+                # logger.info(po_item.actual_unit_cost)
+                
+                inventory.cost = cost
+                inventory.save()
 
-            ActivityLog.objects.create(
-                purchase_order=po_item.purchase_order,
-                branch=request.user.branch,
-                user=request.user,
-                action=action,
-                inventory=inventory,
-                quantity=quantity_adjustment,
-                system_quantity = system_quantity,
-                description=description,
-                total_quantity=inventory.quantity,
-                dealer_price = dealer_price,
-                selling_price = selling_price
-            )
+                ActivityLog.objects.create(
+                    purchase_order=po_item.purchase_order,
+                    branch=request.user.branch,
+                    user=request.user,
+                    action=action,
+                    inventory=inventory,
+                    quantity=quantity_adjustment,
+                    system_quantity = system_quantity,
+                    description=description,
+                    total_quantity=inventory.quantity,
+                    dealer_price = dealer_price,
+                    selling_price = selling_price
+                )
 
         except Inventory.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Inventory not found for the product'}, status=404)

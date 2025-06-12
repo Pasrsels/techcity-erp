@@ -101,7 +101,7 @@
                     <div class="rounded {% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">Received [{{item.received_quantity}}]</div>
                     {% else %}
                     <input type="number"
-                           value="{% if item.received_quantity > 0 %} {{ item.received_quantity }} {% else %} {{ item.quantity }} {% endif %}"
+                           value="{{ item.quantity }}"
                            id="quantity_{{ item.id }}"
                            placeholder="Enter quantity received"
                            min="1"
