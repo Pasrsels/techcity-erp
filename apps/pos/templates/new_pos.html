@@ -1,0 +1,1721 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pos</title>
+</head>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link href='{% static "assets/boxicons/css/boxicons.css"%}' rel='stylesheet'>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    :root {
+        --primary: #11998e;
+        --primary-no-gradient: #11998e;
+        --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        --secondary: orange;
+        --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+        --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        --dark: #1a1a2e;
+        --dark-alt: #16213e;
+        --text-light: rgba(228, 230, 234, 1);
+        --text-dark: black;
+        --text-muted: black;
+        --glass: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+        --border-radius: 16px;
+        --border-radius-sm: 8px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --m-bottom: 20px;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        color: var(--text-light);
+        overflow-x: hidden;
+    }
+
+    /* Animated background */
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        z-index: -1;
+    }
+
+    .pos-container {
+        display: grid;
+        grid-template-columns: 80px 1fr;
+        grid-template-rows: auto 1fr;
+        grid-template-areas: 
+            "sidebar header"
+            "sidebar content";
+        height: 100vh;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        grid-area: sidebar;
+        padding: 20px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        box-shadow: var(--shadow);
+        background: #000;
+    }
+
+    .sidebar-item {
+        width: 50px;
+        height: 50px;
+        border-radius: var(--border-radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .sidebar-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--primary);
+        transition: var(--transition);
+        z-index: -1;
+    }
+
+    .sidebar-item:hover::before {
+        left: 0;
+    }
+
+    .sidebar-item:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .sidebar-item:hover i {
+        color: #fff !important;
+    }
+
+    .sidebar-item i {
+        font-size: 20px;
+        color: #fff;
+    }
+
+    /* Header */
+    .header {
+        grid-area: header;
+        padding: 20px 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: var(--shadow);
+    }
+
+    .logo {
+        font-size: 24px;
+        font-weight: 700;
+        background: var(--primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .header-btn {
+        padding: 8px 16px;
+        border-radius: var(--border-radius-sm);
+        background: var(--primary-no-gradient);
+        border: 1px solid var(--glass-border);
+        color: var(--text-light);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .header-btn:hover {
+        background: var(--primary);
+        transform: translateY(-1px);
+    }
+
+    /* Products Section */
+    .products-section {
+        grid-area: products;
+        background: var(--glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius);
+        padding: 30px;
+        overflow-y: auto;
+        box-shadow: var(--shadow);
+    }
+
+    .search-container {
+        position: relative;
+        margin-bottom: 30px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 15px 50px 15px 20px;
+        border-radius: var(--border-radius);
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        color: var(--text-light);
+        font-size: 16px;
+        transition: var(--transition);
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: rgba(102, 126, 234, 0.5);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-input::placeholder {
+        color: var(--text-dark);
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-dark);
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .filter-tab {
+        padding: 8px 16px;
+        border-radius: 20px;
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        color: #000;
+        cursor: pointer;
+        transition: var(--transition);
+        font-size: 14px;
+    }
+
+    .filter-tab.active {
+        background: var(--primary);
+        border-color: transparent;
+        color: white;
+    }
+
+    .filter-tab:hover:not(.active) {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .product-card {
+        border-radius: var(--border-radius);
+        padding: 20px;
+        cursor: pointer;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .product-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--primary);
+        transform: scaleX(0);
+        transition: var(--transition);
+    }
+
+    .product-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .product-image {
+        width: 60px;
+        height: 60px;
+        border-radius: var(--border-radius-sm);
+        <!-- background: var(--accent); -->
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+    }
+
+    .product-image i {
+        font-size: 24px;
+        color: white;
+    }
+
+    .product-name {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: var(--text-dark);
+    }
+
+    .product-price {
+        font-size: 18px;
+        font-weight: 700;
+        background: var(--success);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .product-stock {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+
+    /* Cart Section */
+    .cart-section {
+        grid-area: cart;
+        background: var(--glass);
+        backdrop-filter: blur(20px);
+        {% comment %} border: 1px solid var(--glass-border); {% endcomment %}
+        border-radius: var(--border-radius);
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: var(--shadow);
+    }
+
+    .cart-header {
+        display: flex;
+        align-items: center;
+        justify-content: between;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--glass-border);
+        width: 100%;
+    }
+
+    .cart-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .customer-select {
+        flex: 1;
+        margin-left: 20px;
+        padding: 10px 15px;
+        border-radius: var(--border-radius-sm);
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        color: var(--text-dark);
+    }
+
+    .cart-items {
+        flex: 1;
+        overflow-y: auto;
+        margin-bottom: 20px;
+    }
+
+    .cart-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        margin-bottom: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--border-radius-sm);
+        transition: var(--transition);
+    }
+
+    .cart-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .cart-item-image {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--border-radius-sm);
+        background: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+    }
+
+    .cart-item-details {
+        flex: 1;
+    }
+
+    .cart-item-name {
+        margin-bottom: 2px;
+        color: #000;
+    }
+
+    .cart-item-price {
+        font-size: 14px;
+        color: var(--text-muted);
+    }
+
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-left: 15px;
+    }
+
+    .qty-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 1px solid var(--glass-border);
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .qty-btn:hover {
+        background: var(--primary);
+    }
+
+    .qty-display {
+        min-width: 30px;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .cart-totals {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--border-radius);
+        padding: 20px;
+        margin-bottom: 20px;
+        color: #000;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .total-row:last-child {
+        margin-bottom: 0;
+        padding-top: 10px;
+        border-top: 1px solid var(--glass-border);
+        font-weight: 700;
+        font-size: 18px;
+    }
+
+    .discount-input {
+        width: 100%;
+        padding: 12px;
+        border-radius: var(--border-radius-sm);
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        color: var(--text-light);
+        margin-bottom: 15px;
+        color: #000 !important;
+    }
+
+    .checkout-btn {
+        width: 100%;
+        padding: 15px;
+        border-radius: var(--border-radius);
+        background: var(--primary);
+        border: none;
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .checkout-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+
+    .checkout-btn:hover::before {
+        left: 100%;
+    }
+
+    .checkout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .quick-actions {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .quick-action-btn {
+        flex: 1;
+        padding: 10px;
+        border-radius: var(--border-radius-sm);
+        border:none;
+        color: var(--text-dark);
+        cursor: pointer;
+        transition: var(--transition);
+        font-size: 12px;
+    }
+
+    .quick-action-btn:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    /* Animations */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-in {
+        animation: slideIn 0.5s ease-out;
+    }
+
+    @media (max-width: 1200px) {
+        .pos-container {
+            grid-template-columns: 1fr 350px;
+            grid-template-areas: 
+                "header header"
+                "products cart";
+        }
+        
+        .sidebar {
+            display: none;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .pos-container {
+            grid-template-columns: 1fr;
+            grid-template-areas: 
+                "header"
+                "products"
+                "cart";
+            height: auto;
+        }
+        
+        .products-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+    }
+
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--glass);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-dark);
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+    }
+
+    .modal-content {
+        position: relative;
+        background: white;
+        margin: 15% auto;
+        padding: 20px;
+        width: 80%;
+        max-width: 500px;
+        border-radius: var(--border-radius);
+    }
+
+    .close-modal {
+        position: absolute;
+        right: 20px;
+        top: 10px;
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    .payment-option {
+        display: none;
+    }
+
+    .payment-option h3 {
+        margin-bottom: 20px;
+        color: var(--text-dark);
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--text-dark);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--glass-border);
+    }
+
+    .form-control[type="date"] {
+        width: 100%;
+    }
+
+    .form-control[type="textarea"] {
+        height: 100px;
+    }
+
+    .quick-action-btn.active {
+        background: var(--primary);
+        color: white;
+    }
+
+    /* Toast Styles */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+
+    .toast {
+        background: white;
+        color: var(--text-dark);
+        padding: 12px 24px;
+        border-radius: var(--border-radius-sm);
+        margin-bottom: 10px;
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideInRight 0.3s ease-out;
+        min-width: 300px;
+    }
+
+    .toast.success {
+        border-left: 4px solid var(--primary);
+    }
+
+    .toast.error {
+        border-left: 4px solid var(--danger);
+    }
+
+    .toast.warning {
+        border-left: 4px solid var(--warning);
+    }
+
+    .toast i {
+        font-size: 20px;
+    }
+
+    .toast.success i {
+        color: var(--primary);
+    }
+
+    .toast.error i {
+        color: var(--danger);
+    }
+
+    .toast.warning i {
+        color: var(--warning);
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+        }
+    }
+
+    .layby-terms {
+        background: var(--glass);
+        border-radius: var(--border-radius);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .amount-display {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 10px 0;
+    }
+
+    .payment-schedule {
+        background: white;
+        border-radius: var(--border-radius-sm);
+        padding: 15px;
+        margin-top: 10px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .schedule-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    .schedule-item:last-child {
+        border-bottom: none;
+    }
+
+    .schedule-date {
+        color: var(--text-dark);
+        font-weight: 500;
+    }
+
+    .schedule-amount {
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    .schedule-item.deposit {
+        background: var(--glass);
+        padding: 10px;
+        border-radius: var(--border-radius-sm);
+        margin-bottom: 10px;
+    }
+
+    .m-bottom {
+        margin-bottom: var(--m-bottom);
+    }
+
+    .branch-content {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .branch-item {
+        width: 100%;
+        height: 100%;
+        margin-bottom: var(--m-bottom);
+        <!-- background: var(--secondary); -->
+        border-radius: var(--border-radius-sm);
+        border:1px solid #000;
+        padding: 10px;
+    }
+    .branch-item a {
+        text-decoration: none;
+        color: white;
+        font-weight: 500;
+        font-size: 14px;
+    }
+</style>
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <div class="pos-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-item active" data-target="home" title="Dashboard">
+                <i class="fas fa-home"></i>
+            </div>
+            <div class="sidebar-item" data-target="customers" title="Customers">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="sidebar-item" data-target="reports" title="Reports">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <div class="sidebar-item" data-target="settings" title="Settings">
+                <i class="fas fa-cog"></i>
+            </div>
+            <div class="sidebar-item" data-target="layby" title="Layby">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="sidebar-item" data-target="paylater" title="Pay Later">
+                <i class="fas fa-credit-card"></i>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                Posflow - 
+                <span class="text-dark">
+                    {{ request.user.branch.name }}
+                </span>
+                <span>
+                    <button class="btn" id='branchBtn'>
+                        <i class='bx bx-grid'></i>
+                    </button>
+                </span>
+            </div>
+            <div class="header-actions">
+                <div class="header-btn" id="out_of_stock">
+                    <i class="fas fa-exclamation-triangle"></i> Out of Stock
+                </div>
+                <div class="header-btn">
+                    <i class="fas fa-print"></i> End of Day
+                </div>
+                <div class="text-dark">
+                    <i class="fas fa-user-circle"></i> Admin
+                </div>
+            </div>
+        </div>
+
+        <!-- Pages Container -->
+        <div class="pages-container" style="grid-area: content; display: flex; gap: 20px; height: 100vh; padding: 30px; overflow-y: auto;">
+            <!-- Home Page: combines products and cart -->
+            <div class="page active" id="home" style="flex: 1; display: flex; gap: 20px;">
+                <!-- Products Section -->
+                <div class="products-section" style="flex: 2; background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--border-radius); padding: 30px; overflow-y: auto; box-shadow: var(--shadow);">
+                    <div class="search-container">
+                        <input type="text" class="search-input" placeholder="Search products..." id="product-search">
+                        <i class="fas fa-search search-icon"></i>
+                    </div>
+                    
+                    <div class="filter-tabs">
+                        <div class="filter-tab active" data-category="all">All Products</div>
+                        {% for product_category in product_categories %}
+                            <div class="filter-tab" data-category="{{ product_category.name }}">{{ product_category.name }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="products-grid" id="products-grid">
+                        {% for product in products %}
+                            <div class="product-card animate-in" data-category="{{ product.category__name }}" 
+                                data-id="{{ product.id }}"
+                                data-price="{{ product.price }}"
+                                data-stock="{{ product.quantity }}"
+                                onclick="addToCart('{{ product.id }}', '{{ product.name }}', {{ product.price }}, {{ product.quantity }})">
+                                <div class="product-image">
+                                    {% if product.image %}
+                                        <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                        <img src="{% static 'placeholder.png' %}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% endif %}
+                                </div>
+                                <div class="product-name">{{ product.name }}</div>
+                                <div class="product-price">${{ product.unit_price }}</div>
+                                <div class="product-stock">In Stock: {{ product.quantity }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Cart Section -->
+                <div class="cart-section" style="flex: 1; background: var(--glass); backdrop-filter: blur(20px); border-radius: var(--border-radius); padding: 30px; display: flex; flex-direction: column; box-shadow: var(--shadow);">
+                    <div class="cart-header">
+                        <div class="cart-title">
+                            <i class="fas fa-shopping-cart"></i> Cart
+                        </div>
+                        <div class="d-flex align-items-center w-100">
+                            <select class="customer-select"></select>
+                            <i class="fas fa-plus"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <button class="quick-action-btn" id="layby-btn" onclick="showPaymentModal('layby')">
+                            <i class="fas fa-clock"></i> Layby
+                        </button>
+                        <button class="quick-action-btn" id="paylater-btn" onclick="showPaymentModal('paylater')">
+                            <i class="fas fa-credit-card"></i> Pay Later
+                        </button>
+                        <button class="quick-action-btn" id="quote-btn" onclick="showPaymentModal('quote')">
+                            <i class="fas fa-file-alt"></i> Quote
+                        </button>
+                    </div>
+                    
+                    <div class="cart-items" id="cart-items">
+                        <div class="text-center" style="color: var(--text-muted); padding: 40px 0;">
+                            <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 10px; opacity: 0.3;"></i>
+                            <div>Your cart is empty</div>
+                            <div style="font-size: 14px;">Add products to get started</div>
+                        </div>
+                    </div>
+                    
+                    <input type="number" class="discount-input" placeholder="Enter discount amount" id="discount-input">
+                    
+                    <div class="cart-totals">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Tax:</span>
+                            <span id="tax">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Discount:</span>
+                            <span id="discount">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Total:</span>
+                            <span id="total">$0.00</span>
+                        </div>
+                    </div>
+                    
+                    <button class="checkout-btn" onclick="openProcessPaymentModal()">
+                        <i class="fas fa-credit-card"></i> Confirm Payment
+                    </button>
+                </div>
+            </div>
+
+            <!-- Customers Page -->
+            <div class="page" id="customers" style="display: none;">
+                <!-- Existing customers content here -->
+                <h2>Customers</h2>
+                <!-- Add your customers content here -->
+            </div>
+
+            <!-- Reports Page -->
+            <div class="page" id="reports" style="display: none;">
+                <h2>Reports</h2>
+                <!-- Add your reports content here -->
+            </div>
+
+            <!-- Settings Page -->
+            <div class="page" id="settings" style="display: none;">
+                <h2>Settings</h2>
+                <!-- Add your settings content here -->
+            </div>
+
+            <!-- Layby Page -->
+            <div class="page" id="layby" style="display: none;">
+                <h2>Layby</h2>
+                <!-- Add your layby content here -->
+            </div>
+
+            <!-- Paylater Page -->
+            <div class="page" id="paylater" style="display: none;">
+                {% include 'partials/paylaters.html' %}
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- process payment modal -->
+    <div id="process-payment-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeProcessPaymentModal()">&times;</span>
+            <h3 class="m-bottom">Process Payment</h3>
+            <div class="form-group">
+                <label>Payment Method</label>
+                <select id="payment-method" class="form-control">
+                    <option value="cash">Cash</option>
+                    <option value="bank">Bank</option>
+                    <option value="cheque">Ecocash</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Payment Amount</label>
+                <input type="number" id="payment-amount" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Payment Notes</label>
+                <textarea id="payment-notes" class="form-control" placeholder="Enter payment notes (optional)"></textarea>
+            </div>
+            <button onclick="processPayment()" class="checkout-btn" style="margin-top: 20px;">
+                <i class="fas fa-credit-card"></i> Process Payment
+            </button>
+        </div>
+    </div>
+
+    <!-- Payment Modals -->
+    <div id="payment-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closePaymentModal()">&times;</span>
+            
+            <!-- Layby Modal -->
+            <div id="layby-modal" class="payment-option">
+                <h3>Layby Payment</h3>
+                <div class="layby-terms">
+                    <div class="form-group">
+                        <label>Total Amount</label>
+                        <div class="amount-display" id="layby-total">$0.00</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Deposit Amount</label>
+                        <input type="number" id="layby-deposit" class="form-control" min="0" step="0.01" onchange="calculateLaybyPayments()">
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Interval (in months)</label>
+                        <input type="number" id="layby-interval" class="form-control" min="1" max="12" value="3" onchange="calculateLaybyPayments()">
+                    </div>
+                    <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="date" id="layby-start-date" class="form-control" onchange="calculateLaybyPayments()">
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Schedule</label>
+                        <div id="layby-schedule" class="payment-schedule"></div>
+                    </div>
+                </div>
+                <button onclick="processLaybyPayment()" class="checkout-btn" style="margin-top: 20px;">
+                    Confirm Layby
+                </button>
+            </div>
+
+            <!-- Pay Later Modal -->
+            <div id="paylater-modal" class="payment-option">
+                <h3>Pay Later</h3>
+                <div class="form-group">
+                    <label>Payment Interval</label>
+                    <select id="paylater-interval" class="form-control">
+                        <option value="weekly">Weekly</option>
+                        <option value="biweekly">Bi-weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>First Payment Date</label>
+                    <input type="date" id="paylater-start-date" class="form-control">
+                </div>
+                <button onclick="processPayLaterPayment()" class="checkout-btn" style="margin-top: 20px;">
+                    Confirm Pay Later
+                </button>
+            </div>
+
+            <!-- Quote Modal -->
+            <div id="quote-modal" class="payment-option">
+                <h3>Create Quote</h3>
+                <div class="form-group">
+                    <label>Valid Until</label>
+                    <input type="date" id="quote-valid-until" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="quote-notes" class="form-control"></textarea>
+                </div>
+                <button onclick="processQuote()" class="checkout-btn" style="margin-top: 20px;">
+                    Generate Quote
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- branch modal -->
+    <div id="branch-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeBranchModal()">&times;</span>
+            <div class="modal-body">
+                <div class="branch-content"> 
+                    {% for branch in branches %}
+                        <div class="branch-item">
+                            <a class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center" 
+                               href="{% url 'company:switch_branch' branch.id %}">
+                                {{ branch.name }}
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    let cart = [];
+    let paylater_data = [];
+    let layby_data = [];
+    let customer_id = null;
+
+    const searchInput = document.getElementById('product-search');
+    const productsGrid = document.getElementById('products-grid');
+    const filterTabs = document.querySelectorAll('.filter-tab');
+    const productCards = document.querySelectorAll('.product-card');
+    const branchBtn = document.getElementById('branchBtn');
+
+    branchBtn.addEventListener('click', function() {
+        document.getElementById('branch-modal').style.display = 'block';
+    });
+
+    function closeBranchModal(){
+        document.getElementById('branch-modal').style.display = 'none';
+    }
+
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        
+        productCards.forEach(card => {
+            const productName = card.querySelector('.product-name').textContent.toLowerCase();
+            const productCategory = card.getAttribute('data-category').toLowerCase();
+            
+            if (productName.includes(searchTerm) || productCategory.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            filterTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            const selectedCategory = this.getAttribute('data-category');
+            
+            productCards.forEach(card => {
+                const cardCategory = card.getAttribute('data-category');
+                
+                if (selectedCategory === 'all' || cardCategory === selectedCategory) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const sidebarItems = document.querySelectorAll(".sidebar-item");
+        const pages = document.querySelectorAll(".page");
+
+        sidebarItems.forEach(item => {
+            item.addEventListener("click", () => {
+                sidebarItems.forEach(i => i.classList.remove("active"));
+                item.classList.add("active");
+                pages.forEach(page => page.style.display = "none");
+                const targetId = item.getAttribute("data-target");
+                const targetPage = document.getElementById(targetId);
+                if (targetPage) {
+                    targetPage.style.display = "flex";
+                }
+            });
+        });
+
+        document.querySelector(".sidebar-item.active")?.click();
+    });
+
+    function showToast(message, type = 'success') {
+        const toastContainer = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        let icon = 'check-circle';
+        if (type === 'error') icon = 'exclamation-circle';
+        if (type === 'warning') icon = 'exclamation-triangle';
+        
+        toast.innerHTML = `
+            <i class="fas fa-${icon}"></i>
+            <span>${message}</span>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease-out forwards';
+            setTimeout(() => {
+                toastContainer.removeChild(toast);
+            }, 300);
+        }, 3000);
+    }
+
+    function addToCart(productId, productName, price, stock) {
+        const existingItem = cart.find(item => item.id === productId);
+        
+        if (existingItem) {
+            if (existingItem.quantity < stock) {
+                existingItem.quantity++;
+                existingItem.total = existingItem.quantity * parseFloat(existingItem.price);
+                showToast(`Added another ${productName} to cart`);
+            } else {
+                showToast(`Cannot add more ${productName} - stock limit reached`, 'warning');
+            }
+        } else {
+            cart.push({
+                id: productId,
+                name: productName,
+                price: parseFloat(price),
+                quantity: 1,
+                total: parseFloat(price),
+                stock: parseInt(stock)
+            });
+            showToast(`Added ${productName} to cart`);
+        }
+        
+        updateCartDisplay();
+        updateCartTotal();
+    }
+
+    function removeFromCart(productId) {
+        const item = cart.find(item => item.id === productId);
+        if (item) {
+            showToast(`Removed ${item.name} from cart`);
+        }
+        cart = cart.filter(item => item.id !== productId);
+        updateCartDisplay();
+        updateCartTotal();
+    }
+
+    function updateQuantity(productId, change) {
+        const item = cart.find(item => item.id === productId);
+        if (item) {
+            const newQuantity = item.quantity + change;
+            if (newQuantity > 0 && newQuantity <= item.stock) {
+                item.quantity = newQuantity;
+                item.total = item.quantity * parseFloat(item.price);
+                showToast(`Updated ${item.name} quantity to ${newQuantity}`);
+                updateCartDisplay();
+                updateCartTotal();
+            } else if (newQuantity > item.stock) {
+                showToast(`Cannot add more ${item.name} - stock limit reached`, 'warning');
+            }
+        }
+    }
+
+    function updateCartDisplay() {
+        const cartItems = document.querySelector('.cart-items');
+        
+        if (cart.length === 0) {
+            cartItems.innerHTML = `
+                <div class="text-center" style="color: var(--text-muted); padding: 40px 0;">
+                    <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 10px; opacity: 0.3;"></i>
+                    <div>Your cart is empty</div>
+                    <div style="font-size: 14px;">Add products to get started</div>
+                </div>
+            `;
+            return;
+        }
+
+        cartItems.innerHTML = '';
+        cart.forEach(item => {
+            const cartItem = document.createElement('div');
+            cartItem.className = 'cart-item';
+            cartItem.innerHTML = `
+                <div class="cart-item-details">
+                    <div class="cart-item-name">${item.name}</div>
+                    <div class="cart-item-price">$${parseFloat(item.price).toFixed(2)}</div>
+                </div>
+                <div class="quantity-control">
+                    <button class="qty-btn" onclick="updateQuantity('${item.id}', -1)">-</button>
+                    <span class="qty-display">${item.quantity}</span>
+                    <button class="qty-btn" onclick="updateQuantity('${item.id}', 1)">+</button>
+                </div>
+                <button class="qty-btn" onclick="removeFromCart('${item.id}')" style="margin-left: 10px;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            cartItems.appendChild(cartItem);
+        });
+    }
+
+    function updateCartTotal() {
+        const subtotal = cart.reduce((sum, item) => sum + item.total, 0);
+        
+        {% if tax_rate %}
+            const tax = subtotal / (1 + {{ tax_rate }});
+        {% else %}
+            const tax = subtotal * 1;
+        {% endif %}
+
+        const total = subtotal;
+
+        document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+        document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
+        document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+    }
+
+    function showPaymentModal(type) {
+        document.querySelectorAll('.quick-action-btn').forEach(btn => btn.classList.remove('active'));
+        
+        document.getElementById(`${type}-btn`).classList.add('active');
+        
+        document.getElementById('payment-modal').style.display = 'block';
+        
+        document.querySelectorAll('.payment-option').forEach(option => option.style.display = 'none');
+ 
+        document.getElementById(`${type}-modal`).style.display = 'block';
+    }
+
+    function closePaymentModal() {
+        document.getElementById('payment-modal').style.display = 'none';
+        document.querySelectorAll('.quick-action-btn').forEach(btn => btn.classList.remove('active'));
+    }
+
+    function calculateLaybyPayments() {
+        const total = parseFloat(document.getElementById('total').textContent.replace('$', ''));
+        const deposit = parseFloat(document.getElementById('layby-deposit').value) || 0;
+        const interval = parseInt(document.getElementById('layby-interval').value);
+        const startDate = document.getElementById('layby-start-date').value;
+        const scheduleContainer = document.getElementById('layby-schedule');
+        
+        // Update total display
+        document.getElementById('layby-total').textContent = `$${total.toFixed(2)}`;
+        
+        if (!startDate || !interval) {
+            scheduleContainer.innerHTML = '<div class="text-muted">Please select a start date and interval</div>';
+            return;
+        }
+
+        const remainingAmount = total - deposit;
+        const paymentAmount = (remainingAmount / interval).toFixed(2);
+        const start = new Date(startDate);
+        
+        let scheduleHTML = '';
+        
+        // Add deposit payment
+        if (deposit > 0) {
+            scheduleHTML += `
+                <div class="schedule-item deposit">
+                    <span class="schedule-date">Deposit Payment</span>
+                    <span class="schedule-amount">$${deposit.toFixed(2)}</span>
+                </div>
+            `;
+        }
+        
+        // Add remaining payments
+        for (let i = 0; i < interval; i++) {
+            const paymentDate = new Date(start);
+            paymentDate.setMonth(start.getMonth() + i);
+            
+            const formattedDate = paymentDate.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            scheduleHTML += `
+                <div class="schedule-item">
+                    <span class="schedule-date">${formattedDate}</span>
+                    <span class="schedule-amount">$${paymentAmount}</span>
+                </div>
+            `;
+        }
+        
+        scheduleContainer.innerHTML = scheduleHTML;
+    }
+
+    function processLaybyPayment() {
+        const deposit = parseFloat(document.getElementById('layby-deposit').value) || 0;
+        const interval = document.getElementById('layby-interval').value;
+        const startDate = document.getElementById('layby-start-date').value;
+        const total = parseFloat(document.getElementById('total').textContent.replace('$', ''));
+        const final_total = document.getElementById('payment-amount');
+
+        final_total.value = deposit;
+
+        if (!startDate) {
+            showToast('Please select a start date', 'error');
+            return;
+        }
+        
+        if (!interval || interval < 1) {
+            showToast('Please enter a valid interval', 'error');
+            return;
+        }
+
+        if (deposit < 0 || deposit > total) {
+            showToast('Please enter a valid deposit amount', 'error');
+            return;
+        }
+        
+        console.log('Processing layby payment:', { deposit, interval, startDate, total });
+
+        paylater_data.push({
+            deposit: deposit,
+            interval: interval,
+            startDate: startDate,
+            total: total
+        });
+        
+        showToast('Layby payment processed successfully');
+        closePaymentModal();
+    }
+
+    function processPayLaterPayment() {
+        const interval = document.getElementById('paylater-interval').value;
+        const startDate = document.getElementById('paylater-start-date').value;
+        
+        if (!startDate) {
+            showToast('Please select a start date', 'error');
+            return;
+        }
+        
+        console.log('Processing pay later payment:', { interval, startDate });
+        showToast('Pay later payment processed successfully');
+        closePaymentModal();
+    }
+
+    function processQuote() {
+        const validUntil = document.getElementById('quote-valid-until').value;
+        const notes = document.getElementById('quote-notes').value;
+        
+        if (!validUntil) {
+            showToast('Please select a valid until date', 'error');
+            return;
+        }
+  
+        console.log('Processing quote:', { validUntil, notes });
+        showToast('Quote generated successfully');
+        closePaymentModal();
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('payment-modal');
+        if (event.target == modal) {
+            closePaymentModal();
+        }
+    }
+
+    //process payment
+    function processPayment() {
+        if (cart.length === 0) {
+            showToast('Please add items to the cart', 'error');
+            return;
+        }
+
+        const payment_method = document.getElementById('payment-method').value;
+        const payment_amount = document.getElementById('payment-amount').value;
+        const payment_notes = document.getElementById('payment-notes').value;
+        const products_total = cart.reduce((acc, item) => acc + item.total, 0);
+
+        if (payment_method === 'paylater') {
+            processPayLaterPayment();
+        } else if (payment_method === 'layby') {
+            processLaybyPayment();
+        } 
+
+        const data = {
+            payment_method: payment_method,
+            payment_amount: payment_amount,
+            payment_notes: payment_notes,
+            products_total: products_total,
+            paylater_data: paylater_data,
+            layby_data: layby_data,
+            customer_id: customer_id,
+            cart: cart
+        }
+
+        console.log(data);
+
+        return
+
+        fetch('/pos/process-payment/', {
+            method: 'POST',
+            body: JSON.stringify({data: data})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+
+                displayReceipt(data.invoice_data);
+
+                //reset data
+                cart = [];
+                paylater_data = [];
+                layby_data = [];
+                customer_id = null;
+                updateCartDisplay();
+                updateCartTotal();
+
+                showToast('Payment processed successfully');
+            } else {
+                showToast('Payment failed', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Payment failed', 'error');
+        });
+    }
+
+    function displayReceipt(data) {
+        try {
+            let content = generateReceiptContent(data);
+            printReceiptSilently(content);
+
+            Swal.fire({
+                title: 'Printing Receipt...',
+                text: 'Please wait while we finish printing.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                timer: 3000,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+            }).then(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Done!',
+                    text: 'Receipt printed successfully.',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    location.reload();
+                });
+            });
+
+        } catch (error) {
+            console.error("Error:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to print the receipt. Please try again.'
+            });
+        }
+    }
+
+    function generateReceiptContent(data) {
+        const { invoice, invoice_items: invoiceItems } = data;
+        const {
+            invoice_number: invoiceNumber,
+            amount: invoiceTotal,
+            vat: vatAmount,
+            subtotal: subTotal,
+            currency_symbol: currencySymbol,
+            receipt_hash: receiptHash,
+            amount_paid: amountPaid,
+            payment_terms: paymentMethod,
+            device_id: deviceId,
+            device_serial_number: deviceSerialNumber,
+            receipt_signature: receiptSignature,
+            qr_code: qrCodeURL,
+            branch_name: branchName,
+            branch_phone: branchPhone,
+            branch_email: branchEmail,
+            code: code,
+            fiscal_day:fiscal_day
+        } = invoice;
+    
+        const vatRate = 15;
+    
+        return `
+            <style>
+                .receipt {
+                    font-family: Arial, sans-serif;
+                    font-size: 12px;
+                    width: 5.8cm;
+                    margin: auto;
+                    padding: 10px;
+                }
+                .receipt h2, .footer p, .center {
+                    text-align: center;
+                }
+                .receipt-body table {
+                    width: 100%;
+                    margin-top: 10px;
+                    border-collapse: collapse;
+                }
+                .receipt-body th, .receipt-body td {
+                    padding: 2px;
+                    border-bottom: 1px dashed #000;
+                }
+                .qr-code {
+                    text-align: center;
+                    margin-top: 10px;
+                }
+                .footer {
+                    font-size: 11px;
+                    margin-top: 10px;
+                }
+            </style>
+    
+            <div class="receipt">
+                <h2>Pasales Investments</h2>
+                <p><strong>FISCAL TAX INVOICE</strong></p>
+    
+                <p><strong>Invoice No:</strong> ${invoiceNumber}</p>
+                <p><strong>Branch:</strong> ${branchName || 'Main'}<br>
+                <strong>Phone:</strong> ${branchPhone || 'N/A'}<br>
+                <strong>Email:</strong> ${branchEmail || 'N/A'}</p>
+    
+                <p>
+                    <strong>Fiscal Day No: ${fiscal_day}</strong><br>
+                    <strong>Device ID:</strong> ${deviceId}<br>
+                    <strong>Device Serial:</strong> ${deviceSerialNumber}
+                </p>
+    
+                <div class="receipt-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>${currencySymbol}Price</th>
+                                <th>${currencySymbol}VAT</th>
+                                <th>${currencySymbol}Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${invoiceItems.map(item => {
+                                const total = item.unit_price * item.quantity;
+                                const vat = total - (total / (1 + vatRate / 100));
+                                return `
+                                    <tr>
+                                        <td>${item.item__name}</td>
+                                        <td>${item.quantity}</td>
+                                        <td>${currencySymbol}${item.unit_price}</td>
+                                        <td>${currencySymbol}${vat.toFixed(2)}</td>
+                                        <td>${currencySymbol}${total}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr><td colspan="4"><strong>Subtotal</strong></td><td>${currencySymbol}${subTotal}</td></tr>
+                            <tr><td colspan="4"><strong>VAT (${vatRate}%)</strong></td><td>${currencySymbol}${vatAmount}</td></tr>
+                            <tr><td colspan="4"><strong>Total</strong></td><td>${currencySymbol}${invoiceTotal}</td></tr>
+                            <tr><td colspan="4"><strong>Amount Paid</strong></td><td>${currencySymbol}${amountPaid}</td></tr>
+                            <tr><td colspan="4"><strong>Payment Method</strong></td><td>${paymentMethod || 'Cash'}</td></tr>
+                        </tfoot>
+                    </table>
+                </div>
+    
+                <div class="qr-code">
+                    <img src="${qrCodeURL}" alt="QR Code" width="100" height="100" style="display:block; margin: 0 auto;">
+                </div>
+                <div class="footer center">
+                    <p><strong>Verification Code: <br> </strong> ${code} <br>
+                        Verification Url: https://fdmstest.zimra.co.zw/
+                    </p>
+                    <hr>
+                    <p>Thank you for shopping with us</p>
+                    <hr>
+                </div>
+            </div>
+        `;
+    }
+    
+
+    // Function to print the receipt silently
+    function printReceiptSilently(content) {
+        let printFrame = document.getElementById("print-frame");
+
+        if (!printFrame) {
+            printFrame = document.createElement("iframe");
+            printFrame.id = "print-frame";
+            printFrame.style.position = "absolute";
+            printFrame.style.width = "0px";
+            printFrame.style.height = "0px";
+            printFrame.style.border = "none";
+            printFrame.style.visibility = "hidden";
+            document.body.appendChild(printFrame);
+        }
+
+        const frameDoc = printFrame.contentWindow || 
+                        printFrame.contentDocument.document || 
+                        printFrame.contentDocument;
+
+        frameDoc.document.open();
+        frameDoc.document.write(`
+            <html>
+            <head>
+                <title>Print Receipt</title>
+                <style>
+                    body { font-family: Arial, sans-serif; font-size: 12px; }
+                </style>
+            </head>
+            <body onload="window.print(); setTimeout(() => window.close(), 1000);">
+                ${content}
+            </body>
+            </html>
+        `);
+        frameDoc.document.close();
+    }
+
+    function openProcessPaymentModal() {
+        if (cart.length > 0) {
+            const total = cart.reduce((acc, item) => acc + item.total, 0);
+            document.getElementById('payment-amount').value = total;
+            document.getElementById('process-payment-modal').style.display = 'block';
+        } else {
+            showToast('Please add items to the cart', 'error');
+        }
+    }
+
+    function closeProcessPaymentModal() {
+        document.getElementById('process-payment-modal').style.display = 'none';
+    }
+
+</script>
+</html>

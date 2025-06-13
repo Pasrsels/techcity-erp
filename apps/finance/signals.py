@@ -133,31 +133,31 @@ def create_expense_cashbook_entry(sender, instance, **kwargs):
 #         branch=instance.to_branch
 #     )
     
-@receiver(post_save, sender=Invoice)
-def handle_invoice_post_save(sender, instance, created, **kwargs):
-    if created:
-        # Create Income
-        category = IncomeCategory.objects.filter(name='sales').first() #to change
+# @receiver(post_save, sender=Invoice)
+# def handle_invoice_post_save(sender, instance, created, **kwargs):
+#     if created:
+#         # Create Income
+#         category = IncomeCategory.objects.filter(name='sales').first() #to change
 
-        income = Income.objects.create(
-            amount=instance.amount_paid,
-            currency=instance.currency,
-            category=category,
-            note=instance.products_purchased,
-            user=instance.user,
-            branch=instance.branch,
-            status=False,
-        )
-        logger.info(f'Income created: {income}')
+#         income = Income.objects.create(
+#             amount=instance.amount_paid,
+#             currency=instance.currency,
+#             category=category,
+#             note=instance.products_purchased,
+#             user=instance.user,
+#             branch=instance.branch,
+#             status=False,
+#         )
+#         logger.info(f'Income created: {income}')
 
-        # Create Finance Log
-        FinanceLog.objects.create(
-            type='income',
-            category='sales',
-            amount=instance.amount_paid,
-            description=instance.products_purchased
-        )
-        logger.info(f'Finance log created for invoice: {instance}')
+#         # Create Finance Log
+#         FinanceLog.objects.create(
+#             type='income',
+#             category='sales',
+#             amount=instance.amount_paid,
+#             description=instance.products_purchased
+#         )
+#         logger.info(f'Finance log created for invoice: {instance}')
 
 
 @receiver(post_save, sender=Expense)

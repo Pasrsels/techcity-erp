@@ -269,142 +269,39 @@
         </div>
     </div>
 
-    <!-- Paylater Details Modal -->
-    <div class="modal fade" id="paylaterDetailsModal" tabindex="-1" aria-labelledby="paylaterDetailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+    <div class="modal fade" id="branchModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-right">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="paylaterDetailsModalLabel">Paylater Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
                 <div class="modal-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6>Invoice Information</h6>
-                            <table class="table table-sm">
-                                <tr>
-                                    <th>Invoice #:</th>
-                                    <td id="detail-invoice-number"></td>
-                                </tr>
-                                <tr>
-                                    <th>Customer:</th>
-                                    <td id="detail-customer-name"></td>
-                                </tr>
-                                <tr>
-                                    <th>Total Amount:</th>
-                                    <td id="detail-total-amount"></td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Payment Summary</h6>
-                            <table class="table table-sm">
-                                <tr>
-                                    <th>Amount Paid:</th>
-                                    <td id="detail-amount-paid"></td>
-                                </tr>
-                                <tr>
-                                    <th>Amount Due:</th>
-                                    <td id="detail-amount-due"></td>
-                                </tr>
-                                <tr>
-                                    <th>Status:</th>
-                                    <td id="detail-status"></td>
-                                </tr>
-                            </table>
-                        </div>
+                    <div>
+                        <p class='fw-bold'>Choose Branch</p>
                     </div>
-
-                    <h6>Payment Schedule</h6>
-                    <div class="table-responsive">
-                        <table class="table table-sm" id="paymentScheduleTable">
-                            <thead>
-                                <tr>
-                                    <th>Due Date</th>
-                                    <th>Amount</th>
-                                    <th>Status</th>
-                                    <th>Payment Date</th>
-                                    <th>Payment Method</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                    <div class="row row-cols-3 g-3"> 
+                        {% for branch in branches %}
+                            <div class="col">
+                                <a class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center" 
+                                   href="{% url 'company:switch_branch' branch.id %}">
+                                    {{ branch.name }}
+                                </a>
+                            </div>
+                        {% endfor %}
                     </div>
-
-                    <h6 class="mt-4">Cash Flow History</h6>
-                    <div class="table-responsive">
-                        <table class="table table-sm" id="cashFlowTable">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Description</th>
-                                    <th>Amount</th>
-                                    <th>Type</th>
-                                    <th>Processed By</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="printPaylaterDetails()">Print Details</button>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Add Payment Modal -->
-    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="paymentModalLabel">Process Payment</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="paymentForm">
-                        <div class="mb-3">
-                            <label for="paymentAmount" class="form-label">Amount Due</label>
-                            <input type="text" class="form-control" id="paymentAmount" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="paymentMethod" class="form-label">Payment Method</label>
-                            <select class="form-select" id="paymentMethod" required>
-                                <option value="">Select Payment Method</option>
-                                <option value="cash">Cash</option>
-                                <option value="card">Card</option>
-                                <option value="bank">Bank Transfer</option>
-                                <option value="ecocash">EcoCash</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="amountPaid" class="form-label">Amount to Pay</label>
-                            <input type="number" class="form-control" id="amountPaid" step="0.01" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="paymentDate" class="form-label">Payment Date</label>
-                            <input type="date" class="form-control" id="paymentDate" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="paymentNotes" class="form-label">Notes</label>
-                            <textarea class="form-control" id="paymentNotes" rows="2"></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="processPayment()">Process Payment</button>
-                </div>
-            </div>
-        </div>
-    </div>
+  
 
     <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>    
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        const branchModal = new bootstrap.Modal(document.querySelector('#branchModal'))
+        const branchBtn = document.querySelector('#branchBtn')
+
+        branchBtn.addEventListener('click', ()=>{
+            branchModal.show()
+        })
         function formatCurrency(amount) {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',

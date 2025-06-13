@@ -3,6 +3,112 @@
 {% block title%} Invoices {% endblock%}
 {% block content %}
 <style>
+
+:root {
+    --primary: #11998e;
+    --primary-no-gradient: #11998e;
+    --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    --secondary: orange;
+    --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+    --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    --dark: #1a1a2e;
+    --dark-alt: #16213e;
+    --text-light: rgba(228, 230, 234, 1);
+    --text-dark: black;
+    --text-muted: black;
+    --glass: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+    --border-radius: 16px;
+    --border-radius-sm: 8px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --m-bottom: 20px;
+}
+
+.header {
+    grid-area: header;
+    padding: 20px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+}
+
+.search-input {
+    width: 100%;
+    padding: 15px 50px 15px 20px;
+    border-radius: var(--border-radius);
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--text-light);
+    font-size: 16px;
+    transition: var(--transition);
+}
+
+.search-input:focus {
+        outline: none;
+        border-color: rgba(102, 126, 234, 0.5);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+.search-input::placeholder {
+    color: var(--text-dark);
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--glass-border);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-dark);
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    margin: 15% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 500px;
+    border-radius: var(--border-radius);
+}
+
+.close-modal {
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+
+.search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
 .table-container {
     max-width: 100%;
     margin: auto;
@@ -10,11 +116,40 @@
     background-color: white;
 }
 
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--glass);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
     text-align: left;
 }
+
+.btn {
+        flex: 1;
+        padding: 10px;
+        border-radius: var(--border-radius-sm);
+        border:none;
+        color: var(--text-dark);
+        cursor: pointer;
+        transition: var(--transition);
+        font-size: 12px;
+    }
+
 
 thead th {
     background-color: #f9f9f9;
@@ -70,14 +205,12 @@ input[type="checkbox"] {
     color: white;
 }
 
-/* Table Container to allow scrolling */
 .table-container {
     max-height: 100vh !important;
     overflow-y: auto;
     position: relative;
 }
 
-/* Sticky Search Bar */
 .sticky-top-search {
     position: sticky;
     top: 0;
@@ -87,12 +220,11 @@ input[type="checkbox"] {
     border-bottom: 2px solid #ccc;
 }
 
-/* Sticky Table Header */
 .sticky-header th {
     position: sticky;
     top: 56px; 
     z-index: 99;
-    background-color: #007bff; 
+    background-color: var(--primary); 
     color: white;
 }
 
@@ -100,116 +232,146 @@ input[type="checkbox"] {
     width: 100%;
     display: block;
 }
+.heading-item{
+    font-size: 12px;
+}
 
+.footer-btn {
+    padding: 8px 16px;
+    border-radius: var(--border-radius-sm);
+    background: var(--primary-no-gradient);
+    border: 1px solid var(--glass-border);
+    color: var(--text-light);
+    text-decoration: none;
+    transition: var(--transition);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.footer-btn:hover {
+    background: var(--primary);
+    transform: translateY(-1px);
+}
 
 </style>
-<div class="finance">
-    <div class="finance-navbar">
-        <nav class="d-flex justify-content-between align-items-center  rounded shadow p-2">
-            <div class='h5'>
-                Invoices
+<div class="financ">
+    <div class="header">
+        <div class='h5'>
+            Invoices
+        </div>
+        <div class="d-flex justify-content-between mt-1">
+            <div>
+                <select class="form-select" id="filterSelect" onchange="filterCashBook()">
+                    <option value="today" {% if filter_option == 'today' %}selected{% endif %}>Today</option>
+                    <option value="this_week" {% if filter_option == 'this_week' %}selected{% endif %}>This Week</option>
+                    <option value="yesterday" {% if filter_option == 'yesterday' %}selected{% endif %}>Yesterday</option>
+                    <option value="this_month" {% if filter_option == 'this_month' %}selected{% endif %}>This Month</option>
+                    <option value="last_month" {% if filter_option == 'last_month' %}selected{% endif %}>Last Month</option>
+                    <option value="this_year" {% if filter_option == 'this_year' %}selected{% endif %}>This Year</option>
+                </select>
             </div>
-            <div class="d-flex justify-content-between mt-1">
-                <div>
-                    <select class="form-select" id="filterSelect" onchange="filterCashBook()">
-                        <option value="today" {% if filter_option == 'today' %}selected{% endif %}>Today</option>
-                        <option value="this_week" {% if filter_option == 'this_week' %}selected{% endif %}>This Week</option>
-                        <option value="yesterday" {% if filter_option == 'yesterday' %}selected{% endif %}>Yesterday</option>
-                        <option value="this_month" {% if filter_option == 'this_month' %}selected{% endif %}>This Month</option>
-                        <option value="last_month" {% if filter_option == 'last_month' %}selected{% endif %}>Last Month</option>
-                        <option value="this_year" {% if filter_option == 'this_year' %}selected{% endif %}>This Year</option>
-                    </select>
-                </div>
-                <div id="customDateRange" class="d-flex mx-2">
-                    <input type="date" id="startDate" value="{{ start_date }}" class="form-control" placeholder="Start Date">
-                    <input type="date" id="endDate" value="{{ end_date}}" class="form-control mx-2" placeholder="End Date">
-                    <button class="btn btn-outline-dark btn-sm" onclick="applyCustomFilter()">Apply</button>
-                </div>
-                <button class="btn btn-outline-dark btn-sm" onclick="downloadReport()">Download Report</button>
+            <div id="customDateRange" class="d-flex mx-2">
+                <input type="date" id="startDate" value="{{ start_date }}" class="form-control" placeholder="Start Date">
+                <input type="date" id="endDate" value="{{ end_date}}" class="form-control mx-2" placeholder="End Date">
+                <button class="btn btn-outline-dark btn-sm" onclick="applyCustomFilter()">Apply</button>
             </div>
-        </nav>
+            <button class="btn btn-outline-dark btn-sm" onclick="downloadReport()">Download Report</button>
+        </div>
     </div>
         <!-- {% include 'components/loader.html' %} -->
         <div class='table-responsive' style="height: 100vh;">
-            <div class="row mt-2 mb-3 sticky-top-search">
-                <div class="col-md-4 w-100 px-3">
-                    <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search invoices...">
-                </div>
+            <div class="search-container sticky-top-search">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search invoices...">
+                <i class="fas fa-search search-icon"></i>
             </div>
-            {% for date_heading, invoices in grouped_invoices.items %}
-                <h4 class="mt-3">{{ date_heading }}</h4>
-                <table class="sticky-header table-stripped w-100" id="invoiceTable">
-                    <thead>
-                        <tr>
-                            <th>Customer Name &#9650;</th>
-                            <th>Reference &#9650;</th>
-                            <th>Date &#9650;</th>
-                            <th>Products</th>
-                            <th>Grand Total &#9650;</th>
-                            <th>Paid &#9650;</th>
-                            <th>Due &#9650;</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for invoice in invoices %}
-                        <tr>
-                            <td><small><a href="{% url 'finance:customer' invoice.customer.id %}">{{ invoice.customer.name }}</a></small></td>
-                            <td><small>#{{ invoice.invoice_number }}</small></td>
-                            <td><small>{{ invoice.issue_date|date:"d/m/y H:i" }}</small></td>
-                            <td><small>{{ invoice.products_purchased }}</small></td>
-                            <td><small>{{ invoice.currency.symbol }} {{ invoice.amount }}</small></td>
-                            <td id="tr" data-invoiceID="{{ invoice.id }}"><small>{{ invoice.currency.symbol }} {{ invoice.amount_paid }}</small></td>
-                            <td><small>
-                                <td>
-                                    {% if invoice.amount_due > 0 %}
-                                    <small class="text-danger">
-                                        {{ invoice.currency.symbol }} {{ invoice.amount_due }}
-                                    </small>
-                                    {% else %}
-                                    <small class="text-success">
-                                        {{ invoice.currency.symbol }} {{ invoice.amount_paid }}
-                                    </small>
-                                    {% endif %}
-                                </td>
-                            </small></td>
-                            <td>
-                                <span class='px-2'>
-                                    <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Preview Invoice' data-id="{{ invoice.id }}" id='previewBtn'>
-                                        <i class='bx bx-file'></i>
-                                    </span>
-                                </span>
-                                <span>
-                                    {% if invoice.amount_due > 0 %}
-                                    <span style='cursor:pointer;' data-id="{{ invoice.id }}" data-amount="{{ invoice.amount_due }}" id='id_update' class="text-dark">
-                                        <i class='bx bx-right-arrow bg-success'></i>
-                                    </span>
-                                    {% else %}
-                                    <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Invoice fully paid'>
-                                        <i class='bx bx-bx-right-arrow bg-danger'></i>
-                                    </span>
-                                    {% endif %}
-                                </span>
-                                <span>
-                                    {% if request.user.role == 'admin' %}
-                                    <span id='id_delete' data-id="{{ invoice.id }}" class="text-dark hint--bottom" aria-label='sales return'>
-                                        <img width="18px" src="{% static 'assets/return.png' %}" />
-                                    </span>
-                                    {% endif %}
-                                </span>
-                                {% if invoice.payment_terms == 'pay later' %}
-                                <span class='px-2'>
-                                    <span style='cursor:pointer;' class="text-dark" data-bs-toggle="modal" data-bs-target="#paylaterModal{{ invoice.id }}">
-                                        <i class='bx bx-calendar'></i>
-                                    </span>
-                                </span>
-                                {% endif %}
-                            </td>
-                        </tr>
+            {% for date_heading, data in grouped_invoices.items %}
+    <div class="mb-4">
+        <h4 class="mt-3 d-flex flex-column justify-content-center">
+            <span>{{ date_heading }}</span>
+            <div class="d-flex gap-3 text-muted">
+                <small class="heading-item">{{ data.invoices|length }} invoice{{ data.invoices|length|pluralize }}</small>
+                <small class="heading-item">Total: {{ data.invoices.0.currency.symbol }}{{ data.total_amount }}</small>
+                <small class="heading-item">Due: {{ data.invoices.0.currency.symbol }}{{ data.amount_due }}</small>
+            </div>
+        </h4>
+        
+        <table class="sticky-header table-stripped w-100" id="invoiceTable">
+            <thead>
+                <tr>
+                    <th>Customer Name &#9650;</th>
+                    <th>Reference &#9650;</th>
+                    <th>Date &#9650;</th>
+                    <th>Products</th>
+                    <th>Grand Total &#9650;</th>
+                    <th>Paid &#9650;</th>
+                    <th>Due &#9650;</th>                
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in data.invoices %}
+                <tr>
+                    <td><small><a href="{% url 'finance:customer' invoice.customer.id %}">{{ invoice.customer.name }}</a></small></td>
+                    <td><small>#{{ invoice.invoice_number }}</small></td>
+                    <td><small>{{ invoice.issue_date|date:"d/m/y H:i" }}</small></td>
+                    <td><small>
+                        {% for item in invoice_items %}
+                            {% if item.invoice == invoice %}
+                                <span style="margin-right:5px;">{{item.item.name }} x {{item.quantity}}</span>
+                            {% endif %}
                         {% endfor %}
-                    </tbody>
-                </table>
-            {% endfor %}
+                    </small></td>
+                    <td><small>{{ invoice.currency.symbol }} {{ invoice.amount }}</small></td>
+                    <td id="tr" data-invoiceID="{{ invoice.id }}"><small>{{ invoice.currency.symbol }} {{ invoice.amount_paid }}</small></td>
+                    <td>
+                        {% if invoice.amount_due > 0 %}
+                        <small class="text-danger">
+                            {{ invoice.currency.symbol }} {{ invoice.amount_due }}
+                        </small>
+                        {% else %}
+                        <small class="text-success">
+                            {{ invoice.currency.symbol }} {{ invoice.amount_paid }}
+                        </small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class='px-2'>
+                            <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Preview Invoice' data-id="{{ invoice.id }}" id='previewBtn'>
+                                <i class='bx bx-file'></i>
+                            </span>
+                        </span>
+                        <span>
+                            {% if invoice.amount_due > 0 %}
+                            <span style='cursor:pointer;' data-id="{{ invoice.id }}" data-amount="{{ invoice.amount_due }}" id='id_update' class="text-dark">
+                                <i class='bx bx-right-arrow bg-success'></i>
+                            </span>
+                            {% else %}
+                            <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Invoice fully paid'>
+                                <i class='bx bx-bx-right-arrow bg-danger'></i>
+                            </span>
+                            {% endif %}
+                        </span>
+                        <span>
+                            {% if request.user.role == 'admin' %}
+                            <span id='id_delete' data-id="{{ invoice.id }}" class="text-dark hint--bottom" aria-label='sales return'>
+                                <img width="18px" src="{% static 'assets/return.png' %}" />
+                            </span>
+                            {% endif %}
+                        </span>
+                        {% if invoice.payment_terms == 'pay later' %}
+                        <span class='px-2'>
+                            <span style='cursor:pointer;' class="text-dark" data-bs-toggle="modal" data-bs-target="#paylaterModal{{ invoice.id }}">
+                                <i class='bx bx-calendar'></i>
+                            </span>
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endfor %}
         </div>
         
 
@@ -491,15 +653,12 @@ input[type="checkbox"] {
                 </div>
             </div>
             <div class="modal-footer">
-                <div class="d-flex justify-content-between w-100">
+                <div class="d-flex justify-content-end w-100">
                     <div>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                    <div>
-                        <button type="button" class="btn btn-primary me-2" onclick="printInvoice()">
+                        <button type="button" class="me-2 footer-btn" onclick="printInvoice()">
                             <i class='bx bx-printer'></i> Print
                         </button>
-                        <button type="button" class="btn btn-success" onclick="sendInvoiceEmail()">
+                        <button type="button" class="footer-btn" onclick="sendInvoiceEmail()">
                             <i class='bx bx-envelope'></i> Send Email
                         </button>
                     </div>
@@ -1042,7 +1201,7 @@ input[type="checkbox"] {
     });
 
     async function fetchInvoicePreview(invoiceId) {
-        currentInvoiceId = invoiceId; // Store the current invoice ID
+        currentInvoiceId = invoiceId; 
         try {
             const response = await fetch(`/finance/invoice/preview/data/${invoiceId}/`, {
                 method: "POST",
@@ -1059,7 +1218,6 @@ input[type="checkbox"] {
             const data = await response.json();
             const { invoice, invoice_items: invoiceItems } = data;
             
-            // Update modal content
             document.getElementById('preview-invoice-number').textContent = invoice.invoice_number;
             document.getElementById('preview-date').textContent = new Date(invoice.issue_date).toLocaleDateString();
             document.getElementById('preview-customer').textContent = invoice.customer_name;
@@ -1070,24 +1228,22 @@ input[type="checkbox"] {
             document.getElementById('preview-status').textContent = invoice.payment_status;
             document.getElementById('preview-payment-terms').textContent = invoice.payment_terms;
 
-            // Update items table
             const itemsTable = document.getElementById('preview-items');
             itemsTable.innerHTML = '';
             invoiceItems.forEach(item => {
                 const row = itemsTable.insertRow();
-                row.insertCell().textContent = item.item__product__name;
-                row.insertCell().textContent = item.item__product__description;
+                row.insertCell().textContent = item.item__name;
+                row.insertCell().textContent = item.item__description;
                 row.insertCell().textContent = item.quantity;
                 row.insertCell().textContent = `${invoice.currency_symbol} ${item.unit_price}`;
                 row.insertCell().textContent = `${invoice.currency_symbol} ${item.total_amount}`;
             });
 
-            // Update totals
             document.getElementById('preview-subtotal').textContent = `${invoice.currency_symbol} ${invoice.subtotal}`;
             document.getElementById('preview-vat').textContent = `${invoice.currency_symbol} ${invoice.vat}`;
             document.getElementById('preview-total').textContent = `${invoice.currency_symbol} ${invoice.amount}`;
             document.getElementById('preview-paid').textContent = `${invoice.currency_symbol} ${invoice.amount_paid}`;
-            document.getElementById('preview-due').textContent = `${invoice.currency_symbol} ${invoice.amount_due}`;
+            document.getElementById('preview-due').textContent = `${invoice.currency_symbol} ${invoice.amount_due || 0.00}`;
 
             previewModal.show();
         } catch (error) {

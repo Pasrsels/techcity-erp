@@ -17,7 +17,6 @@
                     <th>Quantity Sold</th>
                     <th>Quantity At Hand</th>
                     <th>Physical Count</th>
-                    <th>Difference</th> 
                 </tr>
             </thead>
             <tbody>
@@ -28,11 +27,9 @@
         <table class="table table-bordered">
             <thead>
                 <tr>
-                    <th>Invoices</th>
                     <th>Withdrawals</th>
                     <th>Deposits</th>
                     <th>Cashed In</th>
-                    <th>Difference</th>
                 </tr>
             </thead>
             <tbody id="cashTable">
@@ -56,7 +53,7 @@
 
             const cashTbody = document.getElementById('cashTable'); 
             const row = cashTbody.insertRow(); 
-            row.insertCell().textContent = cashData[0].total_invoices_amount;
+            <!-- row.insertCell().textContent = cashData[0].total_invoices_amount; -->
             row.insertCell().textContent = cashData[0].total_withdrawals_amount;
             row.insertCell().textContent = 0;
 
@@ -77,10 +74,6 @@
                 const withdrawals = parseFloat(cashData[0].total_withdrawals_amount) || 0;
                 const deposits = parseFloat(0) || 0;
                 const collected = parseFloat(input.value, 10) || 0;
-                const difference = collected - (invoices - withdrawals + deposits);
-
-                cashDiffCell.textContent = difference;
-                cashDiffCell.style.color = difference < 0 ? 'red' : 'green'; 
             });
 
             const stockTable = document.getElementById('stockTable'); 
@@ -97,18 +90,11 @@
                 input.className = 'form-control';
                 input.dataset.itemId = item.id;
 
-                const diffCell = row.insertCell();
-                diffCell.textContent = '';
-
                 inputCell.appendChild(input);
 
                 input.addEventListener('input', () => {
                     const physicalCount = parseInt(input.value, 10) || 0;
                     const remainingQuantity = parseInt(item.remaining_quantity, 10);
-                    const difference = physicalCount - remainingQuantity;
-
-                    diffCell.textContent = difference;
-                    diffCell.style.color = difference < 0 ? 'red' : 'green'; 
                 });
             });
         })

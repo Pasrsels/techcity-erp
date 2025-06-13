@@ -297,7 +297,7 @@ class Invoice(models.Model):
     subtotal =  models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     note = models.TextField(null=True)
     cancelled = models.BooleanField(default=False)
-    products_purchased = models.TextField()
+    products_purchased = models.TextField(null=True)
     invoice_return = models.BooleanField(default=False)
     payment_terms = models.CharField(choices=(
         ('cash', 'cash'),
@@ -359,6 +359,13 @@ class InvoiceItem(models.Model):
 class layby(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='layby')
     branch = models.ForeignKey('company.branch', on_delete=models.CASCADE)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    payment_method = models.CharField(max_length=50, choices=[
+        ('cash', 'Cash'),
+        ('bank', 'Bank Transfer'),
+        ('ecocash', 'EcoCash'),
+    ], null=True)
     fully_paid = models.BooleanField(default=False)
 
     def check_payment_status(self):
@@ -492,7 +499,7 @@ class Cashbook(models.Model):
 
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True)
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True)
-    issue_date = models.DateField(auto_now_add=True)
+    issue_date = models.DateTimeField(auto_now_add=True)
     description = models.CharField(max_length=255)
     debit = models.BooleanField(default=False)
     credit = models.BooleanField(default=False)
@@ -737,7 +744,7 @@ class Cashflow(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     cash_up = models.ForeignKey('finance.CashUp', on_delete=models.CASCADE, null=True)
-
+ 
     def save(self, *args, **kwargs):
         # Calculate total (income - expense)
         self.total = self.income - self.expense
@@ -822,7 +829,7 @@ class Income(models.Model):
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     currency = models.ForeignKey('Currency', on_delete=models.CASCADE)
     category = models.ForeignKey('IncomeCategory', on_delete=models.PROTECT)
-    note = models.CharField(max_length=200)
+    note = models.CharField(max_length=200, null=True)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
     status = models.BooleanField(default=False)

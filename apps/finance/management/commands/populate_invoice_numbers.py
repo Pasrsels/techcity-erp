@@ -100,6 +100,7 @@ class Command(BaseCommand):
                 # Show what would be updated in dry run
                 for i, invoice in enumerate(invoices_without_numbers[:5]):  # Show first 5
                     invoice_number = f"INV{branch.name}-{next_number + i}"
+                    invoice.issue_date = invoice.issue_date
                     self.stdout.write(f"    Invoice ID {invoice.id} -> {invoice_number}")
                 
                 if invoices_without_numbers.count() > 5:

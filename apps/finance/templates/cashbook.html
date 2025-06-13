@@ -4,6 +4,30 @@
 {% block content %}
 
 <style>
+    :root {
+        --primary: #11998e;
+        --primary-no-gradient: #11998e;
+        --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        --secondary: orange;
+        --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+        --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        --dark: #1a1a2e;
+        --dark-alt: #16213e;
+        --text-light: rgba(228, 230, 234, 1);
+        --text-dark: black;
+        --text-muted: black;
+        --glass: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+        --border-radius: 16px;
+        --border-radius-sm: 8px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --m-bottom: 20px;
+    }
+
     .cashbook .table td, .cashbook .table th {
         padding: 0.75rem 1rem;
         vertical-align: middle;
@@ -14,8 +38,8 @@
     }
     
     .cashbook .form-check-input:checked {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
+        background-color: var(--primary);
+        border-color: var(--primary);
     }
     
     .chat-messages {
@@ -436,6 +460,34 @@
         min-height: 100vh;
         overflow-y: auto;
     }
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+    }
+
+    .modal-content {
+        position: relative;
+        background: white;
+        margin: 15% auto;
+        padding: 20px;
+        width: 80%;
+        max-width: 100%;
+        border-radius: var(--border-radius);
+    }
+
+    .close-modal {
+        position: absolute;
+        right: 20px;
+        top: 10px;
+        font-size: 24px;
+        cursor: pointer;
+    }
 </style>
 
 <div class="finance">
@@ -613,7 +665,7 @@
     </div>
 
 <!-- Cash Up Modal -->
-    <div class="modal fade" id="cashUpModal" tabindex="-1" aria-labelledby="cashupModalLabel" aria-hidden="true" style="height: auto  !important;">
+    <div class="modal fade" id="cashUpModal" tabindex="-1" aria-labelledby="cashupModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content border-0 shadow">
                 {% include 'cashflows/cash_ups.html' %}
