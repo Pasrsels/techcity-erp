@@ -4,115 +4,223 @@
 {% block title%} Update Purchase Order {% endblock%}
 {% block content %}
 <style>
-    .po-input {
-        border: none !important;
+  :root {
+      --primary: #11998e;
+      --primary-no-gradient: #11998e;
+      --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+      --secondary: orange;
+      --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+      --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      --dark: #1a1a2e;
+      --dark-alt: #16213e;
+      --text-light: rgba(228, 230, 234, 1);
+      --text-dark: black;
+      --text-muted: black;
+      --glass: rgba(255, 255, 255, 0.1);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+      --border-radius: 16px;
+      --border-radius-sm: 8px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --m-bottom: 20px;
+  }
+
+  .modal-content {
+      position: relative;
+      background: white;
+      margin: 15% auto;
+      padding: 20px;
+      width: 200%;
+      max-width: 500px;
+      border-radius: var(--border-radius);
+  }
+
+  .close-modal {
+      position: absolute;
+      right: 20px;
+      top: 10px;
+      font-size: 24px;
+      cursor: pointer;
+  }
+  .po-input {
+      border: none !important;
+  }
+  td, input {
+      font-size: 12px;
+      vertical-align: middle;
+      text-align: center;
+  }
+
+      td:first-child {
+      text-align: left; 
+  }
+
+  td:first-child,
+  td:nth-child(2){
+      text-align: left; 
+  }
+
+
+  input {
+      height: 30px;
+      font-size: 12px;
+      vertical-align: middle;
+      text-align: center;
+  }
+
+  .search-container {
+        position: relative;
+        margin-bottom: 10px;
     }
-    td, input {
-        font-size: 12px;
-        vertical-align: middle;
-        text-align: center;
+
+  .search-input {
+      width: 100%;
+      padding: 15px 50px 15px 20px;
+      border-radius: var(--border-radius);
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      color: var(--text-light);
+      font-size: 16px;
+      transition: var(--transition);
+  }
+
+
+    .search-input:focus {
+        outline: none;
+        border-color: rgba(102, 126, 234, 0.5);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
-       td:first-child {
-       text-align: left; 
-   }
-
-    td:first-child,
-    td:nth-child(2){
-        text-align: left; 
+    .search-input::placeholder {
+        color: var(--text-dark);
     }
 
-
-    input {
-        height: 30px;
-        font-size: 12px;
-        vertical-align: middle;
-        text-align: center;
+    .search-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-dark);
+    }
+    .btn-save {
+        padding: 8px 16px;
+        border-radius: var(--border-radius-sm);
+        background: var(--primary-no-gradient);
+        border: 1px solid var(--glass-border);
+        color: var(--text-light);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 14px;
+        cursor: pointer;
+    }
+    .add-btn:hover {
+        background: var(--primary);
+        transform: translateY(-1px);
+    }
+    .nav{
+        background: var(--primary);
+        color:#fff;
+    }
+    .nav-link{
+        color:#fff !important;
+        background: var(--primary);
+    }
+    .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
+        color: #fff !important;
+        background-color: var(--primary) !important;
+        border-color: #fff !important;
+    }
+    .background{
+      background: var(--primary);
     }
 </style>
 <div class="inventory">
     <div class='add-purchase-order'>
-        <div class='purchase-order-nav shadow p-2 d-flex justify-content-between align-items-center rounded'>
+        <div class="p-2">
             <div>
-                <h5 class='fw-bold px-2 mt-2'>Update Purchase order</h5>
+                <h4>
+                    Edit Purchase order: <span class='bg-primary bg-primary-subtle p-2 rounded'>{{ purchase_order.order_number }}</span>
+                </h4>
+                <p>update purchase orders</p>
             </div>
         </div>
         <div class="row mt-2 main" id="main-section">
             <div class="col-9">
                 <div class="d-flex flex-column rounded p-2" style="background: #fff;">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <p id="Editcart-title" class="fw-bold fs-6 rounded mx-1">Purchase order Items</p>
-                    <div>
-                      <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search products..." oninput="searchTable()">
+                  <div class="search-container bg-white border rounded">
+                    <input type="text" id="search-input" class="search-input" placeholder="Search products..." oninput="searchTable()" style='text-align:left;'>
+                    <i class="fas fa-search search-icon"></i>
                   </div>
-                  </div>
-                    <table class="table border rounder p-2" id="Editcart-table">
-                        <thead>
-                          <th id="sort-number" style="cursor: pointer;">#
-                            <span id="sort-arrow" class="sort-arrow">?</span>
-                          </th>
-                          <th>Action</th>
-                          <th>Product</th>
-                          <th>Supplier</th>
-                          <th>Quantity</th>
-                          <th>Unit Price</th>
-                          <th class="text-center">Total</th>
-                        </thead>
-                        <tbody id="Editcart-items"></tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="5"></td>
-                                <td class="fw-bold">Subtotal</td>
-                                <td class="text-center fw-bold" id="subtotal"></td>
-                            </tr>
-                            <tr>
-                                <td colspan="5"></td>
-                                <td class="fw-bold">Discount</td>
-                                <td>
-                                    <input id="id_discount" class="form-control text-center fw-bold" oninput="calculateTotals()">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td colspan="5"></td>
-                                <td class="fw-bold">Tax Rate</td>
-                                <td id="tax_rate" class="fw-bold text-center">15%</td>
-                            </tr>
-                            <tr>
-                                <td colspan="5"></td>
-                                <td class="fw-bold">Tax Total</td>
-                                <td id="tax" class="fw-bold text-center"></td>
-                            </tr>
-                            <tr>
-                                <td colspan="5"></td>
-                                <td class="fw-bold">Expenses</td>
-                                <td>
-                                    <input id="id_other" style="border:none;" value="0.00"  class="form-control text-center fw-bold" oninput="calculateTotals()" readonly>
-                                </td>
-                            </tr>
-                            <!-- Add dynamic rows for other expenses here -->
-                            <tr id="other-expense-row">
-                                <td colspan="6"></td>
-                                <td>
-                                    <button class="btn btn-outline-dark btn-sm w-100" id="add-expense-btn" onclick="addExpense()">Add Expense</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td colspan="5"></td>
-                                <td class="fw-bold">Total</td>
-                                <td class="fw-bold text-center" id="id_total"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                    <div class="d-flex justify-content-end">
-                      <button class="btn btn-outline-dark btn-sm flex mx-2" onclick="reload();">Clear</button>
-                      <button class="btn btn-dark btn-sm flex" id="confirm_btn">Next</button>
-                    </div>                        
+
+                  <table class="table table-borderless rounder p-2" id="Editcart-table">
+                      <thead class='background'>
+                        <th id="sort-number" style="cursor: pointer;">#
+                          <span id="sort-arrow" class="sort-arrow">?</span>
+                        </th>
+                        <th>Action</th>
+                        <th>Product</th>
+                        <th>Supplier</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th class="text-center">Total</th>
+                      </thead>
+                      <tbody id="Editcart-items"></tbody>
+                      <tfoot>
+                          <tr>
+                              <td colspan="5"></td>
+                              <td class="fw-bold">Subtotal</td>
+                              <td class="text-center fw-bold" id="subtotal"></td>
+                          </tr>
+                          <tr>
+                              <td colspan="5"></td>
+                              <td class="fw-bold">Discount</td>
+                              <td>
+                                  <input id="id_discount" class="form-control text-center fw-bold" oninput="calculateTotals()">
+                              </td>
+                          </tr>
+                          <tr>
+                              <td colspan="5"></td>
+                              <td class="fw-bold">Tax Rate</td>
+                              <td id="tax_rate" class="fw-bold text-center">15%</td>
+                          </tr>
+                          <tr>
+                              <td colspan="5"></td>
+                              <td class="fw-bold">Tax Total</td>
+                              <td id="tax" class="fw-bold text-center"></td>
+                          </tr>
+                          <tr>
+                              <td colspan="5"></td>
+                              <td class="fw-bold">Expenses</td>
+                              <td>
+                                  <input id="id_other" style="border:none;" value="0.00"  class="form-control text-center fw-bold" oninput="calculateTotals()" readonly>
+                              </td>
+                          </tr>
+                          <!-- Add dynamic rows for other expenses here -->
+                          <tr id="other-expense-row">
+                              <td colspan="6"></td>
+                              <td>
+                                  <button class="btn btn-outline-dark btn-sm w-100" id="add-expense-btn" onclick="addExpense()">Add Expense</button>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td colspan="5"></td>
+                              <td class="fw-bold">Total</td>
+                              <td class="fw-bold text-center" id="id_total"></td>
+                          </tr>
+                      </tfoot>
+                  </table>
+                  <div class="d-flex justify-content-end">
+                    <button class="btn btn-outline-dark btn-sm flex mx-2" onclick="reload();">Clear</button>
+                    <button class="btn btn-dark btn-sm flex" id="confirm_btn">Next</button>
+                  </div>                        
                 </div>
             </div>
             <div class="col-3 rounded" style="background: #fff;">
                 <div>
-                  <p id="Editcart-title" class="fw-bold fs-6 mt-3">Add Product</p>
-                  <hr>
+                  <p id="Editcart-title" class="fw-bold fs-6 mt-3 background rounded text-white p-2">Add Product</p>
                     <form class='d-flex flex-column mt-2 w-100 mt-2 w-100 px-2' method='post'>
                         {% csrf_token %}
                         <div class="mb-1">
@@ -176,19 +284,8 @@
                             <p id="quantity_error" class="fs-6 text-danger"></p>
                             <p id="cart_error" class="text-danger"></p>
                         </div>
-                        <!-- <div id="div_id_tax_method" class="mb-2"> 
-                            <label for="id_tax_method" class="form-label requiredField">
-                                Tax Calculation Method
-                            </label> 
-                            <select class="select form-select" id='id_tax_method'>
-                              <option value="">-----</option>
-                              <option value='inclusive'>Inclusive</option>
-                              <option value="exclusive">Exclusive</option>
-                              <option value="no">No tax charge</option>
-                          </select>
-                        </div>  -->
                         <div class='d-flex justify-content-end mt-2'>
-                            <button type='button' class='btn btn-dark btn-sm w-100' id="id_add_to_cart" onclick="addItem();">
+                            <button type='button' class='btn-save w-100' id="id_add_to_cart" onclick="addItem();">
                               <i class='bx bx-save' ></i>
                                 save
                             </button>
@@ -500,14 +597,20 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-body">
-                <h5 class="fw-bold">Proceed by filling the Purchase Order form below</h5>
+                <h5 class="fw-bold">Confirm Purchase Order Edit</h5>
                 <form class="mt-2">
                     {% csrf_token %}
+                     <div id="div_id_name" class="mb-3">
+                        <label for="id_name" class="form-label requiredField">
+                            Name<span class="asteriskField">*</span>
+                        </label> <input type="text" name="name" maxlength="20" value="{{ purchase_order.name }}" class="textinput form-control" required="" id="id_name">
+                    </div> 
                     <div id="div_id_batch" class="mb-3">
                         <label for="id_batch" class="form-label requiredField">
                             Batch<span class="asteriskField">*</span>
                         </label> <input type="text" name="batch" maxlength="20" value="{{ purchase_order.batch }}" class="textinput form-control" required="" id="id_batch">
-                    </div> <div id="div_id_status" class="mb-3">
+                    </div> 
+                    <div id="div_id_status" class="mb-3">
                         <label for="id_status" class="form-label requiredField">
                             Status<span class="asteriskField">*</span>
                         </label> <select name="status" class="select form-select" id="id_status">
@@ -517,7 +620,8 @@
                             <option value="canceled">Canceled</option>
 
                         </select>
-                    </div> <div id="div_id_delivery_date" class="mb-3">
+                    </div>
+                     <div id="div_id_delivery_date" class="mb-3">
                         <label for="id_delivery_date" class="form-label">
                             Delivery date
                         </label> <input type="date" name="delivery_date" value="2024-10-19" class="dateinput form-control" id="id_delivery_date">
@@ -530,12 +634,12 @@
                             <option value="ecocash">ecocash</option>
 
                         </select>
-                    </div> <div id="div_id_notes" class="mb-3">
+                    </div> 
+                    <div id="div_id_notes" class="mb-3">
                         <label for="id_notes" class="form-label">
                             Notes
                         </label> <input type="text" value="{{ purchase_order.notes }}" name="notes" maxlength="255" class="textinput form-control" id="id_notes">
-                    </div>
-
+                    </div
                     <p id="cartError" class="text-danger"></p>
                     <div class="d-flex justify-content-end">
                         <div class="">
@@ -544,9 +648,11 @@
                                 Reset
                             </button>
                         </div>
-                        <span class="px-1"></span>
                         <div class="">
-                            <button type="button" onclick="processCart();" class="btn btn-dark btn-sm w-100">
+                            <button type="button" class="btn btn-outline-dark btn-sm me-2" onclick="processCart(true)">
+                              Hold Purchase Order
+                            </button>
+                            <button type="button" onclick="processCart(false);" class="btn btn-dark btn-sm">
                                 <i class="bx bx-save"></i>
                                 Save
                             </button>
@@ -666,61 +772,6 @@
     let overide = ''
 
     calculateExpression('id_p_price', errorId = null);
-
-    //check if local storage have anything and populate at the page load
-    const checkLocalCart = () => {
-      Swal.fire({
-          title: 'Loading products...',
-          text: 'Please wait while we load your Editcart.',
-          allowOutsideClick: false, 
-          didOpen: () => {
-              Swal.showLoading();
-              const cartData = localStorage.getItem('Editcart');
-  
-              if (!cartData || cartData.length == 2) {
-                  Swal.close();
-                  return;
-              }
-  
-              try {
-                  Editcart = JSON.parse(cartData);
-  
-                  const seen = new Set();
-                  Editcart = Editcart.filter(item => {
-                      if (seen.has(item.id)) {
-                          return false; // duplicate
-                      }
-                      seen.add(item.id);
-                      return true;
-                  });
-
-                  console.log('done')
-  
-                  // Save cleaned cart back to localStorage
-                  localStorage.setItem('Editcart', JSON.stringify(Editcart));
-  
-                  // update count if any items exist
-                  if (Editcart.length > 0) {
-                      itemCount = Editcart[Editcart.length - 1].count;
-                  }
-  
-                  updateCartDisplay().then(() => {
-                      Swal.close(); 
-                  }).catch(error => {
-                      console.error('Error updating Editcart:', error);
-                      Swal.fire('Error', 'Failed to load products. Please try again.', 'error');
-                  });
-              } catch (e) {
-                  console.error('Failed to parse cart data:', e);
-                  Swal.close();
-                  Swal.fire('Error', 'Corrupted cart data. Please clear your cart.', 'error');
-              }
-          },
-      });
-  };
-  
-
-    checkLocalCart()
 
     const clearField = (el) =>{
       el.value=''
@@ -1329,9 +1380,7 @@
               items = Editcart;
             }
 
-          console.log(items, 'cart')
-
-          items.reverse().forEach((item, index) => {
+          Editcart.reverse().forEach((item, index) => {
               const row = document.createElement("tr");
               row.innerHTML = `
               <td><small>${item.count}</small></td>
@@ -1480,11 +1529,13 @@
     };
   
 
-    function processCart() {
+    function processCart(status) {
         const data = {
         'po_items':Editcart,
         'expenses':expensesData,
+        'hold':status,
         'overide':"manual",
+        'purchase_order_id':{{ purchase_order.id }},
         'cost_allocations': formData, 
           'purchase_order': {
           'batch': document.getElementById('id_batch').value.trim(),

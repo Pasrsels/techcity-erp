@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Price List</title>
     <style>
+        
         body {
             font-family: Arial, sans-serif;
         }
@@ -35,10 +36,14 @@
         <tbody>
             {% for item in items %}
             <tr>
-                <td>{{ item.product }} ({{ item.description }})</td>
+                <td>{{ item.product.name }} 
+                    {% if item.product.description %}
+                     - {{ item.description }}
+                    {% endif %}
+                </td>
                 <td>{{ item.quantity }}</td>
-                <td>${{ item.dealer_price }}</td>
-                <td>${{ item.selling_price }}</td>
+                <td>${{ item.wholesale_price }}</td>
+                <td>${{ item.price }}</td>
             </tr>
             {% endfor %}
         </tbody>

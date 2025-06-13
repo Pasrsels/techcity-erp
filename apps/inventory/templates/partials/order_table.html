@@ -1,0 +1,69 @@
+<table class="table table-borderless table-rounded table-hover p-2 rounded shadow-4" id="order_table" style="width:100%;">
+    <thead class="background">
+        <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Delivery Date</th>
+            <th>Batch</th>
+            <th class='text-end'>Total Cost</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+            <tr>
+                <td class="{% if order.is_partial %}bg-warning text-dark{% endif %}"><small>{{forloop.counter}}</small></td>
+                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}"data-id={{ order.id }}><small>{{ order.order_date }}</small></td>
+                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}"data-id={{ order.id }}><small>{{ order.delivery_date }}</small></td>
+                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}"data-id={{ order.id }}><small>{{ order.batch|lower }}</small></td>
+                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %} text-end"data-id={{ order.id }}><small>${{ order.total_cost }}</small></td>
+                {% comment %} <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}"data-id={{ order.id }}><small>{{ order.notes }}</small></td> {% endcomment %}
+                <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}"data-id={{ order.id }}>
+                    {% if order.hold %}
+                        <small>hold</small>
+                    {% else %}
+                        <small>{{ order.status }}</small>
+                    {% endif %}
+                </td>
+               <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}">
+                    <a href="{% url 'inventory:purchase_order_detail' order.id %}" class="btn bx bx-show"></a>
+
+                    <a href="{% url 'inventory:print_purchase_order' order.id %}"
+                        class="btn bx bx-printer mx-1"></a>
+
+                    {% if order.hold %}
+                        <small class="badge bg-warning text-dark rounded-pill w-25 py-2 text-center">On Hold</small>
+
+                    {% elif order.status != 'received' %}
+                        <button class="btn btn-sm btn-outline-primary rounded-pill w-25" data-id="{{ order.id }}" onclick="status(this)">
+                            Change Status
+                        </button>
+
+                    {% elif order.received %}
+                        <small class="badge bg-success text-light rounded-pill w-25 py-2 text-center">Received</small>
+                    {% else %}
+                        <a href="{% url 'inventory:receive_order' order.id %}" class="btn btn-sm btn-outline-success rounded-pill w-25">
+                            <small>Receive Order Items</small>
+                        </a>
+                    {% endif %}
+
+                    {% if order.received %}
+                        <!-- Disabled Edit and Delete buttons for received orders -->
+                        <button class="btn btn-sm text-muted border-0 bg-light" disabled title="Editing disabled">
+                            <i class="bx bx-edit"></i>
+                        </button>
+                        <button class="btn btn-sm text-muted border-0 bg-light" disabled title="Deletion disabled">
+                            <i class="bx bx-trash"></i>
+                        </button>
+                    {% else %}
+                        <!-- Active Edit and Delete buttons -->
+                        <a href="{% url 'inventory:edit_po' order.id %}" class="btn btn-outline-dark btn-sm bx bx-edit"></a>
+                        <button class="btn bx bx-trash btn-outline-dark btn-sm" onclick="confirmDeletePurchaseOrder({{ order.id }})"></button>
+                    {% endif %}
+                </td>
+
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

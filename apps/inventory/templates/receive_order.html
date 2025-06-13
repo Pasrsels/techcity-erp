@@ -5,6 +5,29 @@
 {% block title %} Receive Purchase Order {% endblock %}
 {% block content %}
 <style>
+    :root {
+      --primary: #11998e;
+      --primary-no-gradient: #11998e;
+      --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+      --secondary: orange;
+      --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+      --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      --dark: #1a1a2e;
+      --dark-alt: #16213e;
+      --text-light: rgba(228, 230, 234, 1);
+      --text-dark: black;
+      --text-muted: black;
+      --glass: rgba(255, 255, 255, 0.1);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+      --border-radius: 16px;
+      --border-radius-sm: 8px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --m-bottom: 20px;
+  }
     td, input {
         font-size: 12px;
         vertical-align: middle; 
@@ -58,20 +81,88 @@
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
     }
 
+     .search-container {
+        position: relative;
+        margin-bottom: px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 15px 50px 15px 20px;
+        border-radius: var(--border-radius);
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        color: var(--text-dark);
+        font-size: 16px;
+        transition: var(--transition);
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: rgba(102, 126, 234, 0.5);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-input::placeholder {
+        color: var(--text-dark);
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-dark);
+    }
+
+    .confirm-btn {
+        padding: 8px 16px;
+        border-radius: var(--border-radius-sm);
+        background: var(--primary-no-gradient);
+        border: 1px solid var(--glass-border);
+        color: var(--text-light);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .table-container {
+        max-height: 70vh; /* adjust as needed */
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+    }
+
+    table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: var(--primary); /* your existing background */
+        color: white;
+    }
+
+    .background{
+        background: var(--primary);
+    }
 </style>
 <div class="inventory-navbar">
-    <nav class="d-flex justify-content-between align-items-center shadow rounded mb-2 p-2">
-        <div class="d-flex">
-            <div>
-                <h4 class='mt-1 fw-bold'><small class='px-1 fw-bold fx-6'>Receive Purchase Order: </small>{{ purchase_order.batch|lower }}</h4>
-            </div>
+    <nav class=" p-2">
+        <div class='d-flex justify-content-between align-items-center'>
+            <h4>Receive Purchase Order</h4>
+            <h4 class='bg-primary bg-primary-subtle p-1 rounded'>{{ purchase_order.batch }}</h4>
         </div>
-        <!--<a href="{% url 'inventory:mark_done' purchase_order.id %}" class="btn btn-secondary">Done</a>-->
+        <p>Total cost ${{purchase_order.total_cost}}</p>
     </nav>
 </div>
+
+<div class="search-container bg-white rounded">
+    <input type="text" id="search-input" class="search-input" placeholder="Search products..." oninput="searchTable()" style='text-align:left;'>
+    <i class="fas fa-search search-icon"></i>
+</div>
+
 <div class="table-container">
-    <table class='table table-striped table-responsive table-bordered' id='order_items_table' style='width:100%;'>
-        <thead>
+    <table class='table table-responsive table-borderless' id='order_items_table'>
+        <thead style="background:var(--primary);">
             <tr>
                 <th>#</th>
                 <th>Product Name</th>
@@ -181,7 +272,7 @@
         </tbody>
     </table>
     <div class="floating-button">
-        <button class="btn btn-outline-dark btn-sm" id="confirmPurchaseOrder"  disabled>
+        <button class="confirm-btn" id="confirmPurchaseOrder"  disabled>
             Confirm Purchase Order
         </button>
     </div>
@@ -191,12 +282,6 @@
     let expectedProfitAmnt = 0;
     let dealerExpectedProfitAmnt = 0;
     let editStatus = false;
-
-    $('#order_items_table').DataTable({
-        paging: false,
-        scrollY: '850px',
-        scrollCollapse: true
-    });
 
     document.addEventListener('DOMContentLoaded', function () {
         const confirmButton = document.getElementById('confirmPurchaseOrder');
@@ -251,7 +336,7 @@
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken'), 
+                'X-CSRFToken': "{{ csrf_token }}", 
             },
         })
         .then((response) => response.json())
@@ -263,6 +348,7 @@
                     title: 'Success',
                     text: 'Purchase order has been successfully confirmed!',
                 });
+                window.location.href = '/inventory/purchase_orders/list/';
             } else {
                 Swal.fire({
                     icon: 'error',

@@ -119,8 +119,6 @@ urlpatterns = [
     path('defective/', create_defective, name='create_defective'),
     path('write_off/', create_write_off, name='create_write_off'),
 
-    path('test/', test, name='test'),
-
     #API ENDPOINTS
     ################################################################################################
 

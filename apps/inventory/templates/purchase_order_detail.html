@@ -3,44 +3,106 @@
 {% block title%} Inventory {% endblock%}
 {% block content %}
 <style>
-    td, span {
-        font-size: 12px;
-        vertical-align: middle;
-        text-align: center;
+td, span {
+    font-size: 12px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+td:first-child {
+    text-align: left;
+}
+:root {
+    --primary: #11998e;
+    --primary-no-gradient: #11998e;
+    --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    --secondary: orange;
+    --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+    --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    --dark: #1a1a2e;
+    --dark-alt: #16213e;
+    --text-light: rgba(228, 230, 234, 1);
+    --text-dark: black;
+    --text-muted: black;
+    --glass: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+    --border-radius: 16px;
+    --border-radius-sm: 8px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --m-bottom: 20px;
+}
+
+  .header-btn {
+      padding: 8px 16px;
+      border-radius: var(--border-radius-sm);
+      background: var(--primary-no-gradient);
+      border: 1px solid var(--glass-border);
+      color: var(--text-light);
+      text-decoration: none;
+      transition: var(--transition);
+      font-size: 14px;
+      cursor: pointer;
+  }
+
+  .search-container {
+        position: relative;
+        margin-bottom: 10px;
     }
 
-        td:first-child {
-            text-align: left;
-        }
+  .search-input {
+      width: 100%;
+      padding: 15px 50px 15px 20px;
+      border-radius: var(--border-radius);
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      color: var(--text-light);
+      font-size: 16px;
+      transition: var(--transition);
+  }
 
-    /* Sticky header style */
-    /* thead th { */
-        /* position: sticky;
-        top: 0;
-        background: #808080 !important;
-        z-index: 1;
-        text-align: center;
-    }
-    .inventory-navbar {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-        text-align: center;
-    } */
+ .search-input:focus {
+      outline: none;
+      border-color: rgba(102, 126, 234, 0.5);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .search-input::placeholder {
+      color: var(--text-dark);
+  }
+
+  .search-icon {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dark);
+  }
+  .background{
+    background: var(--primary);
+  }
 </style>
 <div class="inventory">
     <div class="inventory-navbar" onscroll="adjust()">
-        <nav class="d-flex justify-content-between align-items-center shadow rounded mb-2 p-2">
+        <nav class="d-flex justify-content-between align-items-center rounded mb-2 p-2">
             <div class="d-flex">
                 <div>
-                    <h4 class='mt-1 fw-bold'>{{ purchase_order.batch|lower }}: <small class='px-1 fw-bold fx-6'>Order Detail</small></h4>
+                    <h4>Purchase Order Detail</h4>
+                    <span class='bg-primary bg-primary-subtle p-1 rounded'>{{ purchase_order.batch }}</span>
                 </div>
             </div>
             <div>
-                <a href="?download=csv" class="btn btn-outline-dark btn-sm bx bx-download mx-1"></a>
+                <a href="?download=csv" class="btn header-btn mx-1">
+                    <i class="bx bx-download"></i>
+                    Download csv
+                </a>
                 <div class="dropdown d-inline-block">
-                    <a href="javascript:void(0)" class="btn btn-outline-dark btn-sm " id="shareDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a href="javascript:void(0)" class="btn btn-light" id="shareDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class='bx bx-share-alt'></i>
+                        Share
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="shareDropdown">
                         <li>
@@ -53,81 +115,77 @@
             </div>
         </nav>
     </div>
+    <div class="p-3 roundedbg-light d-flex justify-content-around text-center text-light rounded" style="background:var(--primary);">
     <div>
-        <div class="mt-2">
-            <table class="table table-bordered table-striped" id="details_table" style='width:100%;'>
-                <thead>
-                <th class="fs-6 text-dark bg-light" style="color:black;">Product</th>
-                <th class="fs-6 text-dark bg-light" style="color:black;">Quantity</th>
-                <th class="fs-6 text-dark bg-light" style="color:black;">Quantity Received</th>
-                <th class="fs-6 text-dark bg-light" style="color:black;">Supplier Price</th>
-                <th class="fs-6 text-dark bg-light" style="color:black;">Unit Expense</th>
-                <th class="fs-6 text-dark bg-light" style="color:black;">landing Cost</th>
-                <th class="fs-6 text-dark bg-light" style="background: #fff;">Retail Price</th>
-                <th class="fs-6 text-dark bg-light" style="background: #fff;">Wholesale Price</th>
-                <th class="fs-6 text-dark bg-light" style="background: #fff;">Retail Profit</th>
-                <th class="fs-6 text-dark bg-light" style="background: #fff;">Wholesale Profit</th>
-                <th class="fs-6 text-dark bg-light" style="color:black;">All Supplier$</th>
-                <th class="fs-6 text-dark bg-light" style="color:black;">Total Expenses</th>
-                <th class="fs-6 text-dark bg-light" style="color:black;">Total Order$</th>
+        <div>Ordered Quantity</div>
+        <div class="text-light fw-bold">{{ total_quantity }}</div>
+    </div>
+    <div>
+        <div>Total Cost</div>
+        <div class="text-light fw-bold">${{ purchase_order.total_cost|floatformat:2 }}</div>
+    </div>
+    <div>
+        <div>Total Wholesale Profit</div>
+        <div class="text-light fw-bold">$${{ total_wholesale_profit|floatformat:2 }}</div>
+    </div>
+    <div>
+        <div>Total Retail Profit</div>
+        <div class="text-light fw-bold">${{ total_retail_profit|floatformat:2 }}</div>
+    </div>
+</div>
+
+    <div>
+        <div>
+            <table class="table table-borderless" id="details_table">
+                <thead class="background">
+                    <th>Product Details</th>
+                    <th>Ordered Qty</th>
+                    <th>Received Status</th>
+                    <th>Unit Cost</th>
+                    <th>Actual Unit Cost</th>
+                    <th>Selling Price</th>
+                    <th>Wholesale Price</th>
+                    <th>Retail Profit</th>
+                    <th>Wholesale Profit</th>
+                    <th>Supplier</th>
                 </thead>
                 <tbody id="apportionment-table">
-                    {% for item in items %}
-                    {% for order in order_items %}
-                    {% if order.product.name == item.product %}
-                    <tr>
-                        <td class="fw-bold" style="background: #ebeced;">{{ item.product }} <small>({{ order.product.description }})</small></td>
-                        <td style="background: #ebeced;">{{ order.quantity }}</td>
-                        <td style="background: #ebeced;">
-                            {% if order.received_quantity == order.quantity %}
-                            <small class="bg-success btn btn-sm btn-success">All received</small>
-                            {% else %}
-                            <small class="bg-danger btn btn-danger btn-sm">
-                                Received
-                                {{ order.received_quantity }} / {{ order.quantity }}
-                            </small>
-                            {% endif %}
-                        </td>
-                        <td style="background: #ebeced;">{{ item.price }}</td>
-                        <td style="background: #ebeced;">{{ item.allocationRate }}</td>
-                        <td class="fw-bold" style="background: #ebeced;">{{ item.expense_cost }}</td>
-                        <td class="fw-bold" style="background: #fff;">{{ item.selling_price }}</td>
-                        <td class="fw-bold" style="background: #fff;">{{ item.dealer_price }}</td>
-                        <td style="background: #fff;">
-                            {% if not order.expected_profit or order.expected_profit < 0 %}
-                            <span class="text-danger">{{ order.expected_profit }}</span>
-                            {% endif %}
-                        </td>
-                        <td style="background: #fff;">{{ order.dealer_expected_profit }}</td>
-                        <td style="background: #ebeced;">{{ item.total_buying }}</td>
-                        <td style="background: #ebeced;">{{ item.allocated }}</td>
-                        <td style="background: #ebeced;">{{ item.total }}</td>
-                    </tr>
-                    {% endif %}
-                    {% endfor %}
-                    {% endfor %}
-                </tbody>
-
-                <tbody id="expenses-table">
-                    <tr>
-                        <td colspan="1"><strong>Totals</strong></td>
-                        <td class="fw-bold">{{ total_quantity }}</td>
-                        <td class="fw-bold">{{ total_received_quantity }}</td>
-                        <td colspan="5"></td>
-                        <td class="fw-bold">{{ total_expected_dealer_profit }}0</td>
-                        <td class="fw-bold">{{ total_expected_profit }}</td>
-                        <td colspan="1"></td>
-                        <td><strong>{{ total_expenses }}</strong></td>
-                        <td></td>
-                    </tr>
-                    {% for expense in expenses %}
-                    <tr>
-                        <td colspan="11">{{ expense.name }}</td>
-                        <td>{{ expense.amount }}</td>
-                        <td colspan="1"></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+        {% for order in order_items %}
+        <tr>
+            <td style="background: #ebeced;">
+                {{ order.product.name }} 
+                {% if order.product.description %}
+                    <small>- {{ order.product.description }}</small>
+                {% endif %}
+            </td>
+            <td style="background: #ebeced;">{{ order.quantity }}</td>
+            <td style="background: #ebeced;">
+                {% if order.received_quantity == order.quantity %}
+                    <small class="bg-success bg-success-subtle p-2 rounded">All received</small>
+                {% else %}
+                    <small class="bg-danger bg-danger-subtle p-2 rounded">
+                        Received {{ order.received_quantity }} / {{ order.quantity }}
+                    </small>
+                {% endif %}
+            </td>
+            <td style="background: #ebeced;">{{ order.unit_cost }}</td>
+            <td style="background: #ebeced;">{{ order.actual_unit_cost }}</td>
+            <td class="fw-bold" style="background: #fff;">{{ order.price }}</td>
+            <td class="fw-bold" style="background: #fff;">{{ order.wholesale_price }}</td>
+            <td style="background: #fff;">
+                {% if not order.expected_profit or order.expected_profit < 0 %}
+                    <span class="text-danger">{{ order.expected_profit }}</span>
+                {% else %}
+                    {{ order.expected_profit }}
+                {% endif %}
+            </td>
+            <td style="background: #fff;">{{ order.dealer_expected_profit }}</td>
+            <td style="background: #ebeced;">
+                {{ order.supplier.name }}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
             </table>
         </div>
     </div>

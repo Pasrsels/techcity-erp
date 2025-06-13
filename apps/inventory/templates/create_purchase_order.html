@@ -4,8 +4,49 @@
 {% block title%} Create Purchase Order {% endblock%}
 {% block content %}
 <style>
-  .po-input {
+  :root {
+      --primary: #11998e;
+      --primary-no-gradient: #11998e;
+      --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+      --secondary: orange;
+      --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+      --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      --dark: #1a1a2e;
+      --dark-alt: #16213e;
+      --text-light: rgba(228, 230, 234, 1);
+      --text-dark: black;
+      --text-muted: black;
+      --glass: rgba(255, 255, 255, 0.1);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+      --border-radius: 16px;
+      --border-radius-sm: 8px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --m-bottom: 20px;
+  }
+.po-input {
     border: none !important;
+  }
+
+  .modal-content {
+      position: relative;
+      background: white;
+      margin: 15% auto;
+      padding: 20px;
+      width: 200%;
+      max-width: 500px;
+      border-radius: var(--border-radius);
+  }
+
+  .close-modal {
+      position: absolute;
+      right: 20px;
+      top: 10px;
+      font-size: 24px;
+      cursor: pointer;
   }
 
   td,
@@ -20,49 +61,88 @@
     text-align: left;
   }
 
-  /* input {
-        height: 30px;
-        font-size: 12px;
-        vertical-align: middle;
-        text-align: center;
-    } */
-    .spinner {
+
+  .spinner {
       border: 2px solid #f3f3f3;
       border-top: 2px solid #3498db;
       border-radius: 50%;
       width: 16px;
       height: 16px;
       animation: spin 0.8s linear infinite;
-    }
+  }
     
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .back-btn, .btn-save {
+      padding: 8px 16px;
+      border-radius: var(--border-radius-sm);
+      background: var(--primary-no-gradient);
+      border: 1px solid var(--glass-border);
+      color: var(--text-light);
+      text-decoration: none;
+      transition: var(--transition);
+      font-size: 14px;
+      cursor: pointer;
+  }
+
+  .search-container {
+        position: relative;
+        margin-bottom: 10px;
     }
-    
+
+  .search-input {
+      width: 100%;
+      padding: 15px 50px 15px 20px;
+      border-radius: var(--border-radius);
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      color: var(--text-light);
+      font-size: 16px;
+      transition: var(--transition);
+  }
+
+ .search-input:focus {
+      outline: none;
+      border-color: rgba(102, 126, 234, 0.5);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .search-input::placeholder {
+      color: var(--text-dark);
+  }
+
+  .search-icon {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dark);
+  }
+  .background{
+    background: var(--primary);
+  }
 </style>
 <div class="inventory">
   <div class='add-purchase-order'>
-    <div class='purchase-order-nav shadow p-2 d-flex justify-content-between align-items-center rounded'>
+    <div class='p-2'>
       <div>
-        <h5 class='fw-bold mt-2'>Create Purchase order</h5>
+        <h4>Create Purchase order</h4>
+        <p> Add purchase order items </p>
       </div>
     </div>
     <div class="row mt-2 main" id="main-section">
       <div class="col-9">
         <div class="d-flex flex-column rounded p-2" style="background: #fff;">
-          <div class="d-flex justify-content-between align-items-center">
-            <p id="cart-title" class="fw-bold fs-6 rounded mx-1">Purchase order Items</p>
-            <div>
-              <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search products..."
-                oninput="searchTable()">
-            </div>
+          <div class="search-container bg-white border rounded">
+            <input type="text" id="search-input" class="search-input" placeholder="Search products..." oninput="searchTable()" style='text-align:left;'>
+              <i class="fas fa-search search-icon"></i>
           </div>
-          <table class="table border rounder p-2" id="cart-table">
-            <thead>
-              <th id="sort-number" style="cursor: pointer;">#
-                <span id="sort-arrow" class="sort-arrow">↕</span>
-              </th>
+          <table class="table table-borderless rounder p-2" id="cart-table">
+            <thead class='background'>
+              <th id="sort-number" style="cursor: pointer;">#<span id="sort-arrow" class="sort-arrow">↕</span></th>
               <th>Action</th>
               <th>Product</th>
               <th>Supplier</th>
@@ -120,8 +200,7 @@
       </div>
       <div class="col-3 rounded" style="background: #fff;">
         <div class=''>
-          <p id="cart-title" class="fw-bold fs-6 mt-3">Add Product</p>
-          <hr>
+          <p id="cart-title" class="fw-bold fs-6 mt-3 background p-2 rounded text-white">Add Product</p>
           <form class='d-flex flex-column mt-2 w-100 mt-2 w-100 px-2' method='post'>
             {% csrf_token %}
             <div class="mb-1 position-relative">
@@ -166,14 +245,12 @@
               </label>
               <input type="text" name="price" step="0.01" class="numberinput form-control" required id="id_p_price">
               
-              <!-- Spinner inside the input wrapper -->
               <div id="loader" class="spinner" style="display: none; position: absolute; top: 38px; right: 10px;"></div>
               
               <p id="price_error" class="fs-6 text-danger"></p>
             </div>
             
             <div id="supplier_prices" class="mb-1">
-              <!-- to be rendered by js -->
             </div>
             <div id="div_id_quantity" class="mb-1">
               <label for="id_p_quantity" class="form-label requiredField">
@@ -193,19 +270,8 @@
                 <option value="15">Standard (15%)</option>
               </select>
             </div>
-            <!-- <div id="div_id_tax_method" class="mb-2"> 
-                          <label for="id_tax_method" class="form-label requiredField">
-                            Tax Calculation Method
-                          </label> 
-                          <select class="select form-select" id='id_tax_method'>
-                            <option value="">-----</option>
-                            <option value='inclusive'>Inclusive</option>
-                            <option value="exclusive">Exclusive</option>
-                            <option value="no">No tax charge</option>
-                        </select>
-                      </div>  -->
             <div class='d-flex justify-content-end mt-2'>
-              <button type='button' class='btn btn-dark btn-sm w-100' id="id_add_to_cart" onclick="addItem();">
+              <button type='button' class='btn-save w-100' id="id_add_to_cart" onclick="addItem();">
                 <i class='bx bx-save'></i>
                 save
               </button>
@@ -495,17 +561,19 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-body">
-        <h5 class="fw-bold">Proceed by filling the Purchase Order form below</h5>
+        <h5 class="fw-bold">Confirm Purchase Order</h5>
         <form class="mt-2">
           {{ note_form | crispy }}
           <p id="cartError" class="text-danger"></p>
           <div class="d-flex justify-content-end">
-            <button type="reset" class="btn btn-danger btn-sm w-10">
+            <button type="reset" class="btn btn-danger me-2 btn-sm w-10">
               <i class='bx bx-reset'></i> Reset
             </button>
-            <span class="px-1"></span>
-            <button type="button" class="btn btn-outline-dark btn-sm w-100" onclick="nextBtn()">
-              <i class='bx bx-data'></i> Proceed to payment
+            <button type="button" class="btn btn-outline-dark btn-sm w-100" onclick="processCart(true)">
+              Hold Purchase Order
+            </button>
+            <button type="button" class="btn btn-outline-dark btn-sm w-100" onclick="processCart(false)">
+              Confirm Purchase Order
             </button>
           </div>
         </form>
@@ -661,10 +729,9 @@
     paymentModal.show()
   }
 
-  calculateExpression('id_p_price', errorId = null) // calculator for price field
+  calculateExpression('id_p_price', errorId = null) 
 
   const LocalStorageHelper = {
-    // Get cart from localStorage
     getCart: function() {
       try {
         const cartData = localStorage.getItem('cart');
@@ -755,8 +822,6 @@
       },
     });
   };
-
-  checkLocalCart()
 
   // search functionality of the table -> js
   const searchTable = () => {
@@ -1492,9 +1557,8 @@
       try {
         const cartItemsList = document.getElementById("cart-items");
         cartItemsList.innerHTML = "";
-        let items = JSON.parse(localStorage.getItem('cart'))
 
-        items.reverse().forEach((item, index) => {
+        cart.forEach((item, index) => {
           const row = document.createElement("tr");
           row.innerHTML = `
               <td><small>${item.count}</small></td>
@@ -1618,9 +1682,9 @@
       cart.push(newTransfer);
       
       // Save to localStorage
-      if (!LocalStorageHelper.saveCart(cart)) {
+      {% comment %} if (!LocalStorageHelper.saveCart(cart)) {
         throw new Error('Failed to save cart to localStorage');
-      }
+      } {% endcomment %}
 
       updateCartDisplay();
       calculateTotals();
@@ -1648,9 +1712,9 @@
       cart = cart.filter((item) => item.id !== id);
       
       // Save updated cart to localStorage
-      if (!LocalStorageHelper.saveCart(cart)) {
+      {% comment %} if (!LocalStorageHelper.saveCart(cart)) {
         throw new Error('Failed to save cart to localStorage');
-      }
+      } {% endcomment %}
       
       updateCartDisplay();
       calculateTotals();
@@ -1664,10 +1728,10 @@
     }
   }
 
-  function processCart() {
+  function processCart(status) {
     suppliers_payment_data = []
 
-    for (let i = 1; i <= count; i++) {
+    {% comment %} for (let i = 1; i <= count; i++) {
       suppliers_payment_data.push(
         {
           'id': document.getElementById(`other_form_supplier_${count}`).value,
@@ -1676,14 +1740,14 @@
           'currency': document.getElementById(`other_form_currency_${count}`).value
         }
       )
-    }
+    } {% endcomment %}
 
     console.info('supplier paymetnt data: ', suppliers_payment_data)
 
     const data = {
       'po_items': cart,
-      'supplier_data': suppliers_payment_data,
-      'hold': holdPurchaseOrder,
+      'supplier_data': [],
+      'hold': status,
       'expenses': expensesData,
       'overide': overide,
       'cost_allocations': formData,
@@ -2342,11 +2406,11 @@
   }    
 
   // Initialize cart from localStorage on page load
-  document.addEventListener('DOMContentLoaded', function() {
+  {% comment %} document.addEventListener('DOMContentLoaded', function() {
     cart = LocalStorageHelper.getCart();
     itemCount = LocalStorageHelper.updateItemCount(cart);
     updateCartDisplay();
-  });
+  }); {% endcomment %}
 </script>
 
 {% endblock content %}
