@@ -15,7 +15,6 @@ from . models import (
     WriteOff
 )
 from datetime import date
-from loguru import logger
 
 class BatchForm(forms.ModelForm):
     class Meta:
@@ -79,7 +78,7 @@ class CreateOrderForm(forms.ModelForm):
 class noteStatusForm(forms.ModelForm):
     class Meta:
         model = PurchaseOrder
-        fields = ['batch', 'status', 'delivery_date', 'payment_method', 'notes']
+        fields = ['name', 'batch', 'status', 'delivery_date', 'payment_method', 'notes']
         
         widgets = {
             'delivery_date': forms.DateInput(attrs={'type': 'date'}),

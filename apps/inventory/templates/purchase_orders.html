@@ -3,86 +3,152 @@
 {% load crispy_forms_tags %}
 {% block title %} Purchase Orders {% endblock %}
 {% block content %}
+<style>
+     :root {
+        --primary: #11998e;
+        --primary-no-gradient: #11998e;
+        --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        --secondary: orange;
+        --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+        --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        --dark: #1a1a2e;
+        --dark-alt: #16213e;
+        --text-light: rgba(228, 230, 234, 1);
+        --text-dark: black;
+        --text-muted: black;
+        --glass: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+        --border-radius: 16px;
+        --border-radius-sm: 8px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --m-bottom: 20px;
+    }
+
+    .search-container {
+        position: relative;
+        margin-bottom: 30px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 15px 50px 15px 20px;
+        border-radius: var(--border-radius);
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        color: var(--text-light);
+        font-size: 16px;
+        transition: var(--transition);
+    }
+
+
+    .search-input:focus {
+        outline: none;
+        border-color: rgba(102, 126, 234, 0.5);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-input::placeholder {
+        color: var(--text-dark);
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-dark);
+    }
+    .add-btn {
+        padding: 8px 16px;
+        border-radius: var(--border-radius-sm);
+        background: var(--primary-no-gradient);
+        border: 1px solid var(--glass-border);
+        color: var(--text-light);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 14px;
+        cursor: pointer;
+    }
+    .add-btn:hover {
+        background: var(--primary);
+        transform: translateY(-1px);
+    }
+    .nav{
+        background: var(--primary);
+        color:#fff;
+    }
+    .nav-link{
+        color:#fff !important;
+        background: var(--primary);
+    }
+    .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
+        color: #fff !important;
+        background-color: var(--primary) !important;
+        border-color: #fff !important;
+    }
+    .background{
+        background: var(--primary);
+    }
+    </style>
 <div class="inventory">
     <div class="inventory-navbar">
-        <nav class="d-flex justify-content-between align-items-center rounded shadow p-2">
-            <div class='fw-bold d-flex'>
-                <h5 class="fw-bold">Purchase Orders</h5>
+        <nav class="d-flex justify-content-between align-items-center p-2">
+            <div>
+                <h4>Purchase Orders</h4>
+                <p>Create and manage purchase orders</p>
             </div>
             <div>
-                <a href='{% url "inventory:create_purchase_order" %}' class="btn btn-outline-dark btn-sm">
+                <a href='{% url "inventory:create_purchase_order" %}' class="add-btn">
                     <i class='bx bx-plus'></i> <span>Purchase Order</span>
                 </a>
             </div>
         </nav>
     </div>
-    <div>
-        <div class="mt-3 w-100">
-            <table class='table border table-striped table-bordered table-rounded p-2' id='order_table'
-                style="width:100%;">
-                <thead class="table-dark">
-                    <tr>
-                        <th>#</th>
-                        <th>Date</th>
-                        <th>Delivery Date</th>
-                        <th>Batch</th>
-                        <th>Supplier</th>
-                        <th>Total Cost</th>
-                        <th>Notes</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in orders %}
-                    <tr>
-                        <td class="{% if order.is_partial %}bg-warning text-dark{% endif %}"><small>{{
-                                forloop.counter}}</small></td>
-                        <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}"
-                            data-id={{ order.id }}><small>{{ order.order_date }}</small></td>
-                        <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}"
-                            data-id={{ order.id }}><small>{{ order.delivery_date }}</small></td>
-                        <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}"
-                            data-id={{ order.id }}><small>{{ order.batch|lower }}</small></td>
-                        <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}"
-                            data-id={{ order.id }}><small>{{ order.supplier.name }}</small></td>
-                        <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}"
-                            data-id={{ order.id }}><small>{{ order.total_cost }}</small></td>
-                        <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}"
-                            data-id={{ order.id }}><small>{{ order.notes }}</small></td>
-                        <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}"
-                            data-id={{ order.id }}><small>{{ order.status }}</small></td>
-                        <td id="id_{{ order.id }}" class="{% if order.is_partial %}bg-warning text-dark{% endif %}">
-                            <a href="{% url 'inventory:purchase_order_detail' order.id %}" class="btn bx bx-show"></a>
-                            <a href="{% url 'inventory:print_purchase_order' order.id %}"
-                                class="btn bx bx-printer mx-1"></a>
-                            {% if order.status != 'received' %}
-                            <button class="btn btn-sm btn-light" data-id={{ order.id }} onclick="status(this)">Change
-                                Status</button>
-                            {% else %}
-                            {% if order.received %}
-                            <small class="bg-success fw-bold text-light p-2 rounded text-center w-100">Received</small>
-                            {% else %}
-                            <a href="{% url 'inventory:receive_order' order.id %}" class="btn btn-sm btn-outline-dark">
-                                <small>Receive Order Items</small>
-                            </a>
-                            <a href="{% url 'inventory:download_delivery_note' order.id %}"
-                                class="btn btn-primary btn-sm">
-                                D Note
-                            </a>
-                            {% endif %}
-                            {% endif %}
-                            <a href="{% url 'inventory:edit_po' order.id %}"
-                                class="btn btn-outline-dark btn-sm bx bx-edit"></a>
-                            <button class="btn bx bx-trash btn-outline-dark btn-sm"
-                                onclick="confirmDeletePurchaseOrder({{ order.id }})"></button>
-                            <button class="btn btn-outline-primary btn-sm bx bx-user"
-                                onclick="showSupplierDetails({{ order.id }})"></button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+    <div class="search-container bg-white rounded mt-2">
+        <input type="text" class="search-input" placeholder="Search purchase order ..." id="purchase_order-search">
+        <i class="fas fa-search search-icon"></i>
+    </div>
+
+    <ul class="nav nav-tabs" id="orderTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">All </span></button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="received-tab" data-bs-toggle="tab" data-bs-target="#received" type="button" role="tab">Received</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="onhold-tab" data-bs-toggle="tab" data-bs-target="#onhold" type="button" role="tab">On Hold</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="notreceived-tab" data-bs-toggle="tab" data-bs-target="#notreceived" type="button" role="tab">Not Yet Received </span></button>
+        </li>
+    </ul>
+
+    <div class="w-100">
+       <div class="tab-content" id="orderTabsContent">
+            <div class="tab-pane fade show active" id="all" role="tabpanel">
+                {% include 'partials/order_table.html' with orders=orders %}
+            </div>
+            <div class="tab-pane fade" id="received" role="tabpanel">
+                {% include 'partials/order_table.html' with orders=orders_received %}
+            </div>
+            <div class="tab-pane fade" id="onhold" role="tabpanel">
+                {% include 'partials/order_table.html' with orders=orders_on_hold %}
+            </div>
+            <div class="tab-pane fade" id="notreceived" role="tabpanel">
+                {% include 'partials/order_table.html' with orders=orders_not_received %}
+            </div>
+        </div>
+    </div>
+
+     <div id="tab-loader" class="text-center py-3" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 
@@ -146,8 +212,6 @@
 </div>
 
 <script>
-    new DataTable('#order_table');
-
     let orderID = '';
     const statusFormModal = new bootstrap.Modal(document.getElementById('statusFormModal'));
     const successModal = new bootstrap.Modal(document.getElementById('successModal'));
@@ -156,17 +220,36 @@
     let suppliers = [];
     let currentSupplierIndex = 0;
 
-    // green received
-    /*
-      const receive = () => {
-          {% for order in orders %}
-              if (${order.received}) {
-                  document.getElementById(id_${order.id}).classList.add('bg-success');
-              }
-          {% endfor %}
-      };
-      receive();
-       */
+    document.getElementById("purchase_order-search").addEventListener("keyup", function () {
+        const input = this.value.toLowerCase();
+        const rows = document.querySelectorAll("#order_table tbody tr");
+
+        rows.forEach(function (row) {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(input)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    });
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabButtons = document.querySelectorAll('#orderTabs button');
+        const loader = document.getElementById('tab-loader');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                loader.style.display = 'block';
+
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 500); 
+            });
+        });
+    });
+
 
     function status(td) {
         orderID = td.dataset.id;
@@ -203,6 +286,8 @@
                 });
             });
     }
+
+
     /*
    function showSupplierDetails(orderId) {
        fetch(/inventory/purchase_order/suppliers/${orderId}/)
