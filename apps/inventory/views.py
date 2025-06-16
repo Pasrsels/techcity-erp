@@ -73,6 +73,7 @@ from collections import defaultdict
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from typing import List, Dict, Any
+from apps.finance.models import UserAccount
 
 @login_required
 def notifications_json(request):
@@ -426,11 +427,8 @@ def inventory(request):
         inventory_items = Inventory.objects.filter(
             id=product_id,
             status=True
-<<<<<<< HEAD
-=======
         ).filter(
             branch=request.user.branch
->>>>>>> refs/remotes/origin/main
         ).values()
 
         if inventory_items:
@@ -3600,11 +3598,7 @@ def product(request):
         
         return JsonResponse({'success':True}, status=200)
 
-<<<<<<< HEAD
     if request.method == 'GET': # to be dynamic
-=======
-    if request.method == 'GET':
->>>>>>> refs/remotes/origin/main
         products = Inventory.objects.filter(
             Q(branch=request.user.branch),
             status=True,
@@ -3669,7 +3663,6 @@ def reorder_settings(request):
             settings.order_enough_stock = True if order_enough else False
             
             if order_enough:
-                # validate days 
                 if not days_from or not days_to:
                     return JsonResponse({'success':False, 'message':'Please fill in the days.'})
                 settings.number_of_days_from = days_from
@@ -3688,44 +3681,33 @@ def reorder_settings(request):
             return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
         return JsonResponse({'success':False, 'message':'Invalid request'}, status=500)
 
-
 # #stocktake
 @login_required
 def process_stock_take_item(request):
      if request.method == 'POST':
-       """
-         payload = {
-            pyhsical_quantity:int
-            stocktake_id:int
-        }
-       """
-
        try:
-           """
-            1. get the product
-            2. get the quantity
-            3. condition to check between physical_quantity and quantity of the product
-            4. json to the front {id:inventory.id, different:difference}
-           """
-
            data = json.loads(request.body)
            phy_quantity = data.get('quantity')
            stocktake_id =data.get('stocktake_id')
-
-           logger.info(phy_quantity)
-           logger.info(type(phy_quantity))
            
-           # update the stock item object with the quantity
            s_item = StocktakeItem.objects.get(id=stocktake_id)
            s_item.quantity = int(phy_quantity)
            
-           s_item.quantity_difference = int(phy_quantity) - abs(s_item.product.quantity )
-           logger.info(s_item.product.quantity)
+           difference = abs(s_item.product.quantity - int(phy_quantity)) 
+           
+           logger.info(f'difference: {difference}')
+           
+           s_item.quantity_difference = difference
+           s_item.cost = s_item.product.cost * s_item.quantity_difference
 
+           s_item.stocktake.negative += difference
+           s_item.stocktake.positive += int(phy_quantity)
+           
+           s_item.stocktake.negative_cost += difference * s_item.product.cost
+           s_item.stocktake.positive_cost += int(phy_quantity)  * s_item.product.cost 
+           s_item.stocktake.save()        
            s_item.save()
-
-           logger.info(f'{s_item.quantity_difference}')
-
+           
            descripancy_value =  s_item.quantity_difference
            details_inventory= {'item_id': s_item.id, 'difference': descripancy_value}
            return JsonResponse({'success': True, 'data': details_inventory }, status = 200)
@@ -3735,58 +3717,96 @@ def process_stock_take_item(request):
 @login_required
 def stock_take_index(request):
     if request.method == 'GET':
+        form = StockTakeForm()
         stock_takes = StockTake.objects.all()
+        
+        negative = stock_takes.aggregate(total=Sum('negative'))['total'] or 0
+        positive = stock_takes.aggregate(total=Sum('positive'))['total'] or 0
+        negative_value = stock_takes.aggregate(total=Sum('negative_cost'))['total'] or 0
+        positive_value = stock_takes.aggregate(total=Sum('positive_cost'))['total'] or 0
+        
+        logger.info(f'Negative: {positive}:{positive_value}')
 
-        logger.info(f'stock take {stock_takes}')
+        logger.info(f'Stock takes: {stock_takes}')
+        
         return render(request, 'stocktake/stocktake.html', {
-            'stocktakes': stock_takes
+            'negative':negative,
+            'positive':positive,
+            'negative_value':negative_value,
+            'positive_value':positive_value,
+            'stocktakes': stock_takes,
+            'form': form
         })
-    
+
     if request.method == 'POST':
-        try:
-            date = timezone.now().date()
-            branch = request.user.branch 
-            result = "" 
+        form = StockTakeForm(request.POST)
+        if form.is_valid():
+            try:
+                stock_take = form.save(commit=False)
+                branch = request.user.branch
+                stock_take.branch = branch
+                stock_take.status = False
+                stock_take.s_t_number = StockTake().stocktake_number(branch.name)
+                stock_take.result = 0  
+                stock_take.save()
 
-            s_t_number = StockTake().stocktake_number(branch.name)
+                form.save_m2m()
 
-            stock_take = StockTake.objects.create(
-                date=date,
-                s_t_number=s_t_number,
-                result=result,
-                branch=branch,
-                status=False
-            )
-
-            # create inventory objects to link to a stocktake record
-            inventory = Inventory.objects.filter(branch=request.user.branch, disable=False)
-
-            stocktake_items = []
-            for product in inventory:
-                stocktake_items.append(
+                inventory = Inventory.objects.filter(branch=branch, disable=False)
+                stocktake_items = [
                     StocktakeItem(
                         stocktake=stock_take,
                         product=product,
                         quantity=0,
                         quantity_difference=0
                     )
-                )
-            
-            StocktakeItem.objects.bulk_create(stocktake_items)
+                    for product in inventory
+                ]
+                
+                StocktakeItem.objects.bulk_create(stocktake_items)
 
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Stock take recorded successfully.',
-                'stock_take': {
-                    'id': stock_take.id,
-                    'date': stock_take.date,
-                    's_t_number': stock_take.s_t_number,
-                    'result': stock_take.result,
-                    'branch': stock_take.branch.name,
-                }
-            }, status=201)
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+                stock_takes = StockTake.objects.all()
+                return render(request, 'stocktake/stocktake.html', {
+                    'stocktakes': stock_takes,
+                    'form': StockTakeForm(), 
+                    'success': 'Stock take created successfully!'
+                })
+
+            except Exception as e:
+                logger.error(f"Error in stock take creation: {e}")
+                return render(request, 'stocktake/stocktake.html', {
+                    'form': form,
+                    'error': str(e),
+                    'stocktakes': StockTake.objects.all()
+                })
+
+        else:
+            return render(request, 'stocktake/stocktake.html', {
+                'form': form,
+                'error': 'Please correct the errors below.',
+                'stocktakes': StockTake.objects.all()
+            })
+@login_required
+def confirm_stocktake(request, stocktake_id):
+    try:
+        stocktake = StockTake.objects.get(id=stocktake_id)
+        stocktakes = StocktakeItem.objects.filter(stocktake__id=stocktake_id)
+        
+        flag = True
+        for stock in stocktakes:
+            if not stock.recorded:
+                flag = False
+                break
+            
+        if flag:
+            stocktake.status = True
+            stocktake.save()
+            return JsonResponse({'success':True}, status=200)
+        else:
+            return JsonResponse({'success':False, 'message':'Please record all stock take items.'}, status=400)
+    except Exception as e:
+        logger.error(f'Error saving stocktake, {e}')
+        return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
         
 @login_required
 def stock_take_detail(request, stocktake_id):
@@ -3794,13 +3814,108 @@ def stock_take_detail(request, stocktake_id):
         try:
             products = StocktakeItem.objects.filter(stocktake__id=stocktake_id)
             stocktake  = StockTake.objects.get(id=stocktake_id)
-            logger.info(stocktake)
             return render(request, 'stocktake/stocktake_detail.html', {
                 'products':products,
                 'stocktake':stocktake
             })
         except Exception as e:
             return redirect('inventory:stocktake_detail', stocktake_id)
+
+@login_required
+def accept_stocktake_item(request):
+    from apps.finance.models import UserAccount, UserTransaction
+    try:
+        data = json.loads(request.body)
+        stocktake_id = data.get('product_id')
+        users = data.get('users')
+        note = data.get('note')
+        company = data.get('company')
+
+        logger.success(f'data: {data}')
+        
+        with transaction.atomic():
+            stocktake = StocktakeItem.objects.get(id=stocktake_id)
+            stocktake.product.quantity = 0 if stocktake.quantity_difference < 0 else stocktake.quantity_difference
+            stocktake.note = note
+            stocktake.accepted = True
+            
+            if users:
+                user_accounts = UserAccount.objects.all()
+                user_accounts_transactons = []
+                for user in users:
+                    account = user_accounts.filter(user__id=int(user)).first()
+                    account = create_user_account(int(user)) if not account else account
+                    user_accounts_transactons.append(
+                        UserTransaction(
+                            account=account,
+                            transaction_type='Stock loss',
+                            amount = stocktake.cost,
+                            description = note,
+                            debit = stocktake.cost,
+                            credit = 0,
+                            received_by = request.user
+                        )
+                    )
+                UserTransaction.objects.bulk_create(user_accounts_transactons)
+                
+            if company:
+                stocktake.company_loss = True
+            
+            stocktake.save()
+            
+            credit = False
+            debit = False            
+            if stocktake.quantity_difference < 0:
+                credit=True
+            else:
+                debit=True
+            
+            currency=Currency.objects.get(default=True)
+            category, _ = ExpenseCategory.objects.get_or_create(name='Stock Loss')
+            
+            logger.info(f'Category: {category}, {_}')
+            
+            if stocktake.cost >= 0:
+                expense = Expense.objects.create(
+                    amount = stocktake.cost,
+                    payment_method = 'cash',
+                    currency=currency,
+                    description=stocktake.note,
+                    user=request.user,
+                    branch=request.user.branch,
+                    is_recurring=True,
+                    category=category
+                )
+            
+            Cashbook.objects.create(
+                expense=expense,
+                description=note,
+                credit=debit,
+                debit=credit,
+                branch=request.user.branch,
+                created_by=request.user,
+                updated_by=request.user,
+                currency=currency,
+                amount = stocktake.cost,
+            )
+                
+            logger.success(f'Stocktake loss successfully debited to user account(s)')   
+            return JsonResponse({'success':True, 'message':'success', 'quantity':stocktake.quantity_difference}, status=201) 
+        
+    except Exception as e:
+        logger.error(f'Error recording stocktake item: {e}')
+        return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
+        
+def create_user_account(id):
+    account = UserAccount.objects.create(
+        user_id=id,
+        account_type='',
+        balance=0,
+        total_credits=0,
+        total_debits=0,
+    )
+    logger.info(f'Account for user {account.user.username}')
+    return account
         
 #supplier payments
 @login_required
@@ -3850,7 +3965,6 @@ def payments(request):
         except Exception as e:
             return JsonResponse({'success': False, 'response': f'{e}'}, status = 400)
 
-
 @login_required
 def accessory_view(request, product_id):
     if request.method == 'POST':
@@ -3889,20 +4003,13 @@ def accessory_view(request, product_id):
                 logger.info(f'Accessories to add: {accessories_to_add_objs}')
 
                 for accessory in accessories_to_add_objs:
-                    logger.info(f'{accessory.id}')
-                    logger.info(input_data)
                     quantity = input_data[f'{accessory.id}']  
-                    logger.info(quantity)
                     acc.accessory_product.add(int(accessory.id))
-                    logger.info('accessory')
                     acc.quantity = quantity  
                     acc.save()
-                    logger.info('done')
 
             if accessories_to_remove:
                 accessories_to_remove_objs = Inventory.objects.filter(id__in=accessories_to_remove)
-
-                logger.info(f'Accessories to remove: {accessories_to_remove_objs}')
 
                 for accessory in accessories_to_remove_objs:
                     acc.accessory_product.remove(accessory)

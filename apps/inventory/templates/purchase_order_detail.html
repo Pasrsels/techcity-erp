@@ -116,23 +116,23 @@ td:first-child {
         </nav>
     </div>
     <div class="p-3 roundedbg-light d-flex justify-content-around text-center text-light rounded" style="background:var(--primary);">
-    <div>
-        <div>Ordered Quantity</div>
-        <div class="text-light fw-bold">{{ total_quantity }}</div>
+        <div>
+            <div>Ordered Quantity</div>
+            <div class="text-light fw-bold">{{ total_quantity }}</div>
+        </div>
+        <div>
+            <div>Total Cost</div>
+            <div class="text-light fw-bold">${{ purchase_order.total_cost|floatformat:2 }}</div>
+        </div>
+        <div>
+            <div>Total Wholesale Profit</div>
+            <div class="text-light fw-bold">$${{ total_wholesale_profit|floatformat:2 }}</div>
+        </div>
+        <div>
+            <div>Total Retail Profit</div>
+            <div class="text-light fw-bold">${{ total_retail_profit|floatformat:2 }}</div>
+        </div>
     </div>
-    <div>
-        <div>Total Cost</div>
-        <div class="text-light fw-bold">${{ purchase_order.total_cost|floatformat:2 }}</div>
-    </div>
-    <div>
-        <div>Total Wholesale Profit</div>
-        <div class="text-light fw-bold">$${{ total_wholesale_profit|floatformat:2 }}</div>
-    </div>
-    <div>
-        <div>Total Retail Profit</div>
-        <div class="text-light fw-bold">${{ total_retail_profit|floatformat:2 }}</div>
-    </div>
-</div>
 
     <div>
         <div>

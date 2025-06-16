@@ -198,7 +198,7 @@ def login_view(request):
         if user is not None:
             if user.is_active:
                 cache.delete(cache_key)
-                request.session.set_expiry(3600)
+                request.session.set_expiry(28800)
                 request.session.set_test_cookie()
                 
                 login(request, user)

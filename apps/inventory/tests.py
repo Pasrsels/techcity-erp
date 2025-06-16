@@ -5,8 +5,6 @@ from apps.users.models import User
 from apps.inventory.models import *
 from apps.company.models import Branch, Company
 
-
-
 @pytest.fixture
 def create_user():
     def make_user():
@@ -15,7 +13,6 @@ def create_user():
 
 @pytest.mark.django_db
 class TestTransferBack():
-
     user = create_user(
         username='casy',
         password='neverfail'

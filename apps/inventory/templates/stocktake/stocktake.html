@@ -1,108 +1,228 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 {% block content %}
+<style>
+    :root {
+    --primary: #11998e;
+    --primary-no-gradient: #11998e;
+    --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    --secondary: orange;
+    --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+    --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    --dark: #1a1a2e;
+    --dark-alt: #16213e;
+    --text-light: rgba(228, 230, 234, 1);
+    --text-dark: black;
+    --text-muted: black;
+    --glass: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+    --border-radius: 16px;
+    --border-radius-sm: 8px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --m-bottom: 20px;
+}
+
+.header-btn {
+    padding: 8px 16px;
+    border-radius: var(--border-radius-sm);
+    background: var(--primary-no-gradient);
+    border: 1px solid var(--glass-border);
+    color: var(--text-light);
+    text-decoration: none;
+    transition: var(--transition);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.header-btn:hover {
+    background: var(--primary);
+    transform: translateY(-1px);
+}
+
+.search-container {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.search-input {
+    width: 90%;
+    padding: 15px 50px 15px 20px;
+    border-radius: var(--border-radius);
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--text-light);
+    font-size: 16px;
+    transition: var(--transition);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-input::placeholder {
+    color: var(--text-dark);
+}
+
+.search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dark);
+}
+ .background{
+    background: var(--primary);
+  }
+ .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    margin: 15% auto;
+    padding: 20px;
+    width: 100%;
+    max-width: 500px;
+    border-radius: var(--border-radius);
+}
+
+.close-modal {
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.floating-button {
+    position: fixed;
+    bottom: 20px; 
+    right: 20px;
+    z-index: 1000; 
+}
+
+</style>
 <div class="stocktake">
-    <div class="d-flex align-items-center justify-content-between rounded shadow header py-2 mb-4">
-        <h5 class="px-1">Stocktake</h5>
+    <div class="d-flex justify-content-between align-items-center p-2">
         <div>
-            <button class="btn btn-sm btn-outline-dark" id="createStockTakeButton">
+            <h4>Stocktake</h4>
+            <p>Create and manage stock</p>
+        </div>
+        <div>
+            <button class="header-btn" id="createStockTakeButton">
                 <i class="bx bx-plus"></i>
                 stocktake
             </button>
         </div>
     </div>
 
-    <!-- stocktake table -->
+     <div class="search-container d-flex justify-content-between align-items-center">
+        <div>
+            <input type="text" class="search-input" placeholder="Search Stocktake..." id="product-search">
+            <!-- <i class="fas fa-search search-icon"></i> -->
+        </div>
+        <div>
+            <i class="header-btn bx bx-funnel"></i>
+        </div>
+    </div>
 
+    <div class="p-3 roundedbg-light d-flex justify-content-around text-center text-light rounded" style="background:#e7f5f3;">
+        <div>
+            <div class="fw-bold" style="color:var(--primary)">Total Loss Count</div>
+            <div class="text-danger fw-bold">-{{ negative }}</div>
+        </div>
+
+        <div>
+            <div  class="fw-bold" style="color:var(--primary)">Total Loss Value</div>
+            <div class="text-danger fw-bold">-${{ negative_value }}</div>
+        </div>
+
+        <div>
+            <div class="fw-bold" style="color:var(--primary)">Total Positive Count</div>
+            <div class="text-dark fw-bold">{{ positive }}</div>
+        </div>
+
+        <div>
+            <div  class="fw-bold" style="color:var(--primary)">Total Positive Value</div>
+            <div class="fw-bold text-dark">${{ positive_value }}</div>
+        </div>
+    </div>
+
+    <!-- stocktake table -->
     <div class="table-responsive">
-        <table class="table table-striped" id="stock" style="width: 100%;">
-            <thead class="table-dark">
-                <th>#</th>
-                <th>Stocktake #</th>
+        <table class="table table-borderless table-hover" id="stock" style="width: 100%;">
+            <thead style="background:var(--primary);">
+                <th>Details</th>
                 <th>Status</th>
                 <th>Actions</th>
             </thead>
             <tbody>
                 {% for item in stocktakes %}
-                    <tr>
-                        <td><small>{{ forloop.counter }}</small></td>
-                        <td><small>{{ item.s_t_number }}</small></td>
-                        <td><small>
-                            {% if not result %}
-                                Empty
-                            {% endif %}
-                        </small></td>
-                        <td>
-                            <small>
-                                <a href="{% url 'inventory:stock_take_detail' item.id %}" class="btn btn-sm bx bx-show"></a>
-                                <button class="btn btn-sm bx bx-trash"></button>
-                            </small>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td>
+                                <small>{{ item.date }} #{{ item.s_t_number }} <br> 
+                                    <span class="text-muted">conducted by {{item.conductor.username}}</span>
+                                </small>
+                            </td>
+                            <td><small>
+                                {% if not result %}
+                                    <span class="p-2  text-light rounded" style="background: var(--primary);">In progress</span>
+                                {% else %}
+                                    <span class="bg bg-success p-2 rounded">Completed</span>
+                                {% endif %}
+                            </small></td>
+                            <td>
+                                <small>
+                                    <a href="{% url 'inventory:stock_take_detail' item.id %}" class="btn btn-sm bx bx-show"></a>
+                                    <button class="btn btn-sm bx bx-trash"></button>
+                                </small>
+                            </td>
+                        </tr>
+                    </a>
                 {% endfor %}
             </tbody>
         </table>
     </div>  
+
+    <div class="modal fade" id="createStockTake" tabindex="-1" aria-labelledby="createStockTakeLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <h5>Create Stock Take</h5>
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        {{ form | crispy }}
+                        <div class="mb-4">
+                            <button class="header-btn w-100" type="submit">Create Stock</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 <script>
-    new DataTable('#stock', {
-        pagin:false
+    const createStockTakeModal = new bootstrap.Modal(document.getElementById('createStockTake'));
+    const createBtn = document.getElementById('createStockTakeButton');
+
+    createBtn.addEventListener('click', ()=>{
+        createStockTakeModal.show()
     })
-    document.getElementById('createStockTakeButton').addEventListener('click', async () => {
-        const confirmation = await Swal.fire({
-            title: 'Are you sure?',
-            text: 'Do you want to create a stocktake record?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, create it!',
-            cancelButtonText: 'No, cancel',
-        });
 
-        if (confirmation.isConfirmed) {
-            try {
-                const response = await fetch('/inventory/stocktake/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: JSON.stringify({}) 
-                });
-
-                const result = await response.json();
-                console.log(result)
-                if (response.ok) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: result.message,
-                    }).then(() => {
-                        location.reload(); 
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: result.message,
-                    });
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'An Error Occurred',
-                    text: 'An unexpected error occurred while creating the stock take. Please try again.',
-                });
-            }
-        } else {
-            Swal.fire({
-                icon: 'info',
-                title: 'Action Cancelled',
-                text: 'No stocktake record was created.',
-            });
-        }
-    });
-    
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {

@@ -1,24 +1,172 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 {% block content %}
+<style>
+    :root {
+    --primary: #11998e;
+    --primary-no-gradient: #11998e;
+    --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    --secondary: orange;
+    --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+    --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    --dark: #1a1a2e;
+    --dark-alt: #16213e;
+    --text-light: rgba(228, 230, 234, 1);
+    --text-dark: black;
+    --text-muted: black;
+    --glass: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+    --border-radius: 16px;
+    --border-radius-sm: 8px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --m-bottom: 20px;
+}
+
+.header-btn {
+    padding: 8px 16px;
+    border-radius: var(--border-radius-sm);
+    background: var(--primary-no-gradient);
+    border: 1px solid var(--glass-border);
+    color: var(--text-light);
+    text-decoration: none;
+    transition: var(--transition);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.header-btn:hover {
+    background: var(--primary);
+    transform: translateY(-1px);
+}
+
+.search-container {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 15px 50px 15px 20px;
+    border-radius: var(--border-radius);
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--text-dark);
+    font-size: 16px;
+    transition: var(--transition);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-input::placeholder {
+    color: var(--text-dark);
+}
+
+.search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dark);
+    }
+ .background{
+    background: var(--primary);
+  }
+ .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.header-btn {
+    padding: 8px 16px;
+    border-radius: var(--border-radius-sm);
+    background: var(--primary-no-gradient);
+    border: 1px solid var(--glass-border);
+    color: var(--text-light);
+    text-decoration: none;
+    transition: var(--transition);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.header-btn:hover {
+    background: var(--primary);
+    transform: translateY(-1px);
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    margin: 15% auto;
+    padding: 20px;
+    width: 100%;
+    max-width: 500px;
+    border-radius: var(--border-radius);
+}
+
+.close-modal {
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.header-btn {
+    padding: 8px 16px;
+    border-radius: var(--border-radius-sm);
+    background: var(--primary-no-gradient);
+    border: 1px solid var(--glass-border);
+    color: var(--text-light);
+    text-decoration: none;
+    transition: var(--transition);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.header-btn:hover {
+    background: var(--primary);
+    transform: translateY(-1px);
+}
+</style>
 <div class="stocktake">
-    <div class="d-flex align-items-center justify-content-between shadow py-2 mb-4">
-        <h5 class="px-1">Stocktake #{{ stocktake.s_t_number }}</h5>
-        <!-- Print Button -->
-        <button class="btn btn-light me-2" onclick="printStockSheet()" title="Print Stocktake">
-            <i class="bix bix-printer"></i> Print Sheet
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h4 class="px-1">Stocktake #{{ stocktake.s_t_number }}</h4>
+            <p>Process and Detail view</p>
+        </div>
+        <button class="header-btn" onclick="printStockSheet()" title="Print Stocktake">
+            <i class="bx bx-printer"></i> Print Sheet
         </button>
     </div>
 
+    <div class="search-container mt-2">
+        <input type="text" class="search-input" placeholder="Search products..." id="stocktake-search">
+        <i class="fas fa-search search-icon"></i>
+    </div>
+
     <div id="print-section">
-        <table class="table table-striped">
-            <thead>
+        <table class="table table-borderless table-hover" id="stocktake_table">
+            <thead class="background">
                 <th>#</th>
                 <th>Product</th>
                 <th>System Quantity</th>
+                <th>Physical Quantity</th>
                 <th>Quantity Difference</th>
                 <th>Quantity Difference Value</th>
-                <th>Physical Quantity</th>
+                <th>Note</th>
+                <th>Actions</th>
             </thead>
             <tbody>
                 {% for product in products %}
@@ -29,16 +177,10 @@
                                 {{ product.product.name }}
                             </small>
                         </td>
-                        <td id="id_quantity_{{ product.id }}">
-                            <small>
+                        <td>
+                            <small id="id_quantity_{{ product.id }}">
                                 {{ product.product.quantity }}
                             </small>
-                        </td>
-                        <td>
-                            <small id="id_diff_{{ product.id }}">0</small>
-                        </td>
-                        <td>
-                            <small id="id_cost_diff_{{ product.id }}">0.00</small>
                         </td>
                         <td>
                             <input
@@ -49,14 +191,241 @@
                                 onchange="handleQuantityChange(this.value, {{ product.product.quantity }}, {{ product.product.cost }}, {{ product.id }}, {{ product.id }})"
                             >
                         </td>
+                        <td>
+                            <small id="id_diff_{{ product.id }}">{{ product.quantity_difference }}</small>
+                        </td>
+                        <td>
+                            <small id="id_cost_diff_{{ product.id }}">{{ product.cost }}</small>
+                        </td>
+                        <td>
+                            <small id="id_description_{{ product.id }}">{{product.note }}</small>
+                        </td>
+                        <td id="action_{{ product.id }}">
+                            {% if product.quantity_difference != 0 and product.accepted or  product.quantity_difference == 0 and product.accepted%}
+                                <span class='bg-success bg-success-subtle rounded p-2'>success</span>
+                            {% elif product.accepted %}
+                                 <button class="header-btn" onclick="showAccpetModal({{ product.id }})" id="accept-btn">Accept</button>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    <div class="modal fade" id="acceptModal" tabindex="-1" aria-labelledby="acceptModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="acceptCashUpModalLabel">Accept Cash Up</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h5>Assign Stock loss</h5>
+                    <form id="acceptStock">
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="flex-grow-1">
+                                    <label for="assignAccount" class="form-label">Choose Account</label>
+                                    <select name="account" class="form-select" id="assignAccount" onchange="toggleAssignmentFields()">
+                                        <option value="">----------</option>
+                                        <option value="employee">Employee</option>
+                                        <option value="company">Company</option>
+                                    </select>
+                                </div>
+
+                                <div id="employeeAssignment" class="flex-grow-1 d-none">
+                                    <label class="form-label">Assign Shortfall To Employee</label>
+                                    <select class="form-select" id="assignToEmployee" multiple required>
+                                        <option value="">Select Salesperson</option>
+                                        {% for user in salespeople %}
+                                            <option value="{{ user.id }}">{{ user.username }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div id="companyAssignment" class="flex-grow-1 d-none">
+                                    <label class="form-label">Assign Shortfall To Company Account</label>
+                                    <select class="form-select" id="assignToCompany" required>
+                                        <option value="">Select Account</option>
+                                        <option value="loss">Loss Account</option>
+                                    </select>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="acceptStockTake()">Accept</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="floating-button d-flex justify-content-end">
+        <a onclick="confirmStockTake()" class="header-btn text-center w-100" id="confirmStocktake"  disabled>
+            Confirm Stocktake
+        </a>
+    </div>
 </div>
 
 <script>
+    let stocktakeItemId = '';
+    const acceptBtn = document.querySelectorAll('#accept-btn');
+    const acceptModal = new bootstrap.Modal(document.getElementById('acceptModal'));
+    const selectedOptions = Array.from(document.querySelector('#assignToEmployee').selectedOptions).map(opt => opt.value);
+    
+    new SlimSelect({
+        select: '#assignToEmployee',
+        placeholder: 'Select Employee'
+    })
+
+     document.getElementById("stocktake-search").addEventListener("keyup", function () {
+        const input = this.value.toLowerCase();
+        const rows = document.querySelectorAll("#stocktake_table tbody tr");
+
+        rows.forEach(function (row) {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(input)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    });
+
+    function showAccpetModal(id){
+        stocktakeItemId = id;
+        acceptModal.show()
+    }
+
+    async function confirmStockTake(){
+        try {
+            Swal.fire({
+                title: 'Processing',
+                text: 'Please wait while Stocktake is being confirmed...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const response = await fetch(`/inventory/confirm_stocktake/{{ stocktake.id }}`, {
+                method: 'GET',
+            });
+           
+            const data = await response.json();
+            if (response.ok && data.success) {    
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Stocktake Confirmation',
+                    text: 'Stocktake Successfully Confirmed.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to confirm Stocktake.'
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while processing your request.'
+            });
+            console.error('Error:', error);
+        }
+    }
+
+    async function acceptStockTake(){
+        try {
+            Swal.fire({
+                title: 'Processing',
+                text: 'Please wait while the quantity is being updated...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const response = await fetch(`{% url "inventory:accept_stocktake_item" %}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')  
+                },
+                body: JSON.stringify({
+                    product_id:stocktakeItemId,
+                    note: document.getElementById('notes').value,
+                    users: Array.from(document.querySelector('#assignToEmployee').selectedOptions).map(opt => opt.value),
+                    company: document.getElementById('assignToCompany').value,
+                })
+            });
+           
+            const data = await response.json();
+            console.log(data)
+            if (response.ok && data.success) {
+                const action = document.querySelector(`#action_${stocktakeItemId}`);
+                const quantityEl = document.querySelector(`#id_quantity_${stocktakeItemId}`);
+                const descriptionEl = document.getElementById(`id_description_${stocktakeItemId}`);
+        
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Quantity Updated',
+                    text: 'The quantity saved successfully.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                quantityEl.textContent = data.quantity;
+                descriptionEl.textContent =  document.getElementById('notes').value;
+                action.innerHTML = `
+                    <span class='bg-success bg-success-subtle rounded p-2'>success</span>
+                `;
+                acceptModal.hide()
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to update the quantity.'
+                });
+            }
+
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while processing your request.'
+            });
+            console.error('Error:', error);
+        }
+    }
+
+    document.getElementById('employeeAssignment').classList.add('d-none');
+    document.getElementById('companyAssignment').classList.add('d-none');
+
+    function toggleAssignmentFields() {
+        const accountSelect = document.getElementById('assignAccount');
+        const employeeDiv = document.getElementById('employeeAssignment');
+        const companyDiv = document.getElementById('companyAssignment');
+        
+        employeeDiv.classList.add('d-none');
+        companyDiv.classList.add('d-none');
+        
+        if (accountSelect.value === 'employee') {
+            employeeDiv.classList.remove('d-none');
+        } else if (accountSelect.value === 'company') {
+            companyDiv.classList.remove('d-none');
+        }
+    }
+
     function updateDifference(systemQty, cost, productId) {
         const physicalQtyInput = document.getElementById(`p_quantity_${productId}`);
         const diffCell = document.getElementById(`id_diff_${productId}`);
@@ -68,7 +437,19 @@
 
         diffCell.textContent = difference.toFixed(2);
         costDiffCell.textContent = costDifference.toFixed(2);
+
+        const action = document.querySelector(`#action_${productId}`);
+        if( difference !== 0 ){
+            action.innerHTML = `
+                <button class="header-btn" onclick="showAccpetModal(${productId})" id="accept-btn">Accept</button>
+            `
+        }else{
+            action.innerHTML = `
+                <span class='bg-success bg-success-subtle rounded p-2'>success</span>
+            `
+        }
     }
+
     function printStockSheet() {
         const originalContent = document.body.innerHTML;
 
@@ -149,34 +530,5 @@
             console.error('Error:', error);
         }
     }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const products = [
-            {% for product in products %}
-            {
-                id: {{ product.id }},
-                systemQty: {{ product.product.quantity }},
-                cost: {{ product.product.cost }},
-                physicalQtyId: 'p_quantity_{{ product.id }}',
-                diffCellId: 'id_diff_{{ product.id }}',
-                costDiffCellId: 'id_cost_diff_{{ product.id }}'
-            },
-            {% endfor %}
-        ];
-
-        products.forEach(product => {
-            const physicalQtyInput = document.getElementById(product.physicalQtyId);
-            const diffCell = document.getElementById(product.diffCellId);
-            const costDiffCell = document.getElementById(product.costDiffCellId);
-
-            const physicalQty = physicalQtyInput.value ? physicalQtyInput.value : 0;
-            const difference = physicalQty - product.systemQty;
-            const costDifference = difference * product.cost;
-
-            diffCell.textContent = difference.toFixed(2);
-            costDiffCell.textContent = costDifference.toFixed(2);
-        });
-    });
-
 </script>
 {% endblock content %}

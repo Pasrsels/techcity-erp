@@ -13266,7 +13266,9 @@ def user_accounts(request):
             'total_debits': total_debits,
             'last_activity': last_activity
         })
+        
     logger.info(users_with_accounts)
+    
     context = {
         'users_with_accounts': users_with_accounts
     }

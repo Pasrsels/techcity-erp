@@ -546,11 +546,17 @@ class reorderSettings(models.Model):
 
 
 class StockTake(models.Model):
-    date = models.DateField()
+    date = models.DateField(auto_now_add=True)
     s_t_number = models.CharField(max_length=255)
     result = models.CharField(max_length=255, null=True)
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
     status = models.BooleanField(default=False)
+    conducted_by = models.ManyToManyField('users.User')
+    conductor = models.ForeignKey('users.User', on_delete=models.CASCADE, null=True, related_name='stocktake_conductor')
+    negative = models.IntegerField(default=0)
+    positive = models.IntegerField(default=0)
+    negative_cost = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    positive_cost = models.DecimalField(max_digits=15, decimal_places=2, default=0)
 
     def stocktake_number(self, branch):
         prv_stock_take = StockTake.objects.filter(branch__name=branch).order_by('-id').first()
@@ -570,13 +576,16 @@ class StocktakeItem(models.Model):
     product = models.ForeignKey(Inventory, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     quantity_difference = models.IntegerField()
+    cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
+    note = models.TextField(null=True, default='')
+    accepted = models.BooleanField(default=False)
+    company_loss = models.BooleanField(null=True, default=False)
+    recorded = models.BooleanField(null=True, default=False)
 
     def __str__(self):
         return self.product.name
 
-
 # Inventory loss models
-
 class WriteOff(models.Model):
     inventory_item = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='write_offs')
     quantity = models.PositiveIntegerField()

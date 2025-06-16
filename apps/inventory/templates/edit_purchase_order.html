@@ -2104,11 +2104,8 @@
 
     }
 
-    // Function to collect data from the table and submit it to the backend
     function submitTableData() {
         const rows = document.querySelectorAll('#apportionment-table tr');
-
-        // Loop through each row and extract data
         rows.forEach((row) => {
             let product = row.querySelector('td:first-child small')?.textContent.trim();
             let quantity = row.querySelector('td:nth-child(2) small')?.textContent.trim();
@@ -2122,7 +2119,6 @@
 
             console.log(quantity)
 
-            // Prepare the data object for each row
             if (product) {
                 formData.push({
                     product: product,
@@ -2168,7 +2164,6 @@
         console.warn('Product not found in Editcart:', rowId);
       }
     }
-
 
     function getCookie(name) {
       let cookieValue = null;

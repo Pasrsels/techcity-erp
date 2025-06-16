@@ -160,23 +160,23 @@ DATABASES = {
     #     default=os.environ.get('DATABASE_URL')
     # )
 
-    # 'default': {
-    #      'ENGINE': 'django.db.backends.postgresql',
-    #      'NAME':  'techcity_db',
-    #      'USER': 'postgres',
-    #      'PASSWORD': 'neverfail',
-    #      'HOST': 'localhost',
-    #      'PORT': '5432'
-    #  }
-    
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME':  'testt',
-        'USER': 'postgres',
-        'PASSWORD': 'neverfail',
-        'HOST': 'localhost',
-        'PORT': '5432'
-    }
+         'ENGINE': 'django.db.backends.postgresql',
+         'NAME':  'techcity_db',
+         'USER': 'postgres',
+         'PASSWORD': 'neverfail',
+         'HOST': 'localhost',
+         'PORT': '5432'
+     }
+    
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME':  'testt',
+    #     'USER': 'postgres',
+    #     'PASSWORD': 'neverfail',
+    #     'HOST': 'localhost',
+    #     'PORT': '5432'
+    # }
 }
 
 if os.environ.get('TESTING'):
@@ -309,13 +309,6 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
-
-CELERY_BEAT_SCHEDULE = {
-    'check-upcoming-layby-payments': {
-        'task': 'your_app.tasks.check_upcoming_layby_payments',
-        'schedule': crontab(hour=9, minute=0),  
-    },
-}
 
 REDIS_OPTIONS = {
     'ssl': True,
