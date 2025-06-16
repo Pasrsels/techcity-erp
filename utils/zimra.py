@@ -186,6 +186,7 @@ class ZIMRA:
             hash,
             signature,
         ):
+        
         """
             Submits a single receipt to the FDMS.
         """
@@ -219,12 +220,10 @@ class ZIMRA:
         
         try:
             response = request
-            r=response
-            logger.info(r)
             response.raise_for_status()
             return response.json()
         except Exception as e:
-            logger.error(f"Error submitting receipt: {e}, {r}")
+            logger.error(f"Error submitting receipt: {e}, {response}")
             return e
 
     def submit_file(self):
