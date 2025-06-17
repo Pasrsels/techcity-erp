@@ -918,19 +918,24 @@
     }
 
     function addItem(product, value) {
-        const existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
+        let existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
         console.log(value, 'value')
         let priceType = ''
         if(value === 'wp'){
             price = product[0].dealer_price
             priceType = `${product[0].dealer_price * parseFloat(currencyData[0][0]?.exchange_rate)}`
+            existingItem = False;
         }else{
             price = product[0].price
             priceType = `${product[0].price * parseFloat(currencyData[0][0]?.exchange_rate)}`
         }
 
+<<<<<<< HEAD
         existingItem = False;
 
+=======
+        console.log(existingItem)
+>>>>>>> refs/remotes/origin/fiscalisation
         if (existingItem) {
             existingItem.quantity += 1;
         } else {
@@ -1227,7 +1232,6 @@
                                 Swal.showLoading();
                             }
                         });
-
                         setTimeout(() => {
                             qouteModal.hide();
                             window.location.href = `/finance/qoutation/preview/${result.qoute_id}`;

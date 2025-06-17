@@ -72,9 +72,7 @@ def receipt_signature(
 
     if previous_receipt_hash:
         signature_components.append(previous_receipt_hash)
-
     return ''.join(signature_components)
-
 
 def generate_receipt_signature(signature_string, private_key):
     
@@ -110,14 +108,13 @@ def generate_receipt_data(invoice, invoice_items, request):
         logger.info(fiscal_day)
         logger.info(f"Processing Invoice: {invoice.invoice_number} {invoice}")
 
-       
         # if not fiscal_day:
         #     zimra = ZIMRA()
         #     zimra.open_day()
 
         last_global_no = get_last_receipt_numbers()
+        logger.info(last_global_no)
         new_receipt_global_no = last_global_no + 1
-
 
         logger.info(f'Global number: {new_receipt_global_no}')
 
@@ -133,7 +130,6 @@ def generate_receipt_data(invoice, invoice_items, request):
             line_total = float(item.unit_price) * item.quantity
             tax_amount = round(line_total / 1.15, 2)
             total_tax_amount += tax_amount
-
             receipt_lines.append({
                 "receiptLineType": "Sale",
                 "receiptLineNo": index,
