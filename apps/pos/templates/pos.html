@@ -15,6 +15,7 @@
         <link href='{% static "assets/boxicons/css/boxicons.css"%}' rel='stylesheet'>
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
         <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     {% endblock css %}
 
     <script src="{% static 'css/bootstrap/js/bootstrap.min.js'%}"></script>
@@ -28,10 +29,50 @@
     </title>
 </head>
 <style>
+    :root {
+        --primary: #11998e;
+        --primary-no-gradient: #11998e;
+        --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        --secondary: orange;
+        --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+        --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        --dark: #1a1a2e;
+        --dark-alt: #16213e;
+        --text-light: rgba(228, 230, 234, 1);
+        --text-dark: black;
+        --text-muted: black;
+        --glass: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+        --border-radius: 16px;
+        --border-radius-sm: 8px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --m-bottom: 20px;
+    }
+
+    .header-btn {
+        padding: 8px 16px;
+        border-radius: var(--border-radius-sm);
+        background: var(--primary-no-gradient);
+        border: 1px solid var(--glass-border);
+        color: var(--text-light);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .header-btn:hover {
+        background: var(--primary);
+        transform: translateY(-1px);
+    }
+
     table {
         width: 100%;
         border-collapse: collapse;
-        /* text-align: left; */
     }
 
     tbody tr:hover {
@@ -138,70 +179,70 @@
                                 {% include 'pay_modal.html' %}
                             </div>
                     </div>
-                    <div class="col-4 cartSection mt-2">
-                        <div class="cart-container rounded shadow-sm bg-white h-100">
-                            <div class="d-flex justify-content-between align-items-center w-100 p-1">
-                            <select type="text" id="search-input" class="form-select">
-                                <option value=""></option>
-                            </select>
-                            <button class="btn btn-sm btn-light" id="id_add_client">
-                                <i class="bx bx-plus"></i>
-                            </button>
-                        </div>
+                   <div class="col-4 cartSection mt-2">
+  <div class="cart-container d-flex flex-column rounded shadow-sm bg-white" style="height: 90vh;">
 
-                        <div class="d-flex justify-content-between w-100 p-1">
-                            <div class="text-muted">Due</div>
-                            <div id="due_balance" class="fw-bold text-muted">$0.00</div>
-                        </div>
+    <!-- Header: Client Select -->
+    <div class="d-flex justify-content-between align-items-center w-100 p-2 border-bottom">
+      <select type="text" id="search-input" class="form-select">
+        <option value=""></option>
+      </select>
+      <button class="btn btn-sm btn-light ms-2" id="id_add_client">
+        <i class="bx bx-plus"></i>
+      </button>
+    </div>
 
-                        <div class="cart-items bg-light rounded m-2 mt-1">
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead class="table-light">
-                                    <tr>
-                                        <th>Qty</th>
-                                        <th>Product</th>
-                                        <th>Price</th>
-                                        <th>Subtotal</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody id="cart_items"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="p-2">
-                            <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <label for="id_discount" class="form-label small">Discount</label>
-                                <input id="id_discount" type="number" class="form-control text-center" placeholder="Discount" value="0" />
-                            </div>
-                            <div class="col-6">
-                                <label for="id_dc_input" class="form-label small">Delivery Charge</label>
-                                <input id="id_dc_input" type="number" class="form-control text-center" placeholder="Delivery Charge" value="0" />
-                            </div>
-                            </div>
-                            <div class="totals bg-light rounded p-2 mb-3">
-                            <table class="table table-sm mb-0">
-                                <tr>
-                                <td>Total Amount</td>
-                                <td class="text-end fw-bold" id="id_total_amount">0.00</td>
-                                </tr>
-                                <tr>
-                                <td>Tax Amount</td>
-                                <td class="text-end" id="id_vat_amount">0.00</td>
-                                </tr>
-                                <tr class="table-active">
-                                <td>Payable Amount</td>
-                                <td class="text-end fw-bold" id="id_payable">0.00</td>
-                                </tr>
-                            </table>
-                            </div>
-                            <button class="btn btn-primary w-100" id="id_pay">Proceed to Payment</button>
-                        </div>
-                        </div>
-                    </div>   
-            </div>
+    <!-- Due Summary -->
+    <div class="d-flex justify-content-between w-100 px-2 py-1 border-bottom">
+      <div class="text-muted">Due</div>
+      <div id="due_balance" class="fw-bold text-muted">$0.00</div>
+    </div>
+
+    <!-- Scrollable Cart Items -->
+    <div class="cart-items bg-light rounded m-2 mt-1 overflow-auto" style="flex: 1; min-height: 150px;">
+      <div class="table-responsive" id="cart_items">
+        <div class="text-center" style="color: var(--text-muted); padding: 40px 0;">
+            <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 10px; opacity: 0.3;"></i>
+            <div>Your cart is empty</div>
+            <div style="font-size: 14px;">Add products to get started</div>
         </div>
+      </div>
+    </div>
+
+    <!-- Bottom Section -->
+    <div class="p-2 border-top">
+      <div class="row g-2 mb-3">
+        <div class="col-6">
+          <label for="id_discount" class="form-label small">Discount</label>
+          <input id="id_discount" type="number" class="form-control text-center" placeholder="Discount" value="0" />
+        </div>
+        <div class="col-6">
+          <label for="id_dc_input" class="form-label small">Delivery Charge</label>
+          <input id="id_dc_input" type="number" class="form-control text-center" placeholder="Delivery Charge" value="0" />
+        </div>
+      </div>
+
+      <div class="totals bg-light rounded p-2 mb-3">
+        <table class="table table-sm mb-0">
+          <tr>
+            <td>Total Amount</td>
+            <td class="text-end fw-bold" id="id_total_amount">0.00</td>
+          </tr>
+          <tr>
+            <td>Tax Amount</td>
+            <td class="text-end" id="id_vat_amount">0.00</td>
+          </tr>
+          <tr class="table-active">
+            <td>Payable Amount</td>
+            <td class="text-end fw-bold" id="id_payable">0.00</td>
+          </tr>
+        </table>
+      </div>
+
+      <button class="btn btn-primary w-100" id="id_pay">Proceed to Payment</button>
+    </div>
+    </div>
+    </div>
     </div>
     
     <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
@@ -369,6 +410,88 @@
             </div>
        </div>
 
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="salesActionsModal" aria-labelledby="salesActionsLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="salesActionsLabel">Sales Panel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+            <ul class="list-unstyled d-flex flex-column gap-2">
+
+                <!-- Currency Dropdown -->
+                <li>
+                    <select id="currency" class="text-light form-select border-0" style="background: #007bff;">
+                        <option value=''>Currency</option>
+                        {% for currency in currencies %}
+                            <option value='{{currency.id}}' {% if currency.default %}selected{% endif %}>{{currency.name}}</option>
+                        {% endfor %}
+                    </select>
+                </li>
+
+                <!-- Invoices -->
+                <li>
+                    <a href="{% url 'finance:invoice' %}" class="btn btn-primary w-100 d-flex justify-content-between align-items-center">
+                        <span>Invoices</span>
+                        <span class="badge bg-light text-dark">{{ invoice_count }}</span>
+                    </a>
+                </li>
+
+                <!-- Quotations -->
+                <li>
+                    <a href="{% url 'finance:qoutation_list' %}" class="btn btn-primary w-100">
+                        Quotations
+                    </a>
+                </li>
+
+                <!-- Cash Withdraw -->
+                <li>
+                    <a href="{% url 'finance:withdrawals' %}" class="btn btn-primary w-100">
+                        Cash Withdraw
+                    </a>
+                </li>
+
+                <li>
+                    <button id="end" class="btn btn-primary w-100">
+                        End Of Day
+                    </button>
+                </li>
+
+                <li>
+                    <a href="{% url 'inventory:branches_inventory' %}" class="btn btn-success w-100">
+                        <i class="bx bx-briefcase fs-5 text-light"></i>
+                    </a>
+                </li>
+
+                <!-- Notification Bell -->
+                <li>
+                    <button class="btn btn-success w-100">
+                        <i class="bx bx-bell fs-5 text-light"></i>
+                    </button>
+                </li>
+
+                <!-- User Dropdown -->
+                <li class="dropdown">
+                    <a class="dropdown-toggle text-dark" data-bs-toggle="dropdown" href="#">
+                        {{ request.user }}
+                    </a>
+                    <ul class="dropdown-menu bg-light">
+                        <li><a href="#" class="dropdown-item">Profile</a></li>
+                        <li><a href="{% url 'users:logout' %}" class="dropdown-item">Logout</a></li>
+                    </ul>
+                </li>
+
+                <!-- Profile Image -->
+                <li>
+                    {% if request.user.profile_image %}
+                        <img class="rounded-circle" src="{{ request.user.profile_image.url }}" width="25px" />
+                    {% else %}
+                        <img class="rounded-circle" src="{% static 'assets/avatar.png' %}" width="25px" />
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+
+        </div>
     </div> 
     <div class="overlay hidden"></div>
 </body>

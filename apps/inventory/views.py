@@ -426,11 +426,8 @@ def inventory(request):
         inventory_items = Inventory.objects.filter(
             id=product_id,
             status=True
-<<<<<<< HEAD
-=======
         ).filter(
             branch=request.user.branch
->>>>>>> refs/remotes/origin/main
         ).values()
 
         if inventory_items:
@@ -3621,11 +3618,7 @@ def product(request):
         
         return JsonResponse({'success':True}, status=200)
 
-<<<<<<< HEAD
     if request.method == 'GET': # to be dynamic
-=======
-    if request.method == 'GET':
->>>>>>> refs/remotes/origin/main
         products = Inventory.objects.filter(
             Q(branch=request.user.branch),
             status=True,
