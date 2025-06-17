@@ -1,7 +1,10 @@
+{% load static %}
+{% load crispy_forms_tags %}
 {% block content %}
 <div class="stocktake">
-    <div class="d-flex align-items-center justify-content-between rounded text-light shadow header py-2 mb-4" style="background: #373f4c;">
-        <h5 class="text-light px-1">Stocktake</h5>
+    <div>
+        <h4 class="text-light px-1">Stocktake</h4>
+        <p>Create and manage stock</p>
     </div>
 
     <div class="mt-2">
@@ -21,16 +24,19 @@
                         <td id="id_quantity">{{ product.quantity }}</td>
                         <td>
                             <input id="p_quantity_{{ forloop.counter }}" 
-                                   class="form-control form-control-sm quantity-input" 
-                                   type="number" 
-                                   data-product-id="{{ product.id }}" 
-                                   onkeydown="handleEnterKey(event, this)" 
-                                   onchange="postQuantity(this.value, {{ product.id }})">
+                                class="form-control form-control-sm quantity-input" 
+                                type="number" 
+                                data-product-id="{{ product.id }}" 
+                                onkeydown="handleEnterKey(event, this)" 
+                                onchange="postQuantity(this.value, {{ product.id }})"
+                            >
                         </td>
-                        <td id="q_difference"></td>
+                        <td id="q_difference">{{ product.quantity_diffirence }}</td>
                         <td id="q_cost"></td>
                         <td>
-                            <button class="btn btn-sm btn-outline-dark" onclick="accept()">Accept</button>
+                            {% if quantity_difference != 0 %}
+                                <button class="btn btn-sm btn-outline-dark" onclick="accept()">Accept</button>
+                            {% endif %}
                         </td>
                     </tr>
                 {% endfor %}

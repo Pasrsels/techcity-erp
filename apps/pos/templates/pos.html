@@ -179,6 +179,7 @@
                                 {% include 'pay_modal.html' %}
                             </div>
                     </div>
+<<<<<<< HEAD
                    <div class="col-4 cartSection mt-2">
   <div class="cart-container d-flex flex-column rounded shadow-sm bg-white" style="height: 90vh;">
 
@@ -191,6 +192,18 @@
         <i class="bx bx-plus"></i>
       </button>
     </div>
+=======
+                    <div class="col-4 cartSection mt-2">
+                        <div class="cart-container rounded shadow-sm bg-white h-100">
+                            <div class="d-flex justify-content-between align-items-center w-100 p-1">
+                            <select type="text" id="search-input" class="form-select">
+                                <option value=""></option>
+                            </select>
+                            <span class="px-1"></span>
+                            <button class="btn btn-sm btn-light bx bx-user" id="id_add_client"></button>
+                            <div id="due_balance" class="fw-bold text-muted px-1"></div>
+                        </div>
+>>>>>>> refs/remotes/origin/main
 
     <!-- Due Summary -->
     <div class="d-flex justify-content-between w-100 px-2 py-1 border-bottom">
@@ -353,6 +366,7 @@
             </div>
        </div>
     </div>   
+
     <div class="modal fade" id="PaylaterModal" tabindex="-1" aria-labelledby="PaylaterModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -585,9 +599,19 @@
     confirmPayment.addEventListener('click', ()=>{
         const changeInput = document.getElementById('change_amount');
         const amountPaidInput = document.getElementById('id_amount_paid');
+        const previousDue = document.getElementById('previous_due')
         let totalAmount = calculateTotalAmount(cart);
+        let amount = parseFloat(previousDue.textContent.split(' ')[1])
 
-        changeInput.value = parseFloat(amountPaidInput.value - totalAmount) || 0.00
+        let totalAmoutPrv = totalAmount + parseFloat(previousDue.textContent.split(' ')[1])
+        changeInput.value = parseFloat(amountPaidInput.value - (parseFloat(totalAmount) + parseFloat(previousDue.textContent.split(' ')[1]))) || 0.00;
+
+        if(changeInput.value < 0){
+            changeInput.value = 0.00;
+        }else if(changeInput.value > amountPaidInput){
+            changeInput.value = 0.00
+        }
+
         paidAmount.value = parseFloat(amountPaidInput.value);
         changeAmount = parseFloat(changeInput.value)
         confirmPaymentModal.show()
@@ -603,8 +627,6 @@
         const receiptTableBody = document.querySelector('#receiptTable');
         const prvDue = document.getElementById('previous_due');
         const tpreviousDue = document.getElementById('tpreviousDue')
-
-        tpreviousDue.textContent = prvDue.textContent
         
         receiptTableBody.innerHTML = '';
 
@@ -799,17 +821,7 @@
             }
         })
 
-        id_amount_paid.addEventListener('input', ()=>{
-            value = id_amount_paid.value;
-            depositedAmount.textContent = value;
-
-            const amountDue = parseFloat(previousDue.textContent.split(' ')[1]);
-        
-            // availabe balance 
-            availableBalance.textContent = parseFloat(value) - amountDue || 0;
-            availableBal.textContent = parseFloat(value) - amountDue || 0;
-            
-        })
+       
 
         const calculateNextDueDate = (period) => {
             const todayDate = new Date(); 
@@ -1454,8 +1466,6 @@
 
         console.log(data)
 
-        return 
-
         console.log(pay_later_dates, 'pay_later_dates')
     
         const url = el.dataset.name === 'qoutation' 
@@ -1865,7 +1875,7 @@
             }
 
             previousDue = bal;
-            previousDueEl.textContent = balance ? `${balance.currency__symbol} ${bal}` : "0.00";
+            previousDueEl.textContent = (balance ? `${balance.currency__symbol} ${bal}` : "0.00");
 
             data.forEach((balance) => {
                 const balanceItem = document.createElement('small');

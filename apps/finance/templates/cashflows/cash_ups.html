@@ -1680,11 +1680,9 @@ function showAcceptCashUpModal(cashUpId) {
     document.getElementById('assignToCompany').value = '';
     document.getElementById('notes').value = '';
 
-    // Hide both assignment fields initially
     document.getElementById('employeeAssignment').classList.add('d-none');
     document.getElementById('companyAssignment').classList.add('d-none');
   
-    // Setup amount received input handler
     const amountReceivedInput = document.getElementById('amountReceived');
     const newAmountReceivedInput = amountReceivedInput.cloneNode(true);
     amountReceivedInput.parentNode.replaceChild(newAmountReceivedInput, amountReceivedInput);
@@ -1696,7 +1694,6 @@ function showAcceptCashUpModal(cashUpId) {
         document.getElementById('shortfall').value = `$${shortfall.toFixed(2)}`;
     });
     
-    // Show the modal
     const modal = new bootstrap.Modal(document.getElementById('acceptCashUpModal'));
     modal.show();
 }
@@ -1706,14 +1703,12 @@ function toggleAssignmentFields() {
     const employeeDiv = document.getElementById('employeeAssignment');
     const companyDiv = document.getElementById('companyAssignment');
     
-    // Hide both divs initially
     employeeDiv.classList.add('d-none');
     companyDiv.classList.add('d-none');
     
-    // Show the appropriate div based on selection
     if (accountSelect.value === 'employee') {
         employeeDiv.classList.remove('d-none');
-    } else if (accountSelect.value === 'company') {
+    }else if (accountSelect.value === 'company'){
         companyDiv.classList.remove('d-none');
     }
 }

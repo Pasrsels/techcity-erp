@@ -201,7 +201,6 @@ class StockTransaction(models.Model):
     unit_price = models.DecimalField(max_digits=15, decimal_places=2)
     date = models.DateField()
 
-
 def expense_receipt_upload_path(instance, filename):
     """Generates a unique file path for uploaded receipts."""
     return os.path.join('receipts/', f"expense_{instance.id}_{filename}")
@@ -255,22 +254,20 @@ class Expense(models.Model):
     def __str__(self):
         return f"{self.issue_date} - {self.category} - {self.description} - ${self.amount}"
 
-    
 class Sale(models.Model):
     """
-    Represents a sale transaction.
+        Represents a sale transaction.
     """
     date = models.DateField()
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
     transaction = models.ForeignKey('finance.Invoice', on_delete=models.PROTECT)
     
-
     def __str__(self):
         return f"Sale to {self.transaction.customer} on {self.date} ({self.total_amount})"
 
 class Invoice(models.Model):
     """
-    Model representing an invoice.
+        Model representing an invoice.
     """
     class PaymentStatus(models.TextChoices):
         DRAFT = 'Draft', _('Draft')

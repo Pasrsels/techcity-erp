@@ -3109,11 +3109,6 @@ def delete_qoute(request, qoutation_id):
     qoute.delete()
     return JsonResponse({'success':True, 'message':'Qoutation successfully deleted'}, status=200)
 
-@login_required
-def cashbook_view(request):
-    """Main view to render the cashbook page"""
-    return render(request, 'cashbook.html')
-
 
 # @login_required
 # def cashbook_data(request):
@@ -7207,11 +7202,6 @@ def delete_qoute(request, qoutation_id):
     qoute = get_object_or_404(Qoutation, id=qoutation_id)
     qoute.delete()
     return JsonResponse({'success':True, 'message':'Qoutation successfully deleted'}, status=200)
-
-@login_required
-def cashbook_view(request):
-    """Main view to render the cashbook page"""
-    return render(request, 'cashbook.html')
 
 @login_required
 def cashbook_data(request):
@@ -11615,8 +11605,8 @@ def cashbook_view(request):
         'currency': currency,
         'all_totals': total,
         'cash_up_count': cash_up.count(),
-        'to_date':cash_up.last().created_at.date,
-        'from_date':cash_up.first().created_at.date,
+        'to_date': cash_up.last().created_at.date if cash_up else '',
+        'from_date':cash_up.first().created_at.date if cash_up else '',
         'branches_data': list(branches_data.values())
     })
 
@@ -13276,7 +13266,9 @@ def user_accounts(request):
             'total_debits': total_debits,
             'last_activity': last_activity
         })
+        
     logger.info(users_with_accounts)
+    
     context = {
         'users_with_accounts': users_with_accounts
     }
