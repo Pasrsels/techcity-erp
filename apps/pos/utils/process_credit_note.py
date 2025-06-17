@@ -280,7 +280,7 @@ def submit_credit_note(request, receipt_data, credit_note_data, hash, signature,
 
                     logger.info('Fiscale day incremented.')
                     
-                # salesbytax -receip data
+                    # salesbytax
                 fiscal_sale_counter_obj, _sbt = FiscalCounter.objects.get_or_create(
                     fiscal_counter_type='SaleByTax',
                     created_at__date=datetime.today(),
@@ -312,35 +312,33 @@ def submit_credit_note(request, receipt_data, credit_note_data, hash, signature,
                         "fiscal_counter_tax_percent":15,
                         "fiscal_counter_tax_id":3,
                         "fiscal_counter_money_type":None,
-                        "fiscal_counter_value":total_tax_amount
+                        "fiscal_counter_value":credit_note_data['receiptTaxes'][0]['taxAmount']
                     }
                 )
                 
                 if not _stbt:
                     fiscal_counter_obj.fiscal_counter_value += Decimal(credit_note_data['receiptTaxes'][0]['taxAmount'])
                     fiscal_counter_obj.save()
-          
-                    # Balance By Money Type 
-                    fiscal_counter_bal_obj, _ = FiscalCounter.objects.get_or_create(
-                        fiscal_counter_type="Balancebymoneytype",
-                        created_at__date=datetime.today(),
-                        fiscal_counter_currency=invoice.currency.name.lower(),
+                
+                # Balance By Money Type
+                fiscal_counter_bal_obj, _ = FiscalCounter.objects.get_or_create(
+                    fiscal_counter_type="Balancebymoneytype",
+                    created_at__date=datetime.today(),
+                    fiscal_counter_currency=invoice.currency.name.lower(),
 
-                        defaults={
-                            "fiscal_counter_tax_percent": None,
-                            "fiscal_counter_tax_id": 0,
-                            "fiscal_counter_tax_percent": 0,
-                            "fiscal_counter_money_type": invoice.payment_terms,
-                            "fiscal_counter_value": credit_note.amount
-                        }
-                    )
+                    defaults={
+                        "fiscal_counter_tax_percent": None,
+                        "fiscal_counter_tax_id": 0,
+                        "fiscal_counter_tax_percent": 0,
+                        "fiscal_counter_money_type": invoice.payment_terms,
+                        "fiscal_counter_value": credit_note_data['receiptTotal']
+                    }
+                )
 
-                    if not _:
-                        fiscal_counter_bal_obj.fiscal_count
-                        er_value += total_tax_amount
-                        fiscal_counter_bal_obj.save()
-                        
-                return True
+                if not _:
+                    fiscal_counter_bal_obj.fiscal_counter_value += Decimal(credit_note_data['receiptTotal'])
+                    fiscal_counter_bal_obj.save()
+
             except Exception as e:
                 logger.info(e)
                     
