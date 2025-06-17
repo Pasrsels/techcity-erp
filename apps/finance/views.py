@@ -1598,13 +1598,9 @@ def customer_account(request, customer_id):
     })
     
 @login_required
-<<<<<<< HEAD
 def create_credit_note(request):
     from apps.pos.utils.process_credit_note import generate_credit_note_data, submit_credit_note
     
-=======
-def create_credit_note(request):  
->>>>>>> refs/remotes/origin/fiscalisation
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
         
@@ -1680,11 +1676,7 @@ def create_credit_note(request):
             logger.info(f'hash_sig_data: {hash_sig_data}')
 
             receipt_data = []
-<<<<<<< HEAD
-            submit_credit_note(request, receipt_data, credit_note_data, hash_sig_data['hash'], hash_sig_data['signature'], invoice.id, credit_note.id)
-=======
             submit_credit_note(request, receipt_data, credit_note_data, hash_sig_data['hash'], hash_sig_data['signature'], invoice.id)
->>>>>>> refs/remotes/origin/fiscalisation
                     
             return JsonResponse({
                 'success': True,
