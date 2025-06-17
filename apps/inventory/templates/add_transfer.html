@@ -237,8 +237,6 @@
         });
     };
 
-    checkLocalCart()
-
     const clearCart = () => {
         Swal.fire({
             title: "Are you sure?",
@@ -288,8 +286,6 @@
     }
       }
 
-
-
   if (userRole === 'sales'){
       salesPerson = true
     }
@@ -298,20 +294,6 @@
         select: '#id_to',
         placeholder: 'Select Product'
     });
-
-    // function getSelectedValues() {
-    //     const selectElement = document.getElementById('id_to');
-        
-    //     const selectedValues = Array.from(selectElement.selectedOptions).map(option => {
-    //     return {
-    //             name: option.text, 
-    //             value: option.value 
-    //         };
-    //     });
-
-    //     console.log(selectedValues);
-    //     return selectedValues;
-    // }
 
     const pushBranches = (data) => {
 
@@ -330,9 +312,6 @@
             branches = branches.filter(branch => branch.name !== data.dataset.name);
             branchesList = branchesList.filter(name => name !== data.dataset.name);
         }
-
-        console.log('branchList', branchesList);
-        console.log('branches', branches);
     };
 
     document.getElementById('toggleButton').addEventListener('click', function() {
@@ -552,7 +531,6 @@
             if (quantity){
                 const newItem = {
                     product_id:parseInt(product_id),
-                    count: itemCount,
                     id: generateUniqueId(),
                     product: product,
                     branch_name: branchName,
@@ -572,7 +550,6 @@
             trackProductQuantity = 0;
             trackQuantity = [] 
 
-            localStorage.setItem('transfers', JSON.stringify(cart));
             updateCartDisplay(insufficientQnt);
 
         }
@@ -671,6 +648,8 @@
 
                 cart.forEach((item, index) => {
 
+                    index += 1;
+
                     if (currentProduct !== item.product) {
                         currentProduct = item.product; 
                         currentColor = currentColor === "#ebeced" ? "white" : "#ebeced"; 
@@ -682,7 +661,7 @@
                     function updateRowContent() {
 
                         row.innerHTML = `
-                            <td style='background:${currentColor}'><small class='${item.product}'>${item.count}</small></td>
+                            <td style='background:${currentColor}'><small class='${item.product}'>${index}</small></td>
                             <td style='background:${currentColor}'><small class='${item.product}'>${item.product}</small></td>
                             <td style='background:${currentColor}'>
                                 <small class='${item.product}'>
@@ -800,8 +779,6 @@
 
             trackProductQuantity = 0;
             letrackQuantity = [] 
-            
-            localStorage.setItem('transfers', JSON.stringify(cart));
 
             updateCartDisplay(insufficientQnt);
         }
@@ -821,50 +798,12 @@
       let insufficientQnt = false;
       cart = cart.filter((item) => item.id !== id);
     
-      localStorage.setItem('transfers', JSON.stringify(cart));
       trackProductQuantity = 0;
       trackQuantity = [] 
 
       updateCartDisplay(insufficientQnt);
       updateTotalCost()
   };
-
-
-  function processCart(action) {
-    Swal.fire({
-        title: 'Processing...',
-        text: 'Please wait while we process your request.',
-        allowOutsideClick: false,
-        showConfirmButton: false,
-        willOpen: () => {
-            Swal.showLoading();
-        }
-    });
-
-    const data = {
-        'action': action,
-        'cart': cart,
-        'salesPerson': salesPerson,
-        'branches_to': branches
-    };
-    fetch('/inventory/process-transfer-cart/', {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCookie("csrftoken"),
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.task_id) {
-            checkTransferStatus(data.task_id);
-        }
-    })
-    .catch(error => {
-        Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
-    });
-}
 
     function processCart(action) {
         const data = {
@@ -873,6 +812,8 @@
             'salesPerson': salesPerson,
             'branches_to': branches
         };
+
+        console.log('data', data)
 
         Swal.fire({
             title: 'Processing Transfer',
@@ -894,7 +835,6 @@
         .then(response => response.json())
         .then(data => {
             if (data.task_id) {
-                // Poll for status
                 checkTransferStatus(data.task_id);
             }
         });
@@ -905,10 +845,8 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'processing') {
-                    // Poll again after delay
                     setTimeout(() => checkTransferStatus(taskId), 2000);
                 } else {
-                    // Handle completion
                     console.info('Transfer done')
                     Swal.fire({
                         icon: 'success',
@@ -920,7 +858,6 @@
                     cart = [];
                     let insufficientQnt = false
                     updateCartDisplay(insufficientQnt);
-                    localStorage.clear('transfers')
                     setTimeout(() => {
                         window.location.href = '{% url "inventory:transfers" %}';
                     }, 1500);

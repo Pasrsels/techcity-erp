@@ -283,9 +283,10 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         try:
             data = json.loads(request.body)
             action = data['action']
+            
+            logger.info(f'data: {data}')
 
             if action == 'process':
-                # Trigger async transfer processing
                 task = tasks.process_transfer.delay(
                     data=data,
                     user_id=request.user.id,
