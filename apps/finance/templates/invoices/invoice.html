@@ -452,7 +452,6 @@ input[type="checkbox"] {
         });
     });
 
-    // Column Sorting
     const headers = document.querySelectorAll("thead th");
     const tableBody = document.querySelector("tbody");
     const rows = Array.from(tableBody.querySelectorAll("tr"));
@@ -481,7 +480,6 @@ input[type="checkbox"] {
     {% comment %} setTimeout(()=>{
         loaderSpin.classList.add('hidden');
         loaderSpin.classList.remove('d-flex')
-        // tableEl.classList.remove('hidden')
     }, 300) {% endcomment %}
 
     // payment methods
@@ -555,10 +553,6 @@ input[type="checkbox"] {
             console.error("Error:", error);
             });
         }
-    }
-
-    function name(params) {
-        
     }
 
     updateBtn.forEach((btn)=>{
@@ -1020,7 +1014,8 @@ input[type="checkbox"] {
             if (data.success) {
                 Swal.fire('Success', 'Credit note issued successfully', 'success')
                 .then(() => {
-                    location.reload();
+                    let content = generateReceiptContent(data.invoice_data)
+                    printReceiptSilently(content)
                 });
             } else {
                 Swal.fire('Error', data.message || 'Failed to issue credit note', 'error');
@@ -1031,5 +1026,185 @@ input[type="checkbox"] {
             Swal.fire('Error', 'Failed to issue credit note', 'error');
         });
     });
+
+
+    function generateReceiptContent(data) {
+        console.log(data)
+        const { invoice, invoice_items: invoiceItems, credit, credit_note_items: creditNoteItems} = data;
+        const {
+            vat: vatAmount,
+            subtotal: subTotal,
+            currency_symbol: currencySymbol,
+            receipt_hash: receiptHash,
+            amount_paid: amountPaid,
+            payment_terms: paymentMethod,
+            device_id: deviceId,
+            device_serial_number: deviceSerialNumber,
+            branch_name: branchName,
+            branch_phone: branchPhone,
+            branch_email: branchEmail,
+            amount:totalAmount
+        } = invoice;
+
+        const {
+            credit_note_number: creditNoteNumber,
+            issue_date: issueDate,
+            reason: reason,
+            amount: amount,
+            created_by: created_by,
+            qr_code: qr_code,
+            code: code,
+            fiscal_day: fiscal_day,
+            discount:discount
+        } = credit;
+    
+        const vatRate = 15;
+    
+        return `
+            <style>
+                .receipt {
+                    font-family: Arial, sans-serif;
+                    font-size: 12px;
+                    width: 5.8cm;
+                    margin: auto;
+                    padding: 10px;
+                }
+                .receipt h2, .footer p, .center {
+                    text-align: center;
+                }
+                .receipt-body table {
+                    width: 100%;
+                    margin-top: 10px;
+                    border-collapse: collapse;
+                }
+                .receipt-body th, .receipt-body td {
+                    padding: 2px;
+                    border-bottom: 1px dashed #000;
+                }
+                .qr-code {
+                    text-align: center;
+                    margin-top: 10px;
+                }
+                .footer {
+                    font-size: 11px;
+                    margin-top: 10px;
+                }
+            </style>
+    
+            <div class="receipt">
+                <h2>Pasales Investments</h2>
+                <p><strong>FISCAL TAX INVOICE</strong></p>
+    
+                <p><strong>Invoice No:</strong>${creditNoteNumber}</p>
+                <p><strong>Original Invoice No:</strong> ${invoiceNumber}</p>
+                <p><strong>Branch:</strong> ${branchName || 'Main'}<br>
+                <strong>Phone:</strong> ${branchPhone || 'N/A'}<br>
+                <strong>Email:</strong> ${branchEmail || 'N/A'}</p>
+    
+                <p>
+                    <strong>Fiscal Day No: ${fiscal_day}</strong><br>
+                    <strong>Device ID:</strong> ${deviceId}<br>
+                    <strong>Device Serial:</strong> ${deviceSerialNumber}
+                </p>
+    
+                <div class="receipt-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>${currencySymbol}Price</th>
+                                <th>${currencySymbol}VAT</th>
+                                <th>${currencySymbol}Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${invoiceItems.map(item => {
+                                const total = item.unit_price * item.quantity;
+                                const vat = total - (total / (1 + vatRate / 100));
+                                return `
+                                    <tr>
+                                        <td>${item.item__name}</td>
+                                        <td>${item.quantity}</td>
+                                        <td>${currencySymbol}${item.unit_price}</td>
+                                        <td>${currencySymbol}${vat.toFixed(2)}</td>
+                                        <td>${currencySymbol}${total}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                            ${creditNoteItems.map(item => {
+                                const total = item.unit_price * item.quantity;
+                                const vat = item.vat_amount;
+                                const lineTotal = item.total_amount;
+                                return `<tr>
+                                        <td>Discount:${item.invoice_item__item__name}</td>
+                                        <td>${parseInt(item.quantity)}</td>
+                                        <td>-${currencySymbol}${item.discount}</td>
+                                        <td>-</td>
+                                        <td>-${currencySymbol}${item.discount}</td>
+                                        </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr><td colspan="4"><strong>Total15% VAT (${vatRate}%)</strong></td><td>${currencySymbol}${vat}}</td></tr>
+                            <tr><td colspan="4"><strong>Invoice Total </strong></td><td>${totalAmount}</td></tr>
+                        </tfoot>
+                    </table>
+                </div>
+    
+                <div class="qr-code">
+                    <img src="${qr_code}" alt="QR Code" width="100" height="100" style="display:block; margin: 0 auto;">
+                </div>
+                <div class="footer center">
+                    <p><strong>Verification Code: <br> </strong> ${code} <br>
+                        Verification Url: https://fdmstest.zimra.co.zw/
+                    </p>
+                    <hr>
+                    <p>Thank you for shopping with us</p>
+                    <hr>
+                </div>
+            </div>
+        `;
+    }
+    
+
+    // Function to print the receipt silently
+    function printReceiptSilently(content) {
+        let printFrame = document.getElementById("print-frame");
+
+        if (!printFrame) {
+            printFrame = document.createElement("iframe");
+            printFrame.id = "print-frame";
+            printFrame.style.position = "absolute";
+            printFrame.style.width = "0px";
+            printFrame.style.height = "0px";
+            printFrame.style.border = "none";
+            printFrame.style.visibility = "hidden";
+            document.body.appendChild(printFrame);
+        }
+
+        const frameDoc = printFrame.contentWindow || 
+                        printFrame.contentDocument.document || 
+                        printFrame.contentDocument;
+
+        frameDoc.document.open();
+        frameDoc.document.write(`
+            <html>
+            <head>
+                <title>Print Receipt</title>
+                <style>
+                    body { font-family: Arial, sans-serif; font-size: 12px; }
+                </style>
+            </head>
+            <body onload="window.print(); setTimeout(() => window.close(), 1000);">
+                ${content}
+            </body>
+            </html>
+        `);
+        frameDoc.document.close();
+    }
 </script>
+
+
 {% endblock content %}

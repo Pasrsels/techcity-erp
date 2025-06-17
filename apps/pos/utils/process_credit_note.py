@@ -230,6 +230,7 @@ def submit_credit_note(request, receipt_data, credit_note_data, hash, signature,
     )
     receipt.save()
     logger.info(f'Receipt saved offline: {receipt}')
+    
     if credit_note_data:
         zimra_instance = ZIMRA()
         invoice = Invoice.objects.get(id=invoice__id)
@@ -282,7 +283,7 @@ def submit_credit_note(request, receipt_data, credit_note_data, hash, signature,
                     
                     # salesbytax
                 fiscal_sale_counter_obj, _sbt = FiscalCounter.objects.get_or_create(
-                    fiscal_counter_type='SaleByTax',
+                    fiscal_counter_type='CreditNoteByTax',
                     created_at__date=datetime.today(),
                     fiscal_counter_currency=invoice.currency.name.lower(),
 
@@ -304,7 +305,7 @@ def submit_credit_note(request, receipt_data, credit_note_data, hash, signature,
 
                 # Sale Tax By Tax
                 fiscal_counter_obj, _stbt = FiscalCounter.objects.get_or_create(
-                    fiscal_counter_type='SaleTaxByTax',
+                    fiscal_counter_type='CreditNoteTaxByTax',
                     created_at__date=datetime.today(),
                     fiscal_counter_currency=invoice.currency.name.lower(),
             
