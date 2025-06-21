@@ -4,13 +4,70 @@
 {% block title%} Inventory detail {% endblock%}
 {% block content %}
 <style>
-    .table-responsive {
-        overflow-x: auto;
-    }
-    [x-cloak]{
-        display: none;
-    }
-    /* style="background:rgb(0 123 255) ; */
+:root {
+    --primary: #11998e;
+    --primary-no-gradient: #11998e;
+    --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    --secondary: orange;
+    --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+    --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    --dark: #1a1a2e;
+    --dark-alt: #16213e;
+    --text-light: rgba(228, 230, 234, 1);
+    --text-dark: black;
+    --text-muted: black;
+    --glass: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+    --border-radius: 12px;
+    --border-radius-sm: 8px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --m-bottom: 20px;
+}
+
+ .search-container {
+    position: relative;
+    margin-bottom: 5px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 15px 50px 15px 20px;
+    border-radius: var(--border-radius);
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--text-dark);
+    font-size: 16px;
+    transition: var(--transition);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-input::placeholder {
+    color: var(--text-dark);
+}
+
+.search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dark);
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+[x-cloak]{
+    display: none;
+}
 </style>
 <script src="https://unpkg.com/alpinejs" defer></script>
 <div class="inventory"
@@ -54,10 +111,11 @@
     }"
     >
     <div class="inventory-navbar mb-3">
-        <nav class="d-flex justify-content-between align-items-center shadow rounded p-2">
+        <nav class="d-flex justify-content-between align-items-center rounded p-2">
             <div class="d-flex">
-                <div class="d-flex align-items-center">
+                <div>
                     <h5>{{ inventory.name | capfirst }}</h5>
+                    <p>View product detail</p>
                 </div>
             </div>
             <nav class='recent-nav navbar navbar-expand-lg navbar-light rounded px-2'>
@@ -68,7 +126,7 @@
             </nav>
         </nav>
     </div>
-    <div class="d-flex justify-content-between align-items-center border p-2 rounded">
+    <div class="d-flex justify-content-between text-light align-items-center p-2" style="background: var(--primary);">
         <div class="d-flex">
             <div class="p-1">Cost value:  
                 {% for value in inventory_value %}
@@ -83,14 +141,14 @@
         </div>
         <div>
             <button 
-                class="btn btn-outline-dark" 
+                class="btn btn-outline-light" 
                 @click="open =!open"
                 x-text="open ? 'Logs' : 'Stock Account'">
             >
                 Stock Account
             </button>
             <button 
-                class="btn btn-outline-dark bx bx-printer bx-sm" 
+                class="btn btn-outline-light bx bx-printer bx-sm" 
                 @click="download(!open ? 'logs' : 'account')">
             </button>
         </div>
@@ -98,18 +156,16 @@
     <div class="d-flex justify-content-between align-items-center mb-1 mt-1">
     </div>
         <div x-show="!open">
-            <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search logs..." oninput="searchTable()">
+            <input type="text" id="search-input" class=" search-input border rounded" placeholder="Search logs..." oninput="searchTable()">
         </div>
-  
-
     <div>
         <div class="table-detail mt-2 w-100 atable table-responsive" x-show="!open" x-transition>
-                <table class='table border rounded display p-2 table-bordered table-responsive' style="width:100%" id='detailTable'>
-                    <thead class="table-dark">
+                <table class='table rounded table-borderless table-hover display p-2 table-responsive' style="width:100%" id='detailTable'>
+                    <thead style="background: var(--primary);">
                         <tr>
                             <th>#</th>
                             <th>Date</th>
-                            <th>By (user)</th>
+                            <th>By</th>
                             <th>Refence</th>
                             <th>Type</th>
                             <th>Selling Price</th>
@@ -184,8 +240,8 @@
     <div x-show="open" x-transition class="mt-1">
         <h5>Stock Account</h5>
         <div class="table-responsive stock-account">
-            <table class="table table-bordered table-striped">
-                <thead class="table-dark">
+            <table class="table table-borderless table-hover" >
+                <thead style="background: var(--primary);">
                     <tr>
                         <th>#</th>
                         <th>Timestamp</th>

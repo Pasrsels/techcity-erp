@@ -255,7 +255,7 @@ table thead th {
                     <span class="d-flex">
                         <button class="btn btn-outline-dark btn-sm" id="submit_{{ item.id }}" style="display:none;" onclick="submitItem('{{ item.id }}')">Submit</button>
                         <button class="bx bx-edit border btn mx-1" id="editBtn_{{ item.id }}" style="display:none;" onclick="edit({{ item.id }}, {{ item.product.price }}, {{ item.product.dealer_price }}, {{ item.quantity }}, {{ item.actual_unit_cost }})"></button>
-                        <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}" onclick="cancel('{{ item.id }}', {{ item.product.price }}, {{ item.product.dealer_price|default_if_none:0 }}" style="display:none;">cancel</button>
+                        <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}" onclick="cancel('{{ item.id }}', {{ item.product.price }}, {{ item.product.dealer_price|default_if_none:0 }})" style="display:none;">cancel</button>
                         <button class="btn btn-outline-dark btn-sm" onclick="submitItem('{{ item.id }}')">Submit</button>
                     </span>
                     {% else %}
@@ -412,7 +412,6 @@ table thead th {
         const dsp = document.getElementById(`dSp_${itemId}`);
 
         // remove the submitted button and show the submit button
-        document.getElementById(`submitted_${itemId}`).style.display = 'none';
         document.getElementById(`submit_${itemId}`).style.display = 'block';
 
         // add cancel button
@@ -469,14 +468,11 @@ table thead th {
     }
 
     function cancel(itemId, originalSellingPrice, originalDealerPrice) {
-        // Revert Selling Price and Dealer Price to their original values
         document.getElementById(`selling_${itemId}`).replaceWith(`${originalSellingPrice}`);
         document.getElementById(`dealer_${itemId}`).replaceWith(`${originalDealerPrice}`);
 
-        // Hide the submit and cancel buttons and show the "Submitted" button
         document.getElementById(`submit_${itemId}`).style.display = 'none';
         document.getElementById(`cancel_${itemId}`).style.display = 'none';
-        document.getElementById(`submitted_${itemId}`).style.display = 'block';
 
         editStatus=false
     } 
@@ -531,8 +527,6 @@ table thead th {
                 dealer_expected_profit: parseFloat(dealerExpectedProfitAmnt)
             };
 
-            submitButton.disabled = true;
-
             const response = await fetch(`{% url "inventory:process_received_order" %}`, {
                 method: 'POST',
                 headers: {
@@ -548,10 +542,10 @@ table thead th {
 
                 Toastify({
                     text: "Item submitted successfully",
-                    duration: 3000, // 3 seconds
-                    gravity: "top", // top or bottom
-                    position: "right", // left, center or right
-                    backgroundColor: "#4BB543", // green for success
+                    duration: 3000, 
+                    gravity: "top", 
+                    position: "right",
+                    backgroundColor: "#4BB543",
                     close: true
                   }).showToast();
                 
@@ -564,7 +558,7 @@ table thead th {
                     tableDataCells.forEach(td => td.classList.add('bg-warning'));
                 }
 
-                // Update the row with the new values
+
                 document.getElementById(`quantity_${itemId}`)?.replaceWith(`${itemData.quantity}`);
                 document.getElementById(`selling_${itemId}`).replaceWith(`${itemData.selling_price}`);
                 document.getElementById(`dealer_${itemId}`).replaceWith(`${itemData.dealer_price}`);
@@ -578,6 +572,7 @@ table thead th {
                 // Hide the submit and cancel buttons, show edit button
                 const cancelBtn = document.getElementById(`cancel_${itemId}`);
                 const editBtn = document.getElementById(`editBtn_${itemId}`);
+                      
                 if (cancelBtn) cancelBtn.style.display = 'none';
                 if (editBtn) editBtn.style.display = 'block';
             } else {

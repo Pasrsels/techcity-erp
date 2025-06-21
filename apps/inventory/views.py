@@ -272,6 +272,9 @@ class AddProductView(LoginRequiredMixin, View):
             total_quantity=inventory.quantity + inv.quantity if action == 'update' else inventory.quantity
         )
 
+from django.apps import apps
+
+
 class ProcessTransferCartView(LoginRequiredMixin, View):
     """Handle product transfers between branches."""
 
@@ -283,62 +286,134 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
         try:
             data = json.loads(request.body)
             action = data['action']
-            
+
             logger.info(f'data: {data}')
 
             if action == 'process':
-                task = tasks.process_transfer.delay(
-                    data=data,
-                    user_id=request.user.id,
-                    user_branch_id=request.user.branch.id
-                )
-                
-                # Store task ID for status checking
-                request.session['transfer_task_id'] = task.id
-                
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Transfer processing started',
-                    'task_id': task.id
-                })
+                # Inline version of `process_transfer`
+                Transfer = apps.get_model('inventory', 'Transfer')
+                TransferItems = apps.get_model('inventory', 'TransferItems')
+                Inventory = apps.get_model('inventory', 'Inventory')
+                Branch = apps.get_model('company', 'Branch')
+                ActivityLog = apps.get_model('inventory', 'ActivityLog')
+                User = apps.get_model('users', 'User')
+
+                with transaction.atomic():
+                    user = request.user
+                    user_branch = user.branch
+
+                    branches_data = data['branches_to']
+                    transfer_id = data.get('transfer_id', '')
+                    cart = data['cart']
+
+                    logger.info(f'cart data {cart}')
+
+                    # Get branch objects
+                    branch_objects = []
+                    for branch in branches_data:
+                        if branch.get('value'):
+                            branch_obj = Branch.objects.get(id=branch['value'])
+                        else:
+                            branch_obj = Branch.objects.get(name=branch['name'])
+                        branch_objects.append(branch_obj)
+
+                    # Get products
+                    products = Inventory.objects.filter(branch=user_branch).select_related('branch')
+                    products_dict = {product.id: product for product in products}
+
+                    # Validate quantities
+                    product_quantities = defaultdict(int)
+                    for item in cart:
+                        product_quantities[item['product_id']] += item['quantity']
+
+                    for product_id, total_quantity in product_quantities.items():
+                        product = products_dict.get(int(product_id))
+                        if total_quantity > product.quantity:
+                            raise ValueError(f'Insufficient stock for product: {product.name}')
+
+                    # Create or get transfer
+                    branch_names = [branch['name'] for branch in branches_data]
+                    if not transfer_id:
+                        transfer = Transfer.objects.create(
+                            branch=user_branch,
+                            user=user,
+                            transfer_ref=Transfer.generate_transfer_ref(user_branch.name, branch_names),
+                            description='transfer'
+                        )
+                    else:
+                        transfer = Transfer.objects.get(id=transfer_id)
+
+                    transfer.transfer_to.set(branch_objects)
+
+                    # Process transfer items
+                    track_quantity = 0
+                    transfer_items = []
+
+                    for branch_obj in branch_objects:
+                        for item in cart:
+                            if item['branch_name'] == branch_obj.name:
+                                product = products_dict.get(int(item['product_id']))
+                                transfer_item = TransferItems(
+                                    transfer=transfer,
+                                    product=product,
+                                    cost=item['cost'],
+                                    price=item['price'],
+                                    dealer_price=item['dealer_price'],
+                                    quantity=item['quantity'],
+                                    from_branch=user_branch,
+                                    to_branch=branch_obj,
+                                    description=f'from {user_branch} to {branch_obj}'
+                                )
+                                transfer_items.append(transfer_item)
+                                track_quantity += item['quantity']
+
+                    created_items = TransferItems.objects.bulk_create(transfer_items)
+
+                    # Update inventory and create activity logs
+                    for transfer_item in created_items:
+                        inventory = Inventory.objects.select_for_update().get(
+                            id=transfer_item.product.id,
+                            branch__name=transfer_item.from_branch
+                        )
+                        inventory.quantity -= int(transfer_item.quantity)
+                        inventory.save()
+
+                        ActivityLog.objects.create(
+                            invoice=None,
+                            product_transfer=transfer_item,
+                            branch=user_branch,
+                            user=user,
+                            action='transfer out',
+                            dealer_price=transfer_item.dealer_price,
+                            selling_price=transfer_item.price,
+                            inventory=inventory,
+                            system_quantity=inventory.quantity,
+                            quantity=-transfer_item.quantity,
+                            total_quantity=inventory.quantity,
+                            description=f'to {transfer_item.to_branch}'
+                        )
+
+                        transfer.quantity += transfer_item.quantity
+
+                    transfer.total_quantity_track = track_quantity
+                    transfer.hold = False
+                    transfer.date = datetime.datetime.now()
+                    transfer.save()
+
+                    return JsonResponse({'success': True, 'message': 'Transfer processed successfully'})
+
             else:
-                # Handle held transfers
-                # Add your held transfer logic here
-                return JsonResponse({'success': True})
+                return JsonResponse({'success': True, 'message': 'Held transfer saved'})
 
         except Exception as e:
-            logger.error(f"Error initiating transfer: {e}", exc_info=True)
+            logger.error(f"Error processing transfer: {e}", exc_info=True)
             return JsonResponse({
                 'success': False,
                 'message': str(e)
             })
 
-    def get(self, request, *args, **kwargs) -> JsonResponse:
-        """
-        Check the status of a transfer task
-        """
-        task_id = request.GET.get('task_id')
-        if not task_id:
-            return JsonResponse({
-                'success': False,
-                'message': 'No task ID provided'
-            })
+    
 
-        # Get task result from Celery
-        task = tasks.process_transfer.AsyncResult(task_id)
-        
-        if task.ready():
-            result = task.get()
-            if result.get('success'):
-                # If transfer was successful, trigger notification
-                logger.info(f"Transfer {result.get('transfer_id')} completed successfully")
-                # tasks.notify_branch_transfer.delay(result.get('transfer_id'))
-            return JsonResponse(result)
-        
-        return JsonResponse({
-            'success': True,
-            'status': 'processing'
-        })
     
 @login_required
 def delete_transfer(request, transfer_id):
@@ -491,16 +566,52 @@ def inventory_index(request):
     q = request.GET.get('q', '')  
     category = request.GET.get('category', '')    
     
-    # from utils.zimra import ZIMRA
-    
-    # zimra = ZIMRA
-    # zimra.ping()
+    now = timezone.now() 
+    today = now.date()  
     
     accessories = Accessory.objects.all()
-    inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).select_related(
+    inventory = Inventory.objects.filter(
+        branch=request.user.branch, 
+        status=True, 
+        disable=False,
+        category__name=category
+    ).select_related(
         'category',
         'branch'
     ).order_by('name')
+    
+    logs = ActivityLog.objects.filter(branch=request.user.branch).select_related('branch').order_by('-id')
+    
+    grouped_logs = {}
+    ordered_grouped_logs = {}
+
+    for log in logs:
+        log_date = log.timestamp.date()  
+
+        if log_date == today:
+            date_key = 'Today'
+        elif log_date == today - timedelta(days=1):
+            date_key = 'Yesterday'
+        else:
+            date_key = log_date.strftime('%A, %d %B %Y')
+
+        if not log.invoice:
+            if date_key not in grouped_logs:
+                grouped_logs[date_key] = {'logs': []}
+            grouped_logs[date_key]['logs'].append(log)
+
+    for special_day in ['Today', 'Yesterday']:
+        if special_day in grouped_logs:
+            ordered_grouped_logs[special_day] = grouped_logs[special_day]
+
+    remaining_dates = sorted(
+        [(k, v) for k, v in grouped_logs.items() if k not in ['Today', 'Yesterday']],
+        key=lambda x: datetime.datetime.strptime(x[0], '%A, %d %B %Y') if not x[0] in ['Today', 'Yesterday'] else today
+    )
+
+    for date_key, data in remaining_dates:
+        ordered_grouped_logs[date_key] = data
+    
 
     if 'download' and 'excel' in request.GET:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -529,9 +640,9 @@ def inventory_index(request):
                 cell.font = Font(bold=True)
                 cell.alignment = Alignment(horizontal='center')
 
-            categories = Inventory.objects.filter(branch=request.user.branch).values_list('product__category__name', flat=True).distinct()
+            categories = Inventory.objects.filter(branch=request.user.branch).values_list('category__name', flat=True).distinct()
             for category in categories:
-                products_in_category = products.filter(branch__name=branch, product__category__name=category)
+                products_in_category = products.filter(branch__name=branch, category__name=category)
                 if products_in_category.exists():
                     worksheet['A' + str(row_offset + 1)] = category
                     cell = worksheet['A' + str(row_offset + 1)]
@@ -541,9 +652,10 @@ def inventory_index(request):
                     row_offset += 2
 
                 for product in products.filter(branch__name=branch):
-                    if category == product.category.name:
-                        worksheet.append([product.name, product.cost, product.price, product.quantity])
-                        row_offset += 1
+                    if product.category:
+                        if category == product.category.name:
+                            worksheet.append([product.name, product.cost, product.price, product.quantity])
+                            row_offset += 1
 
         workbook.save(response)
         return response
@@ -555,7 +667,7 @@ def inventory_index(request):
         'search_query': q,
         'category': category,
         'accessories': accessories,
-        'logs': [],
+        'grouped_logs':ordered_grouped_logs
     }
 
     return render(request, 'inventory.html', context)

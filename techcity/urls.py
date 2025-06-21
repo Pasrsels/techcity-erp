@@ -33,7 +33,7 @@ urlpatterns = [
     path('dashboard/', include('apps.Dashboard.urls', namespace='dashboard')),
     path('booking', include('apps.booking.urls', namespace='booking')),
     path('verify/<uidb64>/<token>/', verify_email, name='verify_email'),
-    # path('__reload__/', include('django_browser_reload.urls')),
+    path('__reload__/', include('django_browser_reload.urls')),
     
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),

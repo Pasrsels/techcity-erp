@@ -1,11 +1,17 @@
- <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3" id="log-rows">
-        {% for log in logs %}
-        <div class="col">
-            <div class="card h-100 shadow-sm">
+<div class="row" id="log-rows">
+    {% for date_key, data in grouped_logs.items %}
+        <!-- Date Header -->
+        <div class="col-12 mt-2 mb-2">
+            <h5 class="text-dark fw-bold">{{ date_key }}</h5>
+        </div>
+
+        {% for log in data.logs %}
+        <div class="col-12 mb-2">
+            <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <h6 class="card-title mb-0">{{ log.inventory.name }}</h6>
-                        <span class="badge bg-primary rounded-pill">{{ log.action }}</span>
+                        <span class="badge bg-success bg-success-subtle text-success rounded-pill">{{ log.action }}</span>
                     </div>
                     <div class="d-flex justify-content-between">
                         <p class="card-text">
@@ -26,14 +32,14 @@
                 </div>
                 <div class="card-footer bg-transparent">
                     <small class="text-muted">
-                        <i class="bi bi-calendar-event"></i> {{ log.timestamp|date:"M d, Y" }}
+                        <i class="bx bx-user"></i> {{ log.user.username }}
                     </small>
                 </div>
             </div>
         </div>
         {% endfor %}
-    </div>
-    
+    {% endfor %}
+</div>
 
 <!-- Infinite scroll trigger -->
 <tr id="loading-indicator"
@@ -45,7 +51,6 @@
         <div id="spinner" class="spinner-border spinner-border-sm" role="status" style="display:none">
             <span class="visually-hidden">Loading...</span>
         </div>
-        <!-- <span class="text-muted">Loading more...</span> -->
     </td>
 </tr>
 

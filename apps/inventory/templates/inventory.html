@@ -4,20 +4,83 @@
 {% block title %} Inventory {% endblock %}
 {% block content %}
 <style>
-    :root {
-        --primary-color: #4e73df;
-        --secondary-color: #858796;
-        --success-color: #1cc88a;
-        --danger-color: #e74a3b;
-        --warning-color: #f6c23e;
-        --light-bg: #f8f9fc;
-        --card-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-        --border-radius: 0.35rem;
+   :root {
+        --primary: #11998e;
+        --primary-no-gradient: #11998e;
+        --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        --secondary: orange;
+        --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+        --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        --dark: #1a1a2e;
+        --dark-alt: #16213e;
+        --text-light: rgba(228, 230, 234, 1);
+        --text-dark: black;
+        --text-muted: black;
+        --glass: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+        --border-radius: 12px;
+        --border-radius-sm: 8px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --m-bottom: 20px;
     }
-    
+
+    .header-btn {
+        padding: 8px 16px;
+        border-radius: var(--border-radius-sm);
+        background: var(--primary-no-gradient);
+        border: 1px solid var(--glass-border);
+        color: var(--text-light);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .header-btn:hover {
+        background: var(--primary);
+        transform: translateY(-1px);
+    }
+
+    .search-container {
+        position: relative;
+        margin-bottom: 5px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 15px 50px 15px 20px;
+        border-radius: var(--border-radius);
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        color: var(--text-dark);
+        font-size: 16px;
+        transition: var(--transition);
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: rgba(102, 126, 234, 0.5);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-input::placeholder {
+        color: var(--text-dark);
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-dark);
+    }
+
     .inventory-card {
         border-radius: var(--border-radius);
-        box-shadow: var(--card-shadow);
         transition: transform 0.2s ease;
         border: none;
     }
@@ -42,7 +105,6 @@
     }
     
     .inventory-table {
-        box-shadow: var(--card-shadow);
         border-radius: var(--border-radius);
         overflow: hidden;
     }
@@ -62,7 +124,6 @@
     .log-container {
         border-radius: var(--border-radius);
         background-color: #fff;
-        box-shadow: var(--card-shadow);
     }
     
     .log-table {
@@ -109,23 +170,76 @@
     }
 </style>
 
-<div class="container-fluid py-4">
-    <!-- Header Section -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Products Inventory</h1>
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between p-2">
+        <div>
+            <h4>Products Inventory</h4>
+            <p>Create and manage inventory</p>
+        </div>
         
-        <!-- Main Action Button -->
         {% if request.user.role == 'admin' %}
-        <button class="d-none d-sm-inline-block btn btn-primary btn-sm shadow-sm action-btn" data-bs-toggle="modal" data-bs-target="#addProductModal">
-            <i class="bx bx-plus mr-1"></i>Add New Product
-        </button>
+          <button class="d-none d-sm-inline-block header-btn btn-sm action-btn" data-bs-toggle="modal" data-bs-target="#addProductModal">
+              <i class="bx bx-plus mr-1"></i>Add New Product
+          </button>
         {% endif %}
     </div> 
+
+    <div class="card inventory-card">
+        <div class="card-body p-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center">
+                <div class="d-flex flex-wrap gap-2 mb-3 mb-md-0">
+                    {% if request.user.role == 'admin' %}
+                      <a href="{% url 'inventory:create_purchase_order' %}" class="btn btn-sm btn-outline-primary action-btn d-md-none">
+                          <i class="bx bx-plus"></i> Product
+                      </a>
+                    {% endif %}
+                    <a href="{% url 'inventory:reorder_list' %}" class="header-btn action-btn">
+                        <i class="bx bx-list-check mr-1"></i>Reorder List
+                    </a>
+                    <a href="{% url 'inventory:purchase_orders' %}" class="header-btn action-btn">
+                        <i class="bx bx-package mr-1"></i>Purchase Orders
+                    </a>
+                    <a href="{% url 'inventory:suppliers' %}" class="header-btn action-btn">
+                        <i class="bx bx-store mr-1"></i>Suppliers
+                    </a>
+                    <a href="{% url 'inventory:stocktake' %}" class="header-btn action-btn">
+                        <i class="bx bx-clipboard mr-1"></i>Stocktake
+                    </a>
+                    <a href="{% url 'inventory:loss_management' %}" class="header-btn btn-outline-secondary action-btn" disabled>
+                        <i class="bx bx-error-circle mr-1"></i>Loss Management
+                    </a>
+                </div>
+                
+                <div class="search-filters">
+                    <a href="?download=true&excel=true" class="btn btn-outline-secondary  btn-sm action-btn">
+                        <i class="bx bx-download mr-1"></i>Export Excel
+                    </a>
+                    <form method="get" class="d-flex gap-2" id="filter-form">
+                      <select name="category" class="form-select form-select-sm" id="id_category">
+                          <option value="">All Categories</option>
+                          <option value="inactive" {% if request.GET.category == "inactive" %}selected{% endif %}>Inactive</option>
+                          {% for category in categories %}
+                              <option value="{{ category.name }}" {% if category.name == request.GET.category %}selected{% endif %}>
+                                  {{ category.name }}
+                              </option>
+                          {% endfor %}
+                      </select>
+                  </form>
+
+                  <script>
+                      document.getElementById('id_category').addEventListener('change', function() {
+                          document.getElementById('filter-form').submit();
+                      });
+                  </script>
+
+                </div>
+            </div>
+        </div>
+    </div>
     
-    <!-- Stats Cards -->
-    <div class="row">
-        <div class="col-xl-6 col-md-6 mb-4">
-            <div class="card shadow-sm stats-card bg-gradient-light shadow h-100 py-2">
+    <div class="row bg-white mt-2">
+        <div class="col-xl-6 col-md-6">
+            <div class="card stats-card bg-gradient-light h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
@@ -139,8 +253,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-6 col-md-6 mb-4">
-            <div class="card shadow-sm stats-card bg-gradient-light shadow h-100 py-2">
+        
+        <div class="col-xl-6 col-md-6">
+            <div class="card stats-card bg-gradient-light h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
@@ -156,69 +271,16 @@
         </div>
     </div>
     
-    <div class="card shadow-sm mb-4 inventory-card">
-        <div class="card-body p-3">
-            <div class="d-flex flex-wrap justify-content-between align-items-center">
-                <div class="d-flex flex-wrap gap-2 mb-3 mb-md-0">
-                    {% if request.user.role == 'admin' %}
-                      <a href="{% url 'inventory:create_purchase_order' %}" class="btn btn-sm btn-outline-primary action-btn d-md-none">
-                          <i class="bx bx-plus"></i> Product
-                      </a>
-                    {% endif %}
-                    <a href="{% url 'inventory:reorder_list' %}" class="btn btn-sm btn-outline-secondary action-btn">
-                        <i class="bx bx-list-check mr-1"></i>Reorder List
-                    </a>
-                    <a href="{% url 'inventory:purchase_orders' %}" class="btn btn-sm btn-outline-secondary action-btn">
-                        <i class="bx bx-package mr-1"></i>Purchase Orders
-                    </a>
-                    <a href="{% url 'inventory:suppliers' %}" class="btn btn-sm btn-outline-secondary action-btn">
-                        <i class="bx bx-store mr-1"></i>Suppliers
-                    </a>
-                    <a href="{% url 'inventory:stocktake' %}" class="btn btn-sm btn-outline-secondary action-btn">
-                        <i class="bx bx-clipboard mr-1"></i>Stocktake
-                    </a>
-                    <a href="{% url 'inventory:loss_management' %}" class="btn btn-sm btn-outline-secondary action-btn">
-                        <i class="bx bx-error-circle mr-1"></i>Loss Management
-                    </a>
-                </div>
-                
-                <!-- Search and Filter -->
-                <div class="search-filters">
-                    <a href="?download=true&excel=true" class="btn btn-success btn-sm action-btn">
-                        <i class="bx bx-download mr-1"></i>Export Excel
-                    </a>
-                    <form method="get" class="d-flex gap-2">
-                        <select name="category" class="form-select form-select-sm" id="id_category">
-                            <option value="">All Categories</option>
-                            <option value="inactive">Inactive</option>
-                            {% for category in categories %}
-                                <option value="{{ category.name }}" {% if category.name == request.GET.category %}selected{% endif %}>
-                                    {{ category.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit" class="btn btn-primary btn-sm action-btn">
-                            <i class="bx bx-filter"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Main Content -->
-    <div class="row">
-        <!-- Inventory Table -->
+    <div class="row bg-white mt-2">
         <div class="col-9">
             <div class="table-wrapper">
                 {% include "components/inventory_table.html" %}
             </div>
         </div>
         
-        <!-- Logs Section -->
         <div class="col-3 logs-section">
-            <div class="log-container p-3">
-                <h5 class="mb-3"><i class="bx bx-history mr-2"></i>Activity Logs</h5>
+            <div class="log-container p-2 mt-1">
+                <h5 class="mb-1 d-flex align-items-center"><i class="bx bx-history bx-lg mr-2"></i><span class="ms-2">Activity Logs</span></h5>
                 <div style="height: 70vh; overflow-y: auto;">
                     {% include "partials/logs_page.html" %}
                 </div>
@@ -373,8 +435,6 @@
     </div>
   </div>
 </div>
-
-
 <script>
   document.getElementById('id_submit_product').addEventListener('click', function () {
     const form = document.querySelector('#addProductModal form');
@@ -416,27 +476,23 @@
   });
 
   document.getElementById('decrease_quantity').addEventListener('click', function () {
-    let quantityInput = document.getElementById('id_quantity');
-    let currentValue = parseInt(quantityInput.value || 0);
-    if (currentValue > 1) {
-      quantityInput.value = currentValue - 1;
-    }
+    
   });
 
   document.addEventListener('DOMContentLoaded', function() {
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl)
-        });
-        
-        const categorySelect = document.getElementById('id_category');
-        if (categorySelect) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const category = urlParams.get('category');
-            if (category) {
-                categorySelect.value = category;
-            }
-        }
-    });
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+      const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl)
+      });
+      
+      const categorySelect = document.getElementById('id_category');
+      if (categorySelect) {
+          const urlParams = new URLSearchParams(window.location.search);
+          const category = urlParams.get('category');
+          if (category) {
+              categorySelect.value = category;
+          }
+      }
+  });
 </script>
 {% endblock content %} 
