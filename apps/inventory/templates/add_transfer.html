@@ -815,6 +815,7 @@
 
         console.log('data', data)
 
+
         Swal.fire({
             title: 'Processing Transfer',
             text: 'Please wait...',
@@ -834,36 +835,17 @@
         })
         .then(response => response.json())
         .then(data => {
-            if (data.task_id) {
-                checkTransferStatus(data.task_id);
+            if (data.success) {
+                Swal.close();
+                Swal.fire({
+                    title: 'Transfer Successful',
+                    text: 'Your transfer has been successfully processed.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                })
             }
         });
     } 
-
-    function checkTransferStatus(taskId) {
-        fetch(`/inventory/process-transfer-cart/?task_id=${taskId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'processing') {
-                    setTimeout(() => checkTransferStatus(taskId), 2000);
-                } else {
-                    console.info('Transfer done')
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: 'Product(s) Transferred Successfully',
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
-                    cart = [];
-                    let insufficientQnt = false
-                    updateCartDisplay(insufficientQnt);
-                    setTimeout(() => {
-                        window.location.href = '{% url "inventory:transfers" %}';
-                    }, 1500);
-                    }
-            });
-    }
 
 
   function getCookie(name) {

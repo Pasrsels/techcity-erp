@@ -1,23 +1,66 @@
 {% load static%}
+<style>
+:root {
+    --primary: #11998e;
+    --primary-no-gradient: #11998e;
+    --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    --secondary: orange;
+    --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+    --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    --dark: #1a1a2e;
+    --dark-alt: #16213e;
+    --text-light: rgba(228, 230, 234, 1);
+    --text-dark: black;
+    --text-muted: black;
+    --glass: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+    --border-radius: 12px;
+    --border-radius-sm: 8px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --m-bottom: 20px;
+}
+
+.header-btn {
+    padding: 8px 16px;
+    border-radius: var(--border-radius-sm);
+    background: var(--primary-no-gradient);
+    border: 1px solid var(--glass-border);
+    color: var(--text-light);
+    text-decoration: none;
+    transition: var(--transition);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.header-btn:hover {
+    background: var(--primary);
+    transform: translateY(-1px);
+}
+</style>
 {% block content %}
    <div class="table-responsive mt-2" style="height: 70vh; overflow-y: auto;">
         <!-- inventory table -->
         {% include 'components/loader.html' %}
         <div class='product table-container p-1 rounded' style="background: #fff; position: relative;">
-            <div class="" id="fixed-search" style="position: sticky; top: 0; z-index: 2; background: white;">
-                <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search products...">
+            <div class="search-container border rounded" id="fixed-search" style="position: sticky; top: 0; z-index: 2; background: white;">
+                <input type="text" class="search-input" placeholder="Search products..." id="searchInput">
+                <i class="fas fa-search search-icon"></i>
             </div>
-            <table class='table border table-bordered table-striped table-hover table-responsive table-sm rounded p-2 ' style="width:100%;" id='inventory'>
-                <thead class="table-dark" style="position: sticky; top: 28px; background-color: #fff; z-index: 1;">
+            <table class='table table-borderless table-hover table-responsive table-sm rounded p-2 ' style="width:100%;" id='inventory'>
+                <thead style="position: sticky; top: 28px; background-color: var(--primary); z-index: 1;">
                     <th>#</th>
                     <th>Image</th>
                     <th>Description</th>
                     <th>Accessories</th>
-                    <th>Average Sales Per</th>
-                    <th>Quantity</th>
-                    <th>Cost</th>
-                    <th>Price</th>
-                    <th>W/Price</th>
+                    <!-- <th>Average Sales Per</th> -->
+                    <th style="background: #ebeced;">Quantity</th>
+                    <th style="background: #ebeced;">Cost</th>
+                    <th style="background: #ebeced;">Price</th>
+                    <th style="background: #ebeced;">W/Price</th>
                     <th>Actions</th>
                 </thead>
                 <tbody id='inventory_table'>
@@ -45,7 +88,7 @@
                                     {% endfor %}
                                 </small>
                             </td>
-                            <td></td>
+                            <!-- <td></td> -->
                             <td><small>{{ product.quantity }}</small></td>
                             <td><small>{{ product.cost }}</small></td>
                             <td><small>{{ product.price }}</small></td>
@@ -211,8 +254,6 @@
             </div>
         </div>
         
-           
-    
 <script src="{% static 'js/jquery.js'%}"></script>
 <script>
     let product_id = ''
@@ -404,8 +445,6 @@
             showError("No accessories selected.");
             return;
         }
-
-        
 
         try {
             Swal.fire({

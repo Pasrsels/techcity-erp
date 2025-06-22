@@ -115,6 +115,7 @@ td:first-child {
             </div>
         </nav>
     </div>
+
     <div class="p-3 roundedbg-light d-flex justify-content-around text-center text-light rounded" style="background:var(--primary);">
         <div>
             <div>Ordered Quantity</div>
@@ -150,40 +151,41 @@ td:first-child {
                     <th>Supplier</th>
                 </thead>
                 <tbody id="apportionment-table">
+
         {% for order in order_items %}
-        <tr>
-            <td style="background: #ebeced;">
-                {{ order.product.name }} 
-                {% if order.product.description %}
-                    <small>- {{ order.product.description }}</small>
-                {% endif %}
-            </td>
-            <td style="background: #ebeced;">{{ order.quantity }}</td>
-            <td style="background: #ebeced;">
-                {% if order.received_quantity == order.quantity %}
-                    <small class="bg-success bg-success-subtle p-2 rounded">All received</small>
-                {% else %}
-                    <small class="bg-danger bg-danger-subtle p-2 rounded">
-                        Received {{ order.received_quantity }} / {{ order.quantity }}
-                    </small>
-                {% endif %}
-            </td>
-            <td style="background: #ebeced;">{{ order.unit_cost }}</td>
-            <td style="background: #ebeced;">{{ order.actual_unit_cost }}</td>
-            <td class="fw-bold" style="background: #fff;">{{ order.price }}</td>
-            <td class="fw-bold" style="background: #fff;">{{ order.wholesale_price }}</td>
-            <td style="background: #fff;">
-                {% if not order.expected_profit or order.expected_profit < 0 %}
-                    <span class="text-danger">{{ order.expected_profit }}</span>
-                {% else %}
-                    {{ order.expected_profit }}
-                {% endif %}
-            </td>
-            <td style="background: #fff;">{{ order.dealer_expected_profit }}</td>
-            <td style="background: #ebeced;">
-                {{ order.supplier.name }}
-            </td>
-        </tr>
+            <tr>
+                <td style="background: #ebeced;">
+                    {{ order.product.name }} 
+                    {% if order.product.description %}
+                        <small>- {{ order.product.description }}</small>
+                    {% endif %}
+                </td>
+                <td style="background: #ebeced;">{{ order.quantity }}</td>
+                <td style="background: #ebeced;">
+                    {% if order.received_quantity == order.quantity %}
+                        <small class="bg-success bg-success-subtle p-2 rounded">All received</small>
+                    {% else %}
+                        <small class="bg-danger bg-danger-subtle p-2 rounded">
+                            Received {{ order.received_quantity }} / {{ order.quantity }}
+                        </small>
+                    {% endif %}
+                </td>
+                <td style="background: #ebeced;">{{ order.unit_cost }}</td>
+                <td style="background: #ebeced;">{{ order.actual_unit_cost }}</td>
+                <td class="fw-bold" style="background: #fff;">{{ order.price }}</td>
+                <td class="fw-bold" style="background: #fff;">{{ order.product.dealer_price }}</td>
+                <td style="background: #fff;">
+                    {% if not order.expected_profit or order.expected_profit < 0 %}
+                        <span class="text-danger">{{ order.expected_profit }}</span>
+                    {% else %}
+                        {{ order.expected_profit }}
+                    {% endif %}
+                </td>
+                <td style="background: #fff;">{{ order.dealer_expected_profit }}</td>
+                <td style="background: #ebeced;">
+                    {{ order.supplier.name }}
+                </td>
+            </tr>
         {% endfor %}
     </tbody>
             </table>

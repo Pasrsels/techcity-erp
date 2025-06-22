@@ -37,7 +37,6 @@ def process_transfer(data, user_id, user_branch_id):
             cart = data['cart']
             
             logger.info(f'cart data {cart}')
-            return 
         
             # Get branch objects
             branch_objects = []

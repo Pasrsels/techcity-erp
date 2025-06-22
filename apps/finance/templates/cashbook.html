@@ -22,10 +22,61 @@
         --glass-border: rgba(255, 255, 255, 0.2);
         --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
-        --border-radius: 16px;
+        --border-radius: 12px;
         --border-radius-sm: 8px;
         --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         --m-bottom: 20px;
+    }
+
+    .header-btn {
+        padding: 8px 16px;
+        border-radius: var(--border-radius-sm);
+        background: var(--primary-no-gradient);
+        border: 1px solid var(--glass-border);
+        color: var(--text-light);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .header-btn:hover {
+        background: var(--primary);
+        transform: translateY(-1px);
+    }
+
+    .search-container {
+        position: relative;
+        margin-bottom: 5px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 15px 50px 15px 20px;
+        border-radius: var(--border-radius);
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        color: var(--text-dark);
+        font-size: 16px;
+        transition: var(--transition);
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: rgba(102, 126, 234, 0.5);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-input::placeholder {
+        color: var(--text-dark);
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-dark);
     }
 
     .cashbook .table td, .cashbook .table th {
@@ -468,7 +519,7 @@
         width: 100%;
         height: 100%;
         background: rgba(0,0,0,0.5);
-        z-index: 1000;
+        z-index: 3000;
     }
 
     .modal-content {
@@ -487,6 +538,23 @@
         top: 10px;
         font-size: 24px;
         cursor: pointer;
+    }
+
+    .nav{
+        background: var(--primary);
+        color:#fff;
+    }
+    .nav-link{
+        color:#fff !important;
+        background: var(--primary);
+    }
+    .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
+        color: #fff !important;
+        background-color: var(--primary) !important;
+        border-color: #fff !important;
+    }
+    .background{
+        background: var(--primary);
     }
 </style>
 
@@ -525,7 +593,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                     <div class="d-flex gap-2 w-25">
-                        <button class="btn btn-outline-dark w-50" data-bs-toggle="modal" data-bs-target="#cashOutModal">
+                        <button class="btn btn-primary" id="openCashOut" type="button">
                             <i class="bx bx-plus-circle me-1"></i> Record Transaction
                         </button>
                         <button class="btn btn-outline-dark w-50" data-bs-toggle="modal" data-bs-target="#cashUpModal">
@@ -545,7 +613,7 @@
                         <a href="{% url 'finance:banking' %}" class="btn btn-outline-dark w-50">
                             <i class="bi bi-plus-circle me-1"></i> Banking
                         </a>
-                        <button class="btn btn-outline-dark w-50" data-bs-toggle="modal" data-bs-target="#cashOutModal">
+                        <button class="btn btn-outline-dark w-50">
                             <i class="bx bx-plus-circle me-1"></i> Transfers
                         </button>
                     </div>
@@ -708,14 +776,17 @@
         </div>
     </div>
 
-    <!-- Cash Out Modal -->
-    <div class="modal fade transaction-modal" id="cashOutModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content">
-                {% include 'cashflows/cashmanagement.html' %}
-            </div>
+    <!-- Cash Out Offcanvas -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="cashOutCanvas" aria-labelledby="cashOutCanvasLabel">
+        <div class="offcanvas-header align-items-center">
+            <h5 class="offcanvas-title fw-bold" id="cashOutCanvasLabel">Create Income or Expense</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            {% include 'cashflows/cashmanagement.html' %}
         </div>
     </div>
+
 
     <!-- Add loading overlay -->
     <div class="loading-overlay" id="loadingOverlay">
@@ -756,6 +827,15 @@ const state = {
 const categoryModal = new bootstrap.Modal(document.getElementById('addCatModal'));
 const expenseCategoryModal = new bootstrap.Modal(document.getElementById('addExpenseCategoryModal'));
 
+document.addEventListener('DOMContentLoaded', function () {
+    const openBtn = document.getElementById('openCashOut');
+    const cashOutCanvas = document.getElementById('cashOutCanvas');
+    const bsOffcanvas = new bootstrap.Offcanvas(cashOutCanvas);
+    bsOffcanvas.show();
+    openBtn.addEventListener('click', function () {
+        bsOffcanvas.show();
+    });
+});
 document.getElementById('addCategoryButton').addEventListener('click', () => {
     categoryModal.show();
 });
@@ -767,7 +847,6 @@ document.getElementById('addExpenseCategoryButton').addEventListener('click', ()
 
 function toggleRecurrence(type) {
 
-    console.log(type)
     const toggle = document.getElementById(`${type}RecurringToggle`);
     const group = document.getElementById(`${type}RecurrenceGroup`);
 
