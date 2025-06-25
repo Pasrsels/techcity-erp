@@ -111,7 +111,7 @@ class Inventory(models.Model):
     alert_notification = models.BooleanField(default=False, null=True, blank=True)
     batch = models.CharField(max_length=255, blank=True, null=True)
     category = models.ForeignKey('ProductCategory', on_delete=models.SET_NULL, null=True)
-    tax_type = models.CharField(max_length=50, choices=TAX_CHOICES, null=True)
+    tax_type = models.ForeignKey('finance.ValueAddedTax', on_delete=models.CASCADE, null=True)
     batch = models.TextField(blank=True, default='')
     suppliers = models.ManyToManyField('Supplier', related_name="products_suppliers")
     description = models.TextField(max_length=255, default='')

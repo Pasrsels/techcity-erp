@@ -688,10 +688,15 @@
             endOfDayModal.show()
         }
     )
+    
+    let currency_id = null;
 
     currencySelect.addEventListener(
         'change', ()=>{
-            const data = {id:currencySelect.value}
+
+            const data = {id:currencySelect.value};
+            currency_id = currencySelect.value;
+
             $.ajax({
                 url: '{% url "finance:currency_json" %}',
                 type: 'GET',
@@ -810,7 +815,6 @@
     cartButton()
 
     function displayProducts(products) {
-
         productListContainer.innerHTML = '';
         products.forEach(product => {
             if (menuName === 'tiles' || menuName === '') {
@@ -819,15 +823,37 @@
                     productDiv.className = 'col-3';
                     productDiv.innerHTML = `
                         <div class="card mb-4" id='id_product_card' data-product='${JSON.stringify(product)}'>
-                            <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart" data-product='${product.inventory_id}'>
+                            <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart">
                                 <div>
                                     <img src="${product.image ? product.image : '{% static "placeholder.png" %}'}" alt="${product.product_name}">
                                 </div>
                                 <p class='text-center mt-2'><small class="fw-bold">${product.product_name}</small></p>
                                 <p class='text-center'><small class="text-muted">${product.description}</small></p>
                                 <p class='text-center'><small class="text-muted">[${product.quantity}]</small></p>
-                                <span class='btn btn-outline-secondary btn-sm w-100' data-product='${product.inventory_id}' data-price='rp' onclick='fetchProductData(this)'>RP ${product.price}</span>
-                                <span class='btn btn-outline-secondary btn-sm mt-2 w-100' data-product='${product.inventory_id}' data-price='wp' onclick='fetchProductData(this)'>WP${product.dealer_price}</span> 
+
+                                <span class='btn btn-outline-secondary btn-sm w-100'
+                                    data-id='${product.inventory_id}'
+                                    data-name='${product.product_name}'
+                                    data-price='${product.price}'
+                                    data-wholesale-price='${product.dealer_price}'
+                                    data-tax-code='${product.tax_code}'
+                                    data-tax-name='${product.tax_name}'
+                                    data-tax-percent='${product.tax_percent}'
+                                    onclick='addItem(this)'>
+                                    RP USD${product.price}
+                                </span>
+
+                                <span class='btn btn-outline-secondary btn-sm mt-2 w-100'
+                                    data-id='${product.inventory_id}'
+                                    data-name='${product.product_name}'
+                                    data-price='${product.dealer_price}'
+                                    data-wholesale-price='${product.dealer_price}'
+                                    data-tax-code='${product.tax_code}'
+                                    data-tax-name='${product.tax_name}'
+                                    data-tax-percent='${product.tax_percent}'
+                                    onclick='addItem(this)'>
+                                    WP USD${product.dealer_price}
+                                </span> 
                             </div>
                         </div>
                     `;
@@ -839,7 +865,7 @@
                     productDiv.className = 'col-3';
                     productDiv.innerHTML = `
                         <div class="card bg-danger" id='id_product_card' data-product='${JSON.stringify(product)}'>
-                            <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart" data-product='${product.inventory_id}' onclick='fetchProductData(this)'>
+                            <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart">
                                 <div class="d-flex align-items-center mb-3">
                                     <i style="font-size:30px" class='bx bx-barcode'></i>
                                 </div>
@@ -848,7 +874,7 @@
                                 <p><small class="text-muted">[${product.quantity}]</small></p>
                                 <p>
                                     <small class="text-muted mx-1">USD${product.price}</small>
-                                    <small class='text-muted'>Wholesale PriceUSD${product.dealer_price}</small>
+                                    <small class='text-muted'>Wholesale Price USD${product.dealer_price}</small>
                                 </p>
                             </div>
                         </div>
@@ -865,7 +891,14 @@
                 const productListItem = document.createElement('li');
                 productListItem.id = 'id_add_to_cart';
                 productListItem.setAttribute('data-product', product.inventory_id);
-                productListItem.setAttribute('onclick', 'fetchProductData(this)');
+                productListItem.setAttribute('onclick', 'addItem(this)');
+                productListItem.setAttribute('data-id', product.inventory_id);
+                productListItem.setAttribute('data-name', product.product_name);
+                productListItem.setAttribute('data-price', product.price);
+                productListItem.setAttribute('data-wholesale-price', product.dealer_price);
+                productListItem.setAttribute('data-tax-code', product.tax_code);
+                productListItem.setAttribute('data-tax-name', product.tax_name);
+                productListItem.setAttribute('data-tax-percent', product.tax_percent);
                 productListItem.className = `product-list-item ${product.quantity <= 0 ? 'text-danger' : ''}`;
                 productListItem.innerHTML = `
                     <i class='bx bx-barcode'></i>
@@ -917,37 +950,57 @@
         return Math.floor(Math.random() * 1000000000).toString(36);
     }
 
-    function addItem(product, value) {
-        let existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
-        console.log(value, 'value')
-        let priceType = ''
-        if(value === 'wp'){
-            price = product[0].dealer_price
-            priceType = `${product[0].dealer_price * parseFloat(currencyData[0][0]?.exchange_rate)}`
-            existingItem = False;
-        }else{
-            price = product[0].price
-            priceType = `${product[0].price * parseFloat(currencyData[0][0]?.exchange_rate)}`
+    function addItem(button) {
+        console.log(button)
+        const id = button.getAttribute('data-id');
+        const name = button.getAttribute('data-name');
+        const price = parseFloat(button.getAttribute('data-price'));
+        const wholesalePrice = parseFloat(button.getAttribute('data-wholesale-price'));
+        const taxCode = button.getAttribute('data-tax-code');
+        const taxName = button.getAttribute('data-tax-name');
+        const taxPercent = button.getAttribute('data-tax-percent') 
+            ? parseFloat(button.getAttribute('data-tax-percent')) 
+            : null;
+
+        const value = price === wholesalePrice ? 'wp' : 'rp';
+        const exchangeRate = parseFloat(currencyData[0][0]?.exchange_rate || 1);
+
+        const finalPrice = price * exchangeRate;
+
+        let existingItem = cart.find(item => item.inventory_id === id);
+        let taxAmount = 0;
+
+        if (taxName !== 'Exempted' && taxPercent !== null) {
+            taxAmount = (finalPrice * taxPercent) / (100 + taxPercent);
         }
 
-        console.log(existingItem)
         if (existingItem) {
             existingItem.quantity += 1;
         } else {
-            const newTransfer = {
-            id:generateUniqueId(),
-            inventory_id:product[0].inventory_id, 
-            product_name: product[0].product_name,
-            product_description: product[0].description,
-            quantity:1,
-            price:priceType
+            const newItem = {
+                id: generateUniqueId(),
+                inventory_id: id,
+                product_name: name,
+                product_description: '', 
+                quantity: 1,
+                price: finalPrice,
+                tax_amount: parseFloat(taxAmount.toFixed(2)),
+                tax_code: taxCode,
+                tax_name: taxName,
+                tax_percent: taxPercent,
+                wholesale_price: wholesalePrice * exchangeRate,
+                price_type: value
             };
-            cart.push(newTransfer);
+            cart.push(newItem);
         }
-        updateCartDisplay(); 
-        cartButton()
-        totals()
+
+        console.log(cart)
+
+        updateCartDisplay();
+        cartButton();
+        totals();
     }
+
 
     function totals(){
 
@@ -998,21 +1051,20 @@
     }
 
     function calculateTotalAmount(cart) {
-    let total = cart.reduce((total, item) => total + item.price * item.quantity, 0);
-    return total.toFixed(2)
+        let total = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+        return total.toFixed(2)
     }
 
-    function calculateVAT(totalAmount) {
-        if( taxMethod === 'Exclusive'){
-            return calculateExclusiveTax(totalAmount, 0.15)
-        }else if( taxMethod === 'Inclusive'){
-            return calculateExclusiveTax(totalAmount, 0.15)
-        }else{
-            return 0;
-        }
+    function calculateVAT() {
+        let vatTotal = 0;
+
+        cart.forEach(item => {
+            vatTotal += (item.tax_amount || 0) * item.quantity;
+        });
+
+        return parseFloat(vatTotal.toFixed(2));
     }
 
-    // events for discount and delivery charge
     document.querySelector('#id_discount').addEventListener(
         'input', ()=>{
             totals()

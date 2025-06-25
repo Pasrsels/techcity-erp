@@ -867,7 +867,8 @@ class CreditNote(models.Model):
     fiscal_day = models.CharField(max_length=50, null=True)
     zimra_inv_id = models.CharField(max_length=255, null=True)
     fiscal_day = models.IntegerField(null=True)
-
+    credit_note_invoice_number = models.CharField(max_length=10)
+    
     def __str__(self):
         return f"Credit Note #{self.credit_note_number} for Invoice #{self.invoice.invoice_number}"
 
@@ -916,3 +917,13 @@ class CreditNoteItem(models.Model):
 
     def __str__(self):
         return f"{self.credit_note.credit_note_number} - {self.invoice_item.item.product.name}"
+
+
+class ValueAddedTax(models.Model):
+    name = models.CharField(null=True, max_length=200)
+    tax_id = models.IntegerField()
+    tax_percent = models.FloatField(null=True)
+    tax_code = models.CharField(max_length=3)
+    
+    def __str__(self):
+        return self.name

@@ -1032,6 +1032,7 @@ input[type="checkbox"] {
         console.log(data)
         const { invoice, invoice_items: invoiceItems, credit, credit_note_items: creditNoteItems} = data;
         const {
+            invoice_number: invoiceNumber,
             vat: vatAmount,
             subtotal: subTotal,
             currency_symbol: currencySymbol,
@@ -1043,7 +1044,8 @@ input[type="checkbox"] {
             branch_name: branchName,
             branch_phone: branchPhone,
             branch_email: branchEmail,
-            amount:totalAmount
+            amount:totalAmount,
+            issue_date: invoiceDate
         } = invoice;
 
         const {
@@ -1052,11 +1054,14 @@ input[type="checkbox"] {
             reason: reason,
             amount: amount,
             created_by: created_by,
-            qr_code: qr_code,
+            qr_code_url: qr_code_url,
             code: code,
             fiscal_day: fiscal_day,
-            discount:discount
+            discount:discount,
+            credit_note_invoice_number: creditInvoiceNoteNumber
         } = credit;
+
+        console.log(creditNoteNumber, issueDate, amount, created_by, qr_code_url, code, fiscal_day)
     
         const vatRate = 15;
     
@@ -1089,22 +1094,42 @@ input[type="checkbox"] {
                     font-size: 11px;
                     margin-top: 10px;
                 }
+                .center{
+                    text-align:center;
+                }
             </style>
     
             <div class="receipt">
                 <h2>Pasales Investments</h2>
-                <p><strong>FISCAL TAX INVOICE</strong></p>
-    
-                <p><strong>Invoice No:</strong>${creditNoteNumber}</p>
-                <p><strong>Original Invoice No:</strong> ${invoiceNumber}</p>
-                <p><strong>Branch:</strong> ${branchName || 'Main'}<br>
-                <strong>Phone:</strong> ${branchPhone || 'N/A'}<br>
-                <strong>Email:</strong> ${branchEmail || 'N/A'}</p>
-    
+
+                <p class="center">
+                    TIN: 2001020099 <br>
+                    VAT No: 220356643
+                </P>
+
+                <p class="center">
+                    Branch:${branchName || 'Main'}<br>
+                    Phone: ${branchPhone || 'N/A'}<br>
+                    Email: ${branchEmail || 'N/A'}
+                </p>
+
+                <p style="text-align:center;"><strong>CREDIT NOTE</strong></p>
+
                 <p>
-                    <strong>Fiscal Day No: ${fiscal_day}</strong><br>
-                    <strong>Device ID:</strong> ${deviceId}<br>
-                    <strong>Device Serial:</strong> ${deviceSerialNumber}
+                    Invoice No:${invoiceNumber}<br>
+                    Customer reference No: ${creditNoteNumber}<br>
+                    Device Serial: ${deviceSerialNumber}<br>
+                    Fiscal Day No: ${fiscal_day}
+                </p>
+
+                <p style="text-align:center;"><strong>CREDITED INVOICE</strong></p>
+
+                <p>
+                    Invoice No: ${creditInvoiceNoteNumber}<br>
+                    Customer reference No: ${creditNoteNumber}<br>
+                    Date: ${issueDate}<br>
+                    Device Serial: ${deviceSerialNumber}<br>
+                    Device ID: ${deviceId}
                 </p>
     
                 <div class="receipt-body">
@@ -1113,48 +1138,41 @@ input[type="checkbox"] {
                             <tr>
                                 <th>Item</th>
                                 <th>Qty</th>
-                                <th>${currencySymbol}Price</th>
-                                <th>${currencySymbol}VAT</th>
-                                <th>${currencySymbol}Total</th>
+                                <th>Price</th>
+                                <th>VAT</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${invoiceItems.map(item => {
-                                const total = item.unit_price * item.quantity;
-                                const vat = total - (total / (1 + vatRate / 100));
-                                return `
-                                    <tr>
-                                        <td>${item.item__name}</td>
-                                        <td>${item.quantity}</td>
-                                        <td>${currencySymbol}${item.unit_price}</td>
-                                        <td>${currencySymbol}${vat.toFixed(2)}</td>
-                                        <td>${currencySymbol}${total}</td>
-                                    </tr>
-                                `;
-                            }).join('')}
                             ${creditNoteItems.map(item => {
                                 const total = item.unit_price * item.quantity;
                                 const vat = item.vat_amount;
                                 const lineTotal = item.total_amount;
                                 return `<tr>
-                                        <td>Discount:${item.invoice_item__item__name}</td>
+                                        <td>${item.invoice_item__item__name}</td>
                                         <td>${parseInt(item.quantity)}</td>
-                                        <td>-${currencySymbol}${item.discount}</td>
-                                        <td>-</td>
-                                        <td>-${currencySymbol}${item.discount}</td>
-                                        </tr>
+                                        <td>-${item.discount}</td>
+                                        <td></td>
+                                        <td>-${item.discount}</td>
+                                    </tr>
                                 `;
                             }).join('')}
                         </tbody>
                         <tfoot>
-                            <tr><td colspan="4"><strong>Total15% VAT (${vatRate}%)</strong></td><td>${currencySymbol}${vat}}</td></tr>
-                            <tr><td colspan="4"><strong>Invoice Total </strong></td><td>${totalAmount}</td></tr>
+                            <tr>
+                                <td colspan="4"><strong>Total ${currencySymbol.toUpperCase()}</td>
+                                <td>-${amount}</td>
+                            </tr>
+                            <tr><td colspan="4">${currencySymbol.toUpperCase()} Cash</td><td>${amount}</td></tr>
+                            <tr><td colspan="4">Net Amount(${vatRate}%)</td><td>-${amount - (amount - (amount/1.15)).toFixed(2)}</td></tr>
+                            <tr><td colspan="4">VAT (%15)</td><td>-${(amount - (amount/1.15)).toFixed(2)}</td></tr>
+                            <tr><td colspan="4">Gross Amount</td><td>-${amount}</td></tr>
                         </tfoot>
                     </table>
                 </div>
     
                 <div class="qr-code">
-                    <img src="${qr_code}" alt="QR Code" width="100" height="100" style="display:block; margin: 0 auto;">
+                    <img src="${qr_code_url}" alt="QR Code" width="100" height="100" style="display:block; margin: 0 auto;">
                 </div>
                 <div class="footer center">
                     <p><strong>Verification Code: <br> </strong> ${code} <br>
@@ -1167,7 +1185,6 @@ input[type="checkbox"] {
             </div>
         `;
     }
-    
 
     // Function to print the receipt silently
     function printReceiptSilently(content) {

@@ -149,6 +149,7 @@ class ZIMRA:
             return f"Fiscal Day {active_day.day_no} is already open."
 
         last_day = FiscalDay.objects.order_by('-created_at').first()
+        print(last_day)
         next_day_no = (last_day.day_no + 1) if last_day else 1
     
         payload = {

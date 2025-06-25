@@ -268,6 +268,7 @@ def submit_credit_note(request, receipt_data, credit_note_data, hash, signature,
                 credit_note.code=code
                 credit_note.fiscal_day=fiscal_day.day_no
                 credit_note.zimra_inv_id=invoiceId
+                credit_note.credit_note_invoice_number= receipt_global_no = str(credit_note_data['receiptGlobalNo'])
                 
                 credit_note.save()
                 

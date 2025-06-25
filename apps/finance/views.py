@@ -1680,18 +1680,21 @@ def create_credit_note(request):
             
             invoice_data = invoice_preview_json(request, invoice.id)
             
-            credit = CreditNote.objects.filter(id=credit_note.id).values(
-                'credit_note_number',
-                'issue_date',
-                'amount',
-                'currency__name',
-                'reason',
-                'created_by__username',
-                'qr_code',
-                'code',
-                'fiscal_day'
-            )
-            
+            credit_note_obj = CreditNote.objects.get(id=credit_note.id)
+            credit = {
+                'credit_note_number': credit_note_obj.credit_note_number,
+                'issue_date': credit_note_obj.issue_date,
+                'amount': credit_note_obj.amount,
+                'currency': credit_note_obj.currency.name,
+                'reason': credit_note_obj.reason,
+                'created_by': credit_note_obj.created_by.username,
+                'qr_code_url': credit_note_obj.qr_code.url if credit_note_obj.qr_code else None,
+                'code': credit_note_obj.code,
+                'fiscal_day': credit_note_obj.fiscal_day,
+                'issue_date': credit_note_obj.issue_date,
+                'credit_note_invoice_number':  credit_note_obj.credit_note_invoice_number
+            }
+                        
             credit_note_items = CreditNoteItem.objects.filter(credit_note=credit_note).values(
                 'invoice_item__item__name',
                 'quantity',
@@ -1702,7 +1705,7 @@ def create_credit_note(request):
                 'discount'
             )
             
-            invoice_data['credit'] = list(credit)
+            invoice_data['credit'] = credit
             invoice_data['credit_note_items'] = list(credit_note_items)
             
             logger.info(f'data - {invoice_data}')
@@ -7108,5 +7111,4 @@ class UserAccountsView(views.APIView):
                 'total_debits': total_debits,
                 'last_activity': last_activity
             })
-
         return Response({'Account Data':users_with_accounts}, status.HTTP_200_OK)

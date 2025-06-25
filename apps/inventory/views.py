@@ -133,23 +133,28 @@ def product_list(request):
         'price', 
         'quantity',
         'dealer_price',
-        'image'
+        'image',
+        'tax_type__tax_code',
+        'tax_type__name',
+        'tax_type__tax_percent'
     ))
     
-    # to be reviewed more 
     merged_data = [{
-        'inventory_id': item['id'],
-        'product_id': item['id'],
-        'product_name':item['name'],
-        'description': item['description'],
-        'category': item['category__id'],
-        'category_name': item['category__name'],
-        'end_of_day':item['end_of_day'],
-        'price': item['price'],
-        'quantity': item['quantity'],
-        'dealer_price':item['dealer_price'],
-        'image':item['image']
-    } for item in inventory_data]
+    'inventory_id': item['id'],
+    'product_id': item['id'],
+    'product_name': item['name'],
+    'description': item['description'],
+    'category': item['category__id'],
+    'category_name': item['category__name'],
+    'end_of_day': item['end_of_day'],
+    'price': item['price'],
+    'quantity': item['quantity'],
+    'dealer_price': item['dealer_price'],
+    'image': item['image'],
+    'tax_code': item['tax_type__tax_code'],
+    'tax_name': item['tax_type__name'],
+    'tax_percent': item['tax_type__tax_percent'],
+} for item in inventory_data]
 
     return JsonResponse(merged_data, safe=False)
 
@@ -3540,7 +3545,7 @@ def product(request):
                 return JsonResponse({'success':False, 'message':f'Product {data['name']} exists'})
             
             logger.info(f'Creating product: {data['name']}: {request.user.branch}')
-
+            from apps.finance.models import ValueAddedTax
             product = Inventory.objects.create(
                 batch = '',
                 name = data['name'],
@@ -3548,7 +3553,7 @@ def product(request):
                 cost = 0,
                 quantity = 0,
                 category = category,
-                tax_type = data['tax_type'],
+                tax_type = ValueAddedTax.objects.get(id=int(data['tax_type'])),
                 stock_level_threshold = data['min_stock_level'],
                 description = data['description'], 
                 end_of_day = True if data['end_of_day'] else False,
