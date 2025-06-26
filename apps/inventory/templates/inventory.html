@@ -171,10 +171,39 @@
 </style>
 
 <div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between p-2">
-        <div>
-            <h4>Products Inventory</h4>
-            <p>Create and manage inventory</p>
+    <div class="d-sm-flex align-items-center justify-content-between bg-white p-2">
+        <div class="row bg-white mt-2 justify-content-between w-100">
+            <div class="col-xl-6 col-md-6">
+                <div class="card stats-card bg-gradient-light h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Inventory Cost</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">USD {{total_cost}}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bx bx-dollar-circle fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-6 col-md-6">
+                <div class="card stats-card bg-gradient-light h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Inventory Price</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">USD {{total_price}}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bx bx-cart fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
         {% if request.user.role == 'admin' %}
@@ -184,7 +213,7 @@
         {% endif %}
     </div> 
 
-    <div class="card inventory-card">
+    <div class="card inventory-card mt-2">
         <div class="card-body p-3">
             <div class="d-flex flex-wrap justify-content-between align-items-center">
                 <div class="d-flex flex-wrap gap-2 mb-3 mb-md-0">
@@ -208,6 +237,9 @@
                     <a href="{% url 'inventory:loss_management' %}" class="header-btn btn-outline-secondary action-btn" disabled>
                         <i class="bx bx-error-circle mr-1"></i>Loss Management
                     </a>
+                    <a href="{% url 'inventory:settings' %}" class="header-btn btn-outline-secondary action-btn">
+                        <i class='bx bx-cog'></i> Settings
+                    </a>
                 </div>
                 
                 <div class="search-filters">
@@ -224,7 +256,7 @@
                               </option>
                           {% endfor %}
                       </select>
-                  </form>
+                    </form>
 
                   <script>
                       document.getElementById('id_category').addEventListener('change', function() {
@@ -232,40 +264,6 @@
                       });
                   </script>
 
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="row bg-white mt-2">
-        <div class="col-xl-6 col-md-6">
-            <div class="card stats-card bg-gradient-light h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Inventory Cost</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">USD {{total_cost}}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bx bx-dollar-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-6 col-md-6">
-            <div class="card stats-card bg-gradient-light h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Inventory Price</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">USD {{total_price}}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bx bx-cart fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

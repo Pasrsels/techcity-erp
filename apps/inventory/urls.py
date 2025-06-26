@@ -28,6 +28,10 @@ urlpatterns = [
     path('delete_product', delete_product, name='delete'),
     path('add-inventory', add_inventory_view, name="add-inventory"),
     path('logs/page/', logs_page, name='logs-page'),
+    
+    # settings
+    path('settings/', settings, name='settings'),
+    path('update_notification_settings', update_notification_settings, name='update_notification_settings'),
 
     #Stocktake
     path('stocktake/', stock_take_index, name='stocktake'),

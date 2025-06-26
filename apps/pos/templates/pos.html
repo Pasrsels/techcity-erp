@@ -1272,19 +1272,6 @@
     async function processCart(el) {
         const amountReceived = document.getElementById('id_amount_paid');
 
-        if (!holdStatus) {
-            if (Number((amountReceived.value) <= 0) && (paymentTerms === 'cash')) {
-                Swal.fire({
-                    icon: 'error',
-                    text: 'Amount cannot be zero when payment method is cash.',
-                    title: 'Error'
-                }).then(() => {
-                    amountReceived.focus()
-                });
-                return;
-            }
-        }
-
         let pay_later_dates = [];
         if (paymentTerms === 'pay later') {
             const paylaterPeriod = document.getElementById('id_paylater_period');
@@ -1332,7 +1319,6 @@
             : "{% url 'finance:create_invoice' %}";
 
         try {
-            // Show loading/processing Swal
             Swal.fire({
                 title: 'Processing...',
                 text: 'Please wait while we process the invoice.',

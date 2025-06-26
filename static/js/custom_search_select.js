@@ -39,7 +39,7 @@ class CustomSearchSelect {
             const query = e.target.value.toLowerCase().trim();
             
             this.filteredData = this.data.filter(item => 
-                item.text.toLowerCase().includes(query)
+                item.name.toLowerCase().includes(query)
             );
 
             this.highlightedIndex = -1;
@@ -100,7 +100,7 @@ class CustomSearchSelect {
             if (!this.allowAddNew || !query) return false;
 
             const exactMatch = this.data.some(item => 
-                item.text.toLowerCase() === query.toLowerCase()
+                item.name.toLowerCase() === query.toLowerCase()
             );
             
             return !exactMatch;
@@ -128,7 +128,7 @@ class CustomSearchSelect {
             } else {
                 html = this.filteredData.map((item, index) => `
                     <div class="dropdown-item" data-index="${index}" data-type="existing">
-                        ${item.text}
+                        ${item.name}
                         ${this.newOptions.includes(item.value) ? '<span class="new-option-badge">NEW</span>' : ''}
                     </div>
                 `).join('');

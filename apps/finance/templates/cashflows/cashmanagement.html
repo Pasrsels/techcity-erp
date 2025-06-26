@@ -22,7 +22,108 @@
         .table-container {
             min-height: 300px;
         }
-    </style>
+        .search-select {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.custom-search-input {
+    width: 100%;
+    padding: 10px 35px 10px 10px;
+    border: 1px solid #fff;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.custom-search-input:focus {
+    border-color: #11998e;
+}
+
+.custom-search-icon {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    width: 16px;
+    height: 16px;
+    transform: translateY(-50%);
+    background: url('/static/icons/search.svg') no-repeat center;
+    background-size: contain;
+    pointer-events: none;
+}
+
+.custom-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    display: none;
+    border-radius: 0 0 6px 6px;
+}
+
+.custom-dropdown.show {
+    display: block;
+}
+
+.custom-dropdown-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-dropdown-item:hover,
+.custom-dropdown-item.highlighted {
+    background-color: #f1f1f1;
+}
+
+.add-new {
+    font-weight: 500;
+    color: #007bff;
+}
+
+.add-icon {
+    margin-right: 5px;
+    color: #007bff;
+    font-weight: bold;
+}
+
+.no-results {
+    padding: 10px 15px;
+    color: #888;
+    font-style: italic;
+}
+
+.new-option-badge {
+    background-color: #28a745;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 12px;
+    margin-left: 10px;
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus,
+.btn:focus,
+    input[type="checkbox"]:focus,
+    input[type="radio"]:focus {
+    border-color: #11998e !important;
+}
+
+</style>
 </head> 
 <body>
     <div class="mt-2">
@@ -42,12 +143,15 @@
                         <div class="card p-3">
                             <div class="">
                                 <div class="input-group">
-                                    <div class="d-flex justify-content-end">
-                                        <select class="form-select border-0 b" id="currency" name="currency">
-                                            {% for currency in currencies %}
-                                                <option value="{{ currency.id }}" {% if currency.default %} selected {% endif %}>{{ currency.name }}</option>
-                                            {% endfor %}
-                                        </select>
+                                    <div class="d-flex justify-content-end w-100 mb-2">
+                                        <div class="d-flex align-items-center bg-light px-1">
+                                            <i class='bx bx-wallet'></i>
+                                            <select class="form-select bg-light border-0 b" id="currency" name="currency">
+                                                {% for currency in currencies %}
+                                                    <option value="{{ currency.id }}" {% if currency.default %} selected {% endif %}>{{ currency.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                     </div>
                                     <div class="mb-4">
                                         <div class="input-group">
@@ -58,29 +162,27 @@
                                 </div>
                             </div>
 
-                            <div class="mb-4 d-flex bg-light">
-                                <div class="bg-light">
+                            <div class="mb-4 d-flex gap-2 align-items-start">
+                                <div class="d-flex bg-light w-100">
                                     <span class="input-group-text bg-light border-0">
                                         <i class="bx bx-pencil"></i>
                                     </span>
-                                </div>
-                                
-                                <div class="search-select" id="categories">
-                                    <input type="text" class="search-input" placeholder="Search or add category" autocomplete="off">
-                                    <span class="search-icon">💻</span>
-                                    <div class="dropdown"></div>
+                                    <div class="search-select bg-light" id="categories" style="height: 60px;">
+                                        <input type="text" class="custom-search-input bg-light" style="height: 60px;" placeholder="Search or add category" autocomplete="off">
+                                        <span class="search-icon"></span>
+                                        <div class="custom-dropdown"></div>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="mb-4 d-flex gap-2 align-items-start">
-                                <div class="input-group flex-grow-1">
+                                <div class="d-flex bg-light w-100">
                                     <span class="input-group-text bg-light border-0"><i class="bx bx-category"></i></span>
-                                    <select class="form-select border-0 bg-light" id="incomeCategory" style="height: 60px;">
-                                        <option value="">Select Income Category</option>
-                                        {% for category in income_categories %}
-                                            <option value="{{ category.id }}">{{ category.name }}</option>
-                                        {% endfor %}
-                                    </select>
+                                    <div class="search-select bg-light" id="main-categories" style="height: 60px;">
+                                        <input type="text" class="custom-search-input bg-light" style="height: 60px;" placeholder="Search or add Main category" autocomplete="off">
+                                        <span class="search-icon"></span>
+                                        <div class="custom-dropdown"></div>
+                                    </div>
                                 </div>
                             </div>
                                                                 
@@ -105,7 +207,7 @@
                                     <select class="form-select border-0 bg-light" id="accountTo" style="height: 60px;">
                                         <option value="">Account to</option>
                                         {% for user in users %}
-                                            <option value="{{ user.id }}">{{ user.name }}</option>
+                                            <option value="{{ user.id }}">{{ user }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -246,8 +348,9 @@
                                     </span>
                                 </div>
                                 <div class="search-select" id="categories">
-                                    <input type="text" class="search-input w-100" placeholder="Search or add category" autocomplete="off">
-                                    <div class="dropdown"></div>
+                                    <input type="text" class="custom-search-input w-100" placeholder="Search or add category" autocomplete="off">
+                                    <div class="custom-dropdown"></div>
+                                    <input type="text" id="category_text" class="form-control" hidden/>
                                 </div>
                             </div>
 
@@ -494,37 +597,464 @@
         </div>
     </div>
 
-<script src="{% static 'js/custom_search_select.js' %}"></script>
+<!-- <script src="{% static 'js/custom_search_select.js' %}"></script> -->
 <script>
-    let data = []
+let categoriesData = [];
 
-    {% for cat in categories %}
-        data.push(
-            {
-                id:{{ cat.id }},
-                name:{{ cat.name }}
-            }
-        )
-    {% endfor %}
-
-    conosle.log('data', data)
-
-    const searchSelect = new CustomSearchSelect('categories', {
-        data: technologies,
-        hiddenInput: document.getElementById('category'),
-        placeholder: 'Search or add technology...',
-        onSelect: (item) => {
-            console.log('Technology selected:', item);
-        },
-        onAddNew: (item) => {
-            console.log('New technology added:', item);
-        }
+{% for cat in categories %}
+    categoriesData.push({
+        id: {{ cat.id }},
+        name: '{{ cat.name }}',
+        value: {{ cat.id }},
+        text: '{{ cat.name }}'
     });
-    function toggleReminderDate() {
-        const toggle = document.getElementById('incomeReminderToggle');
-        const dateGroup = document.getElementById('reminderDateGroup');
-        dateGroup.style.display = toggle.checked ? 'block' : 'none';
-    } 
+{% endfor %}
+
+console.log('Categories data:', categoriesData);
+
+class CustomSearchSelect {
+    constructor(containerId, options = {}) {
+        this.container = document.getElementById(containerId);
+        this.input = this.container.querySelector('.custom-search-input');
+        this.dropdown = this.container.querySelector('.custom-dropdown');
+        this.hiddenInput = options.hiddenInput;
+        this.data = options.data || [];
+        this.newOptions = []; 
+        this.placeholder = options.placeholder || 'Search...';
+        this.onSelect = options.onSelect || (() => {});
+        this.onAddNew = options.onAddNew || (() => {});
+        this.selectedValue = null;
+        this.selectedText = null;
+        this.highlightedIndex = -1;
+        this.filteredData = [...this.data];
+        this.allowAddNew = options.allowAddNew !== false; 
+
+        this.init();
+    }
+
+    init() {
+        this.input.placeholder = this.placeholder;
+        this.bindEvents();
+    }
+
+    bindEvents() {
+        this.input.addEventListener('input', (e) => this.handleInput(e));
+        this.input.addEventListener('focus', () => this.showDropdown());
+        this.input.addEventListener('keydown', (e) => this.handleKeydown(e));
+
+        document.addEventListener('click', (e) => {
+            if (!this.container.contains(e.target)) {
+                this.hideDropdown();
+            }
+        });
+    }
+
+    handleInput(e) {
+        const query = e.target.value.toLowerCase().trim();
+        
+        this.filteredData = this.data.filter(item => 
+            item.name.toLowerCase().includes(query)
+        );
+
+        this.highlightedIndex = -1;
+        this.renderDropdown(query);
+        this.showDropdown();
+    }
+
+    handleKeydown(e) {
+        const totalItems = this.getTotalDropdownItems();
+        
+        switch(e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                this.highlightedIndex = Math.min(this.highlightedIndex + 1, totalItems - 1);
+                this.updateHighlight();
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                this.highlightedIndex = Math.max(this.highlightedIndex - 1, -1);
+                this.updateHighlight();
+                break;
+            case 'Enter':
+                e.preventDefault();
+                this.handleEnterKey();
+                break;
+            case 'Escape':
+                this.hideDropdown();
+                this.input.blur();
+                break;
+        }
+    }
+
+    handleEnterKey() {
+        if (this.highlightedIndex >= 0) {
+            const isAddNewOption = this.highlightedIndex >= this.filteredData.length;
+            
+            if (isAddNewOption) {
+                const newText = this.input.value.trim();
+                this.addNewOption(newText);
+            } else {
+                this.selectItem(this.filteredData[this.highlightedIndex]);
+            }
+        }
+    }
+
+    getTotalDropdownItems() {
+        let total = this.filteredData.length;
+        
+        const query = this.input.value.trim();
+        if (this.shouldShowAddNew(query)) {
+            total += 1;
+        }
+        
+        return total;
+    }
+
+    shouldShowAddNew(query) {
+        if (!this.allowAddNew || !query) return false;
+
+        const exactMatch = this.data.some(item => 
+            item.name.toLowerCase() === query.toLowerCase()
+        );
+        
+        return !exactMatch;
+    }
+
+    showDropdown() {
+        const query = this.input.value.trim();
+        if (this.filteredData.length > 0 || this.shouldShowAddNew(query)) {
+            this.renderDropdown(query);
+            this.dropdown.classList.add('show');
+        }
+    }
+
+    hideDropdown() {
+        this.dropdown.classList.remove('show');
+        this.highlightedIndex = -1;
+    }
+
+    renderDropdown(query = '') {
+        let html = '';
+        
+        if (this.filteredData.length === 0 && !this.shouldShowAddNew(query)) {
+            html = '<div class="no-results">No results found</div>';
+        } else {
+            html = this.filteredData.map((item, index) => `
+                <div class="custom-dropdown-item" data-index="${index}" data-type="existing">
+                    ${item.name}
+                    ${this.newOptions.includes(item.value) ? '<span class="new-option-badge">NEW</span>' : ''}
+                </div>
+            `).join('');
+            
+            if (this.shouldShowAddNew(query)) {
+                html += `
+                    <div class="custom-dropdown-item add-new" data-type="add-new">
+                        <span class="add-icon">+</span>
+                        Add "${query}"
+                    </div>
+                `;
+            }
+        }
+
+        this.dropdown.innerHTML = html;
+
+        // Add click listeners
+        this.dropdown.querySelectorAll('.custom-dropdown-item').forEach((item, index) => {
+            item.addEventListener('click', () => {
+                const type = item.dataset.type;
+                
+                if (type === 'add-new') {
+                    this.addNewOption(query);
+                } else {
+                    const dataIndex = parseInt(item.dataset.index);
+                    this.selectItem(this.filteredData[dataIndex]);
+                }
+            });
+        });
+    }
+
+    updateHighlight() {
+        const items = this.dropdown.querySelectorAll('.custom-dropdown-item');
+        items.forEach((item, index) => {
+            item.classList.toggle('highlighted', index === this.highlightedIndex);
+        });
+
+        if (this.highlightedIndex >= 0 && items[this.highlightedIndex]) {
+            items[this.highlightedIndex].scrollIntoView({
+                block: 'nearest',
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    addNewOption(text) {
+        if (!text) return;
+        
+        const newOption = {
+            id: `new_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            name: text,
+            value: `new_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            text: text,
+            isNew: true
+        };
+        
+        this.data.push(newOption);
+        this.newOptions.push(newOption.value);
+        
+        this.selectItem(newOption);
+        
+        this.onAddNew(newOption);
+    }
+
+    selectItem(item) {
+        this.selectedValue = item.value || item.id;
+        this.selectedText = item.text || item.name;
+        this.input.value = item.text || item.name;
+        
+        if (this.hiddenInput) {
+            this.hiddenInput.value = item.value || item.id;
+        }
+        
+        this.hideDropdown();
+        this.onSelect(item);
+    }
+
+    setValue(value, text) {
+        this.selectedValue = value;
+        this.selectedText = text;
+        this.input.value = text;
+        
+        if (this.hiddenInput) {
+            this.hiddenInput.value = value;
+        }
+    }
+
+    getValue() {
+        return {
+            value: this.selectedValue,
+            text: this.selectedText,
+            isNew: this.newOptions.includes(this.selectedValue)
+        };
+    }
+
+    getNewOptions() {
+        return this.data.filter(item => this.newOptions.includes(item.value));
+    }
+
+    setData(newData) {
+        this.data = newData.map(item => {
+            if (typeof item === 'string') {
+                return { value: item, text: item, name: item };
+            }
+            return {
+                ...item,
+                value: item.value || item.id,
+                text: item.text || item.name,
+                name: item.name || item.text
+            };
+        });
+        this.filteredData = [...this.data];
+    }
+}
+
+const categorySearchSelect = new CustomSearchSelect('categories', {
+    data: categoriesData,
+    placeholder: 'Search or add category...',
+    onSelect: (item) => {
+        console.log('Category selected:', item);
+    },
+    onAddNew: (item) => {
+        console.log('New category added:', item);
+    }
+});
+
+
+const mainCategorySearchSelect = new CustomSearchSelect('main-categories', {
+    data: categoriesData,
+    placeholder: 'Search or add category...',
+    onSelect: (item) => {
+        console.log('Category selected:', item);
+    },
+    onAddNew: (item) => {
+        console.log('New category added:', item);
+    }
+});
+
+function toggleRecurrence(type) {
+    const toggle = document.getElementById(`${type}RecurringToggle`);
+    const group = document.getElementById(`${type}RecurrenceGroup`);
+    if (group) {
+        group.style.display = toggle.checked ? 'block' : 'none';
+    }
+}
+
+function toggleReminderDate() {
+    const toggle = document.getElementById('incomeReminderToggle');
+    const dateGroup = document.getElementById('reminderDateGroup');
+    dateGroup.style.display = toggle.checked ? 'block' : 'none';
+}
+
+
+async function recordIncome() {
+    try {
+        const formData = {
+            amount: parseFloat(document.getElementById('inAmount').value) || 0,
+            currency: document.getElementById('currency').value,
+            category: categorySearchSelect.getValue(),
+            main_category: mainCategorySearchSelect.getValue(),
+            branch: document.getElementById('inBranch').value,
+            account_to: document.getElementById('accountTo').value,
+            is_recurring: document.getElementById('incomeRecurringToggle').checked,
+            has_reminder: document.getElementById('incomeReminderToggle').checked,
+            recurrence_value: document.getElementById('inRecurrenceValue').value,
+            recurrence_unit: document.getElementById('inRecurrenceUnit').value,
+            from_date: document.getElementById('fromDate').value,
+            to_date: document.getElementById('toDate').value,
+            reminder_dated: document.getElementById('reminderDate').value,
+        };
+
+        console.log('form data', formData)
+
+        if (formData.amount <= 0) {
+            alert('Please enter a valid amount');
+            return;
+        }
+
+        if (!formData.currency) {
+            alert('Please select a currency');
+            return;
+        }
+
+        if (!formData.category.value && !formData.income_category) {
+            alert('Please select or add a category');
+            return;
+        }
+
+        if (formData.is_recurring) {
+            formData.recurrence = {
+                value: parseInt(document.getElementById('inRecurrenceValue').value) || 1,
+                unit: document.getElementById('inRecurrenceUnit').value,
+                from_date: document.getElementById('fromDate').value,
+                to_date: document.getElementById('toDate').value
+            };
+
+            if (!formData.recurrence.from_date) {
+                alert('Please select a start date for recurring income');
+                return;
+            }
+        }
+
+        if (formData.has_reminder) {
+            formData.reminder_date = document.getElementById('reminderDate').value;
+            
+            if (!formData.reminder_date) {
+                alert('Please select a reminder date');
+                return;
+            }
+        }
+        const submitButton = document.querySelector('.header-btn');
+        const originalText = submitButton.textContent;
+        submitButton.textContent = 'Recording...';
+        submitButton.disabled = true;
+
+        const submissionData = new FormData();
+        submissionData.append('amount', formData.amount);
+        submissionData.append('currency', formData.currency);
+        submissionData.append('branch', formData.branch);
+        submissionData.append('account_to', formData.account_to);
+        submissionData.append('is_recurring', formData.is_recurring);
+        submissionData.append('has_reminder', formData.has_reminder);
+
+        if (formData.category.isNew) {
+            submissionData.append('new_category', formData.category.text);
+        } else if (formData.category.value) {
+            submissionData.append('category', formData.category.value);
+        } else if (formData.income_category) {
+            submissionData.append('income_category', formData.income_category);
+        }
+
+        if (formData.is_recurring) {
+            submissionData.append('recurrence_value', formData.recurrence.value);
+            submissionData.append('recurrence_unit', formData.recurrence.unit);
+            submissionData.append('from_date', formData.recurrence.from_date);
+            if (formData.recurrence.to_date) {
+                submissionData.append('to_date', formData.recurrence.to_date);
+            }
+        }
+
+        if (formData.has_reminder) {
+            submissionData.append('reminder_date', formData.reminder_date);
+        }
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        const response = await fetch('/finance/record_income/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+            },
+            body: submissionData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert('Income recorded successfully!');
+
+            resetIncomeForm();
+            
+            if (result.redirect_url) {
+                window.location.href = result.redirect_url;
+            }
+
+        } else {
+            if (result.errors) {
+                const errorMessages = Object.values(result.errors).flat().join('\n');
+                alert('Error recording income:\n' + errorMessages);
+            } else {
+                alert(result.message || 'An error occurred while recording income');
+            }
+        }
+
+    } catch (error) {
+        console.error('Error recording income:', error);
+        alert('An error occurred while recording income. Please try again.');
+    } finally {
+        const submitButton = document.querySelector('.header-btn');
+        submitButton.textContent = 'Record Income';
+        submitButton.disabled = false;
+    }
+}
+
+function resetIncomeForm() {
+    document.getElementById('inAmount').value = '0.00';
+    document.getElementById('incomeCategory').value = '';
+    document.getElementById('accountTo').value = '';
+    document.getElementById('incomeRecurringToggle').checked = false;
+    document.getElementById('incomeReminderToggle').checked = false;
+    document.getElementById('incomeRecurrenceGroup').style.display = 'none';
+    document.getElementById('reminderDateGroup').style.display = 'none';
+    document.getElementById('inRecurrenceValue').value = '1';
+    document.getElementById('inRecurrenceUnit').value = 'day';
+    document.getElementById('fromDate').value = '';
+    document.getElementById('toDate').value = '';
+    document.getElementById('reminderDate').value = '';
+    
+    categorySearchSelect.setValue(null, '');
+    categorySearchSelect.input.value = '';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const currencySelect = document.getElementById('currency');
+    if (!currencySelect.value) {
+        const defaultOption = currencySelect.querySelector('option[selected]');
+        if (defaultOption) {
+            currencySelect.value = defaultOption.value;
+        }
+    }
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('fromDate').value = today;
+});
 </script>
 </body>
 </html>
