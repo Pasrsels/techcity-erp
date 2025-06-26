@@ -74,6 +74,7 @@ from django.core.cache import cache
 from django.core.paginator import Paginator
 from typing import List, Dict, Any
 from apps.finance.models import UserAccount
+from django.template.loader import render_to_string
 
 @login_required
 def notifications_json(request):
@@ -821,12 +822,14 @@ def edit_inventory(request, product_id):
 @login_required
 def inventory_detail(request, id):
     purchase_order_items = PurchaseOrderItem.objects.all()
+    
     inventory = Inventory.objects.get(id=id, branch=request.user.branch)
+    
     logs = ActivityLog.objects.filter(
         inventory=inventory,
         branch=request.user.branch
     ).order_by('-timestamp__date', '-timestamp__time')
-    logger.info(logs)
+    
 
     # stock account data and totals (costs and quantities)
     stock_account_data = get_stock_account_data(logs)
@@ -1393,6 +1396,28 @@ def receive_inventory_json(request):
             'received_by__username'
         )
         return JsonResponse(list(transfers), safe=False)
+    
+    
+@login_required
+def update_notification_settings(request):
+    settings, created = InventoryNotificationSettings.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        settings.low_stock = 'low_stock' in request.POST
+        settings.out_of_stock = 'out_of_stock' in request.POST
+        settings.movement_create = 'movement_create' in request.POST
+        settings.movement_update = 'movement_update' in request.POST
+        settings.movement_delete = 'movement_delete' in request.POST
+        settings.movement_transfer = 'movement_transfer' in request.POST
+        settings.save()
+        messages.success(request, "Notification settings updated successfully.")
+        return redirect('inventory:settings')
+
+    return render(request, 'inventory/settings.html', {'settings': settings})
+
+@login_required
+def settings(request):
+    return render(request, 'settings.html')
     
 @login_required
 @transaction.atomic
@@ -3818,6 +3843,7 @@ def process_stock_take_item(request):
            
            s_item.stocktake.negative_cost += difference * s_item.product.cost
            s_item.stocktake.positive_cost += int(phy_quantity)  * s_item.product.cost 
+           s_item.recorded = True
            s_item.stocktake.save()        
            s_item.save()
            
@@ -3908,8 +3934,9 @@ def confirm_stocktake(request, stocktake_id):
         flag = True
         for stock in stocktakes:
             if not stock.recorded:
-                flag = False
-                break
+                if  not stock.product.quantity == 0:
+                    flag = False
+                    break
             
         if flag:
             stocktake.status = True
@@ -3933,6 +3960,31 @@ def stock_take_detail(request, stocktake_id):
             })
         except Exception as e:
             return redirect('inventory:stocktake_detail', stocktake_id)
+        
+    if request.method == 'POST':
+        
+        data = json.loads(request.body)
+        id = data.get('inventory_id')
+        
+        if id:
+            inventory = Inventory.objects.get(id=id, branch=request.user.branch)
+            logs = ActivityLog.objects.filter(
+                inventory=inventory,
+                branch=request.user.branch
+            ).select_related(
+                'branch', 'inventory'
+            ).order_by(
+                '-timestamp__date', '-timestamp__time'
+            )
+            
+            html = render_to_string('stocktake/partials/inventory_detail_partials.html', {
+                'inventory': inventory,
+                'logs': logs,
+            })
+            
+            return JsonResponse({'success':True, 'html':html}, status=200)
+        return JsonResponse({'success':False, 'message':'Error processing your request.'}, status=400)
+        
 
 @login_required
 def accept_stocktake_item(request):
@@ -3948,7 +4000,7 @@ def accept_stocktake_item(request):
         
         with transaction.atomic():
             stocktake = StocktakeItem.objects.get(id=stocktake_id)
-            stocktake.product.quantity = 0 if stocktake.quantity_difference < 0 else stocktake.quantity_difference
+            stocktake.product.quantity += 0 if stocktake.quantity_difference < 0 else stocktake.quantity_difference
             stocktake.note = note
             stocktake.accepted = True
             
@@ -3977,7 +4029,8 @@ def accept_stocktake_item(request):
             stocktake.save()
             
             credit = False
-            debit = False            
+            debit = False    
+                    
             if stocktake.quantity_difference < 0:
                 credit=True
             else:

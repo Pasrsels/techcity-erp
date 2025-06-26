@@ -34,8 +34,10 @@
                         <td id="q_difference">{{ product.quantity_diffirence }}</td>
                         <td id="q_cost"></td>
                         <td>
-                            {% if quantity_difference != 0 %}
+                            {% if product.quantity_difference != 0 %}
                                 <button class="btn btn-sm btn-outline-dark" onclick="accept()">Accept</button>
+                            {% elif product.recorded and product.quantity_difference == 0 %}
+                                <span class="bg-success bg-success-subtle">success</span>
                             {% endif %}
                         </td>
                     </tr>

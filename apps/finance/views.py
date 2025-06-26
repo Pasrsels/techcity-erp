@@ -916,8 +916,7 @@ def create_invoice(request):
                     products_purchased = ''
                 )
                 
-           
-                category = IncomeCategory.objects.filter(name='sales').first() #to change
+                category = IncomeCategory.objects.filter(name='sales').first() 
                 
                 income = Income.objects.create(
                     amount=invoice.amount_paid,
@@ -12908,35 +12907,41 @@ def get_incomes(request):
 @login_required
 def record_income(request):
     try:
-        data = json.loads(request.body)
+        data = request.POST
         logger.info(data)
 
         name = data.get('name')
         amount = data.get('amount')
+        currency_id = data.get('currency')
         category_name = data.get('category')
+        main_category = data.get('main_category')
+        account_id = data.get('account_to')
         branch_id = data.get('branch')
-        r_value = data.get('r_value')
+        r_value = data.get('is_recurring')
+        reminder = data.get('has_reminder')
         r_unit = data.get('r_unit')
+        from_date = data.get('from_date')
+        to_date = data.get('to_date')
+        reminder_dated = data.get('reminder_dated')
 
-        if not all([name, amount, category_name, branch_id]):
-            return JsonResponse({'success': False, 'message': 'Missing required fields'}, status=400)
-
-        parent_category, _ = IncomeCategory.objects.get_or_create(name="Manual", parent=None)
+        parent_category, _ = IncomeCategory.objects.get_or_create(name=main_category, parent=None)
         category, _ = IncomeCategory.objects.get_or_create(name=category_name, parent=parent_category)
 
         branch = Branch.objects.get(id=branch_id)
-        currency = Currency.objects.filter(name__icontains="usd").first() #to be dynamic
-        
-        logger.info(currency)
 
         Income.objects.create(
             amount=amount,
-            currency_id=currency.id,
+            account_id=account_id,
+            currency_id=currency_id,
             category=category,
             note=name,
             user=request.user,
             branch=branch,
             is_recurring=bool(r_value),
+            from_date = from_date,
+            to_date = to_date,
+            reminder = reminder,
+            remainder_date = reminder_dated,
             recurrence_value=r_value if r_value else None,
             recurrence_unit=r_unit if r_unit else None
         )

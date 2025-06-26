@@ -836,13 +836,8 @@ document.addEventListener('DOMContentLoaded', function () {
         bsOffcanvas.show();
     });
 });
-document.getElementById('addCategoryButton').addEventListener('click', () => {
-    categoryModal.show();
-});
 
-document.getElementById('addExpenseCategoryButton').addEventListener('click', () => {
-    expenseCategoryModal.show();
-});
+
 
 
 function toggleRecurrence(type) {
@@ -904,8 +899,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-
-    loadIncomes();
     
     document.getElementById('cash_expense-tab').addEventListener('click', function() {
         if (document.getElementById('expense_table').children.length === 0) {
@@ -1074,65 +1067,6 @@ function renderIncomes(incomes) {
         `;
 
         table.appendChild(row);
-    });
-}
-
-function recordIncome() {
-    const inName = document.getElementById('inName').value;
-    const inAmount = document.getElementById('inAmount').value;
-    const inCategory = document.getElementById('inCategory').value;
-    const inBranch = document.getElementById('inBranch').value;
-
-    const isRecurring = document.getElementById('incomeRecurringToggle').checked;
-    const value = isRecurring ? document.getElementById('inRecurrenceValue').value : null;
-    const unit = isRecurring ? document.getElementById('inRecurrenceUnit').value : null;
-
-    if (!inAmount || inAmount <= 0) {
-        showToast("Please enter a valid amount", "error");
-        return;
-    }
-
-    if (!inCategory) {
-        showToast("Please select a category", "error");
-        return;
-    }
-
-    const incomeData = {
-        name: inName,
-        amount: inAmount,
-        category: inCategory,
-        branch: inBranch,
-        r_value: value,
-        r_unit: unit
-    };
-
-    fetch("/finance/record_income/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCookie("csrftoken")
-        },
-        body: JSON.stringify(incomeData)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            showToast(result.message, "success");
-
-            document.getElementById('inName').value = '';
-            document.getElementById('inAmount').value = '';
-            document.getElementById('inCategory').value = '';
-            document.getElementById('incomeRecurringToggle').checked = false;
-            toggleRecurrence('income');
-            loadIncomes(true);
-            loadCashbookData(1, false, {{ currency.id }})
-        } else {
-            showToast(result.message || "Failed to record income", "error");
-        }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        showToast("An error occurred while saving income", "error");
     });
 }
 
@@ -1350,31 +1284,22 @@ if (expenseTableContainer) {
 });
 
 
-document.addEventListener('keydown', function(event) {
-if (document.getElementById('cash_income-panel').classList.contains('active')) {
-    if (event.ctrlKey && event.key === 'Enter') {
-        recordIncome();
-    }
-}
-
 
 if (document.getElementById('cash_expense-panel').classList.contains('active')) {
     if (event.ctrlKey && event.key === 'Enter') {
         recordCashExpense();
     }
 }
-});
-
 
 document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
-tab.addEventListener('shown.bs.tab', function (event) {
-    const targetId = event.target.getAttribute('data-bs-target');
-    if (targetId === '#cash_expense-panel') {
-        if (document.getElementById('expense_table').children.length === 0) {
-            loadExpenses();
+    tab.addEventListener('shown.bs.tab', function (event) {
+        const targetId = event.target.getAttribute('data-bs-target');
+        if (targetId === '#cash_expense-panel') {
+            if (document.getElementById('expense_table').children.length === 0) {
+                loadExpenses();
+            }
         }
-    }
-});
+    });
 });
 
 

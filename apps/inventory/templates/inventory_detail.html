@@ -165,9 +165,7 @@
                         <tr>
                             <th>#</th>
                             <th>Date</th>
-                            <th>By</th>
-                            <th>Refence</th>
-                            <th>Type</th>
+                            <th>Details</th>
                             <th>Selling Price</th>
                             <th>Dealer Price</th>
                             <th>Updated Qnty</th>
@@ -180,18 +178,20 @@
                             <tr>
                                 <td><small>{{ forloop.counter }}</small></td>
                                 <td><small>{{ log.timestamp }}</small></td>
-                                <td><small><span>{{ log.user }}</span></small></td>
                                 <td data-id="{{log.invoice.id}}" id="invoice" style="cursor:pointer;">
                                     <small>
                                         {{ log.invoice.invoice_number }}
                                         {{ log.product_transfer.transfer.transfer_ref }}
                                         {{ log.purchase_order.order_number }}
+                                         - 
                                     </small>
-                                </td>
-                                <td>
-                                    <small style='width:20px !important;'>
+                                    <small>
                                         {{ log.action }}
                                         {% if log.description %}({{ log.description }}){% endif %}
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="bx bx-user"></i> {{ log.user }}
                                     </small>
                                 </td>
                                 <td><small>{{ log.selling_price }}</small></td>

@@ -25,6 +25,17 @@
     width: 8px;
 }
 
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus,
+.btn:focus,
+input[type="checkbox"]:focus,
+input[type="radio"]:focus {
+  border-color: #11998e !important;
+  box-shadow: 0 0 0 0.25rem rgba(17, 153, 142, 0.25) !important;
+  outline: none;
+}
+
 @mixin links{
     .menu-link{
         cursor: pointer;

@@ -828,11 +828,16 @@ class Income(models.Model):
     category = models.ForeignKey('IncomeCategory', on_delete=models.PROTECT)
     note = models.CharField(max_length=200, null=True)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    account = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='account_users', null=True)
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
     status = models.BooleanField(default=False)
     sale = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True)
     expenses = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True)
     is_recurring = models.BooleanField(default=False)
+    reminder = models.BooleanField(default=False)
+    remainder_date = models.DateField(null=True)
+    from_date = models.DateField(null=True)
+    to_date = models.DateField(null=True)
     recurrence_value = models.PositiveIntegerField(null=True, blank=True)
     recurrence_unit = models.CharField(
         max_length=10,
@@ -844,7 +849,8 @@ class Income(models.Model):
         ],
         null=True,
         blank=True
-    )    
+    ) 
+
     def __str__(self):
         return f"{self.created_at} - {self.category} - {self.note} - ${self.amount}"
 

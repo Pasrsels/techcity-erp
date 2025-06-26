@@ -567,23 +567,18 @@ class StockTake(models.Model):
             new_stocktake_number = 1
 
         return new_stocktake_number
-    
-    def __str__(self):
-        return f'{self.date}: {self.s_t_number}'
         
 class StocktakeItem(models.Model):
     stocktake = models.ForeignKey(StockTake, on_delete=models.CASCADE, null=True)
     product = models.ForeignKey(Inventory, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
+    now_quantity = models.IntegerField(default=0)
+    quantity = models.IntegerField(null=True)
     quantity_difference = models.IntegerField()
     cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
     note = models.TextField(null=True, default='')
-    accepted = models.BooleanField(default=False)
+    accepted = models.BooleanField(default=False,null=True)
     company_loss = models.BooleanField(null=True, default=False)
     recorded = models.BooleanField(null=True, default=False)
-
-    def __str__(self):
-        return self.product.name
 
 # Inventory loss models
 class WriteOff(models.Model):
@@ -638,3 +633,12 @@ class DeliveryNoteItem(models.Model):
     delivery_note = models.ForeignKey(DeliveryNote, on_delete=models.CASCADE, related_name="items", null=True)
     product_name = models.CharField(max_length=255, null=True)
     quantity_delivered = models.PositiveIntegerField(null=True)
+    
+class InventoryNotificationSettings(models.Model):
+    user = models.OneToOneField('users.User', on_delete=models.CASCADE)
+    low_stock = models.BooleanField(default=True)
+    out_of_stock = models.BooleanField(default=True)
+    movement_create = models.BooleanField(default=True)
+    movement_update = models.BooleanField(default=True)
+    movement_delete = models.BooleanField(default=True)
+    movement_transfer = models.BooleanField(default=True)
