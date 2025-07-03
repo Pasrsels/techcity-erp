@@ -126,380 +126,369 @@
 </style>
 </head> 
 <body>
-    <div class="mt-2">
-        <ul class="nav nav-tabs p-2" id="cashFlowTabs" role="tablist" style="background: var(--primary);">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="cash_income-tab" data-bs-toggle="tab" data-bs-target="#cash_income-panel" 
-                        type="button" role="tab" aria-controls="cash_income-panel" aria-selected="true">Income</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="cash_expense-tab" data-bs-toggle="tab" data-bs-target="#cash_expense-panel" type="button" role="tab" aria-controls="cash_expense-panel" aria-selected="false">Expenses</button>
-            </li>
-        </ul>
-        <div class="tab-content" id="cashFlowTabsContent">
-            <div class="tab-pane fade show active" id="cash_income-panel" role="tabpanel" aria-labelledby="cash_income-tab">
-                <div class="row">
-                    <div class="col">
-                        <div class="card p-3">
-                            <div class="">
-                                <div class="input-group">
-                                    <div class="d-flex justify-content-end w-100 mb-2">
-                                        <div class="d-flex align-items-center bg-light px-1">
-                                            <i class='bx bx-wallet'></i>
-                                            <select class="form-select bg-light border-0 b" id="currency" name="currency">
-                                                {% for currency in currencies %}
-                                                    <option value="{{ currency.id }}" {% if currency.default %} selected {% endif %}>{{ currency.name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="mb-4">
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
-                                            <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="inAmount" value="0.00" placeholder="Enter amount" style="height: 100px;">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-4 d-flex gap-2 align-items-start">
-                                <div class="d-flex bg-light w-100">
-                                    <span class="input-group-text bg-light border-0">
-                                        <i class="bx bx-pencil"></i>
-                                    </span>
-                                    <div class="search-select bg-light" id="categories" style="height: 60px;">
-                                        <input type="text" class="custom-search-input bg-light" style="height: 60px;" placeholder="Search or add category" autocomplete="off">
-                                        <span class="search-icon"></span>
-                                        <div class="custom-dropdown"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-4 d-flex gap-2 align-items-start">
-                                <div class="d-flex bg-light w-100">
-                                    <span class="input-group-text bg-light border-0"><i class="bx bx-category"></i></span>
-                                    <div class="search-select bg-light" id="main-categories" style="height: 60px;">
-                                        <input type="text" class="custom-search-input bg-light" style="height: 60px;" placeholder="Search or add Main category" autocomplete="off">
-                                        <span class="search-icon"></span>
-                                        <div class="custom-dropdown"></div>
-                                    </div>
-                                </div>
-                            </div>
-                                                                
-                            <div class="mb-4">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0"><i class="bx bx-map"></i></span>
-                                    <select class="form-select border-0 bg-light" id="inBranch" style="height: 60px;">
-                                        {% for branch in branches %}
-                                            {% if request.user.role|lower == 'admin' %}
-                                                <option value="{{ branch.id}}">{{ branch.name }}</option>
-                                            {% elif forloop.first %}
-                                                <option value="{{ request.user.branch.id}}">{{ request.user.branch }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0"><i class="bx bx-user"></i></span>
-                                    <select class="form-select border-0 bg-light" id="accountTo" style="height: 60px;">
-                                        <option value="">Account to</option>
-                                        {% for user in users %}
-                                            <option value="{{ user.id }}">{{ user }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input bg-dark" type="checkbox" id="incomeRecurringToggle" onchange="toggleRecurrence('income')">
-                                <label class="form-check-label" for="incomeRecurringToggle">Recurring Income?</label>
-                            </div>
-
-                            <div class="mb-3 mt-2" id="incomeRecurrenceGroup" style="display: none;">
-
-                            <!-- Repeat Interval -->
-                            <div class="bg-light p-3 rounded shadow-sm mb-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="input-group-text bg-light border-0">
-                                        <i class="bx bx-repeat"></i>
-                                    </span>
-                                    <label class="mb-0 me-2">Repeat every</label>
-                                    <input type="number" class="form-control border-0 bg-light text-center" id="inRecurrenceValue" min="1" value="1" style="width: 80px;">
-                                    <select class="form-select border-0 bg-light w-auto" id="inRecurrenceUnit">
-                                        <option value="day">Day(s)</option>
-                                        <option value="week">Week(s)</option>
-                                        <option value="month">Month(s)</option>
-                                        <option value="year">Year(s)</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- From Date Block -->
-                            <div class="bg-light p-3 rounded shadow-sm mb-3">
-                                <label for="fromDate" class="form-label">From</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0">
-                                        <i class="bx bx-calendar"></i>
-                                    </span>
-                                    <input id="fromDate" class="form-control border-0 bg-light" type="date">
-                                </div>
-                            </div>
-
-                            <!-- To Date Block -->
-                            <div class="bg-light p-3 rounded shadow-sm">
-                                <label for="toDate" class="form-label">To</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0">
-                                        <i class="bx bx-calendar"></i>
-                                    </span>
-                                    <input id="toDate" class="form-control border-0 bg-light" type="date">
-                                </div>
-                            </div>
-                        </div>
-
-                       
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input bg-dark" type="checkbox" id="incomeReminderToggle" onchange="toggleReminderDate()">
-                                <label class="form-check-label" for="incomeReminderToggle">Set a Reminder?</label>
-                            </div>
-
-                            <div class="mb-3" id="reminderDateGroup" style="display: none;">
-                                <label for="reminderDate" class="form-label">Reminder Date</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0">
-                                        <i class="bx bx-calendar"></i>
-                                    </span>
-                                    <input type="date" class="form-control border-0 bg-light" id="reminderDate">
-                                </div>
-                            </div>
-
-                            <div class="mt-5">
-                                <button type="button" class="header-btn w-100" onclick="recordIncome()">Record Income</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Income Table Section -->
-                    <!-- <div class="col mt-4">
-                        <div>
-                            
-                            <div class="d-flex justify-content-between w-100 align-items-center">
-                                <h5 class="mb-0">Income History</h5>
-                                <button class="btn btn-sm btn-outline-primary" onclick="loadIncomes(true)">
-                                    <i class="bx bx-refresh"></i> Refresh
-                                </button>
-                            </div>
-
-                            <div class="table-container">
-                                <table class="table table-borderless table-hover mb-0">
-                                    <thead class="background">
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Note</th>
-                                            <th>Category</th>
-                                            <th>Branch</th>
-                                            <th>Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="income_table">
-                                    </tbody>
-                                </table>
-                                <div id="income_loader" class="loader d-none">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> -->
-                </div>
-            </div>
-            
-            <!-- Expense Tab -->
-            <div class="tab-pane fade" id="cash_expense-panel" role="tabpanel" aria-labelledby="cash_expense-tab">
-                 <div class="row">
-                    <div class="col">
-                        <div class="card p-3">
-                            <div class="">
-                                <div class="input-group">
-                                    <div class="d-flex justify-content-end">
-                                        <select class="form-select border-0 b" id="currency" name="currency">
+    <div class="tab-content" id="cashFlowTabsContent">
+        <div class="tab-pane fade show active" id="cash_income-panel" role="tabpanel" aria-labelledby="cash_income-tab">
+            <div class="row">
+                <div class="col">
+                    <div class="card p-3">
+                        <div class="">
+                            <div class="input-group">
+                                <div class="d-flex justify-content-end w-100 mb-2">
+                                    <div class="d-flex align-items-center bg-light px-1">
+                                        <i class='bx bx-wallet'></i>
+                                        <select class="form-select bg-light border-0 b" id="currency" name="currency">
                                             {% for currency in currencies %}
                                                 <option value="{{ currency.id }}" {% if currency.default %} selected {% endif %}>{{ currency.name }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
-                                    <div class="mb-4">
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
-                                            <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="inAmount" value="0.00" placeholder="Enter amount" style="height: 100px;">
-                                        </div>
+                                </div>
+                                <div class="mb-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
+                                        <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="inAmount" value="0.00" placeholder="Enter amount" style="height: 100px;">
                                     </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-4 d-flex bg-light">
-                                <div>
-                                    <span class="input-group-text bg-light border-0">
-                                        <i class="bx bx-pencil"></i>
-                                    </span>
-                                </div>
-                                <div class="search-select" id="categories">
-                                    <input type="text" class="custom-search-input w-100" placeholder="Search or add category" autocomplete="off">
-                                    <div class="custom-dropdown"></div>
-                                    <input type="text" id="category_text" class="form-control" hidden/>
-                                </div>
-                            </div>
-
-                            <div class="mb-4 d-flex gap-2 align-items-start">
-                                <div class="input-group flex-grow-1">
-                                    <span class="input-group-text bg-light border-0"><i class="bx bx-category"></i></span>
-                                    <select class="form-select border-0 bg-light" id="incomeCategory" style="height: 60px;">
-                                        <option value="">Select Expense Category</option>
-                                        {% for category in income_categories %}
-                                            <option value="{{ category.id }}">{{ category.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                                                                
-                            <div class="mb-4">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0"><i class="bx bx-map"></i></span>
-                                    <select class="form-select border-0 bg-light" id="inBranch" style="height: 60px;">
-                                        {% for branch in branches %}
-                                            {% if request.user.role|lower == 'admin' %}
-                                                <option value="{{ branch.id}}">{{ branch.name }}</option>
-                                            {% elif forloop.first %}
-                                                <option value="{{ request.user.branch.id}}">{{ request.user.branch }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0"><i class="bx bx-user"></i></span>
-                                    <select class="form-select border-0 bg-light" id="accountTo" style="height: 60px;">
-                                        <option value="">Account to</option>
-                                        {% for user in users %}
-                                            <option value="{{ user.id }}">{{ user.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input bg-dark" type="checkbox" id="incomeRecurringToggle" onchange="toggleRecurrence('income')">
-                                <label class="form-check-label" for="incomeRecurringToggle">Recurring Expenses?</label>
-                            </div>
-
-                            <div class="mb-3 mt-2" id="incomeRecurrenceGroup" style="display: none;">
-
-                            <!-- Repeat Interval -->
-                            <div class="bg-light p-3 rounded shadow-sm mb-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="input-group-text bg-light border-0">
-                                        <i class="bx bx-repeat"></i>
-                                    </span>
-                                    <label class="mb-0 me-2">Repeat every</label>
-                                    <input type="number" class="form-control border-0 bg-light text-center" id="inRecurrenceValue" min="1" value="1" style="width: 80px;">
-                                    <select class="form-select border-0 bg-light w-auto" id="inRecurrenceUnit">
-                                        <option value="day">Day(s)</option>
-                                        <option value="week">Week(s)</option>
-                                        <option value="month">Month(s)</option>
-                                        <option value="year">Year(s)</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- From Date Block -->
-                            <div class="bg-light p-3 rounded shadow-sm mb-3">
-                                <label for="fromDate" class="form-label">From</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0">
-                                        <i class="bx bx-calendar"></i>
-                                    </span>
-                                    <input id="fromDate" class="form-control border-0 bg-light" type="date">
-                                </div>
-                            </div>
-
-                            <!-- To Date Block -->
-                            <div class="bg-light p-3 rounded shadow-sm">
-                                <label for="toDate" class="form-label">To</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0">
-                                        <i class="bx bx-calendar"></i>
-                                    </span>
-                                    <input id="toDate" class="form-control border-0 bg-light" type="date">
                                 </div>
                             </div>
                         </div>
 
-                       
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input bg-dark" type="checkbox" id="incomeReminderToggle" onchange="toggleReminderDate()">
-                                <label class="form-check-label" for="incomeReminderToggle">Set a Reminder?</label>
-                            </div>
-
-                            <div class="mb-3" id="reminderDateGroup" style="display: none;">
-                                <label for="reminderDate" class="form-label">Reminder Date</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0">
-                                        <i class="bx bx-calendar"></i>
-                                    </span>
-                                    <input type="date" class="form-control border-0 bg-light" id="reminderDate">
+                        <div class="mb-4 d-flex gap-2 align-items-start">
+                            <div class="d-flex bg-light w-100">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="bx bx-pencil"></i>
+                                </span>
+                                <div class="search-select bg-light" id="categories" style="height: 60px;">
+                                    <input type="text" class="custom-search-input bg-light" style="height: 60px;" placeholder="Search or add category" autocomplete="off">
+                                    <span class="search-icon"></span>
+                                    <div class="custom-dropdown"></div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="mt-5">
-                                <button type="button" class="header-btn w-100" onclick="recordIncome()">Record Income</button>
+                        <div class="mb-4 d-flex gap-2 align-items-start">
+                            <div class="d-flex bg-light w-100">
+                                <span class="input-group-text bg-light border-0"><i class="bx bx-category"></i></span>
+                                <div class="search-select bg-light" id="main-categories" style="height: 60px;">
+                                    <input type="text" class="custom-search-input bg-light" style="height: 60px;" placeholder="Search or add Main category" autocomplete="off">
+                                    <span class="search-icon"></span>
+                                    <div class="custom-dropdown"></div>
+                                </div>
+                            </div>
+                        </div>
+                                                            
+                        <div class="mb-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="bx bx-map"></i></span>
+                                <select class="form-select border-0 bg-light" id="inBranch" style="height: 60px;">
+                                    {% for branch in branches %}
+                                        {% if request.user.role|lower == 'admin' %}
+                                            <option value="{{ branch.id}}">{{ branch.name }}</option>
+                                        {% elif forloop.first %}
+                                            <option value="{{ request.user.branch.id}}">{{ request.user.branch }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="bx bx-user"></i></span>
+                                <select class="form-select border-0 bg-light" id="accountTo" style="height: 60px;">
+                                    <option value="">Account to</option>
+                                    {% for user in users %}
+                                        <option value="{{ user.id }}">{{ user }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input bg-dark" type="checkbox" id="incomeRecurringToggle" onchange="toggleRecurrence('income')">
+                            <label class="form-check-label" for="incomeRecurringToggle">Recurring Income?</label>
+                        </div>
+
+                        <div class="mb-3 mt-2" id="incomeRecurrenceGroup" style="display: none;">
+
+                        <!-- Repeat Interval -->
+                        <div class="bg-light p-3 rounded shadow-sm mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="bx bx-repeat"></i>
+                                </span>
+                                <label class="mb-0 me-2">Repeat every</label>
+                                <input type="number" class="form-control border-0 bg-light text-center" id="inRecurrenceValue" min="1" value="1" style="width: 80px;">
+                                <select class="form-select border-0 bg-light w-auto" id="inRecurrenceUnit">
+                                    <option value="day">Day(s)</option>
+                                    <option value="week">Week(s)</option>
+                                    <option value="month">Month(s)</option>
+                                    <option value="year">Year(s)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- From Date Block -->
+                        <div class="bg-light p-3 rounded shadow-sm mb-3">
+                            <label for="fromDate" class="form-label">From</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="bx bx-calendar"></i>
+                                </span>
+                                <input id="fromDate" class="form-control border-0 bg-light" type="date">
+                            </div>
+                        </div>
+
+                        <!-- To Date Block -->
+                        <div class="bg-light p-3 rounded shadow-sm">
+                            <label for="toDate" class="form-label">To</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="bx bx-calendar"></i>
+                                </span>
+                                <input id="toDate" class="form-control border-0 bg-light" type="date">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Income Table Section -->
-                    <!-- <div class="col mt-4">
-                        <div>
-                            
-                            <div class="d-flex justify-content-between w-100 align-items-center">
-                                <h5 class="mb-0">Income History</h5>
-                                <button class="btn btn-sm btn-outline-primary" onclick="loadIncomes(true)">
-                                    <i class="bx bx-refresh"></i> Refresh
-                                </button>
-                            </div>
+                    
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input bg-dark" type="checkbox" id="incomeReminderToggle" onchange="toggleReminderDate()">
+                            <label class="form-check-label" for="incomeReminderToggle">Set a Reminder?</label>
+                        </div>
 
-                            <div class="table-container">
-                                <table class="table table-borderless table-hover mb-0">
-                                    <thead class="background">
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Note</th>
-                                            <th>Category</th>
-                                            <th>Branch</th>
-                                            <th>Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="income_table">
-                                    </tbody>
-                                </table>
-                                <div id="income_loader" class="loader d-none">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Loading...</span>
+                        <div class="mb-3" id="reminderDateGroup" style="display: none;">
+                            <label for="reminderDate" class="form-label">Reminder Date</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="bx bx-calendar"></i>
+                                </span>
+                                <input type="date" class="form-control border-0 bg-light" id="reminderDate">
+                            </div>
+                        </div>
+
+                        <div class="mt-5">
+                            <button type="button" class="header-btn w-100" onclick="recordIncome()">Record Income</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Income Table Section -->
+                <!-- <div class="col mt-4">
+                    <div>
+                        
+                        <div class="d-flex justify-content-between w-100 align-items-center">
+                            <h5 class="mb-0">Income History</h5>
+                            <button class="btn btn-sm btn-outline-primary" onclick="loadIncomes(true)">
+                                <i class="bx bx-refresh"></i> Refresh
+                            </button>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="table table-borderless table-hover mb-0">
+                                <thead class="background">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Note</th>
+                                        <th>Category</th>
+                                        <th>Branch</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="income_table">
+                                </tbody>
+                            </table>
+                            <div id="income_loader" class="loader d-none">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+            </div>
+        </div>
+        
+        <!-- Expense Tab -->
+        <div class="tab-pane fade" id="cash_expense-panel" role="tabpanel" aria-labelledby="cash_expense-tab">
+                <div class="row">
+                <div class="col">
+                    <div class="card p-3">
+                        <div class="">
+                            <div class="input-group">
+                                <div class="d-flex justify-content-end">
+                                    <select class="form-select border-0 b" id="currency" name="currency">
+                                        {% for currency in currencies %}
+                                            <option value="{{ currency.id }}" {% if currency.default %} selected {% endif %}>{{ currency.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
+                                        <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="inAmount" value="0.00" placeholder="Enter amount" style="height: 100px;">
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div> -->
+
+                        <div class="mb-4 d-flex bg-light">
+                            <div>
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="bx bx-pencil"></i>
+                                </span>
+                            </div>
+                            <div class="search-select" id="categories">
+                                <input type="text" class="custom-search-input w-100" placeholder="Search or add category" autocomplete="off">
+                                <div class="custom-dropdown"></div>
+                                <input type="text" id="category_text" class="form-control" hidden/>
+                            </div>
+                        </div>
+
+                        <div class="mb-4 d-flex gap-2 align-items-start">
+                            <div class="input-group flex-grow-1">
+                                <span class="input-group-text bg-light border-0"><i class="bx bx-category"></i></span>
+                                <select class="form-select border-0 bg-light" id="incomeCategory" style="height: 60px;">
+                                    <option value="">Select Expense Category</option>
+                                    {% for category in income_categories %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                                                            
+                        <div class="mb-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="bx bx-map"></i></span>
+                                <select class="form-select border-0 bg-light" id="inBranch" style="height: 60px;">
+                                    {% for branch in branches %}
+                                        {% if request.user.role|lower == 'admin' %}
+                                            <option value="{{ branch.id}}">{{ branch.name }}</option>
+                                        {% elif forloop.first %}
+                                            <option value="{{ request.user.branch.id}}">{{ request.user.branch }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="bx bx-user"></i></span>
+                                <select class="form-select border-0 bg-light" id="accountTo" style="height: 60px;">
+                                    <option value="">Account to</option>
+                                    {% for user in users %}
+                                        <option value="{{ user.id }}">{{ user.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input bg-dark" type="checkbox" id="incomeRecurringToggle" onchange="toggleRecurrence('income')">
+                            <label class="form-check-label" for="incomeRecurringToggle">Recurring Expenses?</label>
+                        </div>
+
+                        <div class="mb-3 mt-2" id="incomeRecurrenceGroup" style="display: none;">
+
+                        <!-- Repeat Interval -->
+                        <div class="bg-light p-3 rounded shadow-sm mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="bx bx-repeat"></i>
+                                </span>
+                                <label class="mb-0 me-2">Repeat every</label>
+                                <input type="number" class="form-control border-0 bg-light text-center" id="inRecurrenceValue" min="1" value="1" style="width: 80px;">
+                                <select class="form-select border-0 bg-light w-auto" id="inRecurrenceUnit">
+                                    <option value="day">Day(s)</option>
+                                    <option value="week">Week(s)</option>
+                                    <option value="month">Month(s)</option>
+                                    <option value="year">Year(s)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- From Date Block -->
+                        <div class="bg-light p-3 rounded shadow-sm mb-3">
+                            <label for="fromDate" class="form-label">From</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="bx bx-calendar"></i>
+                                </span>
+                                <input id="fromDate" class="form-control border-0 bg-light" type="date">
+                            </div>
+                        </div>
+
+                        <!-- To Date Block -->
+                        <div class="bg-light p-3 rounded shadow-sm">
+                            <label for="toDate" class="form-label">To</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="bx bx-calendar"></i>
+                                </span>
+                                <input id="toDate" class="form-control border-0 bg-light" type="date">
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input bg-dark" type="checkbox" id="incomeReminderToggle" onchange="toggleReminderDate()">
+                            <label class="form-check-label" for="incomeReminderToggle">Set a Reminder?</label>
+                        </div>
+
+                        <div class="mb-3" id="reminderDateGroup" style="display: none;">
+                            <label for="reminderDate" class="form-label">Reminder Date</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="bx bx-calendar"></i>
+                                </span>
+                                <input type="date" class="form-control border-0 bg-light" id="reminderDate">
+                            </div>
+                        </div>
+
+                        <div class="mt-5">
+                            <button type="button" class="header-btn w-100" onclick="recordIncome()">Record Income</button>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Income Table Section -->
+                <!-- <div class="col mt-4">
+                    <div>
+                        
+                        <div class="d-flex justify-content-between w-100 align-items-center">
+                            <h5 class="mb-0">Income History</h5>
+                            <button class="btn btn-sm btn-outline-primary" onclick="loadIncomes(true)">
+                                <i class="bx bx-refresh"></i> Refresh
+                            </button>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="table table-borderless table-hover mb-0">
+                                <thead class="background">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Note</th>
+                                        <th>Category</th>
+                                        <th>Branch</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="income_table">
+                                </tbody>
+                            </table>
+                            <div id="income_loader" class="loader d-none">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
             </div>
         </div>
     </div>
-
+    
     <!-- Add income Category Modal -->
     <div class="modal fade" id="addCatModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -758,7 +747,6 @@ class CustomSearchSelect {
 
         this.dropdown.innerHTML = html;
 
-        // Add click listeners
         this.dropdown.querySelectorAll('.custom-dropdown-item').forEach((item, index) => {
             item.addEventListener('click', () => {
                 const type = item.dataset.type;
@@ -930,61 +918,12 @@ async function recordIncome() {
             return;
         }
 
-        if (formData.is_recurring) {
-            formData.recurrence = {
-                value: parseInt(document.getElementById('inRecurrenceValue').value) || 1,
-                unit: document.getElementById('inRecurrenceUnit').value,
-                from_date: document.getElementById('fromDate').value,
-                to_date: document.getElementById('toDate').value
-            };
-
-            if (!formData.recurrence.from_date) {
-                alert('Please select a start date for recurring income');
-                return;
-            }
-        }
-
-        if (formData.has_reminder) {
-            formData.reminder_date = document.getElementById('reminderDate').value;
-            
-            if (!formData.reminder_date) {
-                alert('Please select a reminder date');
-                return;
-            }
-        }
+        
         const submitButton = document.querySelector('.header-btn');
         const originalText = submitButton.textContent;
         submitButton.textContent = 'Recording...';
         submitButton.disabled = true;
 
-        const submissionData = new FormData();
-        submissionData.append('amount', formData.amount);
-        submissionData.append('currency', formData.currency);
-        submissionData.append('branch', formData.branch);
-        submissionData.append('account_to', formData.account_to);
-        submissionData.append('is_recurring', formData.is_recurring);
-        submissionData.append('has_reminder', formData.has_reminder);
-
-        if (formData.category.isNew) {
-            submissionData.append('new_category', formData.category.text);
-        } else if (formData.category.value) {
-            submissionData.append('category', formData.category.value);
-        } else if (formData.income_category) {
-            submissionData.append('income_category', formData.income_category);
-        }
-
-        if (formData.is_recurring) {
-            submissionData.append('recurrence_value', formData.recurrence.value);
-            submissionData.append('recurrence_unit', formData.recurrence.unit);
-            submissionData.append('from_date', formData.recurrence.from_date);
-            if (formData.recurrence.to_date) {
-                submissionData.append('to_date', formData.recurrence.to_date);
-            }
-        }
-
-        if (formData.has_reminder) {
-            submissionData.append('reminder_date', formData.reminder_date);
-        }
 
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
@@ -993,7 +932,7 @@ async function recordIncome() {
             headers: {
                 'X-CSRFToken': csrfToken,
             },
-            body: submissionData
+            body: JSON.stringify(formData)
         });
 
         const result = await response.json();

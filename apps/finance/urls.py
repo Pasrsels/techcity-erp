@@ -1,7 +1,10 @@
 from django.urls import path, include
 from . views import *
+# from apis.cashbook_apis import *
 from rest_framework.routers import DefaultRouter
 # from apps.finance.custom_views.cashbook_views import cashbook_data
+from apps.finance.apis.cashbook_apis import *
+
 
 app_name = 'finance'
 
@@ -10,10 +13,13 @@ router.register(r'api/v1/customers_list', CustomersViewset, basename='customers_
 router.register(r'api/v1/currency', CurrencyViewset, basename= 'api_currency_crud')
 router.register(r'api/v1/Cashwithrawals', CashWithdrawalsViewset, basename= 'api_cash_withrawals')
 router.register(r'api/v1/quotation', QuatationCrud, basename= 'api_quotation')
+router.register(r'api/v1/income', IncomeViewSet, basename='api_income')
+router.register(r'api/v1/expenses', ExpenseViewSet, basename='api_expense')
 
 urlpatterns = [
     path('', Finance.as_view(), name='finance'),
     path('generate-report/', generate_financial_report, name='generate-report'),
+    # path('Income/', IncomeViewsets, name="income")
     
     # expenses
     path('expenses/', expenses, name='expenses'),
@@ -77,7 +83,7 @@ urlpatterns = [
     path('currency/add/', add_currency, name='add_currency'),
     path('currency/update/<int:currency_id>/', update_currency, name='update_currency'),
     path('currency/delete/<int:currency_id>/', delete_currency, name='delete_currency'),
-
+    
     # withdrawals
     path('withdrawals/', cashWithdrawals, name='withdrawals'),
     path('delete/withdrawal/<int:withdrawal_id>/', delete_withdrawal, name='delete_withdrawal'),
@@ -200,14 +206,6 @@ urlpatterns = [
 
     #Quotation
     # path('api/v1/quotation-list/', QuotationList.as_view(), name='api_quotation_list'),
-
-    #Expense
-    path('api/v1/expense/', ExpenseView.as_view(), name='api_expense'),
-    path('api/v1/expense/<int:expense_id>/', ExpenseDetail.as_view(), name='api_expense_detail'),
-    path('api/v1/expense_category/', AddExpenseCategory.as_view(), name='api_expense_category'),
-    path('api/v1/add-or-edit-expense/<int:id>/', EditExpense.as_view(), name='api_add_edit_expense'),
-    path('api/v1/delete-expense/', DeleteExpense.as_view(), name='api_delete_expense'),
-    path('api/v1/update-expense-status/<int:id>/', UpdateExpenseStatus.as_view(), name='api_update_expense_status'),
 
     #Invoice
     path('api/v1/invoice-pdf/', InvoicePDF.as_view(), name='api_invoice_pdf'),

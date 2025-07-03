@@ -150,30 +150,244 @@ def cashflow_list(request): # to be organised
         
         return JsonResponse({'html': html})
 
+
+
 class Finance(View):
-    # authentication loginmixin
     template_name = 'finance.html'
 
     def get(self, request, *args, **kwargs):
-
         if request.user.role == 'sales':
             return redirect('finance:expenses')
         
+        # Get filter period from request
+        period = request.GET.get('period', 'this_month')
+        
+        # Get date range based on period
+        start_date, end_date = self.get_date_range(period)
+        
+        # Get basic data
         balances = AccountBalance.objects.filter(branch=request.user.branch)
-    
         recent_sales = Sale.objects.filter(transaction__branch=request.user.branch).order_by('-date')[:5]
-
         expenses_by_category = Expense.objects.values('category__name').annotate(
             total_amount=Sum('amount', output_field=DecimalField())
         )
+        
+        # Get graph data
+        graph_data = self.get_graph_data(request.user.branch, period, start_date, end_date)
+        
+        # Calculate metrics
+        metrics = self.calculate_metrics(request.user.branch, start_date, end_date)
         
         context = {
             'balances': balances,
             'recent_transactions': recent_sales,
             'expenses_by_category': expenses_by_category,
+            'graph_data': json.dumps(graph_data),
+            'metrics': metrics,
+            'current_period': period,
         }
         
         return render(request, self.template_name, context)
+
+    def get_date_range(self, period):
+        """Get start and end dates based on period"""
+        now = timezone.now()
+        
+        if period == 'today':
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif period == 'year':
+            start_date = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            end_date = now
+        else:
+            # Default to this month
+            start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            end_date = now
+            
+        return start_date, end_date
+
+    def get_graph_data(self, branch, period, start_date, end_date):
+        """Get sales and expenses data for the graph"""
+        
+        if period == 'today':
+            # Hourly data for today
+            labels = ['6 AM', '9 AM', '12 PM', '3 PM', '6 PM', '9 PM']
+            sales_data = []
+            expenses_data = []
+            
+            for i, hour in enumerate([6, 9, 12, 15, 18, 21]):
+                hour_start = start_date.replace(hour=hour)
+                hour_end = hour_start + timedelta(hours=3)
+                
+                sales = Sale.objects.filter(
+                    transaction__branch=branch,
+                    date__range=[hour_start, hour_end]
+                ).aggregate(total=Sum('total_amount'))['total'] or 0
+                
+                expenses = Expense.objects.filter(
+                    branch=branch,
+                    date__range=[hour_start, hour_end]
+                ).aggregate(total=Sum('amount'))['total'] or 0
+                
+                sales_data.append(float(sales))
+                expenses_data.append(float(expenses))
+                
+        elif period == 'last_week':
+            # Daily data for last week
+            labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            sales_data = []
+            expenses_data = []
+            
+            for i in range(7):
+                day_start = start_date + timedelta(days=i)
+                day_end = day_start + timedelta(days=1)
+                
+                sales = Sale.objects.filter(
+                    transaction__branch=branch,
+                    date__range=[day_start, day_end]
+                ).aggregate(total=Sum('total_amount'))['total'] or 0
+                
+                expenses = Expense.objects.filter(
+                    branch=branch,
+                    date__range=[day_start, day_end]
+                ).aggregate(total=Sum('amount'))['total'] or 0
+                
+                sales_data.append(float(sales))
+                expenses_data.append(float(expenses))
+                
+        elif period == 'this_month':
+            # Weekly data for this month
+            labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4']
+            sales_data = []
+            expenses_data = []
+            
+            for week in range(4):
+                week_start = start_date + timedelta(weeks=week)
+                week_end = week_start + timedelta(weeks=1)
+                if week_end > end_date:
+                    week_end = end_date
+                
+                sales = Sale.objects.filter(
+                    transaction__branch=branch,
+                    date__range=[week_start, week_end]
+                ).aggregate(total=Sum('total_amount'))['total'] or 0
+                
+                expenses = Expense.objects.filter(
+                    branch=branch,
+                    date__range=[week_start, week_end]
+                ).aggregate(total=Sum('amount'))['total'] or 0
+                
+                sales_data.append(float(sales))
+                expenses_data.append(float(expenses))
+                
+        elif period == 'year':
+            # Monthly data for this year
+            labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            sales_data = []
+            expenses_data = []
+            
+            for month in range(1, 13):
+                month_start = start_date.replace(month=month, day=1)
+                if month == 12:
+                    month_end = month_start.replace(year=month_start.year + 1, month=1, day=1)
+                else:
+                    month_end = month_start.replace(month=month + 1, day=1)
+                
+                if month_end > end_date:
+                    month_end = end_date
+                
+                sales = Sale.objects.filter(
+                    transaction__branch=branch,
+                    date__range=[month_start, month_end]
+                ).aggregate(total=Sum('total_amount'))['total'] or 0
+                
+                expenses = Expense.objects.filter(
+                    branch=branch,
+                    date__range=[month_start, month_end]
+                ).aggregate(total=Sum('amount'))['total'] or 0
+                
+                sales_data.append(float(sales))
+                expenses_data.append(float(expenses))
+        
+        return {
+            'labels': labels,
+            'sales': sales_data,
+            'expenses': expenses_data
+        }
+
+    def calculate_metrics(self, branch, start_date, end_date):
+        """Calculate financial metrics for the period"""
+        
+        # Total sales
+        total_sales = Sale.objects.filter(
+            transaction__branch=branch,
+            date__range=[start_date, end_date]
+        ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+        
+        # Total expenses
+        total_expenses = Expense.objects.filter(
+            branch=branch,
+            date__range=[start_date, end_date]
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        
+        # COGS (Cost of Goods Sold)
+        cogs = Expense.objects.filter(
+            branch=branch,
+            category__name__icontains='cogs',  # Adjust based on your category naming
+            date__range=[start_date, end_date]
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        
+        # Calculate derived metrics
+        gross_profit = total_sales - cogs
+        net_profit = total_sales - total_expenses
+        
+        # Gross profit margin
+        if total_sales > 0:
+            gp_margin = (gross_profit / total_sales) * 100
+        else:
+            gp_margin = Decimal('0')
+        
+        # Operating expenses (excluding COGS)
+        operating_expenses = total_expenses - cogs
+        
+        return {
+            'total_sales': total_sales,
+            'total_expenses': total_expenses,
+            'cogs': cogs,
+            'gross_profit': gross_profit,
+            'net_profit': net_profit,
+            'gp_margin': gp_margin,
+            'operating_expenses': operating_expenses,
+        }
+
+
+# AJAX endpoint for dynamic data loading
+class FinanceDataAPI(View):
+    """API endpoint for fetching finance data dynamically"""
+    
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+        
+        period = request.GET.get('period', 'this_month')
+        finance_view = Finance()
+        
+        start_date, end_date = finance_view.get_date_range(period)
+        graph_data = finance_view.get_graph_data(request.user.branch, period, start_date, end_date)
+        metrics = finance_view.calculate_metrics(request.user.branch, start_date, end_date)
+        
+        # Convert Decimal to float for JSON serialization
+        for key, value in metrics.items():
+            if isinstance(value, Decimal):
+                metrics[key] = float(value)
+        
+        return JsonResponse({
+            'graph_data': graph_data,
+            'metrics': metrics,
+            'period': period
+        })
+
     
 @login_required
 def monthly_installments(request):
@@ -4701,60 +4915,6 @@ def get_incomes(request):
         'has_next': page_obj.has_next()
     })
     
-@transaction.atomic
-@login_required
-def record_income(request):
-    try:
-        data = json.loads(request.body)
-        logger.info(data)
-
-        name = data.get('name')
-        amount = data.get('amount')
-        category_name = data.get('category')
-        branch_id = data.get('branch')
-        r_value = data.get('r_value')
-        r_unit = data.get('r_unit')
-
-        if not all([name, amount, category_name, branch_id]):
-            return JsonResponse({'success': False, 'message': 'Missing required fields'}, status=400)
-
-        parent_category, _ = IncomeCategory.objects.get_or_create(name="Manual", parent=None)
-        category, _ = IncomeCategory.objects.get_or_create(name=category_name, parent=parent_category)
-
-        branch = Branch.objects.get(id=branch_id)
-        currency = Currency.objects.filter(name__icontains="usd").first() #to be dynamic
-        
-        logger.info(currency)
-
-        Income.objects.create(
-            amount=amount,
-            currency_id=currency.id,
-            category=category,
-            note=name,
-            user=request.user,
-            branch=branch,
-            is_recurring=bool(r_value),
-            recurrence_value=r_value if r_value else None,
-            recurrence_unit=r_unit if r_unit else None
-        )
-        
-        Cashbook.objects.create(
-            amount=amount,
-            description=f"Income: {name} -> {category.name}",
-            debit=True,
-            credit=False,
-            branch=branch,
-            created_by=request.user,
-            updated_by=request.user,
-            issue_date=timezone.now()
-        )
-        
-        logger.info(f'Income recorded successfully: {Income.objects.last()}')
-
-        return JsonResponse({'success': True, 'message': 'Income recorded successfully'}, status=200)
-    except Exception as e:
-        logger.error("Income record error: %s", e)
-        return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 
 import csv
@@ -8428,62 +8588,6 @@ def get_incomes(request):
         'data': income_data,
         'has_next': page_obj.has_next()
     })
-    
-@transaction.atomic
-@login_required
-def record_income(request):
-    try:
-        data = json.loads(request.body)
-        logger.info(data)
-
-        name = data.get('name')
-        amount = data.get('amount')
-        category_name = data.get('category')
-        branch_id = data.get('branch')
-        r_value = data.get('r_value')
-        r_unit = data.get('r_unit')
-
-        if not all([name, amount, category_name, branch_id]):
-            return JsonResponse({'success': False, 'message': 'Missing required fields'}, status=400)
-
-        parent_category, _ = IncomeCategory.objects.get_or_create(name="Manual", parent=None)
-        category, _ = IncomeCategory.objects.get_or_create(name=category_name, parent=parent_category)
-
-        branch = Branch.objects.get(id=branch_id)
-        currency = Currency.objects.filter(name__icontains="usd").first() #to be dynamic
-        
-        logger.info(currency)
-
-        Income.objects.create(
-            amount=amount,
-            currency_id=currency.id,
-            category=category,
-            note=name,
-            user=request.user,
-            branch=branch,
-            is_recurring=bool(r_value),
-            recurrence_value=r_value if r_value else None,
-            recurrence_unit=r_unit if r_unit else None
-        )
-        
-        Cashbook.objects.create(
-            amount=amount,
-            description=f"Income: {name} -> {category.name}",
-            debit=True,
-            credit=False,
-            branch=branch,
-            created_by=request.user,
-            updated_by=request.user,
-            issue_date=timezone.now()
-        )
-        
-        logger.info(f'Income recorded successfully: {Income.objects.last()}')
-
-        return JsonResponse({'success': True, 'message': 'Income recorded successfully'}, status=200)
-    except Exception as e:
-        logger.error("Income record error: %s", e)
-        return JsonResponse({'success': False, 'message': str(e)}, status=500)
-
 
 @login_required
 @transaction.atomic
@@ -12907,14 +13011,12 @@ def get_incomes(request):
 @login_required
 def record_income(request):
     try:
-        data = request.POST
+        data = json.loads(request.body)
         logger.info(data)
 
         name = data.get('name')
         amount = data.get('amount')
         currency_id = data.get('currency')
-        category_name = data.get('category')
-        main_category = data.get('main_category')
         account_id = data.get('account_to')
         branch_id = data.get('branch')
         r_value = data.get('is_recurring')
@@ -12923,25 +13025,58 @@ def record_income(request):
         from_date = data.get('from_date')
         to_date = data.get('to_date')
         reminder_dated = data.get('reminder_dated')
-
-        parent_category, _ = IncomeCategory.objects.get_or_create(name=main_category, parent=None)
-        category, _ = IncomeCategory.objects.get_or_create(name=category_name, parent=parent_category)
-
-        branch = Branch.objects.get(id=branch_id)
+        
+        category_data = data.get('category', {})
+        main_category_data = data.get('main_category', {})
+        
+        try:
+            main_category, _ = IncomeCategory.objects.get_or_create(
+                name=main_category_data.get('text'),
+                 defaults={
+                    'parent':None
+                }
+            )
+        except IncomeCategory.DoesNotExist:
+            logger.info(f'Main category doesnt exists.')
+            return JsonResponse(
+                {"error": "Selected main category does not exist."},
+                status=400
+            )
+            
+        logger.info(f'main category: {main_category}')
+        
+        if category_data.get('isNew', False):
+            category, created = IncomeCategory.objects.get_or_create(
+                name=category_data.get('text'),
+                parent_id=main_category.id
+            )
+        else:
+            try:
+                category = IncomeCategory.objects.get(
+                    id=category_data.get('value')
+                )
+            except IncomeCategory.DoesNotExist:
+                return JsonResponse(
+                    {"error": "Selected category does not exist."},
+                    status=400
+                )
+        
+        logger.info(f'Main cat: {main_category_data}')
+        
 
         Income.objects.create(
             amount=amount,
             account_id=account_id,
             currency_id=currency_id,
-            category=category,
+            category_id=category.id,
             note=name,
             user=request.user,
-            branch=branch,
+            branch_id=branch_id,
             is_recurring=bool(r_value),
-            from_date = from_date,
-            to_date = to_date,
+            from_date = from_date if from_date else None,
+            to_date = to_date if to_date else None,
             reminder = reminder,
-            remainder_date = reminder_dated,
+            remainder_date = reminder_dated if reminder_dated else None,
             recurrence_value=r_value if r_value else None,
             recurrence_unit=r_unit if r_unit else None
         )
@@ -12951,7 +13086,7 @@ def record_income(request):
             description=f"Income: {name} -> {category.name}",
             debit=True,
             credit=False,
-            branch=branch,
+            branch_id=branch_id,
             created_by=request.user,
             updated_by=request.user,
             issue_date=timezone.now()
