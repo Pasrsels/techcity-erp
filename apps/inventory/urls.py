@@ -3,10 +3,9 @@ from . views import *
 from rest_framework import routers
 from . consumer import InventoryConsumer
 from rest_framework.routers import DefaultRouter
-from .api import *
 
 router = DefaultRouter()
-router.register(r'products', InventoryViewset, basename='api_products')
+# router.register(r'products', InventoryViewset, basename='api_products')
 
 app_name = 'inventory'
 
@@ -125,81 +124,5 @@ urlpatterns = [
     #API ENDPOINTS
     ################################################################################################
 
-    #Categories
-    # path('api/v1/inventory/add/', AddInventoryView.as_view(), name='add-inventory'),
-    path('api/v1/categories', CategoriesList.as_view(), name = 'api_categories'),
-    path('api/v1/categories-add', AddCategories.as_view(), name = 'api_add_categories'),
-
-    #Products
-    path('api/v1/products', Products.as_view(), name = 'api_products'),
-    path('api/v1/products-add-and-edit', AddProducts.as_view(), name = 'api_add_and_edit_products'),
-    path('api/v1/products-delete', DeleteProducts.as_view(), name = 'api_delete_products'),
-
-    #Inventory
-    path('api/v1/inventory-list/', InventoryList.as_view(), name = 'api_inventory_list'),
-    path('api/v1/inventory-delete/<int:id>/', DeleteInventory.as_view(), name = 'api_delete_inventory'),
-    path('api/v1/inventory-edit/<int:product_id>/', EditInventory.as_view(), name = 'api_edit_inventory'),
-    path('api/v1/inventory-index', InventoryIndexJson.as_view(), name = 'api_inventory_index_json'),
-    path('api/v1/inventory-activate/<int:product_id>/', ActivateInventory.as_view(), name = 'api_inventory_activate'),
-    path('api/v1/inventory-branch', BranchesInventory.as_view(), name = 'api_inventory_branch'),
-    path('api/v1/defective-product-view-add/', DefectiveProductViewAdd.as_view(), name='api_defective_product_view_add'),
-
-    #Notification
-    path('api/v1/notification-json', NotificationJson.as_view(), name = 'api_notification_json'),
-
-    #Stock Take
-    path('api/v1/stocktake-view-and-edit', StockTakeViewEdit.as_view(), name = 'api_stock_take'),
-    path('api/v1/process-stocktake-item', ProcessStockTakeItem.as_view(), name = 'api_process_stock_take'),
-    path('api/v1/stocktake-details', StockTakeDetail.as_view(), name = 'api_stock_take_detail'),
-
-    #Branch
-    path('api/v1/branch-view-and-add', BranchCode.as_view(), name = 'api_branch_code'),
-
-    #Supplier
-    path('api/v1/supplier-view-add', SupplierViewAdd.as_view(), name= 'api_supplier_view_add'),
-    path('api/v1/supplier-list-json', SupplierListJson.as_view(), name= 'api_supplier_list'),
-    path('api/v1/supplier-delete-edit/<int:supplier_id>/', SupplierDelete.as_view(), name= 'api_supplier_delete'),
-    path('api/v1/supplier-prices/<int:product_id>/', SupplierPrices.as_view(), name= 'api_supplier_prices'),
-    path('api/v1/supplier-payment-history/<int:supplier_id>/', SupplierPaymentHistory.as_view(), name= 'api_supplier_payment_history'),
-    path('api/v1/supplier-view/<int:supplier_id>/', SupplierView.as_view(), name= 'api_supplier_view'),
-
-    #Reorder
-    path('api/v1/reorder-create-and-get', CreateandGetOrder.as_view(), name= 'api_create_get_reorder'),
-    path('api/v1/reorder-list-json', ReorderListJson.as_view(), name= 'api_reorder_list_json'),
-    path('api/v1/reorder-from-notification', ReorderFromNotification.as_view(), name= 'api_reorder_from_notification'),
-    path('api/v1/reorder-add-quantity', AddReorderQuantity.as_view(), name= 'api_add_reorder_quantity'),
-    path('api/v1/reorder-settings', ReorderSettings.as_view(), name= 'api_reorder_settings'),
-
-    #Purchase Order
-    path('api/v1/purchase-order-list-create', PurchaseOrderListandCreate.as_view(), name= 'api_purchase_order_list_create'),
-    path('api/v1/purchase-order-information', PurchaseOrderInformation.as_view(), name= 'api_purchase_order_information'),
-    path('api/v1/purchase-order-delete-update/<int:purchase_order_id>/', PurchaseOrderDeleteandEdit.as_view(), name= 'api_purchase_order_delete_edit'),
-    path('api/v1/purchase-order-print/<int:order_id>/', PrintPurchaseOrder.as_view(), name= 'api_purchase_order_print'),
-    path('api/v1/purchase-receive-order/<int:order_id>/', ReceiveOrder.as_view(), name= 'api_purchase_order_receive'),
-    path('api/v1/purchase-process-received-order', ProcessReceivedOrder.as_view(), name= 'api_purchase_order_received'),
-    path('api/v1/purchase-order-detail', PurchaseOrderDetail.as_view(), name= 'api_purchase_order_detail'),
-    path('api/v1/purchase-order-status/<int:order_id>/', PurchaseOrderStatus.as_view(), name= 'api_purchase_order_status'),
-    path('api/v1/purchase-order-mark-done/<int:order_id>/', MarkPurchaseOrderDone.as_view(), name= 'api_purchase_order_mark'),
-    path('api/v1/purchase-order-sales-price-list-pdf/<int:order_id>/', SalesPriceListPDF.as_view(), name= 'api_purchase_order_sales_price_list_pdf'),
-    path('api/v1/purchase-order-confirm-item/<int:order_id>/', PurchaseOrderConfirmOrderItem.as_view(), name= 'api_purchase_order_confirm'),
-
-    #Transfer
-    path('api/v1/transfer-print/<int:transfer_id>/', PrintTransfer.as_view(), name= 'api_print_transfer'),
-    path('api/v1/transfer-recieve-inventory', RecieveInventory.as_view(), name= 'api_recieve_inventory'),
-    path('api/v1/transfer-over-list-stock', OverListStock.as_view(), name= 'api_over_list_stock'),
-    path('api/v1/transfer-delete/<int:transfer_id>/', TransferDelete.as_view(), name= 'api_transfer_delete'),
-    path('api/v1/transfer-add', AddTransferInventory.as_view(), name= 'api_add_transfer'),
-    path('api/v1/transfer-details/<int:transfer_id>/', TransferDetails.as_view(), name= 'api_transfer_details'),
-    path('api/v1/transfer-held-json/<int:transfer_id>/', HeldTransferJson.as_view(), name= 'api_transfer_held'),
-    path('api/v1/transfer-held', HeldTransfers.as_view(), name= 'api_transfers_held'),
-    path('api/v1/process-transfer-held/<int:transfer_id>/', ProcessHeldTransfer.as_view(), name= 'api_process_transfer_held'),
-
-    #Report
-    path('api/v1/inventory-pdf', InventoryPDF.as_view(), name='api_inventory_pdf'),
-    path('api/v1/inventory-report', InventoryReport.as_view(), name='api_inventory_report'),
-
-    #Accessories
-    path('api/v1/accessories_view/<int:product_id>/', AccessoriesView.as_view(), name='api_accessories_view'),
-
-    path('get-cart-items/', get_cart_items, name='get_cart_items'),
+     path('get-cart-items/', get_cart_items, name='get_cart_items'),
 ]

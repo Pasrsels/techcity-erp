@@ -163,23 +163,23 @@ DATABASES = {
     #     default=os.environ.get('DATABASE_URL')
     # )
 
-    'default': {
-         'ENGINE': 'django.db.backends.postgresql',
-         'NAME':  'techcity_db',
-         'USER': 'postgres',
-         'PASSWORD': 'neverfail',
-         'HOST': 'localhost',
-         'PORT': '5432'
-     }
-    
     # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME':  'testt',
-    #     'USER': 'postgres',
-    #     'PASSWORD': 'neverfail',
-    #     'HOST': 'localhost',
-    #     'PORT': '5432'
-    # }
+    #      'ENGINE': 'django.db.backends.postgresql',
+    #      'NAME':  'techcity_db',
+    #      'USER': 'postgres',
+    #      'PASSWORD': 'neverfail',
+    #      'HOST': 'localhost',
+    #      'PORT': '5432'
+    #  }
+    
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME':  'testt',
+        'USER': 'postgres',
+        'PASSWORD': 'neverfail',
+        'HOST': 'localhost',
+        'PORT': '5432'
+    }
 }
 
 if os.environ.get('TESTING'):
@@ -260,29 +260,6 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 MEDIA_ROOT = str(BASE_DIR / "media")
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-url
 MEDIA_URL = "/media/"
-
-# LOGGING
-# ------------------------------------------------------------------------------
-# https://docs.djangoproject.com/en/dev/ref/settings/#logging
-# See https://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s",
-        },
-    },
-    "handlers": {
-        "console": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "formatter": "verbose",
-        }
-    },
-    "root": {"level": "INFO", "handlers": ["console"]},
-}
 
 
 # CACHES
@@ -383,5 +360,26 @@ CELERY_BEAT_SCHEDULE = {
     'ping-every-5-seconds': {
         'task': 'utils.zimra.ping',
         'schedule': REPORTING_FREQUENCY * 60
+    },
+}
+
+
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'products_api.log',
+        },
+    },
+    'loggers': {
+        '__main__': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
     },
 }

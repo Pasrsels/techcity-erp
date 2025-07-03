@@ -184,9 +184,13 @@ class Inventory(models.Model):
     image = models.ImageField(upload_to='product_images/', default='placeholder.png', null=True, blank=True)
     disable = models.BooleanField(default=False)
     serial_numbers = models.ManyToManyField('SerialNumber', related_name='inventories') 
-
     class Meta:
         unique_together = ('id', 'branch') 
+        
+        indexes = [
+            models.Index(fields=['branch', 'status', 'disable']),
+            models.Index(fields=['name']),
+        ]
 
     def update_stock(self, added_quantity):
         self.quantity += added_quantity
