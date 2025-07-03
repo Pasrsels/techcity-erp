@@ -3831,7 +3831,7 @@ def process_stock_take_item(request):
            s_item = StocktakeItem.objects.get(id=stocktake_id)
            s_item.quantity = int(phy_quantity)
            
-           difference = abs(s_item.product.quantity - int(phy_quantity)) 
+           difference = abs(s_item.product.now_quantity - int(phy_quantity)) 
            
            logger.info(f'difference: {difference}')
            
@@ -3852,12 +3852,38 @@ def process_stock_take_item(request):
            return JsonResponse({'success': True, 'data': details_inventory }, status = 200)
        except Exception as e:
            return JsonResponse({'success': False, 'response': e}, status = 400)
+       
+@login_required
+def stocktake_pdf(request):
+    try:
+        data = json.loads(request.body)
+        type = data.get('type')
+        stocktake_id = data.get('stocktake_id')
+        template_name = 'reports/stocktake.html'
+        
+        stock_take = StockTake.objects.get(id=stocktake_id)
+        
+        stock_items = None
+        if type == 'negative':
+            stock_items = StocktakeItem.objects.filter(stocktake__id=stocktake_id, difference__lt=0)
+        elif type == 'positve':
+            stock_items = StocktakeItem.objects.filter(stocktake__id=stocktake_id, difference__gt=0)
+        
+        return generate_pdf(
+        template_name, {
+            'stocktake_items':stock_items,
+            'stock_take':stock_take
+        }
+    )
+        
+    except Exception as e:
+        return JsonResponse({'success':False, 'message':str(e)}, status=400)
 
 @login_required
 def stock_take_index(request):
     if request.method == 'GET':
         form = StockTakeForm()
-        stock_takes = StockTake.objects.all()
+        stock_takes = StockTake.objects.filter(branch=request.user.branch)
         
         negative = stock_takes.aggregate(total=Sum('negative'))['total'] or 0
         positive = stock_takes.aggregate(total=Sum('positive'))['total'] or 0
@@ -3951,15 +3977,15 @@ def confirm_stocktake(request, stocktake_id):
 @login_required
 def stock_take_detail(request, stocktake_id):
     if request.method == 'GET':
-        try:
-            products = StocktakeItem.objects.filter(stocktake__id=stocktake_id)
-            stocktake  = StockTake.objects.get(id=stocktake_id)
-            return render(request, 'stocktake/stocktake_detail.html', {
-                'products':products,
-                'stocktake':stocktake
-            })
-        except Exception as e:
-            return redirect('inventory:stocktake_detail', stocktake_id)
+   
+        products = StocktakeItem.objects.filter(stocktake__id=stocktake_id)
+        stocktake  = StockTake.objects.get(id=stocktake_id)
+        return render(request, 'stocktake/stocktake_detail.html', {
+            'products':products,
+            'stocktake':stocktake
+        })
+    
+        return redirect('inventory:stocktake_detail', stocktake_id)
         
     if request.method == 'POST':
         
@@ -4000,7 +4026,17 @@ def accept_stocktake_item(request):
         
         with transaction.atomic():
             stocktake = StocktakeItem.objects.get(id=stocktake_id)
-            stocktake.product.quantity += 0 if stocktake.quantity_difference < 0 else stocktake.quantity_difference
+            logger.info(f'quantity: {stocktake.quantity} : now_quantity {stocktake.now_quantity}')
+            logger.info(f'diff: {stocktake.now_quantity} :{stocktake.quantity - stocktake.now_quantity }')
+            
+            stocktake.product.quantity += (stocktake.quantity - stocktake.now_quantity )
+            stocktake.now_quantity = stocktake.product.quantity 
+            stocktake.has_diff = True
+            
+            stocktake.save()
+            
+            logger.info(f'quantity: {stocktake.now_quantity}')
+        
             stocktake.note = note
             stocktake.accepted = True
             
@@ -4066,7 +4102,7 @@ def accept_stocktake_item(request):
             )
                 
             logger.success(f'Stocktake loss successfully debited to user account(s)')   
-            return JsonResponse({'success':True, 'message':'success', 'quantity':stocktake.quantity_difference}, status=201) 
+            return JsonResponse({'success':True, 'message':'success', 'quantity':stocktake.now_quantity}, status=201) 
         
     except Exception as e:
         logger.error(f'Error recording stocktake item: {e}')

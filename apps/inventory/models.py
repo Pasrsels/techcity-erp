@@ -579,6 +579,7 @@ class StocktakeItem(models.Model):
     accepted = models.BooleanField(default=False,null=True)
     company_loss = models.BooleanField(null=True, default=False)
     recorded = models.BooleanField(null=True, default=False)
+    has_diff = models.BooleanField(default=False)
 
 # Inventory loss models
 class WriteOff(models.Model):

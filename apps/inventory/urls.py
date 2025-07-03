@@ -4,6 +4,7 @@ from rest_framework import routers
 from . consumer import InventoryConsumer
 from rest_framework.routers import DefaultRouter
 from .api import *
+from apps.finance.apis.cashbook_apis import *
 
 router = DefaultRouter()
 router.register(r'products', InventoryViewset, basename='api_products')
@@ -39,6 +40,7 @@ urlpatterns = [
     path('stocktake/detail/<int:stocktake_id>/', stock_take_detail, name='stock_take_detail'),
     path('accept_stock_take/', accept_stocktake_item, name='accept_stocktake_item'),
     path('confirm_stocktake/<int:stocktake_id>/', confirm_stocktake, name='confirm_stocktake'),
+    path('stocktake_pdf/',  stocktake_pdf, name="stocktake_pdf"),
     
     #batch_code 
     path('batch_code/', batch_code, name='batch_code'),

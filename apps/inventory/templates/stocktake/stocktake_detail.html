@@ -152,12 +152,16 @@
             <h4 class="px-1">Stocktake #{{ stocktake.s_t_number }}</h4>
             <p>Process and Detail view</p>
         </div>
-        <button class="header-btn" onclick="printStockSheet()" title="Print Stocktake">
-            <i class="bx bx-printer"></i> Print Sheet
-        </button>
+        <div class="d-flex gap-2">
+            <i class="bx bx-filter header-btn" onclick="showFilterModal()" id="filter"></i>
+            <button class="header-btn" onclick="printStockSheet()" title="Print Stocktake">
+                <i class="bx bx-printer"></i> Print Sheet
+            </button>
+        </div>
+        
     </div>
 
-    <div class="search-container mt-2">
+    <div class="search-container mt-2 ">
         <input type="text" class="search-input" placeholder="Search products..." id="stocktake-search">
         <i class="fas fa-search search-icon"></i>
     </div>
@@ -185,7 +189,7 @@
                         </td>
                         <td>
                             <small id="id_quantity_{{ product.id }}">
-                                {{ product.product.quantity }}
+                                {{ product.now_quantity }}
                             </small>
                         </td>
                         <td>
@@ -208,7 +212,9 @@
                         </td>
                         <td id="action_{{ product.id }}">
                             <button class="bx bx-info-circle text-primary btn btn-primary-sm bg-primary-subtle border-0" style="cursor: pointer;" onclick="getProductDetail({{ product.product.id }})"></button>
-                            {% if product.quantity_difference == 0 and product.recorded %}
+                            {% if product.has_diff %}
+                                <span class='bg-success bg-success-subtle rounded p-2'>success</span>
+                            {% elif product.quantity_difference == 0 and product.recorded %}
                                 <span class='bg-success bg-success-subtle rounded p-2'>success</span>
                             {% elif product.quantity_difference != 0 %}
                                  <button class="header-btn" onclick="showAccpetModal({{ product.id }})" id="accept-btn">Accept</button>
@@ -294,6 +300,33 @@
         </div>
     </div>
 
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl-custom modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Filter Options</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body" id="inventory-detail-container">
+                    <button class="border p-3 rounded-4 btn w-100 mb-2" onclick="pdf('all', {{ stocktake.id }})">All</button>
+                    <button class="border p-3 rounded-4 mb-2 btn w-100" onclick="pdf('negative', {{ stocktake.id }})" data-name="negative">Negative</button>
+                    <button class="border p-3 rounded-4 btn mb-2 w-100" onclick="pdf('positive', { stocktake.id }})">Positive</button>
+                    <button class="border p-3 rounded-4 mb-2 btn w-100" onclick="pdf('product', {{ stocktake.id }})">By product</button>
+                    <button class="border p-3 rounded-4 btn w-100"  onclick="pdf('category', {{ stocktake.id }})">By Category</button>
+                </div>
+
+                <div class="d-none">
+                    <select name="by_products" id="products">
+                        {% for product in products %}
+                            <option value="product">{{ product }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+            </div>
+        </div>
+    </div>
 
 </div>
 
@@ -302,13 +335,19 @@
     const acceptBtn = document.querySelectorAll('#accept-btn');
     const acceptModal = new bootstrap.Modal(document.getElementById('acceptModal'));
     const selectedOptions = Array.from(document.querySelector('#assignToEmployee').selectedOptions).map(opt => opt.value);
-    
+    const filterButton = document.getElementById('filter')
+    const filterModal = new bootstrap.Modal(document.getElementById('filterModal'))
+
     new SlimSelect({
         select: '#assignToEmployee',
         placeholder: 'Select Employee'
     })
 
-     document.getElementById("stocktake-search").addEventListener("keyup", function () {
+    filterButton.addEventListener('click', ()=>{
+        filterModal.show()
+    })
+
+    document.getElementById("stocktake-search").addEventListener("keyup", function () {
         const input = this.value.toLowerCase();
         const rows = document.querySelectorAll("#stocktake_table tbody tr");
 
@@ -325,6 +364,21 @@
     function showAccpetModal(id){
         stocktakeItemId = id;
         acceptModal.show()
+    }
+
+    function pdf(type){
+        fetch('inventory/stocktake_pdf/',{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')  
+            },
+            body: JSON.stringify({ type: type })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data)
+        })
     }
 
     function getProductDetail(id) {

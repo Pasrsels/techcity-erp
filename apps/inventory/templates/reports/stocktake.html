@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% block css %}
+        <link rel="stylesheet" href="{% static 'css/main.css'%}">
+        <link rel="stylesheet" href="{% static 'css/bootstrap/css/bootstrap.min.css'%}">
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+        <link href='{% static "assets/boxicons/css/boxicons.css"%}' rel='stylesheet'>
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    {% endblock css %}
+
+    <title>Stocktake</title>
+</head>
+<body class="container">
+    <div class="row container mt-5">
+        <small>{{report_date}}</small>
+        <div class="col-12">
+            <h4>Stocktake</h4>
+            <hr style="border:1px solid #664147 !important;">
+            <div class='table-scroll'>
+                <table class="table table-borderless table-hover" id="stocktake_table">
+                    <thead class="background">
+                        <th>#</th>
+                        <th>Product</th>
+                        <th>System Quantity</th>
+                        <th>Physical Quantity</th>
+                        <th>Quantity Difference</th>
+                        <th>Note</th>
+                        <th>Actions</th>
+                    </thead>
+                    <tbody>
+                        {% for product in stocktake_items %}
+                            <tr>
+                                <td><small>{{ forloop.counter }}</small></td>
+                                <td>
+                                    <small>
+                                        {{ product.product.name }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <small id="id_quantity_{{ product.id }}">
+                                        {{ product.now_quantity }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <small id="id_diff_{{ product.id }}">{{ product.quantity_difference }}</small>
+                                </td>
+                                <td>
+                                    <small id="id_cost_diff_{{ product.id }}">{{ product.cost }}</small>
+                                </td>
+                                <td>
+                                    <small id="id_description_{{ product.id }}">{{product.note }}</small>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
