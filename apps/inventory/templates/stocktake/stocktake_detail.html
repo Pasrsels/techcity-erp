@@ -167,7 +167,7 @@
     </div>
 
     <div id="print-section">
-        <table class="table table-borderless table-hover" id="stocktake_table">
+        <table class="table w-100 table-borderless table-hover" id="stocktake_table" style="width: 100%;">
             <thead class="background">
                 <th>#</th>
                 <th>Product</th>
@@ -189,7 +189,7 @@
                         </td>
                         <td>
                             <small id="id_quantity_{{ product.id }}">
-                                {{ product.now_quantity }}
+                                {{ product.product.quantity }}
                             </small>
                         </td>
                         <td>
@@ -350,6 +350,15 @@
         filterModal.show()
     })
 
+    $(document).ready(function() {
+        $('#stocktake_table').DataTable({
+            searching: false,   
+            paging: false,     
+            info: false,        
+            ordering: true  
+        });
+    });
+
     document.getElementById("stocktake-search").addEventListener("keyup", function () {
         const input = this.value.toLowerCase();
         const rows = document.querySelectorAll("#stocktake_table tbody tr");
@@ -402,22 +411,48 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')  
+                'X-CSRFToken': getCookie('csrftoken')
             },
             body: JSON.stringify({ product_id: product_id })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Undo successful');
+                Toastify({
+                    text: "Undo successful",
+                    duration: 3000,
+                    gravity: "top", 
+                    position: "right", 
+                    backgroundColor: "#4CAF50", 
+                    close: true
+                }).showToast();
+
+                document.getElementById(`action_${data.product_id}`).style.display="none";
             } else {
-                alert('Undo failed: ' + data.message);
+                Toastify({
+                    text: "Undo failed: " + (data.message || "Unknown error"),
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#f44336", 
+                    close: true
+                }).showToast();
             }
         })
         .catch(error => {
             console.error('Error:', error);
+            Toastify({
+                text: "An error occurred. Please try again.",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#ff9800", 
+                close: true
+            }).showToast();
         });
     }
+
+
 
     function getProductDetail(id) {
         const modalBody = document.getElementById('inventory-detail-container');
@@ -539,6 +574,9 @@
                     <span class='bg-success bg-success-subtle rounded p-2'>success</span>
                 `;
                 acceptModal.hide()
+
+                document.getElementById(`action_${stocktakeItemId}`).style.display="block";
+                console.log(document.getElementById(`action_${stocktakeItemId}`))
             } else {
                 Swal.fire({
                     icon: 'error',

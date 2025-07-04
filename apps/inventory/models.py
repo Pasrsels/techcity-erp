@@ -359,7 +359,6 @@ class Transfer(models.Model):
             models.Index(fields=['hold']),
         ]
         
-
     @classmethod
     def generate_transfer_ref(self, branch, branches):
 

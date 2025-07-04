@@ -548,6 +548,9 @@
         color:#fff !important;
         background: var(--primary);
     }
+    .nav-link{
+
+    }
     .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
         color: #fff !important;
         background-color: var(--primary) !important;
@@ -696,9 +699,6 @@
             </div>
             {% endfor %}
         </div>
-        
-        
-        
         <!-- Chat Modal -->
         <div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
@@ -778,10 +778,10 @@
                     <button class="nav-link active" id="cash_income-tab" data-bs-toggle="tab" data-bs-target="#cash_income-panel" type="button" role="tab" aria-controls="cash_income-panel" aria-selected="true">Income</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="cash_expense-tab" data-bs-toggle="tab" data-bs-target="#cash_expense-panel" type="button" role="tab" aria-controls="cash_expense-panel" aria-selected="false">Expenses</button>
+                    <button class="nav-link bg-danger" id="cash_expense-tab" data-bs-toggle="tab" data-bs-target="#cash_expense-panel" type="button" role="tab" aria-controls="cash_expense-panel" aria-selected="false">Expenses</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="cash_expense-tab" data-bs-toggle="tab" data-bs-target="#cash_expense-panel" type="button" role="tab" aria-controls="cash_expense-panel" aria-selected="false">Transfers</button>
+                    <button class="nav-link" id="transfer-tab" data-bs-toggle="tab" data-bs-target="#transfer-panel" type="button" role="tab" aria-controls="transfer_tab" aria-selected="false">Transfers</button>
                 </li>
             </ul>
         </div>
@@ -841,7 +841,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 function toggleRecurrence(type) {
-
     const toggle = document.getElementById(`${type}RecurringToggle`);
     const group = document.getElementById(`${type}RecurrenceGroup`);
 

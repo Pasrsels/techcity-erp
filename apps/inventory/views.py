@@ -3866,23 +3866,26 @@ def stocktake_pdf(request):
         stock_take = StockTake.objects.get(id=stocktake_id)
         
         stock_items = None
+      
         if type == 'negative':
             stock_items = StocktakeItem.objects.filter(stocktake=stock_take, quantity_difference__lt=0)
-        elif type == 'positve':
+        elif type == 'positve': 
             stock_items = StocktakeItem.objects.filter(stocktake=stock_take, quantity_difference__gt=0)
         elif type == 'all':
             stock_items = StocktakeItem.objects.all()
-        
-        logger.info(stock_items)
+
+        total_cost = stock_items.aggregate(total=Sum('product__cost'))['total'] or 0
        
         return generate_pdf(
             template_name, {
                 'stocktake_items':stock_items,
-                'stock_take':stock_take
+                'stock_take':stock_take,
+                'total_cost':total_cost
             }
         )
         
     except Exception as e:
+        logger.error(f'error processing pdf: {e}')
         return JsonResponse({'success':False, 'message':str(e)}, status=400)
     
 
@@ -4025,11 +4028,13 @@ def undo_accept_stocktake_item(request):
         with transaction.atomic():
             stocktake = StocktakeItem.objects.select_related('product').get(id=stocktake_id)
 
-            if not stocktake.accepted:
-                return JsonResponse({'success': False, 'message': 'Stocktake item not accepted yet.'}, status=400)
+            # if not stocktake.accepted:
+            #     return JsonResponse({'success': False, 'message': 'Stocktake item not accepted yet.'}, status=400)
 
             original_diff = stocktake.quantity - stocktake.now_quantity or 0
-            stocktake.now_quantity = stocktake.quantity
+            stocktake.product.quantity += abs(stocktake.quantity_difference)
+            stocktake.now_quantity += abs(stocktake.quantity_difference)
+            
             stocktake.product.quantity -= original_diff
             stocktake.product.save()
 
@@ -4043,8 +4048,8 @@ def undo_accept_stocktake_item(request):
             if expense:
                 Cashbook.objects.filter(expense=expense).delete()
                 expense.delete()
-
-            stocktake.now_quantity = None
+                
+            stocktake.recorded = False
             stocktake.has_diff = False
             stocktake.accepted = False
             stocktake.note = ''
@@ -4053,7 +4058,7 @@ def undo_accept_stocktake_item(request):
 
             logger.success('Stocktake acceptance successfully undone.')
 
-            return JsonResponse({'success': True, 'message': 'Undo successful', 'quantity': stocktake.product.quantity}, status=200)
+            return JsonResponse({'success': True, 'message': 'Undo successful', 'quantity': stocktake.now_quantity, 'product_id':stocktake.id}, status=200)
 
     except Exception as e:
         logger.error(f'Error undoing stocktake item: {e}')

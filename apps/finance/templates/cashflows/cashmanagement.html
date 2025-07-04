@@ -133,7 +133,15 @@
                     <div class="card p-3">
                         <div class="">
                             <div class="input-group">
-                                <div class="d-flex justify-content-end w-100 mb-2">
+                                <div class="d-flex justify-content-between w-100 mb-4 bg-light" style="height: 60px;">
+                                    <div class="d-flex align-items-center bg-light px-1">
+                                        <i class='bx bx-payment' style="color:#11998e;"></i>
+                                        <select class="form-select bg-light border-0 b" id="payment_type" name="payment_type">
+                                            <option value="cash">Cash</option>
+                                            <option value="bank">Bank</option>
+                                            <option value="ecocash">Ecocash</option>
+                                        </select>
+                                    </div>
                                     <div class="d-flex align-items-center bg-light px-1">
                                         <i class='bx bx-wallet'></i>
                                         <select class="form-select bg-light border-0 b" id="currency" name="currency">
@@ -313,26 +321,41 @@
                 <div class="row">
                 <div class="col">
                     <div class="card p-3">
+                        <div>
+                            here
+                            <input type="checkbox" class='form-check' onclick="showLoanModal()"/>
+                        </div>
+
                         <div class="">
                             <div class="input-group">
                                 <div class="input-group">
-                                <div class="d-flex justify-content-end">
-                                        <select class="form-select border-0 b" id="exp_currency" name="currency">
+                                <div class="d-flex justify-content-between w-100 mb-4 bg-light" style="height: 60px;">
+                                    <div class="d-flex align-items-center bg-light px-1">
+                                        <i class='bx bx-payment' style="color:#11998e;"></i>
+                                        <select class="form-select bg-light border-0 b" id="exp_payment_type" name="payment_type">
+                                            <option value="cash">Cash</option>
+                                            <option value="bank">Bank</option>
+                                            <option value="ecocash">Ecocash</option>
+                                        </select>
+                                    </div>
+                                    <div class="d-flex align-items-center bg-light px-1">
+                                        <i class='bx bx-wallet'></i>
+                                        <select class="form-select bg-light border-0 b" id="exp_currency" name="currency">
                                             {% for currency in currencies %}
                                                 <option value="{{ currency.id }}" {% if currency.default %} selected {% endif %}>{{ currency.name }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
-                                    <div class="mb-4">
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
-                                            <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="exp_Amount" onclick="clearInput(this)" value="0.00" placeholder="Enter amount" style="height: 100px;">
-                                        </div>
+                                </div>
+                                <div class="mb-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
+                                        <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="exp_Amount" onclick="clearInput(this)" value="0.00" placeholder="Enter amount" style="height: 100px;">
                                     </div>
+                                </div>
                                 </div>
                             </div>
                         </div>
-
                         <div class="mb-4 d-flex bg-light">
                             <div>
                                 <span class="input-group-text bg-light border-0">
@@ -489,6 +512,114 @@
                 </div> -->
             </div>
         </div>
+
+        <!-- transfer Tab -->
+        <div class="tab-pane fade" id="transfer-panel" role="tabpanel" aria-labelledby="transfer_tab">
+            <div class="row">
+                <div class="col">
+                    <div class="card p-3">
+                        <div class="input-group">
+                            <!-- Transfer Form -->
+                            <form id="transferForm" class="w-100">
+                                <div class="d-flex justify-content-between w-100 mb-4 bg-light" style="height: 60px;">
+                                    <div class="d-flex align-items-center bg-light px-1">
+                                        <i class='bx bx-payment' style="color:#11998e;"></i>
+                                        <select class="form-select bg-light border-0 b" id="exp_payment_type" name="payment_type">
+                                            <option value="cash">Cash</option>
+                                            <option value="bank">Bank</option>
+                                            <option value="ecocash">Ecocash</option>
+                                        </select>
+                                    </div>
+                                    <div class="d-flex align-items-center bg-light px-1">
+                                        <i class='bx bx-wallet'></i>
+                                        <select class="form-select bg-light border-0 b" id="exp_currency" name="currency">
+                                            {% for currency in currencies %}
+                                                <option value="{{ currency.id }}" {% if currency.default %} selected {% endif %}>{{ currency.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
+                                        <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="exp_Amount" onclick="clearInput(this)" value="0.00" placeholder="Enter amount" style="height: 100px;">
+                                    </div>
+                                </div>
+
+                                <div class="w-100 bg-light p-2 mb-4">
+                                    <h6><i class="bx bx-export"></i> From</h6>
+                                    <div class="form-section d-flex justify-content-between w-100">
+                                        <div>
+                                            <select class="form-select" id="fromType" name="fromType">
+                                                <option value="branch">Branch</option>
+                                                <option value="person">Person</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <select class="form-select" id="fromBranch" name="fromBranch">
+                                                <option value="">Select Branch</option>
+                                                {% for branch in branches %}
+                                                    {% if request.user.role|lower == 'admin' %}
+                                                        <option value="{{ branch.id}}">{{ branch.name }}</option>
+                                                    {% elif forloop.first %}
+                                                        <option value="{{ request.user.branch.id}}">{{ request.user.branch }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- To Section -->
+                                <div class="bg-light p-2 ">
+                                    <h6><i class="bx bx-import"></i> To</h6>
+                                    <div class="form-section mb-4 d-flex bg-light justify-content-between w-100">
+                                        <div>
+                                            <select class="form-select border-0" id="toType" name="toType">
+                                                <option value="branch">Branch</option>
+                                                <option value="person">Person</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <select class="form-select border-0" id="toBranch" name="toBranch">
+                                                <option value="">Select Branch</option>
+                                                {% for branch in branches %}
+                                                    {% if request.user.role|lower == 'admin' %}
+                                                        <option value="{{ branch.id}}">{{ branch.name }}</option>
+                                                    {% elif forloop.first %}
+                                                        <option value="{{ request.user.branch.id}}">{{ request.user.branch }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <h6><i class="bx bx-note"></i> Description</h6>
+                                    <textarea class="form-control" id="description" name="description" rows="3" placeholder="Transfer description (optional)"></textarea>
+                                </div>
+
+                                <button type="submit" class="submit-btn">
+                                    <span class="button-text">Submit Transfer</span>
+                                    <span class="loading">
+                                        <i class="bx bx-loader-alt bx-spin"></i> Processing...
+                                    </span>
+                                </button>
+
+                                <div id="successMessage" class="success-message">
+                                    <i class="bx bx-check-circle"></i> Transfer completed successfully!
+                                </div>
+                                <div id="errorMessage" class="error-message">
+                                    <i class="bx bx-error-circle"></i> <span id="errorText"></span>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <!-- Add income Category Modal -->
@@ -588,10 +719,31 @@
         </div>
     </div>
 
+    <div class="modal fade" id="loan-Modal" tabindex="-1" aria-labelledby="addIncomeCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addIncomeCategoryModalLabel"><i class="bx bx-plus-circle me-2"></i>Enter loan details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                to be made
+            </div>
+            </div>
+        </div>
+    </div>
+
 <!-- <script src="{% static 'js/custom_search_select.js' %}"></script> -->
 <script>
 let categoriesData = [];
+const loanModal = new bootstrap.Modal(document.getElementById('loan-modal'));
+function clearInput(el){
+    el.value = '';
+}
 
+function showLoanModal(){
+    loanModal.show()
+}
 {% for cat in categories %}
     categoriesData.push({
         id: {{ cat.id }},
@@ -600,11 +752,6 @@ let categoriesData = [];
         text: '{{ cat.name }}'
     });
 {% endfor %}
-
-
-function clearInput(el){
-    el.value = '';
-}
 
 class CustomSearchSelect {
     constructor(containerId, options = {}) {

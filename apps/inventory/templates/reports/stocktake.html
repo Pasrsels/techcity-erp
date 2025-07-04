@@ -1,4 +1,14 @@
 {% load static %}
+<style>
+    .total{
+        border-top: 1px solid black;
+        border-bottom: 1px solid black;
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        padding-top: 5px;        
+    }
+</style> 
 <div class="container">
     <div class="row container mt-5">
         <small>{{report_date}}</small>
@@ -13,6 +23,7 @@
                         <th style="text-align:left;">System Quantity</th>
                         <th style="text-align:left;">Physical Quantity</th>
                         <th style="text-align:left;">Quantity Difference</th>
+                        <th style="text-align:left;">Cost Value</th>
                     </thead>
                     <tbody>
                         {% for product in stocktake_items %}
@@ -29,11 +40,28 @@
                                     </small>
                                 </td>
                                 <td  style="text-align:center;">
+                                    <small id="id_quantity_{{ product.id }}">
+                                        {{ product.quantity }}
+                                    </small>
+                                </td>
+                                <td  style="text-align:center;">
                                     <small id="id_diff_{{ product.id }}">{{ product.quantity_difference }}</small>
+                                </td>
+                                <td  style="text-align:center;">
+                                    <small id="id_quantity_{{ product.id }}">
+                                        ${{ product.cost }}
+                                    </small>
                                 </td>
                             </tr>
                         {% endfor %}
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <td>Total</td>
+                            <td colspan="4"></td>
+                            <td class="total">${{ total_cost }}</td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
