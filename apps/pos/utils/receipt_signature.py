@@ -36,7 +36,6 @@ def receipt_signature(
     receipt_taxes, 
     previous_receipt_hash=None
 ):
-    
     receipt_total_cents = int(receipt_total * 100)
 
     def format_tax_line(tax):
@@ -52,7 +51,7 @@ def receipt_signature(
         tax_amount_cents = int(tax['taxAmount'] * 100)
         sales_amount_cents = int(tax['salesAmountWithTax'] * 100)
         
-        return f"{tax['taxCode']}{tax_percent}{tax_amount_cents}{sales_amount_cents}"
+        return f"{tax.get('taxCode')}{tax_percent}{tax_amount_cents}{sales_amount_cents}"
     
     sorted_taxes = sorted(
         receipt_taxes, 
@@ -74,6 +73,7 @@ def receipt_signature(
     if previous_receipt_hash:
         signature_components.append(previous_receipt_hash)
     return ''.join(signature_components)
+
 
 def generate_receipt_signature(signature_string, private_key):
     
@@ -139,7 +139,7 @@ def generate_receipt_data(invoice, invoice_items, request):
                 tax_amount = 0.00
 
             # Accumulate tax group totals
-            key = (tax_id, tax_percent, tax_code, tax_name)
+            key = (tax_id, tax_percent, tax_code)
             tax_group_totals[key]["taxAmount"] += tax_amount
             tax_group_totals[key]["salesAmountWithTax"] += line_total
 

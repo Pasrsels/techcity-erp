@@ -1313,7 +1313,6 @@
         }
     }
 
-
     function displayReceipt(data) {
         try {
             let content = generateReceiptContent(data);
@@ -1349,7 +1348,6 @@
             });
         }
     }
-
 
     function generateReceiptContent(data) {
         const { invoice, invoice_items: invoiceItems } = data;
@@ -1449,7 +1447,28 @@
                         </tbody>
                         <tfoot>
                             <tr><td colspan="4"><strong>Subtotal</strong></td><td>${currencySymbol}${subTotal}</td></tr>
-                            <tr><td colspan="4"><strong>VAT (${vatRate}%)</strong></td><td>${currencySymbol}${vatAmount}</td></tr>
+                            ${invoiceItems.map(item => {
+                                const taxPercent = item.item__tax_type__tax_percent;
+                                const taxName = item.item__tax_type__tax_name;
+
+                                console.log(taxName);
+
+                                if (taxPercent == 0 || (taxName && taxName.toLowerCase() === "exempted")) {
+                                    return ''; 
+                                }
+
+                                if (parseFloat(taxPercent) === 0) {
+                                    return `<tr><td colspan="4"><strong>VAT (0%)</strong></td><td>${currencySymbol}0.00</td></tr>`;
+                                }
+
+                                const taxAmount = item.total_amount - (item.total_amount / ((taxPercent / 100) + 1));
+                                return `
+                                    <tr>
+                                        <td colspan="4"><strong>VAT (${taxPercent}%)</strong></td>
+                                        <td>${currencySymbol}${taxAmount.toFixed(2)}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
                             <tr><td colspan="4"><strong>Total</strong></td><td>${currencySymbol}${invoiceTotal}</td></tr>
                             <tr><td colspan="4"><strong>Amount Paid</strong></td><td>${currencySymbol}${amountPaid}</td></tr>
                             <tr><td colspan="4"><strong>Payment Method</strong></td><td>${paymentMethod || 'Cash'}</td></tr>
@@ -1472,8 +1491,6 @@
         `;
     }
     
-
-    // Function to print the receipt silently
     function printReceiptSilently(content) {
         let printFrame = document.getElementById("print-frame");
 
@@ -1508,7 +1525,6 @@
         `);
         frameDoc.document.close();
     }
-
     
     // customer get and post
     function submitClient() {

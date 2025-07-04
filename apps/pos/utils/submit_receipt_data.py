@@ -10,6 +10,9 @@ import hashlib
 import os
 import base64
 import binascii
+from collections import defaultdict
+from decimal import Decimal
+from django.utils.timezone import now
 
 def submit_receipt_data(request, receipt_data, credit_note, hash, signature, invoice__id):
     logger.info(invoice__id)
@@ -89,43 +92,70 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
 
                 logger.info('Fiscale day incremented.')
 
-            # salesbytax
-            fiscal_sale_counter_obj, _sbt = FiscalCounter.objects.get_or_create(
-                fiscal_counter_type='SaleByTax',
-                created_at__date=datetime.today(),
-                fiscal_counter_currency=invoice.currency.name.lower(),
+            invoice_items = invoice.invoice_items.all()
+            grouped = defaultdict(lambda: {
+                "amount": Decimal("0.00"),
+                "vat": Decimal("0.00")
+            })
 
-                defaults={
-                    "fiscal_counter_tax_percent":15,
-                    "fiscal_counter_tax_id":3,
-                    "fiscal_counter_money_type":invoice.payment_terms,
-                    "fiscal_counter_value":invoice.amount
-                }
-            )
+            for item in invoice_items:
+                
+                rate = item.vat_rate.rate  
+                tax_id = item.item.tax_type.tax_id
+                key = (invoice.currency.name.lower(), rate, tax_id)
+                grouped[key]["amount"] += item.total_amount
+                grouped[key]["vat"] += item.vat_amount
 
-            if not _sbt:
-                fiscal_sale_counter_obj.fiscal_counter_value += invoice.amount
-                fiscal_sale_counter_obj.save()
+            today = now().date()
 
-            # Sale Tax By Tax
-            fiscal_counter_obj, _stbt = FiscalCounter.objects.get_or_create(
-                fiscal_counter_type='SaleTaxByTax',
-                created_at__date=datetime.today(),
-                fiscal_counter_currency=invoice.currency.name.lower(),
+            for (currency, rate, tax_id), values in grouped.items():
+                if values["amount"] == 0:
+                    continue 
 
-                defaults={
-                    "fiscal_counter_tax_percent":15,
-                    "fiscal_counter_tax_id":3,
-                    "fiscal_counter_money_type":None,
-                    "fiscal_counter_value":invoice.vat
-                }
-            )
-            
-            if not _stbt:
-                fiscal_counter_obj.fiscal_counter_value += invoice.vat
-                fiscal_counter_obj.save()
+                # --- SALEBYTAX ---
+                sale_counter = FiscalCounter.objects.filter(
+                    fiscal_counter_type='SaleByTax',
+                    fiscal_counter_currency=currency,
+                    fiscal_counter_tax_percent=rate,
+                    fiscal_counter_tax_id=tax_id,
+                    created_at__date=today
+                ).first()
 
-            
+                if sale_counter:
+                    sale_counter.fiscal_counter_value += values["amount"]
+                    sale_counter.save()
+                else:
+                    FiscalCounter.objects.create(
+                        fiscal_counter_type='SaleByTax',
+                        fiscal_counter_currency=currency,
+                        fiscal_counter_tax_percent=rate,
+                        fiscal_counter_tax_id=tax_id,
+                        fiscal_counter_money_type=None,
+                        fiscal_counter_value=values["amount"]
+                    )
+
+                # --- SALETAXBYTAX ---
+                if rate is not None and rate > 0:
+                    tax_counter = FiscalCounter.objects.filter(
+                        fiscal_counter_type='SaleTaxByTax',
+                        fiscal_counter_currency=currency,
+                        fiscal_counter_tax_percent=rate,
+                        fiscal_counter_tax_id=tax_id,
+                        created_at__date=today
+                    ).first()
+
+                    if tax_counter:
+                        tax_counter.fiscal_counter_value += values["vat"]
+                        tax_counter.save()
+                    else:
+                        FiscalCounter.objects.create(
+                            fiscal_counter_type='SaleTaxByTax',
+                            fiscal_counter_currency=currency,
+                            fiscal_counter_tax_percent=rate,
+                            fiscal_counter_tax_id=tax_id,
+                            fiscal_counter_money_type=None,
+                            fiscal_counter_value=values["vat"]
+                        )
             try:
                 # Balance By Money Type
                 fiscal_counter_bal_obj, _ = FiscalCounter.objects.get_or_create(

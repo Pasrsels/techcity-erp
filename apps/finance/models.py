@@ -259,7 +259,7 @@ class Expense(models.Model):
     
 class Sale(models.Model):
     """
-    Represents a sale transaction.
+        Represents a sale transaction.
     """
     date = models.DateField()
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
@@ -827,7 +827,6 @@ class Income(models.Model):
         blank=True
     )
 
-    
     def __str__(self):
         return f"{self.created_at} - {self.category} - {self.note} - ${self.amount}"
 

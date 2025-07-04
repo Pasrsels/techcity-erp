@@ -119,7 +119,7 @@ class Inventory(models.Model):
     service = models.BooleanField(default=False, null=True)
     image = models.ImageField(upload_to='product_images/', default='placeholder.png', null=True, blank=True)
     disable = models.BooleanField(default=False)
-    serial_numbers = models.ManyToManyField('SerialNumber', related_name='inventories') 
+    # serial_numbers = models.ManyToManyField('SerialNumber', related_name='inventories') 
 
     class Meta:
         unique_together = ('id', 'branch') 

@@ -108,7 +108,6 @@ urlpatterns = [
 
     # days data
     path('days_data', days_data, name='days_data'),
-
     path('pl_overview/', pl_overview, name='pl_overview'),
     path('income_json/', income_json, name='income_json'),
     path('expense_json/', expense_json, name='expense_json'),

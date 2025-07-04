@@ -2293,7 +2293,6 @@ def replace_item(request, item_id):
             return JsonResponse({'success': False, 'error': 'Invalid item'}, status=404)
         
 def invoice_preview_json(request, invoice_id):
-    from django.core.serializers.json import DjangoJSONEncoder
     try:
         invoice = Invoice.objects.get(id=invoice_id)
     except Invoice.DoesNotExist:
@@ -2308,7 +2307,9 @@ def invoice_preview_json(request, invoice_id):
         'quantity',
         'item__description',
         'total_amount',
-        'unit_price'
+        'unit_price',
+        'item__tax_type__tax_percent',
+        'item__tax_type__name'
     )
 
     invoice_dict = {}
