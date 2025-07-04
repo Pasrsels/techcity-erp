@@ -42,6 +42,7 @@ urlpatterns = [
     path('accept_stock_take/', accept_stocktake_item, name='accept_stocktake_item'),
     path('confirm_stocktake/<int:stocktake_id>/', confirm_stocktake, name='confirm_stocktake'),
     path('stocktake_pdf/',  stocktake_pdf, name="stocktake_pdf"),
+    path('undo_accept_stocktake/', undo_accept_stocktake_item, name='undo_accept_stocktake'),
     
     #batch_code 
     path('batch_code/', batch_code, name='batch_code'),

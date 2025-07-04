@@ -3831,7 +3831,7 @@ def process_stock_take_item(request):
            s_item = StocktakeItem.objects.get(id=stocktake_id)
            s_item.quantity = int(phy_quantity)
            
-           difference = abs(s_item.product.now_quantity - int(phy_quantity)) 
+           difference = abs(s_item.now_quantity - int(phy_quantity)) 
            
            logger.info(f'difference: {difference}')
            
@@ -3861,23 +3861,30 @@ def stocktake_pdf(request):
         stocktake_id = data.get('stocktake_id')
         template_name = 'reports/stocktake.html'
         
+        logger.info(f'Id: {stocktake_id}')
+        
         stock_take = StockTake.objects.get(id=stocktake_id)
         
         stock_items = None
         if type == 'negative':
-            stock_items = StocktakeItem.objects.filter(stocktake__id=stocktake_id, difference__lt=0)
+            stock_items = StocktakeItem.objects.filter(stocktake=stock_take, quantity_difference__lt=0)
         elif type == 'positve':
-            stock_items = StocktakeItem.objects.filter(stocktake__id=stocktake_id, difference__gt=0)
+            stock_items = StocktakeItem.objects.filter(stocktake=stock_take, quantity_difference__gt=0)
+        elif type == 'all':
+            stock_items = StocktakeItem.objects.all()
         
+        logger.info(stock_items)
+       
         return generate_pdf(
-        template_name, {
-            'stocktake_items':stock_items,
-            'stock_take':stock_take
-        }
-    )
+            template_name, {
+                'stocktake_items':stock_items,
+                'stock_take':stock_take
+            }
+        )
         
     except Exception as e:
         return JsonResponse({'success':False, 'message':str(e)}, status=400)
+    
 
 @login_required
 def stock_take_index(request):
@@ -3889,10 +3896,6 @@ def stock_take_index(request):
         positive = stock_takes.aggregate(total=Sum('positive'))['total'] or 0
         negative_value = stock_takes.aggregate(total=Sum('negative_cost'))['total'] or 0
         positive_value = stock_takes.aggregate(total=Sum('positive_cost'))['total'] or 0
-        
-        logger.info(f'Negative: {positive}:{positive_value}')
-
-        logger.info(f'Stock takes: {stock_takes}')
         
         return render(request, 'stocktake/stocktake.html', {
             'negative':negative,
@@ -3951,6 +3954,7 @@ def stock_take_index(request):
                 'error': 'Please correct the errors below.',
                 'stocktakes': StockTake.objects.all()
             })
+            
 @login_required
 def confirm_stocktake(request, stocktake_id):
     try:
@@ -4010,6 +4014,50 @@ def stock_take_detail(request, stocktake_id):
             
             return JsonResponse({'success':True, 'html':html}, status=200)
         return JsonResponse({'success':False, 'message':'Error processing your request.'}, status=400)
+    
+
+def undo_accept_stocktake_item(request):
+    from apps.finance.models import UserAccount, UserTransaction
+    try:
+        data = json.loads(request.body)
+        stocktake_id = data.get('product_id')
+
+        with transaction.atomic():
+            stocktake = StocktakeItem.objects.select_related('product').get(id=stocktake_id)
+
+            if not stocktake.accepted:
+                return JsonResponse({'success': False, 'message': 'Stocktake item not accepted yet.'}, status=400)
+
+            original_diff = stocktake.quantity - stocktake.now_quantity or 0
+            stocktake.now_quantity = stocktake.quantity
+            stocktake.product.quantity -= original_diff
+            stocktake.product.save()
+
+            UserTransaction.objects.filter(description=stocktake.note, amount=stocktake.cost).delete()
+
+            expense = Expense.objects.filter(
+                description=stocktake.note,
+                amount=stocktake.cost,
+                user=request.user
+            ).first()
+            if expense:
+                Cashbook.objects.filter(expense=expense).delete()
+                expense.delete()
+
+            stocktake.now_quantity = None
+            stocktake.has_diff = False
+            stocktake.accepted = False
+            stocktake.note = ''
+            stocktake.company_loss = False
+            stocktake.save()
+
+            logger.success('Stocktake acceptance successfully undone.')
+
+            return JsonResponse({'success': True, 'message': 'Undo successful', 'quantity': stocktake.product.quantity}, status=200)
+
+    except Exception as e:
+        logger.error(f'Error undoing stocktake item: {e}')
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
         
 
 @login_required

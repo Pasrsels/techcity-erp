@@ -146,7 +146,7 @@
                                 <div class="mb-4">
                                     <div class="input-group">
                                         <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
-                                        <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="inAmount" value="0.00" placeholder="Enter amount" style="height: 100px;">
+                                        <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="inAmount" onclick="clearInput(this)" value="0.00" placeholder="Enter amount" style="height: 100px;">
                                     </div>
                                 </div>
                             </div>
@@ -315,17 +315,19 @@
                     <div class="card p-3">
                         <div class="">
                             <div class="input-group">
+                                <div class="input-group">
                                 <div class="d-flex justify-content-end">
-                                    <select class="form-select border-0 b" id="currency" name="currency">
-                                        {% for currency in currencies %}
-                                            <option value="{{ currency.id }}" {% if currency.default %} selected {% endif %}>{{ currency.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="mb-4">
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
-                                        <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="inAmount" value="0.00" placeholder="Enter amount" style="height: 100px;">
+                                        <select class="form-select border-0 b" id="exp_currency" name="currency">
+                                            {% for currency in currencies %}
+                                                <option value="{{ currency.id }}" {% if currency.default %} selected {% endif %}>{{ currency.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-4">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
+                                            <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="exp_Amount" onclick="clearInput(this)" value="0.00" placeholder="Enter amount" style="height: 100px;">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -340,14 +342,14 @@
                             <div class="search-select" id="categories">
                                 <input type="text" class="custom-search-input w-100" placeholder="Search or add category" autocomplete="off">
                                 <div class="custom-dropdown"></div>
-                                <input type="text" id="category_text" class="form-control" hidden/>
+                                <input type="text" id="exp_category_text" class="form-control" hidden/>
                             </div>
                         </div>
 
                         <div class="mb-4 d-flex gap-2 align-items-start">
                             <div class="input-group flex-grow-1">
                                 <span class="input-group-text bg-light border-0"><i class="bx bx-category"></i></span>
-                                <select class="form-select border-0 bg-light" id="incomeCategory" style="height: 60px;">
+                                <select class="form-select border-0 bg-light" id="exp_Category" style="height: 60px;">
                                     <option value="">Select Expense Category</option>
                                     {% for category in income_categories %}
                                         <option value="{{ category.id }}">{{ category.name }}</option>
@@ -359,7 +361,7 @@
                         <div class="mb-4">
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-0"><i class="bx bx-map"></i></span>
-                                <select class="form-select border-0 bg-light" id="inBranch" style="height: 60px;">
+                                <select class="form-select border-0 bg-light" id="exp_Branch" style="height: 60px;">
                                     {% for branch in branches %}
                                         {% if request.user.role|lower == 'admin' %}
                                             <option value="{{ branch.id}}">{{ branch.name }}</option>
@@ -374,7 +376,7 @@
                         <div class="mb-4">
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-0"><i class="bx bx-user"></i></span>
-                                <select class="form-select border-0 bg-light" id="accountTo" style="height: 60px;">
+                                <select class="form-select border-0 bg-light" id="exp_accountTo" style="height: 60px;">
                                     <option value="">Account to</option>
                                     {% for user in users %}
                                         <option value="{{ user.id }}">{{ user.name }}</option>
@@ -384,11 +386,11 @@
                         </div>
 
                         <div class="form-check form-switch mb-3">
-                            <input class="form-check-input bg-dark" type="checkbox" id="incomeRecurringToggle" onchange="toggleRecurrence('income')">
-                            <label class="form-check-label" for="incomeRecurringToggle">Recurring Expenses?</label>
+                            <input class="form-check-input bg-dark" type="checkbox" id="exp_RecurringToggle" onchange="toggleRecurrence('income')">
+                            <label class="form-check-label" for="exp_RecurringToggle">Recurring Expenses?</label>
                         </div>
 
-                        <div class="mb-3 mt-2" id="incomeRecurrenceGroup" style="display: none;">
+                        <div class="mb-3 mt-2" id="exp_RecurrenceGroup" style="display: none;">
 
                         <!-- Repeat Interval -->
                         <div class="bg-light p-3 rounded shadow-sm mb-3">
@@ -398,7 +400,7 @@
                                 </span>
                                 <label class="mb-0 me-2">Repeat every</label>
                                 <input type="number" class="form-control border-0 bg-light text-center" id="inRecurrenceValue" min="1" value="1" style="width: 80px;">
-                                <select class="form-select border-0 bg-light w-auto" id="inRecurrenceUnit">
+                                <select class="form-select border-0 bg-light w-auto" id="exp_category_textRecurrenceUnit">
                                     <option value="day">Day(s)</option>
                                     <option value="week">Week(s)</option>
                                     <option value="month">Month(s)</option>
@@ -414,18 +416,18 @@
                                 <span class="input-group-text bg-light border-0">
                                     <i class="bx bx-calendar"></i>
                                 </span>
-                                <input id="fromDate" class="form-control border-0 bg-light" type="date">
+                                <input id="exp_fromDate" class="form-control border-0 bg-light" type="date">
                             </div>
                         </div>
 
                         <!-- To Date Block -->
                         <div class="bg-light p-3 rounded shadow-sm">
-                            <label for="toDate" class="form-label">To</label>
+                            <label for="exp_toDate" class="form-label">To</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-0">
                                     <i class="bx bx-calendar"></i>
                                 </span>
-                                <input id="toDate" class="form-control border-0 bg-light" type="date">
+                                <input id="exp_toDate" class="form-control border-0 bg-light" type="date">
                             </div>
                         </div>
                     </div>
@@ -436,13 +438,13 @@
                             <label class="form-check-label" for="incomeReminderToggle">Set a Reminder?</label>
                         </div>
 
-                        <div class="mb-3" id="reminderDateGroup" style="display: none;">
+                        <div class="mb-3" id="exp_reminderDateGroup" style="display: none;">
                             <label for="reminderDate" class="form-label">Reminder Date</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-0">
                                     <i class="bx bx-calendar"></i>
                                 </span>
-                                <input type="date" class="form-control border-0 bg-light" id="reminderDate">
+                                <input type="date" class="form-control border-0 bg-light" id="exp_reminderDate">
                             </div>
                         </div>
 
@@ -599,7 +601,10 @@ let categoriesData = [];
     });
 {% endfor %}
 
-console.log('Categories data:', categoriesData);
+
+function clearInput(el){
+    el.value = '';
+}
 
 class CustomSearchSelect {
     constructor(containerId, options = {}) {
@@ -868,6 +873,29 @@ const mainCategorySearchSelect = new CustomSearchSelect('main-categories', {
     }
 });
 
+const categorySearchSelect = new CustomSearchSelect('exp_categories', {
+    data: categoriesData,
+    placeholder: 'Search or add category...',
+    onSelect: (item) => {
+        console.log('Category selected:', item);
+    },
+    onAddNew: (item) => {
+        console.log('New category added:', item);
+    }
+});
+
+
+const mainCategorySearchSelect = new CustomSearchSelect('exp_main-categories', {
+    data: categoriesData,
+    placeholder: 'Search or add category...',
+    onSelect: (item) => {
+        console.log('Category selected:', item);
+    },
+    onAddNew: (item) => {
+        console.log('New category added:', item);
+    }
+});
+
 function toggleRecurrence(type) {
     const toggle = document.getElementById(`${type}RecurringToggle`);
     const group = document.getElementById(`${type}RecurrenceGroup`);
@@ -982,6 +1010,108 @@ function resetIncomeForm() {
     categorySearchSelect.setValue(null, '');
     categorySearchSelect.input.value = '';
 }
+
+async function recordExpense() {
+    try {
+        const formData = {
+            amount: parseFloat(document.getElementById('exp_Amount').value) || 0,
+            currency: document.getElementById('exp_currency').value,
+            category: categorySearchSelect.getValue(),
+            main_category: mainCategorySearchSelect.getValue(),
+            branch: document.getElementById('exp_Branch').value,
+            account_to: document.getElementById('exp_accountTo').value,
+            is_recurring: document.getElementById('exp_RecurringToggle').checked,
+            has_reminder: document.getElementById('exp_ReminderToggle').checked,
+            recurrence_value: document.getElementById('exp_RecurrenceValue').value,
+            recurrence_unit: document.getElementById('exp_RecurrenceUnit').value,
+            from_date: document.getElementById('exp_fromDate').value,
+            to_date: document.getElementById('exp_toDate').value,
+            reminder_dated: document.getElementById('exp_reminderDate').value,
+        };
+
+        console.log('form data', formData)
+
+        if (formData.amount <= 0) {
+            alert('Please enter a valid amount');
+            return;
+        }
+
+        if (!formData.currency) {
+            alert('Please select a currency');
+            return;
+        }
+
+        if (!formData.category.value && !formData.income_category) {
+            alert('Please select or add a category');
+            return;
+        }
+
+        
+        const submitButton = document.querySelector('.header-btn');
+        const originalText = submitButton.textContent;
+        submitButton.textContent = 'Recording...';
+        submitButton.disabled = true;
+
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        const response = await fetch('/finance/record_income/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert('Expense recorded successfully!');
+
+            resetIncomeForm();
+            
+            if (result.redirect_url) {
+                window.location.href = result.redirect_url;
+            }
+
+        } else {
+            if (result.errors) {
+                const errorMessages = Object.values(result.errors).flat().join('\n');
+                alert('Error recording income:\n' + errorMessages);
+            } else {
+                alert(result.message || 'An error occurred while recording income');
+            }
+        }
+
+    } catch (error) {
+        console.error('Error recording income:', error);
+        alert('An error occurred while recording income. Please try again.');
+    } finally {
+        const submitButton = document.querySelector('.header-btn');
+        submitButton.textContent = 'Record Income';
+        submitButton.disabled = false;
+    }
+}
+
+function resetExpenseForm() {
+    amount: parseFloat(document.getElementById('exp_Amount').value) || 0,
+    currency: document.getElementById('exp_currency').value,
+    category: categorySearchSelect.getValue(),
+    main_category: mainCategorySearchSelect.getValue(),
+    branch: document.getElementById('exp_Branch').value,
+    account_to: document.getElementById('exp_accountTo').value,
+    is_recurring: document.getElementById('exp_RecurringToggle').checked,
+    has_reminder: document.getElementById('exp_ReminderToggle').checked,
+    recurrence_value: document.getElementById('exp_RecurrenceValue').value,
+    recurrence_unit: document.getElementById('exp_RecurrenceUnit').value,
+    from_date: document.getElementById('exp_fromDate').value,
+    to_date: document.getElementById('exp_toDate').value,
+    reminder_dated: document.getElementById('exp_reminderDate').value,
+    
+    categorySearchSelect.setValue(null, '');
+    categorySearchSelect.input.value = '';
+}
+
 
 document.addEventListener('DOMContentLoaded', function() {
     const currencySelect = document.getElementById('currency');
