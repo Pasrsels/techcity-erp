@@ -2,7 +2,6 @@
 
 from django.db import migrations, models
 
-
 class Migration(migrations.Migration):
     dependencies = [
         ("finance", "0040_valueaddedtax_name"),

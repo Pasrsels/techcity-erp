@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="cashbook",
-            name="status",
+            name="",
             field=models.BooleanField(default=True, null=True),
         ),
         migrations.AlterField(
