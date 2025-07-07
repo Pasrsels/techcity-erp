@@ -848,13 +848,8 @@ class Income(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     currency = models.ForeignKey('Currency', on_delete=models.CASCADE)
-<<<<<<< HEAD
-    category = models.ForeignKey('IncomeCategory', on_delete=models.PROTECT)
-    note = models.CharField(max_length=200, null=True)
-=======
     category = models.ForeignKey('IncomeCategory', on_delete=models.PROTECT, null = True)
     note = models.CharField(max_length=200)
->>>>>>> techcity/new-changes
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     account = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='account_users', null=True)
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)

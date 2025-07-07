@@ -11783,20 +11783,20 @@ def day_report(request, inventory_data):
     
     try:
         html_string = render_to_string('day_report.html',{
-                'request':request,
-                'invoices':invoices,
-                'date': datetime.date.today(),
-                'inventory_data': inventory_data,
-                'total_sales': paid_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
-                'partial_payments': partial_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
-                'total_paid_invoices': paid_invoices.count(),
-                'expenses':expenses,
-                'total_partial_invoices': partial_invoices.count(),
-                'total_expenses': confirmed_expenses.aggregate(Sum('amount'))['amount__sum'] or 0,
-                'confirmed_expenses': confirmed_expenses,
-                'unconfirmed_expenses': unconfirmed_expenses,
-                'account_balances': account_balances,
-            })
+            'request':request,
+            'invoices':invoices,
+            'date': datetime.date.today(),
+            'inventory_data': inventory_data,
+            'total_sales': paid_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
+            'partial_payments': partial_invoices.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0,
+            'total_paid_invoices': paid_invoices.count(),
+            'expenses':expenses,
+            'total_partial_invoices': partial_invoices.count(),
+            'total_expenses': confirmed_expenses.aggregate(Sum('amount'))['amount__sum'] or 0,
+            'confirmed_expenses': confirmed_expenses,
+            'unconfirmed_expenses': unconfirmed_expenses,
+            'account_balances': account_balances,
+        })
         
         pdf_buffer = BytesIO()
         pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)

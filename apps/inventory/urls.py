@@ -6,6 +6,7 @@ from rest_framework.routers import DefaultRouter
 
 from .api import *
 from apps.finance.apis.cashbook_apis import *
+from .a import *
 
 router = DefaultRouter()
 # router.register(r'products', InventoryViewset, basename='api_products')
