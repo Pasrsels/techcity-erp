@@ -96,11 +96,11 @@ class AddProducts(views.APIView):
         try:
             data = request.data
             product_id = data.get('id', '')
-            logger.info(product_id)   
+            logger.info(data)   
         except Exception as e:
             return Response({'message':'Invalid data'}, status.HTTP_400_BAD_REQUEST)
 
-        image_data = data.get('image')
+        image_data = data.get('image', '')
         if image_data:
             try:
                 format, imgstr = image_data.split(';base64,') 
@@ -185,14 +185,18 @@ class InventoryList(views.APIView):
         logger.info(list(Inventory.objects.\
         filter(branch=request.user.branch, status=True).values()))
         inventory_data = Inventory.objects.filter(branch=request.user.branch, status=True).values()
+        accessory_data = Accessory.objects.filter(main_product__branch=request.user.branch, main_product__status=True).values()
+
         logger.info(inventory_data)
         inventory = Inventory.objects.filter(branch=request.user.branch, status=True, disable=False).select_related(
         'category',
         'branch'
         ).order_by('name').values()
+        logger.info(inventory_data)
         return Response(
             {
                 'inventory':inventory_data,
+                'accessory': accessory_data,
                 'total_cost':inventory.aggregate(total_cost=Sum(F('quantity') * F('cost')))['total_cost'] or 0,
                 'total_price':inventory.aggregate(total_price=Sum(F('quantity') * F('price')))['total_price'] or 0,
             }, 
@@ -482,6 +486,128 @@ class DefectiveProductViewAdd(views.APIView):
         )
         return Response({'success':True}, status.HTTP_200_OK)
 
+
+class InventoryDetail(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, id):
+        purchase_order_items = PurchaseOrderItem.objects.all().values()
+        inventory = Inventory.objects.get(id=id, branch=request.user.branch)
+        logs = ActivityLog.objects.filter(
+            inventory=inventory,
+            branch=request.user.branch
+        ).order_by('-timestamp__date', '-timestamp__time')
+        logger.info(logs)
+
+
+        logs_serialized = ActivityLog.objects.filter(
+            inventory=inventory,
+            branch=request.user.branch
+        ).order_by('-timestamp__date', '-timestamp__time').values()
+
+        inventory_list = []
+        inventory_list.append(
+            {
+                'ID': inventory.id,
+                'Name': inventory.name,
+            }
+        )
+        # stock account data and totals (costs and quantities)
+        stock_account_data = get_stock_account_data(logs)
+        total_debits = sum(entry['cost'] for entry in stock_account_data if entry['type'] == 'debits')
+        total_credits = sum(entry['cost'] for entry in stock_account_data if entry['type'] == 'credits')
+
+        total_debits_quantity = sum(entry['quantity'] for entry in stock_account_data if entry['type'] == 'debits')
+        total_credits_quantity = sum(entry['quantity'] for entry in stock_account_data if entry['type'] == 'credits')
+
+        logger.info(f'debits {total_debits_quantity}')
+        logger.info(f'debits {total_credits_quantity}')
+
+        remaining_stock_quantity = total_debits_quantity - total_credits_quantity
+
+        """ get inventory value based on the currencies in the system """
+        inventory_value = []
+        inventory_sold_value = []
+        inventory_total_cost = inventory.cost * inventory.quantity
+        
+        for currency in Currency.objects.all():
+            inventory_value.append(
+                {
+                    'name': f'{currency.name}',
+                    'value': float(inventory_total_cost * currency.exchange_rate )if currency.exchange_rate == 1\
+                            else float(inventory_total_cost * currency.exchange_rate)
+                }
+            )
+            inventory_sold_value.append(
+                {
+                    'name': f'{currency.name}',
+                    'value': logs.filter(invoice__invoice_return = False, invoice__currency=currency).\
+                            aggregate(Sum('invoice__amount'))['invoice__amount__sum'] or 0
+                }
+            )
+        
+        logger.info(f'inventory value: {inventory_sold_value}')
+
+        # logs = ActivityLog.objects.annotate(hour=Extract('timestamp', 'hour')).order_by('-hour')
+
+        """ create log data structure for the activity log graph """
+        sales_data = {}
+        stock_in_data = {}
+        transfer_data = {}
+        labels = []
+
+        for log in logs:
+            month_name = log.timestamp.strftime('%B')  
+            year = log.timestamp.strftime('%Y')
+            month_year = f"{month_name} {year}"  
+
+            if log.action == 'Sale':
+                if month_year in sales_data:
+                    sales_data[month_year] += log.quantity
+                else:
+                    sales_data[month_year] = log.quantity
+            elif log.action in ('stock in', 'Update'):
+                if month_year in stock_in_data:
+                    stock_in_data[month_year] += log.quantity
+                else:
+                    stock_in_data[month_year] = log.quantity
+            elif log.action == 'Transfer':
+                if month_year in transfer_data:
+                    transfer_data[month_year] += log.quantity
+                else:
+                    transfer_data[month_year] = log.quantity
+            elif log.action == 'sale return':
+                if month_year in transfer_data:
+                    transfer_data[month_year] += abs(log.quantity)
+                else:
+                    transfer_data[month_year] = abs(log.quantity)
+
+            if month_year not in labels:
+                labels.append(month_year)
+
+        """ download a log or stock account pdf """
+
+        # if request.GET.get('logs'):
+        #     download_stock_logs_account('logs', logs, inventory)
+        # elif request.GET.get('account'):
+        #     download_stock_logs_account('account', logs, inventory)
+        
+        logger.info(stock_account_data)
+        
+        return Response({
+            'inventory': inventory_list,
+            'remaining_stock_quantity':remaining_stock_quantity,
+            'stock_account_data':stock_account_data,
+            'inventory_value':inventory_value,
+            'inventory_sold_value':inventory_sold_value,
+            'total_debits':total_debits,
+            'total_credits':total_credits,
+            'logs': logs_serialized,
+            'items':purchase_order_items,
+            'sales_data': list(sales_data.values()), 
+            'stock_in_data': list(stock_in_data.values()),
+            'transfer_data': list(transfer_data.values()),
+            'labels': labels,
+        }, status.HTTP_200_OK)
 
 class NotificationJson(views.APIView):
     permission_classes = [IsAuthenticated]

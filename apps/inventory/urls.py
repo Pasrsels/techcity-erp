@@ -142,6 +142,7 @@ urlpatterns = [
     path('api/v1/inventory-activate/<int:product_id>/', ActivateInventory.as_view(), name = 'api_inventory_activate'),
     path('api/v1/inventory-branch', BranchesInventory.as_view(), name = 'api_inventory_branch'),
     path('api/v1/defective-product-view-add/', DefectiveProductViewAdd.as_view(), name='api_defective_product_view_add'),
+    path('api/v1/inventory-detail/<int:id>/', InventoryDetail.as_view(), name='api_inventory_detail'),
 
     #Notification
     path('api/v1/notification-json', NotificationJson.as_view(), name = 'api_notification_json'),
@@ -149,7 +150,7 @@ urlpatterns = [
     #Stock Take
     path('api/v1/stocktake-view-and-edit', StockTakeViewEdit.as_view(), name = 'api_stock_take'),
     path('api/v1/process-stocktake-item', ProcessStockTakeItem.as_view(), name = 'api_process_stock_take'),
-    path('api/v1/stocktake-details', StockTakeDetail.as_view(), name = 'api_stock_take_detail'),
+    path('api/v1/stocktake-details/<int:stocktake_id>/', StockTakeDetail.as_view(), name = 'api_stock_take_detail'),
 
     #Branch
     path('api/v1/branch-view-and-add', BranchCode.as_view(), name = 'api_branch_code'),
