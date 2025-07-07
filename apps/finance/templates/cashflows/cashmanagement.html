@@ -122,7 +122,9 @@
     input[type="radio"]:focus {
     border-color: #11998e !important;
 }
-
+.loading {
+    display: none;
+}
 </style>
 </head> 
 <body>
@@ -211,9 +213,9 @@
                             </div>
                         </div>
 
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input bg-dark" type="checkbox" id="incomeRecurringToggle" onchange="toggleRecurrence('income')">
-                            <label class="form-check-label" for="incomeRecurringToggle">Recurring Income?</label>
+                        <div class="d-flex mb-3">
+                            <input class="form-check bg-dark" type="checkbox" id="incomeRecurringToggle" onchange="toggleRecurrence('income')">
+                            <label class="form-check-label px-2" for="incomeRecurringToggle">Recurring Income?</label>
                         </div>
 
                         <div class="mb-3 mt-2" id="incomeRecurrenceGroup" style="display: none;">
@@ -258,258 +260,213 @@
                         </div>
                     </div>
 
-                    
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input bg-dark" type="checkbox" id="incomeReminderToggle" onchange="toggleReminderDate()">
-                            <label class="form-check-label" for="incomeReminderToggle">Set a Reminder?</label>
-                        </div>
+                    <div class="d-flex mb-3">
+                        <input class="form-check bg-dark" type="checkbox" id="incomeReminderToggle" onchange="toggleReminderDate()">
+                        <label class="form-check-label px-2" for="incomeReminderToggle">Set a Reminder?</label>
+                    </div>
 
-                        <div class="mb-3" id="reminderDateGroup" style="display: none;">
-                            <label for="reminderDate" class="form-label">Reminder Date</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-0">
-                                    <i class="bx bx-calendar"></i>
-                                </span>
-                                <input type="date" class="form-control border-0 bg-light" id="reminderDate">
-                            </div>
+                    <div class="mb-3" id="reminderDateGroup" style="display: none;">
+                        <label for="reminderDate" class="form-label">Reminder Date</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0">
+                                <i class="bx bx-calendar"></i>
+                            </span>
+                            <input type="date" class="form-control border-0 bg-light" id="reminderDate">
                         </div>
+                    </div>
 
-                        <div class="mt-5">
-                            <button type="button" class="header-btn w-100" onclick="recordIncome()">Record Income</button>
-                        </div>
+                    <div class="mt-5">
+                        <button type="button" class="header-btn w-100" onclick="recordIncome()">Record Income</button>
+                    </div>
                     </div>
                 </div>
-
-                <!-- Income Table Section -->
-                <!-- <div class="col mt-4">
-                    <div>
-                        
-                        <div class="d-flex justify-content-between w-100 align-items-center">
-                            <h5 class="mb-0">Income History</h5>
-                            <button class="btn btn-sm btn-outline-primary" onclick="loadIncomes(true)">
-                                <i class="bx bx-refresh"></i> Refresh
-                            </button>
-                        </div>
-
-                        <div class="table-container">
-                            <table class="table table-borderless table-hover mb-0">
-                                <thead class="background">
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Note</th>
-                                        <th>Category</th>
-                                        <th>Branch</th>
-                                        <th>Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="income_table">
-                                </tbody>
-                            </table>
-                            <div id="income_loader" class="loader d-none">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div> -->
             </div>
         </div>
         
         <!-- Expense Tab -->
         <div class="tab-pane fade" id="cash_expense-panel" role="tabpanel" aria-labelledby="cash_expense-tab">
-                <div class="row">
+            <div class="row">
                 <div class="col">
                     <div class="card p-3">
-                        <div>
-                            here
-                            <input type="checkbox" class='form-check' onclick="showLoanModal()"/>
-                        </div>
-
-                        <div class="">
-                            <div class="input-group">
+                        <form action="" id="expense-form">
+                            <div class="">
                                 <div class="input-group">
-                                <div class="d-flex justify-content-between w-100 mb-4 bg-light" style="height: 60px;">
-                                    <div class="d-flex align-items-center bg-light px-1">
-                                        <i class='bx bx-payment' style="color:#11998e;"></i>
-                                        <select class="form-select bg-light border-0 b" id="exp_payment_type" name="payment_type">
-                                            <option value="cash">Cash</option>
-                                            <option value="bank">Bank</option>
-                                            <option value="ecocash">Ecocash</option>
-                                        </select>
-                                    </div>
-                                    <div class="d-flex align-items-center bg-light px-1">
-                                        <i class='bx bx-wallet'></i>
-                                        <select class="form-select bg-light border-0 b" id="exp_currency" name="currency">
-                                            {% for currency in currencies %}
-                                                <option value="{{ currency.id }}" {% if currency.default %} selected {% endif %}>{{ currency.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="mb-4">
                                     <div class="input-group">
-                                        <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
-                                        <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="exp_Amount" onclick="clearInput(this)" value="0.00" placeholder="Enter amount" style="height: 100px;">
+                                    <div class="d-flex justify-content-between w-100 mb-4 bg-light" style="height: 60px;">
+                                        <div class="d-flex align-items-center bg-light px-1">
+                                            <i class='bx bx-payment' style="color:#11998e;"></i>
+                                            <select class="form-select bg-light border-0 b" id="exp_payment_type" name="payment_type">
+                                                <option value="cash">Cash</option>
+                                                <option value="bank">Bank</option>
+                                                <option value="ecocash">Ecocash</option>
+                                            </select>
+                                        </div>
+                                        <div class="d-flex align-items-center bg-light px-1">
+                                            <i class='bx bx-wallet'></i>
+                                            <select class="form-select bg-light border-0 b" id="exp_currency" name="currency">
+                                                {% for currency in currencies %}
+                                                    <option value="{{ currency.id }}" {% if currency.default %} selected {% endif %}>{{ currency.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
+                                            <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="exp_Amount" onclick="clearInput(this)" value="0.00" placeholder="Enter amount" style="height: 100px;">
+                                        </div>
+                                    </div>
                                     </div>
                                 </div>
+                            </div>
+                            <div class="mb-4 d-flex align-items-center bg-light">
+                                <div>
+                                    <span class="input-group-text bg-light border-0">
+                                        <i class="bx bx-pencil"></i>
+                                    </span>
+                                </div>
+                                <div class="search-select bg-light" id="exp-categories">
+                                    <input type="text" class="custom-search-input w-100" placeholder="Search or add category" autocomplete="off">
+                                    <div class="custom-dropdown"></div>
+                                    <input type="text" id="exp_category_text" class="form-control" hidden/>
                                 </div>
                             </div>
-                        </div>
-                        <div class="mb-4 d-flex bg-light">
-                            <div>
-                                <span class="input-group-text bg-light border-0">
-                                    <i class="bx bx-pencil"></i>
-                                </span>
+
+                            <div class="mb-4 d-flex bg-light">
+                                <div>
+                                    <span class="input-group-text bg-light border-0"><i class="bx bx-category"></i></span>
+                                </div>
+                                <div class="search-select bg-light align-items-center" id="exp-main-categories">
+                                    <input type="text" class="custom-search-input w-100" placeholder="Search or add category" autocomplete="off">
+                                    <div class="custom-dropdown"></div>
+                                    <input type="text" id="exp_main_category_text" class="form-control" hidden/>
+                                </div>
                             </div>
-                            <div class="search-select" id="categories">
-                                <input type="text" class="custom-search-input w-100" placeholder="Search or add category" autocomplete="off">
-                                <div class="custom-dropdown"></div>
-                                <input type="text" id="exp_category_text" class="form-control" hidden/>
+                                                                
+                            <div class="mb-4">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="bx bx-map"></i></span>
+                                    <select class="form-select border-0 bg-light" id="exp_Branch" style="height: 60px;">
+                                        {% for branch in branches %}
+                                            {% if request.user.role|lower == 'admin' %}
+                                                <option value="{{ branch.id}}">{{ branch.name }}</option>
+                                            {% elif forloop.first %}
+                                                <option value="{{ request.user.branch.id}}">{{ request.user.branch }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="mb-4 d-flex gap-2 align-items-start">
-                            <div class="input-group flex-grow-1">
-                                <span class="input-group-text bg-light border-0"><i class="bx bx-category"></i></span>
-                                <select class="form-select border-0 bg-light" id="exp_Category" style="height: 60px;">
-                                    <option value="">Select Expense Category</option>
-                                    {% for category in income_categories %}
-                                        <option value="{{ category.id }}">{{ category.name }}</option>
-                                    {% endfor %}
-                                </select>
+                            <div class="mb-4">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="bx bx-user"></i></span>
+                                    <select class="form-select border-0 bg-light" id="exp_accountTo" style="height: 60px;">
+                                        <option value="">Account to</option>
+                                        {% for user in users %}
+                                            <option value="{{ user.id }}">{{ user.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                                                            
-                        <div class="mb-4">
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-0"><i class="bx bx-map"></i></span>
-                                <select class="form-select border-0 bg-light" id="exp_Branch" style="height: 60px;">
-                                    {% for branch in branches %}
-                                        {% if request.user.role|lower == 'admin' %}
-                                            <option value="{{ branch.id}}">{{ branch.name }}</option>
-                                        {% elif forloop.first %}
-                                            <option value="{{ request.user.branch.id}}">{{ request.user.branch }}</option>
-                                        {% endif %}
-                                    {% endfor %}
-                                </select>
+
+                            <div class="d-flex mb-3">
+                                <input type="checkbox" class="form-check" onclick="toggleLoanFields()" id="isLoan"/>
+                                <label for="isLoan" class="px-2">Is this a loan?</label>
                             </div>
-                        </div>
 
-                        <div class="mb-4">
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-0"><i class="bx bx-user"></i></span>
-                                <select class="form-select border-0 bg-light" id="exp_accountTo" style="height: 60px;">
-                                    <option value="">Account to</option>
-                                    {% for user in users %}
-                                        <option value="{{ user.id }}">{{ user.name }}</option>
-                                    {% endfor %}
-                                </select>
+                            <div id="loanFields" style="display: none;">
+                                <div class="bg-light p-3 rounded shadow-sm mb-3">
+                                    <label for="loanRepaymentAmount" class="form-label">Repayment Amount</label>
+                                    <input type="number" class="form-control border-0 bg-light" id="loanRepaymentAmount" placeholder="e.g. 200.00">
+                                </div>
+                                
+                                <div class="bg-light p-3 rounded shadow-sm mb-3">
+                                    <label for="loanInterestRate" class="form-label">Interest Rate (%)</label>
+                                    <input type="number" class="form-control border-0 bg-light" id="loanInterestRate" placeholder="e.g. 10">
+                                </div>
+
+                                <div class="bg-light p-3 rounded shadow-sm mb-3">
+                                    <label for="loanPeriod" class="form-label">Repayment Period</label>
+                                    <div class="d-flex gap-2">
+                                        <input type="number" class="form-control border-0 bg-light w-50" id="loanPeriodValue" value="1" min="1">
+                                        <select id="loanPeriodUnit" class="form-select border-0 bg-light w-50">
+                                            <option value="day">Day(s)</option>
+                                            <option value="week">Week(s)</option>
+                                            <option value="month">Month(s)</option>
+                                            <option value="year">Year(s)</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input bg-dark" type="checkbox" id="exp_RecurringToggle" onchange="toggleRecurrence('income')">
-                            <label class="form-check-label" for="exp_RecurringToggle">Recurring Expenses?</label>
-                        </div>
-
-                        <div class="mb-3 mt-2" id="exp_RecurrenceGroup" style="display: none;">
-
-                        <!-- Repeat Interval -->
-                        <div class="bg-light p-3 rounded shadow-sm mb-3">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="input-group-text bg-light border-0">
-                                    <i class="bx bx-repeat"></i>
-                                </span>
-                                <label class="mb-0 me-2">Repeat every</label>
-                                <input type="number" class="form-control border-0 bg-light text-center" id="inRecurrenceValue" min="1" value="1" style="width: 80px;">
-                                <select class="form-select border-0 bg-light w-auto" id="exp_category_textRecurrenceUnit">
-                                    <option value="day">Day(s)</option>
-                                    <option value="week">Week(s)</option>
-                                    <option value="month">Month(s)</option>
-                                    <option value="year">Year(s)</option>
-                                </select>
+                            <div class="d-flex mb-3">
+                                <input class="form-check bg-dark" type="checkbox" id="exp_RecurringToggle" onchange="exptoggleRecurrence('income')">
+                                <label class="form-check-label px-2" for="exp_RecurringToggle">Recurring Expenses?</label>
                             </div>
-                        </div>
 
-                        <!-- From Date Block -->
-                        <div class="bg-light p-3 rounded shadow-sm mb-3">
-                            <label for="fromDate" class="form-label">From</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-0">
-                                    <i class="bx bx-calendar"></i>
-                                </span>
-                                <input id="exp_fromDate" class="form-control border-0 bg-light" type="date">
+                            <div class="mb-3 mt-2" id="exp_RecurrenceGroup" style="display: none;">
+                                <!-- Repeat Interval -->
+                                <div class="bg-light p-3 rounded shadow-sm mb-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="bx bx-repeat"></i>
+                                        </span>
+                                        <label class="mb-0 me-2">Repeat every</label>
+                                        <input type="number" class="form-control border-0 bg-light text-center" id="expRecurrenceValue" min="1" value="1" style="width: 80px;">
+                                        <select class="form-select border-0 bg-light w-auto" id="exp_category_textRecurrenceUnit">
+                                            <option value="day">Day(s)</option>
+                                            <option value="week">Week(s)</option>
+                                            <option value="month">Month(s)</option>
+                                            <option value="year">Year(s)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- From Date Block -->
+                                <div class="bg-light p-3 rounded shadow-sm mb-3">
+                                    <label for="fromDate" class="form-label">From</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="bx bx-calendar"></i>
+                                        </span>
+                                        <input id="exp_fromDate" class="form-control border-0 bg-light" type="date">
+                                    </div>
+                                </div>
+
+                                <!-- To Date Block -->
+                                <div class="bg-light p-3 rounded shadow-sm">
+                                    <label for="exp_toDate" class="form-label">To</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="bx bx-calendar"></i>
+                                        </span>
+                                        <input id="exp_toDate" class="form-control border-0 bg-light" type="date">
+                                    </div>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- To Date Block -->
-                        <div class="bg-light p-3 rounded shadow-sm">
-                            <label for="exp_toDate" class="form-label">To</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-0">
-                                    <i class="bx bx-calendar"></i>
-                                </span>
-                                <input id="exp_toDate" class="form-control border-0 bg-light" type="date">
+                            <div class="d-flex mb-3">
+                                <input class="form-check bg-dark" type="checkbox" id="expReminderToggle" onchange="exptoggleReminderDate()">
+                                <label class="form-check-label px-2" for="expcomeReminderToggle">Set a Reminder?</label>
                             </div>
-                        </div>
-                    </div>
 
-                    
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input bg-dark" type="checkbox" id="incomeReminderToggle" onchange="toggleReminderDate()">
-                            <label class="form-check-label" for="incomeReminderToggle">Set a Reminder?</label>
-                        </div>
-
-                        <div class="mb-3" id="exp_reminderDateGroup" style="display: none;">
-                            <label for="reminderDate" class="form-label">Reminder Date</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-0">
-                                    <i class="bx bx-calendar"></i>
-                                </span>
-                                <input type="date" class="form-control border-0 bg-light" id="exp_reminderDate">
+                            <div class="mb-3" id="exp_reminderDateGroup" style="display: none;">
+                                <label for="reminderDate" class="form-label">Reminder Date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0">
+                                        <i class="bx bx-calendar"></i>
+                                    </span>
+                                    <input type="date" class="form-control border-0 bg-light" id="exp_reminderDate">
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="mt-5">
-                            <button type="button" class="header-btn w-100" onclick="recordIncome()">Record Income</button>
-                        </div>
+                        
+                            <div class="mt-5">
+                                <button type="submit" class="header-btn w-100">Record Expense</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-
-                <!-- Income Table Section -->
-                <!-- <div class="col mt-4">
-                    <div>
-                        
-                        <div class="d-flex justify-content-between w-100 align-items-center">
-                            <h5 class="mb-0">Income History</h5>
-                            <button class="btn btn-sm btn-outline-primary" onclick="loadIncomes(true)">
-                                <i class="bx bx-refresh"></i> Refresh
-                            </button>
-                        </div>
-
-                        <div class="table-container">
-                            <table class="table table-borderless table-hover mb-0">
-                                <thead class="background">
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Note</th>
-                                        <th>Category</th>
-                                        <th>Branch</th>
-                                        <th>Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="income_table">
-                                </tbody>
-                            </table>
-                            <div id="income_loader" class="loader d-none">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div> -->
             </div>
         </div>
 
@@ -521,10 +478,10 @@
                         <div class="input-group">
                             <!-- Transfer Form -->
                             <form id="transferForm" class="w-100">
-                                <div class="d-flex justify-content-between w-100 mb-4 bg-light" style="height: 60px;">
+                                <div class="d-flex justify-content-between w-100 mb-4 bg-light rounded" style="height: 60px;">
                                     <div class="d-flex align-items-center bg-light px-1">
                                         <i class='bx bx-payment' style="color:#11998e;"></i>
-                                        <select class="form-select bg-light border-0 b" id="exp_payment_type" name="payment_type">
+                                        <select class="form-select bg-light border-0 b" id="transfer_payment_type" name="payment_type">
                                             <option value="cash">Cash</option>
                                             <option value="bank">Bank</option>
                                             <option value="ecocash">Ecocash</option>
@@ -532,7 +489,7 @@
                                     </div>
                                     <div class="d-flex align-items-center bg-light px-1">
                                         <i class='bx bx-wallet'></i>
-                                        <select class="form-select bg-light border-0 b" id="exp_currency" name="currency">
+                                        <select class="form-select bg-light border-0 b" id="transfer_currency" name="currency">
                                             {% for currency in currencies %}
                                                 <option value="{{ currency.id }}" {% if currency.default %} selected {% endif %}>{{ currency.name }}</option>
                                             {% endfor %}
@@ -543,21 +500,21 @@
                                 <div class="mb-4">
                                     <div class="input-group">
                                         <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
-                                        <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="exp_Amount" onclick="clearInput(this)" value="0.00" placeholder="Enter amount" style="height: 100px;">
+                                        <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="transfer_Amount" onclick="clearInput(this)" value="0.00" placeholder="Enter amount" style="height: 100px;">
                                     </div>
                                 </div>
 
-                                <div class="w-100 bg-light p-2 mb-4">
+                                <div class="w-100 bg-light mb-4 p-2 rounded">
                                     <h6><i class="bx bx-export"></i> From</h6>
-                                    <div class="form-section d-flex justify-content-between w-100">
-                                        <div>
-                                            <select class="form-select" id="fromType" name="fromType">
+                                    <div class="form-section d-flex flex-column w-100">
+                                        <div class="mb-4">
+                                            <select class="form-select border-1" id="transferFromType" name="transferFromType">
                                                 <option value="branch">Branch</option>
                                                 <option value="person">Person</option>
                                             </select>
                                         </div>
                                         <div>
-                                            <select class="form-select" id="fromBranch" name="fromBranch">
+                                            <select class="form-select border-1" id="transferFromBranch" name="transferFromBranch">
                                                 <option value="">Select Branch</option>
                                                 {% for branch in branches %}
                                                     {% if request.user.role|lower == 'admin' %}
@@ -565,6 +522,14 @@
                                                     {% elif forloop.first %}
                                                         <option value="{{ request.user.branch.id}}">{{ request.user.branch }}</option>
                                                     {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div id="fromPersonContainer" style="display: none;">
+                                            <select class="form-select border-1" id="transferFromPerson" name="fromPerson">
+                                                <option value="">Select Person</option>
+                                                {% for user in users %}
+                                                    <option value="{{ user.id }}">{{ user.get_full_name }}</option>
                                                 {% endfor %}
                                             </select>
                                         </div>
@@ -572,17 +537,17 @@
                                 </div>
 
                                 <!-- To Section -->
-                                <div class="bg-light p-2 ">
+                                <div class="bg-light mb-4 p-2 rounded">
                                     <h6><i class="bx bx-import"></i> To</h6>
-                                    <div class="form-section mb-4 d-flex bg-light justify-content-between w-100">
-                                        <div>
-                                            <select class="form-select border-0" id="toType" name="toType">
+                                    <div class="form-section mb-4 d-flex bg-light flex-column w-100">
+                                        <div class="mb-4">
+                                            <select class="form-select border-1" id="transferToType" name="transfertoType">
                                                 <option value="branch">Branch</option>
                                                 <option value="person">Person</option>
                                             </select>
                                         </div>
                                         <div>
-                                            <select class="form-select border-0" id="toBranch" name="toBranch">
+                                            <select class="form-select border-1" id="transferToBranch" name="transfertoBranch">
                                                 <option value="">Select Branch</option>
                                                 {% for branch in branches %}
                                                     {% if request.user.role|lower == 'admin' %}
@@ -593,27 +558,28 @@
                                                 {% endfor %}
                                             </select>
                                         </div>
+                                        <div id="toPersonContainer" style="display: none;">
+                                            <select class="form-select border-1" id="transferToPerson" name="toPerson">
+                                                <option value="">Select Person</option>
+                                                {% for user in users %}
+                                                    <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="form-section">
+                                <div class="form-section mb-4 p-2 bg-light rounded">
                                     <h6><i class="bx bx-note"></i> Description</h6>
-                                    <textarea class="form-control" id="description" name="description" rows="3" placeholder="Transfer description (optional)"></textarea>
+                                    <textarea class="form-control" id="transferDescription" name="description" rows="3" placeholder="Transfer description (optional)"></textarea>
                                 </div>
 
-                                <button type="submit" class="submit-btn">
+                                <button type="submit" class="header-btn w-100">
                                     <span class="button-text">Submit Transfer</span>
                                     <span class="loading">
                                         <i class="bx bx-loader-alt bx-spin"></i> Processing...
                                     </span>
                                 </button>
-
-                                <div id="successMessage" class="success-message">
-                                    <i class="bx bx-check-circle"></i> Transfer completed successfully!
-                                </div>
-                                <div id="errorMessage" class="error-message">
-                                    <i class="bx bx-error-circle"></i> <span id="errorText"></span>
-                                </div>
                             </form>
                         </div>
                     </div>
@@ -719,7 +685,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="loan-Modal" tabindex="-1" aria-labelledby="addIncomeCategoryModalLabel" aria-hidden="true">
+    <div class="modal fade" id="loan-modal" tabindex="-1" aria-labelledby="addIncomeCategoryModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content border-0">
             <div class="modal-header">
@@ -732,18 +698,11 @@
             </div>
         </div>
     </div>
-
-<!-- <script src="{% static 'js/custom_search_select.js' %}"></script> -->
 <script>
 let categoriesData = [];
-const loanModal = new bootstrap.Modal(document.getElementById('loan-modal'));
-function clearInput(el){
-    el.value = '';
-}
+let expense_child_categories = [];
+let expense_main_categories = [];
 
-function showLoanModal(){
-    loanModal.show()
-}
 {% for cat in categories %}
     categoriesData.push({
         id: {{ cat.id }},
@@ -752,6 +711,84 @@ function showLoanModal(){
         text: '{{ cat.name }}'
     });
 {% endfor %}
+
+{% for cat in exp_child_categories %}
+    expense_child_categories.push({
+        id: {{ cat.id }},
+        name: '{{ cat.name }}',
+        value: {{ cat.id }},
+        text: '{{ cat.name }}'
+    })
+{% endfor %}
+
+console.log('expenses categories: ', expense_child_categories)
+
+{% for cat in exp_main_categories %}
+    expense_main_categories.push({
+        id: {{ cat.id }},
+        name: '{{ cat.name }}',
+        value: {{ cat.id }},
+        text: '{{ cat.name }}'
+    })
+{% endfor %}
+
+console.log('expenses main categories: ', expense_main_categories)
+
+const loanModal = new bootstrap.Modal(document.getElementById('loan-modal'));
+function clearInput(el){
+    el.value = '';
+}
+
+function showLoanModal(){
+    loanModal.show()
+}
+
+function toggleLoanFields() {
+    const isLoan = document.getElementById("isLoan").checked;
+    const loanFields = document.getElementById("loanFields");
+
+    if (isLoan) {
+        loanFields.style.display = "block";
+    } else {
+        loanFields.style.display = "none";
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const fromType = document.getElementById("transferFromType");
+    const fromBranch = document.getElementById("transferFromBranch");
+    const fromPersonContainer = document.getElementById("fromPersonContainer");
+
+    const toType = document.getElementById("transferToType");
+    const toBranch = document.getElementById("transferToBranch");
+    const toPersonContainer = document.getElementById("toPersonContainer");
+
+    function toggleFromFields() {
+        if (fromType.value === "branch") {
+            fromBranch.parentElement.style.display = "block";
+            fromPersonContainer.style.display = "none";
+        } else {
+            fromBranch.parentElement.style.display = "none";
+            fromPersonContainer.style.display = "block";
+        }
+    }
+
+    function toggleToFields() {
+        if (toType.value === "branch") {
+            toBranch.parentElement.style.display = "block";
+            toPersonContainer.style.display = "none";
+        } else {
+            toBranch.parentElement.style.display = "none";
+            toPersonContainer.style.display = "block";
+        }
+    }
+
+    fromType.addEventListener("change", toggleFromFields);
+    toType.addEventListener("change", toggleToFields);
+
+    toggleFromFields();
+    toggleToFields();
+})
 
 class CustomSearchSelect {
     constructor(containerId, options = {}) {
@@ -1020,8 +1057,9 @@ const mainCategorySearchSelect = new CustomSearchSelect('main-categories', {
     }
 });
 
-const categorySearchSelect = new CustomSearchSelect('exp_categories', {
-    data: categoriesData,
+
+const expCategorySearchSelect = new CustomSearchSelect('exp-categories', {
+    data: expense_child_categories,
     placeholder: 'Search or add category...',
     onSelect: (item) => {
         console.log('Category selected:', item);
@@ -1032,8 +1070,8 @@ const categorySearchSelect = new CustomSearchSelect('exp_categories', {
 });
 
 
-const mainCategorySearchSelect = new CustomSearchSelect('exp_main-categories', {
-    data: categoriesData,
+const expMainCategorySearchSelect = new CustomSearchSelect('exp-main-categories', {
+    data: expense_main_categories,
     placeholder: 'Search or add category...',
     onSelect: (item) => {
         console.log('Category selected:', item);
@@ -1057,48 +1095,55 @@ function toggleReminderDate() {
     dateGroup.style.display = toggle.checked ? 'block' : 'none';
 }
 
+function exptoggleRecurrence() {
+    const toggle = document.getElementById('exp_RecurringToggle');
+    const section = document.getElementById('exp_RecurrenceGroup');
+    section.style.display = toggle.checked ? 'block' : 'none';
+}
+
+function exptoggleReminderDate() {
+    const toggle = document.getElementById('expReminderToggle');
+    const section = document.getElementById('exp_reminderDateGroup');
+    section.style.display = toggle.checked ? 'block' : 'none';
+}
 
 async function recordIncome() {
     try {
         const formData = {
-            amount: parseFloat(document.getElementById('inAmount').value) || 0,
-            currency: document.getElementById('currency').value,
+            amount: parseFloat(document.getElementById('inAmount')?.value) || 0,
+            currency: document.getElementById('currency')?.value,
             category: categorySearchSelect.getValue(),
             main_category: mainCategorySearchSelect.getValue(),
-            branch: document.getElementById('inBranch').value,
-            account_to: document.getElementById('accountTo').value,
-            is_recurring: document.getElementById('incomeRecurringToggle').checked,
-            has_reminder: document.getElementById('incomeReminderToggle').checked,
+            branch: document.getElementById('inBranch')?.value,
+            account_to: document.getElementById('accountTo')?.value,
+            is_recurring: document.getElementById('incomeRecurringToggle')?.checked,
+            has_reminder: document.getElementById('incomeReminderToggle')?.checked,
             recurrence_value: document.getElementById('inRecurrenceValue').value,
-            recurrence_unit: document.getElementById('inRecurrenceUnit').value,
-            from_date: document.getElementById('fromDate').value,
-            to_date: document.getElementById('toDate').value,
-            reminder_dated: document.getElementById('reminderDate').value,
+            recurrence_unit: document.getElementById('inRecurrenceUnit')?.value,
+            from_date: document.getElementById('fromDate')?.value,
+            to_date: document.getElementById('toDate')?.value,
+            reminder_dated: document.getElementById('reminderDate')?.value,
         };
 
-        console.log('form data', formData)
-
         if (formData.amount <= 0) {
-            alert('Please enter a valid amount');
+            showToast("Please enter a valid amount", "#dc3545");
             return;
         }
 
         if (!formData.currency) {
-            alert('Please select a currency');
+            showToast("Please select a currency", "#dc3545");
             return;
         }
 
-        if (!formData.category.value && !formData.income_category) {
-            alert('Please select or add a category');
+        if (!formData.category?.value && !formData.income_category) {
+            showToast("Please select or add a category", "#dc3545");
             return;
         }
 
-        
         const submitButton = document.querySelector('.header-btn');
         const originalText = submitButton.textContent;
         submitButton.textContent = 'Recording...';
         submitButton.disabled = true;
-
 
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
@@ -1106,6 +1151,7 @@ async function recordIncome() {
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(formData)
         });
@@ -1113,26 +1159,24 @@ async function recordIncome() {
         const result = await response.json();
 
         if (response.ok) {
-            alert('Income recorded successfully!');
-
+            showToast("Income recorded successfully!", "#28a745");
             resetIncomeForm();
-            
+
             if (result.redirect_url) {
                 window.location.href = result.redirect_url;
             }
-
         } else {
             if (result.errors) {
                 const errorMessages = Object.values(result.errors).flat().join('\n');
-                alert('Error recording income:\n' + errorMessages);
+                showToast(`Error:\n${errorMessages}`, "#dc3545", 5000);
             } else {
-                alert(result.message || 'An error occurred while recording income');
+                showToast(result.message || "An error occurred while recording income", "#dc3545");
             }
         }
 
     } catch (error) {
         console.error('Error recording income:', error);
-        alert('An error occurred while recording income. Please try again.');
+        showToast("An unexpected error occurred. Please try again.", "#dc3545");
     } finally {
         const submitButton = document.querySelector('.header-btn');
         submitButton.textContent = 'Record Income';
@@ -1140,125 +1184,181 @@ async function recordIncome() {
     }
 }
 
-function resetIncomeForm() {
-    document.getElementById('inAmount').value = '0.00';
-    document.getElementById('incomeCategory').value = '';
-    document.getElementById('accountTo').value = '';
-    document.getElementById('incomeRecurringToggle').checked = false;
-    document.getElementById('incomeReminderToggle').checked = false;
-    document.getElementById('incomeRecurrenceGroup').style.display = 'none';
-    document.getElementById('reminderDateGroup').style.display = 'none';
-    document.getElementById('inRecurrenceValue').value = '1';
-    document.getElementById('inRecurrenceUnit').value = 'day';
-    document.getElementById('fromDate').value = '';
-    document.getElementById('toDate').value = '';
-    document.getElementById('reminderDate').value = '';
-    
-    categorySearchSelect.setValue(null, '');
-    categorySearchSelect.input.value = '';
+function showToast(message, type = "success") {
+    Toastify({
+        text: message,
+        duration: 3000,
+        gravity: "top",
+        position: "right",
+        backgroundColor: "#28a745" ,
+        stopOnFocus: true,
+    }).showToast();
 }
+
+document.getElementById("expense-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    recordExpense();
+});
 
 async function recordExpense() {
     try {
         const formData = {
-            amount: parseFloat(document.getElementById('exp_Amount').value) || 0,
-            currency: document.getElementById('exp_currency').value,
-            category: categorySearchSelect.getValue(),
-            main_category: mainCategorySearchSelect.getValue(),
-            branch: document.getElementById('exp_Branch').value,
-            account_to: document.getElementById('exp_accountTo').value,
-            is_recurring: document.getElementById('exp_RecurringToggle').checked,
-            has_reminder: document.getElementById('exp_ReminderToggle').checked,
-            recurrence_value: document.getElementById('exp_RecurrenceValue').value,
-            recurrence_unit: document.getElementById('exp_RecurrenceUnit').value,
-            from_date: document.getElementById('exp_fromDate').value,
-            to_date: document.getElementById('exp_toDate').value,
-            reminder_dated: document.getElementById('exp_reminderDate').value,
+            amount: parseFloat(document.getElementById('exp_Amount')?.value) || 0,
+            currency: document.getElementById('exp_currency')?.value,
+            category: expCategorySearchSelect.getValue(),
+            main_category: expMainCategorySearchSelect.getValue(),
+            branch: document.getElementById('exp_Branch')?.value,
+            account_to: document.getElementById('exp_accountTo')?.value,
+            is_recurring: document.getElementById('exp_RecurringToggle')?.checked,
+            has_reminder: document.getElementById('expReminderToggle')?.checked,
+            recurrence_value: document.getElementById('expRecurrenceValue')?.value,
+            recurrence_unit: document.getElementById('exp_category_textRecurrenceUnit')?.value,
+            from_date: document.getElementById('exp_fromDate')?.value,
+            to_date: document.getElementById('exp_toDate')?.value,
+            reminder_date: document.getElementById('exp_reminderDate')?.value,
+            payment_type: document.getElementById('exp_payment_type')?.value,
+            is_loan: document.getElementById('isLoan')?.checked,
+            loan_repayment_amount: document.getElementById('loanRepaymentAmount')?.value,
+            loan_interest_rate: document.getElementById('loanInterestRate')?.value,
+            loan_period_value: document.getElementById('loanPeriodValue')?.value,
+            loan_period_unit: document.getElementById('loanPeriodUnit')?.value,
         };
-
-        console.log('form data', formData)
-
-        if (formData.amount <= 0) {
-            alert('Please enter a valid amount');
-            return;
-        }
-
-        if (!formData.currency) {
-            alert('Please select a currency');
-            return;
-        }
-
-        if (!formData.category.value && !formData.income_category) {
-            alert('Please select or add a category');
-            return;
-        }
-
-        
-        const submitButton = document.querySelector('.header-btn');
-        const originalText = submitButton.textContent;
-        submitButton.textContent = 'Recording...';
-        submitButton.disabled = true;
-
 
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-        const response = await fetch('/finance/record_income/', {
-            method: 'POST',
+        console.log('expenses Data: ', formData)
+
+        const response = await fetch("/finance/create_expense/", {
+            method: "POST",
             headers: {
-                'X-CSRFToken': csrfToken,
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
             },
             body: JSON.stringify(formData)
         });
 
         const result = await response.json();
 
-        if (response.ok) {
-            alert('Expense recorded successfully!');
-
-            resetIncomeForm();
-            
-            if (result.redirect_url) {
-                window.location.href = result.redirect_url;
-            }
-
+        if (response.ok && result.success) {
+            Toastify({
+                text: "Expense submitted successfully!",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#28a745",
+                stopOnFocus: true,
+            }).showToast();
+            document.getElementById("expense-form").reset();
+            document.getElementById("loanFields").style.display = "none";
+            document.getElementById("exp_RecurrenceGroup").style.display = "none";
+            document.getElementById("exp_reminderDateGroup").style.display = "none";
         } else {
-            if (result.errors) {
-                const errorMessages = Object.values(result.errors).flat().join('\n');
-                alert('Error recording income:\n' + errorMessages);
-            } else {
-                alert(result.message || 'An error occurred while recording income');
-            }
+            Toastify({
+                text: `${data.message || "Submission failed."}`,
+                duration: 4000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#dc3545",
+                stopOnFocus: true,
+            }).showToast();
         }
 
     } catch (error) {
-        console.error('Error recording income:', error);
-        alert('An error occurred while recording income. Please try again.');
-    } finally {
-        const submitButton = document.querySelector('.header-btn');
-        submitButton.textContent = 'Record Income';
-        submitButton.disabled = false;
+        console.error("Error:", error);
+        Toastify({
+            text: "Something went wrong. Please try again.",
+            duration: 4000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "#dc3545",
+            stopOnFocus: true,
+        }).showToast();
     }
 }
 
-function resetExpenseForm() {
-    amount: parseFloat(document.getElementById('exp_Amount').value) || 0,
-    currency: document.getElementById('exp_currency').value,
-    category: categorySearchSelect.getValue(),
-    main_category: mainCategorySearchSelect.getValue(),
-    branch: document.getElementById('exp_Branch').value,
-    account_to: document.getElementById('exp_accountTo').value,
-    is_recurring: document.getElementById('exp_RecurringToggle').checked,
-    has_reminder: document.getElementById('exp_ReminderToggle').checked,
-    recurrence_value: document.getElementById('exp_RecurrenceValue').value,
-    recurrence_unit: document.getElementById('exp_RecurrenceUnit').value,
-    from_date: document.getElementById('exp_fromDate').value,
-    to_date: document.getElementById('exp_toDate').value,
-    reminder_dated: document.getElementById('exp_reminderDate').value,
-    
-    categorySearchSelect.setValue(null, '');
-    categorySearchSelect.input.value = '';
-}
 
+const transferForm = document.getElementById("transferForm");
+const submitBtn = transferForm.querySelector("button[type='submit']");
+const submitText = submitBtn.querySelector(".button-text");
+const loadingSpinner = submitBtn.querySelector(".loading");
+
+transferForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    submitBtn.disabled = true;
+    submitText.style.display = "none";
+    loadingSpinner.style.display = "inline-flex";
+    e.preventDefault();
+
+    const inputs = transferForm.querySelectorAll("[id^='transfer']");
+    const fromType = document.getElementById("transferFromType");
+    const toType = document.getElementById("transferToType");
+    const formData = {};
+
+    inputs.forEach((input) => {
+        const id = input.id.replace("transfer", "").toLowerCase();
+        if (input.type === "checkbox") {
+            formData[id] = input.checked;
+        } else {
+            formData[id] = input.value;
+        }
+    });
+
+
+    formData["fromtype"] = fromType.value;
+    formData["totype"] = toType.value;
+
+    console.log("Submitting transfer:", formData);
+
+    fetch("/finance/create_transfer/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"), 
+        },
+        body: JSON.stringify(formData),
+    })
+    .then((response) => response.json())
+    .then((data) => {
+        if (data.success) {
+            Toastify({
+                text: "Transfer submitted successfully!",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#28a745",
+                stopOnFocus: true,
+            }).showToast();
+
+            transferForm.reset();
+        } else {
+            Toastify({
+                text: `${data.message || "Submission failed."}`,
+                duration: 4000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#dc3545",
+                stopOnFocus: true,
+            }).showToast();
+        }
+    })
+    .catch((error) => {
+        console.error("Error submitting transfer:", error);
+        Toastify({
+            text: "Something went wrong. Please try again.",
+            duration: 4000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "#dc3545",
+            stopOnFocus: true,
+        }).showToast();
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitText.style.display = "inline";
+        loadingSpinner.style.display = "none";
+    });
+});
 
 document.addEventListener('DOMContentLoaded', function() {
     const currencySelect = document.getElementById('currency');

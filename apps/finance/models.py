@@ -233,23 +233,14 @@ class Expense(models.Model):
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
     status = models.BooleanField(default=False)
     purchase_order = models.ForeignKey("inventory.PurchaseOrder", on_delete=models.CASCADE, null=True, blank=True)
-
+    account_to = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name="account_to")
     receipt = models.FileField(upload_to=expense_receipt_upload_path, null=True, blank=True)
-
+    
     is_recurring = models.BooleanField(default=False)
-    recurrence_value = models.PositiveIntegerField(null=True, blank=True, help_text="Repeat every X units")
-    recurrence_unit = models.CharField(
-        max_length=10,
-        choices=[
-            ('day', 'Day(s)'),
-            ('week', 'Week(s)'),
-            ('month', 'Month(s)'),
-            ('year', 'Year(s)')
-        ],
-        null=True,
-        blank=True
-    )
-    cash_up_status = models.BooleanField(default=False, null=True)
+    is_loan = models.BooleanField(default=False)
+    
+    has_reminder = models.BooleanField(default=False)
+    reminder_dated = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.issue_date} - {self.category} - {self.description} - ${self.amount}"
@@ -496,6 +487,7 @@ class Cashbook(models.Model):
 
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True)
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True)
+    transfer = models.ForeignKey('finance.CashTransfers', on_delete=models.CASCADE, null=True)
     issue_date = models.DateTimeField(auto_now_add=True)
     description = models.CharField(max_length=255)
     debit = models.BooleanField(default=False)
@@ -524,6 +516,37 @@ class CashBookNote(models.Model):
 
     def __str__(self):
         return f"Note by {self.user.username} on {self.timestamp}"
+    
+class Recurrence(models.Model):
+    class TimeUnit(models.TextChoices):
+        DAILY = 'daily', _('Daily')
+        WEEKLY = 'weekly', _('Weekly')
+        MONTHLY = 'monthly', _('Monthly')
+        YEARLY = 'yearly', _('Yearly')
+
+    expense = models.OneToOneField('finance.Expense', on_delete=models.CASCADE, related_name='recurrence')
+    recurrence_value = models.PositiveIntegerField(help_text="Number of units between each recurrence (e.g., every 2 weeks)")
+    recurrence_unit = models.CharField(max_length=10, choices=TimeUnit.choices)
+    from_date = models.DateField()
+    to_date = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Recurring {self.expense.amount} {self.recurrence_unit} starting {self.from_date}"
+
+class Loan(models.Model):
+    class TimeUnit(models.TextChoices):
+        WEEK = 'week', _('Week')
+        MONTH = 'month', _('Month')
+        YEAR = 'year', _('Year')
+
+    expense = models.OneToOneField('finance.Expense', on_delete=models.CASCADE, related_name='loan')
+    loan_repayment_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    loan_interest_rate = models.DecimalField(max_digits=5, decimal_places=2, help_text="Interest rate as a percentage")
+    loan_period_value = models.PositiveIntegerField()
+    loan_period_unit = models.CharField(max_length=10, choices=TimeUnit.choices)
+
+    def __str__(self):
+        return f"Loan of {self.expense.amount} at {self.loan_interest_rate}% over {self.loan_period_value} {self.loan_period_unit}"
     
 class CashTransfers(models.Model):
     class TransferMethod(models.TextChoices):

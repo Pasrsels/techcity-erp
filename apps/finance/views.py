@@ -1587,6 +1587,74 @@ def create_invoice_pdf(invoice):
 
 
 @login_required
+def create_transfer(request):
+    try:
+        data = json.loads(request.body)
+
+        amount = data.get('_amount', 0)
+        currency_id = data.get('_currency')
+        from_type = data.get('fromtype')
+        to_type = data.get('totype')
+        from_branch_id = data.get('frombranch')  # ID of branch or person
+        to_branch_id = data.get('tobranch')
+        from_person_id = data.get('fromperson')
+        to_person_id = data.get('toperson')
+        reason = data.get('description', '')
+        transfer_method = data.get('_payment_type', 'cash').capitalize()
+
+        if not all([amount, currency_id]):
+            return JsonResponse({'success': False, 'message': 'Amount and currency are required.'}, status=400)
+        
+        currency = Currency.objects.get(pk=currency_id)
+
+        if from_type == "person":
+            user = User.objects.get(pk=from_person_id)
+            from_branch = user.branch
+        else:
+            from_branch = Branch.objects.get(pk=from_branch_id)
+
+        if to_type == "person":
+            user = User.objects.get(pk=to_person_id)
+            to_branch = user.branch
+        else:
+            to_branch = Branch.objects.get(pk=to_branch_id)
+
+        currency = Currency.objects.get(pk=currency_id)
+        from_branch = Branch.objects.get(pk=from_branch_id)
+        to_branch = Branch.objects.get(pk=to_branch_id)
+
+        cash_transfer = CashTransfers.objects.create(
+            from_branch=from_branch,
+            to=to_branch,
+            branch=request.user.branch, 
+            amount=amount,
+            currency=currency,
+            user=request.user,
+            reason=reason,
+            transfer_method=transfer_method,
+        )
+
+        Cashbook.objects.create(
+            transfer=cash_transfer,
+            amount=amount,
+            currency=currency,
+            credit=True,
+            description=f'Transfer ({cash_transfer.reason[:20]})',
+            branch=request.user.branch,
+            created_by=request.user,
+            updated_by=request.user,
+        )
+        return JsonResponse({'success': True})
+    
+    except Currency.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Invalid currency selected.'}, status=404)
+    except Branch.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Invalid branch selected.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@login_required
 @transaction.atomic
 def invoice_returns(request, invoice_id): # dont forget the payments
     invoice = get_object_or_404(Invoice, id=invoice_id)
@@ -8998,15 +9066,15 @@ def expenses(request):
 
             is_recurring = data.get('is_recurring') == 'true'
             recurrence_value = data.get('recurrence_value')
-            recurrence_unit = data.get('recurrence_unit')
-            
+            recurrence_unit = data.gext('recurrence_unit')
+             
             logger.info(branch)
 
             # Validation
             if not all([name, amount, category, payment_method, currency_id, branch]):
                 return JsonResponse({'success': False, 'message': 'Missing required fields.'})
 
-            # Fetch related objects
+            # Fetch related objects      X
             try:
                 category = ExpenseCategory.objects.get(id=category)
             except ExpenseCategory.DoesNotExist:
@@ -9059,24 +9127,119 @@ def expenses(request):
                 receipt=image,
             )
 
-            # Create Cashbook entry
-            Cashbook.objects.create(
-                amount=amount,
-                expense=expense,
-                currency=currency,
-                credit=True,
-                description=f'Expense ({expense.description[:20]})',
-                branch=branch
-            )
-
-            # Send notification (to turn on)
-            # send_expense_creation_notification.delay(expense.id)
-
+            
             return JsonResponse({'success': True, 'message': 'Expense recorded successfully.'})
 
         except Exception as e:
             logger.exception("Error while recording expense:")
             return JsonResponse({'success': False, 'message': str(e)})
+        
+        
+@login_required
+def create_expense(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST allowed"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        logger.info(f'data: {data}')
+
+        amount = float(data.get('amount', 0))
+        if amount < 0:
+            return JsonResponse({"error": "Amount cannot be negative."}, status=400)
+
+        category_data = data.get('category', {})
+        if category_data.get('isNew', False):
+            category, _ = ExpenseCategory.objects.get_or_create(
+                name=category_data.get('text'),
+                defaults={'description': f"Auto-created category: {category_data.get('text')}"}
+            )
+        else:
+            try:
+                category = ExpenseCategory.objects.get(id=category_data.get('value'))
+            except ExpenseCategory.DoesNotExist:
+                return JsonResponse({"error": "Selected category does not exist."}, status=400)
+
+        try:
+            main_category_data = data.get('main_category', {})
+            main_category = ExpenseCategory.objects.get(id=main_category_data.get('value'))
+        except ExpenseCategory.DoesNotExist:
+            return JsonResponse({"error": "Selected main category does not exist."}, status=400)
+
+        currency = Currency.objects.get(id=data.get('currency'))
+        branch = Branch.objects.get(id=data.get('branch'))
+        account_to = User.objects.get(id=data.get('account_to'))
+        
+        with transaction.atomic():
+
+            # Create Expense
+            expense = Expense.objects.create(
+                amount=amount,
+                currency=currency,
+                category=category,
+                branch=branch,
+                account_to=account_to,
+                user=request.user,
+                payment_method=data.get('payment_type', 'cash'),
+                is_recurring=data.get('is_recurring', False),
+                is_loan=data.get('is_loan', False)
+            )
+
+            # Create Recurrence model if recurring
+            if expense.is_recurring:
+                from_date = parse_date(data.get('from_date'))
+                recurrence_value = data.get('recurrence_value')
+                recurrence_unit = data.get('recurrence_unit')
+
+                if not from_date or not recurrence_value or not recurrence_unit:
+                    return JsonResponse({"error": "Missing recurrence info"}, status=400)
+
+                Recurrence.objects.create(
+                    expense=expense,
+                    recurrence_value=recurrence_value,
+                    recurrence_unit=recurrence_unit,
+                    from_date=from_date,
+                    to_date=parse_date(data.get('to_date')) if data.get('to_date') else None,
+                    has_reminder=data.get('has_reminder', False),
+                    reminder_dated=parse_date(data.get('reminder_dated')) if data.get('reminder_dated') else None,
+                )
+
+            if expense.is_loan:
+                Loan.objects.create(
+                    expense=expense,
+                    loan_repayment_amount=data.get('loan_repayment_amount', 0),
+                    loan_interest_rate=data.get('loan_interest_rate', 0),
+                    loan_period_value=data.get('loan_period_value', 0),
+                    loan_period_unit=data.get('loan_period_unit')
+                )
+
+            Cashbook.objects.create(
+                amount=amount,
+                expense=expense,
+                currency=currency,
+                credit=True,
+                description=f'Expense entry - {category.name}',
+                branch=branch,
+                created_by=request.user,
+                updated_by=request.user
+            )
+
+        return JsonResponse({
+            "success": True,
+            "message": "Expense recorded successfully",
+            "expense_id": expense.id
+        })
+
+    except Currency.DoesNotExist:
+        return JsonResponse({"error": "Invalid currency."}, status=400)
+    except Branch.DoesNotExist:
+        return JsonResponse({"error": "Invalid branch."}, status=400)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "Invalid user/account_to."}, status=400)
+    except Exception as e:
+        logger.exception("Unexpected error during expense creation")
+        return JsonResponse({"error": str(e)}, status=500)
+
         
 @login_required
 def get_expenses(request):
@@ -11690,7 +11853,20 @@ def cashbook_view(request):
     """Main view to render the cashbook page"""
     currency = Currency.objects.filter(default=True).first()
     cash_up = CashUp.objects.filter(status=False)
+    expense_child_categories = ExpenseCategory.objects.filter(parent__isnull=True)
+    expense_main_categories = ExpenseCategory.objects.filter(parent__isnull=False)
+    
+    cashbook_currencies = Currency.objects.all().values('id', 'name')
+    
+    CASHBOOK_TYPES = [
+        {'id': 'bank', 'name': 'Bank'},
+        {'id': 'ecocash', 'name': 'Ecocash'},
+        {'id': 'transfer', 'name': 'Transfers'},
+        {'id': 'loan', 'name': 'Loans'},
+    ]
 
+    cashbook_filter_types = list(cashbook_currencies )+ CASHBOOK_TYPES
+    
     branches_pending_totals = defaultdict(float)
     total = 0
     branches_data = {}
@@ -11710,7 +11886,10 @@ def cashbook_view(request):
         'cash_up_count': cash_up.count(),
         'to_date': cash_up.last().created_at.date if cash_up else '',
         'from_date':cash_up.first().created_at.date if cash_up else '',
-        'branches_data': list(branches_data.values())
+        'branches_data': list(branches_data.values()),
+        'exp_main_categories': expense_main_categories,
+        'exp_child_categories' : expense_child_categories,
+        'cashbook_filter_types' : cashbook_filter_types 
     })
 
 @login_required
@@ -11763,14 +11942,50 @@ def cashbook_data(request):
         else:
             start_date = now - timedelta(days=now.weekday())
             end_date = now
-
-    entries = Cashbook.objects.filter(
-        issue_date__gte=start_date,
-        issue_date__lte=end_date,
-        currency__id=currency,
-        branch=request.user.branch
-    ).select_related('created_by', 'branch', 'updated_by', 'currency', 'invoice', 'expense').order_by('-issue_date')
     
+    if currency in [str(i) for i in range(11)]:  
+        logger.info(f'currency: {currency}')
+        entries = Cashbook.objects.filter(
+            issue_date__range=[start_date, end_date],
+            currency__id=currency,
+            branch=request.user.branch
+        ).select_related(
+            'created_by', 'branch', 'updated_by', 'currency', 'invoice', 'expense'
+        ).order_by('-issue_date')
+
+    else:
+        if currency == 'bank' or currency == 'ecocash':
+            entries = Cashbook.objects.filter(
+                issue_date__range=[start_date, end_date],
+                branch=request.user.branch
+            ).filter(
+                Q(expense__payment_type=currency) |
+                Q(invoice__payment_type=currency)
+            ).select_related(
+                'created_by', 'branch', 'updated_by', 'currency', 'invoice', 'expense'
+            ).order_by('-issue_date')
+
+        elif currency == 'transfer':
+            entries = Cashbook.objects.filter(
+                issue_date__range=[start_date, end_date],
+                transfer__payment_method=currency,
+                branch=request.user.branch
+            ).select_related(
+                'created_by', 'branch', 'updated_by', 'currency', 'transfer'
+            ).order_by('-issue_date')
+
+        elif currency == 'loan':
+            entries = Cashbook.objects.filter(
+                issue_date__range=[start_date, end_date],
+                expense__is_loan=True,
+                branch=request.user.branch
+            ).select_related(
+                'created_by', 'branch', 'updated_by', 'currency', 'expense'
+            ).order_by('-issue_date')
+
+        else:
+            entries = Cashbook.objects.none()
+       
     logger.info(f'Found {entries.count()} entries')
 
     if search_query:

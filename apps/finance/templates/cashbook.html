@@ -126,9 +126,6 @@
             justify-content: center;
         }
     }
-    .report{
-        margin-left: 6px;
-    }
 
     .form-label{
         font-size: 12px !important;
@@ -373,9 +370,14 @@
         max-width: 400px;
     }
 
-    .filter-btn.active {
-        background-color: #0d6efd;
+    .filter-btn{
+        background: var(--primary) !important;
         color: white;
+    }
+
+    .filter-btn.active {
+        background-color: var(--primary);
+        color: black;
     }
 
     .category-modal {
@@ -564,47 +566,22 @@
 <div class="finance">
     <div class="cashbook">
         <!-- Header Section with Navigation and Filters -->
-        <header class="rounded p-2 mb-2">
-            <div class="d-flex align-items-center gap-2">
-                <div class="col-4">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <h5 class="card-title">Cash In</h5>
-                            <p class="card-text fs-3"><span id="totalCashIn">0.00</span></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <h5 class="card-title">Cash Out</h5>
-                            <p class="card-text fs-3"><span id="totalCashOut">0.00</span></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <h5 class="card-title">Balance</h5>
-                            <p class="card-text fs-3"><span id="totalBalance">0.00</span></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <div>
-            <div class="row">
-                <div class="d-flex flex-wrap justify-content-md-end gap-2">
+         <div class="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <h4 class="mb-1">Cashbook</h4>
+                <p class="text-muted mb-0">Manage and create cashbook transactions</p>
+              </div>
+              <div class="row">
+                <div class="d-flex flex-wrap justify-content-md-end">
                     <div class="card-body">                    
                         <div class="btn-group">
-                            <button class="btn btn-outline-dark filter-btn active" data-filter="today" onclick="applyFilter('today')">Today</button>
-                            <button class="btn btn-outline-dark filter-btn" data-filter="this_week" onclick="applyFilter('this_week')">This Week</button>
-                            <button class="btn btn-outline-dark filter-btn" data-filter="this_month" onclick="applyFilter('this_month')">This Month</button>
-                            <button class="btn btn-outline-dark filter-btn" data-filter="this_year" onclick="applyFilter('this_year')">This Year</button>
-                            <button class="btn btn-outline-dark filter-btn" data-filter="custom" onclick="showCustomFilter()">Custom</button>
+                            <button class="btn filter-btn active" data-filter="today" onclick="applyFilter('today')">Today</button>
+                            <button class="btn filter-btn" data-filter="this_week" onclick="applyFilter('this_week')">This Week</button>
+                            <button class="btn filter-btn" data-filter="this_month" onclick="applyFilter('this_month')">This Month</button>
+                            <button class="btn filter-btn" data-filter="this_year" onclick="applyFilter('this_year')">This Year</button>
+                            <button class="btn filter-btn" data-filter="custom" onclick="showCustomFilter()">Custom</button>
                         </div>
-                        <button class="btn btn-outline-primary report ">
+                        <button class="btn filter-btn report">
                             <i class="bi bi-download"></i>
                             Reports
                         </button>
@@ -613,6 +590,34 @@
             </div>
         </div>
         
+        <header class="rounded p-2 mb-2 bg-white">
+            <div class="d-flex align-items-center gap-2">
+                <div class="col-4">
+                    <div class="card border-0">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <h5 class="card-title">Cash In</h5>
+                            <p class="card-text fs-3"><span id="totalCashIn">0.00</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card border-0">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <h5 class="card-title">Cash Out</h5>
+                            <p class="card-text fs-3"><span id="totalCashOut">0.00</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card border-0">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <h5 class="card-title">Balance</h5>
+                            <p class="card-text fs-3"><span id="totalBalance">0.00</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
         <div class="card shadow-none border-0 mb-4">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
@@ -645,8 +650,8 @@
             </div>
         </div>
 
-        <ul class="nav nav-tabs bg-white p-2" id="cashbookTabs" role="tablist">
-            {% for currency in currencies %}
+        <ul class="nav nav-tabs p-2" id="cashbookTabs" role="tablist" style="background-color: var(--primary);">
+            {% for currency in cashbook_filter_types %}
                 <li class="nav-item" role="presentation">
                     <button 
                         class="nav-link {% if forloop.first %}active{% endif %}" id="tab-{{ currency.name }}" 
@@ -665,7 +670,7 @@
         </ul>
         
         <div class="tab-content">
-            {% for currency in currencies %}
+            {% for currency in cashbook_filter_types %}
             <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="{{ currency.name }}" role="tabpanel" aria-labelledby="tab-{{ currency.name }}">
                 <div class="row">
                     <div class="col">
@@ -898,12 +903,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-    
-    document.getElementById('cash_expense-tab').addEventListener('click', function() {
-        if (document.getElementById('expense_table').children.length === 0) {
-            loadExpenses();
-        }
-    });
 
     document.getElementById('saveCatBtn').addEventListener('click', saveIncomeCategory);
     document.getElementById('saveExpenseCategoryBtn').addEventListener('click', saveExpenseCategory);
@@ -1254,53 +1253,6 @@ toast.addEventListener('hidden.bs.toast', function () {
     toast.remove();
 });
 }
-
-
-document.addEventListener('DOMContentLoaded', function() {
-
-const incomeTableContainer = document.querySelector('#cash_income-panel .table-container');
-const expenseTableContainer = document.querySelector('#cash_expense-panel .table-container');
-
-if (incomeTableContainer) {
-    incomeTableContainer.addEventListener('scroll', function() {
-        const { scrollTop, scrollHeight, clientHeight } = this;
-        
-        if (scrollTop + clientHeight >= scrollHeight - 5 && state.cash_income.hasMore && !state.cash_income.loading) {
-            loadIncomes();
-        }
-    });
-}
-
-if (expenseTableContainer) {
-    expenseTableContainer.addEventListener('scroll', function() {
-        const { scrollTop, scrollHeight, clientHeight } = this;
-        
-        if (scrollTop + clientHeight >= scrollHeight - 5 && state.cash_expense.hasMore && !state.cash_expense.loading) {
-            loadExpenses();
-        }
-    });
-}
-});
-
-
-
-if (document.getElementById('cash_expense-panel').classList.contains('active')) {
-    if (event.ctrlKey && event.key === 'Enter') {
-        recordCashExpense();
-    }
-}
-
-document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
-    tab.addEventListener('shown.bs.tab', function (event) {
-        const targetId = event.target.getAttribute('data-bs-target');
-        if (targetId === '#cash_expense-panel') {
-            if (document.getElementById('expense_table').children.length === 0) {
-                loadExpenses();
-            }
-        }
-    });
-});
-
 
 // Cashbook
 function formatCurrency(amount) {

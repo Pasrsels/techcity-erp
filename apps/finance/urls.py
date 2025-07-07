@@ -23,6 +23,7 @@ urlpatterns = [
     
     # expenses
     path('expenses/', expenses, name='expenses'),
+    path('create_expense/', create_expense, name='create_expense'),
     path('get_expense/<int:expense_id>/',get_expense, name='get_expense'),
     path('add/expense/', add_expense_category, name='add_expense_category'),
     path('edit/expense/', add_or_edit_expense, name='add_or_edit_expense'),
@@ -172,6 +173,9 @@ urlpatterns = [
     
     path('paylater/', paylater, name='paylater'),
     path('paylater/details/<int:paylater_id>/', paylater_details, name='paylater_details'),
+    
+    #cash_transfers
+    path('create_transfer/', create_transfer, name='create_transfer'),
 
     ########################################################################################################################
     # API end points
