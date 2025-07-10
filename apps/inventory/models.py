@@ -468,8 +468,9 @@ class ActivityLog(models.Model):
     
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE) 
+    stocktake = models.ForeignKey('inventory.Stocktake', on_delete=models.CASCADE, null=True)
     user = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
-    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    action = models.CharField(max_length=100, choices=ACTION_CHOICES)
     quantity = models.IntegerField()
     total_quantity = models.IntegerField()
     dealer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)

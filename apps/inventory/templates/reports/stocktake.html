@@ -24,6 +24,7 @@
                         <th style="text-align:left;">Physical Quantity</th>
                         <th style="text-align:left;">Quantity Difference</th>
                         <th style="text-align:left;">Cost Value</th>
+                        <th style="text-align:left;">Selling Value</th>
                     </thead>
                     <tbody>
                         {% for product in stocktake_items %}
@@ -52,6 +53,11 @@
                                         ${{ product.cost }}
                                     </small>
                                 </td>
+                                <td  style="text-align:center;">
+                                    <small id="id_quantity_{{ product.id }}">
+                                        ${{ product.selling_value }}
+                                    </small>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -60,6 +66,7 @@
                             <td>Total</td>
                             <td colspan="4"></td>
                             <td class="total">${{ total_cost }}</td>
+                            <td class="total">${{ total_selling_value }}</td>
                         </tr>
                     </tfoot>
                 </table>

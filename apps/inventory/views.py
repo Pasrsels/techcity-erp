@@ -3875,12 +3875,26 @@ def stocktake_pdf(request):
             stock_items = StocktakeItem.objects.all()
 
         total_cost = stock_items.aggregate(total=Sum('product__cost'))['total'] or 0
-       
+        
+        stock_items = stock_items.annotate(
+            selling_value=ExpressionWrapper(
+                F('product__price') * F('quantity_difference'),
+                output_field=FloatField()
+            )
+        )
+        
+        total_selling_value = stock_items.aggregate(
+            total=Sum('selling_value')
+        )['total'] or 0
+        
+        print(total_selling_value)
+            
         return generate_pdf(
             template_name, {
                 'stocktake_items':stock_items,
                 'stock_take':stock_take,
-                'total_cost':total_cost
+                'total_cost':total_cost,
+                'total_selling_value':total_selling_value
             }
         )
         
@@ -4024,41 +4038,56 @@ def undo_accept_stocktake_item(request):
     try:
         data = json.loads(request.body)
         stocktake_id = data.get('product_id')
-
+        stocktake_item = StocktakeItem.objects.select_related('product').get(id=stocktake_id)
+        adjustment_log = ActivityLog.objects.filter(stocktake=stocktake_item.stocktake, inventory=stocktake_item.product).order_by('-id').first()
+        product = Inventory.objects.get(id=stocktake_item.product.id)
+        
+        logger.info(f'adjustment: {adjustment_log}:{product}')
+        
         with transaction.atomic():
-            stocktake = StocktakeItem.objects.select_related('product').get(id=stocktake_id)
+            if adjustment_log:
+                if adjustment_log.quantity > 0:
+                    product.quantity += abs(adjustment_log.quantity)
+                    logger.info(f'added')
+                else:
+                    product.quantity -= abs(adjustment_log.quantity)
+                    logger.info(f'deducted')
+            product.save()
 
-            # if not stocktake.accepted:
-            #     return JsonResponse({'success': False, 'message': 'Stocktake item not accepted yet.'}, status=400)
-
-            original_diff = stocktake.quantity - stocktake.now_quantity or 0
-            stocktake.product.quantity += stocktake.quantity_difference
-            stocktake.now_quantity += stocktake.quantity_difference
-            
-            stocktake.product.quantity -= original_diff
-            stocktake.product.save()
-
-            UserTransaction.objects.filter(description=stocktake.note, amount=stocktake.cost).delete()
+            UserTransaction.objects.filter(description=stocktake_item.note, amount=stocktake_item.cost).delete()
 
             expense = Expense.objects.filter(
-                description=stocktake.note,
-                amount=stocktake.cost,
+                description=stocktake_item.note,
+                amount=stocktake_item.cost,
                 user=request.user
             ).first()
+            
             if expense:
                 Cashbook.objects.filter(expense=expense).delete()
                 expense.delete()
-                
-            stocktake.recorded = False
-            stocktake.has_diff = False
-            stocktake.accepted = False
-            stocktake.note = ''
-            stocktake.company_loss = False
-            stocktake.save()
+            
+            stocktake_item.cost = 0
+            stocktake_item.recorded = False
+            stocktake_item.has_diff = False
+            stocktake_item.accepted = False
+            stocktake_item.note = ''
+            stocktake_item.company_loss = False
+            stocktake_item.save()
+            
+            ActivityLog.objects.create(
+                branch=request.user.branch,
+                user=request.user,
+                stocktake=stocktake_item.stocktake,
+                action='Stocktake adjustments',
+                inventory=stocktake_item.product,
+                quantity= 0,
+                total_quantity= stocktake_item.product.quantity,
+                description=f'Stock adjustment(undo): #{stocktake_item.stocktake.id}'
+            )
 
             logger.success('Stocktake acceptance successfully undone.')
 
-            return JsonResponse({'success': True, 'message': 'Undo successful', 'quantity': stocktake.now_quantity, 'product_id':stocktake.id}, status=200)
+            return JsonResponse({'success': True, 'message': 'Undo successful', 'quantity': stocktake_item.now_quantity, 'product_id':stocktake_item.id}, status=200)
 
     except Exception as e:
         logger.error(f'Error undoing stocktake item: {e}')
@@ -4083,11 +4112,13 @@ def accept_stocktake_item(request):
             logger.info(f'diff: {stocktake.now_quantity} :{stocktake.quantity - stocktake.now_quantity }')
             
             stocktake.product.quantity += stocktake.quantity_difference
-            stocktake.now_quantity += stocktake.quantity_difference
+            stocktake.product.save()
+            stocktake.cost = stocktake.quantity_difference * stocktake.product.cost
             stocktake.has_diff = True
             
             stocktake.save()
-            stocktake.product.save()
+            
+            logger.info(f'Product quantity: {stocktake.product.quantity}')
             
             logger.info(f'quantity: {stocktake.now_quantity}')
         
@@ -4154,7 +4185,18 @@ def accept_stocktake_item(request):
                 currency=currency,
                 amount = stocktake.cost,
             )
-                
+            
+            ActivityLog.objects.create(
+                branch=request.user.branch,
+                user=request.user,
+                stocktake=stocktake.stocktake,
+                action='Stocktake adjustments',
+                inventory=stocktake.product,
+                quantity=stocktake.quantity_difference,
+                total_quantity=stocktake.product.quantity,
+                description=f'Stock adjustment: #{stocktake.id}'
+            )
+            
             logger.success(f'Stocktake loss successfully debited to user account(s)')   
             return JsonResponse({'success':True, 'message':'success', 'quantity':stocktake.now_quantity}, status=201) 
         
