@@ -199,19 +199,7 @@ class CreateExpenseAPI(APIView):
     
 class CashBookData(APIView):
     permission_classes = [IsAuthenticated]
-    def get(self, request):
-        try:
-            page = int(request.query_params.get('page', 1))
-            per_page = int(request.query_params.get('per_page', 20))
-            filter_option = request.query_params.get('filter', 'this_week')
-            start_date = request.query_params.get('start_date')
-            end_date = request.query_params.get('end_date')
-            search_query = request.query_params.get('search', '')
-            currency = request.query_params.get('currency', '')
-        except Exception as e:
-            return Response({'error': e}, status.HTTP_404_NOT_FOUND)
-        logger.info(f'filter Option: {filter_option}, currency: {currency}')
-
+    def cashbook_data(self,page,per_page,filter_option,start_date,end_date,search_query,currency, request_data ):
         now = timezone.now()
         end_date = now
 
@@ -240,7 +228,7 @@ class CashBookData(APIView):
             entries = Cashbook.objects.filter(
                 issue_date__range=[start_date, end_date],
                 currency__id=currency,
-                branch=request.user.branch
+                branch=request_data.user.branch
             ).select_related(
                 'created_by', 'branch', 'updated_by', 'currency', 'invoice', 'expense'
             ).order_by('-issue_date')
@@ -249,7 +237,7 @@ class CashBookData(APIView):
             if currency == 'bank' or currency == 'ecocash':
                 entries = Cashbook.objects.filter(
                     issue_date__range=[start_date, end_date],
-                    branch=request.user.branch
+                    branch=request_data.user.branch
                 ).filter(
                     Q(expense__payment_type=currency) |
                     Q(invoice__payment_type=currency)
@@ -261,7 +249,7 @@ class CashBookData(APIView):
                 entries = Cashbook.objects.filter(
                     issue_date__range=[start_date, end_date],
                     transfer__payment_method=currency,
-                    branch=request.user.branch
+                    branch=request_data.user.branch
                 ).select_related(
                     'created_by', 'branch', 'updated_by', 'currency', 'transfer'
                 ).order_by('-issue_date')
@@ -270,7 +258,7 @@ class CashBookData(APIView):
                 entries = Cashbook.objects.filter(
                     issue_date__range=[start_date, end_date],
                     expense__is_loan=True,
-                    branch=request.user.branch
+                    branch=request_data.user.branch
                 ).select_related(
                     'created_by', 'branch', 'updated_by', 'currency', 'expense'
                 ).order_by('-issue_date')
@@ -357,6 +345,30 @@ class CashBookData(APIView):
                 'has_previous': page > 1
             }
         }, status.HTTP_200_OK)
+    def get(self, request):
+        try:
+            page = int(request.query_params.get('page', 1))
+            per_page = int(request.query_params.get('per_page', 20))
+            filter_option = request.query_params.get('filter', 'this_week')
+            start_date = request.query_params.get('start_date')
+            end_date = request.query_params.get('end_date')
+            search_query = request.query_params.get('search', '')
+            currency = request.query_params.get('currency', '')
+        except Exception as e:
+            return Response({'error': e}, status.HTTP_404_NOT_FOUND)
+        logger.info(f'filter Option: {filter_option}, currency: {currency}')
+
+        return self.cashbook_data(
+            page, 
+            per_page, 
+            filter_option, 
+            start_date, 
+            end_date, 
+            search_query, 
+            currency,
+            request
+        )
+        
     def post(self, request):
         """ cashbook data with filters and pagination"""
     
@@ -376,148 +388,13 @@ class CashBookData(APIView):
         
         logger.info(f'filter Option: {filter_option}, currency: {currency}')
 
-        now = timezone.now()
-        end_date = now
-
-        if filter_option == 'today':
-            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        elif filter_option == 'this_week':
-            start_date = now - timedelta(days=now.weekday())
-        elif filter_option == 'yesterday':
-            start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-        elif filter_option == 'this_month':
-            start_date = now.replace(day=1)
-        elif filter_option == 'last_month':
-            start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
-        elif filter_option == 'this_year':
-            start_date = now.replace(month=1, day=1)
-        elif filter_option == 'custom':
-            if start_date and end_date:
-                start_date = datetime.strptime(start_date, '%Y-%m-%d')
-                end_date = datetime.strptime(end_date, '%Y-%m-%d')
-            else:
-                start_date = now - timedelta(days=now.weekday())
-                end_date = now
-        
-        if currency in [str(i) for i in range(11)] or currency in [int(i) for i in range(11)]:  
-            logger.info(f'currency: {currency}')
-            entries = Cashbook.objects.filter(
-                issue_date__range=[start_date, end_date],
-                currency__id=currency,
-                branch=request.user.branch
-            ).select_related(
-                'created_by', 'branch', 'updated_by', 'currency', 'invoice', 'expense'
-            ).order_by('-issue_date')
-            logger.info(f'entries: {entries}')
-        else:
-            if currency == 'bank' or currency == 'ecocash':
-                entries = Cashbook.objects.filter(
-                    issue_date__range=[start_date, end_date],
-                    branch=request.user.branch
-                ).filter(
-                    Q(expense__payment_type=currency) |
-                    Q(invoice__payment_type=currency)
-                ).select_related(
-                    'created_by', 'branch', 'updated_by', 'currency', 'invoice', 'expense'
-                ).order_by('-issue_date')
-
-            elif currency == 'transfer':
-                entries = Cashbook.objects.filter(
-                    issue_date__range=[start_date, end_date],
-                    transfer__payment_method=currency,
-                    branch=request.user.branch
-                ).select_related(
-                    'created_by', 'branch', 'updated_by', 'currency', 'transfer'
-                ).order_by('-issue_date')
-
-            elif currency == 'loan':
-                entries = Cashbook.objects.filter(
-                    issue_date__range=[start_date, end_date],
-                    expense__is_loan=True,
-                    branch=request.user.branch
-                ).select_related(
-                    'created_by', 'branch', 'updated_by', 'currency', 'expense'
-                ).order_by('-issue_date')
-
-            else:
-                entries = Cashbook.objects.none()
-        
-        logger.info(f'Found {entries.count()} entries')
-
-        if search_query:
-            entries = entries.filter(
-                Q(description__icontains=search_query) |
-                Q(accountant__icontains=search_query) |
-                Q(manager__icontains=search_query) |
-                Q(director__icontains=search_query)
-            )
-
-        entries = entries.order_by('-issue_date')
-        
-        # Calculate totals
-        total_cash_in = entries.filter(debit=True, cancelled=False).aggregate(total=Sum('amount'))['total'] or 0
-        total_cash_out = entries.filter(credit=True, cancelled=False).aggregate(total=Sum('amount'))['total'] or 0
-        total_balance = total_cash_in - total_cash_out
-
-        total_entries = entries.count()
-        total_pages = (total_entries + per_page - 1) // per_page
-        start_index = (page - 1) * per_page
-        end_index = start_index + per_page
-
-        paginated_entries = entries[start_index:end_index]
-        
-        
-        # usd and other currencies balances
-        currency_cash_in_balances = []
-        currency_cash_out_balances = []
-        currency_net_balances = []
-        
-        for currency in Currency.objects.all():
-            cash_in = entries.filter(currency=currency, debit=True, cancelled=False).aggregate(total=Sum('amount'))['total'] or 0
-            cash_out = entries.filter(currency=currency, credit=True, cancelled=False).aggregate(total=Sum('amount'))['total'] or 0
-            
-            currency_cash_in_balances.append({'name': currency.name, 'amount':cash_in})
-            currency_cash_out_balances.append({'name': currency.name, 'amount':cash_out})
-            currency_net_balances.append({'name': currency.name, 'amount':cash_in - cash_out})
-        
-        logger.info(f'balances: {currency_net_balances} /n')
-        logger.info(f'cash in{currency_cash_in_balances}')
-        logger.info(f'cash out {currency_cash_out_balances}')
-        
-        balance = 0
-        entries_data = []
-        for entry in paginated_entries:
-            if entry.debit:
-                balance += entry.amount
-            elif entry.credit:
-                balance -= entry.amount
-            
-            entries_data.append({
-                'id': entry.id,
-                'date': entry.issue_date.strftime('%Y-%m-%d %H:%M'),
-                'description': entry.description,
-                'debit': float(entry.amount) if entry.debit else None,
-                'credit': float(entry.amount) if entry.credit else None,
-                'balance': float(balance),
-                'accountant': entry.accountant,
-                'manager': entry.manager,
-                'director': entry.director,
-                'status': entry.status,
-                'created_by': entry.created_by.first_name
-            })
-
-        return Response({
-            'entries': entries_data,
-            'totals': {
-                'cash_in': currency_cash_in_balances,
-                'cash_out': currency_cash_out_balances,
-                'balance': currency_net_balances
-            },
-            'pagination': {
-                'current_page': page,
-                'total_pages': total_pages,
-                'total_entries': total_entries,
-                'has_next': page < total_pages,
-                'has_previous': page > 1
-            }
-        }, status.HTTP_200_OK) 
+        return self.cashbook_data(
+            page, 
+            per_page, 
+            filter_option, 
+            start_date, 
+            end_date, 
+            search_query, 
+            currency,
+            request
+        )
