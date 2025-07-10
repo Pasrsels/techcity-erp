@@ -12,7 +12,7 @@ router = DefaultRouter()
 router.register(r'api/v1/customers_list', CustomersViewset, basename='customers_list')
 router.register(r'api/v1/currency', CurrencyViewset, basename= 'api_currency_crud')
 router.register(r'api/v1/Cashwithrawals', CashWithdrawalsViewset, basename= 'api_cash_withrawals')
-router.register(r'api/v1/quotation', QuatationCrud, basename= 'api_quotation')
+router.register(r'api/v1/quotation', QuotationCrud, basename= 'api_quotation')
 # router.register(r'api/v1/income', IncomeViewSet, basename='api_income')
 # router.register(r'api/v1/expenses', CreateExpenseAPI.as_view(), basename='api_expense')
 
