@@ -190,15 +190,20 @@ urlpatterns = [
     path('api/v1/purchase-order-confirm-item/<int:order_id>/', PurchaseOrderConfirmOrderItem.as_view(), name= 'api_purchase_order_confirm'),
 
     #Transfer
+    path('api/v1/transfers/', TransfersIndex.as_view(), name='transfer_index_api'),
+    path('api/v1/inventory-transfer-items/<int:id>/', InventoryTransferItemData.as_view(), name= 'api_inventory_transfer_data'),
     path('api/v1/transfer-print/<int:transfer_id>/', PrintTransfer.as_view(), name= 'api_print_transfer'),
     path('api/v1/transfer-recieve-inventory', RecieveInventory.as_view(), name= 'api_recieve_inventory'),
     path('api/v1/transfer-over-list-stock', OverListStock.as_view(), name= 'api_over_list_stock'),
     path('api/v1/transfer-delete/<int:transfer_id>/', TransferDelete.as_view(), name= 'api_transfer_delete'),
     path('api/v1/transfer-add', AddTransferInventory.as_view(), name= 'api_add_transfer'),
     path('api/v1/transfer-details/<int:transfer_id>/', TransferDetails.as_view(), name= 'api_transfer_details'),
+    path('api/v1/process-transfer-cart/', ProcessTransfer.as_view(), name='process_transfer_cart_api'),
     path('api/v1/transfer-held-json/<int:transfer_id>/', HeldTransferJson.as_view(), name= 'api_transfer_held'),
     path('api/v1/transfer-held', HeldTransfers.as_view(), name= 'api_transfers_held'),
     path('api/v1/process-transfer-held/<int:transfer_id>/', ProcessHeldTransfer.as_view(), name= 'api_process_transfer_held'),
+    path('api/v1/edit-transfer-item/<int:transfer_item_id>/', EditTransferItem.as_view(), name= 'api_edit_transfer'),
+    path('api/v1/add-transfer-item/<int:transfer_id>/', AddTransferItem.as_view(), name= 'api_add_transfer'),
 
     #Report
     path('api/v1/inventory-pdf', InventoryPDF.as_view(), name='api_inventory_pdf'),

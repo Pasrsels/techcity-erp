@@ -1,6 +1,6 @@
 from django.urls import path, include
 from . views import *
-# from apis.cashbook_apis import *
+from .apis.cashbook_apis import *
 from rest_framework.routers import DefaultRouter
 # from apps.finance.custom_views.cashbook_views import cashbook_data
 from apps.finance.apis.cashbook_apis import *
@@ -237,6 +237,11 @@ urlpatterns = [
     path('api/v1/cancel-entry/', CancelTransaction.as_view(), name='api_cancel_entry'),
     path('api/v1/cashbook/note/<int:entry_id>/', CashbookNoteView.as_view(), name='api_cashbook_noteview'),
     path('api/v1/update_transaction_status/<int:pk>/', UpdateTransactionStatus.as_view(), name='api_update_transaction_status'),
+    path('api/v1/cashbook-data/', CashBookData.as_view(), name='cashbook_data_api'),
+    path('api/v1/record-income/', RecordIncomeAPI.as_view(), name='record_income_api'),
+    path('api/v1/create-expense/', CreateExpenseAPI.as_view(), name='create_expense_api'),
+
+
 
     #Cash flow
     path("api/v1/cashflows", CashFlowView.as_view(), name="api_cash_flow"),
