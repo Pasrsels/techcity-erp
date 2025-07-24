@@ -1108,10 +1108,9 @@ def create_invoice(request):
             
             products_purchased = f"""{', '.join([f'{item['product_name']} x {item['quantity']} ' for item in items_data])}"""
             
-            logger.info(products_purchased)
-            
             with transaction.atomic():
                 invoice = Invoice.objects.create(
+                    invoice_number=Invoice.generate_invoice_number(request.user.branch.name),
                     customer=customer,
                     issue_date=timezone.now(),
                     amount=invoice_total_amount,
@@ -2714,6 +2713,7 @@ def invoice_preview_json(request, invoice_id):
 
     if invoice.branch:
         invoice_dict['branch_name'] = invoice.branch.name
+        invoice_dict['brach_address'] = invoice.branch.address
         invoice_dict['branch_phone'] = invoice.branch.phonenumber
         invoice_dict['branch_email'] = invoice.branch.email
 
@@ -10027,6 +10027,88 @@ def invoice_returns(request, invoice_id): # dont forget the payments
     invoice.save()
 
     return JsonResponse({'message': f'Invoice {invoice.invoice_number} successfully deleted'})
+
+
+def reset_pc_pasels_invoices(request):
+    try:
+        invoices = Invoice.objects.filter(branch__name__icontains='pc pasels', cancelled=False)
+
+        with transaction.atomic():
+            for invoice in invoices:
+                account = get_object_or_404(CustomerAccount, customer=invoice.customer)
+                customer_account_balance = get_object_or_404(CustomerAccountBalances, account=account, currency=invoice.currency)
+
+                try:
+                    sale = Sale.objects.get(transaction=invoice)
+                except Sale.DoesNotExist:
+                    sale = None
+
+                payments = Payment.objects.filter(invoice=invoice)
+                try:
+                    vat_transaction = VATTransaction.objects.get(invoice=invoice)
+                except VATTransaction.DoesNotExist:
+                    vat_transaction = None
+
+                activity = ActivityLog.objects.filter(invoice=invoice)
+
+                if invoice.payment_status == Invoice.PaymentStatus.PARTIAL:
+                    customer_account_balance.balance -= invoice.amount_due
+
+                account_types = {
+                    'cash': Account.AccountType.CASH,
+                    'bank': Account.AccountType.BANK,
+                    'ecocash': Account.AccountType.ECOCASH,
+                }
+
+                for payment in payments:
+                    try:
+                        account = Account.objects.get(
+                            name__icontains=f"{invoice.branch.name} {invoice.currency.name} {payment.payment_method.capitalize()} Account",
+                            type=account_types.get(payment.payment_method, None)
+                        )
+                        account_balance = AccountBalance.objects.get(account=account, currency=invoice.currency, branch=invoice.branch)
+                        account_balance.balance -= payment.amount_due
+                        account_balance.save()
+                    except Account.DoesNotExist:
+                        continue
+
+                for stock_transaction in activity:
+                    product = Inventory.objects.get(id=stock_transaction.inventory.id, branch=invoice.branch)
+                    product.quantity += abs(stock_transaction.quantity)
+                    product.save()
+
+                    ActivityLog.objects.create(
+                        invoice=invoice,
+                        product_transfer=None,
+                        branch=invoice.branch,
+                        user=request.user,
+                        action='sale return',
+                        inventory=product,
+                        quantity=stock_transaction.quantity,
+                        total_quantity=product.quantity
+                    )
+
+                InvoiceItem.objects.filter(invoice=invoice).delete()
+                StockTransaction.objects.filter(invoice=invoice).delete()
+                payments.delete()
+
+                if sale:
+                    sale.delete()
+                if vat_transaction:
+                    vat_transaction.delete()
+
+                customer_account_balance.save()
+                invoice.cancelled = True
+                invoice.save()
+
+                logger.info(f'Invoice {invoice.invoice_number} reset')
+
+        return JsonResponse({'success': True, 'message': 'All PC Pasels invoices successfully reset'})
+
+    except Exception as e:
+        logger.error(str(e))
+        return JsonResponse({'success': False, 'message': str(e)})
+
     
 
 @login_required
@@ -10107,6 +10189,87 @@ def invoice_details(request, invoice_id):
     )
     return JsonResponse(list(invoice), safe=False)
 
+
+@login_required
+def process_paylater_payment(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            paylater_id = data.get('paylater_id')
+            amount = data.get('amount')
+            payment_method = data.get('payment_method')
+            payment_date = data.get('payment_date')
+            
+            if not paylater_id or not amount or not payment_method or not payment_date:
+                return JsonResponse({'success': False, 'message': 'All fields are required.'}, status=400)
+            
+            paylater = Paylater.objects.get(id=paylater_id)
+            if not paylater:
+                return JsonResponse({'success': False, 'message': 'Paylater not found.'}, status=404)
+            
+            invoice = paylater.invoice
+            account = CustomerAccount.objects.get(customer=invoice.customer)
+            customer_account_balance = CustomerAccountBalances.objects.get(account=account, currency=invoice.currency)
+            paylater_date = paylaterDates.objects.filter(paylater=paylater, due_date= payment_date).first()
+            
+            with transaction.atomic():
+                # record amount paid on paylater date
+                if paylater_date:
+                    paylater_date.amount_paid += amount
+                    paylater_date.amount_due -= amount
+                    paylater_date.payment_method = payment_method
+                    
+                    if paylater_date.amount_due <= 0:
+                        paylater_date.paid = True
+                        
+                    paylater_date.save()
+                    
+                # record paylater
+                paylater.amount_paid += amount
+                paylater.amount_due -= amount
+                paylater.payment_method = payment_method
+                
+                
+                invoice.amount_paid += amount
+                invoice.amount_due -= amount
+                
+                if paylater.amount_due <= 0:
+                    paylater.paid = True
+                    invoice.payment_status = Invoice.PaymentStatus.PAID
+                    invoice.amount_due = 0
+                
+                invoice.save() 
+                paylater.save()
+                
+                # record payment
+                Payment.objects.create(
+                    invoice=invoice,
+                    amount_paid=amount,
+                    payment_method=payment_method,
+                    date=payment_date
+                )
+                
+                # record cash book
+                Cashbook.objects.create(
+                    invoice=invoice,
+                    issue_date=timezone.now(),
+                    branch=request.user.branch,
+                    debit=False,
+                    credit=True,
+                    amount=amount,
+                    created_by=request.user,
+                    updated_by=request.user,
+                    currency=invoice.currency,
+                    description=f'Paylater payment ({paylater.invoice.invoice_number})',
+                )
+                
+                # adjust customer account balance
+                customer_account_balance.balance -= amount
+                customer_account_balance.save()
+                        
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 @login_required
 def layby_data(request):
@@ -11756,7 +11919,7 @@ def cashbook_view(request):
     """Main view to render the cashbook page"""
     currency = Currency.objects.filter(default=True).first()
     cash_up = CashUp.objects.filter(status=False)
-    expense_child_categories = ExpenseCategory.objects.filter(parent__isnull=True)
+    expense_child_categories = ExpenseCategory.objects.filter()
     expense_main_categories = ExpenseCategory.objects.filter(parent__isnull=False)
     income_child_categories = IncomeCategory.objects.filter(parent__isnull=True)
     income_main_categories = IncomeCategory.objects.filter(parent__isnull=False)
@@ -11770,7 +11933,7 @@ def cashbook_view(request):
         {'id': 'loan', 'name': 'Loans'},
     ]
 
-    cashbook_filter_types = list(cashbook_currencies )+ CASHBOOK_TYPES
+    cashbook_filter_types = list(cashbook_currencies ) + CASHBOOK_TYPES
     
     branches_pending_totals = defaultdict(float)
     total = 0
@@ -11807,7 +11970,7 @@ def cashbook_data(request):
     
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
+            data = json.loads(request.body) 
             page = int(data.get('page', 1))
             per_page = int(data.get('per_page', 20))
             filter_option = data.get('filter', 'this_week')
@@ -11825,13 +11988,13 @@ def cashbook_data(request):
         end_date = request.GET.get('end_date')
         search_query = request.GET.get('search', '')
         currency = data.get('currency', '')
-    
-    logger.info(f'filter Option: {filter_option}, currency: {currency}')
 
     now = timezone.now()
     end_date = now
-
-    if filter_option == 'today':
+    
+    cashbook_entries = Cashbook.objects.filter(branch=request.user.branch)
+    
+    if filter_option == 'todayd':
         start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
     elif filter_option == 'this_week':
         start_date = now - timedelta(days=now.weekday())
@@ -11850,9 +12013,22 @@ def cashbook_data(request):
         else:
             start_date = now - timedelta(days=now.weekday())
             end_date = now
+            
+    if filter_option == 'income':
+        entries = entries.filter(income__isnull=False)
+    elif filter_option == 'expense':
+        entries = entries.filter(expense__isnull=False)
+    elif filter_option == 'transfer':
+        entries = entries.filter(transfer__isnull=False)
+        
+    else:
+        entries = cashbook_entries.filter(
+            Q(income__category__name=filter_option)|
+            Q(expense__category__name=filter_option)
+        )
+        logger.info(f'entries: {entries}')
     
     if currency in [str(i) for i in range(11)] or currency in [int(i) for i in range(11)]:  
-        logger.info(f'currency: {currency}')
         entries = Cashbook.objects.filter(
             issue_date__range=[start_date, end_date],
             currency__id=currency,
@@ -11860,7 +12036,6 @@ def cashbook_data(request):
         ).select_related(
             'created_by', 'branch', 'updated_by', 'currency', 'invoice', 'expense'
         ).order_by('-issue_date')
-        logger.info(f'entries: {entries}')
     else:
         if currency == 'bank' or currency == 'ecocash':
             entries = Cashbook.objects.filter(
@@ -11892,9 +12067,8 @@ def cashbook_data(request):
             ).order_by('-issue_date')
 
         else:
-            entries = Cashbook.objects.none()
-       
-    logger.info(f'Found {entries.count()} entries')
+            entries = cashbook_entries
+            logger.info('here')
 
     if search_query:
         entries = entries.filter(
@@ -11916,8 +12090,8 @@ def cashbook_data(request):
     start_index = (page - 1) * per_page
     end_index = start_index + per_page
 
-    paginated_entries = entries[start_index:end_index]
-    
+    # paginated_entries = entries[start_index:end_index]
+    paginated_entries = entries
     
     # usd and other currencies balances
     currency_cash_in_balances = []
@@ -11932,10 +12106,6 @@ def cashbook_data(request):
         currency_cash_out_balances.append({'name': currency.name, 'amount':cash_out})
         currency_net_balances.append({'name': currency.name, 'amount':cash_in - cash_out})
     
-    logger.info(f'balances: {currency_net_balances} /n')
-    logger.info(f'cash in{currency_cash_in_balances}')
-    logger.info(f'cash out {currency_cash_out_balances}')
-     
     balance = 0
     entries_data = []
     for entry in paginated_entries:
@@ -11943,7 +12113,15 @@ def cashbook_data(request):
             balance += entry.amount
         elif entry.credit:
             balance -= entry.amount
-        
+
+        name = ''
+        if entry.income:
+            name = entry.income.category.name 
+        elif entry.expense:
+            name =  entry.expense.category.name
+        elif entry.invoice:
+            name = 'Sales'
+            
         entries_data.append({
             'id': entry.id,
             'date': entry.issue_date.strftime('%Y-%m-%d %H:%M'),
@@ -11955,7 +12133,8 @@ def cashbook_data(request):
             'manager': entry.manager,
             'director': entry.director,
             'status': entry.status,
-            'created_by': entry.created_by.first_name
+            'created_by': entry.created_by.first_name,
+            'category__name': name
         })
 
     return JsonResponse({
@@ -13883,6 +14062,25 @@ def get_date_range_from_time_frame(time_frame, request):
 
     return today, today
 
+
+def create_contact(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        name = data.get('name')
+        mobile = data.get('mobile')
+        contact_type = data.get('type')
+
+        if not name:
+            return JsonResponse({'error': 'Name is required'}, status=400)
+
+        contact = Contact.objects.create(
+            name=name,
+            mobile=mobile,
+            contact_type=contact_type
+        )
+
+        return JsonResponse({'id': contact.id, 'name': contact.name})
     
 
 #API 

@@ -44,6 +44,7 @@ urlpatterns = [
     path('invoice/preview/json/<int:invoice_id>/', invoice_preview_json, name='invoice_preview_json'),
     path('invoice/preview/data/<int:invoice_id>/', invoice_preview_data, name='invoice_preview_data'),
     path('held/invoices', held_invoice_view, name='held_invoice'),
+    path('reset/', reset_pc_pasels_invoices, name='reset_pc_pasels_invoices'),
     
     #customer
     path('customers/', customer, name='customers'),
@@ -176,6 +177,10 @@ urlpatterns = [
     
     #cash_transfers
     path('create_transfer/', create_transfer, name='create_transfer'),
+    
+    
+    #contacts
+    path('create_contact/', create_contact, name="create_contact"),
 
     ########################################################################################################################
     # API end points

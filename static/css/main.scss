@@ -162,6 +162,7 @@ input[type="radio"]:focus {
   .search-input:focus {
     box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.15);
 }
+
 .techcity{
     .reorder-basket{
         position: relative;
@@ -709,4 +710,102 @@ input[type="radio"]:focus {
         border-top: 1px #007bff solid ;            
       }
     
+}
+
+// Stylish Tabs for Income/Expenses/Transfers
+.stylish-tabs {
+  .nav-link {
+    border-radius: 20px !important;
+    margin: 0 4px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  }
+  .income-tab {
+    background: #e6f9f0;
+    color: #11998e !important;
+    border: none;
+  }
+  .income-tab.active, .income-tab:focus, .income-tab:hover {
+    background: #11998e !important;
+    color: #fff !important;
+    box-shadow: 0 4px 16px rgba(17,153,142,0.12);
+  }
+  .expense-tab {
+    background: #e74c3c !important;
+    color: #fff !important;
+    border: none;
+  }
+  .expense-tab.active, .expense-tab:focus, .expense-tab:hover {
+    background: #007bff !important;
+    color: #fff !important;
+    box-shadow: 0 4px 16px rgba(0,123,255,0.12);
+  }
+  .transfer-tab {
+    background: #f4f4f4;
+    color: #333 !important;
+    border: none;
+  }
+  .transfer-tab.active, .transfer-tab:focus, .transfer-tab:hover {
+    background: #333 !important;
+    color: #fff !important;
+    box-shadow: 0 4px 16px rgba(51,51,51,0.12);
+  }
+}
+
+// Category Pills
+.category-pills-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.category-pill {
+  background: #f4f4f4;
+  color: #333;
+  border-radius: 16px;
+  padding: 6px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  border: 1px solid #e0e0e0;
+}
+.category-pill.selected, .category-pill:hover {
+  background: #11998e;
+  color: #fff;
+  border-color: #11998e;
+}
+
+// Add Category Button
+.add-category-btn {
+  color: #11998e;
+  font-weight: 600;
+  background: none;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.add-category-btn:hover {
+  color: #0d7a6a;
+  text-decoration: underline;
+}
+
+// Modal Enhancements
+.modal-content {
+  border-radius: 18px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+}
+.modal-header {
+  border-radius: 18px 18px 0 0 !important;
+  background: #f8f9fa;
+}
+.modal-footer {
+  border-radius: 0 0 18px 18px !important;
+  background: #f8f9fa;
 }

@@ -156,7 +156,7 @@ class Product(models.Model):
 
 class SerialNumber(models.Model):
     serial_number = models.CharField(max_length=255, unique=True)
-    status = models.BooleanField(default=True)  # True for active/available, False for used/inactive
+    status = models.BooleanField(default=True) 
     added_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

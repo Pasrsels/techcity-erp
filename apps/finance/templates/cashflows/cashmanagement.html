@@ -17,117 +17,248 @@
         }
         .loader {
             text-align: center;
-            padding: 20px;
         }
-        .table-container {
-            min-height: 300px;
+        .search-icon {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            width: 16px;
+            height: 16px;
+            transform: translateY(-50%);
+            background: url('/static/icons/search.svg') no-repeat center;
+            background-size: contain;
+            pointer-events: none;
         }
-        .search-select {
-    position: relative;
-    width: 100%;
-    max-width: 400px;
-    font-family: 'Segoe UI', sans-serif;
-}
 
-.custom-search-input {
-    width: 100%;
-    padding: 10px 35px 10px 10px;
-    border: 1px solid #fff;
-    border-radius: 6px;
-    outline: none;
-    transition: border-color 0.3s;
-}
+        .custom-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: none;
+            border-radius: 0 0 6px 6px;
+        }
 
-.custom-search-input:focus {
-    border-color: #11998e;
-}
+        .custom-dropdown.show {
+            display: block;
+        }
 
-.custom-search-icon {
-    position: absolute;
-    top: 50%;
-    right: 10px;
-    width: 16px;
-    height: 16px;
-    transform: translateY(-50%);
-    background: url('/static/icons/search.svg') no-repeat center;
-    background-size: contain;
-    pointer-events: none;
-}
+        .custom-dropdown-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-.custom-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 999;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-top: none;
-    max-height: 200px;
-    overflow-y: auto;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    display: none;
-    border-radius: 0 0 6px 6px;
-}
+        .custom-dropdown-item:hover,
+        .custom-dropdown-item.highlighted {
+            background-color: #f1f1f1;
+        }
 
-.custom-dropdown.show {
-    display: block;
-}
+        .add-new {
+            font-weight: 500;
+            color: #007bff;
+        }
 
-.custom-dropdown-item {
-    padding: 10px 15px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+        .add-icon {
+            margin-right: 5px;
+            color: #007bff;
+            font-weight: bold;
+        }
 
-.custom-dropdown-item:hover,
-.custom-dropdown-item.highlighted {
-    background-color: #f1f1f1;
-}
+        .no-results {
+            padding: 10px 15px;
+            color: #888;
+            font-style: italic;
+        }
 
-.add-new {
-    font-weight: 500;
-    color: #007bff;
-}
+        .new-option-badge {
+            background-color: #28a745;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 12px;
+            margin-left: 10px;
+        }
 
-.add-icon {
-    margin-right: 5px;
-    color: #007bff;
-    font-weight: bold;
-}
-
-.no-results {
-    padding: 10px 15px;
-    color: #888;
-    font-style: italic;
-}
-
-.new-option-badge {
-    background-color: #28a745;
-    color: white;
-    font-size: 0.7rem;
-    padding: 2px 6px;
-    border-radius: 12px;
-    margin-left: 10px;
-}
-
-.form-control:focus,
-.form-select:focus,
-.form-check-input:focus,
-.btn:focus,
-    input[type="checkbox"]:focus,
-    input[type="radio"]:focus {
-    border-color: #11998e !important;
-}
-.loading {
-    display: none;
-}
-</style>
+        .form-control:focus,
+        .form-select:focus,
+        .form-check-input:focus,
+        .btn:focus,
+            input[type="checkbox"]:focus,
+            input[type="radio"]:focus {
+            border-color: #11998e !important;
+        }
+        .loading {
+            display: none;
+        }
+        .category-list {
+            background: #f8f9fa;
+            border-radius: 18px;
+            padding: 16px 0 0 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            justify-content: flex-start;
+            margin-right: 0 !important;
+            margin-left: 0 !important;
+            width: 100%;
+        }
+        .main-category-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            padding: 18px 18px 12px 18px;
+            min-width: 220px;
+            max-width: 100%;
+            flex: 1 1 220px;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0;
+            transition: box-shadow 0.2s, transform 0.2s;
+            margin-right: 0 !important;
+        }
+        .main-category-card:hover {
+            box-shadow: 0 4px 16px rgba(33,150,243,0.10);
+            transform: translateY(-2px) scale(1.02);
+        }
+        .main-category-icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+            color: #2196f3;
+            display: flex;
+            align-items: center;
+        }
+        .category-pill {
+            background: #e5e6e8 !important;
+            color: #444 !important;
+            font-weight: 500;
+            font-size: 1em;
+            border-radius: 16px !important;
+            padding: 6px 18px !important;
+            margin-bottom: 6px;
+        }
+        .add-category-link {
+            color: #2196f3;
+            font-weight: 600;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 6px;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        .add-category-link i {
+            font-size: 1.2em;
+        }
+        @media (max-width: 768px) {
+            .category-list {
+                flex-direction: column;
+                gap: 0;
+            }
+            .main-category-card {
+                max-width: 100%;
+                min-width: 0;
+                margin-bottom: 18px;
+            }
+        }
+        /* Inline Add Category Modal */
+        #addCategoryInlineModal {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+            padding: 28px 18px 18px 18px;
+            position: relative;
+            margin-top: 18px;
+            margin-bottom: 18px;
+            z-index: 20;
+        }
+        #addCategoryInlineModal .close-btn {
+            position: absolute;
+            right: 18px;
+            top: 18px;
+            font-size: 1.3em;
+            color: #888;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        #addCategoryInlineModal .form-label {
+            font-weight: 500;
+            color: #444;
+            margin-bottom: 6px;
+        }
+        #addCategoryInlineModal .form-control {
+            border-radius: 12px;
+            background: #f5f6fa;
+            border: none;
+            font-size: 1.1em;
+            margin-bottom: 12px;
+        }
+        #addCategoryInlineModal .input-group-text {
+            background: #f5f6fa;
+            border: none;
+        }
+        #addCategoryInlineModal .btn {
+            border-radius: 12px;
+            font-size: 1.1em;
+            min-width: 100px;
+        }
+        #addCategoryInlineModal .btn-primary {
+            background: #2196f3;
+            border: none;
+        }
+        #addCategoryInlineModal .btn-outline-primary {
+            border: 1.5px solid #2196f3;
+            color: #2196f3;
+        }
+        #addCategoryInlineModal .add-sub-btn {
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1em;
+            margin-left: 8px;
+            padding: 0;
+            min-width: 0;
+        }
+        #addCategoryInlineModal .action-btns {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 18px;
+        }
+        .offcanvas-body {
+            padding-right: 0 !important;
+            padding-left: 0 !important;
+        }
+    </style>
 </head> 
 <body>
+    <!-- TABS: Update Income/Expenses tab buttons (move to correct location, outside JS blocks) -->
+    <ul class="nav nav-tabs justify-content-between w-100 bg-white border rounded p-2 gap-2 stylish-tabs" id="cashFlowTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link income-tab" id="cash_income-tab" data-bs-toggle="tab" data-bs-target="#cash_income-panel" type="button" role="tab" aria-controls="cash_income-tab" aria-selected="true">Income</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link expense-tab" id="cash_expense-tab" data-bs-toggle="tab" data-bs-target="#cash_expense-panel" type="button" role="tab" aria-controls="cash_expense-tab" aria-selected="false">Expenses</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link transfer-tab" id="transfer-tab" data-bs-toggle="tab" data-bs-target="#transfer-panel" type="button" role="tab" aria-controls="transfer_tab" aria-selected="false">Transfers</button>
+        </li>
+    </ul>
     <div class="tab-content" id="cashFlowTabsContent">
         <div class="tab-pane fade show active" id="cash_income-panel" role="tabpanel" aria-labelledby="cash_income-tab">
             <div class="row">
@@ -153,35 +284,32 @@
                                         </select>
                                     </div>
                                 </div>
+                                <!-- ENTER AMOUNT SECTION WITH FLOATING LABEL AND AMOUNT IN WORDS -->
                                 <div class="mb-4">
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
-                                        <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="inAmount" onclick="clearInput(this)" value="0.00" placeholder="Enter amount" style="height: 100px;">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="inAmount" placeholder="Enter amount" oninput="updateAmountInWords(this)" style="height: 100px;">
+                                        <label for="inAmount" class="text-muted">Enter amount</label>
                                     </div>
+                                    <div id="amountInWords" class="text-secondary mt-1" style="font-size: 0.95em;"></div>
                                 </div>
                             </div>
-                        </div>
 
+                        <!-- INCOME PANEL: Replace first category search with Notes -->
                         <div class="mb-4 d-flex gap-2 align-items-start">
                             <div class="d-flex bg-light w-100">
                                 <span class="input-group-text bg-light border-0">
                                     <i class="bx bx-pencil"></i>
                                 </span>
-                                <div class="search-select bg-light" id="categories" style="height: 60px;">
-                                    <input type="text" class="custom-search-input bg-light" style="height: 60px;" placeholder="Search or add category" autocomplete="off">
-                                    <span class="search-icon"></span>
-                                    <div class="custom-dropdown"></div>
-                                </div>
+                                <input type="text" class="form-control bg-light border-0" id="incomeNotes" placeholder="Notes" style="height: 60px;">
                             </div>
                         </div>
 
+                        <!-- CATEGORY SECTION WITH BUTTON -->
                         <div class="mb-4 d-flex gap-2 align-items-start">
-                            <div class="d-flex bg-light w-100">
-                                <span class="input-group-text bg-light border-0"><i class="bx bx-category"></i></span>
-                                <div class="search-select bg-light" id="main-categories" style="height: 60px;">
-                                    <input type="text" class="custom-search-input bg-light" style="height: 60px;" placeholder="Search or add Main category" autocomplete="off">
-                                    <span class="search-icon"></span>
-                                    <div class="custom-dropdown"></div>
+                            <div class="w-100">
+                                <label class="form-label">Category</label>
+                                <div class="category-select-panel bg-light p-3 rounded shadow-sm">
+                                    <button type="button" class="btn btn-outline-primary w-100" onclick="openCategoryPanel()">Search or Add New Categories</button>
                                 </div>
                             </div>
                         </div>
@@ -201,17 +329,48 @@
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-0"><i class="bx bx-user"></i></span>
-                                <select class="form-select border-0 bg-light" id="accountTo" style="height: 60px;">
-                                    <option value="">Account to</option>
-                                    {% for user in users %}
-                                        <option value="{{ user.id }}">{{ user }}</option>
-                                    {% endfor %}
-                                </select>
+                        <div class="custom-dropdown dropdown">
+                            <button class="form-control text-start dropdown-toggle" type="button" id="contactDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Search or Select
+                            </button>
+                            <ul class="dropdown-menu p-2" aria-labelledby="contactDropdown">
+
+                                <!-- Search Input -->
+                                <li class="dropdown-header-input">
+                                <input type="text" class="form-control" placeholder="Search or Select" oninput="filterContacts(this.value)">
+                                </li>
+
+                                <div id="contactOptions">
+                                <!-- Radio Options -->
+                                <li>
+                                    <label class="dropdown-item dropdown-item-radio">
+                                    <input type="radio" name="contact" value="casper"> casper
+                                    </label>
+                                </li>
+                                <li>
+                                    <label class="dropdown-item dropdown-item-radio">
+                                    <input type="radio" name="contact" value="Casper Moyo"> Casper Moyo
+                                    </label>
+                                </li>
+                                </div>
+
+                                <li><hr class="dropdown-divider"></li>
+
+                                <!-- Add New Contact -->
+                                <li>
+                                <div class="dropdown-item add-contact text-primary" onclick="openAddContactModal()">
+                                    <i class="bi bi-plus-circle me-1"></i> Add New Contact
+                                </div>
+                                </li>
+
+                                <!-- Import CSV -->
+                                <li>
+                                <div class="dropdown-item import-csv bg-success bg-opacity-10 text-success rounded">
+                                    <i class="bi bi-cloud-arrow-up me-1"></i> Import Bulk contacts from CSV
+                                </div>
+                                </li>
+                            </ul>
                             </div>
-                        </div>
 
                         <div class="d-flex mb-3">
                             <input class="form-check bg-dark" type="checkbox" id="incomeRecurringToggle" onchange="toggleRecurrence('income')">
@@ -281,6 +440,7 @@
                     </div>
                 </div>
             </div>
+            </div>
         </div>
         
         <!-- Expense Tab -->
@@ -310,36 +470,51 @@
                                             </select>
                                         </div>
                                     </div>
+                                    <!-- EXPENSE PANEL: ENTER AMOUNT SECTION WITH FLOATING LABEL AND AMOUNT IN WORDS -->
                                     <div class="mb-4">
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
-                                            <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="exp_Amount" onclick="clearInput(this)" value="0.00" placeholder="Enter amount" style="height: 100px;">
+                                        <div class="form-floating">
+                                            <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="exp_Amount" placeholder="Enter amount" oninput="updateAmountInWords(this, 'exp')" style="height: 100px;">
+                                            <label for="exp_Amount" class="text-muted">Enter amount</label>
                                         </div>
+                                        <div id="expAmountInWords" class="text-secondary mt-1" style="font-size: 0.95em;"></div>
                                     </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="mb-4 d-flex align-items-center bg-light">
-                                <div>
-                                    <span class="input-group-text bg-light border-0">
-                                        <i class="bx bx-pencil"></i>
-                                    </span>
-                                </div>
-                                <div class="search-select bg-light" id="exp-categories">
-                                    <input type="text" class="custom-search-input w-100" placeholder="Search or add category" autocomplete="off">
-                                    <div class="custom-dropdown"></div>
-                                    <input type="text" id="exp_category_text" class="form-control" hidden/>
                                 </div>
                             </div>
 
-                            <div class="mb-4 d-flex bg-light">
-                                <div>
-                                    <span class="input-group-text bg-light border-0"><i class="bx bx-category"></i></span>
+                            <!-- EXPENSE PANEL: Replace first category search with Notes -->
+                            <div class="mb-4 d-flex align-items-center bg-light p-2">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="bx bx-pencil"></i>
+                                </span>
+                                <input type="text" class="form-control bg-light border-0" id="expenseNotes" placeholder="Notes">
+                            </div>
+
+                            <!-- EXPENSE PANEL: Category Selection (Cleared) -->
+                            <div class="mb-4 d-flex gap-2 align-items-start">
+                                <div class="w-100">
+                                    <label class="form-label">Category</label>
+                                    <div class="category-select-panel bg-light p-3 rounded shadow-sm">
+                                        <button type="button" class="btn btn-outline-primary w-100" onclick="openCategoryPanel('expense')">Search or Add New Categories</button>
+                                    </div>
                                 </div>
-                                <div class="search-select bg-light align-items-center" id="exp-main-categories">
-                                    <input type="text" class="custom-search-input w-100" placeholder="Search or add category" autocomplete="off">
-                                    <div class="custom-dropdown"></div>
-                                    <input type="text" id="exp_main_category_text" class="form-control" hidden/>
+                            </div>
+
+                            <div class="mb-4 d-flex flex-column bg-light d-none" id="main-exp" style="height:145px;">
+                                <p class="p-1 mt-2">Add sub category under new main category?</p>
+                                <div class="d-flex align-items-center">
+                                    <div>
+                                        <span class="input-group-text bg-light border-0"><i class="bx bx-category"></i></span>
+                                    </div>
+                                    <div class="search-select bg-light align-items-center me-2" id="exp-main-categories">
+                                        <input type="text" class="custom-search-input w-100" placeholder="Search or add  maincategory" autocomplete="off">
+                                        <div class="custom-dropdown"></div>
+                                        <input type="text" id="exp_main_category_text" class="form-control" hidden/>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center mt-3 p-1">
+                                    <label for="accumulate" class="me-2">Use once?</label>
+                                    <input class="form-check p-2" type="checkbox" id="id_once">
                                 </div>
                             </div>
                                                                 
@@ -363,10 +538,46 @@
                                     <span class="input-group-text bg-light border-0"><i class="bx bx-user"></i></span>
                                     <select class="form-select border-0 bg-light" id="exp_accountTo" style="height: 60px;">
                                         <option value="">Account to</option>
-                                        {% for user in users %}
-                                            <option value="{{ user.id }}">{{ user.name }}</option>
+                                        {% for user in contacts %}
+                                            <option value="{{ user.id }}">{{ user.username }} {{ user.name  }}</option>
                                         {% endfor %}
                                     </select>
+                                    <button class="btn btn-primary" type="button" id="toggleContactFormBtn">
+                                        Add Contact
+                                    </button>
+                                </div>
+                                <!-- Hidden Contact Form -->
+                                <div id="inlineContactForm" class="p-3 rounded bg-light mt-3" style="display: none;">
+                                    <h5 class="mb-3">Add New Contact</h5>
+                                    <form id="contactForm">
+                                        <div class="mb-3">
+                                            <label for="contactName" class="form-label">Contact Name <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="contactName" placeholder="" required>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="mobileNumber" class="form-label">Mobile Number <small class="text-muted">(Optional)</small></label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">🇮</span>
+                                                <input type="tel" class="form-control" id="mobileNumber" placeholder="e.g. +263778587612">
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Contact Type</label>
+                                            <div>
+                                                <input type="radio" class="btn-check" name="contactType" id="customer" value="Customer" checked>
+                                                <label class="btn btn-outline-primary" for="customer">Customer</label>
+
+                                                <input type="radio" class="btn-check" name="contactType" id="supplier" value="Supplier">
+                                                <label class="btn btn-outline-primary" for="supplier">Supplier</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-end">
+                                            <button type="button" id="contactFormBtn"  class="btn btn-primary">Save</button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
 
@@ -464,6 +675,7 @@
                             <div class="mt-5">
                                 <button type="submit" class="header-btn w-100">Record Expense</button>
                             </div>
+
                         </form>
                     </div>
                 </div>
@@ -496,7 +708,6 @@
                                         </select>
                                     </div>
                                 </div>
-
                                 <div class="mb-4">
                                     <div class="input-group">
                                         <span class="input-group-text bg-light border-0"><i class="bx bx-money"></i></span>
@@ -661,7 +872,7 @@
         </div>
         </div>
     </div>
-
+    
     <!-- Add Income Category Modal -->
     <div class="modal fade" id="addIncomeCategoryModal" tabindex="-1" aria-labelledby="addIncomeCategoryModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -698,6 +909,130 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="addContactModal" tabindex="-1" aria-labelledby="addContactModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content p-3">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addContactModalLabel">Add New Contact</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="contactForm">
+                <div class="mb-3">
+                    <label for="contactName" class="form-label">Contact Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="contactName" placeholder="" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="mobileNumber" class="form-label">Mobile Number <small class="text-muted">(Optional)</small></label>
+                    <div class="input-group">
+                    <span class="input-group-text">🇮</span>
+                    <input type="tel" class="form-control" id="mobileNumber" placeholder="e.g. +263778587612">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Contact Type</label>
+                    <div>
+                    <input type="radio" class="btn-check" name="contactType" id="customer" value="Customer" checked>
+                    <label class="btn btn-outline-primary" for="customer">Customer</label>
+
+                    <input type="radio" class="btn-check" name="contactType" id="supplier" value="Supplier">
+                    <label class="btn btn-outline-primary" for="supplier">Supplier</label>
+                    </div>
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+                </form>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CATEGORY SIDE PANEL (OFFCANVAS) -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="categorySelectOffcanvas" aria-labelledby="categorySelectOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="categorySelectOffcanvasLabel">Select Category</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <input type="text" class="form-control mb-3" placeholder="Search categories...">
+            <div class="category-list">
+                <div class="main-category-card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="main-category-icon"><i class="bi bi-geo-alt-fill"></i></span>
+                            <span class="fw-bold">Travel</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" style="width:32px;height:32px;" onclick="openAddCategoryInlineModal()">+</button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge category-pill">Car</span>
+                        <span class="badge category-pill">Lunch</span>
+                        <span class="badge category-pill">Bike</span>
+                    </div>
+                </div>
+                <div class="main-category-card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="main-category-icon"><i class="bi bi-tools"></i></span>
+                            <span class="fw-bold">Repairs</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" style="width:32px;height:32px;" onclick="openAddCategoryInlineModal()">+</button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge category-pill">Phone</span>
+                        <span class="badge category-pill">Laptop</span>
+                        <span class="badge category-pill">Home</span>
+                    </div>
+                </div>
+                <div class="main-category-card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="main-category-icon"><i class="bi bi-cash-coin"></i></span>
+                            <span class="fw-bold">Salary</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" style="width:32px;height:32px;" onclick="openAddCategoryInlineModal()">+</button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge category-pill">Monthly</span>
+                        <span class="badge category-pill">Bonus</span>
+                        <span class="badge category-pill">Freelance</span>
+                    </div>
+                </div>
+            </div>
+            <div class="add-category-link" onclick="openAddCategoryInlineModal()">
+                <i class="bi bi-plus-circle"></i> Add New Category
+            </div>
+            <!-- Inline Add Category Modal (hidden by default) -->
+            <div id="addCategoryInlineModal" style="display:none;">
+                <button class="close-btn" onclick="closeAddCategoryInlineModal()">&times;</button>
+                <h5 class="offcanvas-title w-100 text-center mb-3">Add New Category</h5>
+                <form onsubmit="saveCategory(event)">
+                    <div class="mb-3">
+                        <label for="newCategoryNameInline" class="form-label">Enter the category name</label>
+                        <input type="text" class="form-control" id="newCategoryNameInline" placeholder="Category name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="newSubCategoryNameInline" class="form-label">Add up to 3 subcategories</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="newSubCategoryNameInline" placeholder="Subcategory name">
+                            <button class="btn btn-outline-primary add-sub-btn" type="button" id="addSubBtnInline"><span style="font-size:1.2em;font-weight:bold;line-height:1;">+</span></button>
+                        </div>
+                        <div id="subCategoryListInline" class="d-flex gap-2 mt-2"></div>
+                    </div>
+                    <div class="action-btns">
+                        <button type="button" class="btn btn-outline-primary" onclick="closeAddCategoryInlineModal()">Close</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 <script>
 let categoriesData = [];
 let expense_child_categories = [];
@@ -705,59 +1040,88 @@ let expense_main_categories = [];
 let income_child_categories = [];
 let income_main_categories = [];
 
-{% for cat in categories %}
-    categoriesData.push({
-        id: {{ cat.id }},
-        name: '{{ cat.name }}',
-        value: {{ cat.id }},
-        text: '{{ cat.name }}'
-    });
-{% endfor %}
-
-{% for cat in exp_child_categories %}
-    expense_child_categories.push({
-        id: {{ cat.id }},
-        name: '{{ cat.name }}',
-        value: {{ cat.id }},
-        text: '{{ cat.name }}'
-    })
-{% endfor %}
-
-console.log('expenses categories: ', expense_child_categories)
-
-{% for cat in exp_main_categories %}
-    expense_main_categories.push({
-        id: {{ cat.id }},
-        name: '{{ cat.name }}',
-        value: {{ cat.id }},
-        text: '{{ cat.name }}'
-    })
-{% endfor %}
-
-{% for cat in income_main_categories %}
-    income_main_categories.push({
-        id: {{ cat.id }},
-        name: '{{ cat.name }}',
-        value: {{ cat.id }},
-        text: '{{ cat.name }}'
-    })
-{% endfor %}
-
-{% for cat in income_child_categories %}
-    income_child_categories.push({
-        id: {{ cat.id }},
-        name: '{{ cat.name }}',
-        value: {{ cat.id }},
-        text: '{{ cat.name }}'
-    })
-{% endfor %}
-
-console.log('expenses main categories: ', expense_main_categories)
 
 const loanModal = new bootstrap.Modal(document.getElementById('loan-modal'));
 function clearInput(el){
     el.value = '';
 }
+
+    document.getElementById('toggleContactFormBtn').addEventListener('click', function () {
+        const form = document.getElementById('inlineContactForm');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.getElementById('contactFormBtn').addEventListener('click', async function (e) {
+        e.preventDefault();
+
+        console.log('here')
+
+        const name = document.getElementById('contactName').value.trim();
+        const mobile = document.getElementById('mobileNumber').value.trim();
+        const contactType = document.querySelector('input[name="contactType"]:checked').value;
+
+        if (!name) {
+            alert("Contact name is required.");
+            return;
+        }
+
+        try {
+            const response = await fetch("{% url 'finance:create_contact' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({
+                    name: name,
+                    mobile: mobile,
+                    type: contactType
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                const select = document.getElementById('exp_accountTo');
+                const option = document.createElement('option');
+                option.value = result.id;
+                option.text = result.name;
+                option.selected = true;
+                select.appendChild(option);
+                document.getElementById('inlineContactForm').style.display = 'none';
+                document.getElementById('contactForm').reset();
+
+                Toastify({
+                    text: "Contact added successfully!",
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#28a745",
+                }).showToast();
+            } else {
+                Toastify({
+                    text: result.error || "An error occurred.",
+                    duration: 4000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#dc3545",
+                }).showToast();
+            }
+
+        }catch (error) {
+            console.error("Error:", error);
+            Toastify({
+                text: "Failed to add contact. Please try again.",
+                duration: 4000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#dc3545",
+            }).showToast();
+        }
+    });
 
 function showLoanModal(){
     loanModal.show()
@@ -772,6 +1136,17 @@ function toggleLoanFields() {
     } else {
         loanFields.style.display = "none";
     }
+}
+
+function openAddContactModal() {
+    const cashOutCanvas = document.getElementById('cashOutCanvas');
+    const bsOffcanvas = new bootstrap.Offcanvas(cashOutCanvas);
+    const modalElement = document.getElementById('addContactModal');
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+    bsOffcanvas.hide();
+
+    console.log('here')
 }
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -1085,6 +1460,8 @@ const expCategorySearchSelect = new CustomSearchSelect('exp-categories', {
         console.log('Category selected:', item);
     },
     onAddNew: (item) => {
+        const catEL = document.getElementById('main-exp');
+        catEL.classList.toggle('d-none');
         console.log('New category added:', item);
     }
 });
@@ -1301,7 +1678,7 @@ async function recordExpense() {
             loadCashbookData(1, false, formData['currency']);
         } else {
             Toastify({
-                text: `${data.message || "Submission failed."}`,
+                text: `${result.message || "Submission failed."}`,
                 duration: 4000,
                 gravity: "top",
                 position: "right",
@@ -1417,6 +1794,148 @@ document.addEventListener('DOMContentLoaded', function() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('fromDate').value = today;
 });
+
+function showTab(tab) {
+  // Hide all panels
+  document.getElementById('incomeTabPanel').style.display = 'none';
+  document.getElementById('expenseTabPanel').style.display = 'none';
+  document.getElementById('transferTabPanel').style.display = 'none';
+  // Reset all button classes
+  document.getElementById('tabIncomeBtn').className = 'btn btn-outline-success';
+  document.getElementById('tabExpenseBtn').className = 'btn btn-danger';
+  document.getElementById('tabTransferBtn').className = 'btn btn-outline-info';
+  // Show selected panel and update button style
+  if (tab === 'income') {
+    document.getElementById('incomeTabPanel').style.display = 'block';
+    document.getElementById('tabIncomeBtn').className = 'btn btn-outline-success active';
+  } else if (tab === 'expense') {
+    document.getElementById('expenseTabPanel').style.display = 'block';
+    document.getElementById('tabExpenseBtn').className = 'btn btn-primary active';
+  } else if (tab === 'transfer') {
+    document.getElementById('transferTabPanel').style.display = 'block';
+    document.getElementById('tabTransferBtn').className = 'btn btn-outline-info active';
+  }
+}
+// Set default tab on open
+var offcanvasEl = document.getElementById('recordTransactionOffcanvas');
+offcanvasEl.addEventListener('show.bs.offcanvas', function () {
+  showTab('income');
+});
+
+// Amount in words logic
+function updateAmountInWords(input, prefix) {
+    const value = input.value;
+    const words = value ? numberToWords(parseInt(value)) : '';
+    const target = prefix === 'exp' ? 'expAmountInWords' : 'amountInWords';
+    document.getElementById(target).textContent = words;
+}
+// Simple number to words (English, up to 9999 for demo)
+function numberToWords(num) {
+    if (!num) return '';
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+    const teens = ['', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', 'Ten', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    let word = '';
+    if (num < 10) word = ones[num];
+    else if (num < 20) word = teens[num - 10];
+    else if (num < 100) word = tens[Math.floor(num / 10)] + (num % 10 ? ' ' + ones[num % 10] : '');
+    else if (num < 1000) word = ones[Math.floor(num / 100)] + ' Hundred' + (num % 100 ? ' ' + numberToWords(num % 100) : '');
+    else if (num < 10000) word = ones[Math.floor(num / 1000)] + ' Thousand' + (num % 1000 ? ' ' + numberToWords(num % 1000) : '');
+    else word = num.toString();
+    return word;
+}
+// Open category panel
+function openCategoryPanel(type) {
+    const offcanvas = new bootstrap.Offcanvas(document.getElementById('categorySelectOffcanvas'));
+    offcanvas.show();
+}
+function openAddCategorySheet() {
+    const sheet = new bootstrap.Offcanvas(document.getElementById('addCategoryBottomSheet'));
+    sheet.show();
+}
+// Add subcategory logic
+let subcategories = [];
+document.getElementById('addSubBtn')?.addEventListener('click', function() {
+    const input = document.getElementById('newSubCategoryName');
+    const val = input.value.trim();
+    if (val && subcategories.length < 3) {
+        subcategories.push(val);
+        renderSubcategories();
+        input.value = '';
+    }
+});
+function renderSubcategories() {
+    const list = document.getElementById('subCategoryList');
+    list.innerHTML = '';
+    subcategories.forEach((sub, idx) => {
+        const pill = document.createElement('span');
+        pill.className = 'badge category-pill';
+        pill.textContent = sub;
+        pill.style.cursor = 'pointer';
+        pill.onclick = () => {
+            subcategories.splice(idx, 1);
+            renderSubcategories();
+        };
+        list.appendChild(pill);
+    });
+}
+
+// Inline Add Category Modal logic
+function openAddCategoryInlineModal() {
+    document.getElementById('addCategoryInlineModal').style.display = 'block';
+    document.getElementById('newCategoryNameInline').value = '';
+    document.getElementById('newSubCategoryNameInline').value = '';
+    subcategoriesInline = [];
+    renderSubcategoriesInline();
+}
+function closeAddCategoryInlineModal() {
+    document.getElementById('addCategoryInlineModal').style.display = 'none';
+}
+let subcategoriesInline = [];
+document.getElementById('addSubBtnInline')?.addEventListener('click', function() {
+    const input = document.getElementById('newSubCategoryNameInline');
+    const val = input.value.trim();
+    if (val && subcategoriesInline.length < 3) {
+        subcategoriesInline.push(val);
+        renderSubcategoriesInline();
+        input.value = '';
+    }
+    if (subcategoriesInline.length >= 3) {
+        document.getElementById('addSubBtnInline').disabled = true;
+    } else {
+        document.getElementById('addSubBtnInline').disabled = false;
+    }
+});
+function renderSubcategoriesInline() {
+    const list = document.getElementById('subCategoryListInline');
+    list.innerHTML = '';
+    subcategoriesInline.forEach((sub, idx) => {
+        const pill = document.createElement('span');
+        pill.className = 'badge category-pill';
+        pill.textContent = sub;
+        pill.style.cursor = 'pointer';
+        pill.onclick = () => {
+            subcategoriesInline.splice(idx, 1);
+            renderSubcategoriesInline();
+            if (subcategoriesInline.length < 3) {
+                document.getElementById('addSubBtnInline').disabled = false;
+            }
+        };
+        list.appendChild(pill);
+    });
+    if (subcategoriesInline.length >= 3) {
+        document.getElementById('addSubBtnInline').disabled = true;
+    } else {
+        document.getElementById('addSubBtnInline').disabled = false;
+    }
+}
+function saveCategory(e) {
+    e.preventDefault();
+    // Add your save logic here
+    closeAddCategoryInlineModal();
+}
+
+
 </script>
 </body>
 </html>

@@ -216,7 +216,7 @@ class ExpenseCategory(models.Model):
     )
 
     def __str__(self):
-        return f"{self.parent.name} → {self.name}" if self.parent else self.name
+        return f" {self.name} → {self.parent.name} " if self.parent else self.name
 
 class Expense(models.Model):
     issue_date = models.DateTimeField(auto_now_add=True)
@@ -923,3 +923,17 @@ class BankAccountTransaction(models.Model):
 
     def __str__(self):
         return f"{self.bank_account} - {self.amount} - {self.transaction_type} - {self.description} - {self.date}"
+    
+
+class Contact(models.Model):
+    CONTACT_TYPE_CHOICES = [
+        ('Customer', 'Customer'),
+        ('Supplier', 'Supplier'),
+    ]
+    name = models.CharField(max_length=100)
+    mobile = models.CharField(max_length=20, blank=True, null=True)
+    contact_type = models.CharField(max_length=10, choices=CONTACT_TYPE_CHOICES)
+
+    def __str__(self):
+        return self.name
+
