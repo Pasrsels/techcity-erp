@@ -505,7 +505,7 @@
             try {
                 const response = await fetch(`/finance/paylater/details/${id}/`);
                 const data = await response.json();
-                console.log(data.data, 'data')
+                console.log(data.data, 'data payment details')
                 document.getElementById('detail-invoice-number').textContent = data.data[0].invoice__invoice_number;
                 document.getElementById('detail-customer-name').textContent = data.data[0].invoice__customer__name;
                 document.getElementById('detail-total-amount').textContent = formatCurrency(data.data[0].invoice__amount);

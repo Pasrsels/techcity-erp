@@ -153,14 +153,23 @@
             font-size: 1.1em;
             display: flex;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: flex-end;
             gap: 6px;
             margin-top: 18px;
             margin-bottom: 8px;
             cursor: pointer;
+            margin-left: 32px; /* Add space from the left edge */
         }
         .add-category-link i {
             font-size: 1.2em;
+        }
+        /* Ensure the add-category-link is in the same row as the plus button */
+        .add-category-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 18px;
+            margin-bottom: 8px;
         }
         @media (max-width: 768px) {
             .category-list {
@@ -244,6 +253,151 @@
             padding-right: 0 !important;
             padding-left: 0 !important;
         }
+        .category-search-btn {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            background: #f5f6fa;
+            border: none;
+            border-radius: 12px;
+            padding: 0 16px;
+            height: 60px;
+            color: #aaa;
+            font-size: 1.1em;
+            font-weight: 400;
+            cursor: pointer;
+            box-shadow: none;
+            transition: background 0.2s;
+        }
+        .category-search-btn:focus {
+            outline: none;
+            box-shadow: none;
+            border: none;
+        }
+        .category-search-btn .icon {
+            margin-right: 12px;
+            font-size: 1.3em;
+            color: #bbb;
+        }
+        .category-search-btn .placeholder {
+            color: #bbb;
+            font-size: 1.1em;
+            font-weight: 400;
+        }
+        .category-select-panel {
+            width: 100%;
+        }
+        .category-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 0 12px;
+            height: 48px;
+            width: 100%;
+        }
+        .category-input-wrapper .icon {
+            color: #bdbdbd;
+            font-size: 1.2em;
+            margin-right: 10px;
+        }
+        .category-input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            color: #bdbdbd;
+            font-size: 1em;
+            font-weight: 400;
+            padding: 0;
+        }
+        .category-input::placeholder {
+            color: #bdbdbd;
+            opacity: 1;
+            font-weight: 400;
+        }
+        .main-category-title-green {
+            color: #11998e; /* or your preferred green */
+            font-weight: 600;
+        }
+        .main-category-card .main-category-plus-btn {
+            width: 24px !important;
+            height: 24px !important;
+            font-size: 1em !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+            border: 1.5px solid #2196f3 !important;
+            color: #2196f3 !important;
+            background: #fff !important;
+            box-shadow: none !important;
+            transition: none;
+        }
+        .main-category-card .main-category-plus-btn:focus,
+        .main-category-card .main-category-plus-btn:active,
+        .main-category-card .main-category-plus-btn:hover {
+            background: #fff !important;
+            color: #2196f3 !important;
+            border: 1.5px solid #2196f3 !important;
+            box-shadow: none !important;
+        }
+        .main-category-card .main-category-plus-btn i {
+            color: #2196f3 !important;
+            font-size: 1.1em;
+        }
+        /* Align plus button with subcategories */
+        .main-category-card .d-flex.justify-content-between.align-items-center.mb-2 {
+            align-items: flex-start !important;
+        }
+        /* Modal for editing subcategories */
+        .modal-category-edit {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.3);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-category-edit .modal-content {
+            background: #fff;
+            border-radius: 12px;
+            padding: 32px 24px 24px 24px;
+            min-width: 350px;
+            max-width: 95vw;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        .modal-category-edit .close-btn {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #888;
+            cursor: pointer;
+        }
+        .modal-category-edit .subcat-pill {
+            background: #e5e6e8;
+            color: #444;
+            border-radius: 16px;
+            padding: 6px 18px;
+            margin: 0 6px 6px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .modal-category-edit .remove-subcat {
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 1.1em;
+        }
     </style>
 </head> 
 <body>
@@ -287,7 +441,7 @@
                                 <!-- ENTER AMOUNT SECTION WITH FLOATING LABEL AND AMOUNT IN WORDS -->
                                 <div class="mb-4">
                                     <div class="form-floating">
-                                        <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="inAmount" placeholder="Enter amount" oninput="updateAmountInWords(this)" style="height: 100px;">
+                                        <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="inAmount" placeholder="Enter amount" oninput="updateAmountInWords(this)" style="height: 60px;">
                                         <label for="inAmount" class="text-muted">Enter amount</label>
                                     </div>
                                     <div id="amountInWords" class="text-secondary mt-1" style="font-size: 0.95em;"></div>
@@ -308,8 +462,11 @@
                         <div class="mb-4 d-flex gap-2 align-items-start">
                             <div class="w-100">
                                 <label class="form-label">Category</label>
-                                <div class="category-select-panel bg-light p-3 rounded shadow-sm">
-                                    <button type="button" class="btn btn-outline-primary w-100" onclick="openCategoryPanel()">Search or Add New Categories</button>
+                                <div class="category-select-panel">
+                                    <div class="category-input-wrapper">
+                                        <span class="icon"><i class="bi bi-shapes"></i></span>
+                                        <input type="text" class="category-input" placeholder="search or add category" readonly onclick="openCategoryPanel()" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -473,7 +630,7 @@
                                     <!-- EXPENSE PANEL: ENTER AMOUNT SECTION WITH FLOATING LABEL AND AMOUNT IN WORDS -->
                                     <div class="mb-4">
                                         <div class="form-floating">
-                                            <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="exp_Amount" placeholder="Enter amount" oninput="updateAmountInWords(this, 'exp')" style="height: 100px;">
+                                            <input type="number" class="form-control border-0 text-center fs-3 bg-light" id="exp_Amount" placeholder="Enter amount" oninput="updateAmountInWords(this, 'exp')" style="height: 60px;">
                                             <label for="exp_Amount" class="text-muted">Enter amount</label>
                                         </div>
                                         <div id="expAmountInWords" class="text-secondary mt-1" style="font-size: 0.95em;"></div>
@@ -494,8 +651,11 @@
                             <div class="mb-4 d-flex gap-2 align-items-start">
                                 <div class="w-100">
                                     <label class="form-label">Category</label>
-                                    <div class="category-select-panel bg-light p-3 rounded shadow-sm">
-                                        <button type="button" class="btn btn-outline-primary w-100" onclick="openCategoryPanel('expense')">Search or Add New Categories</button>
+                                    <div class="category-select-panel">
+                                        <div class="category-input-wrapper">
+                                            <span class="icon"><i class="bi bi-shapes"></i></span>
+                                            <input type="text" class="category-input" placeholder="search or add category" readonly onclick="openCategoryPanel('expense')" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -965,9 +1125,9 @@
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div class="d-flex align-items-center gap-2">
                             <span class="main-category-icon"><i class="bi bi-geo-alt-fill"></i></span>
-                            <span class="fw-bold">Travel</span>
+                            <span class="fw-bold main-category-title-green">Travel</span>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" style="width:32px;height:32px;" onclick="openAddCategoryInlineModal()">+</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle main-category-plus-btn" onclick="openEditSubcategoryModal('Travel', ['Car','Lunch','Bike'])"><i class="bi bi-plus"></i></button>
                     </div>
                     <div class="d-flex flex-wrap gap-2">
                         <span class="badge category-pill">Car</span>
@@ -979,9 +1139,9 @@
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div class="d-flex align-items-center gap-2">
                             <span class="main-category-icon"><i class="bi bi-tools"></i></span>
-                            <span class="fw-bold">Repairs</span>
+                            <span class="fw-bold main-category-title-green">Repairs</span>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" style="width:32px;height:32px;" onclick="openAddCategoryInlineModal()">+</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle main-category-plus-btn" onclick="openEditSubcategoryModal('Repairs', ['Phone','Laptop','Home'])"><i class="bi bi-plus"></i></button>
                     </div>
                     <div class="d-flex flex-wrap gap-2">
                         <span class="badge category-pill">Phone</span>
@@ -993,9 +1153,9 @@
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div class="d-flex align-items-center gap-2">
                             <span class="main-category-icon"><i class="bi bi-cash-coin"></i></span>
-                            <span class="fw-bold">Salary</span>
+                            <span class="fw-bold main-category-title-green">Salary</span>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" style="width:32px;height:32px;" onclick="openAddCategoryInlineModal()">+</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle main-category-plus-btn" onclick="openEditSubcategoryModal('Salary', ['Monthly','Bonus','Freelance'])"><i class="bi bi-plus"></i></button>
                     </div>
                     <div class="d-flex flex-wrap gap-2">
                         <span class="badge category-pill">Monthly</span>
@@ -1004,8 +1164,12 @@
                     </div>
                 </div>
             </div>
-            <div class="add-category-link" onclick="openAddCategoryInlineModal()">
-                <i class="bi bi-plus-circle"></i> Add New Category
+            <div class="add-category-row">
+                <div></div>
+                <div class="add-category-link" onclick="openAddCategoryInlineModal()">
+                    <i class="bi bi-plus"></i>
+                    Add New Category
+                </div>
             </div>
             <!-- Inline Add Category Modal (hidden by default) -->
             <div id="addCategoryInlineModal" style="display:none;">
@@ -1029,6 +1193,19 @@
                         <button type="submit" class="btn btn-primary">Save</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for editing subcategories (ensure this is outside any conditional blocks and at the end of body) -->
+    <div id="editSubcategoryModal" class="modal-category-edit">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeEditSubcategoryModal()">&times;</button>
+            <h5 id="editSubcategoryModalTitle" class="mb-3"></h5>
+            <div id="editSubcategoryList" class="mb-3"></div>
+            <div class="input-group mb-3">
+                <input type="text" id="newSubcategoryInput" class="form-control" placeholder="Add new subcategory">
+                <button class="btn btn-outline-primary" type="button" onclick="addNewSubcategory()">Add</button>
             </div>
         </div>
     </div>
@@ -1935,6 +2112,46 @@ function saveCategory(e) {
     closeAddCategoryInlineModal();
 }
 
+// Modal logic for editing subcategories (ensure global scope)
+window.currentEditMainCategory = '';
+window.currentEditSubcategories = [];
+function openEditSubcategoryModal(mainCategory, subcategories) {
+    window.currentEditMainCategory = mainCategory;
+    window.currentEditSubcategories = [...subcategories];
+    document.getElementById('editSubcategoryModalTitle').textContent = mainCategory + ' Subcategories';
+    renderEditSubcategoryList();
+    document.getElementById('editSubcategoryModal').style.display = 'flex';
+}
+function closeEditSubcategoryModal() {
+    document.getElementById('editSubcategoryModal').style.display = 'none';
+}
+function renderEditSubcategoryList() {
+    const list = document.getElementById('editSubcategoryList');
+    list.innerHTML = '';
+    window.currentEditSubcategories.forEach((sub, idx) => {
+        const pill = document.createElement('span');
+        pill.className = 'subcat-pill';
+        pill.textContent = sub;
+        const removeBtn = document.createElement('span');
+        removeBtn.className = 'remove-subcat';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.onclick = () => {
+            window.currentEditSubcategories.splice(idx, 1);
+            renderEditSubcategoryList();
+        };
+        pill.appendChild(removeBtn);
+        list.appendChild(pill);
+    });
+}
+function addNewSubcategory() {
+    const input = document.getElementById('newSubcategoryInput');
+    const val = input.value.trim();
+    if (val && !window.currentEditSubcategories.includes(val)) {
+        window.currentEditSubcategories.push(val);
+        renderEditSubcategoryList();
+        input.value = '';
+    }
+}
 
 </script>
 </body>

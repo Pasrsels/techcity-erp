@@ -353,17 +353,17 @@ input[type="checkbox"] {
                         </span>
                         <span>
                             {% if request.user.role == 'admin' %}
-                            <span id='id_delete' data-id="{{ invoice.id }}" class="text-dark hint--bottom" aria-label='sales return'>
-                                <img width="18px" src="{% static 'assets/return.png' %}" />
-                            </span>
+                                <span id='id_delete' data-id="{{ invoice.id }}" class="text-dark hint--bottom" aria-label='sales return'>
+                                    <img width="18px" src="{% static 'assets/return.png' %}" />
+                                </span>
                             {% endif %}
                         </span>
                         {% if invoice.payment_terms == 'pay later' %}
-                        <span class='px-2'>
-                            <span style='cursor:pointer;' class="text-dark" data-bs-toggle="modal" data-bs-target="#paylaterModal{{ invoice.id }}">
-                                <i class='bx bx-calendar'></i>
+                            <span class='px-2'>
+                                <span style='cursor:pointer;' class="text-dark" data-bs-toggle="modal" data-bs-target="#paylaterModal{{ invoice.id }}">
+                                    <i class='bx bx-calendar'></i>
+                                </span>
                             </span>
-                        </span>
                         {% endif %}
                     </td>
                 </tr>

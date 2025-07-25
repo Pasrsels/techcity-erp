@@ -31,7 +31,12 @@ urlpatterns = [
     path('update_expense_status/', update_expense_status, name='update_expense_status'),
     path('get_expenses/', get_expenses, name='get_expenses'),
     path('save_expense_split/', save_expense_split, name="save_expense_split"),
-    
+
+    path('categories/create/', create_expense_category, name='create_expense_category'),
+    path('categories/list/', list_expense_categories, name='list_expense_categories'),
+    path('income-categories/create/', create_income_category, name='create_income_category'),
+    path('income-categories/list/', list_income_categories, name='list_income_categories'),
+
     #invoice
     path('invoice/', invoice, name='invoice'),
     path('invoice/pdf/', invoice_pdf, name='invoice_pdf'),
@@ -173,6 +178,7 @@ urlpatterns = [
     path('banking_data/', banking_data, name='banking_data'),
     
     path('paylater/', paylater, name='paylater'),
+    path('process-paylater-payment/', process_paylater_payment, name='process_paylater_payment'),
     path('paylater/details/<int:paylater_id>/', paylater_details, name='paylater_details'),
     
     #cash_transfers

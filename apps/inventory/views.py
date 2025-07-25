@@ -4235,12 +4235,62 @@ def stock_take_index(request):
             total_price=Sum(ExpressionWrapper(F('quantity_difference') * F('product__price'), output_field=FloatField())),
         )
         
-        return render(request, 'stocktake/stocktake.html', {
-            'negative': negative,
-            'positive': positive,
-            'stocktakes': stock_takes,
-            'form': form
-        })
+    if request.method == 'POST':
+        form = StockTakeForm(request.POST)
+        if form.is_valid():
+            try:
+                stock_take = form.save(commit=False)
+                branch = request.user.branch
+                stock_take.branch = branch
+                stock_take.status = False
+                stock_take.s_t_number = StockTake().stocktake_number(branch.name)
+                stock_take.result = 0  
+                stock_take.save()
+
+                form.save_m2m()
+
+                inventory = Inventory.objects.filter(branch=branch, disable=False)
+                stocktake_items = [
+                    StocktakeItem(
+                        stocktake=stock_take,
+                        product=product,
+                        now_quantity=product.quantity,
+                        has_diff=False,
+                        accepted=False,
+                        company_loss=False,
+                        note='',
+                        cost=0,
+                        recorded=False,
+                        quantity=0,
+                        quantity_difference=0
+                    )
+                    for product in inventory
+                ]
+                
+                StocktakeItem.objects.bulk_create(stocktake_items)
+
+                stock_takes = StockTake.objects.all()
+                return render(request, 'stocktake/stocktake.html', {
+                    'stocktakes': stock_takes,
+                    'form': StockTakeForm(), 
+                    'success': 'Stock take created successfully!'
+                })
+
+            except Exception as e:
+                logger.error(f"Error in stock take creation: {e}")
+                return render(request, 'stocktake/stocktake.html', {
+                    'form': form,
+                    'error': str(e),
+                    'stocktakes': StockTake.objects.all()
+                })
+
+        
+    return render(request, 'stocktake/stocktake.html', {
+        'negative': negative,
+        'positive': positive,
+        'stocktakes': stock_takes,
+        'form': form
+    })
         
 @login_required
 def confirm_stocktake(request, stocktake_id):

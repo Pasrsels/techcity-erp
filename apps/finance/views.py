@@ -1212,7 +1212,8 @@ def create_invoice(request):
                             invoice=invoice,
                             amount_due=amount_due,
                             due_date=invoice_data['pay_later_dates'][0] if invoice_data['pay_later_dates'] else timezone.now().date(),
-                            payment_method=invoice_data['payment_method']
+                            payment_method=invoice_data['payment_method'],
+                            branch=request.user.branch
                         )
                         
                         # Create paylater dates for each interval
@@ -1406,10 +1407,9 @@ def held_invoice(items_data, invoice, request, vat_rate):
         )
         
 #credits
-
 @login_required
 def paylater(request):
-    paylaters = Paylater.objects.all().select_related('invoice', 'invoice__customer').values(
+    paylaters = Paylater.objects.filter(branch=request.user.branch).select_related('invoice', 'invoice__customer').values(
         'id',
         'invoice__invoice_number',
         'invoice__customer__name',
@@ -1433,6 +1433,8 @@ def paylater_details(request, paylater_id):
         'invoice__currency__symbol',
         'paid'
     )
+    
+    print(paylater)
     
     paylater_dates = paylaterDates.objects.filter(paylater=paylater_id).values(
         'id',
@@ -8805,7 +8807,79 @@ def expenses(request):
             logger.exception("Error while recording expense:")
             return JsonResponse({'success': False, 'message': str(e)})
         
-        
+
+# @login_required
+def create_expense_category(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST allowed"}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        name = data.get("name")
+        parent_id = data.get("parent_id")
+
+        if not name:
+            return JsonResponse({"error": "Category name is required."}, status=400)
+
+        # If no parent_id provided, treat it as a main category
+        parent = None
+        if parent_id:
+            try:
+                parent = ExpenseCategory.objects.get(id=parent_id)
+            except ExpenseCategory.DoesNotExist:
+                return JsonResponse({"error": "Parent category not found."}, status=404)
+
+        category, created = ExpenseCategory.objects.get_or_create(
+            name=name,
+            parent=parent
+        )
+
+        return JsonResponse({
+            "success": True,
+            "message": "Category created" if created else "Category already exists",
+            "category_id": category.id,
+            "is_main_category": True if parent is None else False
+        })
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+
+@login_required
+def list_expense_categories(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "Only GET allowed"}, status=405)
+    
+    categories = ExpenseCategory.objects.filter(parent=None)
+    response = []
+    for cat in categories:
+        subcats = ExpenseCategory.objects.filter(parent=cat)
+        response.append({
+            "id": cat.id,
+            "name": cat.name,
+            "subcategories": [{"id": sc.id, "name": sc.name} for sc in subcats]
+        })
+
+    return JsonResponse({"categories": response})
+
+    
+
+@login_required
+def list_categories(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "Only GET allowed"}, status=405)
+    
+    categories = ExpenseCategory.objects.filter(parent=None)
+    response = []
+    for cat in categories:
+        subcats = ExpenseCategory.objects.filter(parent=cat)
+        response.append({
+            "id": cat.id,
+            "name": cat.name,
+            "subcategories": [{"id": sc.id, "name": sc.name} for sc in subcats]
+        })
+
+    return JsonResponse({"categories": response})
+    
 @login_required
 def create_expense(request):
     if request.method != "POST":
@@ -10195,8 +10269,9 @@ def process_paylater_payment(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            logger.info(f'data: {data}')
             paylater_id = data.get('paylater_id')
-            amount = data.get('amount')
+            amount = Decimal(data.get('amount_paid'))
             payment_method = data.get('payment_method')
             payment_date = data.get('payment_date')
             
@@ -10229,7 +10304,6 @@ def process_paylater_payment(request):
                 paylater.amount_due -= amount
                 paylater.payment_method = payment_method
                 
-                
                 invoice.amount_paid += amount
                 invoice.amount_due -= amount
                 
@@ -10246,16 +10320,16 @@ def process_paylater_payment(request):
                     invoice=invoice,
                     amount_paid=amount,
                     payment_method=payment_method,
-                    date=payment_date
+                    user=request.user
                 )
-                
+                 
                 # record cash book
                 Cashbook.objects.create(
                     invoice=invoice,
                     issue_date=timezone.now(),
                     branch=request.user.branch,
-                    debit=False,
-                    credit=True,
+                    debit=True,
+                    credit=False,
                     amount=amount,
                     created_by=request.user,
                     updated_by=request.user,
@@ -10267,7 +10341,7 @@ def process_paylater_payment(request):
                 customer_account_balance.balance -= amount
                 customer_account_balance.save()
                         
-            
+                return JsonResponse({'success': True, 'message': 'Paylater payment successfully processed.'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
@@ -13308,6 +13382,64 @@ def get_incomes(request):
         'data': income_data,
         'has_next': page_obj.has_next()
     })
+    
+@login_required
+@transaction.atomic  
+def create_income_category(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST allowed"}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        name = data.get("name")
+        parent_id = data.get("parent_id")
+
+        if not name:
+            return JsonResponse({"error": "Category name is required."}, status=400)
+
+        parent = None
+        if parent_id:
+            try:
+                parent = IncomeCategory.objects.get(id=parent_id)
+            except IncomeCategory.DoesNotExist:
+                return JsonResponse({"error": "Parent category not found."}, status=404)
+
+        category, created = IncomeCategory.objects.get_or_create(
+            name=name,
+            parent=parent
+        )
+
+        return JsonResponse({
+            "success": True,
+            "message": "Category created" if created else "Category already exists",
+            "category_id": category.id,
+            "is_main_category": True if parent is None else False
+        })
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+@login_required
+def list_income_categories(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "Only GET allowed"}, status=405)
+
+    try:
+        main_categories = IncomeCategory.objects.filter(parent=None)
+        response = []
+
+        for main_cat in main_categories:
+            subcats = IncomeCategory.objects.filter(parent=main_cat)
+            response.append({
+                "id": main_cat.id,
+                "name": main_cat.name,
+                "subcategories": [
+                    {"id": sc.id, "name": sc.name} for sc in subcats
+                ]
+            })
+
+        return JsonResponse({"categories": response}, safe=False)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
     
 @transaction.atomic
 @login_required
