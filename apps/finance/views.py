@@ -3970,208 +3970,208 @@ def vat(request):
         return JsonResponse({'success':False, 'message':'VAT successfully paid'}, status = 200)
 
 
-@login_required
-def cash_flow(request):
-    """
-    View to display a comprehensive financial overview including sales, income, and expenses.
-    """
-    today = datetime.datetime.today()
-    income_form = IncomeCategoryForm()
+# @login_required
+# def cash_flow(request):
+#     """
+#     View to display a comprehensive financial overview including sales, income, and expenses.
+#     """
+#     today = datetime.datetime.today()
+#     income_form = IncomeCategoryForm()
     
 
-    filter_type = request.GET.get('filter_type', 'today')
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
+#     filter_type = request.GET.get('filter_type', 'today')
+#     start_date = request.GET.get('start_date')
+#     end_date = request.GET.get('end_date')
     
-    if filter_type == 'today':
-        start_date = today.strftime('%Y-%m-%d')
-        end_date = today.strftime('%Y-%m-%d')
-    elif filter_type == 'weekly':
-        start_date = (today - datetime.timedelta(days=today.weekday())).strftime('%Y-%m-%d')
-        end_date = today.strftime('%Y-%m-%d')
-    elif filter_type == 'monthly':
-        start_date = today.replace(day=1).strftime('%Y-%m-%d')
-        end_date = today.strftime('%Y-%m-%d')
-    elif filter_type == 'yearly':
-        start_date = today.replace(month=1, day=1).strftime('%Y-%m-%d')
-        end_date = today.strftime('%Y-%m-%d')
-    elif filter_type == 'custom':
-        if not start_date:
-            start_date = today.strftime('%Y-%m-%d')
-        if not end_date:
-            end_date = today.strftime('%Y-%m-%d')
+#     if filter_type == 'today':
+#         start_date = today.strftime('%Y-%m-%d')
+#         end_date = today.strftime('%Y-%m-%d')
+#     elif filter_type == 'weekly':
+#         start_date = (today - datetime.timedelta(days=today.weekday())).strftime('%Y-%m-%d')
+#         end_date = today.strftime('%Y-%m-%d')
+#     elif filter_type == 'monthly':
+#         start_date = today.replace(day=1).strftime('%Y-%m-%d')
+#         end_date = today.strftime('%Y-%m-%d')
+#     elif filter_type == 'yearly':
+#         start_date = today.replace(month=1, day=1).strftime('%Y-%m-%d')
+#         end_date = today.strftime('%Y-%m-%d')
+#     elif filter_type == 'custom':
+#         if not start_date:
+#             start_date = today.strftime('%Y-%m-%d')
+#         if not end_date:
+#             end_date = today.strftime('%Y-%m-%d')
     
-    start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-    end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+#     start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+#     end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d')
 
-    end_date_query = end_date_obj + datetime.timedelta(days=1)
+#     end_date_query = end_date_obj + datetime.timedelta(days=1)
         
-    # Query for invoice items in the date range
-    invoice_items = InvoiceItem.objects.filter(
-        invoice__issue_date__date__gte=start_date_obj,
-        invoice__issue_date__date__lt=end_date_query
-    )
+#     # Query for invoice items in the date range
+#     invoice_items = InvoiceItem.objects.filter(
+#         invoice__issue_date__date__gte=start_date_obj,
+#         invoice__issue_date__date__lt=end_date_query
+#     )
     
-    # Query for other income and expenses
-    income = Income.objects.filter(
-        created_at__date__gte=start_date_obj,
-        created_at__date__lt=end_date_query
-    )
+#     # Query for other income and expenses
+#     income = Income.objects.filter(
+#         created_at__date__gte=start_date_obj,
+#         created_at__date__lt=end_date_query
+#     )
     
-    expenses = Expense.objects.filter(
-        issue_date__date__gte=start_date_obj,
-        issue_date__date__lt=end_date_query
-    )
+#     expenses = Expense.objects.filter(
+#         issue_date__date__gte=start_date_obj,
+#         issue_date__date__lt=end_date_query
+#     )
     
-    logs = FinanceLog.objects.filter(
-        date__gte=start_date_obj.date(),
-        date__lt=end_date_query.date()
-    )
+#     logs = FinanceLog.objects.filter(
+#         date__gte=start_date_obj.date(),
+#         date__lt=end_date_query.date()
+#     )
     
-    # Normalize invoice items for timeline
-    normalized_sales = invoice_items.annotate(
-        type_label=Value('sale', output_field=CharField()),
-        category_name=F('item__description'), 
-        parent_category=Value('Sales', output_field=CharField()),
-        datetime=F('invoice__issue_date'),
-        source=Value('Invoice', output_field=CharField()),
-        amount=F('total_amount')  
-    ).values('datetime', 'amount', 'type_label', 'category_name', 'parent_category', 'source')
+#     # Normalize invoice items for timeline
+#     normalized_sales = invoice_items.annotate(
+#         type_label=Value('sale', output_field=CharField()),
+#         category_name=F('item__description'), 
+#         parent_category=Value('Sales', output_field=CharField()),
+#         datetime=F('invoice__issue_date'),
+#         source=Value('Invoice', output_field=CharField()),
+#         amount=F('total_amount')  
+#     ).values('datetime', 'amount', 'type_label', 'category_name', 'parent_category', 'source')
     
-    # Normalize income entries
-    normalized_incomes = income.annotate(
-        type_label=Value('income', output_field=CharField()),
-        category_name=F('category__name'),
-        parent_category=F('category__parent__name'),
-        datetime=F('created_at'),
-        source=Value('Income', output_field=CharField())
-    ).values('datetime',  'sale__invoice_items__item__name', 'amount', 'type_label', 'category_name', 'parent_category', 'source', 'note')
+#     # Normalize income entries
+#     normalized_incomes = income.annotate(
+#         type_label=Value('income', output_field=CharField()),
+#         category_name=F('category__name'),
+#         parent_category=F('category__parent__name'),
+#         datetime=F('created_at'),
+#         source=Value('Income', output_field=CharField())
+#     ).values('datetime',  'sale__invoice_items__item__name', 'amount', 'type_label', 'category_name', 'parent_category', 'source', 'note')
     
-    # Normalize expense entries
-    normalized_expenses = expenses.annotate(
-        type_label=Value('expense', output_field=CharField()),
-        category_name=F('category__name'),
-        parent_category=F('category__parent__name'),
-        datetime=F('issue_date'),
-        source=Value('Expense', output_field=CharField())
-    ).values('datetime', 'amount', 'description', 'type_label', 'category_name', 'parent_category', 'source')
+#     # Normalize expense entries
+#     normalized_expenses = expenses.annotate(
+#         type_label=Value('expense', output_field=CharField()),
+#         category_name=F('category__name'),
+#         parent_category=F('category__parent__name'),
+#         datetime=F('issue_date'),
+#         source=Value('Expense', output_field=CharField())
+#     ).values('datetime', 'amount', 'description', 'type_label', 'category_name', 'parent_category', 'source')
     
-    # Combine and sort by datetime (chronological timeline of all financial activity)
-    combined_cashflow = sorted(
-        chain(normalized_incomes, normalized_expenses),
-        key=lambda x: x['datetime']
-    )
+#     # Combine and sort by datetime (chronological timeline of all financial activity)
+#     combined_cashflow = sorted(
+#         chain(normalized_incomes, normalized_expenses),
+#         key=lambda x: x['datetime']
+#     )
     
-    product_sales = invoice_items.values(
-        'item__id', 
-        'item__name',
-        'item__description'
-    ).annotate(
-        total_quantity=Sum('quantity'),
-        total_revenue=Sum('total_amount'),
-        average_price=Avg('unit_price'),
-        total_vat=Sum('vat_amount')
-    ).order_by('-total_revenue')
+#     product_sales = invoice_items.values(
+#         'item__id', 
+#         'item__name',
+#         'item__description'
+#     ).annotate(
+#         total_quantity=Sum('quantity'),
+#         total_revenue=Sum('total_amount'),
+#         average_price=Avg('unit_price'),
+#         total_vat=Sum('vat_amount')
+#     ).order_by('-total_revenue')
     
-    # Calculate totals
-    sales_total = invoice_items.aggregate(total=Sum('total_amount'))['total'] or 0
-    income_total = income.aggregate(total=Sum('amount'))['total'] or 0
-    expenses_total = expenses.aggregate(total=Sum('amount'))['total'] or 0
-    total_income = sales_total 
-    balance = total_income - expenses_total
+#     # Calculate totals
+#     sales_total = invoice_items.aggregate(total=Sum('total_amount'))['total'] or 0
+#     income_total = income.aggregate(total=Sum('amount'))['total'] or 0
+#     expenses_total = expenses.aggregate(total=Sum('amount'))['total'] or 0
+#     total_income = sales_total 
+#     balance = total_income - expenses_total
     
-    # Group expenses by category for summary
-    expenses_by_category = expenses.values(
-        'category__name'
-    ).annotate(
-        total=Sum('amount')
-    ).order_by('-total')
+#     # Group expenses by category for summary
+#     expenses_by_category = expenses.values(
+#         'category__name'
+#     ).annotate(
+#         total=Sum('amount')
+#     ).order_by('-total')
     
-    # Group income by category for summary
-    income_by_category = income.values(
-        'category__name'
-    ).annotate(
-        total=Sum('amount')
-    ).order_by('-total')
+#     # Group income by category for summary
+#     income_by_category = income.values(
+#         'category__name'
+#     ).annotate(
+#         total=Sum('amount')
+#     ).order_by('-total')
 
 
-     # Add percentage to each expense category
-    for category in expenses_by_category:
-        if expenses_total > 0:
-            category['percentage'] = (category['total'] / expenses_total) * 100
-        else:
-            category['percentage'] = 0
+#      # Add percentage to each expense category
+#     for category in expenses_by_category:
+#         if expenses_total > 0:
+#             category['percentage'] = (category['total'] / expenses_total) * 100
+#         else:
+#             category['percentage'] = 0
     
-    # Group income by category for summary
-    income_by_category = income.values(
-        'category__name'
-    ).annotate(
-        total=Sum('amount')
-    ).order_by('-total')
+#     # Group income by category for summary
+#     income_by_category = income.values(
+#         'category__name'
+#     ).annotate(
+#         total=Sum('amount')
+#     ).order_by('-total')
     
-    # Add percentage to each income category
-    for category in income_by_category:
-        if income_total > 0:
-            category['percentage'] = (category['total'] / income_total) * 100
-        else:
-            category['percentage'] = 0
+#     # Add percentage to each income category
+#     for category in income_by_category:
+#         if income_total > 0:
+#             category['percentage'] = (category['total'] / income_total) * 100
+#         else:
+#             category['percentage'] = 0
 
-    # categories
-    expenses_categories = ExpenseCategory.objects.all()
-    income_categories = IncomeCategory.objects.all()
+#     # categories
+#     expenses_categories = ExpenseCategory.objects.all()
+#     income_categories = IncomeCategory.objects.all()
     
-    cash_ups = CashUp.objects.all().select_related(
-        'branch', 'created_by'
-    ).prefetch_related(
-        'sales', 'expenses'
-    ).values(
-        'expected_cash',
-        'branch__id',
-        'branch__name',
-        'received_amount',
-        'sales',
-        'expenses',
-        'created_by__username',
-        'sales_status',
-        'expenses_status',
-        'status',
-        'date'
-    ).order_by('-created_at')
+#     cash_ups = CashUp.objects.all().select_related(
+#         'branch', 'created_by'
+#     ).prefetch_related(
+#         'sales', 'expenses'
+#     ).values(
+#         'expected_cash',
+#         'branch__id',
+#         'branch__name',
+#         'received_amount',
+#         'sales',
+#         'expenses',
+#         'created_by__username',
+#         'sales_status',
+#         'expenses_status',
+#         'status',
+#         'date'
+#     ).order_by('-created_at')
     
-    context = {
-        # Time filter data
-        'start_date': start_date,
-        'end_date': end_date,
-        'filter_type': filter_type,
+#     context = {
+#         # Time filter data
+#         'start_date': start_date,
+#         'end_date': end_date,
+#         'filter_type': filter_type,
         
-        # Raw data
-        'sales': invoice_items,
-        'income': income,
-        'expenses': expenses,
-        'logs': logs,
+#         # Raw data
+#         'sales': invoice_items,
+#         'income': income,
+#         'expenses': expenses,
+#         'logs': logs,
         
-        # Summaries
-        'product_sales': product_sales,
-        'expenses_by_category': expenses_by_category,
-        'income_by_category': income_by_category,
-        'combined_cashflow': combined_cashflow,
+#         # Summaries
+#         'product_sales': product_sales,
+#         'expenses_by_category': expenses_by_category,
+#         'income_by_category': income_by_category,
+#         'combined_cashflow': combined_cashflow,
         
-        # Totals
-        'sales_total': sales_total,
-        'income_total': income_total,
-        'expenses_total': expenses_total,
-        'total_income': total_income,
-        'balance': balance,
+#         # Totals
+#         'sales_total': sales_total,
+#         'income_total': income_total,
+#         'expenses_total': expenses_total,
+#         'total_income': total_income,
+#         'balance': balance,
 
-        # categories 
-        'expenses_categories':expenses_categories,
-        'income_categories':income_categories,
+#         # categories 
+#         'expenses_categories':expenses_categories,
+#         'income_categories':income_categories,
         
-        # branches
-        'cash_ups':cash_ups,
-    }
+#         # branches
+#         'cash_ups':cash_ups,
+#     }
     
-    return render(request, 'cashflow.html', context)
+#     return render(request, 'cashflow.html', context)
     
 # @login_required
 # def cash_flow(request):
@@ -4232,6 +4232,507 @@ def cash_flow(request):
 #     }
 
 #     return render(request, 'cashflow.html', context)
+
+class CashflowDashboardView(View):
+    template_name = 'cashflows/cashflow.html'
+    
+    def get(self, request):
+        context = {
+            'user_branches': self.get_user_branches(request.user),
+            'current_branch': self.get_current_branch(request.user),
+        }
+        return render(request, self.template_name, context)
+    
+    def get_user_branches(self, user):
+        """Get branches accessible to the user"""
+        if hasattr(user, 'profile') and hasattr(user.profile, 'branches'):
+            return user.profile.branches.all()
+        return []
+    
+    def get_current_branch(self, user):
+        """Get user's current/default branch"""
+        if hasattr(user, 'profile') and hasattr(user.profile, 'branch'):
+            return user.profile.branch
+        return None
+
+def cashflow_data_api(request):
+    """
+    Enhanced API endpoint with better error handling and validation
+    """
+    try:
+        # Validate and parse parameters
+        period = request.GET.get('period', 'month')
+        if period not in ['day', 'week', 'month', 'year']:
+            return JsonResponse({'error': 'Invalid period parameter'}, status=400)
+        
+        tab = request.GET.get('tab', 'income')
+        if tab not in ['income', 'expenses']:
+            return JsonResponse({'error': 'Invalid tab parameter'}, status=400)
+        
+        date_str = request.GET.get('date')
+        branch_id = request.GET.get('branch_id')
+        
+        # Parse and validate date
+        try:
+            if date_str:
+                import datetime as datetime 
+                current_date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+            else:
+                current_date = timezone.now().date()
+        except ValueError:
+            return JsonResponse({'error': 'Invalid date format. Use YYYY-MM-DD'}, status=400)
+        
+        # Validate branch access for the user
+        if branch_id:
+            if not has_branch_access(request.user, branch_id):
+                return JsonResponse({'error': 'Access denied to this branch'}, status=403)
+        
+        # # Generate cache key for this request
+        # cache_key = f"cashflow_{request.user.id}_{period}_{tab}_{date_str}_{branch_id}"
+        
+        # # Try to get cached data
+        # cached_data = cache.get(cache_key)
+        # if cached_data:
+        #     return JsonResponse(cached_data)
+        
+        # Generate fresh data
+        period_data = get_period_data(period, current_date, tab, branch_id)
+        detail_data = get_detail_breakdown(period, current_date, tab, branch_id)
+        category_data = get_category_breakdown(period, current_date, tab, branch_id)
+        period_labels = get_period_labels(period, current_date)
+        summary = get_period_summary(period, current_date, branch_id)
+        
+        response_data = {
+            'period_data': period_data,
+            'detail_data': detail_data,
+            'category_data': category_data,
+            'period_labels': period_labels,
+            'summary': summary,
+            'cache_timestamp': timezone.now().isoformat()
+        }
+        
+        # Cache the data for 15 minutes
+        # cache.set(cache_key, response_data, 900)
+        
+        return JsonResponse(response_data)
+        
+    except Exception as e:
+        logger.error(f"Error in cashflow_data_api: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'error': 'An error occurred while processing your request'
+        }, status=500)
+
+def has_branch_access(user, branch_id):
+    """
+    Check if user has access to the specified branch
+    """
+    try:
+        branch_id = int(branch_id)
+        if user.is_superuser:
+            return True
+        
+        if hasattr(user, 'profile'):
+            if hasattr(user.profile, 'branch') and user.profile.branch_id == branch_id:
+                return True
+            if hasattr(user.profile, 'branches') and user.profile.branches.filter(id=branch_id).exists():
+                return True
+        
+        return False
+    except (ValueError, TypeError):
+        return False
+
+# Enhanced period data function with model methods
+def get_period_data(period, current_date, tab, branch_id=None):
+    """
+    Enhanced version using the model methods
+    """
+    periods = []
+    
+    for i in range(4):
+        # Calculate date range for this period
+        start_date, end_date = calculate_period_dates(period, current_date, i)
+        
+        if tab == 'income':
+            total_revenue = Income.get_period_total(start_date, end_date, branch_id)
+            sales = Income.get_period_total(start_date, end_date, branch_id, sale_only=True)
+            receivables = Income.get_period_total(start_date, end_date, branch_id, sale_only=False)
+            
+            # Director cash (you may need to adjust this based on your category structure)
+            director_cash = Income.objects.filter(
+                created_at__date__gte=start_date,
+                created_at__date__lte=end_date,
+                category__name__icontains='director'
+            )
+            if branch_id:
+                director_cash = director_cash.filter(branch_id=branch_id)
+            director_cash = director_cash.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            
+            periods.append({
+                'total_revenue': float(total_revenue),
+                'sales': float(sales),
+                'receivables': float(receivables),
+                'director_cash': float(director_cash),
+            })
+        else:
+            total_expenses = Expense.get_period_total(start_date, end_date, branch_id)
+            cogs = Expense.get_period_total(start_date, end_date, branch_id, 'goods')
+            operating = Expense.get_period_total(start_date, end_date, branch_id, 'operating')
+            administrative = Expense.get_period_total(start_date, end_date, branch_id, 'admin')
+            
+            periods.append({
+                'total_expenses': float(total_expenses),
+                'cogs': float(cogs),
+                'operating': float(operating),
+                'administrative': float(administrative),
+            })
+    
+    return periods
+
+
+def get_period_data(period, current_date, tab, branch_id=None):
+    """
+    Get data for the current period and 3 previous periods
+    """
+    from calendar import monthrange
+
+    periods = []
+    
+    for i in range(4):  # Current + 3 previous periods
+        if period == 'day':
+            period_date = current_date - timedelta(days=i)
+            start_date = period_date
+            end_date = period_date
+        elif period == 'week':
+            # Get start of week (Monday)
+            week_start = current_date - timedelta(days=current_date.weekday()) - timedelta(weeks=i)
+            start_date = week_start
+            end_date = week_start + timedelta(days=6)
+        elif period == 'month':
+            if i == 0:
+                period_month = current_date.month
+                period_year = current_date.year
+            else:
+                period_month = current_date.month - i
+                period_year = current_date.year
+                if period_month <= 0:
+                    period_month += 12
+                    period_year -= 1
+            
+            start_date = datetime.datetime(period_year, period_month, 1).date()
+            _, last_day = monthrange(period_year, period_month)
+            end_date = datetime.datetime(period_year, period_month, last_day).date()
+        elif period == 'year':
+            period_year = current_date.year - i
+            start_date = datetime.datetime(period_year, 1, 1).date()
+            end_date = datetime.datetime(period_year, 12, 31).date()
+        
+        period_totals = get_period_totals(start_date, end_date, tab, branch_id)
+        periods.append(period_totals)
+    
+    return periods
+
+def get_period_totals(start_date, end_date, tab, branch_id=None):
+    """
+    Calculate totals for a specific date range
+    """
+    base_filter = Q(created_at__date__gte=start_date, created_at__date__lte=end_date)
+    if branch_id:
+        base_filter &= Q(branch_id=branch_id)
+    
+    if tab == 'income':
+        
+        # Income data
+        total_revenue = Income.objects.filter(base_filter).aggregate(
+            total=Sum('amount'))['total'] or Decimal('0')
+        
+        # Sales from invoices
+        sales = Income.objects.filter(
+            base_filter, sale__isnull=False
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        
+        # Receivable collections (income not from direct sales)
+        receivables = Income.objects.filter(
+            base_filter, sale__isnull=True
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+      
+        director_cash = Income.objects.filter(
+            base_filter, category__name__icontains='director'
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        
+        return {
+            'total_revenue': float(total_revenue),
+            'sales': float(sales),
+            'receivables': float(receivables),
+            'director_cash': float(director_cash),
+        }
+    
+    else:  
+        expense_filter = Q(issue_date__date__gte=start_date, issue_date__date__lte=end_date)
+        if branch_id:
+            expense_filter &= Q(branch_id=branch_id)
+        
+        total_expenses = Expense.objects.filter(expense_filter).aggregate(
+            total=Sum('amount'))['total'] or Decimal('0')
+        
+        cogs = Expense.objects.filter(
+            expense_filter, category__name__icontains='goods'
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        
+        operating = Expense.objects.filter(
+            expense_filter, category__name__icontains='operating'
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        
+        administrative = Expense.objects.filter(
+            expense_filter, category__name__icontains='admin'
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        
+        return {
+            'total_expenses': float(total_expenses),
+            'cogs': float(cogs),
+            'operating': float(operating),
+            'administrative': float(administrative),
+        }
+
+def calculate_period_dates(period, current_date, offset):
+    """
+    Calculate start and end dates for a period with offset
+    """
+    from calendar import monthrange
+    if period == 'day':
+        period_date = current_date - timedelta(days=offset)
+        return period_date, period_date
+    elif period == 'week':
+        week_start = current_date - timedelta(days=current_date.weekday()) - timedelta(weeks=offset)
+        return week_start, week_start + timedelta(days=6)
+    elif period == 'month':
+        if offset == 0:
+            period_month = current_date.month
+            period_year = current_date.year
+        else:
+            period_month = current_date.month - offset
+            period_year = current_date.year
+            if period_month <= 0:
+                period_month += 12
+                period_year -= 1
+        
+        start_date = datetime.datetime(period_year, period_month, 1).date()
+        _, last_day = monthrange(period_year, period_month)
+        end_date = datetime.datetime(period_year, period_month, last_day).date()
+        return start_date, end_date
+    elif period == 'year':
+        period_year = current_date.year - offset
+        start_date = datetime.datetime(period_year, 1, 1).date()
+        end_date = datetime.datetime(period_year, 12, 31).date()
+        return start_date, end_date
+    
+def get_detail_breakdown(period, current_date, tab, branch_id=None):
+    """
+    Get detailed breakdown for the left side of the dashboard
+    """
+    from calendar import monthrange
+    # Get current period dates
+    if period == 'day':
+        start_date = end_date = current_date
+    elif period == 'week':
+        week_start = current_date - timedelta(days=current_date.weekday())
+        start_date = week_start
+        end_date = week_start + timedelta(days=6)
+    elif period == 'month':
+        start_date = datetime.datetime(current_date.year, current_date.month, 1).date()
+        _, last_day = monthrange(current_date.year, current_date.month)
+        end_date = datetime.datetime(current_date.year, current_date.month, last_day).date()
+    elif period == 'year':
+        start_date = datetime.datetime(current_date.year, 1, 1).date()
+        end_date = datetime.datetime(current_date.year, 12, 31).date()
+    
+    base_filter = Q(created_at__date__gte=start_date, created_at__date__lte=end_date)
+    if branch_id:
+        base_filter &= Q(branch_id=branch_id)
+    
+    if tab == 'income':
+        details = []
+        
+        # Sales breakdown
+        sales_total = Income.objects.filter(
+            base_filter, sale__isnull=False
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        details.append({'name': 'SALES', 'amount': float(sales_total)})
+        
+        # Receivable collections
+        receivables_total = Income.objects.filter(
+            base_filter, sale__isnull=True
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        details.append({'name': 'RECEIVABLE COLLECTIONS', 'amount': float(receivables_total)})
+        
+        # Additional income categories
+        other_income = Income.objects.filter(base_filter).values('category__name').annotate(
+            total=Sum('amount')).order_by('-total')[:5]
+        
+        for item in other_income:
+            if item['category__name'] and item['category__name'].upper() not in ['SALES', 'RECEIVABLES']:
+                details.append({
+                    'name': item['category__name'].upper(),
+                    'amount': float(item['total'])
+                })
+        
+        return details
+    
+    else:  # expenses
+        expense_filter = Q(issue_date__date__gte=start_date, issue_date__date__lte=end_date)
+        if branch_id:
+            expense_filter &= Q(branch_id=branch_id)
+        
+        details = []
+        expense_categories = Expense.objects.filter(expense_filter).values('category__name').annotate(
+            total=Sum('amount')).order_by('-total')[:8]
+        
+        for item in expense_categories:
+            if item['category__name']:
+                details.append({
+                    'name': item['category__name'].upper(),
+                    'amount': float(item['total'])
+                })
+        
+        return details
+
+def get_category_breakdown(period, current_date, tab, branch_id=None):
+    """
+    Get category breakdown for the right side of the dashboard
+    """
+    from calendar import monthrange
+    # Same date logic as detail_breakdown
+    if period == 'day':
+        start_date = end_date = current_date
+    elif period == 'week':
+        week_start = current_date - timedelta(days=current_date.weekday())
+        start_date = week_start
+        end_date = week_start + timedelta(days=6)
+    elif period == 'month':
+        start_date = datetime.datetime(current_date.year, current_date.month, 1).date()
+        _, last_day = monthrange(current_date.year, current_date.month)
+        end_date = datetime.datetime(current_date.year, current_date.month, last_day).date()
+    elif period == 'year':
+        start_date = datetime.datetime(current_date.year, 1, 1).date()
+        end_date = datetime.datetime(current_date.year, 12, 31).date()
+    
+    if tab == 'income':
+        base_filter = Q(created_at__date__gte=start_date, created_at__date__lte=end_date)
+        if branch_id:
+            base_filter &= Q(branch_id=branch_id)
+        
+        categories = Income.objects.filter(base_filter).values('category__name').annotate(
+            total=Sum('amount')).order_by('-total')[:5]
+        
+        total_amount = sum(float(cat['total']) for cat in categories)
+        
+        result = []
+        for cat in categories:
+            if cat['category__name']:
+                result.append({
+                    'name': cat['category__name'].upper(),
+                    'amount': float(cat['total'])
+                })
+        
+        result.append({'name': 'TOTAL', 'amount': total_amount})
+        return result
+    
+    else:  # expenses
+        expense_filter = Q(issue_date__date__gte=start_date, issue_date__date__lte=end_date)
+        if branch_id:
+            expense_filter &= Q(branch_id=branch_id)
+        
+        categories = Expense.objects.filter(expense_filter).values('category__name').annotate(
+            total=Sum('amount')).order_by('-total')[:5]
+        
+        total_amount = sum(float(cat['total']) for cat in categories)
+        
+        result = []
+        for cat in categories:
+            if cat['category__name']:
+                result.append({
+                    'name': cat['category__name'].upper(),
+                    'amount': float(cat['total'])
+                })
+        
+        result.append({'name': 'TOTAL', 'amount': total_amount})
+        return result
+
+def get_period_labels(period, current_date):
+    """
+    Generate labels for the period headers
+    """
+    labels = []
+    
+    for i in range(4):
+        if period == 'day':
+            date = current_date - timedelta(days=i)
+            labels.append(date.strftime('%b %d'))
+        elif period == 'week':
+            week_start = current_date - timedelta(days=current_date.weekday()) - timedelta(weeks=i)
+            labels.append(f"Week {week_start.strftime('%W')}")
+        elif period == 'month':
+            if i == 0:
+                period_month = current_date.month
+                period_year = current_date.year
+            else:
+                period_month = current_date.month - i
+                period_year = current_date.year
+                if period_month <= 0:
+                    period_month += 12
+                    period_year -= 1
+            
+            date = datetime.datetime(period_year, period_month, 1)
+            labels.append(date.strftime('%B'))
+        elif period == 'year':
+            year = current_date.year - i
+            labels.append(str(year))
+    
+    return labels
+
+def get_period_summary(period, current_date, branch_id=None):
+    """
+    Get summary text for the current period
+    """
+    from calendar import monthrange
+    # Current period dates
+    if period == 'day':
+        start_date = end_date = current_date
+        period_str = current_date.strftime('%B %d, %Y')
+    elif period == 'week':
+        week_start = current_date - timedelta(days=current_date.weekday())
+        start_date = week_start
+        end_date = week_start + timedelta(days=6)
+        period_str = f"week of {week_start.strftime('%B %d, %Y')}"
+    elif period == 'month':
+        start_date = datetime.datetime(current_date.year, current_date.month, 1).date()
+        _, last_day = monthrange(current_date.year, current_date.month)
+        end_date = datetime.datetime(current_date.year, current_date.month, last_day).date()
+        period_str = current_date.strftime('%B %Y')
+    elif period == 'year':
+        start_date = datetime.datetime(current_date.year, 1, 1).date()
+        end_date = datetime.datetime(current_date.year, 12, 31).date()
+        period_str = str(current_date.year)
+    
+    # Get totals
+    income_filter = Q(created_at__date__gte=start_date, created_at__date__lte=end_date)
+    expense_filter = Q(issue_date__date__gte=start_date, issue_date__date__lte=end_date)
+    
+    if branch_id:
+        income_filter &= Q(branch_id=branch_id)
+        expense_filter &= Q(branch_id=branch_id)
+    
+    total_income = Income.objects.filter(income_filter).aggregate(
+        total=Sum('amount'))['total'] or Decimal('0')
+    
+    total_expenses = Expense.objects.filter(expense_filter).aggregate(
+        total=Sum('amount'))['total'] or Decimal('0')
+    
+    return {
+        'period_string': period_str,
+        'total_income': float(total_income),
+        'total_expenses': float(total_expenses),
+        'net_profit': float(total_income - total_expenses)
+    }
 
 @login_required
 def confirm_cash_up(request):
@@ -4339,7 +4840,7 @@ def get_recorded_cash_ups(request):
         if branch_id:
             queryset = queryset.filter(branch_id=branch_id)
 
-        now = datetime.now()
+        now = datetime.datetime.now()
         if date_range == 'today':
             queryset = queryset.filter(created_at__date=now.date())
         elif date_range == 'yesterday':

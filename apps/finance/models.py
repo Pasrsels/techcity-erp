@@ -241,6 +241,42 @@ class Expense(models.Model):
     
     has_reminder = models.BooleanField(default=False, null=True)
     reminder_dated = models.DateField(null=True, blank=True)
+    
+    @classmethod
+    def get_period_total(cls, start_date, end_date, branch_id=None, category_filter=None):
+        """
+        Get total expenses for a specific period with optional filters
+        """
+        queryset = cls.objects.filter(
+            issue_date__date__gte=start_date,
+            issue_date__date__lte=end_date
+        )
+        
+        if branch_id:
+            queryset = queryset.filter(branch_id=branch_id)
+            
+        if category_filter:
+            queryset = queryset.filter(category__name__icontains=category_filter)
+            
+        return queryset.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+    
+    @classmethod
+    def get_category_breakdown(cls, start_date, end_date, branch_id=None, limit=10):
+        """
+        Get expense breakdown by category for a specific period
+        """
+        queryset = cls.objects.filter(
+            issue_date__date__gte=start_date,
+            issue_date__date__lte=end_date
+        )
+        
+        if branch_id:
+            queryset = queryset.filter(branch_id=branch_id)
+            
+        return queryset.values('category__name').annotate(
+            total=Sum('amount')
+        ).order_by('-total')[:limit]
+
 
     def __str__(self):
         return f"{self.issue_date} - {self.category} - {self.description} - ${self.amount}"
@@ -698,7 +734,6 @@ class AccountTransaction(models.Model):
     sales_returns = models.ForeignKey(SalesReturns, on_delete=models.CASCADE, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
-
 class ExpenseSubCategory(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
@@ -874,6 +909,45 @@ class Income(models.Model):
         null=True,
         blank=True
     )
+    
+    
+    @classmethod
+    def get_period_total(cls, start_date, end_date, branch_id=None, sale_only=None):
+        """
+        Get total income for a specific period with optional filters
+        """
+        queryset = cls.objects.filter(
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date
+        )
+        
+        if branch_id:
+            queryset = queryset.filter(branch_id=branch_id)
+            
+        if sale_only is True:
+            queryset = queryset.filter(sale__isnull=False)
+        elif sale_only is False:
+            queryset = queryset.filter(sale__isnull=True)
+            
+        return queryset.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+    
+    @classmethod
+    def get_category_breakdown(cls, start_date, end_date, branch_id=None, limit=10):
+        """
+        Get income breakdown by category for a specific period
+        """
+        queryset = cls.objects.filter(
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date
+        )
+        
+        if branch_id:
+            queryset = queryset.filter(branch_id=branch_id)
+            
+        return queryset.values('category__name').annotate(
+            total=Sum('amount')
+        ).order_by('-total')[:limit]
+
 
     def __str__(self):
         return f"{self.created_at} - {self.category} - {self.note} - ${self.amount}"

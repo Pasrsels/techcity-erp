@@ -130,7 +130,8 @@ urlpatterns = [
     path('expense_json/', expense_json, name='expense_json'),
 
     # cash_flows
-    path('cash_flow', cash_flow, name='cash_flow'),
+    # path('cash_flow', cash_flow, name='cash_flow'),
+    path('cash_flow/', CashflowDashboardView.as_view(), name='cash_flow'),
     path('cash-flow/', cashflow_list, name='cashflow_list'),
     path('branch_cash_up/<int:branch_id>/', get_branch_data, name='branch_cash_up'),
     path('create_cash_flow/', cashflow_create, name='create_cash_flow'),
@@ -142,8 +143,8 @@ urlpatterns = [
     path('add_income_category/', add_income_category, name='add_income_category'),
     path('confirm_cash_up/', confirm_cash_up, name='confirm_cash_up'),
     path('undo_record_cashflow/', undo_record_cashflow, name='undo_record_cashflow'),
-    
     path('get_recorded_cash_ups/', get_recorded_cash_ups, name='get_recorded_cash_ups'),
+    path('api/cashflow-data/', cashflow_data_api, name="cashfow_data_api"),
 
     # user accounts
     path('user_accounts/', user_accounts, name='user_accounts'),
