@@ -3950,7 +3950,6 @@ def stock_take_index(request):
                     'error': str(e),
                     'stocktakes': StockTake.objects.all()
                 })
-
         else:
             return render(request, 'stocktake/stocktake.html', {
                 'form': form,
