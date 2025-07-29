@@ -4916,7 +4916,7 @@ def cashflow_create(request):
 
                 expense_category, _ = MainExpenseCategory.objects.get_or_create(name='Expense')
                 income_category, _ = MainIncomeCategory.objects.get_or_create(name='Income')
-                
+                #d
                 # for income
                 Cashflow.objects.create(
                     branch=cash_up.branch,
