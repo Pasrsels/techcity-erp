@@ -7,8 +7,10 @@
     <title>Cash Flow Management</title>
     <style>
         #categorySelectOffcanvas{
-            margin-top: 40vh;
+            margin-top: 30vh;
             max-height: 60vh;
+            margin-bottom: 100px;
+            margin-right: 10px;
         }
         #categorySelectOffcanvasLabel{
             color: #11998e;
@@ -1125,7 +1127,7 @@
     </div>
 
     <!-- CATEGORY SIDE PANEL (OFFCANVAS) -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="categorySelectOffcanvas" aria-labelledby="categorySelectOffcanvasLabel">
+    <div class="offcanvas offcanvas-end rounded-5" tabindex="-1" id="categorySelectOffcanvas" aria-labelledby="categorySelectOffcanvasLabel">
         <div class="offcanvas-header">
             <span>
                 <h5 class="offcanvas-title" id="categorySelectOffcanvasLabel">Select Category</h5>
@@ -1186,7 +1188,7 @@
                 </div>
             </div>
             <!-- Inline Add Category Modal (hidden by default) -->
-            <div id="addCategoryInlineModal" style="display:none;">
+            <!-- <div id="addCategoryInlineModal" style="display:none;">
                 <button class="close-btn" onclick="closeAddCategoryInlineModal()">&times;</button>
                 <h5 class="offcanvas-title w-100 text-center mb-3">Add New Category</h5>
                 <form onsubmit="saveCategory(event)">
@@ -1207,7 +1209,7 @@
                         <button type="submit" class="btn btn-primary">Save</button>
                     </div>
                 </form>
-            </div>
+            </div> -->
         </div>
     </div>
 
@@ -1227,6 +1229,45 @@
         </div>
     </div>
 
+    <div class="modal position-absolute" id="addNewCategoryModal" tabindex="-1" aria-labelledby="addNewCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content p-3">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addNewCategoryModalLabel">Add New Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <input type="text" class="form-control" placeholder="Add new category" required>
+                            <span class="btn btn-outline-primary ">
+                                <i class="bx bx-plus-circle"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <p>Select Main Category</p>
+                        <div>
+                            <!--Populate using JS-->
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <input type="text" class="form-control" placeholder="Add new category" required>
+                            <span class="btn btn-outline-primary">
+                                <i class="bx bx-plus-circle"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 <script>
 let categoriesData = [];
 let expense_child_categories = [];
@@ -1234,6 +1275,7 @@ let expense_main_categories = [];
 let income_child_categories = [];
 let income_main_categories = [];
 
+const addNewCatModal = new bootstrap.Modal(document.getElementById('addNewCategoryModal'));
 
 const loanModal = new bootstrap.Modal(document.getElementById('loan-modal'));
 function clearInput(el){
@@ -2076,11 +2118,14 @@ function renderSubcategories() {
 
 // Inline Add Category Modal logic
 function openAddCategoryInlineModal() {
-    document.getElementById('addCategoryInlineModal').style.display = 'block';
-    document.getElementById('newCategoryNameInline').value = '';
-    document.getElementById('newSubCategoryNameInline').value = '';
-    subcategoriesInline = [];
-    renderSubcategoriesInline();
+    const offcanvas = new bootstrap.Offcanvas(document.getElementById('categorySelectOffcanvas'));
+    offcanvas.hide();
+    addNewCatModal.show();
+    // document.getElementById('addCategoryInlineModal').style.display = 'block';
+    // document.getElementById('newCategoryNameInline').value = '';
+    // document.getElementById('newSubCategoryNameInline').value = '';
+    // subcategoriesInline = [];
+    // renderSubcategoriesInline();
 }
 function closeAddCategoryInlineModal() {
     document.getElementById('addCategoryInlineModal').style.display = 'none';

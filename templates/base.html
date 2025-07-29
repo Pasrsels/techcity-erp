@@ -512,7 +512,7 @@
                 document.getElementById('detail-amount-paid').textContent = formatCurrency(data.data[0].invoice__amount_paid);
                 document.getElementById('detail-amount-due').textContent = formatCurrency(data.data[0].amount_due);
                 document.getElementById('detail-status').innerHTML = `
-                        <span class="badge ${data.data[0].paid ? 'bg-success' : 'bg-warning'}">
+                    <span class="badge ${data.data[0].paid ? 'bg-success' : 'bg-warning'}">
                         ${data.data[0].paid ? 'Paid' : 'Pending'}
                     </span>
                 `;

@@ -1370,6 +1370,16 @@ def create_invoice(request):
 
     return render(request, 'invoices/add_invoice.html')
 
+# def adjust_stocktake(request, items_data, invoice):
+#     """ Adjusts stocktake if one in progress for items in the invoice """
+#     stocktake = StockTake.objects.filter(branch=request.user.branch, status=StockTake.Status.IN_PROGRESS).first()
+#     if stocktake:
+#         for item_data in items_data:
+#             item = Inventory.objects.get(pk=item_data['inventory_id'])
+#             stocktake_item = StockTakeItem.objects.get(stocktake=stocktake, item=item)
+#             stocktake_item.now_quantity -= item_data['quantity']
+#             stocktake_item.save()
+
 def held_invoice(items_data, invoice, request, vat_rate):
     for item_data in items_data:
         item = Inventory.objects.get(pk=item_data['inventory_id'])

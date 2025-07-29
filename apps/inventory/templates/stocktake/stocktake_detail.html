@@ -161,6 +161,9 @@
             <button class="header-btn" onclick="printStockSheet()" title="Print Stocktake">
                 <i class="bx bx-printer"></i> Print Sheet
             </button>
+            <button class="header-btn" onclick="adjustStocktake()" title="Adjust Stocktake">
+                <i class="bx bx-edit"></i> Adjust Stocktake
+            </button>
         </div>
         
     </div>
@@ -398,6 +401,60 @@
         stocktakeItemId = id;
         acceptModal.show()
     }
+
+
+function adjustStocktake() {
+    Swal.fire({
+        title: 'Adjust Stock Quantity',
+        text: 'This will adjust the stock quantity for all products in this stocktake.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Adjust',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/inventory/adjust_stocktake_quantity/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ stocktake_id: "{{ stocktake.id }}" })  
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("Network response was not ok");
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Stock Quantity Adjusted',
+                        text: 'The stock quantity has been adjusted successfully.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    location.reload();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to adjust stock quantity.'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while processing your request.'
+                });
+            });
+        }
+    });
+}
+
 
     function pdf(type) {
         console.log('type', type)

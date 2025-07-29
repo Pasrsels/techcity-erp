@@ -475,98 +475,6 @@ def user_profile(request):
     user = request.user  
     return render(request, 'profile.html', {'user': user})
 
-##############################################################################################################################################################
-""" User API End points """
-
-from django.contrib.auth import login
-from .serializers import(
-    UserSerializer,
-    RegisterSerializer,
-    LoginSerializer,
-    LogoutSerializer,
-    UserPermissionsSerializer,
-)
-from apps.company.models import Branch
-from .models import User, UserPermissions
-from django.contrib.auth.models import Group
-from rest_framework import generics, status, views, permissions, viewsets
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-
-class UserPermissionViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    queryset = UserPermissions.objects.all()
-    serializer_class = UserPermissionsSerializer
-
-
-class BranchSwitch(views.APIView):
-    """ Enables the admin or the ownwer to switch between branches """
-    # permission_classes = [IsAuthenticated]
-
-    def get(self, request, branch_id):
-        user = request.user
-        if user.role == 'Admin' or user.role == 'admin':
-            user.branch = Branch.objects.get(id=branch_id)
-            user.save()
-        else:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-        data = {
-            'user': user,
-            'branch': user.branch
-        }
-        logger.info(data)
-        return Response(data, status=status.HTTP_200_OK)
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    An endpoint which allows viewers to be viewed or edited
-    """
-    permission_classes = [IsAuthenticated]
-    queryset = User.objects.all().order_by('-date_joined')
-    serializer_class = UserSerializer
-
-
-class RegisterView(generics.GenericAPIView):
-    """
-        User registration end point
-    """
-    serializer_class = RegisterSerializer
-
-    def post(self, request):
-        user = request.data
-        serializer = self.serializer_class(data=user)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        user_data = serializer.data
-        return Response(user_data, status=status.HTTP_201_CREATED)
-
-
-class LoginAPIView(generics.GenericAPIView):
-    """
-        Login API end point
-    """
-    serializer_class = LoginSerializer
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class LogoutAPIView(generics.GenericAPIView):
-    """
-        Logout Api End Point
-    """
-    serializer_class = LogoutSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 def send_verification_email(user, token):
     subject = 'Verify your email address'
@@ -792,3 +700,7 @@ def verify_email(request, token):
     except EmailVerificationToken.DoesNotExist:
         messages.error(request, 'Invalid verification link.')
         return redirect('users:login')
+
+##############################################################################################################################################################
+
+

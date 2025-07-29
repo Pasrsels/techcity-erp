@@ -1,6 +1,7 @@
 from django.urls import path, include
 from .views import *
 from rest_framework.routers import DefaultRouter
+from .api import *
 
 app_name = 'users'
 
@@ -36,5 +37,9 @@ urlpatterns = [
     path('api/v1/login/', LoginAPIView.as_view(), name="api_login"),
     path('api/v1/logout/', LogoutAPIView.as_view(), name="api_logout"),
     path('api/v1/branch-switch/<int:branch_id>/', BranchSwitch.as_view(), name='api_branch_switch'),
+    path('api/v1/password-reset/', RequestPasswordResetView.as_view(), name='request_password_reset'),
+    path('api/v1/verify-otp/', VerifyOtpView.as_view(), name='verify_otp'),
+    path('api/v1/reset-password/', ResetPasswordView.as_view(), name='reset_password'),
+    path('api/v1/verify-email/', VerifyEmailView.as_view(), name='verify_email'),
     path('', include(router.urls))
 ]

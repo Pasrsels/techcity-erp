@@ -4220,6 +4220,12 @@ def stock_take_index(request):
                 total=Sum('total_price')
             )['total'] or 0
         
+        cost = 0
+        for stock_take_item in stock_take_items:
+            
+            cost += stock_take_item.quantity_difference * stock_take_item.product.cost
+        logger.info(f'stocktake: {cost}')
+        
         # Overall totals
         negative_items = stock_take_items.filter(quantity_difference__lt=0)
         negative = negative_items.aggregate(
@@ -4284,7 +4290,6 @@ def stock_take_index(request):
                     'stocktakes': StockTake.objects.all()
                 })
 
-        
     return render(request, 'stocktake/stocktake.html', {
         'negative': negative,
         'positive': positive,
@@ -4324,8 +4329,6 @@ def stock_take_detail(request, stocktake_id):
             'products':products,
             'stocktake':stocktake
         })
-    
-        return redirect('inventory:stocktake_detail', stocktake_id)
         
     if request.method == 'POST':
         
@@ -4522,6 +4525,37 @@ def accept_stocktake_item(request):
     except Exception as e:
         logger.error(f'Error recording stocktake item: {e}')
         return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
+    
+def adjust_stocktake_quantity(request):
+    try:
+        data = json.loads(request.body)
+        stocktake_id = data.get('stocktake_id')
+        
+        stocktake_item = StocktakeItem.objects.filter(stocktake__id=stocktake_id)
+        
+        cost = 0
+        selling = 0
+        for stocktake_item in stocktake_item:
+            if not stocktake_item.product.status:
+                logger.info(f'Deleted product: {stocktake_item.product}')
+                stocktake_item.delete()
+            else:
+                stocktake_item.now_quantity = stocktake_item.product.quantity
+                stocktake_item.quantity_difference = stocktake_item.quantity - stocktake_item.now_quantity
+                stocktake_item.cost = stocktake_item.product.cost * stocktake_item.quantity_difference
+                stocktake_item.save()
+                
+                cost += stocktake_item.quantity_difference * stocktake_item.product.cost
+                selling += stocktake_item.quantity_difference * stocktake_item.product.price
+                
+                logger.info(f'selling: {selling}')
+                logger.info(f'cost: {cost}')
+        
+        return JsonResponse({'success': True, 'message': 'Quantity adjusted successfully', 'quantity': stocktake_item.quantity}, status=200)
+    
+    except Exception as e:
+        logger.error(f'Error adjusting stocktake quantity: {e}')
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
         
 def create_user_account(id):
     account = UserAccount.objects.create(
@@ -4531,6 +4565,7 @@ def create_user_account(id):
         total_credits=0,
         total_debits=0,
     )
+    
     logger.info(f'Account for user {account.user.username}')
     return account
         
@@ -4553,7 +4588,7 @@ def payments(request):
             supplier_balance = supplier_payment['account__balance']
             # supplier_timestamp = supplier_payment['timestamp']
             # supplier_user = supplier_payment['amount']
-            #supplier_pay_method = supplier_payment['payment_method']
+            # supplier_pay_method = supplier_payment['payment_method']
 
             if supplier_balance <= 0:
                 return JsonResponse({'success': True, 'response': 'We donot owe this supplier'})

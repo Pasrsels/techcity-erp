@@ -46,6 +46,8 @@ urlpatterns = [
     path('stocktake_pdf/',  stocktake_pdf, name="stocktake_pdf"),
     path('stocktake/<int:stocktake_id>/report/<str:report_type>/', stocktake_report_data, name='stocktake_report_data'),    
     path('stocktake/<int:stocktake_id>/download/<str:report_type>/', stocktake_report_download, name='stocktake_report_download'),
+    path('adjust_stocktake_quantity/', adjust_stocktake_quantity, name='adjust_stocktake_quantity'),
+    
     #batch_code 
     path('batch_code/', batch_code, name='batch_code'),
     
