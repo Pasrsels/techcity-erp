@@ -1,6 +1,6 @@
 from django.urls import path, include
 from . views import *
-# from apis.cashbook_apis import *
+from .apis.cashbook_apis import *
 from rest_framework.routers import DefaultRouter
 # from apps.finance.custom_views.cashbook_views import cashbook_data
 from apps.finance.apis.cashbook_apis import *
@@ -12,7 +12,7 @@ router = DefaultRouter()
 router.register(r'api/v1/customers_list', CustomersViewset, basename='customers_list')
 router.register(r'api/v1/currency', CurrencyViewset, basename= 'api_currency_crud')
 router.register(r'api/v1/Cashwithrawals', CashWithdrawalsViewset, basename= 'api_cash_withrawals')
-router.register(r'api/v1/quotation', QuatationCrud, basename= 'api_quotation')
+router.register(r'api/v1/quotation', QuotationCrud, basename= 'api_quotation')
 # router.register(r'api/v1/income', IncomeViewSet, basename='api_income')
 # router.register(r'api/v1/expenses', CreateExpenseAPI.as_view(), basename='api_expense')
 
@@ -238,6 +238,11 @@ urlpatterns = [
     path('api/v1/cancel-entry/', CancelTransaction.as_view(), name='api_cancel_entry'),
     path('api/v1/cashbook/note/<int:entry_id>/', CashbookNoteView.as_view(), name='api_cashbook_noteview'),
     path('api/v1/update_transaction_status/<int:pk>/', UpdateTransactionStatus.as_view(), name='api_update_transaction_status'),
+    path('api/v1/cashbook-data/', CashBookData.as_view(), name='cashbook_data_api'),
+    path('api/v1/record-income/', RecordIncomeAPI.as_view(), name='record_income_api'),
+    path('api/v1/create-expense/', CreateExpenseAPI.as_view(), name='create_expense_api'),
+
+
 
     #Cash flow
     path("api/v1/cashflows", CashFlowView.as_view(), name="api_cash_flow"),

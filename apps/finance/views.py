@@ -15233,7 +15233,7 @@ class EndOfDay(views.APIView):
             return Response({'success': False, 'error': str(e)})
         
 
-class QuatationCrud(viewsets.ModelViewSet):
+class QuotationCrud(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Qoutation.objects.all()
     serializer_class = QuotationSerializer

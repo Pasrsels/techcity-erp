@@ -6,6 +6,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
+from django.db.models import Q
 from django.http import FileResponse
 import io
 from collections import defaultdict
@@ -26,6 +27,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Avg, F, Value, CharField, ExpressionWrapper
 import datetime
+from datetime import timedelta
 from itertools import chain
 from django.core.paginator import Paginator, EmptyPage
 import imghdr, base64
