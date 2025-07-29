@@ -13,8 +13,8 @@ router.register(r'api/v1/customers_list', CustomersViewset, basename='customers_
 router.register(r'api/v1/currency', CurrencyViewset, basename= 'api_currency_crud')
 router.register(r'api/v1/Cashwithrawals', CashWithdrawalsViewset, basename= 'api_cash_withrawals')
 router.register(r'api/v1/quotation', QuatationCrud, basename= 'api_quotation')
-router.register(r'api/v1/income', IncomeViewSet, basename='api_income')
-router.register(r'api/v1/expenses', ExpenseViewSet, basename='api_expense')
+# router.register(r'api/v1/income', IncomeViewSet, basename='api_income')
+# router.register(r'api/v1/expenses', CreateExpenseAPI.as_view(), basename='api_expense')
 
 urlpatterns = [
     path('', Finance.as_view(), name='finance'),
@@ -241,6 +241,9 @@ urlpatterns = [
     #Cash flow
     path("api/v1/cashflows", CashFlowView.as_view(), name="api_cash_flow"),
     path("api/v1/cash-up-list", CashUpList.as_view(), name="api_cash_up_list"),
+    
+    path('api/v1/expenses/create/', CreateExpenseAPI.as_view(), name='create-expense-api'),
+    path('api/v1/income/record/', RecordIncomeAPI.as_view(), name='record-income-api'),
 
     #Days data
     path('api/v1/days_data', DaysData.as_view(), name='api_days_data'),

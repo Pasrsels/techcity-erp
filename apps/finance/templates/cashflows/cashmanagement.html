@@ -702,6 +702,8 @@
 let categoriesData = [];
 let expense_child_categories = [];
 let expense_main_categories = [];
+let income_child_categories = [];
+let income_main_categories = [];
 
 {% for cat in categories %}
     categoriesData.push({
@@ -725,6 +727,24 @@ console.log('expenses categories: ', expense_child_categories)
 
 {% for cat in exp_main_categories %}
     expense_main_categories.push({
+        id: {{ cat.id }},
+        name: '{{ cat.name }}',
+        value: {{ cat.id }},
+        text: '{{ cat.name }}'
+    })
+{% endfor %}
+
+{% for cat in income_main_categories %}
+    income_main_categories.push({
+        id: {{ cat.id }},
+        name: '{{ cat.name }}',
+        value: {{ cat.id }},
+        text: '{{ cat.name }}'
+    })
+{% endfor %}
+
+{% for cat in income_child_categories %}
+    income_child_categories.push({
         id: {{ cat.id }},
         name: '{{ cat.name }}',
         value: {{ cat.id }},
@@ -1035,7 +1055,7 @@ class CustomSearchSelect {
 }
 
 const categorySearchSelect = new CustomSearchSelect('categories', {
-    data: categoriesData,
+    data: income_child_categories,
     placeholder: 'Search or add category...',
     onSelect: (item) => {
         console.log('Category selected:', item);
@@ -1047,7 +1067,7 @@ const categorySearchSelect = new CustomSearchSelect('categories', {
 
 
 const mainCategorySearchSelect = new CustomSearchSelect('main-categories', {
-    data: categoriesData,
+    data: income_main_categories,
     placeholder: 'Search or add category...',
     onSelect: (item) => {
         console.log('Category selected:', item);
@@ -1156,27 +1176,41 @@ async function recordIncome() {
             body: JSON.stringify(formData)
         });
 
-        const result = await response.json();
+        const data = await response.json();
 
-        if (response.ok) {
-            showToast("Income recorded successfully!", "#28a745");
-            resetIncomeForm();
+        if (data.success) {
+            Toastify({
+                text: "Income transaction submitted successfully!",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#28a745",
+                stopOnFocus: true,
+            }).showToast();
 
-            if (result.redirect_url) {
-                window.location.href = result.redirect_url;
-            }
+            loadCashbookData(1, false, formData['currency']);
+            console.log('data loaded')
         } else {
-            if (result.errors) {
-                const errorMessages = Object.values(result.errors).flat().join('\n');
-                showToast(`Error:\n${errorMessages}`, "#dc3545", 5000);
-            } else {
-                showToast(result.message || "An error occurred while recording income", "#dc3545");
-            }
+            Toastify({
+                text: `${data.message || "Submission failed."}`,
+                duration: 4000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#dc3545",
+                stopOnFocus: true,
+            }).showToast();
+            
         }
-
     } catch (error) {
         console.error('Error recording income:', error);
-        showToast("An unexpected error occurred. Please try again.", "#dc3545");
+        Toastify({
+            text: `An unexpected error occurred. Please try again.`,
+            duration: 4000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "#dc3545",
+            stopOnFocus: true,
+        }).showToast();
     } finally {
         const submitButton = document.querySelector('.header-btn');
         submitButton.textContent = 'Record Income';
@@ -1223,10 +1257,20 @@ async function recordExpense() {
             loan_period_value: document.getElementById('loanPeriodValue')?.value,
             loan_period_unit: document.getElementById('loanPeriodUnit')?.value,
         };
+       
+        if (isNaN(formData['amount']) || formData['amount'] <= 0) {
+            Toastify({
+                text: `Amount must be greater than zero.`,
+                duration: 4000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#dc3545",
+                stopOnFocus: true,
+            }).showToast();
+            return;
+        }
 
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-        console.log('expenses Data: ', formData)
 
         const response = await fetch("/finance/create_expense/", {
             method: "POST",
@@ -1248,10 +1292,13 @@ async function recordExpense() {
                 backgroundColor: "#28a745",
                 stopOnFocus: true,
             }).showToast();
+
             document.getElementById("expense-form").reset();
             document.getElementById("loanFields").style.display = "none";
             document.getElementById("exp_RecurrenceGroup").style.display = "none";
             document.getElementById("exp_reminderDateGroup").style.display = "none";
+
+            loadCashbookData(1, false, formData['currency']);
         } else {
             Toastify({
                 text: `${data.message || "Submission failed."}`,
@@ -1275,7 +1322,6 @@ async function recordExpense() {
         }).showToast();
     }
 }
-
 
 const transferForm = document.getElementById("transferForm");
 const submitBtn = transferForm.querySelector("button[type='submit']");
@@ -1304,7 +1350,6 @@ transferForm.addEventListener("submit", function (e) {
         }
     });
 
-
     formData["fromtype"] = fromType.value;
     formData["totype"] = toType.value;
 
@@ -1331,6 +1376,7 @@ transferForm.addEventListener("submit", function (e) {
             }).showToast();
 
             transferForm.reset();
+            loadCashbookData(1, false, formData['_currency']);
         } else {
             Toastify({
                 text: `${data.message || "Submission failed."}`,

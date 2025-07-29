@@ -3831,9 +3831,9 @@ def process_stock_take_item(request):
            s_item = StocktakeItem.objects.get(id=stocktake_id)
            s_item.quantity = int(phy_quantity)
            
-           difference = abs(s_item.now_quantity - int(phy_quantity)) 
+           difference = int(phy_quantity) - s_item.now_quantity
            
-           logger.info(f'difference: {difference}')
+           logger.info(f'difference: {difference} {s_item.now_quantity} {phy_quantity}')
            
            s_item.quantity_difference = difference
            s_item.cost = s_item.product.cost * s_item.quantity_difference
@@ -3861,7 +3861,7 @@ def stocktake_pdf(request):
         stocktake_id = data.get('stocktake_id')
         template_name = 'reports/stocktake.html'
         
-        logger.info(f'Id: {stocktake_id}')
+        logger.info(f'Id: {stocktake_id} {type}')
         
         stock_take = StockTake.objects.get(id=stocktake_id)
         
@@ -4031,8 +4031,8 @@ def undo_accept_stocktake_item(request):
             #     return JsonResponse({'success': False, 'message': 'Stocktake item not accepted yet.'}, status=400)
 
             original_diff = stocktake.quantity - stocktake.now_quantity or 0
-            stocktake.product.quantity += abs(stocktake.quantity_difference)
-            stocktake.now_quantity += abs(stocktake.quantity_difference)
+            stocktake.product.quantity += stocktake.quantity_difference
+            stocktake.now_quantity += stocktake.quantity_difference
             
             stocktake.product.quantity -= original_diff
             stocktake.product.save()
@@ -4081,11 +4081,12 @@ def accept_stocktake_item(request):
             logger.info(f'quantity: {stocktake.quantity} : now_quantity {stocktake.now_quantity}')
             logger.info(f'diff: {stocktake.now_quantity} :{stocktake.quantity - stocktake.now_quantity }')
             
-            stocktake.product.quantity += (stocktake.quantity - stocktake.now_quantity )
-            stocktake.now_quantity = stocktake.product.quantity 
+            stocktake.product.quantity += stocktake.quantity_difference
+            stocktake.now_quantity += stocktake.quantity_difference
             stocktake.has_diff = True
             
             stocktake.save()
+            stocktake.product.save()
             
             logger.info(f'quantity: {stocktake.now_quantity}')
         
@@ -4129,17 +4130,17 @@ def accept_stocktake_item(request):
             
             logger.info(f'Category: {category}, {_}')
             
-            if stocktake.cost >= 0:
-                expense = Expense.objects.create(
-                    amount = stocktake.cost,
-                    payment_method = 'cash',
-                    currency=currency,
-                    description=stocktake.note,
-                    user=request.user,
-                    branch=request.user.branch,
-                    is_recurring=True,
-                    category=category
-                )
+            # if stocktake.cost >= 0:
+            expense = Expense.objects.create(
+                amount = stocktake.cost,
+                payment_method = 'cash',
+                currency=currency,
+                description=stocktake.note,
+                user=request.user,
+                branch=request.user.branch,
+                is_recurring=True,
+                category=category
+            )
             
             Cashbook.objects.create(
                 expense=expense,

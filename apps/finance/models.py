@@ -233,13 +233,13 @@ class Expense(models.Model):
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
     status = models.BooleanField(default=False)
     purchase_order = models.ForeignKey("inventory.PurchaseOrder", on_delete=models.CASCADE, null=True, blank=True)
-    account_to = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name="account_to")
+    account_to = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name="account_to", null=True)
     receipt = models.FileField(upload_to=expense_receipt_upload_path, null=True, blank=True)
     
-    is_recurring = models.BooleanField(default=False)
-    is_loan = models.BooleanField(default=False)
+    is_recurring = models.BooleanField(default=False, null=True)
+    is_loan = models.BooleanField(default=False, null=True)
     
-    has_reminder = models.BooleanField(default=False)
+    has_reminder = models.BooleanField(default=False, null=True)
     reminder_dated = models.DateField(null=True, blank=True)
 
     def __str__(self):
@@ -488,6 +488,7 @@ class Cashbook(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True)
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True)
     transfer = models.ForeignKey('finance.CashTransfers', on_delete=models.CASCADE, null=True)
+    income = models.ForeignKey('finance.income', on_delete=models.CASCADE, null=True)
     issue_date = models.DateTimeField(auto_now_add=True)
     description = models.CharField(max_length=255)
     debit = models.BooleanField(default=False)
@@ -849,7 +850,7 @@ class Income(models.Model):
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     currency = models.ForeignKey('Currency', on_delete=models.CASCADE)
     category = models.ForeignKey('IncomeCategory', on_delete=models.PROTECT, null = True)
-    note = models.CharField(max_length=200)
+    note = models.CharField(max_length=200, null=True)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     account = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='account_users', null=True)
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
@@ -872,7 +873,7 @@ class Income(models.Model):
         ],
         null=True,
         blank=True
-    ) 
+    )
 
     def __str__(self):
         return f"{self.created_at} - {self.category} - {self.note} - ${self.amount}"
