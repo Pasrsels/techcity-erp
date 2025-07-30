@@ -163,23 +163,23 @@ DATABASES = {
     #     default=os.environ.get('DATABASE_URL')
     # )
 
-    # 'default': {
-    #      'ENGINE': 'django.db.backends.postgresql',
-    #      'NAME':  'techcity_db',
-    #      'USER': 'postgres',
-    #      'PASSWORD': 'neverfail',
-    #      'HOST': 'localhost',
-    #      'PORT': '5432'
-    #  }
-    
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME':  'testt',
-        'USER': 'postgres',
-        'PASSWORD': 'neverfail',
-        'HOST': 'localhost',
-        'PORT': '5432'
-    }
+         'ENGINE': 'django.db.backends.postgresql',
+         'NAME':  'techcity_db',
+         'USER': 'postgres',
+         'PASSWORD': 'neverfail',
+         'HOST': 'localhost',
+         'PORT': '5432'
+     }
+    
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME':  'testt',
+    #     'USER': 'postgres',
+    #     'PASSWORD': 'neverfail',
+    #     'HOST': 'localhost',
+    #     'PORT': '5432'
+    # }
 }
 
 if os.environ.get('TESTING'):

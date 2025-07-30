@@ -1,4 +1,8 @@
-<!-- templates/cashflow/dashboard.html -->
+{% extends "base.html"%}
+{% block content %}
+{% load static %}
+{% load i18n %}
+{% load crispy_forms_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,7 +58,7 @@
             font-size: 16px;
             font-weight: 600;
             margin-bottom: 15px;
-            border-bottom: 2px solid #ff6b35;
+            border-bottom: 2px solid #11998e;
             padding-bottom: 5px;
             display: inline-block;
         }
@@ -96,11 +100,12 @@
             font-weight: 500;
             border-bottom: 2px solid transparent;
             transition: all 0.3s ease;
+            
         }
 
         .tab.active {
-            border-bottom-color: #ff6b35;
-            color: #ff6b35;
+            border-bottom-color: #11998e;
+            color: #11998e;
         }
 
         .data-table {
@@ -663,3 +668,5 @@
     </script>
 </body>
 </html>
+{% endblock content %}
+
