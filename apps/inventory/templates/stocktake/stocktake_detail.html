@@ -144,12 +144,16 @@
     max-width: 90vw;
     width: 100%;
 }
+.col-12 {
+     width: 100%;
+    max-width: 100%;
+}
 </style>
 
 <div class="stocktake">
     <div class="d-flex align-items-center justify-content-between">
         <div>
-            <h4 class="px-1">Stocktake #{{ stocktake.s_t_number }}</h4>
+            <h4 class="px-1">Stocktake #{{ stocktake.id }}</h4>
             <p>Process and Detail view</p>
         </div>
         <div class="d-flex gap-2">
@@ -157,12 +161,14 @@
             <button class="header-btn" onclick="printStockSheet()" title="Print Stocktake">
                 <i class="bx bx-printer"></i> Print Sheet
             </button>
-            <button class='header-btn' onclick="adjustStocktake()">Adjust Stock quantity</button>
+            <button class="header-btn" onclick="adjustStocktake()" title="Adjust Stocktake">
+                <i class="bx bx-edit"></i> Adjust Stocktake
+            </button>
         </div>
         
     </div>
 
-    <div class="search-container mt-2 ">
+    <div class="search-container border mt-2 ">
         <input type="text" class="search-input" placeholder="Search products..." id="stocktake-search">
         <i class="fas fa-search search-icon"></i>
     </div>
@@ -177,7 +183,7 @@
                 <th>Quantity Difference</th>
                 <th>Quantity Difference Value</th>
                 <th>Note</th>
-                <th>Actions</th>
+                {% if not stocktake.status %}<th>Actions</th>{% endif %}
             </thead>
             <tbody>
                 {% for product in products %}
@@ -194,13 +200,17 @@
                             </small>
                         </td>
                         <td>
-                            <input
-                                value="{{ product.quantity }}"
-                                id="p_quantity_{{ product.id }}"
-                                class="form-control form-control-sm"
-                                type="number"
-                                onkeydown="if(event.key === 'Enter'){ handleQuantityChange(this.value, {{ product.product.quantity }}, {{ product.product.cost }}, {{ product.id }}, {{ product.id }}) }"
-                            >
+                            {% if not stocktake.status %}
+                                <input
+                                    value="{{ product.quantity }}"
+                                    id="p_quantity_{{ product.id }}"
+                                    class="form-control form-control-sm"
+                                    type="number"
+                                    onkeydown="if(event.key === 'Enter'){ handleQuantityChange(this.value, {{ product.product.quantity }}, {{ product.product.cost }}, {{ product.id }}, {{ product.id }}) }"
+                                >
+                            {% else %}
+                                <small>{{ product.quantity }}</small>
+                            {% endif %}
                         </td>
                         <td>
                             <small id="id_diff_{{ product.id }}">{{ product.quantity_difference }}</small>
@@ -211,18 +221,20 @@
                         <td>
                             <small id="id_description_{{ product.id }}">{{product.note }}</small>
                         </td>
-                        <td id="action_{{ product.id }}">
-                            <button class="bx bx-info-circle text-primary btn btn-primary-sm bg-primary-subtle border-0" style="cursor: pointer;" onclick="getProductDetail({{ product.product.id }})"></button>
-                            {% if product.has_diff %}
-                                <span class='bg-success bg-success-subtle rounded p-2'>success</span>
-                                <button class="header-btn" onclick="undoAccept({{ product.id }})">undo</button>
-                            {% elif product.quantity_difference == 0 and product.recorded %}
-                                <span class='bg-success bg-success-subtle rounded p-2'>success</span>
-                                <button class="header-btn" onclick="undoAccept({{ product.id }})">undo</button>
-                            {% elif product.quantity_difference != 0 %}
-                                 <button class="header-btn" onclick="showAccpetModal({{ product.id }})" id="accept-btn">Accept</button>
-                            {% endif %}
-                        </td>
+                        {% if not stocktake.status %}
+                            <td id="action_{{ product.id }}">
+                                <button class="bx bx-info-circle text-primary btn btn-primary-sm bg-primary-subtle border-0" style="cursor: pointer;" onclick="getProductDetail({{ product.product.id }})"></button>
+                                {% if product.has_diff %}
+                                    <span class='bg-success bg-success-subtle rounded p-2'>success</span>
+                                    <button class="header-btn" onclick="undoAccept({{ product.id }})">undo</button>
+                                {% elif product.quantity_difference == 0 and product.recorded %}
+                                    <span class='bg-success bg-success-subtle rounded p-2'>success</span>
+                                    <button class="header-btn" onclick="undoAccept({{ product.id }})">undo</button>
+                                {% elif product.quantity_difference != 0 %}
+                                    <button class="header-btn" onclick="showAccpetModal({{ product.id }})" id="accept-btn">Accept</button>
+                                {% endif %}
+                            </td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
             </tbody>
@@ -284,9 +296,11 @@
         </div>
     </div>
     <div class="floating-button d-flex justify-content-end">
-        <a onclick="confirmStockTake()" class="header-btn text-center w-100" id="confirmStocktake"  disabled>
-            Confirm Stocktake
-        </a>
+        {% if not stocktake.status %}
+            <a onclick="confirmStockTake()" class="header-btn text-center w-100" id="confirmStocktake"  disabled>
+                Confirm Stocktake
+            </a>
+        {% endif %}
     </div>
 
      <!-- Inventory Detail Modal -->
@@ -351,6 +365,15 @@
         filterModal.show()
     })
 
+    document.addEventListener("DOMContentLoaded", function () {
+        const diagramContainer = document.querySelector('.col-12');
+        
+        if (diagramContainer) {
+            console.log(diagramContainer)
+            diagramContainer.classList.remove('col-12');
+        }
+    });
+
     $(document).ready(function() {
         $('#stocktake_table').DataTable({
             searching: false,   
@@ -379,7 +402,62 @@
         acceptModal.show()
     }
 
+
+function adjustStocktake() {
+    Swal.fire({
+        title: 'Adjust Stock Quantity',
+        text: 'This will adjust the stock quantity for all products in this stocktake.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Adjust',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/inventory/adjust_stocktake_quantity/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ stocktake_id: "{{ stocktake.id }}" })  
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("Network response was not ok");
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Stock Quantity Adjusted',
+                        text: 'The stock quantity has been adjusted successfully.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    location.reload();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to adjust stock quantity.'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while processing your request.'
+                });
+            });
+        }
+    });
+}
+
+
     function pdf(type) {
+        console.log('type', type)
         fetch('/inventory/stocktake_pdf/', {
             method: 'POST',
             headers: {

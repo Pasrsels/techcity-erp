@@ -216,7 +216,7 @@ class ExpenseCategory(models.Model):
     )
 
     def __str__(self):
-        return f"{self.parent.name} → {self.name}" if self.parent else self.name
+        return f" {self.name} → {self.parent.name} " if self.parent else self.name
 
 class Expense(models.Model):
     issue_date = models.DateTimeField(auto_now_add=True)
@@ -276,7 +276,6 @@ class Expense(models.Model):
         return queryset.values('category__name').annotate(
             total=Sum('amount')
         ).order_by('-total')[:limit]
-
 
     def __str__(self):
         return f"{self.issue_date} - {self.category} - {self.description} - ${self.amount}"
@@ -340,7 +339,7 @@ class Invoice(models.Model):
     
     def generate_invoice_number(branch):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
-        
+        print(last_invoice.invoice_number)
         if last_invoice:
             return f"INV{branch}-{int(last_invoice.invoice_number.split('-')[1]) + 1}"
         else:
@@ -910,7 +909,6 @@ class Income(models.Model):
         blank=True
     )
     
-    
     @classmethod
     def get_period_total(cls, start_date, end_date, branch_id=None, sale_only=None):
         """
@@ -997,3 +995,17 @@ class BankAccountTransaction(models.Model):
 
     def __str__(self):
         return f"{self.bank_account} - {self.amount} - {self.transaction_type} - {self.description} - {self.date}"
+    
+
+class Contact(models.Model):
+    CONTACT_TYPE_CHOICES = [
+        ('Customer', 'Customer'),
+        ('Supplier', 'Supplier'),
+    ]
+    name = models.CharField(max_length=100)
+    mobile = models.CharField(max_length=20, blank=True, null=True)
+    contact_type = models.CharField(max_length=10, choices=CONTACT_TYPE_CHOICES)
+
+    def __str__(self):
+        return self.name
+

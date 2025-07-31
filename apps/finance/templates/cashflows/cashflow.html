@@ -643,24 +643,19 @@
                 });
             }
 
-            // Method to set branch filter (can be called from outside)
             setBranch(branchId) {
                 this.branchId = branchId;
                 this.loadData();
             }
         }
-
-        // Initialize the dashboard when the page loads
         document.addEventListener('DOMContentLoaded', () => {
             window.cashflowDashboard = new DjangoCashflowDashboard();
-            
-            // Example: Set branch from Django context if available
+         
             {% if request.user.profile.branch_id %}
                 window.cashflowDashboard.setBranch({{ request.user.profile.branch_id }});
             {% endif %}
         });
 
-        // Add CSRF token for Django
         function getCSRFToken() {
             return document.querySelector('[name=csrfmiddlewaretoken]').value;
         }

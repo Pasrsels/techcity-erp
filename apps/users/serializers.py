@@ -11,6 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'email', 'first_name', 'last_name', 'phonenumber']
+        ref_name ="UserAppSerializer"
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -93,3 +94,22 @@ class UserPermissionsSerializer(serializers.Serializer):
     class Meta:
         model = UserPermissions
         fields = ['name', 'category']
+        
+class RequestPasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class VerifyOtpSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
+
+class ResetPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['confirm_password']:
+            raise serializers.ValidationError("Passwords do not match")
+        return attrs
+
+class VerifyEmailSerializer(serializers.Serializer):
+    token = serializers.CharField()

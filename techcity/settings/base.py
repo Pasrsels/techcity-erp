@@ -127,6 +127,7 @@ TEMPLATES = [
                 "finance.context_processors.currency_list",
                 "finance.context_processors.expense_category_list",
                 "finance.context_processors.salespeople_list",
+                "finance.context_processors.contacts",
                 
                 #finance
                 # "settings.context_processors.tax_method",
@@ -318,7 +319,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # to be changeed
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # to be changed
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 

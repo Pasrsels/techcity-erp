@@ -1,4 +1,4 @@
-{% load static%}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -128,10 +128,9 @@
         background: #fff;
         min-height: 100vh;
     }
-
 </style>
 <body class="techcity">
-    <div class="">
+    <div class="pos">
         <div>
             <div class="top-bar">
             <div class="nav-bar">{% include "pos_navbar.html" %}</div>
@@ -331,7 +330,6 @@
                 <div class="modal-header d-flex align-items-center justify-content-between w-100 py-2 mb-4">
                     <h5 class="modal-title" id="laybyModalLabel">Laybys</h5>
                     <p id="recordCount"></p><span id="count" class="ms-3">0</span>
-
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                  </div>
                     <div class="modal-body">
@@ -806,8 +804,6 @@
             }
         })
 
-       
-
         const calculateNextDueDate = (period) => {
             const todayDate = new Date(); 
             const dueDates = []; 
@@ -1057,7 +1053,9 @@
     function displayProducts(products) {
 
         productListContainer.innerHTML = '';
+        let number = 100000;
         products.forEach(product => {
+            number =+ 1;
             if (menuName === 'tiles' || menuName === '') {
                 if (product.quantity > 0) {
                     const productDiv = document.createElement('div');
@@ -1071,8 +1069,8 @@
                                 <p class='text-center mt-2'><small class="fw-bold">${product.product_name}</small></p>
                                 <p class='text-center'><small class="text-muted">${product.description}</small></p>
                                 <p class='text-center'><small class="text-muted">[${product.quantity}]</small></p>
-                                <span class='btn btn-outline-secondary btn-sm w-100' data-product='${product.inventory_id}' data-price='rp' onclick='fetchProductData(this)'>RP ${product.price}</span>
-                                <span class='btn btn-outline-secondary btn-sm mt-2 w-100' data-product='${product.inventory_id}' data-price='wp' onclick='fetchProductData(this)'>WP${product.dealer_price}</span> 
+                                <span class='btn btn-outline-secondary btn-sm w-100' data-product='${product.inventory_id}' data-price='rp' onclick='fetchProductData(this, ${number})'>RP ${product.price}</span>
+                                <span class='btn btn-outline-secondary btn-sm mt-2 w-100' data-product='${product.inventory_id}' data-price='wp' onclick='fetchProductData(this, ${number})'>WP${product.dealer_price}</span> 
                             </div>
                         </div>
                     `;
@@ -1126,7 +1124,7 @@
     }
 
     // Cart 
-    async function fetchProductData (product){
+    async function fetchProductData (product, number){
         if(initialCurrencyValue){
             const id = product.dataset.product
             const value = product.dataset.price
@@ -1140,7 +1138,7 @@
                     throw new Error('Network response was not ok.');
                 }
                 const product = await response.json();
-                addItem(product, value);
+                addItem(product, value, number);
                 addedToCartProduct = [];
                 addedToCartProduct.push(product);
                 
@@ -1161,30 +1159,41 @@
         return Math.floor(Math.random() * 1000000000).toString(36);
     }
 
-    function addItem(product, value) {
-        let existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
+    function addItem(product, value, number) {
+        console.log(value, 'value');
+        console.log(number, 'number');
+        console.log(product, 'product')
 
-        console.log(value, 'value')
+        // number
 
         let priceType = '';
+        let product_name = product[0].product_name
+        let product_description = product[0].description
 
         if(value === 'wp'){
+            let existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
             price = product[0].dealer_price
             priceType = `${product[0].dealer_price * parseFloat(currencyData[0][0]?.exchange_rate)}`
             existingItem = false;
+            adjustStock(existingItem, priceType, number, product. priceType, product_name, product_description);
         }else{
-            price = product[0].price
+            let existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
+            price = product[0].price;
             priceType = `${product[0].price * parseFloat(currencyData[0][0]?.exchange_rate)}`
+            number = product[0].inventory_id;
+            adjustStock(existingItem, priceType, number, product, priceType, product_name, product_description);
         }
+    }
 
+    function adjustStock(existingItem, priceType,number, product, product_name, product_description){
         if (existingItem) {
             existingItem.quantity += 1;
         } else {
             const newTransfer = {
                 id:generateUniqueId(),
-                inventory_id:product[0].inventory_id, 
-                product_name: product[0].product_name,
-                product_description: product[0].description,
+                inventory_id:number, 
+                product_name: product_name,
+                product_description: product_description,
                 quantity:1,
                 price:priceType
             };
@@ -1196,7 +1205,6 @@
     }
 
     function totals(){
-
         let totalAmount = calculateTotalAmount(cart);
         let vatAmount = calculateVAT(totalAmount);
         let discount = $('#id_discount').val()
@@ -1222,7 +1230,7 @@
         payable_amount = payable
         discount_amount = discountF
 
-            updateTfoot(vatAmount, totalAmount, delivery, payable)
+            updateTfoot(vatAmount, totalAmount, delivery, payable);
 
         }else{
             totalAmount = totalAmount - discount
@@ -1239,13 +1247,13 @@
             document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
             document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + payable.toFixed(2)}`;
 
-            updateTfoot(vatAmount, totalAmount, payable)
+            updateTfoot(vatAmount, totalAmount, payable);
         }
     }
 
     function calculateTotalAmount(cart) {
-    let total = cart.reduce((total, item) => total + item.price * item.quantity, 0);
-    return total.toFixed(2)
+        let total = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+        return total.toFixed(2)
     }
 
     function calculateVAT(totalAmount) {
@@ -1271,7 +1279,7 @@
         }
     )
 
-    function updateCartDisplay() {
+    function updateCartDisplay(number) {
         const cartItemsList = document.getElementById("cart_items");
         cartItemsList.innerHTML = ""; 
     
@@ -1281,13 +1289,13 @@
         row.innerHTML = `
             <td>
                 <small class='d-flex align-items-center'>
-                    <small><input class='form-control form-control-sm' type='number' data-id=${item.inventory_id} value='${item.quantity}' oninput='addOrDreceaseQuantity(this);' style='width:4rem;'/></small>
+                    <small><input class='form-control form-control-sm' type='number' data-id=${item.inventory_id} value='${item.quantity}' oninput='addOrDreceaseQuantity(this, ${number});' style='width:4rem;'/></small>
                 </small>
             </td>
             <td style='text-align:left !important;'><small>${item.product_name}</small></td>
             <td>
                 <small>
-                    <input class='form-control form-control-sm' type='number' step='0.01' data-id=${item.id} value='${parseFloat(item.price).toFixed(2)}' oninput='updatePrice(this);' style='width:7rem;'/>
+                    <input class='form-control form-control-sm' type='number' step='0.01' data-id=${item.id} value='${parseFloat(item.price).toFixed(2)}' oninput='updatePrice(this, ${number});' style='width:7rem;'/>
                 </small>
             </td>
             <td>
@@ -1295,7 +1303,7 @@
                 <small class='bx bx-trash-alt text-danger' data-id=${item.id} onclick="removeItem(this);"></small>
             </td>
         `;
-        cartItemsList.appendChild(row);
+            cartItemsList.appendChild(row);
         });
 
     }
@@ -1311,12 +1319,7 @@
             const totalElement = document.getElementById(`total-${itemId}`);
             totalElement.innerText = currencyData[0][0].symbol + ' ' + (cartItem.quantity * cartItem.price).toFixed(2);
         }
-        totals();
-
-        // Recalculate the cart total and update the display
-        //updateCartTotal();
-        
-    
+        totals();    
     }
 
     function updateCartTotal() {
@@ -1331,6 +1334,8 @@
         if (!updatedQuantity) return;
 
         const existingItem = cart.find(item => item.inventory_id === item_id);
+
+        console.log('existing', existingItem)
 
         if (existingItem) {
             existingItem.quantity = updatedQuantity;
@@ -1538,7 +1543,6 @@
     }
 }
 
-
     function displayReceipt(data) {
         try {
             let content = generateReceiptContent(data);
@@ -1594,6 +1598,7 @@
             branch_name: branchName,
             branch_phone: branchPhone,
             branch_email: branchEmail,
+            branch_address: branchAddress,
             code: code,
             fiscal_day:fiscal_day
         } = invoice;
@@ -1601,60 +1606,82 @@
         const vatRate = 15;
     
         return `
-            <style>
+           <style>
                 .receipt {
                     font-family: Arial, sans-serif;
-                    font-size: 12px;
-                    width: 5.8cm;
-                    margin: auto;
-                    padding: 10px;
+                    font-size: 11px;
+                    width: 7.6cm;
+                    padding: 5px;
+                    margin: 0 auto;
                 }
-                .receipt h2, .footer p, .center {
+                .border{
+                    border:1px solid #000;
+                }
+                .right, .align {
+                    text-align: right;
+                }
+                .center {
                     text-align: center;
                 }
                 .receipt-body table {
                     width: 100%;
-                    margin-top: 10px;
+                    margin-top: 6px;
                     border-collapse: collapse;
                 }
                 .receipt-body th, .receipt-body td {
-                    padding: 2px;
+                    padding: 1px 2px;
                     border-bottom: 1px dashed #000;
                 }
-                .qr-code {
+                .receipt h2, .footer p {
                     text-align: center;
-                    margin-top: 10px;
+                    margin: 4px 0;
+                }
+                .terms {
+                    margin-top: 6px;
+                }
+                .terms p {
+                    font-size:11px;
+                    margin: 4px 0;
+                }
+                .terms ul {
+                    padding-left: 0;
+                    margin: 0;
+                    list-style-type: none;
+                }
+                .terms li {
+                    margin-bottom: 3px;
                 }
                 .footer {
-                    font-size: 11px;
-                    margin-top: 10px;
+                    font-size: 10px;
+                    margin-top: 6px;
+                }
+                .margin-r{
+                    margin-right:20x;
                 }
             </style>
     
             <div class="receipt">
-                <h2>Pasales Investments</h2>
+                <h2>Parsales Investments T/A Techcity</h1>
+                <p class="center border">
+                    <img src="{% static  'assets/logo.png' %}" width="200px"/>
+                </p>
                 <p><strong>FISCAL TAX INVOICE</strong></p>
-    
                 <p><strong>Invoice No:</strong> ${invoiceNumber}</p>
                 <p><strong>Branch:</strong> ${branchName || 'Main'}<br>
+                <p><strong>Address:</strong> ${branchAddress || 'Main'}<br>
                 <strong>Phone:</strong> ${branchPhone || 'N/A'}<br>
                 <strong>Email:</strong> ${branchEmail || 'N/A'}</p>
-    
-                <p>
-                    <strong>Fiscal Day No: ${fiscal_day}</strong><br>
-                    <strong>Device ID:</strong> ${deviceId}<br>
-                    <strong>Device Serial:</strong> ${deviceSerialNumber}
-                </p>
-    
+
                 <div class="receipt-body">
+                    <p class="right margin-r">${currencySymbol}</p>
                     <table>
                         <thead>
                             <tr>
                                 <th>Item</th>
                                 <th>Qty</th>
-                                <th>${currencySymbol}Price</th>
-                                <th>${currencySymbol}VAT</th>
-                                <th>${currencySymbol}Total</th>
+                                <th>Price</th>
+                                <th>VAT</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1665,39 +1692,56 @@
                                     <tr>
                                         <td>${item.item__name}</td>
                                         <td>${item.quantity}</td>
-                                        <td>${currencySymbol}${item.unit_price}</td>
-                                        <td>${currencySymbol}${vat.toFixed(2)}</td>
-                                        <td>${currencySymbol}${total}</td>
+                                        <td>${item.unit_price}</td>
+                                        <td>${vat.toFixed(2)}</td>
+                                        <td class="align">${total.toFixed(2)}</td>
                                     </tr>
-                                `;
+                                `; 
                             }).join('')}
                         </tbody>
                         <tfoot>
-                            <tr><td colspan="4"><strong>Subtotal</strong></td><td>${currencySymbol}${subTotal}</td></tr>
-                            <tr><td colspan="4"><strong>VAT (${vatRate}%)</strong></td><td>${currencySymbol}${vatAmount}</td></tr>
-                            <tr><td colspan="4"><strong>Total</strong></td><td>${currencySymbol}${invoiceTotal}</td></tr>
-                            <tr><td colspan="4"><strong>Amount Paid</strong></td><td>${currencySymbol}${amountPaid}</td></tr>
-                            <tr><td colspan="4"><strong>Payment Method</strong></td><td>${paymentMethod || 'Cash'}</td></tr>
+                            <tr><td colspan="4"><strong>Subtotal</strong></td><td class="align">${subTotal}</td></tr>
+                            <tr><td colspan="4"><strong>VAT (${vatRate}%)</strong></td><td class="align">${vatAmount}</td></tr>
+                            <tr><td colspan="4"><strong>Total</strong></td><td class="align">${invoiceTotal}</td></tr>
+                            <tr><td colspan="4"><strong>Amount Paid</strong></td><td class="align">${amountPaid}</td></tr>
+                            <tr><td colspan="4"><strong>Payment Method</strong></td><td class="align">${paymentMethod || 'Cash'}</td></tr>
                         </tfoot>
                     </table>
-                </div>
-    
-                <div class="qr-code">
-                    <img src="${qrCodeURL}" alt="QR Code" width="100" height="100" style="display:block; margin: 0 auto;">
-                </div>
-                <div class="footer center">
-                    <p><strong>Verification Code: <br> </strong> ${code} <br>
-                        Verification Url: https://fdmstest.zimra.co.zw/
-                    </p>
-                    <hr>
-                    <p>Thank you for shopping with us</p>
-                    <hr>
+                    <div class="terms">
+                        <p>Terms and Conditions</p>
+                        <ul style="list-style-type:none">
+                            <li>
+                                All laptop batteries within laptops attract 1month warranty.
+                            </li>
+                            <li>
+                                Warranty for all preowned laptops is 3 months. 
+                            </li>
+                            <li>
+                                Techcity doesn't warranty laptops if damaged by water, liquids, or electical power shorts.
+                            </li>  
+                            <li>
+                                Techcity will need 3 hours to 21 days to fully warranty returned laptop.
+                            </li>
+                            <li>
+                                Any withdrawn deposits for any purchase will attract 10% adminstration fee.
+                            </li>
+                            <li>
+                                Techcity does not give refunds, but only accepts exchanges on faulty laptops or repairs them in the time frame already stated above.
+                            </li>
+                            <li>
+                                All accessories attract 48 hours warranty. 
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="center">${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+                        <p class="center">Thanks for shopping with us!!!</p>
+                    </div>
                 </div>
             </div>
         `;
     }
     
-
     // Function to print the receipt silently
     function printReceiptSilently(content) {
         let printFrame = document.getElementById("print-frame");

@@ -40,10 +40,13 @@ urlpatterns = [
     path('stocktake/', stock_take_index, name='stocktake'),
     path('process_stock_take_item/', process_stock_take_item, name='process_stock_take_item'),
     path('stocktake/detail/<int:stocktake_id>/', stock_take_detail, name='stock_take_detail'),
+    path('undo_accept_stocktake/', undo_accept_stocktake_item, name="undo_accept_stocktake"),
     path('accept_stock_take/', accept_stocktake_item, name='accept_stocktake_item'),
     path('confirm_stocktake/<int:stocktake_id>/', confirm_stocktake, name='confirm_stocktake'),
     path('stocktake_pdf/',  stocktake_pdf, name="stocktake_pdf"),
-    path('undo_accept_stocktake/', undo_accept_stocktake_item, name='undo_accept_stocktake'),
+    path('stocktake/<int:stocktake_id>/report/<str:report_type>/', stocktake_report_data, name='stocktake_report_data'),    
+    path('stocktake/<int:stocktake_id>/download/<str:report_type>/', stocktake_report_download, name='stocktake_report_download'),
+    path('adjust_stocktake_quantity/', adjust_stocktake_quantity, name='adjust_stocktake_quantity'),
     
     #batch_code 
     path('batch_code/', batch_code, name='batch_code'),

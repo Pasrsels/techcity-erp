@@ -674,7 +674,7 @@ th{
               <div class="row">
                 <div class="d-flex flex-wrap justify-content-md-end">
                     <div class="card-body">                    
-                        <button class="header-btn" id="openCashOut" type="button">
+                        <button class="header-btn" id="openCashOut" type="button" data-bs-toggle="offcanvas" data-bs-target="#recordTransactionOffcanvas">
                             <i class="bx bx-plus-circle me-1"></i> Record Transaction
                         </button>
                         <button class="header-btn" data-bs-toggle="modal" data-bs-target="#cashUpModal">
@@ -757,8 +757,8 @@ th{
                                                 <tr>
                                                     <th>
                                                         <div class="dropdown">
-                                                            <button onclick="toggleDropdown('{{ currency.id }}')" class="dropdown-toggle bg-white text-dark" id="duration-button-{{ currency.id }}">Duration: <span id="drop-text">All Time</span> ▾</button>
-                                                            <div id="dropdown-menu-{{ currency.id }}" class="dropdown-menu hidden">
+                                                            <button onclick="toggleDropdown('{{ currency.id }}', this)" class="dropdown-toggle bg-white text-dark" id="duration-button-{{ currency.id }}" data-name="duration">Duration: <span id="drop-text">All Time</span> ▾</button>
+                                                            <div id="dropdown-menu-duration-{{ currency.id }}" class="dropdown-menu hidden">
                                                                 <form id="duration-form-{{ currency.id }}">
                                                                     <label><input type="radio" name="duration-{{ currency.id }}" value="All Time" checked> All Time</label>
                                                                     <label><input type="radio" name="duration-{{ currency.id }}" value="Today" onclick="applyFilter('today', {{ currency.id }})"> Today</label>
@@ -776,7 +776,42 @@ th{
                                                             </div>
                                                         </div>
                                                     </th>
-                                                    <th>Description</th>
+                                                    <th>
+                                                        <div class="dropdown">
+                                                            <button onclick="toggleDropdown('{{ currency.id }}', this)" data-name="type" class="dropdown-toggle bg-white text-dark">Duration: <span class="drop-text-type-{{ currency.id }}">All Time</span> ▾</button>
+                                                            <div id="dropdown-menu-type-{{ currency.id }}" class="dropdown-menu hidden">
+                                                                <form>
+                                                                    <label><input type="radio" name="duration-type-{{ currency.id }}" value="All" checked> All</label>
+                                                                    <label><input type="radio" name="duration-type-{{ currency.id }}" value="income" onclick="applyFilter('income', {{ currency.id }})"> Income</label>
+                                                                    <label><input type="radio" name="duration-type-{{ currency.id }}" value="expenses" onclick="applyFilter('expenses', {{ currency.id }})"> Expenses</label>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </th>
+                                                    <th>
+                                                        <div class="dropdown">
+                                                            <button onclick="toggleDropdown('{{ currency.id }}', this)" data-name="categories" class="dropdown-toggle bg-white text-dark">Category: <span class="drop-text-categories-{{ currency.id }}">All</span> ▾</button>
+                                                            <div id="dropdown-menu-categories-{{ currency.id }}" class="dropdown-menu hidden">
+                                                                <form>
+                                                                    {% for category in exp_main_categories %}
+                                                                        <label><input type="radio" name="duration-categories-{{ currency.id }}" value="{{ category.id }}" onclick="applyFilter('{{ category.id }}', {{ currency.id }})">{{ category.name }}</label>
+                                                                    {% endfor %}
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </th>
+                                                    <th>
+                                                        <div class="dropdown">
+                                                            <button onclick="toggleDropdown('{{ currency.id }}', this)" data-name="users" class="dropdown-toggle bg-white text-dark">Person: <span class="drop-text-users-{{ currency.id }}">All</span> ▾</button>
+                                                            <div id="dropdown-menu-users-{{ currency.id }}" class="dropdown-menu hidden">
+                                                                <form>
+                                                                    {% for user in users %}
+                                                                        <label><input type="radio" name="duration-users-{{ currency.id }}" value="{{ user.id }}" onclick="applyFilter('{{ user.id }}', {{ currency.id }})">{{ user.username }}</label>
+                                                                    {% endfor %}
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </th>
                                                     <th>Amount</th>
                                                     <th>Balance</th>
                                                     <th>Actions</th>
@@ -799,6 +834,7 @@ th{
                 </div>
                 {% endfor %}
         </div>
+        
         <!-- Chat Modal -->
         <div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
@@ -826,7 +862,7 @@ th{
         </div>
     </div>
 
-<!-- Cash Up Modal -->
+    <!-- Cash Up Modal -->
     <div class="modal fade" id="cashUpModal" tabindex="-1" aria-labelledby="cashupModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content border-0 shadow">
@@ -896,24 +932,15 @@ th{
         </div>
     </div>
 
-    <!-- Cash Out Offcanvas -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="cashOutCanvas" aria-labelledby="cashOutCanvasLabel">
-        <div class="offcanvas-header align-items-center">
-            <ul class="nav nav-tabs justify-content-between w-100 bg-white border rounded p-2 gap-2" id="cashFlowTabs" role="tablist" style="background: var(--primary);">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="cash_income-tab" data-bs-toggle="tab" data-bs-target="#cash_income-panel" type="button" role="tab" aria-controls="cash_income-panel" aria-selected="true">Income</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link bg-danger" id="cash_expense-tab" data-bs-toggle="tab" data-bs-target="#cash_expense-panel" type="button" role="tab" aria-controls="cash_expense-panel" aria-selected="false">Expenses</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="transfer-tab" data-bs-toggle="tab" data-bs-target="#transfer-panel" type="button" role="tab" aria-controls="transfer_tab" aria-selected="false">Transfers</button>
-                </li>
-            </ul>
-        </div>
-        <div class="offcanvas-body">
-            {% include 'cashflows/cashmanagement.html' %}
-        </div>
+    <!-- Record Transaction Offcanvas (Bootstrap 5) -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="recordTransactionOffcanvas" aria-labelledby="recordTransactionOffcanvasLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="recordTransactionOffcanvasLabel">Record Transaction</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        {% include 'cashflows/cashmanagement.html' %}
+      </div>
     </div>
 
     <!-- Add loading overlay -->
@@ -966,18 +993,23 @@ const state = {
 const categoryModal = new bootstrap.Modal(document.getElementById('addCatModal'));
 const expenseCategoryModal = new bootstrap.Modal(document.getElementById('addExpenseCategoryModal'));
 
-function toggleDropdown(currencyId) {
-    const menu = document.getElementById(`dropdown-menu-${currencyId}`);
-    console.log('Toggling dropdown for currency:', currencyId);
-    console.log('Menu element:', menu);
-    
+function toggleDropdown(currencyId, el) {
+    const type = el.dataset.name;
+    const menuId = `dropdown-menu-${type}-${currencyId}`;
+    const menu = document.getElementById(menuId);
+
     if (menu && menu.classList) {
+        document.querySelectorAll('.dropdown-menu').forEach(m => {
+            if (m.id !== menuId) {
+                m.classList.add('hidden');
+            }
+        });
         menu.classList.toggle('hidden');
-        console.log('Menu classes after toggle:', menu.classList);
     } else {
-        console.error('Dropdown menu not found for currency:', currencyId);
+        console.error(`Dropdown menu not found for type: ${type} and currency: ${currencyId}`);
     }
 }
+
 
 function clearSelection(currencyId) {
     const radios = document.querySelectorAll(`input[name="duration-${currencyId}"]`);
@@ -1057,12 +1089,13 @@ function switchTab(button) {
 
 document.addEventListener('DOMContentLoaded', function () {
     const openBtn = document.getElementById('openCashOut');
-    const cashOutCanvas = document.getElementById('cashOutCanvas');
-    const bsOffcanvas = new bootstrap.Offcanvas(cashOutCanvas);
-    bsOffcanvas.show();
-    openBtn.addEventListener('click', function () {
-        bsOffcanvas.show();
-    });
+    const recordTransactionOffcanvas = document.getElementById('recordTransactionOffcanvas');
+    if (openBtn && recordTransactionOffcanvas) {
+        const bsOffcanvas = new bootstrap.Offcanvas(recordTransactionOffcanvas);
+        openBtn.addEventListener('click', function () {
+            bsOffcanvas.show();
+        });
+    }
 });
 
 
@@ -1500,7 +1533,6 @@ function getCookie(name) {
 
 async function loadCashbookData(page = 1, append = false, currency = null) {
     try {
-        console.log(currency, 'currency')
         showLoading();
 
         const tableBody = document.getElementById(`cashbookTableBody-${currency}`);
@@ -1562,7 +1594,6 @@ async function loadCashbookData(page = 1, append = false, currency = null) {
         }
 
         if (data.entries.length === 0 && !append) {
-            console.log('no entries')
             tableBody.innerHTML = '';
             tableBody.innerHTML = `
                 <tr>
@@ -1585,13 +1616,14 @@ async function loadCashbookData(page = 1, append = false, currency = null) {
                 const amount = entry.debit
                     ? `<span style="color: green;">${formatCurrency(entry.debit)}</span>`
                     : `<span style="color: red;">${formatCurrency(entry.credit)}</span>`;
-                
                 row.innerHTML = `
                     <td>
                         <div>${formattedDate}</div>
                         <div class="text-muted" style="font-size: 0.85em;">${formattedTime}</div>
                     </td>
                     <td>${entry.description} <br> <small class="text-muted"> by ${entry.created_by}</small></td>
+                    <td>${entry.category__name}</td>
+                    <td>${entry.category__name}</td>
                     <td>${amount}</td>
                     <td>${formatCurrency(entry.balance)}</td>
                     <td>

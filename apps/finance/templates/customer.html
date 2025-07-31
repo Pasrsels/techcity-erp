@@ -98,9 +98,8 @@
 </style>
 <div class="customer">
     <div class="main-content">
-        <!-- Header Section -->
-        <div class="header">
-            <h5 class="mb-0">Customer Account</h5>
+        <div class="d-flex align-items-center justify-content-between mt-2">
+            <h3 class="text-dark">Customer Account</h3>
             <div class="header-actions">
                 <div class="header-btn" id="id_add_deposit">
                    <i class='bx bx-plus me-1'></i>Add Deposit
@@ -108,46 +107,46 @@
             </div>
         </div>
         
-        <!-- Customer Info Section -->
-        <div class="row mb-4 mt-4">
-            <!-- Customer Profile Card -->
-            <div class="col-md-7">
-                <div class="card shadow-sm rounded border-0 h-100">
+        <div class="row mb-4 mt-4 bg-white">
+            <div class="col-md-6">
+                <div class="card rounded border-0 h-100">
                     <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="customer-avatar me-3">
+                        <div class="d-flex flex-column">
+                            <div class="customer-avatar d-flex align-items-center me-3">
                                 {% with name_parts=customer.name|split_name %}
                                     {% if name_parts.first_name and name_parts.last_name %}
-                                        <div class="avatar text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 20px;">
+                                        <div class="avatar text-white me-5 rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 20px;">
                                             {{ name_parts.first_name.0 }}{{ name_parts.last_name.0 }}
                                         </div>
                                     {% else %}
-                                        <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 20px;">
+                                        <div class="avatar me-5 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 20px;">
                                             {{ name_parts.first_name.0 }}
                                         </div>
                                     {% endif %}
                                 {% endwith %}
+                                <h5 class="mb-1">{{ customer.name }}</h5>
                             </div>
                             <div>
-                                <h5 class="mb-1">{{ customer.name }}</h5>
-                                <div class="customer-details">
-                                    <span class="me-3 text-muted"><i class='bx bx-phone me-1'></i>{{customer.phone_number}}</span>
-                                    <span class="me-3 text-muted"><i class='bx bx-envelope me-1'></i>{{customer.email}}</span>
+                                <div class="customer-details mt-4">
+                                    <div class="me-3 mb-1 d-flex align-items-center border p-1"><i class='bx bx-phone fs-4 me-1'></i>{{customer.phone_number}}</div><br>
+                                    <div class="me-3 mb-1  d-flex align-items-center border p-1 rounded"><i class='bx bx-envelope fs-4 me-1'></i>{{customer.email}}</div><br>
+                                    <div class="d-flex align-items-center mb-2"><i class='bx bx-building fs-4 me-1'></i>{{customer.address}}</div>
                                 </div>
-                                <div class="mt-1">
-                                    <span class="text-muted"><i class='bx bx-current-location me-1'></i>{{customer.address}}</span>
+                                <div class="mt-1">mb-
+                                    <span class="text-muted">Life time sales: {{invoice_count}}</span>
+                                    <span class="text-muted ms-4">Number of returns: {{invoice_count}}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Financial Summary Cards -->
-            <div class="col-md-5">
+            <div class="col-md-6">
                 <div class="row h-100">
-                    <div class="col-md-6 mb-3 mb-md-0">
-                        <div class="card shadow-sm border-0 h-100">
+                    <div class=" mb-3 mb-md-0">
+                        <div class="card border-0 h-100">
                             <div class="card-body text-center">
                                 <h6 class="text-muted mb-3">Account Balance</h6>
                                 {% for balance in account %}
@@ -158,14 +157,14 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <!-- <div class="col-md-6">
                         <div class="card shadow-sm border-0 h-100">
                             <div class="card-body text-center">
                                 <h6 class="text-muted mb-3">Invoice Count</h6>
                                 <h4 class="text-primary">{{invoice_count}}</h4>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>

@@ -2,6 +2,80 @@
 {% load static %}
 {% block title %} Finance Overview {% endblock title %}
 {% block content %}
+<style>
+    :root {
+        --primary: #11998e;
+        --primary-no-gradient: #11998e;
+        --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        --secondary: orange;
+        --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+        --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        --dark: #1a1a2e;
+        --dark-alt: #16213e;
+        --text-light: rgba(228, 230, 234, 1);
+        --text-dark: black;
+        --text-muted: black;
+        --glass: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+        --border-radius: 12px;
+        --border-radius-sm: 8px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --m-bottom: 20px;
+    }
+
+    .header-btn {
+        padding: 8px 16px;
+        border-radius: var(--border-radius-sm);
+        background: var(--primary-no-gradient);
+        border: 1px solid var(--glass-border);
+        color: var(--text-light);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .header-btn:hover {
+        background: var(--primary);
+        transform: translateY(-1px);
+    }
+
+    .nav{
+        background: var(--primary);
+        color:#fff;
+    }
+    .nav-link{
+        color:#fff !important;
+        background: var(--primary);
+    }
+    .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
+        color: #fff !important;
+        background-color: var(--primary) !important;
+        border-color: #fff !important;
+    }
+    .background{
+        background: var(--primary);
+    }
+    .finance-action-buttons {
+      position: absolute;
+      top: 32px;
+      right: 48px;
+      z-index: 10;
+      display: flex;
+      gap: 0.5rem;
+    }
+    @media (max-width: 991.98px) {
+      .finance-action-buttons {
+        position: static;
+        justify-content: end;
+        margin-bottom: 1rem;
+      }
+    }
+</style>
 <div class="finance-dashboard">
     <div class="container-fluid p-0">
       <div class="row g-0">
@@ -77,7 +151,7 @@
                         <td class="text-muted border-0">GP Margin</td>
                         <td class="text-end fw-medium border-0" id="id_gpm_metrix">0.00%</td>
                       </tr>
-                    </tbody>
+                    </tbody>  
                   </table>
                 </div>
               </div>
@@ -85,8 +159,12 @@
           </div>
         </aside>
   
-        <main role="main" class="col-lg-9 ps-lg-4 pe-lg-4">
-          <div class="p-3">
+        <main role="main" class="col-lg-9 ps-lg-4 pe-lg-4 position-relative">
+          <div class="finance-action-buttons">
+              <button class="btn btn-primary shadow-sm fw-semibold me-2" type="button">Cashups</button>
+              <button class="btn btn-success shadow-sm fw-semibold" type="button" id="openFinanceCashOut" data-bs-toggle="offcanvas" data-bs-target="#recordTransactionOffcanvas"><i class="bx bx-plus-circle me-1"></i> Record Transaction</button>
+          </div>
+          <div class="p-3 mt-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
               <div>
                 <h4 class="mb-1">Finance Dashboard</h4>
@@ -96,7 +174,7 @@
                 <i class="bi bi-layout-sidebar"></i> Toggle Analytics
               </button>
             </div>
-  
+
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
               {% if request.user.branch.name == 'ADMINS' %}
               <div class="col">
@@ -156,7 +234,7 @@
                 </a>
               </div>
   
-              <div class="col">
+              <!-- <div class="col">
                 <a href="{% url 'finance:currency' %}" class="card h-100 border-0 shadow-sm text-decoration-none">
                   <div class="card-body d-flex align-items-center p-3">
                     <div class="icon-container bg-warning bg-opacity-10 p-3 rounded-3 me-3">
@@ -168,7 +246,7 @@
                     </div>
                   </div>
                 </a>
-              </div>
+              </div> -->
 
               <div class="col">
                 <button type="button" class="card h-100 border-0 shadow-sm w-100 text-start p-0" data-bs-toggle="modal" data-bs-target="#timeFrameModal">
@@ -212,7 +290,7 @@
                 </a>
               </div>
 
-              <div class="col">
+              <!-- <div class="col">
                 <a href="{% url 'finance:tax' %}" class="card h-100 border-0 shadow-sm text-decoration-none">
                   <div class="card-body d-flex align-items-center p-3">
                     <div class="icon-container bg-secondary bg-opacity-10 p-3 rounded-3 me-3">
@@ -224,11 +302,22 @@
                     </div>
                   </div>
                 </a>
-              </div>
+              </div> -->
             </div>
           </div>
         </main>
       </div>
+    </div>
+
+    <!-- Cash Out Offcanvas (EXACT COPY from cashbook.html) -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="recordTransactionOffcanvas" aria-labelledby="recordTransactionOffcanvasLabel">
+        <div class="offcanvas-header align-items-center">
+            <h5 class="offcanvas-title" id="recordTransactionOffcanvasLabel">Record Transaction</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            {% include 'cashflows/cashmanagement.html' %}
+        </div>
     </div>
 
   <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
@@ -247,7 +336,7 @@
   
   <div class="modal fade" id="timeFrameModal" tabindex="-1" aria-labelledby="timeFrameModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content rounded-4 shadow-lg border-0">
+      <div class="modal-content rounded-5 shadow-lg border-0">
         <div class="modal-header bg-light border-bottom-0 rounded-top-4 px-4 py-3">
           <h5 class="modal-title fw-semibold" id="timeFrameModalLabel">📊 Generate Financial Report</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -495,5 +584,17 @@ function getCookie(name) {
     return cookieValue;
   }
   
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const openBtn = document.getElementById('openFinanceCashOut');
+    const recordTransactionOffcanvas = document.getElementById('recordTransactionOffcanvas');
+    if (openBtn && recordTransactionOffcanvas) {
+        const bsOffcanvas = new bootstrap.Offcanvas(recordTransactionOffcanvas);
+        openBtn.addEventListener('click', function () {
+            bsOffcanvas.show();
+        });
+    }
+});
 </script>
 {% endblock %}
