@@ -29,7 +29,7 @@ urlpatterns = [
     path('reset-password/', reset_password, name='reset_password'),
     
     #User Permissions
-    path('permissions/create-and-read/', UserPermission_CR, name= 'userPermissionsCR'),
+    path('permissions/create-and-read/', UserPermission, name= 'userPermissionsCR'),
     path('permission/update-and-delete/<int:id>/', UserPermission_UD, name= 'userPermissionsUD'),
 
     #api v1/end point

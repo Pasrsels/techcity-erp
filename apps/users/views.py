@@ -1,54 +1,21 @@
-import json
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
-from django.db.models import Q
-from django.http import JsonResponse
-from django.views import View
-from django.shortcuts import render, redirect
-from loguru import logger
-from django.contrib.auth import get_user_model
-from apps.company.models import Branch
-from apps.settings.models import NotificationsSettings
-from utils.authenticate import authenticate_user
-from .models import User, UserPermissions, EmailVerificationToken, PasswordResetOTP
-from .forms import UserRegistrationForm, UserDetailsForm, UserDetailsForm2, UserPermissionsForm
-from django.contrib import messages
-from django.contrib.auth import login, logout
-from django.contrib.auth.hashers import make_password
-from utils.validate_redirect import is_safe_url
-from django.contrib.auth.decorators import login_required
-from django.core.cache import cache
-from utils.send_verification_email import *
-from django.db import transaction
-from django.contrib.auth import authenticate
-from django.views.decorators.http import require_http_methods
-from django.views.decorators.cache import never_cache
-import time
-from django.core.mail import send_mail
-from django.utils import timezone
-from datetime import timedelta
-from django.conf import settings
+from .helpers.imports import *
 
 @login_required
-def UserPermission_CR(request):
+def UserPermission(request):
     if request.method == 'GET':
-
         permission_data = UserPermissions.objects.all().values()
-        logger.info(list(permission_data))
         return JsonResponse({'success': True, 'Permissiondata': list(permission_data)}, status = 200)
     
-    elif request.method == 'POST':
+    if request.method == 'POST':
 
         user_permission_form = UserPermissionsForm(request.POST)
         name = request.POST.get('name')
         name.lower()
 
         if user_permission_form.is_valid():
-
             if  not UserPermissions.objects.filter(name = name).exists():
                 user_permission_form.save()
                 return JsonResponse({'success':True}, status = 201)
-            
             return JsonResponse({'success': False, 'message': 'Permission already exists'}, status = 400)
         return JsonResponse({'success': False, 'message': 'Invalid form data'}, 400)
     return JsonResponse({'success': False, 'message': 'invalid request'}, status = 500)
@@ -249,9 +216,7 @@ def login_view(request):
 @login_required
 @transaction.atomic
 def user_edit(request, user_id):
-
     user = User.objects.select_for_update().get(id=user_id)
-
     logger.info(f'Editing User: {user.first_name + " " + user.email}')
 
     if request.method == 'POST':
@@ -259,8 +224,7 @@ def user_edit(request, user_id):
 
         if form.is_valid():
             form.save()
-            
-            logger.info('provide')
+            logger.info('User details updated successfully')
             messages.success(request, 'User details updated successfully')
             return redirect('users:user_detail', user_id=user.id)
         
@@ -700,7 +664,3 @@ def verify_email(request, token):
     except EmailVerificationToken.DoesNotExist:
         messages.error(request, 'Invalid verification link.')
         return redirect('users:login')
-
-##############################################################################################################################################################
-
-
