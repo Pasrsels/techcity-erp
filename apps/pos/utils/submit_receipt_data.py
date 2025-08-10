@@ -35,6 +35,7 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
         if response:
             logger.info('here')
 
+            # Updated to include branch filtering like in the second code
             invoice = Invoice.objects.filter(issue_date__date=datetime.today(), branch=request.user.branch).order_by('-id').first()
 
             invoice.receiptServerSignature = signature
@@ -92,6 +93,7 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
 
                 logger.info('Fiscale day incremented.')
 
+            # Updated fiscal counter logic using the improved approach from the second code
             invoice_items = invoice.invoice_items.all()
             grouped = defaultdict(lambda: {
                 "amount": Decimal("0.00"),
@@ -156,6 +158,7 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
                             fiscal_counter_money_type=None,
                             fiscal_counter_value=values["vat"]
                         )
+            
             try:
                 # Balance By Money Type
                 fiscal_counter_bal_obj, _ = FiscalCounter.objects.get_or_create(

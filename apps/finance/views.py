@@ -4619,10 +4619,8 @@ def close_fiscal_day(request):
                 tax_percent = format_tax_percent(data["tax_percent"])
                 credit_note_tax_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
 
-
             for key, data in sorted(balance_by_currency_and_type.items(), key=lambda x: (x[1]["currency"] != "USD", x[1]["currency"], x[1]["money_type"])):
                 balance_money_string += f"{data['type']}{data['currency']}{data['money_type']}{data['value']}"
-
         
             # Final concatenated string
             fiscal_day_counters_string = (
