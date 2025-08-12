@@ -75,13 +75,12 @@ from django.db.models import Max
 from django.utils.dateparse import parse_date
 from dotenv import load_dotenv
 from apps.settings.models import OfflineReceipt, FiscalDay, FiscalCounter
-from utils.zimra import ZIMRA
-from utils.zimra_sig_hash import run
+from utils.new_zimra import Device
 from django.views.decorators.http import require_http_methods
 from apps.pos.utils.process_credit_note import generate_credit_note_data, submit_credit_note
- 
+
 # load global zimra instance
-zimra = ZIMRA()
+zimra = Device()
 
 load_dotenv()
 
@@ -883,13 +882,9 @@ def create_invoice(request):
                 logger.info(invoice_items)
 
                 try:
-                    sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
-                    logger.info(sig_data)
-                    hash_sig_data = run(sig_data)
-                    
-                    # logger.info(hash_sig_data)
-                    credit_note_data = []
-                    submit_receipt_data(request, receipt_data, credit_note_data, hash_sig_data['hash'], hash_sig_data['signature'], invoice.id)
+                    _, receipt_data = generate_receipt_data(invoice, invoice_items, request)
+                    prepared_receipt = zimra.prepareReceipt(receiptData=receipt_data)
+                    submit_receipt_data(request, prepared_receipt, [], prepared_receipt['receiptDeviceSignature']['hash'], prepared_receipt['receiptDeviceSignature']['signature'], invoice.id)
                     
                     invoice_data = invoice_preview_json(request, invoice.id)
 
@@ -1668,15 +1663,9 @@ def create_credit_note(request):
                 updated_by=request.user
             )
             
-            sig_data, credit_note_data = generate_credit_note_data(invoice, invoice_items, request)
-            logger.info(f'Signature data: {credit_note_data}')
-            logger.info(f'{sig_data}')
-            
-            hash_sig_data = run(sig_data)
-            logger.info(f'hash_sig_data: {hash_sig_data}')
-
-            receipt_data = []
-            submit_credit_note(request, receipt_data, credit_note_data, hash_sig_data['hash'], hash_sig_data['signature'], invoice.id, credit_note.id)
+            _, credit_note_data = generate_credit_note_data(invoice, invoice_items, request)
+            prepared_receipt = zimra.prepareReceipt(receiptData=credit_note_data)
+            submit_credit_note(request, [], prepared_receipt, prepared_receipt['receiptDeviceSignature']['hash'], prepared_receipt['receiptDeviceSignature']['signature'], invoice.id, credit_note.id)
             
             invoice_data = invoice_preview_json(request, invoice.id)
             
@@ -4491,7 +4480,9 @@ def get_config(request):
 @login_required
 def open_fiscal_day(request):
     try:
-        open_day_response = zimra.open_day()
+        last_day = FiscalDay.objects.order_by('-created_at').first()
+        next_day_no = (last_day.day_no + 1) if last_day else 1
+        open_day_response = zimra.openDay(fiscalDayNo=next_day_no)
         return JsonResponse({'success': True, 'data': open_day_response})
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'{e}'})
@@ -4631,38 +4622,13 @@ def close_fiscal_day(request):
                 balance_money_string 
             )
 
-            hash_input = f"{ZIMRA.device_identification}{fiscal_day.day_no}{datetime.datetime.today().date()}{fiscal_day_counters_string}"
-            
-            logger.info(f'Hash input for fiscal day signature: {hash_input}')
-        
-           
-            return JsonResponse({
-                'success': True, 
-                'data': hash_input
-            }, status=200)
-        
+            fiscal_day = FiscalDay.objects.filter(created_at__date=datetime.datetime.today(), is_open=True).first()
+            fiscal_day_counters = FiscalCounter.objects.filter(created_at__date=datetime.datetime.today())
+            close_day_response = zimra.closeDay(fiscalDayNo=fiscal_day.day_no, fiscalDayDate=fiscal_day.created_at.date(), lastReceiptCounterValue=fiscal_day.receipt_count, fiscalDayCounters=list(fiscal_day_counters.values()))
+            return JsonResponse({'success': True, 'data': close_day_response})
         except Exception as e:
             logger.error(f"Error closing fiscal day: {str(e)}", exc_info=True)
             return JsonResponse({'success': False, 'message': f'{str(e)}'}, status=400)
-
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            signature_string = data.get('sig_string')
-
-            if not signature_string:
-                return JsonResponse({'message':'Hash data missing.', 'success':False})
-            
-            fiscal_day_counters = FiscalCounter.objects.filter(created_at__date=datetime.datetime.today())
-            
-            day_signature = run(signature_string)
-
-            close_day_response = zimra.close_day(day_signature['hash'], day_signature['signature'], fiscal_day_counters)
-
-            return JsonResponse({'message':close_day_response, 'success':True})
-
-        except Exception as e:
-            return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
         
 def format_tax_percent(tax_percent):
         """Format tax percent to have 2 decimal places as required by the documentation."""

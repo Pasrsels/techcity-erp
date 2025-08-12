@@ -47,6 +47,8 @@ coverage==7.6.1
 crispy-bootstrap5==0.7
 cron-descriptor==1.4.5
 cryptography==42.0.8
+pycryptodome==3.20.0
+pymongo==4.6.1
 cssbeautifier==1.15.1
 cssselect2==0.8.0
 cvlib==0.2.7
