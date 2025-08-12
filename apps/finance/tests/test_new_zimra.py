@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from utils.new_zimra import Device
+from utils.zimra import Device
 import datetime
 
 class TestZimraDevice(unittest.TestCase):
@@ -20,8 +20,8 @@ class TestZimraDevice(unittest.TestCase):
         concatenated_string = self.device.concatenate_receipt_taxes(receipt_taxes)
         self.assertEqual(concatenated_string, '15.001500115000.0005000')
 
-    @patch('utils.new_zimra.RSA.import_key')
-    @patch('utils.new_zimra.pkcs1_15.new')
+    @patch('utils.zimra.RSA.import_key')
+    @patch('utils.zimra.pkcs1_15.new')
     def test_sign_data(self, mock_pkcs1_15, mock_import_key):
         # Mock the private key and signature
         mock_key = MagicMock()
@@ -75,7 +75,7 @@ class TestZimraDevice(unittest.TestCase):
             }
         ]
 
-        with patch('utils.new_zimra.requests.post') as mock_post:
+        with patch('utils.zimra.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.json.return_value = {"status": "success"}
