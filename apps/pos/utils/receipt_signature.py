@@ -15,9 +15,11 @@ import qrcode, os
 from io import BytesIO
 from apps.finance.models import Invoice
 from collections import defaultdict
+from decimal import Decimal
+from django.utils.timezone import now
+import binascii
 
 load_dotenv()
-
 
 def load_private_key(file_path, password=None):
     with open(file_path, "rb") as key_file:
@@ -189,7 +191,7 @@ def generate_receipt_data(invoice, invoice_items, request):
             "receiptCurrency": invoice.currency.name.upper(),
             "receiptCounter": fiscal_day.receipt_count + 1,
             "receiptGlobalNo": new_receipt_global_no,
-            "invoiceNo": f"a{new_receipt_global_no}",
+            "invoiceNo": f"aa{new_receipt_global_no}",
             "receiptNotes": "Thank you for shopping with us!",
             "receiptDate": datetime.now().replace(microsecond=0).isoformat(),
             "receiptLinesTaxInclusive": True,
@@ -220,6 +222,8 @@ def generate_receipt_data(invoice, invoice_items, request):
         
         logger.info(f'Signature data: {signature_data}')
         logger.info(f'Receipt_data: {receipt_data}')
+
+        return signature_data, receipt_data
     except Exception as e:
         logger.error(f"Error generating receipt data: {e}")
         return (f"Error saving receipt offline: {e}")

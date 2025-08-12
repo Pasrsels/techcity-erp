@@ -17,7 +17,6 @@ from django.utils.timezone import now
 def submit_receipt_data(request, receipt_data, credit_note, hash, signature, invoice__id):
     logger.info(invoice__id)
     try:
-
         receipt = OfflineReceipt(
             invoice_id=invoice__id,
             receipt_data=receipt_data

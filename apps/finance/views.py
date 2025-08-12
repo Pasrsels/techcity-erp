@@ -884,7 +884,7 @@ def create_invoice(request):
 
                 try:
                     sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
-                    logger.info(sig_data)
+                    logger.info(f"sig_data: {sig_data}")
                     hash_sig_data = run(sig_data)
                     
                     # logger.info(hash_sig_data)
@@ -894,7 +894,7 @@ def create_invoice(request):
                     invoice_data = invoice_preview_json(request, invoice.id)
 
                 except Exception as e:
-                    logger.info(e)
+                    logger.error(f'Error occurred while generating receipt data: {e}')
                     return JsonResponse({'success': False, 'error': str(e)})
 
                 logger.info(f'inventory creation successfully done: {invoice}')
