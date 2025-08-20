@@ -9951,6 +9951,94 @@ def invoice(request):
         'total_amount': total_amount,
         'invoice_items':invoice_items
     })
+
+#temporary
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from collections import defaultdict
+from django.db.models import Q, Sum
+from datetime import timedelta
+from pytz import timezone as pytz_timezone
+from django.utils import timezone
+
+class InvoiceAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        invoices = Invoice.objects.filter(
+            branch=request.user.branch, status=True, cancelled=False
+        ).select_related('branch', 'currency', 'user').order_by('-invoice_number')
+
+        query_params = request.GET
+        if query_params.get('q'):
+            search_query = query_params['q']
+            invoices = invoices.filter(
+                Q(customer__name__icontains=search_query) |
+                Q(invoice_number__icontains=search_query) |
+                Q(issue_date__icontains=search_query)
+            )
+
+        user_timezone_str = getattr(request.user, 'timezone', 'UTC')
+        user_timezone = pytz_timezone(user_timezone_str)
+
+        def filter_by_date_range(start_date, end_date):
+            start_datetime = user_timezone.localize(
+                timezone.datetime.combine(start_date, timezone.datetime.min.time())
+            )
+            end_datetime = user_timezone.localize(
+                timezone.datetime.combine(end_date, timezone.datetime.max.time())
+            )
+            return invoices.filter(issue_date__range=[start_datetime, end_datetime])
+
+        now = timezone.now().astimezone(user_timezone)
+        today = now.date()
+
+        date_filters = {
+            'today': lambda: filter_by_date_range(today, today),
+            'yesterday': lambda: filter_by_date_range(today - timedelta(days=1), today - timedelta(days=1)),
+            't_week': lambda: filter_by_date_range(today - timedelta(days=today.weekday()), today),
+            'l_week': lambda: filter_by_date_range(today - timedelta(days=today.weekday() + 7), today - timedelta(days=today.weekday() + 1)),
+            't_month': lambda: invoices.filter(issue_date__month=today.month, issue_date__year=today.year),
+            'l_month': lambda: invoices.filter(issue_date__month=today.month - 1 if today.month > 1 else 12, issue_date__year=today.year if today.month > 1 else today.year - 1),
+            't_year': lambda: invoices.filter(issue_date__year=today.year),
+        }
+
+        if query_params.get('day') in date_filters:
+            invoices = date_filters[query_params['day']]()
+
+        total_partial = invoices.filter(payment_status='Partial').aggregate(Sum('amount'))['amount__sum'] or 0
+        total_paid = invoices.filter(payment_status='Paid').aggregate(Sum('amount'))['amount__sum'] or 0
+        total_amount = invoices.aggregate(Sum('amount'))['amount__sum'] or 0
+
+        grouped_invoices = defaultdict(list)
+        for invoice in invoices:
+            issue_date = invoice.issue_date.date()
+            if issue_date == today:
+                grouped_invoices['Today'].append(self.serialize_invoice(invoice))
+            elif issue_date == today - timedelta(days=1):
+                grouped_invoices['Yesterday'].append(self.serialize_invoice(invoice))
+            else:
+                grouped_invoices[issue_date.strftime('%A, %d %B %Y')].append(self.serialize_invoice(invoice))
+
+        return Response({
+            'grouped_invoices': dict(grouped_invoices),
+            'total_due': total_partial,
+            'total_amount': total_amount,
+        })
+
+    def serialize_invoice(self, invoice):
+        return {
+            'id': invoice.id,
+            'invoice_number': invoice.invoice_number,
+            'customer': getattr(invoice.customer, 'name', ''),
+            'amount': float(invoice.amount),
+            'amount_paid': float(getattr(invoice, 'amount_paid', 0)),
+            'amount_due': float(getattr(invoice, 'amount_due', 0)),
+            'payment_status': invoice.payment_status,
+            'issue_date': invoice.issue_date.isoformat(),
+            'currency': getattr(invoice.currency, 'symbol', ''),
+        }
     
 @login_required
 @transaction.atomic 
@@ -12564,6 +12652,9 @@ def cashbook_data(request):
             end_date = data.get('end_date')
             search_query = data.get('search', '')
             currency = data.get('currency')
+            
+            logger.info(f'filter option: {filter_option}')
+            
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON data'}, status=400)
     else:
@@ -12580,7 +12671,7 @@ def cashbook_data(request):
     
     cashbook_entries = Cashbook.objects.filter(branch=request.user.branch)
     
-    if filter_option == 'todayd':
+    if filter_option == 'today':
         start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
     elif filter_option == 'this_week':
         start_date = now - timedelta(days=now.weekday())
@@ -12599,7 +12690,6 @@ def cashbook_data(request):
         else:
             start_date = now - timedelta(days=now.weekday())
             end_date = now
-            
     if filter_option == 'income':
         entries = entries.filter(income__isnull=False)
     elif filter_option == 'expense':
@@ -12612,6 +12702,7 @@ def cashbook_data(request):
             Q(income__category__name=filter_option)|
             Q(expense__category__name=filter_option)
         )
+        
         logger.info(f'entries: {entries}')
     
     if currency in [str(i) for i in range(11)] or currency in [int(i) for i in range(11)]:  
@@ -12700,16 +12791,18 @@ def cashbook_data(request):
         elif entry.credit:
             balance -= entry.amount
 
-        name = ''
+        category = None
         if entry.income:
-            name = entry.income.category.name 
-        elif entry.expense:
-            name =  entry.expense.category.name
+            category = entry.income.category
         elif entry.invoice:
-            name = 'Sales'
+            category = entry.invoice.category  
+        elif entry.expense:
+            category =  entry.expense.category
             
         entries_data.append({
             'id': entry.id,
+            'sale': 'sale' if entry.invoice else None,
+            'expense':  'expense' if entry.expense else None,
             'date': entry.issue_date.strftime('%Y-%m-%d %H:%M'),
             'description': entry.description,
             'debit': float(entry.amount) if entry.debit else None,
@@ -12720,8 +12813,12 @@ def cashbook_data(request):
             'director': entry.director,
             'status': entry.status,
             'created_by': entry.created_by.first_name,
-            'category__name': name
+            'category__name': category.name if category else '',
+            'category__id': category.id if category else ''
         })
+    
+    # for d in entries_data:
+    #     print(f"entry: {d}")
 
     return JsonResponse({
         'entries': entries_data,

@@ -751,7 +751,7 @@ th{
                         <div class="col">
                             <div class="">
                                 <div class="card-body">
-                                    <div class="table-responsive">
+                                    <div class="table-responsive" style="height: 60vh;">
                                         <table class="table modern-table" id="cashbookTable-{{ currency.name }}">
                                             <thead class="background">
                                                 <tr>
@@ -781,7 +781,7 @@ th{
                                                             <button onclick="toggleDropdown('{{ currency.id }}', this)" data-name="type" class="dropdown-toggle bg-white text-dark">Duration: <span class="drop-text-type-{{ currency.id }}">All Time</span> ▾</button>
                                                             <div id="dropdown-menu-type-{{ currency.id }}" class="dropdown-menu hidden">
                                                                 <form>
-                                                                    <label><input type="radio" name="duration-type-{{ currency.id }}" value="All" checked> All</label>
+                                                                    <label><input type="radio" name="duration-type-{{ currency.id }}" value="All" onclick="applyFilter('all', {{ currency.id }})" checked> All</label>
                                                                     <label><input type="radio" name="duration-type-{{ currency.id }}" value="income" onclick="applyFilter('income', {{ currency.id }})"> Income</label>
                                                                     <label><input type="radio" name="duration-type-{{ currency.id }}" value="expenses" onclick="applyFilter('expenses', {{ currency.id }})"> Expenses</label>
                                                                 </form>
@@ -1555,8 +1555,6 @@ async function loadCashbookData(page = 1, append = false, currency = null) {
             search: currentFilters.search || ''
         };
 
-        console.log(requestData, 'requestData')
-
         const response = await fetch('{% url "finance:cashbook_data" %}', {
             method: 'POST',
             headers: {
@@ -1571,6 +1569,7 @@ async function loadCashbookData(page = 1, append = false, currency = null) {
         }
 
         const data = await response.json();
+        console.log('data: ', data)
         if (!append) {
             console.log(data, 'data')
             tableBody.innerHTML = '';
@@ -1605,11 +1604,11 @@ async function loadCashbookData(page = 1, append = false, currency = null) {
                     </td>
                 </tr>
             `;
-            console.log(tableBody, 'tableBody')
         } else {
             data.entries.forEach(entry => {
                 const row = document.createElement('tr');
                 const dt = new Date(entry.date.replace(' ', 'T'));
+                console.log(entry.sale, entry.expense)
                 
                 const formattedDate = dt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
                 const formattedTime = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -1624,7 +1623,9 @@ async function loadCashbookData(page = 1, append = false, currency = null) {
                     <td>${entry.description} <br> <small class="text-muted"> by ${entry.created_by}</small></td>
                     <td>${entry.category__name}</td>
                     <td>${entry.category__name}</td>
-                    <td>${amount}</td>
+                    <td data-type="${entry.type}" data-type="${entry.sale === 'sale' ? entry.sale : entry.expense}">
+                        ${amount}
+                    </td>
                     <td>${formatCurrency(entry.balance)}</td>
                     <td>
                         <div class="btn-group">
@@ -1673,6 +1674,11 @@ function applyFilter(filterType, id) {
         }
     });
 
+    console.log('filter type: ', filterType)
+
+
+    transactionTypeFilterSearch(filterType.toLowerCase(), id)
+
     currentFilters = {
         filter: filterType,
         start_date: null,
@@ -1682,9 +1688,33 @@ function applyFilter(filterType, id) {
     
     currentPage = 1;
     hasMorePages = true;
-    loadCashbookData(1, false, id);
+    //loadCashbookData(1, false, id);
 
     document.getElementById('drop-text').textContent=filterType;
+}
+
+function transactionTypeFilterSearch(filter_type, currency_id) {
+    if (['all', 'expense', 'income'].includes(filter_type)) {
+        console.log('Search, ', filter_type);
+        let tableBody = document.getElementById(`cashbookTableBody-${currency_id}`);
+        let rows = tableBody.querySelectorAll("tr");
+
+        console.log('table types: ', tableBody, rows)
+
+        rows.forEach(row => {
+            let td_expense = row.querySelector("[data-type]");
+            let type = td?.getAttribute("data-type");
+
+            console.log('type, ', type)
+            console.log(td)
+
+            if (filter_type === "all" || type === filter_type) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
 }
 
 function showCustomFilter() {

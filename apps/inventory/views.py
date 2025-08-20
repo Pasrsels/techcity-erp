@@ -4202,6 +4202,9 @@ def stock_take_index(request):
             
             # Calculate totals for each stocktake
             negative_items = stock_take.annotated_items.filter(quantity_difference__lt=0)
+
+            print('items', negative_items)
+            
             positive_items = stock_take.annotated_items.filter(quantity_difference__gt=0)
             
             stock_take.negative_cost_total = negative_items.aggregate(
