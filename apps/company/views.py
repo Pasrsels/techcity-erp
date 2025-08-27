@@ -170,7 +170,7 @@ def branch_list(request):
 def branch_switch(request, branch_id):
     """ Enables the admin or the ownwe to switch between branches """
     user = request.user
-    if user.role == 'Admin' or user.role == 'admin':
+    if user.role.lower() in ['admin', 'accountant', 'manager', 'owner']:
         user.branch = Branch.objects.get(id=branch_id)
         user.save()
     else:

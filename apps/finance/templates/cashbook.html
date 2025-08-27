@@ -862,14 +862,14 @@ th{
         </div>
     </div>
 
-    <!-- Cash Up Modal -->
+    <!-- Cash Up Modal
     <div class="modal fade" id="cashUpModal" tabindex="-1" aria-labelledby="cashupModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content border-0 shadow">
                 {% include 'cashflows/cash_ups.html' %}
             </div>
         </div>
-    </div> 
+    </div>  -->
 
     <!-- Custom Filter Modal -->
     <div class="modal fade filter-modal" id="filterModal" tabindex="-1">
@@ -965,6 +965,7 @@ let currentFilters = {
 };
 let currency = {{ currency.id }};
 let tab_id = null
+let allCashbookEntries = [];
 
 {% with first_currency=cashbook_filter_types.0 %}
 
@@ -1046,17 +1047,6 @@ document.addEventListener('click', function(event) {
     });
 });
 
-// Add event listeners for radio buttons
-document.addEventListener('DOMContentLoaded', function() {
-    const radios = document.querySelectorAll('input[name^="duration-"]');
-    radios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            // Optional: Update button text immediately on selection
-            // const currencyId = this.name.replace('duration-', '');
-            // updateButtonText(currencyId, this.value);
-        });
-    });
-});
 
 
 
@@ -1525,7 +1515,7 @@ function getCookie(name) {
             if (cookie.substring(0, name.length + 1) === (name + '=')) {
                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                 break;
-            }
+            } 
         }
     }
     return cookieValue;
@@ -1533,18 +1523,17 @@ function getCookie(name) {
 
 async function loadCashbookData(page = 1, append = false, currency = null) {
     try {
-        showLoading();
+      
 
         const tableBody = document.getElementById(`cashbookTableBody-${currency}`);
-        const loadingSpinner = document.getElementById(`loadingSpinner-${currency}`);
+
         
         if (!append) {
             tableBody.innerHTML = '';
             currentPage = 1;
         }
         
-        loadingSpinner.style.display = 'block';
-        
+
         const requestData = {
             currency: currency,
             page: page,
@@ -1572,7 +1561,7 @@ async function loadCashbookData(page = 1, append = false, currency = null) {
 
         const data = await response.json();
         if (!append) {
-            console.log(data, 'data')
+            allCashbookEntries = data.entries; 
             tableBody.innerHTML = '';
             cash_in_element = document.getElementById('totalCashIn');
             cash_in_element.innerHTML = ''
@@ -1641,323 +1630,200 @@ async function loadCashbookData(page = 1, append = false, currency = null) {
         currentPage = data.pagination.current_page;
         hasMorePages = data.pagination.has_next;
         
-        loadingSpinner.style.display = 'none';
+    
     } catch (error) {
         console.error('Error loading cashbook data:', error);
         showToast('Failed to load transactions. Please try again.', 'danger');
     } finally {
-        hideLoading();
-        const loadingSpinner = document.getElementById(`loadingSpinner-${currency}`);
+        
+
         
     }
 }
 
+function renderCashbookTable(entries, currency) {
+    const tableBody = document.getElementById(`cashbookTableBody-${currency}`);
+    tableBody.innerHTML = '';
+    if (!entries.length) {
+        tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4">No transactions found</td></tr>`;
+        return;
+    }
+    entries.forEach(entry => {
+        const dt = new Date(entry.date.replace(' ', 'T'));
+        const formattedDate = dt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        const formattedTime = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const amount = entry.debit
+            ? `<span style="color: green;">${formatCurrency(entry.debit)}</span>`
+            : `<span style="color: red;">${formatCurrency(entry.credit)}</span>`;
+        tableBody.innerHTML += `
+            <tr>
+                <td>
+                    <div>${formattedDate}</div>
+                    <div class="text-muted" style="font-size: 0.85em;">${formattedTime}</div>
+                </td>
+                <td>${entry.description} <br> <small class="text-muted"> by ${entry.created_by}</small></td>
+                <td>${entry.category__name}</td>
+                <td>${entry.category__name}</td>
+                <td>${amount}</td>
+                <td>${formatCurrency(entry.balance)}</td>
+                <td>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm text-danger" onclick="cancelTransaction(${entry.id})">
+                            <i class="bx bx-x-circle"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+}
 
+// Utility for date filtering
+function isSameDay(date1, date2) {
+    return date1.getFullYear() === date2.getFullYear() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getDate() === date2.getDate();
+}
+function isSameWeek(date, today) {
+    const firstDayOfWeek = new Date(today);
+    firstDayOfWeek.setDate(today.getDate() - today.getDay());
+    const lastDayOfWeek = new Date(firstDayOfWeek);
+    lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+    return date >= firstDayOfWeek && date <= lastDayOfWeek;
+}
+function isSameMonth(date, today) {
+    return date.getFullYear() === today.getFullYear() &&
+           date.getMonth() === today.getMonth();
+}
+function isLastMonth(date, today) {
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    return date.getFullYear() === lastMonth.getFullYear() &&
+           date.getMonth() === lastMonth.getMonth();
+}
+function isSameYear(date, today) {
+    return date.getFullYear() === today.getFullYear();
+}
 
+// Main filter function
+function filterCashbookEntries({
+    duration = 'All Time',
+    type = 'All',
+    category = null,
+    user = null,
+    search = '',
+    startDate = null,
+    endDate = null
+} = {}) {
+    let filtered = allCashbookEntries;
+    const today = new Date();
+
+    // Duration filter
+    filtered = filtered.filter(entry => {
+        const entryDate = new Date(entry.date.replace(' ', 'T'));
+        switch (duration) {
+            case 'Today':
+                return isSameDay(entryDate, today);
+            case 'Yesterday':
+                const yesterday = new Date(today);
+                yesterday.setDate(today.getDate() - 1);
+                return isSameDay(entryDate, yesterday);
+            case 'This Week':
+                return isSameWeek(entryDate, today);
+            case 'This Month':
+                return isSameMonth(entryDate, today);
+            case 'Last Month':
+                return isLastMonth(entryDate, today);
+            case 'This Year':
+                return isSameYear(entryDate, today);
+            case 'Custom':
+                if (startDate && endDate) {
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    return entryDate >= start && entryDate <= end;
+                }
+                return true;
+            default:
+                return true;
+        }
+    });
+
+    // Type filter
+    if (type === 'income') {
+        filtered = filtered.filter(entry => entry.debit > 0);
+    } else if (type === 'expenses') {
+        filtered = filtered.filter(entry => entry.credit > 0);
+    }
+
+    // Category filter
+    if (category) {
+        filtered = filtered.filter(entry => entry.category_id == category);
+    }
+
+    // User filter
+    if (user) {
+        filtered = filtered.filter(entry => entry.created_by_id == user);
+    }
+
+    // Search filter
+    if (search) {
+        const s = search.toLowerCase();
+        filtered = filtered.filter(entry =>
+            (entry.description && entry.description.toLowerCase().includes(s)) ||
+            (entry.created_by && entry.created_by.toLowerCase().includes(s))
+        );
+    }
+
+    return filtered;
+}
+
+// Example usage for dropdowns:
+function applyFilterDropdown({duration, type, category, user, search, startDate, endDate}, currencyId) {
+    const filtered = filterCashbookEntries({duration, type, category, user, search, startDate, endDate});
+    renderCashbookTable(filtered, currencyId);
+}
+
+// Example: hook up your dropdowns
+function applyFilter(filterType, currencyId) {
+    // You can get selected values from your dropdowns here
+    // For demonstration, let's assume you pass them in
+    let duration = filterType; // e.g. 'Today', 'income', etc.
+    let type = 'All';
+    let category = null;
+    let user = null;
+    let search = document.getElementById('searchInput').value;
+    let startDate = null;
+    let endDate = null;
+
+    // You can add logic to set type/category/user based on which dropdown called this
+    if (filterType === 'income' || filterType === 'expenses') {
+        type = filterType;
+        duration = 'All Time';
+    }
+    // Add more logic for category/user if needed
+
+    // Call the filter
+    applyFilterDropdown({duration, type, category, user, search, startDate, endDate}, currencyId);
+}
+
+// Example: search handler
 function handleSearch(event) {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        const searchValue = event.target.value.trim();
-        currentFilters.search = searchValue;
-        currentPage = 1;
-        hasMorePages = true;
-        loadCashbookData(1, false, currency);
-    }, 500);
+    const searchValue = event.target.value.trim();
+    applyFilterDropdown({search: searchValue}, currency);
 }
 
-function applyFilter(filterType, id) {
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.filter === filterType) {
-            btn.classList.add('active');
-        }
-    });
-
-    currentFilters = {
-        filter: filterType,
-        start_date: null,
-        end_date: null,
-        search: ''
-    };
-    
-    currentPage = 1;
-    hasMorePages = true;
-    loadCashbookData(1, false, id);
-
-    document.getElementById('drop-text').textContent=filterType;
-}
-
-function showCustomFilter() {
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.filter === 'custom') {
-            btn.classList.add('active');
-        }
-    });
-
-    const modal = new bootstrap.Modal(document.getElementById('filterModal'));
-    modal.show();
-}
-
+// Example: custom filter modal
 function applyCustomFilter() {
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     const searchQuery = document.getElementById('searchQuery').value;
-    
-    currentFilters = {
-        filter: 'custom',
-        start_date: startDate,
-        end_date: endDate,
+    applyFilterDropdown({
+        duration: 'Custom',
+        startDate,
+        endDate,
         search: searchQuery
-    };
-    
-    currentPage = 1;
-    hasMorePages = true;
-    loadCashbookData(1, false, '');
-    
+    }, currency);
     const modal = bootstrap.Modal.getInstance(document.getElementById('filterModal'));
     modal.hide();
 }
-
-function resetFilters() {
-    document.getElementById('startDate').value = '';
-    document.getElementById('endDate').value = '';
-    document.getElementById('searchQuery').value = '';
-    
-    currentFilters = {
-        filter: 'today',
-        start_date: null,
-        end_date: null,
-        search: ''
-    };
-    
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.filter === 'today') {
-            btn.classList.add('active');
-        }
-    });
-    
-    currentPage = 1;
-    hasMorePages = true;
-    loadCashbookData(1, false, '');
-}
-
-
-function showAddCategoryModal() {
-    const existingModals = document.querySelectorAll('.modal.show');
-    existingModals.forEach(modal => {
-        const modalInstance = bootstrap.Modal.getInstance(modal);
-        if (modalInstance) {
-            modalInstance.hide();
-        }
-    });
-
-    const categoryModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
-    categoryModal.show();
-}
-
-function refreshCategoryOptions() {
-    fetch('/finance/get-categories/')
-        .then(response => response.json())
-        .then(data => {
-            const categorySelects = document.querySelectorAll('select[name="category"]');
-            categorySelects.forEach(select => {
-                const currentValue = select.value;
-                select.innerHTML = '<option value="">Select Category</option>';
-                data.categories.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category.id;
-                    option.textContent = category.name;
-                    select.appendChild(option);
-                });
-                select.value = currentValue;
-            });
-        });
-}
-
-function cancelTransaction(entryId) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, cancel it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch('/finance/cancel-entry/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ entry_id: entryId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        title: 'Success!',
-                        text: 'Entry successfully cancelled.',
-                        icon: 'success',
-                        confirmButtonText: 'OK'
-                    }).then(() => {
-                        loadCashbookData(currentPage, false, '');
-                    });
-                } else {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: data.message || 'Failed to cancel the entry.',
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    });
-                }
-            });
-        }
-    });
-}
-
-function toggleCalculator(type) {
-    const calculator = document.getElementById(`${type}Calculator`);
-    calculator.classList.toggle('show');
-}
-
-function handleScroll() {
-    const table = document.querySelector('.table-responsive');
-    const tableBottom = table.scrollTop + table.clientHeight;
-    const tableHeight = table.scrollHeight;
-    
-    if (tableHeight - tableBottom < 200 && !isLoading && hasMorePages) {
-        loadCashbookData(currentPage + 1, true, '');
-    }
-}
-
-function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `toast align-items-center text-white bg-${type} border-0`;
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomic', 'true');
-    
-    toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">
-                ${message}
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    `;
-    
-    document.getElementById('toastContainer').appendChild(toast);
-    const bsToast = new bootstrap.Toast(toast);
-    bsToast.show();
-    
-    toast.addEventListener('hidden.bs.toast', () => {
-        toast.remove();
-    });
-}
-
-function showLoading() {
-    document.getElementById('loadingOverlay').style.display = 'flex';
-}
-
-function hideLoading() {
-    document.getElementById('loadingOverlay').style.display = 'none';
-}
-
-function validateForm(form) {
-    const requiredFields = form.querySelectorAll('[required]');
-    let isValid = true;
-    
-    requiredFields.forEach(field => {
-        if (!field.value.trim()) {
-            field.classList.add('is-invalid');
-            isValid = false;
-        } else {
-            field.classList.remove('is-invalid');
-        }
-    });
-    
-    return isValid;
-}
-
-document.addEventListener('keydown', (e) => {
-
-    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-        e.preventDefault();
-        document.getElementById('searchInput').focus();
-    }
-    
-
-    if (e.key === 'Escape') {
-        const openModals = document.querySelectorAll('.modal.show');
-        openModals.forEach(modal => {
-            const modalInstance = bootstrap.Modal.getInstance(modal);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
-        });
-    }
-});
-
-
-document.addEventListener('DOMContentLoaded', () => {
-    loadCashbookData(1, false, {{ currency.id }});
-    document.querySelector('.table-responsive').addEventListener('scroll', handleScroll);
-
-    document.querySelectorAll('input[required], select[required]').forEach(field => {
-        field.addEventListener('input', () => {
-            if (field.value.trim()) {
-                field.classList.remove('is-invalid');
-            }
-        });
-    });
-
-    const calculators = document.querySelectorAll('.calculator-popup');
-    calculators.forEach(calculator => {
-        const buttons = calculator.querySelectorAll('.calculator-buttons button');
-        const display = calculator.querySelector('.calculator-display');
-        const input = calculator.closest('.calculator-container').querySelector('input');
-
-        buttons.forEach(button => {
-            button.addEventListener('click', () => {
-                const value = button.textContent;
-                if (value === '=') {
-                    try {
-                        const result = eval(display.textContent);
-                        display.textContent = result;
-                        input.value = result;
-                    } catch (e) {
-                        display.textContent = 'Error';
-                        showToast('Invalid calculation', 'warning');
-                    }
-                } else {
-                    display.textContent += value;
-                }
-            });
-        });
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.calculator-container')) {
-            document.querySelectorAll('.calculator-popup').forEach(popup => {
-                popup.classList.remove('show');
-            });
-        }
-    });
-
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('focus', () => {
-            searchInput.parentElement.classList.add('focused');
-        });
-        
-        searchInput.addEventListener('blur', () => {
-            searchInput.parentElement.classList.remove('focused');
-        });
-    }
-});
 </script> 
 {% endblock %}
