@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.core.signing import TimestampSigner, BadSignature
 from django.utils.crypto import get_random_string
 from loguru import logger
-from apps.users.models import EmailVerificationToken
+from apps.core.users.models import EmailVerificationToken
 from django.core.cache import cache
 
 

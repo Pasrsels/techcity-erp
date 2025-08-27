@@ -1,7 +1,7 @@
 import json
 from django.urls import reverse
 from django.test import TestCase
-from apps.users.models import User
+from apps.core.users.models import User
 from apps.company.models import Branch
 from ..models import Cashflow
 

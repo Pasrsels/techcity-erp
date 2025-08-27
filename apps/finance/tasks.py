@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.conf import settings 
 from celery import shared_task
 from apps.finance.models import *
-from apps.users.models import User
+from apps.core.users.models import User
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings

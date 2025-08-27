@@ -53,13 +53,13 @@ THIRD_PARTY_APPS = [
     # 'DjangoAsyncMail',
     # 'django_browser_reload',
 
-    'apps.company',
-    'apps.users',
+    'apps.core.company',
+    'apps.core.users',
     'apps.Dashboard',
     'apps.inventory',
     'apps.finance',
     'apps.pos',
-    'apps.settings',
+    'apps.core.settings',
     'apps.Analytics',
     'apps.booking',
     # 'apps.vouchers',
@@ -89,9 +89,9 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     
     # custom middlewares
-    'inventory.middleware.RequestMiddleware',
-    'company.middleware.CompanySetupMiddleware',
-    # 'users.middleware.LoginRequiredMiddleware',
+    'apps.inventory.middleware.RequestMiddleware',
+    'apps.core.company.middleware.CompanySetupMiddleware',
+    # 'apps.core.users.middleware.LoginRequiredMiddleware',
 
     # third pard middleware
     # 'django_browser_reload.middleware.BrowserReloadMiddleware',
@@ -114,26 +114,26 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 
                 # inventory
-                "company.context_processors.branch_list",
-                "inventory.context_processors.product_list",
-                "inventory.context_processors.product_category_list",     
-                "inventory.context_processors.stock_notification_count",
-                "inventory.context_processors.transfers",
-                "inventory.context_processors.stock_notifications",
-                "inventory.context_processors.all_products_list",
+                "apps.core.company.context_processors.branch_list",
+                "apps.inventory.context_processors.product_list",
+                "apps.inventory.context_processors.product_category_list",
+                "apps.inventory.context_processors.stock_notification_count",
+                "apps.inventory.context_processors.transfers",
+                "apps.inventory.context_processors.stock_notifications",
+                "apps.inventory.context_processors.all_products_list",
                 
                 #finance
-                "finance.context_processors.client_list",
-                "finance.context_processors.currency_list",
-                "finance.context_processors.expense_category_list",
-                "finance.context_processors.salespeople_list",
-                "finance.context_processors.contacts",
+                "apps.finance.context_processors.client_list",
+                "apps.finance.context_processors.currency_list",
+                "apps.finance.context_processors.expense_category_list",
+                "apps.finance.context_processors.salespeople_list",
+                "apps.finance.context_processors.contacts",
                 
                 #finance
-                # "settings.context_processors.tax_method",
+                # "apps.core.settings.context_processors.tax_method",
                 
                 #users
-                "users.context_processor.users"
+                "apps.core.users.context_processor.users"
             ],
         },
     },
@@ -165,6 +165,7 @@ DATABASES = {
     # )
 
     'default': {
+<<<<<<< HEAD
          'ENGINE': 'django.db.backends.postgresql',
          'NAME':  'development',
          'USER': 'postgres',
@@ -172,6 +173,11 @@ DATABASES = {
          'HOST': 'localhost',
          'PORT': '5432'
      }
+=======
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+>>>>>>> origin/refactor/code-management
     
     # 'default': {
     #     'ENGINE': 'django.db.backends.postgresql',

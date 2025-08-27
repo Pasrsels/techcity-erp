@@ -8,8 +8,8 @@ from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
-from apps.company.models import Branch
-from apps.users.models import User
+from apps.core.company.models import Branch
+from apps.core.users.models import User
 from django.db.models import Sum
 from django.utils.timezone import localdate
 from django.db import transaction
@@ -322,7 +322,7 @@ class Invoice(models.Model):
     cancelled = models.BooleanField(default=False)
     products_purchased = models.TextField(null=True)
     invoice_return = models.BooleanField(default=False)
-    payment_terms = models.CharField(choices=(
+    payment_terms = models.CharField(max_length=20, choices=(
         ('cash', 'cash'),
         ('layby', 'layby'),
         ('installment', 'installment')

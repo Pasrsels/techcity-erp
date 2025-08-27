@@ -82,6 +82,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from io import BytesIO
+<<<<<<< HEAD
 
 @login_required
 def notifications_json(request):
@@ -4950,3 +4951,5 @@ def get_cart_items(request):
             'success': False,
             'message': str(e)
         }, status=400)
+=======
+>>>>>>> origin/refactor/code-management

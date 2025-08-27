@@ -7,7 +7,7 @@ from celery import shared_task
 from loguru import logger
 from dotenv import load_dotenv
 from django.conf import settings
-from apps.settings.models import OfflineReceipt, FiscalDay, FiscalCounter
+from apps.core.settings.models import OfflineReceipt, FiscalDay, FiscalCounter
 
 load_dotenv()
 

@@ -1,7 +1,7 @@
 import pytest
 from django.urls import reverse
 from django.test import Client
-from apps.users.models import User
+from apps.core.users.models import User
 from apps.inventory.models import *
 from apps.company.models import Branch, Company
 

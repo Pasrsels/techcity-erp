@@ -15,7 +15,7 @@ from . models import (
     WriteOff
 )
 from datetime import date
-from apps.users.models import User
+from apps.core.users.models import User
 
 class BatchForm(forms.ModelForm):
     class Meta:
