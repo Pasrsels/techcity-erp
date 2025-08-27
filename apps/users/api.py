@@ -107,8 +107,22 @@ class LoginAPIView(generics.GenericAPIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        if serializer.is_valid():
+            user = User.objects.get(username=serializer.validated_data['username'])
+            logger.info(f'User {user.username} logged in successfully.')
+          
+        user_role = user.role if hasattr(user, 'role') else 'default_role' 
 
+        return Response({
+            'tokens': {
+                'refresh': user.tokens()['refresh'],
+                'access': user.tokens()['access']
+            },
+            'user_id': user.pk,
+            'email': user.email,
+            'role': user_role, 
+        }, status=status.HTTP_200_OK)
 
 class LogoutAPIView(generics.GenericAPIView):
     """
@@ -122,7 +136,6 @@ class LogoutAPIView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class RequestPasswordResetView(views.APIView):
     def post(self, request):

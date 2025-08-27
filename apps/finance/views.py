@@ -86,6 +86,8 @@ from itertools import chain
 from django.core.paginator import Paginator, EmptyPage
 import imghdr, base64
 from django.core.files.base import ContentFile
+from django.db.models.functions import ExtractMonth 
+import calendar 
  
 # load global zimra instance
 zimra = ZIMRA()
@@ -3841,7 +3843,7 @@ def pl_overview(request):
         cogs_total = cogs.filter(date__range=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
     else:
         current_month_sales = sales.filter(date__range=date_filter).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
-        current_month_expenses = expenses.filter(dissue_date__range=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
+        current_month_expenses = expenses.filter(issue_date__range=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
         cogs_total = cogs.filter(date__range=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
 
     previous_month_sales = sales.filter(date__year=current_year, date__month=previous_month).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
@@ -8171,7 +8173,7 @@ def pl_overview(request):
         cogs_total = cogs.filter(date__range=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
     else:
         current_month_sales = sales.filter(date__range=date_filter).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
-        current_month_expenses = expenses.filter(dissue_date__range=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
+        current_month_expenses = expenses.filter(issue_date__range=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
         cogs_total = cogs.filter(date__range=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
 
     previous_month_sales = sales.filter(date__year=current_year, date__month=previous_month).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
@@ -13205,39 +13207,84 @@ def days_data(request):
 
 @login_required
 def income_json(request):
+    from django.db.models.functions import ExtractMonth
+    
     current_month = get_current_month()
     today = datetime.date.today()
     
     month = request.GET.get('month', current_month)
     day = request.GET.get('day', today.day)
 
-    sales = Sale.objects.filter(transaction__branch=request.user.branch)
+    sales = Invoice.objects.filter(branch=request.user.branch, cancelled=False, invoice_return=False)
+    
+    sales = (
+        sales
+        .annotate(month=ExtractMonth('issue_date'))
+        .values('month')
+        .annotate(total=Sum('amount'))
+    )
+    
+    logger.info(f'Sales: {sales}')
     
     if request.GET.get('filter') == 'today':
-        sales_total = sales.filter(date=today).aggregate(Sum('total_amount'))
+        sales_total = sales.filter(issue_date=today).aggregate(Sum('amount_paid'))
     else:
-        sales_total = sales.filter(date__month=month).aggregate(Sum('total_amount'))
+        sales_total = sales.filter(issue_date__month=month).aggregate(Sum('amount_paid'))
 
-    return JsonResponse({'sales_total': sales_total['total_amount__sum'] or 0})
+    return JsonResponse({'sales_total': sales_total['amount_paid__sum'] or 0})
+
+@login_required
+def finance_monthly_data(request):
+    income = (
+        Invoice.objects
+        .filter(branch=request.user.branch, cancelled=False, invoice_return=False)
+        .annotate(month=ExtractMonth('issue_date'))
+        .values('month')
+        .annotate(total=Sum('amount_paid'))
+    )
+    income_dict = {i['month']: float(i['total']) for i in income}
+    income_data = [income_dict.get(m, 0) for m in range(1, 13)]
+
+    expenses = (
+        Expense.objects
+        .filter(branch=request.user.branch, status=False)
+        .annotate(month=ExtractMonth('issue_date'))
+        .values('month')
+        .annotate(total=Sum('amount'))
+    )
+    expense_dict = {e['month']: float(e['total']) for e in expenses}
+    expense_data = [expense_dict.get(m, 0) for m in range(1, 13)]
+
+    return JsonResponse({
+        "months": list(calendar.month_abbr)[1:],  
+        "incomeData": income_data,
+        "expenseData": expense_data
+    })
 
 
 @login_required
-def expense_json(request):
+def expense_json(request): 
     current_month = get_current_month()
     today = datetime.date.today()
     
     month = request.GET.get('month', current_month)
     day = request.GET.get('day', today.day)
 
-    expenses = Expense.objects.filter(branch=request.user.branch)
-    
+    expenses = Expense.objects.filter(branch=request.user.branch, status=False, )
+
+    expenses = (
+        expenses
+        .annotate(month=ExtractMonth('issue_date'))
+        .values('month')
+        .annotate(total=Sum('amount'))
+    )
+
     if request.GET.get('filter') == 'today':
         expense_total = expenses.filter(issue_date=today, status=False).aggregate(Sum('amount'))
     else:
         expense_total = expenses.filter(issue_date__month=month, status=False).aggregate(Sum('amount'))
     
     return JsonResponse({'expense_total': expense_total['amount__sum'] or 0})
-
 
 @login_required
 def pl_overview(request):
@@ -13275,7 +13322,7 @@ def pl_overview(request):
         cogs_total = cogs.filter(date__range=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
     else:
         current_month_sales = sales.filter(date__range=date_filter).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
-        current_month_expenses = expenses.filter(dissue_date__range=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
+        current_month_expenses = expenses.filter(issue_date__range=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
         cogs_total = cogs.filter(date__range=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
 
     previous_month_sales = sales.filter(date__year=current_year, date__month=previous_month).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
@@ -17276,7 +17323,7 @@ class PLOverview(views.APIView):
             cogs_total = cogs.filter(date__range=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
         else:
             current_month_sales = sales.filter(date__range=date_filter).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
-            current_month_expenses = expenses.filter(dissue_date__range=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
+            current_month_expenses = expenses.filter(issue_date__range=date_filter).aggregate(total_expenses=Sum('amount'))['total_expenses'] or 0
             cogs_total = cogs.filter(date__range=date_filter).aggregate(total_cogs=Sum('product__cost'))['total_cogs'] or 0
 
         previous_month_sales = sales.filter(date__year=current_year, date__month=previous_month).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0

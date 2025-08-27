@@ -22,6 +22,7 @@ urlpatterns = [
     path('generate-report/', generate_financial_report, name='generate-report'),
     path('api/v1/invoices/', InvoiceAPI.as_view(), name='invoice-api'),
     # path('Income/', IncomeViewsets, name="income")
+    path('monthly_data/', finance_monthly_data , name="monthly_data"),
     
     # expenses
     path('expenses/', expenses, name='expenses'),
