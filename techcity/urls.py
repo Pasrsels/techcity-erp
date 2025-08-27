@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 from django.views import defaults as default_views
-from apps.company.views import verify_email
+from apps.core.company.views.company_views import verify_email
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -24,13 +24,13 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('pos/', include('apps.pos.urls', namespace='pos')),
     path("admin/", admin.site.urls),
-    path('users/', include('apps.users.urls', namespace='users')),
-    path('', include('apps.company.urls', namespace='company')),
+    path('users/', include('apps.core.users.urls', namespace='users')),
+    path('', include('apps.core.company.urls', namespace='company')),
     path('finance/', include('apps.finance.urls', namespace='finance')),
-    path('settings/', include('apps.settings.urls', namespace='settings')),
+    path('settings/', include('apps.core.settings.urls')),
     # path('analytics/', include('Analytics.urls', namespace='analytics')),
     path('inventory/', include('apps.inventory.urls', namespace='inventory')),
-    path('dashboard/', include('apps.Dashboard.urls', namespace='dashboard')),
+    path('dashboard/', include('apps.Dashboard.urls')),
     path('booking', include('apps.booking.urls', namespace='booking')),
     path('verify/<uidb64>/<token>/', verify_email, name='verify_email'),
     path('__reload__/', include('django_browser_reload.urls')),

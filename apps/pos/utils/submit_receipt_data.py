@@ -1,10 +1,10 @@
-from apps.settings.models import OfflineReceipt, FiscalDay
+from apps.core.settings.models import OfflineReceipt, FiscalDay
 from datetime import datetime
 from loguru import logger
 from utils.zimra import ZIMRA
 import qrcode
 from io import BytesIO
-from apps.settings.models import FiscalCounter
+from apps.core.settings.models import FiscalCounter
 from apps.finance.models import Invoice
 import hashlib
 import os

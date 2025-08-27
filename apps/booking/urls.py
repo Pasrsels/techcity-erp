@@ -1,26 +1,26 @@
 from django.urls import path
-from .views import *
+from .views import category_views, item_of_use_views, member_views, service_views, unit_measurement_views
 
 app_name = 'booking'
 
 urlpatterns = [
-    # path('', services_view, name='service_view'),
-    #  path('services/', services, name='services'),
-    # path('service_product_crud/', itemofuseCrud, name='service_product_crud'),
-    # path('serviceCrud/', ServiceCrud, name='serviceCrud'),
-    # path('service_crud/', service_crud, name='service_crud'),
-    # #path('service_range_crud/', service_range_crud, name='service_range_crud'),
-    # path('unit_measurement_crud/', unit_measurement_crud, name='unit_measurement_crud'),
-    # #path('service_data/', ServiceData, name = 'service_data'),
-    # path('member/', members_view, name= 'member'),
-    # path('member_crud/', member_crud, name= 'members'),
-    # path('member_acc_crud/', member_acc_crud, name= 'members_acc'),
-    # path('payments/', payments_crud, name= 'payments'),
+    #services
+    path('services/', service_views.services_view, name='services_view'),
+    path('services/products/', service_views.services, name='services'),
+    path('services/crud/', service_views.service_crud, name='service_crud'),
+    path('services/save_combined/', service_views.save_combined_service, name='save_combined_service'),
 
-    # #category
-    # path('category_crud/', category_crud, name='category_crud'),
+    #unit_measurement
+    path('unit_measurement/crud/', unit_measurement_views.unit_measurement_crud, name='unit_measurement_crud'),
 
-    # #item of use
-    # path('item_of_use_crud', item_of_use_crud, name='item_of_use_crud'),
-    # path('save_combined_service/', save_combined_service, name='save_combined_service'),
+    #members
+    path('members/', member_views.members_view, name='members_view'),
+    path('members/crud/', member_views.member_crud, name='member_crud'),
+
+    #category
+    path('category/crud/', category_views.category_crud, name='category_crud'),
+
+    #item of use
+    path('item_of_use/crud/', item_of_use_views.itemofuseCrud, name='itemofuse_crud'),
+    path('item_of_use/crud2/', item_of_use_views.item_of_use_crud, name='item_of_use_crud'),
 ]

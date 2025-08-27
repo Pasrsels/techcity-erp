@@ -7,10 +7,10 @@ class Members(models.Model):
     Email = models.EmailField(max_length=255, blank=False)
     Phone = models.CharField(max_length=12, blank=False)
     Address = models.CharField(max_length= 255, blank= False)
-    Enrollmnet = models.Choices("permanent","temporary")
+    Enrollment = models.CharField(max_length=10, choices=[("permanent", "Permanent"), ("temporary", "Temporary")])
     Company = models.CharField(max_length= 255, blank= True)
     Age = models.IntegerField(blank=False)
-    Gender = models.Choices("M", "F")
+    Gender = models.CharField(max_length=1, choices=[("M", "Male"), ("F", "Female")])
     Member_accounts = models.ForeignKey("MemberAccounts", on_delete=models.CASCADE, null = True)
     Services = models.ForeignKey("Services", on_delete=models.CASCADE, null = True)
     Payments = models.ForeignKey("Payments", on_delete=models.CASCADE, null = True)
@@ -27,7 +27,7 @@ class MemberAccounts(models.Model):
         return f"{self.Balance}"
 
 class Payments(models.Model):
-    Date = models.CharField(default= timezone.now)
+    Date = models.CharField(max_length=255, default= timezone.now)
     Amount = models.DecimalField(max_digits= 8, decimal_places= 2, default= 0.00)
     Admin_fee = models.DecimalField(max_digits=8 , decimal_places=2, default= 0.00)
     Description = models.CharField(max_length= 255, default='')
