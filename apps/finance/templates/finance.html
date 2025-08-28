@@ -7,7 +7,6 @@
 <div class="finance-dashboard">
     <div class="container-fluid p-0">
       <div class="row g-0">
-
         <aside class="col-lg-3 finance-sidebar" id="finance-sidebar">
           <div class="sidebar-content p-3 shadow-sm">
             <div class="card border-0 shadow-sm mb-3">
@@ -94,47 +93,6 @@
       </div>
     </div>
 
-    <!-- Cash Out Offcanvas (EXACT COPY from cashbook.html) -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="recordTransactionOffcanvas" aria-labelledby="recordTransactionOffcanvasLabel">
-        <div class="offcanvas-header align-items-center">
-            <h5 class="offcanvas-title" id="recordTransactionOffcanvasLabel">Record Transaction</h5>
-            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            {% include 'cashflows/cashmanagement.html' %}
-        </div>
-    </div>
-
-  <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content rounded-4 shadow">
-        <div class="modal-header bg-dark text-white">
-          <h5 class="modal-title">Report Details</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body" id="reportBodyContent">
-          <!-- Rendered HTML will be injected here -->
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="modal fade" id="timeFrameModal" tabindex="-1" aria-labelledby="timeFrameModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content rounded-5 shadow-lg border-0">
-        <div class="modal-header bg-light border-bottom-0 rounded-top-4 px-4 py-3">
-          <h5 class="modal-title fw-semibold" id="timeFrameModalLabel">📊 Generate Financial Report</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body px-4 py-4">
-          <form id="timeFrameForm" onsubmit="showLoader(this)">
-            <div class="mb-3">
-              <label for="reportType" class="form-label fw-medium">Type of Report</label>
-              <select class="form-select" id="reportType" name="reportType" required>
-                <option value="" disabled selected>Select Report Type</option>
-                <option 
-  
-
 <div class="finance-dashboard">
     <div class="container-fluid p-0">
       <div class="row g-0">
@@ -214,27 +172,7 @@
                     </tbody>  
                   </table>
                 </div>
-              </div>
-            </div>
-      value="sales">Sales</option>
-                <option value="expenses">Expenses</option>
-                <option value="trading">Trading</option>
-                <option value="profit_loss">Profit and Loss</option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label for="timeFrame" class="form-label fw-medium">Report Period</label>
-              <select class="form-select" id="timeFrame" name="timeFrame" required onchange="toggleCustomDates()">
-                <option value="today">Today</option>
-                <option value="weekly">This Week</option>
-                <option value="monthly">This Month</option>
-                <option value="yearly">This Year</option>
-                <option value="custom">Custom Date Range</option>
-              </select>
-            </div>
-
-            <div class="row d-none" id="customTimeFrame">
+              </div><div class="row d-none" id="customTimeFrame">
               <div class="col-md-6 mb-3">
                 <label for="startDate" class="form-label">Start Date</label>
                 <input type="date" class="form-control" id="startDate" name="startDate">
@@ -260,6 +198,8 @@
               <span>Generate Report</span>
             </button>
           </form>
+            </div>
+          </aside>
         </div>
       </div>
     </div>
