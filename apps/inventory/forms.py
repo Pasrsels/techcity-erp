@@ -15,7 +15,7 @@ from . models import (
     WriteOff
 )
 from datetime import date
-from loguru import logger
+from apps.users.models import User
 
 class BatchForm(forms.ModelForm):
     class Meta:
@@ -79,7 +79,7 @@ class CreateOrderForm(forms.ModelForm):
 class noteStatusForm(forms.ModelForm):
     class Meta:
         model = PurchaseOrder
-        fields = ['batch', 'status', 'delivery_date', 'payment_method', 'notes']
+        fields = ['name', 'batch', 'status', 'delivery_date', 'payment_method', 'notes']
         
         widgets = {
             'delivery_date': forms.DateInput(attrs={'type': 'date'}),
@@ -121,9 +121,15 @@ class ReorderSettingsForm(forms.ModelForm):
        
 
 class StockTakeForm(forms.ModelForm):
+    conducted_by = forms.ModelMultipleChoiceField(
+        queryset=User.objects.filter(is_active=True),
+        widget=forms.SelectMultiple(attrs={'class': 'form-select', 'required': 'required'}),
+        required=True
+    )
+
     class Meta:
         model = StockTake
-        exclude = ['branch', 's_t_number']
+        exclude = ['branch', 's_t_number', 'status', 'date', 'result']
 
 
 class AddDefectiveForm(forms.ModelForm):
@@ -168,3 +174,4 @@ class AddShrinkageForm(forms.ModelForm):
         super(AddShrinkageForm, self).__init__(*args, **kwargs)
         if self.request:
             self.fields['inventory_item'].queryset = Inventory.objects.filter(branch=self.request.user.branch)
+            

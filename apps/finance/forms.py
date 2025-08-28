@@ -10,7 +10,11 @@ from .models import (
     CustomerDeposits,
     CashDeposit,
     VATTransaction,
+<<<<<<< HEAD
     CreditNote
+=======
+    IncomeCategory
+>>>>>>> origin/production
 )
 
 class ExpenseForm(forms.ModelForm):
@@ -79,6 +83,7 @@ class VatPayForm(forms.ModelForm):
     class Meta:
         model = VATTransaction
         fields = ['paid']
+<<<<<<< HEAD
 
 class CreditNoteForm(forms.ModelForm):
     class Meta:
@@ -94,3 +99,10 @@ class CreditNoteForm(forms.ModelForm):
         if self.invoice:
             self.fields['currency'].initial = self.invoice.currency
             self.fields['amount'].initial = self.invoice.amount_due
+=======
+        
+class IncomeCategoryForm(forms.ModelForm):
+    class Meta:
+        model = IncomeCategory
+        fields = '__all__'
+>>>>>>> origin/production

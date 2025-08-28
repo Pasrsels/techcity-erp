@@ -25,6 +25,8 @@
 
     <!-- use-bootstrao-select css -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/use-bootstrap-select@2.2.0/dist/use-bootstrap-select.min.css">
+    <!-- Calculator CSS -->
+    {% comment %} <link rel="stylesheet" href="{% static 'css/calculator.css' %}"> {% endcomment %}
     {% endblock css %}
 
     <script src="https://unpkg.com/slim-select@latest/dist/slimselect.min.js"></script>
@@ -55,9 +57,18 @@
     {% comment %} toastfiy {% endcomment %}
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
-    {% comment %} crypto {% endcomment %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.8.6/jsrsasign-all-min.js"></script>
+    <style>
+        .form-control:focus,
+        .form-select:focus,
+        .form-check-input:focus,
+        .btn:focus,
+            input[type="checkbox"]:focus,
+            input[type="radio"]:focus {
+            border-color: #11998e !important;
+        }
+    </style>
+
+    <script src="https://unpkg.com/htmx.org@1.9.5"></script>
 
     <title>
         {% block title %}Techcity{% endblock title %}
@@ -181,221 +192,573 @@
 
     <div class="modal fade" id="creditModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            
-            <div class="modal-header-info">
-              <div>
-                <span class="text-muted">Total</span>
-              </div>
-              <div>
-                <span class="badge-total">
-                  Total: $24,328.00
-                </span>
-              </div>
-            </div>
-            
-            <div class="modal-body">
-              <div class="table-container">
-                <div class="search-container">
-                  <i class="fas fa-search"></i>
-                  <input type="search" class="form-control search-input" placeholder="Search invoices...">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel">Credit Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
-                <div class="table-responsive">
-                  <table class="table" id="parentTable">
-                    <thead>
-                      <tr>
-                        <th width="50"></th>
-                        <th>Customer</th>
-                        <th>Invoice Date</th>
-                        <th>Status</th>
-                        <th>Total Amount</th>
-                        <th class="text-end">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <!-- Parent rows will be populated here -->
-                    </tbody>
-                  </table>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="creditTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="laybys-tab" data-bs-toggle="tab" data-bs-target="#laybys" type="button" role="tab">Laybys</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="paylaters-tab" data-bs-toggle="tab" data-bs-target="#paylaters" type="button" role="tab">Paylaters</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="monthly-tab" data-bs-toggle="tab" data-bs-target="#monthly" type="button" role="tab">Monthly Installments</button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content mt-3" id="creditTabsContent">
+                        <!-- Laybys Tab -->
+                        <div class="tab-pane fade show active" id="laybys" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table" id="laybysTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Customer</th>
+                                            <th>Total Amount</th>
+                                            <th>Amount Paid</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Paylaters Tab -->
+                        <div class="tab-pane fade" id="paylaters" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table" id="paylatersTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Customer</th>
+                                            <th>Due Date</th>
+                                            <th>Amount Due</th>
+                                            <th>Amount Paid</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Monthly Installments Tab -->
+                        <div class="tab-pane fade" id="monthly" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table" id="monthlyInstallmentsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Customer</th>
+                                            <th>Amount Due</th>
+                                            <th>Amount Paid</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="exportData()">Export Data</button>
+                </div>
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-              <button type="button" class="btn btn-primary btn-sm">Export Data</button>
-            </div>
-          </div>
         </div>
-      </div>
+    </div>
 
+    <div class="modal fade" id="branchModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-right">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div>
+                        <p class='fw-bold'>Choose Branch</p>
+                    </div>
+                    <div class="row row-cols-3 g-3"> 
+                        {% for branch in branches %}
+                            <div class="col">
+                                <a class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center" 
+                                   href="{% url 'company:switch_branch' branch.id %}">
+                                    {{ branch.name }}
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentModalLabel">Process Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="paymentForm">
+                        <div class="mb-3">
+                            <label for="paymentAmount" class="form-label">Amount Due</label>
+                            <input type="text" class="form-control" id="paymentAmount" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="paymentMethod" class="form-label">Payment Method</label>
+                            <select class="form-select" id="paymentMethod" required>
+                                <option value="">Select Payment Method</option>
+                                <option value="cash">Cash</option>
+                                <option value="card">Card</option>
+                                <option value="bank">Bank Transfer</option>
+                                <option value="ecocash">EcoCash</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="amountPaid" class="form-label">Amount to Pay</label>
+                            <input type="number" class="form-control" id="amountPaid" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="paymentDate" class="form-label">Payment Date</label>
+                            <input type="date" class="form-control" id="paymentDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="paymentNotes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="paymentNotes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="processPayment()">Process Payment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
     <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>    
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <!-- <script>
-        const notisModal = new bootstrap.Modal(document.querySelector('#notificationModal'))
-        const notisButton = document.querySelector('#notisBtn')
-
+    <script>
         const branchModal = new bootstrap.Modal(document.querySelector('#branchModal'))
-        const branchButton = document.querySelector('#branchButton')
+        const branchBtn = document.querySelector('#branchBtn')
 
-        const tableWrapper = document.querySelector('#detailTable_wrapper')
-
-        // document.addEventListener("DOMContentLoaded", function () {
-        //     const loader = document.getElementById("loader");
-        //     loader.style.display = "none"; // Hide the loader after the page loads
-        // });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // fetchNotifications();
-        });
-
-        
-        document.querySelector('.col-12')?.classList.add('w-100') 
-        // document.addEventListener("DOMContentLoaded", function () {
-        //     const buttons = document.querySelectorAll(".toggle-btn");
-
-        //     buttons.forEach((button) => {
-        //         button.addEventListener("click", function () {
-        //             const span = button.nextElementSibling;
-        //             button.classList.add("fade-out");
-        //             span.classList.remove("d-none");
-        //             span.classList.add("show");
-        //         });
-        //     });
-        // });
-
-        // function fetchNotifications() {
-        //     fetch('{% url "inventory:reorder_from_notifications" %}')
-        //         .then(response => response.json())
-        //         .then(data => {
-        //             console.log(data)
-        //             const tableBody = document.querySelector('#notificationTable tbody');
-        //             tableBody.innerHTML = ''; 
-        //             data.forEach(notification => {
-        //                 const row = document.createElement('tr');
-        //                 row.innerHTML = `
-        //                     <td>${notification.inventory__product__name}</td>
-        //                     <td>${notification.inventory__quantity}</td>
-        //                     <td>${notification.quantity}</td>
-        //                     <td>
-        //                         <button class="btn bx bx-list-plus" data-id="${notification.inventory__id}" onclick="addToOrderList(this);"></button>
-        //                         <button class="btn bx bx-x text-danger" data-id="${notification.inventory__id}" onclick="dontAddToOrderList(this);"></button>
-        //                     </td>
-        //                 `;
-        //                 tableBody.appendChild(row);
-        //             });
-        //         })
-        //         .catch(error => console.error('Error fetching notifications:', error));
-        // }
-
-        // function addToOrderList(button) {
-        //     const inventoryId = button.getAttribute('data-id');
-        //     fetch('{% url "inventory:reorder_from_notifications" %}', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'X-CSRFToken': getCookie('csrftoken')
-        //         },
-        //         body: JSON.stringify({ inventory_id: inventoryId, action_type:'add' })
-        //     })
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         if (data.success) {
-        //             alert('Added to order list successfully!');
-        //             fetchNotifications(); 
-        //         } else {
-        //             alert('Error: ' + data.message);
-        //         }
-        //     })
-        //     .catch(error => console.error('Error adding to order list:', error));
-        // }
-
-        // function dontAddToOrderList(button) {
-        //     const inventoryId = button.getAttribute('data-id');
-        //     fetch('{% url "inventory:reorder_from_notifications" %}', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'X-CSRFToken': getCookie('csrftoken')
-        //         },
-        //         body: JSON.stringify({ inventory_id: inventoryId, action_type:'remove' })
-        //     })
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         if (data.success) {
-        //             alert('Added to order list successfully!');
-        //             fetchNotifications(); 
-        //         } else {
-        //             alert('Error: ' + data.message);
-        //         }
-        //     })
-        //     .catch(error => console.error('Error adding to order list:', error));
-            
-        // }
-
-        branchButton.addEventListener('click', ()=>{
+        branchBtn.addEventListener('click', ()=>{
             branchModal.show()
         })
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
 
-        notisButton.addEventListener('click', ()=>{
-            notisModal.show()
-        })
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
 
-        // // $.ajax({
-        // //     url: '{% url "finance:finance_notifications_json" %}',
-        // //     type: 'GET',
-        // //     }).done(function(response) {
-        // //         const data = response;
-        // //         displayFinanceNotifications(data)
-        // //     })
-        
-        // // function displayFinanceNotifications(data) {
-        // //     const ul = document.querySelector('#finance_notifications');
-        // //     const notificationTypes = {};
+        function populateMonthlyInstallments(data) {
+            const tbody = document.querySelector('#monthlyInstallmentsTable tbody');
+            tbody.innerHTML = '';
             
-        // //     data.forEach((notification) => {
-        // //         if (!notificationTypes[notification.notification_type]) {
-        // //         notificationTypes[notification.notification_type] = [];
-        // //         }
-        // //         notificationTypes[notification.notification_type].push(notification);
-        // //     });
-            
-        // //     Object.keys(notificationTypes).forEach((type) => {
-                
-        // //         notificationTypes[type].forEach((notification) => {
-        // //         const li = document.createElement('li');
-        // //         if(notification.transfer__to === {{request.user.branch.id}}){
-        // //             li.innerHTML = `<small><a href='{% url "finance:cash_transfer_list" %}'>${notification.notification}</a></small>`;
-        // //         }
-        // //         if(notification.expense__branch === {{request.user.branch.id}}){
-        // //             li.innerHTML = `<small><a>${notification.notification}</a></small>`;
-        // //         }
-        // //         if(notification.invoice__branch === {{request.user.branch.id}}){
-        // //             li.innerHTML = `<small><a>${notification.notification}</a></small>`;
-        // //         }
-        // //         ul.appendChild(li);
-        // //         });
-        // //     });
-        // }
+            data.forEach(installment => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${installment.invoice.invoice_number}</td>
+                    <td>${installment.invoice.customer.name}</td>
+                    <td>${formatCurrency(installment.amount_due)}</td>
+                    <td>${formatCurrency(installment.amount_paid)}</td>
+                    <td>${formatDate(installment.due_date)}</td>
+                    <td>
+                        <span class="badge ${installment.paid ? 'bg-success' : 'bg-warning'}">
+                            ${installment.paid ? 'Paid' : 'Pending'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewInstallmentDetails(${installment.id})">
+                            View Details
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
 
-        function getCookie(name) {
+        function populateLaybys(data) {
+            const tbody = document.querySelector('#laybysTable tbody');
+            tbody.innerHTML = '';
+            
+            data.forEach(layby => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${layby.invoice.invoice_number}</td>
+                    <td>${layby.invoice.customer.name}</td>
+                    <td>${formatCurrency(layby.invoice.amount)}</td>
+                    <td>${formatCurrency(layby.invoice.amount_paid)}</td>
+                    <td>
+                        <span class="badge ${layby.fully_paid ? 'bg-success' : 'bg-warning'}">
+                            ${layby.fully_paid ? 'Fully Paid' : 'In Progress'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewLaybyDetails(${layby.id})">
+                            View Details
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function populateCredits(data) {
+            const tbody = document.querySelector('#creditsTable tbody');
+            tbody.innerHTML = '';
+            
+            data.forEach(credit => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${credit.invoice.invoice_number}</td>
+                    <td>${credit.invoice.customer.name}</td>
+                    <td>${formatCurrency(credit.amount_due)}</td>
+                    <td>${formatCurrency(credit.amount_paid)}</td>
+                    <td>${formatDate(credit.due_date)}</td>
+                    <td>
+                        <span class="badge ${credit.paid ? 'bg-success' : 'bg-warning'}">
+                            ${credit.paid ? 'Paid' : 'Pending'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewCreditDetails(${credit.id})">
+                            View Details
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function populatePaylaters(data) {
+            const tbody = document.querySelector('#paylatersTable tbody');
+            tbody.innerHTML = '';
+
+            console.log(data, 'data data')
+            
+            data.data.forEach(paylater => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${paylater.invoice__invoice_number}</td>
+                    <td>${paylater.invoice__customer__name}</td>
+                    <td>${formatDate(paylater.due_date)}</td>
+                    <td>${formatCurrency(paylater.amount_due)}</td>
+                    <td>${formatCurrency(paylater.invoice__amount_paid)}</td>
+                    <td>
+                        <span class="badge ${paylater.paid ? 'bg-success' : 'bg-warning'}">
+                            ${paylater.paid ? 'Paid' : 'Pending'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-primary me-1" onclick="viewPaylaterDetails(${paylater.id})">
+                                View Details
+                            </button>
+                            ${!paylater.paid ? `
+                                <button class="btn btn-sm btn-success" onclick="showPaymentModal('${paylater.id}', ${paylater.amount_due})">
+                                    update payment
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function viewInstallmentDetails(id) {
+            console.log('Viewing installment details:', id);
+        }
+
+        function viewLaybyDetails(id) {
+            console.log('Viewing layby details:', id);
+        }
+
+        function viewCreditDetails(id) {
+            console.log('Viewing credit details:', id);
+        }
+
+        async function viewPaylaterDetails(id) {
+            try {
+                const response = await fetch(`/finance/paylater/details/${id}/`);
+                const data = await response.json();
+                console.log(data.data, 'data payment details')
+                document.getElementById('detail-invoice-number').textContent = data.data[0].invoice__invoice_number;
+                document.getElementById('detail-customer-name').textContent = data.data[0].invoice__customer__name;
+                document.getElementById('detail-total-amount').textContent = formatCurrency(data.data[0].invoice__amount);
+                document.getElementById('detail-amount-paid').textContent = formatCurrency(data.data[0].invoice__amount_paid);
+                document.getElementById('detail-amount-due').textContent = formatCurrency(data.data[0].amount_due);
+                document.getElementById('detail-status').innerHTML = `
+                    <span class="badge ${data.data[0].paid ? 'bg-success' : 'bg-warning'}">
+                        ${data.data[0].paid ? 'Paid' : 'Pending'}
+                    </span>
+                `;
+                console.log(data.payment_schedule, 'data')
+                const scheduleTable = document.querySelector('#paymentScheduleTable tbody');
+                scheduleTable.innerHTML = '';
+                data.payment_schedule.forEach(schedule => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${formatDate(schedule.due_date)}</td>
+                        <td>${formatCurrency(schedule.amount_paid)}</td>
+                        <td>
+                            <span class="badge ${schedule.paid ? 'bg-success' : 'bg-warning'}">
+                                ${schedule.paid ? 'Paid' : 'Pending'}
+                            </span>
+                        </td>
+                        <td>${schedule.payment_date ? formatDate(schedule.payment_date) : '-'}</td>
+                        <td>${schedule.payment_method || '-'}</td>
+                    `;
+                    scheduleTable.appendChild(row);
+                });
+
+                // Populate cash flow history
+                {% comment %} const cashFlowTable = document.querySelector('#cashFlowTable tbody');
+                cashFlowTable.innerHTML = '';
+                data.cash_flow.forEach(flow => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${formatDate(flow.date)}</td>
+                        <td>${flow.description}</td>
+                        <td>${formatCurrency(flow.amount)}</td>
+                        <td>
+                            <span class="badge ${flow.type === 'credit' ? 'bg-success' : 'bg-danger'}">
+                                ${flow.type}
+                            </span>
+                        </td>
+                        <td>${flow.processed_by}</td>
+                    `;
+                    cashFlowTable.appendChild(row);
+                }); {% endcomment %}
+
+                // Show the modal
+                const modal = new bootstrap.Modal(document.getElementById('paylaterDetailsModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error fetching paylater details:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to fetch paylater details. Please try again later.'
+                });
+            }
+        }
+
+        function printPaylaterDetails() {
+            const printWindow = window.open('', '_blank');
+            const modalContent = document.querySelector('#paylaterDetailsModal .modal-content').cloneNode(true);
+            
+            const footer = modalContent.querySelector('.modal-footer');
+            footer.remove();
+
+            const styles = `
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    .table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+                    .table th, .table td { border: 1px solid #dee2e6; padding: 0.5rem; }
+                    .badge { padding: 0.25rem 0.5rem; border-radius: 0.25rem; }
+                    .bg-success { background-color: #28a745; color: white; }
+                    .bg-warning { background-color: #ffc107; color: black; }
+                    .bg-danger { background-color: #dc3545; color: white; }
+                    h6 { margin-top: 1rem; margin-bottom: 0.5rem; }
+                </style>
+            `;
+            
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Paylater Details</title>
+                        ${styles}
+                    </head>
+                    <body>
+                        ${modalContent.innerHTML}
+                    </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        async function fetchAndPopulateTables() {
+            try {
+                {% comment %} const installmentsResponse = await fetch('/finance/monthly-installments/');
+                const installmentsData = await installmentsResponse.json();
+                populateMonthlyInstallments(installmentsData);
+
+                const laybysResponse = await fetch('/finance/laybys/');
+                const laybysData = await laybysResponse.json();
+                populateLaybys(laybysData); {% endcomment %}
+
+                const paylaterResponse = await fetch('/finance/paylater/');
+                const paylaterData = await paylaterResponse.json();
+                populatePaylaters(paylaterData);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to fetch data. Please try again later.'
+                });
+            }
+        }
+
+        function exportData() {
+            const activeTab = document.querySelector('.tab-pane.active');
+            const table = activeTab.querySelector('table');
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            
+            const csvContent = rows.map(row => {
+                const cells = Array.from(row.querySelectorAll('td'));
+                return cells.map(cell => cell.textContent.trim()).join(',');
+            }).join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${document.querySelector('.nav-link.active').textContent.trim()}_export.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchAndPopulateTables();
+            
+            setInterval(fetchAndPopulateTables, 300000);
+        });
+
+        // Add Payment Modal
+        const paymentModalHtml = `
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', paymentModalHtml);
+
+        let currentPaylaterId = null;
+
+        function showPaymentModal(paylaterId, amountDue) {
+            currentPaylaterId = paylaterId;
+            document.getElementById('paymentAmount').value = formatCurrency(amountDue);
+            document.getElementById('amountPaid').value = amountDue;
+            document.getElementById('paymentDate').valueAsDate = new Date();
+            
+            const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            paymentModal.show();
+        }
+
+        function processPayment() {
+            const amountPaid = document.getElementById('amountPaid').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const paymentDate = document.getElementById('paymentDate').value;
+            const paymentNotes = document.getElementById('paymentNotes').value;
+            
+            if (!paymentMethod) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Please select a payment method',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            if (!amountPaid || amountPaid <= 0) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Please enter a valid amount',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            Swal.fire({
+                title: 'Processing Payment',
+                text: 'Please wait...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            fetch('/finance/process-paylater-payment/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    paylater_id: currentPaylaterId,
+                    amount_paid: amountPaid,
+                    payment_method: paymentMethod,
+                    payment_date: paymentDate,
+                    notes: paymentNotes
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Payment processed successfully',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        const paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+                        paymentModal.hide();
+                        fetchAndPopulateTables();
+                    });
+                } else {
+                    throw new Error(data.message || 'Failed to process payment');
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message || 'Failed to process payment',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            });
+        }
+          function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== "") {
-              const cookies = document.cookie.split(";");
-              for (let i = 0; i < cookies.length; i++) {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
                 const cookie = cookies[i].trim();
                 if (cookie.substring(0, name.length + 1) === name + "=") {
-                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                  break;
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
                 }
-              }
+            }
             }
             return cookieValue;
-          }  
-    </script> -->
+        }    
+    </script>
 </body>
 </html>

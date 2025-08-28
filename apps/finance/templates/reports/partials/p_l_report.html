@@ -1,0 +1,70 @@
+{% load humanize %}
+{% load report_tags %}
+
+<div class="card">
+  <div class="card-header bg-primary text-white">
+    <h4 class="mb-0">Trading and Profit & Loss Account for {% if not branch.name %} All Branches {% else %} {{ branch.name }} {% endif %}</h4>
+    <p class="mb-0">Period: {{ start_date|date:"d M Y" }} to {{ end_date|date:"d M Y" }}</p>
+  </div>
+  
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-bordered">
+        <tbody>
+          <tr class="bg-light">
+            <th colspan="2">Revenue</th>
+          </tr>
+          <tr>
+            <td>Sales</td>
+            <td class="text-end">${{ sales|floatformat:2|intcomma }}</td>
+          </tr>
+          
+          <tr class="bg-light">
+            <th>Cost of Sales</th>
+            <td class="text-end">${{ cost_of_sales|floatformat:2|intcomma }}</td>
+          </tr>
+          
+          <tr class="table-success fw-bold">
+            <th>Gross Profit</th>
+            <td class="text-end">${{ gross_profit|floatformat:2|intcomma }}</td>
+          </tr>
+          
+          <tr class="bg-light">
+            <th colspan="2">Expenses</th>
+          </tr>
+          
+          {% for category_group in expenses_by_category %}
+            <tr class="fw-bold">
+              <td class="ps-3">{{ category_group.category.name }}</td>
+              <td class="text-end">${{ category_group.total|floatformat:2|intcomma }}</td>
+            </tr>
+            
+            {% for expense in category_group.items %}
+              <tr>
+                <td class="ps-5">{{ expense.category.name }}</td>
+                <td class="text-end">${{ expense.amount|floatformat:2|intcomma }}</td>
+              </tr>
+            {% endfor %}
+          {% endfor %}
+          
+          <tr class="table-warning fw-bold">
+            <th>Total Expenses</th>
+            <td class="text-end">${{ total_expenses|floatformat:2|intcomma }}</td>
+          </tr>
+          
+          {% if net_profit >= 0 %}
+          <tr class="table-success fw-bold">
+            <th>Net Profit</th>
+            <td class="text-end">${{ net_profit|floatformat:2|intcomma }}</td>
+          </tr>
+          {% else %}
+          <tr class="table-danger fw-bold">
+            <th>Net Loss</th>
+            <td class="text-end">${{ net_profit|abs|floatformat:2|intcomma }}</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

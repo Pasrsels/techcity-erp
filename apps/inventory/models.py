@@ -24,6 +24,69 @@ class BatchCode(models.Model):
     def __str__(self) -> str:
         return self.code
     
+class TemporaryPurchaseOrder(models.Model):
+    name = models.CharField(max_length=255, null=True, unique=True)
+    date = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    order_number = models.CharField(max_length=100, unique=True, null=True)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True)
+    
+    def generate_order_number():
+        return f'PO-{uuid.uuid4().hex[:10].upper()}'
+    
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            self.order_number = self.generate_order_number()
+        super(TemporaryPurchaseOrder, self).save(*args, **kwargs)
+    def __str__(self):
+        self.name
+        
+class TemporaryPurchaseOrderItem(models.Model):
+    temporary_purchase_order = models.ForeignKey(TemporaryPurchaseOrder, on_delete=models.CASCADE)
+    product = models.ForeignKey('inventory.Inventory', on_delete=models.SET_NULL, null=True)
+    quantity = models.IntegerField(null=True)
+    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    actual_unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    received_quantity = models.IntegerField(default=0, null=True) 
+    received = models.BooleanField(default=False, null=True)
+    expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    dealer_expected_profit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    supplier = models.ForeignKey('inventory.Supplier', on_delete=models.CASCADE, null=True, blank=True, default=1)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    wholesale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+
+    class Meta:
+        models.Index(fields=['product', 'supplier'])
+
+    def receive_items(self, quantity):
+    
+        self.received_quantity += quantity
+        if self.received_quantity >= self.quantity:
+            self.received = True
+        self.save()
+        self.purchase_order.check_partial_status()  
+
+    def check_received(self):
+        """
+        Checks if all related items in the purchase order with the same order_number are received and updates the purchase order's "received" flag.
+        """
+        order_number = self.purchase_order.order_number
+        purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order__order_number=order_number)
+
+        all_received = True
+        for item in purchase_order_items:
+            if not item.received:
+                all_received = False
+            break
+
+        logger.info(f'Received status ={all_received}')
+
+        purchase_order = PurchaseOrder.objects.get(order_number=order_number)
+        purchase_order.received = all_received
+        purchase_order.save()
+    
+    def __str__(self) -> str:
+        return self.product.name
 
 class ProductCategory(models.Model):
     """Model for product categories."""
@@ -92,7 +155,7 @@ class Product(models.Model):
 
 class SerialNumber(models.Model):
     serial_number = models.CharField(max_length=255, unique=True)
-    status = models.BooleanField(default=True)  # True for active/available, False for used/inactive
+    status = models.BooleanField(default=True) 
     added_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -119,10 +182,20 @@ class Inventory(models.Model):
     service = models.BooleanField(default=False, null=True)
     image = models.ImageField(upload_to='product_images/', default='placeholder.png', null=True, blank=True)
     disable = models.BooleanField(default=False)
+<<<<<<< HEAD
     # serial_numbers = models.ManyToManyField('SerialNumber', related_name='inventories') 
 
+=======
+    serial_numbers = models.ManyToManyField('SerialNumber', related_name='inventories') 
+    
+>>>>>>> origin/production
     class Meta:
         unique_together = ('id', 'branch') 
+        
+        indexes = [
+            models.Index(fields=['branch', 'status', 'disable']),
+            models.Index(fields=['name']),
+        ]
 
     def update_stock(self, added_quantity):
         self.quantity += added_quantity
@@ -168,6 +241,7 @@ class PurchaseOrder(models.Model):
     ], default="cash", null=True)
     batch = models.CharField(max_length=20, null=True)
     hold = models.BooleanField(null=True, default=True)
+    name = models.CharField(max_length=255, default='', null=True)
 
     def generate_order_number():
         return f'PO-{uuid.uuid4().hex[:10].upper()}'
@@ -290,7 +364,6 @@ class Transfer(models.Model):
             models.Index(fields=['hold']),
         ]
         
-
     @classmethod
     def generate_transfer_ref(self, branch, branches):
 
@@ -400,8 +473,9 @@ class ActivityLog(models.Model):
     
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE) 
+    stocktake = models.ForeignKey('inventory.Stocktake', on_delete=models.CASCADE, null=True)
     user = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
-    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    action = models.CharField(max_length=100, choices=ACTION_CHOICES)
     quantity = models.IntegerField()
     total_quantity = models.IntegerField()
     dealer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
@@ -481,11 +555,17 @@ class reorderSettings(models.Model):
 
 
 class StockTake(models.Model):
-    date = models.DateField()
+    date = models.DateField(auto_now_add=True)
     s_t_number = models.CharField(max_length=255)
     result = models.CharField(max_length=255, null=True)
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
     status = models.BooleanField(default=False)
+    conducted_by = models.ManyToManyField('users.User')
+    conductor = models.ForeignKey('users.User', on_delete=models.CASCADE, null=True, related_name='stocktake_conductor')
+    negative = models.IntegerField(default=0)
+    positive = models.IntegerField(default=0)
+    negative_cost = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    positive_cost = models.DecimalField(max_digits=15, decimal_places=2, default=0)
 
     def stocktake_number(self, branch):
         prv_stock_take = StockTake.objects.filter(branch__name=branch).order_by('-id').first()
@@ -496,22 +576,21 @@ class StockTake(models.Model):
             new_stocktake_number = 1
 
         return new_stocktake_number
-    
-    def __str__(self):
-        return f'{self.date}: {self.s_t_number}'
         
 class StocktakeItem(models.Model):
     stocktake = models.ForeignKey(StockTake, on_delete=models.CASCADE, null=True)
     product = models.ForeignKey(Inventory, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
+    now_quantity = models.IntegerField(default=0)
+    quantity = models.IntegerField(null=True)
     quantity_difference = models.IntegerField()
-
-    def __str__(self):
-        return self.product.name
-
+    cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
+    note = models.TextField(null=True, default='')
+    accepted = models.BooleanField(default=False,null=True)
+    company_loss = models.BooleanField(null=True, default=False)
+    recorded = models.BooleanField(null=True, default=False)
+    has_diff = models.BooleanField(default=False)
 
 # Inventory loss models
-
 class WriteOff(models.Model):
     inventory_item = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='write_offs')
     quantity = models.PositiveIntegerField()
@@ -564,3 +643,12 @@ class DeliveryNoteItem(models.Model):
     delivery_note = models.ForeignKey(DeliveryNote, on_delete=models.CASCADE, related_name="items", null=True)
     product_name = models.CharField(max_length=255, null=True)
     quantity_delivered = models.PositiveIntegerField(null=True)
+    
+class InventoryNotificationSettings(models.Model):
+    user = models.OneToOneField('users.User', on_delete=models.CASCADE)
+    low_stock = models.BooleanField(default=True)
+    out_of_stock = models.BooleanField(default=True)
+    movement_create = models.BooleanField(default=True)
+    movement_update = models.BooleanField(default=True)
+    movement_delete = models.BooleanField(default=True)
+    movement_transfer = models.BooleanField(default=True)

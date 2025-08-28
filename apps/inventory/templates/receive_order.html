@@ -5,73 +5,164 @@
 {% block title %} Receive Purchase Order {% endblock %}
 {% block content %}
 <style>
-    td, input {
-        font-size: 12px;
-        vertical-align: middle; 
-        text-align: center; 
-    }
+    :root {
+      --primary: #11998e;
+      --primary-no-gradient: #11998e;
+      --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+      --secondary: orange;
+      --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+      --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      --dark: #1a1a2e;
+      --dark-alt: #16213e;
+      --text-light: rgba(228, 230, 234, 1);
+      --text-dark: black;
+      --text-muted: black;
+      --glass: rgba(255, 255, 255, 0.1);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+      --border-radius: 16px;
+      --border-radius-sm: 8px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --m-bottom: 20px;
+  }
+td, input {
+    font-size: 12px;
+    vertical-align: middle; 
+    text-align: center; 
+}
 
-    input {
-        height: 30px;
-        font-size: 12px;
-        vertical-align: middle;
-        text-align: center;
-    }
+input {
+    height: 30px;
+    font-size: 12px;
+    vertical-align: middle;
+    text-align: center;
+}
 
-    thead th {
-        position: sticky;
-        top: 0;
-        background-color: #fff;
-        z-index: 1;
-        border-bottom: 2px solid #dee2e6;
-    }
+thead th {
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 1;
+    border-bottom: 2px solid #dee2e6;
+}
 
-    td:first-child,
-    td:nth-child(2){
-        text-align: left;
-    }
+td:first-child,
+td:nth-child(2){
+    text-align: left;
+}
 
-    th {
-        position: sticky;
-        top: 0;
-        background: white; 
-        z-index: 10; 
-    }
+th {
+    position: sticky;
+    top: 0;
+    background: white; 
+    z-index: 10; 
+}
 
-    table {
-        width: 100%;
-    }
+table {
+    width: 100%;
+}
 
 
-    table {
-        width: 100%;
-    }
+table {
+    width: 100%;
+}
 
-    .floating-button {
-        position: fixed;
-        bottom: 20px; 
-        right: 20px;
-        z-index: 1000; 
-    }
+.floating-button {
+    position: fixed;
+    bottom: 20px; 
+    right: 20px;
+    z-index: 1000; 
+}
 
-    .floating-button .btn {
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
-    }
+.floating-button .btn {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+}
 
+    .search-container {
+    position: relative;
+    margin-bottom: px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 15px 50px 15px 20px;
+    border-radius: var(--border-radius);
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--text-dark);
+    font-size: 16px;
+    transition: var(--transition);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-input::placeholder {
+    color: var(--text-dark);
+}
+
+.search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dark);
+}
+
+.confirm-btn {
+    padding: 8px 16px;
+    border-radius: var(--border-radius-sm);
+    background: var(--primary-no-gradient);
+    border: 1px solid var(--glass-border);
+    color: var(--text-light);
+    text-decoration: none;
+    transition: var(--transition);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.table-container {
+    max-height: 70vh; /* adjust as needed */
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+}
+
+table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--primary); /* your existing background */
+    color: white;
+}
+
+.background{
+    background: var(--primary);
+}
 </style>
 <div class="inventory-navbar">
-    <nav class="d-flex justify-content-between align-items-center shadow rounded mb-2 p-2">
-        <div class="d-flex">
-            <div>
-                <h4 class='mt-1 fw-bold'><small class='px-1 fw-bold fx-6'>Receive Purchase Order: </small>{{ purchase_order.batch|lower }}</h4>
-            </div>
+    <nav class=" p-2">
+        <div class='d-flex justify-content-between align-items-center'>
+            <h4>Receive Purchase Order</h4>
+            <h4 class='bg-primary bg-primary-subtle p-1 rounded'>{{ purchase_order.batch }}</h4>
         </div>
-        <!--<a href="{% url 'inventory:mark_done' purchase_order.id %}" class="btn btn-secondary">Done</a>-->
+        <p>Total cost ${{purchase_order.total_cost}}</p>
     </nav>
 </div>
+
+<div class="search-container bg-white rounded">
+    <input type="text" id="search-input" class="search-input" placeholder="Search products..." oninput="searchTable()" style='text-align:left;'>
+    <i class="fas fa-search search-icon"></i>
+</div>
+
 <div class="table-container">
-    <table class='table table-striped table-responsive table-bordered' id='order_items_table' style='width:100%;'>
-        <thead>
+    <table class='table table-responsive table-borderless' id='order_items_table'>
+        <thead style="background:var(--primary);">
             <tr>
                 <th>#</th>
                 <th>Product Name</th>
@@ -101,7 +192,7 @@
                     <div class="rounded {% if item.received_quantity < purchase_quantity %}bg-warning{% endif %} rChild">Received [{{item.received_quantity}}]</div>
                     {% else %}
                     <input type="number"
-                           value="{% if item.received_quantity > 0 %} {{ item.received_quantity }} {% else %} {{ item.quantity }} {% endif %}"
+                           value="{{ item.quantity }}"
                            id="quantity_{{ item.id }}"
                            placeholder="Enter quantity received"
                            min="1"
@@ -164,7 +255,7 @@
                     <span class="d-flex">
                         <button class="btn btn-outline-dark btn-sm" id="submit_{{ item.id }}" style="display:none;" onclick="submitItem('{{ item.id }}')">Submit</button>
                         <button class="bx bx-edit border btn mx-1" id="editBtn_{{ item.id }}" style="display:none;" onclick="edit({{ item.id }}, {{ item.product.price }}, {{ item.product.dealer_price }}, {{ item.quantity }}, {{ item.actual_unit_cost }})"></button>
-                        <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}" onclick="cancel('{{ item.id }}', {{ item.product.price }}, {{ item.product.dealer_price|default_if_none:0 }}" style="display:none;">cancel</button>
+                        <button class="btn btn-danger btn-sm " id="cancel_{{ item.id }}" onclick="cancel('{{ item.id }}', {{ item.product.price }}, {{ item.product.dealer_price|default_if_none:0 }})" style="display:none;">cancel</button>
                         <button class="btn btn-outline-dark btn-sm" onclick="submitItem('{{ item.id }}')">Submit</button>
                     </span>
                     {% else %}
@@ -181,7 +272,7 @@
         </tbody>
     </table>
     <div class="floating-button">
-        <button class="btn btn-outline-dark btn-sm" id="confirmPurchaseOrder"  disabled>
+        <button class="confirm-btn" id="confirmPurchaseOrder"  disabled>
             Confirm Purchase Order
         </button>
     </div>
@@ -191,12 +282,6 @@
     let expectedProfitAmnt = 0;
     let dealerExpectedProfitAmnt = 0;
     let editStatus = false;
-
-    $('#order_items_table').DataTable({
-        paging: false,
-        scrollY: '850px',
-        scrollCollapse: true
-    });
 
     document.addEventListener('DOMContentLoaded', function () {
         const confirmButton = document.getElementById('confirmPurchaseOrder');
@@ -231,7 +316,6 @@
         updateConfirmButtonState();
     });
 
-
     document.addEventListener('DOMContentLoaded', function () {
         expectedProfitOnLoad();
         calculateCostDifference();
@@ -247,13 +331,12 @@
                 Swal.showLoading(); 
             },
         });
-
         
         fetch('/inventory/mark_purchase_order_done/{{purchase_order.id }}/', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken'), 
+                'X-CSRFToken': "{{ csrf_token }}", 
             },
         })
         .then((response) => response.json())
@@ -265,6 +348,7 @@
                     title: 'Success',
                     text: 'Purchase order has been successfully confirmed!',
                 });
+                window.location.href = '/inventory/purchase_orders/list/';
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -328,7 +412,6 @@
         const dsp = document.getElementById(`dSp_${itemId}`);
 
         // remove the submitted button and show the submit button
-        document.getElementById(`submitted_${itemId}`).style.display = 'none';
         document.getElementById(`submit_${itemId}`).style.display = 'block';
 
         // add cancel button
@@ -385,14 +468,11 @@
     }
 
     function cancel(itemId, originalSellingPrice, originalDealerPrice) {
-        // Revert Selling Price and Dealer Price to their original values
         document.getElementById(`selling_${itemId}`).replaceWith(`${originalSellingPrice}`);
         document.getElementById(`dealer_${itemId}`).replaceWith(`${originalDealerPrice}`);
 
-        // Hide the submit and cancel buttons and show the "Submitted" button
         document.getElementById(`submit_${itemId}`).style.display = 'none';
         document.getElementById(`cancel_${itemId}`).style.display = 'none';
-        document.getElementById(`submitted_${itemId}`).style.display = 'block';
 
         editStatus=false
     } 
@@ -434,6 +514,8 @@
             const sellingPrice = document.getElementById(`selling_${itemId}`)?.value || 0;
             const dealerPrice = document.getElementById(`dealer_${itemId}`)?.value || 0;
 
+            const submitButton = document.querySelector(`button[onclick="submitItem('${itemId}')"]`);
+
             const itemData = {
                 id: itemId,
                 name: document.getElementById(`name_${itemId}`).textContent,
@@ -457,6 +539,16 @@
             const data = await response.json();
 
             if (data.success) {
+
+                Toastify({
+                    text: "Item submitted successfully",
+                    duration: 3000, 
+                    gravity: "top", 
+                    position: "right",
+                    backgroundColor: "#4BB543",
+                    close: true
+                  }).showToast();
+                
                 editStatus = false;
                 const orderedQnty = parseInt(document.getElementById(`purchased_quantity_${itemId}`).textContent);
                 const tableRow = document.getElementById(`tr_${itemId}`);
@@ -466,21 +558,21 @@
                     tableDataCells.forEach(td => td.classList.add('bg-warning'));
                 }
 
-                // Update the row with the new values
+
                 document.getElementById(`quantity_${itemId}`)?.replaceWith(`${itemData.quantity}`);
                 document.getElementById(`selling_${itemId}`).replaceWith(`${itemData.selling_price}`);
                 document.getElementById(`dealer_${itemId}`).replaceWith(`${itemData.dealer_price}`);
 
                 // Update the button
-                const submitButton = document.querySelector(`button[onclick="submitItem('${itemId}')"]`);
                 submitButton.textContent = 'Submitted';
                 submitButton.classList.remove('btn-outline-dark');
                 submitButton.classList.add('bg-success', 'text-light', 'btn-sm');
-                submitButton.disabled = true;
+                
 
                 // Hide the submit and cancel buttons, show edit button
                 const cancelBtn = document.getElementById(`cancel_${itemId}`);
                 const editBtn = document.getElementById(`editBtn_${itemId}`);
+                      
                 if (cancelBtn) cancelBtn.style.display = 'none';
                 if (editBtn) editBtn.style.display = 'block';
             } else {
@@ -489,6 +581,7 @@
                     icon: 'error',
                     text: data.message
                 });
+                submitButton.disabled = false;
             }
         } catch (error) {
             console.error('Error:', error);
@@ -497,6 +590,7 @@
                 icon: 'error',
                 text: 'An error occurred. Please try again.'
             });
+            submitButton.disabled = false;
         }
     }
 

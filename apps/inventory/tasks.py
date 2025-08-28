@@ -20,7 +20,6 @@ def process_transfer(data, user_id, user_branch_id):
     """
         Asynchronously process product transfer between branches
     """
-    # Get models using apps.get_model to avoid circular imports
     Transfer = apps.get_model('inventory', 'Transfer')
     TransferItems = apps.get_model('inventory', 'TransferItems')
     Inventory = apps.get_model('inventory', 'Inventory')
@@ -36,9 +35,12 @@ def process_transfer(data, user_id, user_branch_id):
             branches_data = data['branches_to']
             transfer_id = data.get('transfer_id', '')
             cart = data['cart']
+            
+            logger.info(f'cart data {cart}')
         
             # Get branch objects
             branch_objects = []
+            logger.info(branch_objects)
             for branch in branches_data:
                 if branch.get('value'):
                     branch_obj = Branch.objects.get(id=branch['value'])
@@ -81,6 +83,7 @@ def process_transfer(data, user_id, user_branch_id):
             transfer_items = []
             
             for branch_obj in branch_objects:
+                logger.info(f'Branch object: {branch_obj}')
                 for item in cart:
                     if item['branch_name'] == branch_obj.name:
                         product = products_dict.get(int(item['product_id']))

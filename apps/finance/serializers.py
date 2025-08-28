@@ -77,3 +77,19 @@ class TransferSerializer(serializers.Serializer):
     class Meta:
         model = CashTransfers
         exclude = ['user', 'from_branch', 'branch', 'received_status']
+        
+
+class IncomeSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    amount = serializers.FloatField()
+    currency = serializers.IntegerField()
+    account_to = serializers.IntegerField()
+    branch = serializers.IntegerField()
+    is_recurring = serializers.BooleanField(required=False, default=False)
+    has_reminder = serializers.BooleanField(required=False, default=False)
+    r_unit = serializers.CharField(required=False, allow_null=True)
+    from_date = serializers.DateField(required=False, allow_null=True)
+    to_date = serializers.DateField(required=False, allow_null=True)
+    reminder_dated = serializers.DateField(required=False, allow_null=True)
+    category = serializers.JSONField()
+    main_category = serializers.JSONField()

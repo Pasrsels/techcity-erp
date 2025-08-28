@@ -36,11 +36,13 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'django.contrib.humanize',
 ]
 
 THIRD_PARTY_APPS = [
     "channels",
     # 'debug_toolbar',
+    'drf_yasg',
     "crispy_forms",
     "crispy_bootstrap5",
     'phonenumber_field',
@@ -124,9 +126,14 @@ TEMPLATES = [
                 "finance.context_processors.client_list",
                 "finance.context_processors.currency_list",
                 "finance.context_processors.expense_category_list",
+                "finance.context_processors.salespeople_list",
+                "finance.context_processors.contacts",
                 
                 #finance
                 # "settings.context_processors.tax_method",
+                
+                #users
+                "users.context_processor.users"
             ],
         },
     },
@@ -153,25 +160,37 @@ DATABASES = {
     # 'default': dj_database_url.config(
     #     default=os.environ.get('DATABASE_URL')
     # )
+    # 'default': dj_database_url.config(
+    #     default=os.environ.get('DATABASE_URL')
+    # )
 
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME':  'testt',
-        'USER': 'postgres',
-        'PASSWORD': 'neverfail',
-        'HOST': 'localhost',
-        'PORT': '5432'
-    }
+         'ENGINE': 'django.db.backends.postgresql',
+         'NAME':  'techcity_db',
+         'USER': 'postgres',
+         'PASSWORD': 'neverfail',
+         'HOST': 'localhost',
+         'PORT': '5432'
+     }
+    
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME':  'testt',
+    #     'USER': 'postgres',
+    #     'PASSWORD': 'neverfail',
+    #     'HOST': 'localhost',
+    #     'PORT': '5432'
+    # }
 }
 
 if os.environ.get('TESTING'):
     DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'test_db.sqlite3'),
+    
     }
     
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField" 
 
 # AUTH_USER_MODEL = "users.User"
 # # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
@@ -243,42 +262,22 @@ MEDIA_ROOT = str(BASE_DIR / "media")
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-url
 MEDIA_URL = "/media/"
 
-# LOGGING
+
+# CACHES
 # ------------------------------------------------------------------------------
-# https://docs.djangoproject.com/en/dev/ref/settings/#logging
-# See https://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s",
-        },
-    },
-    "handlers": {
-        "console": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "formatter": "verbose",
-        }
-    },
-    "root": {"level": "INFO", "handlers": ["console"]},
-}
-
-
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.environ.get('REDIS_URL'),
+        "LOCATION": "redis://127.0.0.1:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "CONNECTION_POOL_KWARGS": {
-                "ssl_cert_reqs": None
-            },
+            "SERIALIZER": "django_redis.serializers.json.JSONSerializer",
         }
     }
 }
+
+# Cache time to live is 15 minutes
+CACHE_TTL = 60 * 15
 
 # celery
 CELERY_BROKER_URL = 'redis://localhost:6379'
@@ -292,18 +291,6 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Africa/Johannesburg'
 
-CELERY_BEAT_SCHEDULE = {
-    # 'run-all-invoices-recurring': {
-    #     'task': 'finance.tasks.generate_recurring_invoices',
-    #     'schedule': 60.0, 
-    # },
-
-    'check-upcoming-layby-payments': {
-        'task': 'your_app.tasks.check_upcoming_layby_payments',
-        'schedule': crontab(hour=9, minute=0),  
-    },
-}
-
 REDIS_OPTIONS = {
     'ssl': True,
     'ssl_cert_reqs': None,  # Set to None to bypass certificate verification temporarily
@@ -314,7 +301,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": ["rediss://:p81af2fc64c9b750172375f4b4b521a9a32354997e449c1cb59482e8607f7f227@ec2-44-223-243-234.compute-1.amazonaws.com:23070"],
+            "hosts": ["127.0.0.1:6379"],
             "symmetric_encryption_keys": [SECRET_KEY],
             "ssl_cert_reqs": None,  
         },
@@ -332,7 +319,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # to be changeed
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # to be changed
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
@@ -374,5 +361,26 @@ CELERY_BEAT_SCHEDULE = {
     'ping-every-5-seconds': {
         'task': 'utils.zimra.ping',
         'schedule': REPORTING_FREQUENCY * 60
+    },
+}
+
+
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'products_api.log',
+        },
+    },
+    'loggers': {
+        '__main__': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
     },
 }

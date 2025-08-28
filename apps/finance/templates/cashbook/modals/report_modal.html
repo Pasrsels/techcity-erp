@@ -1,0 +1,125 @@
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="reportModalLabel">Export Transactions Report</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Filters Section -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Transaction Type</label>
+                            <select class="form-select" id="transactionType">
+                                <option value="all">All Transactions</option>
+                                <option value="cash_in">Cash In</option>
+                                <option value="cash_out">Cash Out</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Date Range</label>
+                            <div class="input-group">
+                                <input type="date" class="form-control" id="startDate">
+                                <span class="input-group-text">to</span>
+                                <input type="date" class="form-control" id="endDate">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Report Preview</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="reportPreview" class="table-responsive">
+                            <!-- Preview content will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Options -->
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-primary" onclick="exportToPDF()">
+                        <i class="bx bx-file-pdf me-1"></i> Export as PDF
+                    </button>
+                    <button type="button" class="btn btn-outline-success" onclick="exportToExcel()">
+                        <i class="bx bx-file me-1"></i> Export as Excel
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportToPDF() {
+    const transactionType = document.getElementById('transactionType').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    window.location.href = `/finance/export-transactions/pdf/?type=${transactionType}&start_date=${startDate}&end_date=${endDate}`;
+}
+
+function exportToExcel() {
+    // Add Excel export logic here
+    const transactionType = document.getElementById('transactionType').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    // Call your backend endpoint for Excel generation
+    window.location.href = `/finance/export-transactions/excel/?type=${transactionType}&start_date=${startDate}&end_date=${endDate}`;
+}
+
+// Add event listeners for filter changes
+document.getElementById('transactionType').addEventListener('change', updatePreview);
+document.getElementById('startDate').addEventListener('change', updatePreview);
+document.getElementById('endDate').addEventListener('change', updatePreview);
+
+function updatePreview() {
+    const transactionType = document.getElementById('transactionType').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    // Call your backend endpoint to get preview data
+    fetch(`/finance/get-transactions-preview/?type=${transactionType}&start_date=${startDate}&end_date=${endDate}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update the preview section with the data
+            const previewHtml = generatePreviewHtml(data);
+            document.getElementById('reportPreview').innerHTML = previewHtml;
+        });
+}
+
+function generatePreviewHtml(data) {
+    return `
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.map(item => `
+                    <tr>
+                        <td>${item.date}</td>
+                        <td>${item.description}</td>
+                        <td>${item.amount}</td>
+                        <td>${item.type}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+</script>

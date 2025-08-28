@@ -1,0 +1,1913 @@
+{% load static %}
+<style>
+    :root {
+        --primary: #11998e;
+        --primary-no-gradient: #11998e;
+        --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        --secondary: orange;
+        --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+        --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        --dark: #1a1a2e;
+        --dark-alt: #16213e;
+        --text-light: rgba(228, 230, 234, 1);
+        --text-dark: black;
+        --text-muted: black;
+        --glass: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+        --border-radius: 16px;
+        --border-radius-sm: 8px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --m-bottom: 20px;
+    }
+    .nv-active{
+        background-color: var(--primary) !important;
+        color: #fff !important;
+    }
+
+    .b-active{
+        background-color: rgb(78, 76, 76) !important;
+        color: #fff !important;
+    }
+    .b-active:hover{
+        background-color: #000 !important;
+        color: #fff !important;
+    }
+    #cashFlowTabs{
+        padding: -1.5rem -1.5rem  !important;
+    }
+    #cashFlowTabs .nav-item{
+        padding:0px;
+    }
+    .amount-border{
+        border: 0.5px solid red !important;
+    }
+    .bg-secondary-cash{
+        background: #8991911c!important;
+    }
+    .branch-details-box {
+        min-width: 180px; 
+    }
+    .branch-input{
+        width: 3rem !important;
+        height: 2.4rem !important;
+    }
+    .active-card{
+        background-color: var(--primary)  !important;
+        color: #fff !important;
+        transition: all 0.3s ease-in-out;
+    }
+    .active-card .active-button{
+        height: 50px !important;
+        border: 1px solid #fff !important;
+        background-color: #5c8989 !important;
+        color: #fff !important;
+        font-size: 14px !important;
+        font-weight: bold !important;
+    }
+    .active-card .branch-admin-header{
+        border: 1px solid #5c8989 !important;
+        color: #000 !important;
+        background-color: #fff !important;
+        padding: 5px !important;
+        border-radius: 10px !important;
+    }
+    .not-active-card{
+        background-color: #edf0f2;
+        opacity: 0.7;
+        filter: blur(2px);
+        transition: all 0.3s ease-in-out;
+        pointer-events: none;
+    }
+    .table-td-text{
+        font-size: 12px;
+    }
+    .branches-scroll-container {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    .branches-scroll-container::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .branches-wrapper {
+        transition: transform 0.3s ease-in-out;
+    }
+    .form-check-input[type=checkbox] {
+        width: 1.5rem !important;
+        border-radius: .25em;
+        height: 1.5rem !important;
+        background-color: var(--primary) !important;
+    }
+    
+</style>
+<div>
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center bg-white p-2 mb-3">
+            <div>
+                <h5 class="card-title">
+                    Pending Cash Ups
+                    <span class="">
+                        {{ pending_cash_ups }}
+                        <small class="text-muted">x{{ cash_up_count }}</small>
+                        <small class="text-muted">${{ all_totals }}</small>
+                    </span>
+                </h5>
+                <div>
+                    <small class="text-muted">{{ to_date }} - </small>
+                    <small class="text-muted">{{ from_date }}</small>
+                </div>
+            </div>
+            
+            <ul class="nav nav-tabs p-0  " id="cashFlowTabs" role="tablist">
+                <li class="nav-item  m-2"  role="presentation">
+                  <button class="nav-link text-dark rounded-4 active nv-active fs-6" id="record-tab" data-bs-toggle="tab" data-bs-target="#record-content" type="button" role="tab">
+                    Record Cashup
+                  </button>
+                </li>
+                <li class="nav-item m-2" role="presentation">
+                    <button class="nav-link text-dark rounded-4 fs-6" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-content" type="button" role="tab">
+                        Cashups List
+                    </button>
+                </li>              
+            </ul>
+        </div>
+
+        <div class="tab-content px-1">
+            <div class="tab-pane fade show active" id="record-content" role="tabpanel">
+                <div class="p-2">
+                    <div id="branchButton" class="bg-light py-2">
+                        <div class="d-flex align-items-center">
+                            <div class="position-relative" style="width: calc(100% - 200px);">
+                                <div class="branches-scroll-container" style="overflow-x: hidden; white-space: nowrap;">
+                                    <div class="d-flex branches-wrapper">
+                                        {% for branch in branches_data %}
+                                            <div class="d-flex flex-column shadow bg-light p-1">
+                                                <div class="">
+                                                    <span class="branch-name">{{ branch.name }}</span>
+                                                </div>
+                                                <div class="col d-flex align-items-center justify-content-between p-2" style="min-width: 225px;">
+                                                    <div class="">
+                                                        {{ currency.symbol }}{{ branch.total|floatformat:2 }}
+                                                    </div>
+                                                    <div>
+                                                        <span class="branch-input">
+                                                            <input 
+                                                                style="width: 3rem; height: 1.5rem; border: none !important;" 
+                                                                type="checkbox" 
+                                                                class="btn btn-sm btn-light branch-checkbox form-check-input bg-primary" 
+                                                                data-branch-id="{{ branch.id }}" 
+                                                                onchange="selectTab(this, {{ branch.id }})"
+                                                            />
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>                                    
+                                </div>
+                                <!-- <button class="btn btn-light bx bx-chevron-right shadow-sm" 
+                                        style="width: 30px; height: 30px; z-index: 1;" 
+                                        onclick="scrollBranches()">
+                                </button> -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="details"></div>
+            </div>
+    
+            <div class="tab-pane fade mt-3" id="list-content" role="tabpanel" aria-labelledby="list-tab">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Branch</label>
+                                <select class="form-select" id="branchFilter">
+                                    <option value="">All Branches</option>
+                                    {% for branch in branches %}
+                                        <option value="{{ branch.id }}">{{ branch.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date Range</label>
+                                <select class="form-select" id="dateRangeFilter">
+                                    <option value="">Select range</option>
+                                    <option value="today">Today</option>
+                                    <option value="yesterday">Yesterday</option>
+                                    <option value="this_week">This Week</option>
+                                    <option value="last_week">Last Week</option>
+                                    <option value="this_month">This Month</option>
+                                    <option value="last_month">Last Month</option>
+                                    <option value="custom">Custom Range</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 d-none" id="customDateRange">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">From</label>
+                                        <input type="date" class="form-control" id="startDate">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">To</label>
+                                        <input type="date" class="form-control" id="endDate">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12" id="recordedCashUps">
+                    <!-- Cash ups will be loaded here -->
+                </div>
+            </div> 
+        </div>  
+    </div>
+    <div class="modal fade" id="acceptCashUpModal" tabindex="-1" aria-labelledby="acceptCashUpModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="acceptCashUpModalLabel">Accept Cash Up</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="acceptCashUpForm">
+                        <input type="hidden" id="cashUpId" name="cashUpId">
+                        <div class="mb-3">
+                            <label class="form-label">Expected Amount</label>
+                            <input type="text" class="form-control" id="expectedAmount" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Amount Received</label>
+                            <input type="number" class="form-control" id="amountReceived" required step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Shortfall</label>
+                            <input type="text" class="form-control" id="shortfall" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="flex-grow-1">
+                                    <label for="assignAccount" class="form-label">Choose Account</label>
+                                    <select name="account" class="form-select" id="assignAccount" onchange="toggleAssignmentFields()">
+                                        <option value="">----------</option>
+                                        <option value="employee">Employee</option>
+                                        <option value="company">Company</option>
+                                    </select>
+                                </div>
+
+                                <div id="employeeAssignment" class="flex-grow-1 d-none">
+                                    <label class="form-label">Assign Shortfall To Employee</label>
+                                    <select class="form-select" id="assignToEmployee" required>
+                                        <option value="">Select Salesperson</option>
+                                        {% for user in salespeople %}
+                                            <option value="{{ user.id }}">{{ user.username }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div id="companyAssignment" class="flex-grow-1 d-none">
+                                    <label class="form-label">Assign Shortfall To Company Account</label>
+                                    <select class="form-select" id="assignToCompany" required>
+                                        <option value="">Select Account</option>
+                                        <option value="loss">Loss Account</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitAcceptCashUp()">Accept</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% csrf_token %}
+</div>
+
+<script>
+const loaderRow = document.getElementById('details')
+
+let totalRecordItems = 0;
+let recordedCount = 0;
+let branchId = null;
+
+const recordCashUpBtn = document.getElementById('record-tab')
+const cashUpListBtn = document.getElementById('list-tab')
+const branchButton = document.querySelectorAll('#branchButton button')
+
+document.addEventListener('DOMContentLoaded', () => {
+    const allCheckbox = document.getElementById('allBranchesCheckbox');
+    if (allCheckbox) {
+        allCheckbox.checked = true;
+        selectTab(allCheckbox, '');
+        fetchCashUpDetails('')
+    }
+});
+
+branchButton.forEach(button => {
+    button.addEventListener('click', () => {
+        if(button.classList.contains('b-active')){
+            return;
+        }
+        button.classList.add('b-active')
+        branchButton.forEach(b => {
+            if(b !== button) b.classList.remove('b-active')
+        })
+    })
+})
+
+
+recordCashUpBtn.addEventListener('click', () => {
+    if (recordCashUpBtn.classList.contains('nv-active')) {
+        return;
+    }
+    recordCashUpBtn.classList.add('nv-active')
+    cashUpListBtn.classList.remove('nv-active')
+})
+
+cashUpListBtn.addEventListener('click', () => {
+    if (cashUpListBtn.classList.contains('nv-active')) {
+        return;
+    }
+    cashUpListBtn.classList.add('nv-active')
+    recordCashUpBtn.classList.remove('nv-active')
+})
+
+totalRecordItems = document.querySelectorAll('.record-sale-btn, .expense-action[data-action="record"]').length;
+recordedCount = 0
+
+function selectAllBranches(button) {
+    const checkboxes = document.querySelectorAll('.branch-checkbox');
+    const isAllSelected = button.classList.contains('b-active');
+    
+    button.classList.toggle('b-active');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = !isAllSelected;
+    
+        const event = new Event('change');
+        checkbox.dispatchEvent(event);
+    });
+}
+
+function selectTab(checkbox, branchId) {
+    const checkboxes = document.querySelectorAll('.branch-checkbox');
+
+    checkboxes.forEach(cb => {
+        if (cb !== checkbox) {
+            cb.checked = false;
+        }
+    });
+
+    if (!checkbox.checked) {
+        allButton.classList.remove('b-active');
+        allButton.checked = false;
+    } else {
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    }
+
+    fetchCashUpDetails(branchId);
+}
+
+async function fetchCashUpDetails(branch_id) {
+    try {
+        branchId = branch_id;
+        loaderRow.innerHTML = `
+            <div class="d-flex justify-content-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        `;
+        
+        const response = await fetch('/finance/get_cash_up_details/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ 
+                branch_id: branch_id,
+                type: 'cash_up' 
+            })
+        });
+        
+        const data = await response.json();
+
+        console.log(data)
+        
+        if (!data.success) {
+            showErrorMessage(loaderRow, data.message || 'Could not load details. Please try again.');
+            return;
+        }
+        
+        renderCashUpDetails(data, loaderRow);
+    } catch (error) {
+        console.error('Error fetching cash up details:', error);
+        showErrorMessage(loaderRow, 'An error occurred while loading details.');
+    }
+}
+
+function showErrorMessage(container, message) {
+    container.innerHTML = `
+        <div class="alert alert-danger d-flex align-items-center mb-0">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <div>${message}</div>
+        </div>
+    `;
+}
+
+function renderCashUpDetails(data, container) {
+    const allSalesData = data.data.sales || [];
+    const allExpensesData = data.data.expenses || [];
+
+    console.log(data, 'data')
+    
+    container.innerHTML = `
+        <div class="w-100 p-1">
+            <div class="row g-3 mt-2 w-100">
+                <div class="w-100">
+                    <div class="row shadow-sm" style="border:none;">
+                        ${data.cash_up.map((c, index) => {
+                            
+                            const salesData = allSalesData.filter(sale => sale.cash_id === c.id);
+                            const expensesData = allExpensesData.filter(expense => expense.cash_id === c.id);
+
+                            let balance = parseFloat(c.total_sales_amount) - (parseFloat(c.total_expense_amount) || 0)
+
+                            balance = balance.toFixed(2)
+                        
+                            return `
+                                <div class="col-4 mb-2" onclick="toggleChildSection(${index}, this)">
+                                    <div class="rounded-3 shadow-sm border p-2 main-card" data-index="${index}" id="main-card-${index}" data-cash-up-id="${c.id}">
+                                        <div class="d-flex flex-column h-100">
+                                        <!-- Header Section -->
+                                        <div class="d-flex align-items-start justify-content-between mb-3">
+                                            <div class="">
+                                                <div class="d-flex align-items-center branch-admin-header mb-2">
+                                                    <i class="bx bx-building"></i>
+                                                    <span class="mb-0">${c.branch__name}</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <small class="mt-1 d-block">${new Date(c.created_at).toLocaleDateString()}</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <i class="bx bx-user"></i>
+                                                    <span class="">${c.created_by__username}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Stats Section -->
+                                        <div class="row p-2">
+                                            <table>
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="table-td-text">
+                                                            Income
+                                                        </td>
+                                                        <td>__________________</td>
+                                                        <td class="table-td-text">
+                                                            <span class="table-td-text expected-amount">${c.total_sales_amount || '$0.00'}</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="table-td-text">
+                                                           Expenses
+                                                        </td>
+                                                        <td>__________________</td>
+                                                        <td class="table-td-text">${c.total_expense_amount || '$0.00'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="table-td-text">
+                                                            Cash Up Amount
+                                                        </td>
+                                                        <td>__________________</td>
+                                                        <td class="table-td-text">$${c.cashed_amount || '$0.00'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="table-td-text">
+                                                            Balance
+                                                        </td>
+                                                        <td>__________________</td>
+                                                        <td class="table-td-text border-top text-danger">$${c.short_fall || '$0.00'}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    <!-- Collapsible section for sales/expenses -->
+                                    <div class="child-section mt-2 d-none" id="child-section-${index}">
+                                        <div class="card shadow-sm m-2 mb-2" style="border: 1px solid #5c8989 !important;">
+                                            <div class="card-body">${createSalesExpensesSection(salesData, expensesData, c.id)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+    attachSplitExpenseEventListeners();
+}
+
+function toggleChildSection(index, el) {
+    
+    const childSection = document.getElementById(`child-section-${index}`);
+    const mainCard = document.getElementById(`main-card-${index}`);
+    const isExpanding = childSection.classList.contains('d-none');
+
+    document.querySelectorAll('.main-card').forEach(card => {
+        if (card.id !== `main-card-${index}`) {
+            card.classList.remove('active-card');
+            card.classList.add('not-active-card');
+        }
+    });
+
+    mainCard.classList.add('active-card');
+    mainCard.classList.remove('not-active-card');
+    
+    document.querySelectorAll('.child-section:not(.d-none)').forEach(section => {
+        if (section.id !== `child-section-${index}`) {
+            section.classList.add('d-none');
+        }
+    });
+    
+    if (isExpanding) {
+        childSection.style.position = 'absolute';
+        childSection.style.left = '0';
+        childSection.style.right = '0';
+        childSection.style.width = '100%';
+        childSection.style.zIndex = '1000';
+    } else {
+        childSection.style.position = '';
+        childSection.style.left = '';
+        childSection.style.right = '';
+        childSection.style.width = '';
+        childSection.style.zIndex = '';
+    }
+    
+    childSection.classList.toggle('d-none');
+}
+
+function createSalesExpensesSection(sales, expenses, cash_up_id) {
+    if (!Array.isArray(sales) || sales.length === 0) {
+        return `
+            <div class="section-header d-flex justify-content-between align-items-center">
+                <h5 class="section-title">
+                    <i class="bx bx-cart me-2 text-primary"></i>Sales
+                </h5>
+            </div>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-cart-x"></i>
+                </div>
+                <p>No sales data available</p>
+            </div>
+        `;
+    }
+
+    let counter = 1; 
+
+    return `     
+        <div class="table-responsive">
+            <table class="table modern-table">
+                <tbody>
+                    ${sales.map(s => s.sales.map(sale => `
+                        <tr class="table-row ${sale.cash_up_status ? 'recorded' : ''}" data-sale-id="${sale.id}" data-branch="${sale.branch}">
+                            <td>
+                                <div class="item-info">
+                                    <span class="item-name">${counter++}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="item-info">
+                                    <span class="item-name">${sale.products_purchased || 'No description'}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="invoice-number">#${sale.invoice_number}</span>
+                            </td>
+                            <td>
+                                <span class="branch-name">${sale.branch__name}</span>
+                            </td>
+                            <td>
+                                <span class="income">$${sale.amount_paid}</span>
+                            </td>
+                            <td>
+                                <select id="category-${sale.id}" class="form-select form-select-sm" ${sale.cash_up_status ? 'disabled' : ''}>
+                                    <option value="sales">sales</option>
+                                    {% for category in income_categories %}
+                                        <option value='{{ category.name }}'>{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                ${sale.cash_up_status 
+                                    ? `<span class="status-badge recorded">
+                                        <i class="bx bx-check-double me-1"></i>Recorded
+                                       </span>`
+                                    : `<span class="status-badge pending">
+                                        <i class="bx bx-clock me-1"></i>Pending
+                                       </span>`
+                                }
+                            </td>
+                            <td>
+                                <div class="actions-cell">
+                                    ${sale.cash_up_status
+                                        ? `<button class="btn btn-sm btn-outline-secondary rounded-pill undo-record-sale-btn" data-sale-id="${sale.id}">
+                                            <i class='bx bx-undo me-1'></i>Undo
+                                           </button>`
+                                        : `<button class="btn btn-sm btn-success rounded-pill record-sale-btn" 
+                                            id="btn-${sale.id}" data-sale-id="${sale.id}" data-branch="${sale.branch}">
+                                            <i class="bi bi-check-lg me-1"></i>Record
+                                           </button>`
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    `)).join('')}
+                </tbody>
+            </table>
+            <div class="d-flex justify-content-end">
+                <button class="btn btn-primary btn-sm" id="record-all-sales-btn">
+                    <i class="bx bx-check2-all me-1" onclick="confirmCashUp(${cash_up_id})"></i>Record All
+                </button>
+             </div>
+        </div>
+        
+        <style>
+            .modern-table {
+                border: none;
+                border-radius: 12px;
+                overflow: hidden;
+                background: white;
+            }
+            
+            .modern-table thead th {
+                background: #f8fafc;
+                border: none;
+                padding: 16px 20px;
+                font-weight: 600;
+                color: #475569;
+                font-size: 0.875rem;
+                text-transform: uppercase;
+                letter-spacing: 0.025em;
+            }
+            
+            .modern-table tbody td {
+                border: none;
+                border-bottom: 1px solid #f1f5f9;
+                padding: 16px 20px;
+                vertical-align: middle;
+            }
+            
+            .table-row {
+                transition: all 0.2s ease;
+            }
+            
+            .table-row:hover {
+                background-color: #f8fafc;
+            }
+            
+            .table-row.recorded {
+                background-color: #f0fdf4;
+                opacity: 0.8;
+            }
+            
+            .item-info .item-name {
+                font-weight: 500;
+                color: #1e293b;
+            }
+            
+            .invoice-number {
+                font-family: 'SFMono-Regular', Consolas, monospace;
+                background: #f1f5f9;
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-size: 0.875rem;
+                color: #475569;
+            }
+            
+            .branch-name {
+                color: #64748b;
+                font-weight: 500;
+            }
+            
+            .amount-display {
+                font-weight: 600;
+                font-size: 1rem;
+            }
+            
+            .amount-display.income {
+                color: #059669;
+            }
+            
+            .status-badge {
+                display: inline-flex;
+                align-items: center;
+                padding: 6px 12px;
+                border-radius: 100px;
+                font-size: 0.75rem;
+                font-weight: 500;
+            }
+            
+            .status-badge.recorded {
+                background: #dcfce7;
+                color: #166534;
+            }
+            
+            .status-badge.pending {
+                background: #fef3c7;
+                color: #92400e;
+            }
+            
+            .actions-cell {
+                white-space: nowrap;
+            }
+            
+            .section-title {
+                font-weight: 600;
+                color: #1e293b;
+                margin: 0;
+                display: flex;
+                align-items: center;
+            }
+            
+            .empty-state {
+                text-align: center;
+                padding: 48px 24px;
+                background: #f9fafb;
+                border-radius: 12px;
+                color: #64748b;
+            }
+            
+            .empty-icon {
+                font-size: 3rem;
+                margin-bottom: 16px;
+                opacity: 0.4;
+            }
+        </style>
+        ${createExpensesSection(expenses, cash_up_id)}
+    `;
+}
+
+function createExpensesSection(expenses, cash_up_id) {
+    if (!Array.isArray(expenses) || expenses.length === 0) {
+        return `
+            <div>
+                <div class="empty-icon">
+                    <i class="bx bx-receipt-cutoff"></i>
+                </div>
+                <p>No expenses data available</p>
+                <button class="btn btn-success btn-sm w-100" onclick="showAcceptCashUpModal(${cash_up_id})">
+                    <i class="bi bi-check2-all me-1"></i>Accept Cash up
+                </button>
+            </div>
+        `;
+    }
+    return `
+        <div class="table-responsive">
+            <table class="table modern-table">
+                <tbody>
+                    ${expenses.map(e => `
+                        <tr class="table-row ${e.cash_up_status ? 'recorded' : ''}" data-expense-id="${e.id}" data-branch-id="${e.branch}">
+                            <td>
+                                <div class="item-info">
+                                    <span class="item-name">${e.description || 'No description'}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="expense-id">#${e.id}</span>
+                            </td>
+                            <td>
+                                <span class="amount-display expense">$${e.amount}</span>
+                            </td>
+                            <td>
+                                ${e.cash_up_status 
+                                    ? `<span class="status-badge recorded">
+                                        <i class="bx bx-check-double me-1"></i>Recorded
+                                       </span>`
+                                    : `<span class="status-badge pending">
+                                        <i class="bx bx-clock me-1"></i>Pending
+                                       </span>`
+                                }
+                            </td>
+                            <td>
+                                <div class="actions-cell">
+                                    ${e.cash_up_status ? `
+                                        <span class="text-muted small">Already recorded</span>
+                                    ` : `
+                                        <div class="btn-group gap-2">
+                                            <button type="button" class="btn btn-sm btn-success rounded-pill expense-action" 
+                                                data-action="record" data-expense-id="${e.id}">
+                                                <i class="bx bx-journal-check me-1"></i>Record
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill expense-action" 
+                                                data-action="split" data-branch-id="${e.branch_id}" data-expense-id="${e.id}"
+                                                data-description="${e.description || 'Expense'}" data-amount="${e.amount}">
+                                                <i class="bx bx-scissors me-1"></i>Split
+                                            </button>
+                                        </div>
+                                    `}
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+             <div class="d-flex justify-content-end">
+                <button class="btn btn-primary btn-sm" id="record-all-sales-btn">
+                    <i class="bi bi-check2-all me-1"></i>Record All
+                </button>
+                <button class="btn btn-success btn-sm" id="record-all-sales-btn">
+                    <i class="bi bi-check2-all me-1"></i>Accept Cash up
+                </button>
+            </div>
+        </div>
+
+        <style>
+            .amount-display.expense {
+                color: #dc2626;
+            }
+            
+            .expense-id {
+                font-family: 'SFMono-Regular', Consolas, monospace;
+                background: #fef2f2;
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-size: 0.875rem;
+                color: #dc2626;
+            }
+            
+            .btn-group {
+                display: flex;
+                gap: 8px;
+            }
+        </style>
+
+        <!-- Split Expense Modal -->
+        <div class="modal fade" id="splitExpenseModal" tabindex="-1" aria-labelledby="splitExpenseModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content">
+                    <div class="modal-header border-bottom">
+                        <h5 class="modal-title" id="splitExpenseModalLabel">Split Expense</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body overflow-auto">
+                        <div class="container-fluid">
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <span class="fs-5 fw-bold" id="expenseDescription"></span>
+                                        <span class="text-muted ms-2">Original: $<span id="originalAmount"></span></span>
+                                    </div>
+                                    <div class="remaining-badge">
+                                        Remaining: $<span id="remainingAmount" class="fw-bold"></span>
+                                    </div>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div id="splitProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div id="splitItemsContainer" class="split-items-grid">
+                                <!-- Split items will be added here -->
+                            </div>
+                            
+                            <button type="button" class="btn btn-outline-primary mt-4 rounded-pill" id="addSplitItemBtn">
+                                <i class="bi bi-plus-circle me-1"></i> Add Another Category
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary rounded-pill" id="saveSplitExpenseBtn" disabled>Save Splits</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+            .modal-content {
+                border-radius: 0;
+                border: none;
+                box-shadow: none;
+                height: 100vh;
+            }
+            
+            .modal-header {
+                padding: 1rem 1.5rem;
+                background-color: #f8f9fa;
+            }
+            
+            .modal-body {
+                padding: 1.5rem;
+                height: calc(100vh - 130px);
+            }
+            
+            .modal-footer {
+                padding: 1rem 1.5rem;
+                background-color: #f8f9fa;
+            }
+            
+            .remaining-badge {
+                background: #f0f9ff;
+                color: #0284c7;
+                padding: 6px 16px;
+                border-radius: 100px;
+                font-size: 0.9rem;
+            }
+            
+            .progress {
+                border-radius: 100px;
+                background: #e2e8f0;
+                overflow: hidden;
+            }
+            
+            .progress-bar {
+                background: linear-gradient(to right, #4361ee, #3b82f6);
+                transition: width 0.4s ease;
+            }
+            
+            .split-items-grid {
+                display: grid;
+                gap: 16px;
+            }
+
+            .modal-fullscreen {
+                padding: 0;
+                margin: 0;
+                max-width: 100%;
+            }
+
+            .modal-fullscreen .modal-content {
+                border: 0;
+                border-radius: 0;
+            }
+
+            .btn-close {
+                padding: 1rem;
+                margin: -1rem -1rem -1rem auto;
+            }
+        </style>
+    `;
+}
+
+function updateProgressBar(totalItems, recordedItems) {
+    const progressBar = document.getElementById('recordProgressBar');
+    if (!progressBar) return;
+
+    const percentage = Math.round((recordedItems / totalItems) * 100);
+    progressBar.style.width = `${percentage}%`;
+    progressBar.setAttribute('aria-valuenow', percentage);
+    progressBar.innerText = `${percentage}%`;
+
+    if (percentage === 100) {
+        progressBar.classList.remove('progress-bar-animated');
+    }
+}
+
+
+function attachSplitExpenseEventListeners() {
+    document.getElementById('addSplitItemBtn')?.addEventListener('click', addSplitItem);
+    document.getElementById('saveSplitExpenseBtn')?.addEventListener('click', saveSplitExpense);
+    
+    document.querySelectorAll('.record-sale-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const saleId = this.getAttribute('data-sale-id');
+            const branch = this.getAttribute('data-branch');
+            const categoryElement = document.getElementById(`category-${saleId}`);
+            const category = categoryElement ? categoryElement.value : '';
+            
+            recordSale(saleId, 'sale', branch, category);
+        });
+    });
+
+    document.querySelectorAll('.undo-record-sale-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const saleId = this.getAttribute('data-sale-id');
+            const branch = this.getAttribute('data-branch');
+            const categoryElement = document.getElementById(`category-${saleId}`);
+            const category = categoryElement ? categoryElement.value : '';
+            
+            recordSale(saleId, 'sale', branch, category);
+        });
+    });
+    
+    document.getElementById('record-all-sales-btn')?.addEventListener('click', function() {
+        const categorySelector = document.getElementById('category-all');
+        const selectedCategory = categorySelector.value;
+        
+        if (!selectedCategory) {
+            showToast('Warning', 'Please select a category for all sales', 'warning');
+            return;
+        }
+        
+        recordAllSales(selectedCategory);
+    });
+                                                        
+    document.querySelectorAll('.expense-action').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const action = this.getAttribute('data-action');
+            const expenseId = this.getAttribute('data-expense-id');
+            const branch = this.getAttribute('data-branch-id');
+            console.log(branch, this)
+
+            if (action === 'split') {
+                const description = this.getAttribute('data-description');
+                const amount = parseFloat(this.getAttribute('data-amount'));
+                splitExpense(expenseId, description, amount);
+            } else if (action === 'record') {
+                recordExpense(expenseId);
+            } else if (action === 'review') {
+                markAsReviewed(expenseId);
+            } else if (action === 'flag') {
+                flagIssue(expenseId);
+            }
+        });
+    });
+}
+
+let currentExpenseId = null;
+let currentExpenseTotal = 0;
+let splitItems = [];
+let splitItemCounter = 0;
+
+function splitExpense(expenseId, description, amount, branch_id) {
+    currentExpenseId = expenseId;
+    currentExpenseTotal = parseFloat(amount);
+    splitItems = [];
+    splitItemCounter = 0;
+    
+    document.getElementById('expenseDescription').textContent = description;
+    document.getElementById('originalAmount').textContent = amount;
+    document.getElementById('remainingAmount').textContent = amount;
+    document.getElementById('splitProgressBar').style.width = '0%';
+    document.getElementById('splitItemsContainer').innerHTML = '';
+    document.getElementById('saveSplitExpenseBtn').disabled = true;
+    
+    addSplitItem();
+    
+    const splitModal = new bootstrap.Modal(document.getElementById('splitExpenseModal'));
+    splitModal.show();
+}
+
+function addSplitItem() {
+    splitItemCounter++;
+    const itemId = `split-item-${splitItemCounter}`;
+    
+    const splitItem = document.createElement('div');
+    splitItem.className = 'split-item card mb-3';
+    splitItem.id = itemId;
+    
+    const categoryOptions = `
+        {% for category in expense_categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+        {% endfor %}
+    `;
+    
+    splitItem.innerHTML = `
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label">Category</label>
+                    <select class="form-select category-select" data-item-id="${itemId}">
+                        <option value="">Select Category</option>
+                        ${categoryOptions}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">Amount</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" class="form-control amount-input" data-item-id="${itemId}" step="0.01" min="0.01" max="${currentExpenseTotal}">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-outline-danger w-100 remove-split-btn" data-item-id="${itemId}">
+                        <i class="bx bx-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-12">
+                    <label class="form-label">Note (Optional)</label>
+                    <textarea class="form-control note-input" data-item-id="${itemId}" rows="1"></textarea>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('splitItemsContainer').appendChild(splitItem);
+    
+    const categorySelect = splitItem.querySelector('.category-select');
+    const amountInput = splitItem.querySelector('.amount-input');
+    const noteInput = splitItem.querySelector('.note-input');
+    const removeButton = splitItem.querySelector('.remove-split-btn');
+    
+    categorySelect.addEventListener('change', updateSplitItem);
+    amountInput.addEventListener('input', updateSplitItem);
+    noteInput.addEventListener('input', updateSplitItem);
+    
+    if (document.querySelectorAll('.split-item').length === 1) {
+        removeButton.disabled = true;
+    } else {
+        document.querySelectorAll('.remove-split-btn').forEach(btn => {
+            btn.disabled = false;
+        });
+    }
+    
+    removeButton.addEventListener('click', function() {
+        removeSplitItem(itemId);
+    });
+
+    splitItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    splitItems.push({
+        id: itemId,
+        category: '',
+        amount: 0,
+        note: ''
+    });
+    
+    updateTotals();
+}
+
+function updateSplitItem(event) {
+    const itemId = event.target.getAttribute('data-item-id');
+    const itemIndex = splitItems.findIndex(item => item.id === itemId);
+    
+    if (itemIndex === -1) return;
+    
+    const item = document.getElementById(itemId);
+    
+    splitItems[itemIndex] = {
+        id: itemId,
+        category: item.querySelector('.category-select').value,
+        amount: parseFloat(item.querySelector('.amount-input').value) || 0,
+        note: item.querySelector('.note-input').value
+    };
+    
+    updateTotals();
+}
+
+function removeSplitItem(itemId) {
+    document.getElementById(itemId).remove();
+    
+    const itemIndex = splitItems.findIndex(item => item.id === itemId);
+    if (itemIndex !== -1) {
+        splitItems.splice(itemIndex, 1);
+    }
+    
+    if (document.querySelectorAll('.split-item').length === 1) {
+        document.querySelector('.remove-split-btn').disabled = true;
+    }
+    
+    updateTotals();
+}
+
+function updateTotals() {
+    const totalSplit = splitItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+    const remaining = Math.max(0, (currentExpenseTotal - totalSplit).toFixed(2));
+    const percentage = Math.min(100, (totalSplit / currentExpenseTotal) * 100);
+    
+    document.getElementById('remainingAmount').textContent = remaining;
+    
+    const progressBar = document.getElementById('splitProgressBar');
+    progressBar.style.width = `${percentage}%`;
+    
+    if (Math.abs(totalSplit - currentExpenseTotal) < 0.01) {
+        progressBar.className = 'progress-bar bg-success';
+        document.getElementById('saveSplitExpenseBtn').disabled = false;
+    } else if (totalSplit > currentExpenseTotal) {
+        progressBar.className = 'progress-bar bg-danger';
+        document.getElementById('saveSplitExpenseBtn').disabled = true;
+    } else {
+        progressBar.className = 'progress-bar bg-primary';
+        document.getElementById('saveSplitExpenseBtn').disabled = true;
+    }
+}
+
+async function saveSplitExpense() {
+    const invalidSplits = splitItems.filter(item => !item.category);
+    if (invalidSplits.length > 0) {
+        alert('Please select a category for all splits.');
+        return;
+    }
+    
+    const saveButton = document.getElementById('saveSplitExpenseBtn');
+    const originalText = saveButton.innerHTML;
+    saveButton.disabled = true;
+    saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+    
+    try {
+        const splitItemsForApi = splitItems.map(item => ({
+            expense_id: currentExpenseId, 
+            category_id: item.category,
+            amount: item.amount,
+            note: item.note
+        }));
+        
+        const response = await fetch('/finance/save_expense_split/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                branch_id:branchId,
+                expense_id: currentExpenseId,
+                splits: splitItemsForApi
+            })
+        });
+        
+        const result = await response.json();
+
+        console.log(result)
+        
+        if (result.success) {
+           
+            bootstrap.Modal.getInstance(document.getElementById('splitExpenseModal')).hide();
+            
+            showToast('Success', 'Expense has been split successfully', 'success');
+            
+            const expenseRow = document.querySelector(`tr[data-expense-id="${currentExpenseId}"]`);
+            if (expenseRow) {
+                expenseRow.classList.add('table-success', 'fade-out');
+                setTimeout(() => {
+                    expenseRow.remove();
+                }, 500);
+            }
+        } else {
+            throw new Error(result.message || 'Failed to split expense');
+        }
+    } catch (error) {
+        console.error('Error splitting expense:', error);
+        showToast('Error', error.message || 'Failed to split expense', 'danger');
+    } finally {
+        saveButton.disabled = false;
+        saveButton.innerHTML = originalText;
+    }
+}
+
+function recordAllSales(selectedCategory) {
+    const saleRows = document.querySelectorAll(`tr[data-sale-id]`);
+    let processedCount = 0;
+    let successCount = 0;
+    
+    showToast('Processing', 'Recording all sales...', 'info');
+    
+    const promises = Array.from(saleRows).map(row => {
+        const saleId = row.getAttribute('data-sale-id');
+        const branch = row.getAttribute('data-branch');
+        const categoryDropdown = document.getElementById(`category-${saleId}`);
+        
+        if (categoryDropdown) {
+            categoryDropdown.value = selectedCategory;
+            return recordSale(saleId, 'sale', branch, selectedCategory)
+                .then(() => {
+                    processedCount++;
+                    successCount++;
+                })
+                .catch(error => {
+                    processedCount++;
+                    console.error(`Error recording sale ${saleId}:`, error);
+                });
+        }
+        return Promise.resolve();
+    });
+    
+    Promise.all(promises).then(() => {
+        if (successCount === saleRows.length) {
+            showToast('Success', `All ${successCount} sales recorded successfully`, 'success');
+        } else {
+            showToast('Partial Success', `${successCount} of ${saleRows.length} sales recorded successfully`, 'warning');
+        }
+    });
+}
+
+async function recordSale(saleId, type, branch, category) {
+    if (!category) {
+        showToast('Warning', 'Please select a category first', 'warning');
+        throw new Error('Category not selected');
+    }
+
+    console.log(saleId, type, branch, category)
+    
+    const button = document.getElementById(`btn-${saleId}`);
+    if (!button) return Promise.reject(new Error('Button not found'));
+
+    console.log(button)
+    
+    const originalText = button.innerHTML;
+    
+    button.disabled = true;
+    button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...`;
+    
+    try {
+        const response = await fetch('/finance/record_cashflow/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ 
+                id: saleId, 
+                type: type, 
+                branch: branch,
+                category: category
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            button.classList.remove('btn-outline-success');
+            button.classList.add('btn-success');
+            button.innerHTML = `<i class="bi bi-check-circle"></i> Recorded`;
+            button.disabled = true;
+            
+            const categorySelect = document.getElementById(`category-${saleId}`);
+            if (categorySelect) categorySelect.disabled = true;
+            
+            showToast('Success', 'Sale recorded successfully', 'success');
+
+            fetchCashUpDetails(branchId)
+
+            return result;
+        } else {
+            throw new Error(result.message || 'Failed to record sale');
+        }
+    } catch (error) {
+        console.error(`Error recording sale ${saleId}:`, error);
+        button.disabled = false;
+        button.innerHTML = originalText;
+        showToast('Error', error.message || 'Failed to record sale', 'danger');
+        throw error;
+    }
+}
+
+async function UndoRecordSale(saleId, type, branch, category) {
+    if (!category) {
+        showToast('Warning', 'Please select a category first', 'warning');
+        throw new Error('Category not selected');
+    }
+
+    console.log(saleId, type, branch, category)
+    
+    const button = document.getElementById(`btn-${saleId}`);
+    if (!button) return Promise.reject(new Error('Button not found'));
+    
+    const originalText = button.innerHTML;
+    
+    button.disabled = true;
+    button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...`;
+    
+    try {
+        const response = await fetch('/finance/undo_record_cashflow/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ 
+                id: saleId, 
+                type: type, 
+                branch: branch,
+                category: category
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            button.classList.remove('btn-outline-success');
+            button.classList.add('btn-success');
+            button.innerHTML = `<i class="bi bi-check-circle"></i> Recorded`;
+            button.disabled = true;
+            
+            const categorySelect = document.getElementById(`category-${saleId}`);
+            if (categorySelect) categorySelect.disabled = true;
+            
+            showToast('Success', 'Sale successfully undone', 'success');
+
+            fetchCashUpDetails(branchId)
+
+            return result;
+        } else {
+            throw new Error(result.message || 'Failed to record sale');
+        }
+    } catch (error) {
+        console.error(`Error recording sale ${saleId}:`, error);
+        button.disabled = false;
+        button.innerHTML = originalText;
+        showToast('Error', error.message || 'Failed to record sale', 'danger');
+        throw error;
+    }
+}
+
+function showToast(title, message, type = 'info') {
+    const toastContainer = document.getElementById('toast-container') || createToastContainer();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center border-0 show`;
+    toast.classList.add(`bg-${type === 'info' ? 'primary' : type}`);
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body text-white">
+                <strong>${title}:</strong> ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+    container.style.zIndex = '1050';
+    document.body.appendChild(container);
+    return container;
+}
+
+async function recordExpense(expenseId) {
+    if (expenseId) {
+        const response = await fetch('/finance/save_expense_split/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                branch_id:branchId,
+                expense_id: expenseId
+            })
+        });
+
+        const result = await response.json()
+        console.log(result)
+
+        if (result.success){
+            showToast('Success', 'Expense recorded successfully', 'success');
+        }else {
+            throw new Error(result.message || 'Failed to record expense');
+        }
+    } else{
+        showToast('Error', error.message || 'Failed to record expense', 'danger');
+    }
+}
+
+function markAsReviewed(expenseId) {
+    console.log(`Marking expense ${expenseId} as reviewed`);
+    showToast('Success', 'Expense marked as reviewed', 'info');
+    
+    const expenseRow = document.querySelector(`tr[data-expense-id="${expenseId}"]`);
+    if (expenseRow) {
+        expenseRow.classList.add('table-info');
+        
+        const actionCell = expenseRow.querySelector('td:last-child');
+        if (actionCell) {
+            actionCell.innerHTML = '<span class="badge bg-info">Reviewed</span>';
+        }
+    }
+}
+
+// to be implemented
+function flagIssue(expenseId) {
+    console.log(`Flagging issue with expense ${expenseId}`);
+    showToast('Warning', 'Issue flagged for review', 'warning');
+    
+    const expenseRow = document.querySelector(`tr[data-expense-id="${expenseId}"]`);
+    if (expenseRow) {
+        expenseRow.classList.add('table-warning');
+        
+        const actionCell = expenseRow.querySelector('td:last-child');
+        if (actionCell) {
+            actionCell.innerHTML = '<span class="badge bg-warning text-dark">Issue Flagged</span>';
+        }
+    }
+}
+
+async function confirmCashUp(cash_up_id) {
+    const response = await fetch('/finance/confirm_cash_up/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            cash_up_id: cash_up_id
+        })
+    });
+    
+    const result = await response.json();
+
+    if (result.success) {
+        fetchCashUpDetails(branchId)
+        showToast('Success', 'Cash up confirmed successfully', 'success');
+    } else {
+        throw new Error(result.message || 'Failed to confirm cash up');
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.head.insertAdjacentHTML('beforeend', `
+<style>
+    .fade-in {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    .fade-out {
+        animation: fadeOut 0.3s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(-10px); }
+    }
+    
+    .details-row td {
+        transition: all 0.3s ease;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,0,0,.03);
+    }
+    
+    .split-item {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    
+    .split-item:hover {
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+    }
+    
+    .progress {
+        height: 8px;
+    }
+    
+    .progress-bar {
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
+</style>
+`);
+
+document.addEventListener('DOMContentLoaded', function() {
+    const firstBranchTab = document.querySelector('[data-branch-id]');
+    if (firstBranchTab) {
+        const branchId = firstBranchTab.getAttribute('data-branch-id');
+        console.log(branchId, 'here is the branch id')
+        fetchCashUpDetails(branchId);
+        firstBranchTab.classList.add('active');
+    }
+    fetchCashUpDetails('')
+});
+
+function showRecordCashUp() {
+    document.getElementById('recordCashUpSection').style.display = 'block';
+    document.getElementById('cashUpListSection').style.display = 'none';
+    document.getElementById('recordCashUpBtn').classList.add('active', 'bg-secondary');
+    document.getElementById('cashUpListBtn').classList.remove('active', 'bg-secondary');
+}
+
+function showCashUpList() {
+    document.getElementById('recordCashUpSection').style.display = 'none';
+    document.getElementById('cashUpListSection').style.display = 'block';
+    document.getElementById('cashUpListBtn').classList.add('active', 'bg-secondary');
+    document.getElementById('recordCashUpBtn').classList.remove('active', 'bg-secondary');
+}
+
+let currentScrollPosition = 0;
+const scrollAmount = 250;
+
+function scrollBranches() {
+    const container = document.querySelector('.branches-scroll-container');
+    const wrapper = document.querySelector('.branches-wrapper');
+    const maxScroll = wrapper.scrollWidth - container.clientWidth;
+    
+    currentScrollPosition += scrollAmount;
+    
+    if (currentScrollPosition > maxScroll) {
+        currentScrollPosition = 0;
+    }
+    
+    wrapper.style.transform = `translateX(-${currentScrollPosition}px)`;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+ 
+    currentScrollPosition = 0;
+    const wrapper = document.querySelector('.branches-wrapper');
+    if (wrapper) {
+        wrapper.style.transform = 'translateX(0)';
+    }
+});
+
+
+function showAcceptCashUpModal(cashUpId) {
+    document.querySelectorAll('.child-section:not(.d-none)').forEach(section => {
+        section.classList.add('d-none');
+    });
+
+    document.querySelectorAll('.main-card').forEach(card => {
+        card.classList.remove('active-card');
+        card.classList.add('not-active-card');
+    });
+
+    const cashupModal = new bootstrap.Modal(document.getElementById('cashUpModal'));
+    cashupModal.hide();
+
+    const cashUp = document.querySelector(`[data-cash-up-id="${cashUpId}"]`);
+    const expectedAmount = cashUp.querySelector('.expected-amount').textContent;
+
+    // Reset form fields
+    document.getElementById('cashUpId').value = cashUpId;
+    document.getElementById('expectedAmount').value = expectedAmount;
+    document.getElementById('amountReceived').value = '';
+    document.getElementById('shortfall').value = '';
+    document.getElementById('assignAccount').value = '';
+    document.getElementById('assignToEmployee').value = '';
+    document.getElementById('assignToCompany').value = '';
+    document.getElementById('notes').value = '';
+
+    document.getElementById('employeeAssignment').classList.add('d-none');
+    document.getElementById('companyAssignment').classList.add('d-none');
+  
+    const amountReceivedInput = document.getElementById('amountReceived');
+    const newAmountReceivedInput = amountReceivedInput.cloneNode(true);
+    amountReceivedInput.parentNode.replaceChild(newAmountReceivedInput, amountReceivedInput);
+    
+    newAmountReceivedInput.addEventListener('input', function() {
+        const expected = parseFloat(expectedAmount.replace('$', ''));
+        const received = parseFloat(this.value) || 0;
+        const shortfall = expected - received;
+        document.getElementById('shortfall').value = `$${shortfall.toFixed(2)}`;
+    });
+    
+    const modal = new bootstrap.Modal(document.getElementById('acceptCashUpModal'));
+    modal.show();
+}
+
+function toggleAssignmentFields() {
+    const accountSelect = document.getElementById('assignAccount');
+    const employeeDiv = document.getElementById('employeeAssignment');
+    const companyDiv = document.getElementById('companyAssignment');
+    
+    employeeDiv.classList.add('d-none');
+    companyDiv.classList.add('d-none');
+    
+    if (accountSelect.value === 'employee') {
+        employeeDiv.classList.remove('d-none');
+    }else if (accountSelect.value === 'company'){
+        companyDiv.classList.remove('d-none');
+    }
+}
+
+async function submitAcceptCashUp() {
+    const form = document.getElementById('acceptCashUpForm');
+    const cashUpId = document.getElementById('cashUpId').value;
+    const amountReceived = document.getElementById('amountReceived').value;
+    const accountType = document.getElementById('assignAccount').value;
+    const notes = document.getElementById('notes').value;
+
+    if (!amountReceived) {
+        showToast('Error', 'Please enter the amount received', 'danger');
+        return;
+    }
+
+    if (!accountType) {
+        showToast('Error', 'Please select an account type', 'danger');
+        return;
+    }
+
+    let assignTo;
+    if (accountType === 'employee') {
+        assignTo = document.getElementById('assignToEmployee').value;
+        if (!assignTo) {
+            showToast('Error', 'Please select an employee', 'danger');
+            return;
+        }
+    } else if (accountType === 'company') {
+        assignTo = document.getElementById('assignToCompany').value;
+        if (!assignTo) {
+            showToast('Error', 'Please select a company account', 'danger');
+            return;
+        }
+    }
+
+    const saveButton = document.querySelector('#acceptCashUpModal .modal-footer .btn-primary');
+    const originalText = saveButton.innerHTML;
+    saveButton.disabled = true;
+    saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+    
+    try {
+        const response = await fetch('/finance/confirm_cash_up/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                cash_up_id: cashUpId,
+                amount_received: amountReceived,
+                account_type: accountType,
+                assigned_to: assignTo,
+                notes: notes
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const acceptModal = bootstrap.Modal.getInstance(document.getElementById('acceptCashUpModal'));
+            acceptModal.hide();
+            
+            await fetchCashUpDetails(branchId);
+            
+            showToast('Success', 'Cash up accepted successfully', 'success');
+            
+            const cashUp = document.querySelector(`[data-cash-up-id="${cashUpId}"]`);
+            if (cashUp) {
+                const index = cashUp.getAttribute('data-index');
+                toggleChildSection(index, cashUp.parentElement);
+            }
+        } else {
+            throw new Error(result.message || 'Failed to accept cash up');
+        }
+    } catch (error) {
+        console.error('Error accepting cash up:', error);
+        showToast('Error', error.message || 'Failed to accept cash up', 'danger');
+    } finally {
+        saveButton.disabled = false;
+        saveButton.innerHTML = originalText;
+    }
+}
+
+function loadRecordedCashUps() {
+    const branchId = document.getElementById('branchFilter').value;
+    const dateRange = document.getElementById('dateRangeFilter').value;
+    let startDate = '';
+    let endDate = '';
+
+    if (dateRange === 'custom') {
+        startDate = document.getElementById('startDate').value;
+        endDate = document.getElementById('endDate').value;
+    }
+
+    fetch('/finance/get_recorded_cash_ups/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            branch_id: branchId,
+            date_range: dateRange,
+            start_date: startDate,
+            end_date: endDate
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log(data.cash_ups, 'cash ups')
+            renderRecordedCashUps(data.cash_ups);
+        } else {
+            showToast('Error', data.message || 'Failed to load cash ups', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading recorded cash ups:', error);
+        showToast('Error', 'Failed to load cash ups', 'danger');
+    });
+}
+
+function renderRecordedCashUps(cashUps) {
+    const container = document.getElementById('recordedCashUps');
+
+    console.log(container, cashUps, 'cash ups ups ups')
+    
+    if (!cashUps || cashUps.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <div class="empty-icon mb-3">
+                    <i class="bx bx-receipt-cutoff" style="font-size: 3rem; color: #ccc;"></i>
+                </div>
+                <p class="text-muted">No recorded cash ups found</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="row g-3">
+            ${cashUps.map((cashUp, index) => `
+                <div class="col-md-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-1">${cashUp.branch__name}</h6>
+                                    <small class="text-muted">${new Date(cashUp.created_at).toLocaleDateString()}</small>
+                                </div>
+                                <span class="badge bg-success">Recorded</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td>Expected Amount</td>
+                                            <td class="text-end">$${cashUp.expected_cash}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Amount Received</td>
+                                            <td class="text-end">$${cashUp.received_amount}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Shortfall</td>
+                                            <td class="text-end text-danger">$${cashUp.short_fall}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-3">
+                                <small class="text-muted">Recorded by: ${cashUp.created_by__username}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const dateRangeFilter = document.getElementById('dateRangeFilter');
+    const customDateRange = document.getElementById('customDateRange');
+
+    loadRecordedCashUps()
+
+    dateRangeFilter.addEventListener('change', function() {
+        if (this.value === 'custom') {
+            customDateRange.classList.remove('d-none')
+        } else {
+            customDateRange.classList.add('d-none');
+            loadRecordedCashUps();
+        }
+    });
+
+    document.getElementById('branchFilter').addEventListener('change', loadRecordedCashUps);
+    document.getElementById('startDate').addEventListener('change', loadRecordedCashUps);
+    document.getElementById('endDate').addEventListener('change', loadRecordedCashUps);
+});
+</script>

@@ -34,6 +34,15 @@ class UserDetailsForm(forms.ModelForm):
             'branch',
             'role',
         ]
+    
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        password = self.cleaned_data.get('password')
+        if password:
+            user.set_password(password)
+        if commit:
+            user.save()
+        return user
 
 class UserDetailsForm2(forms.ModelForm):
 
@@ -45,10 +54,19 @@ class UserDetailsForm2(forms.ModelForm):
             'username',
             'email',
             'phonenumber',
+            'password',
             'company',
             'branch',
             'role',
         ]
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        password = self.cleaned_data.get('password')
+        if password:
+            user.set_password(password)
+        if commit:
+            user.save()
+        return user
 
 class UserPermissionsForm(forms.ModelForm):
     class Meta:

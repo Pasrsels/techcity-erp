@@ -16,7 +16,6 @@
                     <img src="{% if user.profile.profile_image %}{{ user.profile.profile_image.url }}{% else %}{% static 'assets/avatar.png' %}{% endif %}" alt="Profile Picture" class="img-thumbnail" style="width: 100px; height: 100px;">
                 </div>
                 <div>
-                    {# header#}
                     <p class="fw-bold pb-2">Personal Details:</p>
                     <p class="fw-normal">First Name: {{user.first_name}}</p>
                     <p class="fw-normal">Last Name: {{user.last_name}}</p>
@@ -24,7 +23,6 @@
                     <p class="fw-normal">Email: {{user.email}}</p>
                 </div>
                 <div>
-                    {# header#}
                     <p class="fw-bold pb-2">Work Details:</p>
                     <p class="fw-normal">Company: {{user.company}}</p>
                     <p class="fw-normal">Branch: {{user.branch}}</p>
@@ -41,7 +39,6 @@
         </div>
       </div>
     </div>
-    {# ********************************* modals ********************************* #}
     
     <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
         <div class="modal-dialog">

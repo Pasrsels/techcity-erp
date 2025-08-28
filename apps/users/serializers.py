@@ -4,12 +4,14 @@ from rest_framework import serializers
 from django.contrib.auth.models import Group
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+from loguru import logger
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email', 'first_name', 'last_name', 'phonenumber']
+        fields = ['username', 'email', 'first_name', 'last_name', 'phonenumber', 'role']
+        ref_name ="UserAppSerializer"
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -35,24 +37,30 @@ class LoginSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
     username = serializers.CharField(max_length=255, min_length=3)
     tokens = serializers.SerializerMethodField()
+    role = serializers.CharField(source='get_role_display', read_only=True)
 
+    class Meta:
+        model = User
+        fields = ['password', 'username', 'tokens', 'role']
+        
     def get_tokens(self, obj):
+    
         user = User.objects.get(username=obj['username'])
+
+        logger.info(f'User: {user}')
         return {
             'refresh': user.tokens()['refresh'],
             'access': user.tokens()['access']
         }
 
-    class Meta:
-        model = User
-        fields = ['password', 'username', 'tokens']
-
     def validate(self, attrs):
         username = attrs.get('username', '')
         password = attrs.get('password', '')
+        print(username, password, 'password')
         user = auth.authenticate(username=username, password=password)
 
         if not user:
+            logger.info('failed')
             raise AuthenticationFailed('Invalid credentials, try again')
         if not user.is_active:
             raise AuthenticationFailed('Account disabled, contact admin')
@@ -62,10 +70,9 @@ class LoginSerializer(serializers.ModelSerializer):
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'role': user.role,
+            'role': user.get_role_display(),
             'tokens': user.tokens
         }
-
 
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
@@ -84,3 +91,22 @@ class UserPermissionsSerializer(serializers.Serializer):
     class Meta:
         model = UserPermissions
         fields = ['name', 'category']
+        
+class RequestPasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class VerifyOtpSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
+
+class ResetPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['confirm_password']:
+            raise serializers.ValidationError("Passwords do not match")
+        return attrs
+
+class VerifyEmailSerializer(serializers.Serializer):
+    token = serializers.CharField()

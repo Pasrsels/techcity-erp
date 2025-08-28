@@ -16,8 +16,6 @@ from django.db import transaction
 import os
 
 today = localdate()
-
-
 class PaymentMethod(models.Model):
     name = models.CharField(max_length=255)
     
@@ -203,7 +201,6 @@ class StockTransaction(models.Model):
     unit_price = models.DecimalField(max_digits=15, decimal_places=2)
     date = models.DateField()
 
-
 def expense_receipt_upload_path(instance, filename):
     """Generates a unique file path for uploaded receipts."""
     return os.path.join('receipts/', f"expense_{instance.id}_{filename}")
@@ -219,7 +216,7 @@ class ExpenseCategory(models.Model):
     )
 
     def __str__(self):
-        return f"{self.parent.name} → {self.name}" if self.parent else self.name
+        return f" {self.name} → {self.parent.name} " if self.parent else self.name
 
 class Expense(models.Model):
     issue_date = models.DateTimeField(auto_now_add=True)
@@ -236,27 +233,53 @@ class Expense(models.Model):
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
     status = models.BooleanField(default=False)
     purchase_order = models.ForeignKey("inventory.PurchaseOrder", on_delete=models.CASCADE, null=True, blank=True)
-
+    account_to = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name="account_to", null=True)
     receipt = models.FileField(upload_to=expense_receipt_upload_path, null=True, blank=True)
-
-    is_recurring = models.BooleanField(default=False)
-    recurrence_value = models.PositiveIntegerField(null=True, blank=True, help_text="Repeat every X units")
-    recurrence_unit = models.CharField(
-        max_length=10,
-        choices=[
-            ('day', 'Day(s)'),
-            ('week', 'Week(s)'),
-            ('month', 'Month(s)'),
-            ('year', 'Year(s)')
-        ],
-        null=True,
-        blank=True
-    )
+    
+    is_recurring = models.BooleanField(default=False, null=True)
+    is_loan = models.BooleanField(default=False, null=True)
+    
+    has_reminder = models.BooleanField(default=False, null=True)
+    reminder_dated = models.DateField(null=True, blank=True)
+    
+    @classmethod
+    def get_period_total(cls, start_date, end_date, branch_id=None, category_filter=None):
+        """
+        Get total expenses for a specific period with optional filters
+        """
+        queryset = cls.objects.filter(
+            issue_date__date__gte=start_date,
+            issue_date__date__lte=end_date
+        )
+        
+        if branch_id:
+            queryset = queryset.filter(branch_id=branch_id)
+            
+        if category_filter:
+            queryset = queryset.filter(category__name__icontains=category_filter)
+            
+        return queryset.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+    
+    @classmethod
+    def get_category_breakdown(cls, start_date, end_date, branch_id=None, limit=10):
+        """
+        Get expense breakdown by category for a specific period
+        """
+        queryset = cls.objects.filter(
+            issue_date__date__gte=start_date,
+            issue_date__date__lte=end_date
+        )
+        
+        if branch_id:
+            queryset = queryset.filter(branch_id=branch_id)
+            
+        return queryset.values('category__name').annotate(
+            total=Sum('amount')
+        ).order_by('-total')[:limit]
 
     def __str__(self):
         return f"{self.issue_date} - {self.category} - {self.description} - ${self.amount}"
 
-    
 class Sale(models.Model):
     """
         Represents a sale transaction.
@@ -265,13 +288,18 @@ class Sale(models.Model):
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
     transaction = models.ForeignKey('finance.Invoice', on_delete=models.PROTECT)
     
-
     def __str__(self):
         return f"Sale to {self.transaction.customer} on {self.date} ({self.total_amount})"
+    
+class InvoiceCategory(models.Model): #to be checked
+    name = models.CharField(max_length=50, default="sales")
 
+    def __str__(self):
+        return self.name
+    
 class Invoice(models.Model):
     """
-    Model representing an invoice.
+        Model representing an invoice.
     """
     class PaymentStatus(models.TextChoices):
         DRAFT = 'Draft', _('Draft')
@@ -298,7 +326,7 @@ class Invoice(models.Model):
     subtotal =  models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     note = models.TextField(null=True)
     cancelled = models.BooleanField(default=False)
-    products_purchased = models.TextField()
+    products_purchased = models.TextField(null=True)
     invoice_return = models.BooleanField(default=False)
     payment_terms = models.CharField(choices=(
         ('cash', 'cash'),
@@ -307,28 +335,28 @@ class Invoice(models.Model):
     ))
     hold_status = models.BooleanField(default=False)
     amount_received = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    receiptServerSignature = models.TextField(null=True, blank=True)  # Change from CharField to TextField
+    receiptServerSignature = models.TextField(null=True, blank=True)
     receipt_hash = models.TextField(null=True, blank=True) 
     qr_code = models.ImageField(upload_to='qr_codes/', null=True, blank=True)
     signature_data = models.CharField(max_length=50, null=True)
     code = models.CharField(max_length=50, null=True)
     fiscal_day = models.CharField(max_length=50, null=True)
     cash_up_status = models.BooleanField(default=False, null=True)
+<<<<<<< HEAD
     zimra_inv_id = models.CharField(max_length=255, null=True)
     fiscal_day = models.IntegerField(null=True)
 
+=======
+    category = models.ForeignKey(InvoiceCategory, on_delete=models.CASCADE, null=True)
+>>>>>>> origin/production
     def generate_invoice_number(branch):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
+        print(last_invoice.invoice_number)
         if last_invoice:
-            if str(last_invoice.invoice_number.split('-')[0])[-1] == branch[0]:
-                last_invoice_number = int(last_invoice.invoice_number.split('-')[1]) 
-                new_invoice_number = last_invoice_number + 1   
-            else:
-                new_invoice_number = 1
-            return f"INV{branch[:1]}-{new_invoice_number:04d}"  
+            return f"INV{branch}-{int(last_invoice.invoice_number.split('-')[1]) + 1}"
         else:
             new_invoice_number = 1
-            return f"INV{branch[:1]}-{new_invoice_number:04d}"  
+            return f"INV{branch}-{new_invoice_number}"  
 
     def __str__(self):
         return f"Invoice #{self.invoice_number} - {self.customer.name}"
@@ -368,6 +396,13 @@ class InvoiceItem(models.Model):
 class layby(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='layby')
     branch = models.ForeignKey('company.branch', on_delete=models.CASCADE)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    payment_method = models.CharField(max_length=50, choices=[
+        ('cash', 'Cash'),
+        ('bank', 'Bank Transfer'),
+        ('ecocash', 'EcoCash'),
+    ], null=True)
     fully_paid = models.BooleanField(default=False)
 
     def check_payment_status(self):
@@ -393,7 +428,7 @@ class layby(models.Model):
                     amount_due=Decimal('0.00'),
                     user=self.invoice.user
                 )
-                s
+                
                 self.fully_paid = True
                 self.save()
                 # Log the activity
@@ -428,11 +463,12 @@ class laybyDates(models.Model):
         return f'{self.invoice}: {self.due_date}'
 
 class Paylater(models.Model):
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='paylater')
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='paylater', null=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     due_date = models.DateField()   
     paid = models.BooleanField(default=False)
+    branch = models.ForeignKey('company.branch', on_delete=models.CASCADE, null=True)
     payment_method = models.CharField(max_length=50, choices=[
         ('cash', 'Cash'),
         ('bank', 'Bank Transfer'),
@@ -442,12 +478,29 @@ class Paylater(models.Model):
     def __str__(self):
         return f'{self.invoice}: {self.due_date}'
     
+class paylaterDates(models.Model):
+    paylater = models.ForeignKey(Paylater, on_delete=models.CASCADE, null=True)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
+    due_date = models.DateField(null=True)
+    due_date = models.DateField(null=True)
+    paid = models.BooleanField(default=False)
+    payment_method = models.CharField(max_length=50, choices=[
+        ('cash', 'Cash'),
+        ('bank', 'Bank Transfer'),
+        ('ecocash', 'EcoCash'),
+    ], null=True)
+    
+    def __str__(self):
+        return f'{self.paylater}: {self.due_date}'
+
 class MonthlyInstallment(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True)
     due_date = models.DateField()  
     paid = models.BooleanField(default=False)
+    
     payment_method = models.CharField(max_length=50, choices=[
         ('cash', 'Cash'),
         ('bank', 'Bank Transfer'),
@@ -476,37 +529,86 @@ class Payment(models.Model):
 
 
 class Cashbook(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', _('Pending')
+        APPROVED = 'approved', _('Approved')
+        CANCELLED = 'cancelled', _('Cancelled')
+
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True)
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True)
-    issue_date = models.DateField(auto_now_add=True)
+    transfer = models.ForeignKey('finance.CashTransfers', on_delete=models.CASCADE, null=True)
+    income = models.ForeignKey('finance.income', on_delete=models.CASCADE, null=True)
+    issue_date = models.DateTimeField(auto_now_add=True)
     description = models.CharField(max_length=255)
     debit = models.BooleanField(default=False)
     credit = models.BooleanField(default=False)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    currency = models.ForeignKey(Currency, on_delete=models.CASCADE)
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, null=True)
     branch = models.ForeignKey('company.branch', on_delete=models.CASCADE)
     manager = models.BooleanField(default=False)
     accountant = models.BooleanField(default=False, null=True)
     director = models.BooleanField(default=False, null=True)
     cancelled = models.BooleanField(default=False, null=True)
     note = models.TextField(default='', null=True)
+<<<<<<< HEAD
     created_by = models.ForeignKey('users.user', on_delete=models.CASCADE, null=True)
     updated_by = models.ForeignKey('users.user', on_delete=models.CASCADE, related_name='updated_cashbook')
     updated_at = models.DateTimeField(auto_now=True)
     # status = models.BooleanField(default=True, null=True)
 
+=======
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    created_by = models.ForeignKey('users.user', on_delete=models.CASCADE, related_name='created_cashbook')
+    updated_by = models.ForeignKey('users.user', on_delete=models.CASCADE, related_name='updated_cashbook')
+    updated_at = models.DateTimeField(auto_now=True)
+    
+>>>>>>> origin/production
     def __str__(self):
         return f'{self.issue_date}'
 
 class CashBookNote(models.Model):
-    entry = models.ForeignKey(Cashbook, related_name="notes", on_delete=models.CASCADE)
+    entry = models.ForeignKey(Cashbook, related_name="notes", on_delete=models.CASCADE, null=True)
     user = models.ForeignKey('users.user', on_delete=models.CASCADE)
     note = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Note by {self.user.username} on {self.timestamp}"
+<<<<<<< HEAD
+=======
+    
+class Recurrence(models.Model):
+    class TimeUnit(models.TextChoices):
+        DAILY = 'daily', _('Daily')
+        WEEKLY = 'weekly', _('Weekly')
+        MONTHLY = 'monthly', _('Monthly')
+        YEARLY = 'yearly', _('Yearly')
+>>>>>>> origin/production
 
+    expense = models.OneToOneField('finance.Expense', on_delete=models.CASCADE, related_name='recurrence')
+    recurrence_value = models.PositiveIntegerField(help_text="Number of units between each recurrence (e.g., every 2 weeks)")
+    recurrence_unit = models.CharField(max_length=10, choices=TimeUnit.choices)
+    from_date = models.DateField()
+    to_date = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Recurring {self.expense.amount} {self.recurrence_unit} starting {self.from_date}"
+
+class Loan(models.Model):
+    class TimeUnit(models.TextChoices):
+        WEEK = 'week', _('Week')
+        MONTH = 'month', _('Month')
+        YEAR = 'year', _('Year')
+
+    expense = models.OneToOneField('finance.Expense', on_delete=models.CASCADE, related_name='loan')
+    loan_repayment_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    loan_interest_rate = models.DecimalField(max_digits=5, decimal_places=2, help_text="Interest rate as a percentage")
+    loan_period_value = models.PositiveIntegerField()
+    loan_period_unit = models.CharField(max_length=10, choices=TimeUnit.choices)
+
+    def __str__(self):
+        return f"Loan of {self.expense.amount} at {self.loan_interest_rate}% over {self.loan_period_value} {self.loan_period_unit}"
+    
 class CashTransfers(models.Model):
     class TransferMethod(models.TextChoices):
         BANK = ('Bank'), _('Bank')
@@ -577,7 +679,7 @@ class QoutationItems(models.Model):
     unit_price = models.DecimalField(max_digits=15, decimal_places=2)
     
     def __str__(self):
-        return f'{self.qoute.qoute_reference} {self.product.product.name}'
+        return f'{self.qoute.qoute_reference} {self.product.name}'
 
 class CashWithdraw(models.Model):
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
@@ -656,7 +758,6 @@ class AccountTransaction(models.Model):
     sales_returns = models.ForeignKey(SalesReturns, on_delete=models.CASCADE, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
-
 class ExpenseSubCategory(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
@@ -723,7 +824,7 @@ class Cashflow(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     cash_up = models.ForeignKey('finance.CashUp', on_delete=models.CASCADE, null=True)
-
+ 
     def save(self, *args, **kwargs):
         # Calculate total (income - expense)
         self.total = self.income - self.expense
@@ -738,7 +839,7 @@ class CashUp(models.Model):
     expected_cash = models.DecimalField(max_digits=10, decimal_places=2)
     received_amount = models.DecimalField(max_digits=10, decimal_places=2)
     balance = models.DecimalField(max_digits=10, decimal_places=2)
-    sales = models.ManyToManyField(InvoiceItem, related_name='cashup_sales')
+    sales = models.ManyToManyField(Invoice, related_name='cashup_sales')
     expenses = models.ManyToManyField(Expense, related_name='cashup_expenses')
     status = models.BooleanField(default=False)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_cashups')
@@ -746,6 +847,8 @@ class CashUp(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     sales_status = models.BooleanField(default=False)
     expenses_status = models.BooleanField(default=False)
+    cashed_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    short_fall = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
     def save(self, *args, **kwargs):
         # Calculate balance (received_amount - expected_cash)
@@ -805,14 +908,24 @@ class Income(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     currency = models.ForeignKey('Currency', on_delete=models.CASCADE)
+<<<<<<< HEAD
     category = models.ForeignKey('IncomeCategory', on_delete=models.PROTECT,  null=True)
     note = models.CharField(max_length=200)
+=======
+    category = models.ForeignKey('IncomeCategory', on_delete=models.PROTECT, null = True)
+    note = models.CharField(max_length=200, null=True)
+>>>>>>> origin/production
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    account = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='account_users', null=True)
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
     status = models.BooleanField(default=False)
-    sale = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE, null=True)
+    sale = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True)
     expenses = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True)
     is_recurring = models.BooleanField(default=False)
+    reminder = models.BooleanField(default=False)
+    remainder_date = models.DateField(null=True)
+    from_date = models.DateField(null=True)
+    to_date = models.DateField(null=True)
     recurrence_value = models.PositiveIntegerField(null=True, blank=True)
     recurrence_unit = models.CharField(
         max_length=10,
@@ -825,6 +938,47 @@ class Income(models.Model):
         null=True,
         blank=True
     )
+<<<<<<< HEAD
+=======
+    
+    @classmethod
+    def get_period_total(cls, start_date, end_date, branch_id=None, sale_only=None):
+        """
+        Get total income for a specific period with optional filters
+        """
+        queryset = cls.objects.filter(
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date
+        )
+        
+        if branch_id:
+            queryset = queryset.filter(branch_id=branch_id)
+            
+        if sale_only is True:
+            queryset = queryset.filter(sale__isnull=False)
+        elif sale_only is False:
+            queryset = queryset.filter(sale__isnull=True)
+            
+        return queryset.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+    
+    @classmethod
+    def get_category_breakdown(cls, start_date, end_date, branch_id=None, limit=10):
+        """
+        Get income breakdown by category for a specific period
+        """
+        queryset = cls.objects.filter(
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date
+        )
+        
+        if branch_id:
+            queryset = queryset.filter(branch_id=branch_id)
+            
+        return queryset.values('category__name').annotate(
+            total=Sum('amount')
+        ).order_by('-total')[:limit]
+
+>>>>>>> origin/production
 
     def __str__(self):
         return f"{self.created_at} - {self.category} - {self.note} - ${self.amount}"
@@ -834,7 +988,6 @@ class FinanceLog(models.Model):
         ('income', 'Income'),
         ('expense', 'Expense'),
     ]
-
     type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
     category = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -843,6 +996,7 @@ class FinanceLog(models.Model):
 
     def __str__(self):
         return f"{self.get_type_display()} | {self.category} | ${self.amount}"
+<<<<<<< HEAD
 
 class CreditNote(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='credit_notes')
@@ -925,3 +1079,51 @@ class ValueAddedTax(models.Model):
     
     def __str__(self):
         return self.name
+=======
+    
+
+class LossAccount(models.Model):
+    name = models.CharField(max_length=100)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_transaction_date = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.name} - {self.balance}"
+
+
+class BankAccount(models.Model):
+    name = models.CharField(max_length=100)
+    branch = models.CharField(max_length=100)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.balance}"
+    
+class BankAccountTransaction(models.Model):
+    bank_account = models.ForeignKey(BankAccount, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    transaction_type = models.CharField(max_length=10)
+    description = models.TextField()
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.bank_account} - {self.amount} - {self.transaction_type} - {self.description} - {self.date}"
+    
+
+class Contact(models.Model):
+    CONTACT_TYPE_CHOICES = [
+        ('Customer', 'Customer'),
+        ('Supplier', 'Supplier'),
+    ]
+    name = models.CharField(max_length=100)
+    mobile = models.CharField(max_length=20, blank=True, null=True)
+    contact_type = models.CharField(max_length=10, choices=CONTACT_TYPE_CHOICES)
+
+    def __str__(self):
+        return self.name
+
+>>>>>>> origin/production

@@ -1,28 +1,3 @@
-<!-- 
-
-This template renders a table displaying transfer records in the inventory system. It includes the following sections:
-
-1. Loader: A loading spinner displayed while data is being fetched.
-2. Table: A table with transfer details including transfer ID, quantity, status, user, reference, discrepancy, and actions.
-3. Modals:
-    - Delete Modal: A modal for confirming the deletion of a transfer.
-    - Items Modal: A modal displaying detailed information about the products in a transfer.
-    - Action Modal: A modal for performing actions on stock discrepancies.
-
-Table Columns:
-- Transfer: Displays the transfer time and status icons.
-- Trans Qnty | Amnt trans: Shows the transferred and received quantities and amounts.
-- Status: Indicates the status of the transfer (defective, all received, partial, not yet received).
-- User: The username of the person who initiated the transfer.
-- Reference: The reference ID of the transfer.
-- Discrepancy: Placeholder for discrepancy information.
-- Action: Buttons for printing, processing, or canceling the transfer.
-
-JavaScript:
-- Handles modal display and data fetching for transfer items.
-- Manages actions such as receiving quantities and canceling transfers.
-- Updates the UI based on user interactions and fetched data.
--->
 {% load static%}
 {% block content %}
 <style>
@@ -269,7 +244,7 @@ JavaScript:
 
                             <div class="mb-3 d-none" id="quantityWrapper">
                                 <label for="quantity" class="form-label">Quantity</label>
-                                <input type="number" id="quantity" class="form-control" min="1" placeholder="Enter quantity">
+                                <input type="number" id="quantity" class="form-control" placeholder="Enter quantity">
                             </div>
 
                             <div class="mb-3 d-none" id="sendToBranches">

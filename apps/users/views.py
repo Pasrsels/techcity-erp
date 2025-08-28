@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from apps.company.models import Branch
 from apps.settings.models import NotificationsSettings
 from utils.authenticate import authenticate_user
-from .models import User, UserPermissions
+from .models import User, UserPermissions, EmailVerificationToken, PasswordResetOTP
 from .forms import UserRegistrationForm, UserDetailsForm, UserDetailsForm2, UserPermissionsForm
 from django.contrib import messages
 from django.contrib.auth import login, logout
@@ -20,6 +20,14 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from utils.send_verification_email import *
 from django.db import transaction
+from django.contrib.auth import authenticate
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.cache import never_cache
+import time
+from django.core.mail import send_mail
+from django.utils import timezone
+from datetime import timedelta
+from django.conf import settings
 
 @login_required
 def UserPermission_CR(request):
@@ -47,7 +55,7 @@ def UserPermission_CR(request):
 
 @login_required
 def UserPermission_UD(request,id):
-
+    
     if request.method == 'GET':
         permissions_data = User.objects.filter(id = id).values()
         logger.info(permissions_data)
@@ -82,25 +90,6 @@ def UserPermission_UD(request,id):
         
 @login_required
 def users(request):
-    """
-        View function to handle user management.
-        This view handles the display and registration of users. It supports both
-        GET and POST requests. On a GET request, it displays a list of users filtered
-        by a search query if provided. On a POST request, it processes the user
-        registration form and adds a new user if the form is valid.
-        Args:
-            request (HttpRequest): The HTTP request object.
-        Returns:
-            HttpResponse: The rendered 'auth/users.html' template with the context
-            containing the list of users, user registration form, user details form,
-            and user permissions form.
-        Context:
-            users (QuerySet): A queryset of User objects filtered by the search query.
-            form (UserRegistrationForm): The user registration form.
-            user_details_form (UserDetailsForm2): The user details form.
-            PermData (UserPermissionsForm): The user permissions form.
-    """
-
     form = UserRegistrationForm()
     user_details_form = UserDetailsForm2()
     formPermissions = UserPermissionsForm()
@@ -108,9 +97,8 @@ def users(request):
     search_query = request.GET.get('q', '')
 
     users = User.objects.filter(
-        Q(username__icontains=search_query) | 
-        Q(email__icontains=search_query)
-
+        Q(username__icontains=search_query) | Q(email__icontains=search_query),
+        is_deleted=False
     ).select_related(
         'branch', 
         'company'
@@ -120,111 +108,208 @@ def users(request):
     )
     
     if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
+        try:
+            data = request.POST
+            user = User()
 
-        if form.is_valid():
-            user = form.save(commit=False)
+            user.first_name = data.get('first_name')
+            user.email = data.get('email')
+            user.phonenumber = data.get('phonenumber')
+            user.username = data.get('username')
+            user.role = data.get('role')  
+            user.company_id = data.get('company')  
+            user.branch_id = data.get('branch')  
             
-            # branches = form.cleaned_data['branches']
-            # user.branch.set(branches)
-            
-            # hash the user password
-            user.password = make_password(form.cleaned_data['password'])
+            raw_password = data.get('password')
+            if not raw_password:
+                return JsonResponse({'success': False, 'message': 'Password is required'}, status=400)
+
+            user.set_password(raw_password)
+            user.is_active = True
             user.save()
 
-            messages.success(request, 'User successfully added')
-        else:
-            messages.error(request, 'Invalid form data')
+            return JsonResponse({'success': True, 'message': 'User registered successfully'})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
     return render(request, 'auth/users.html', {
-        'users': users,
-        'form': form, 
-        'user_details_form': user_details_form, 
-        'PermData':formPermissions
+            'users': users,
+            'form': form, 
+            'user_details_form': user_details_form, 
+            'PermData':formPermissions
         }
     )
 
 
+@never_cache
 def login_view(request):
-    """
-    Handle user login requests.
-    This view handles both GET and POST requests for user login. On a GET request,
-    it renders the login page. On a POST request, it processes the login form,
-    validates the email, authenticates the user, and logs them in if the credentials
-    are correct and the account is active.
-    Args:
-        request (HttpRequest): The HTTP request object.
-    Returns:
-        HttpResponse: The HTTP response object. It returns the login page on GET requests,
-                      and on POST requests, it either redirects to the next URL or the POS
-                      page if login is successful, or re-renders the login page with an
-                      error message if login fails.
-    """
-
+    ip_address = request.META.get('REMOTE_ADDR')
+    cache_key = f'login_attempts_{ip_address}'
+    attempts = cache.get(cache_key, 0)
+    
+    if attempts >= 5:
+        if request.headers.get('Accept') == 'application/json':
+            return JsonResponse({
+                'success': False,
+                'message': 'Too many login attempts. Please try again later.',
+                'status': 'error'
+            }, status=429)
+        messages.error(request, 'Too many login attempts. Please try again later.')
+        return render(request, 'auth/login.html', status=429)
+    
     if request.method == 'GET':
         return render(request, 'auth/login.html')
     
     if request.method == 'POST':
-        email_address = request.POST['email_address']
-        password = request.POST['password']
-
-        # Validate email
+        email_address = request.POST.get('email_address', '').strip()
+        password = request.POST.get('password', '').strip()
+        
+        if not email_address or not password:
+            if request.headers.get('Accept') == 'application/json':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Please provide both email and password',
+                    'status': 'error'
+                }, status=400)
+            messages.error(request, 'Please provide both email and password')
+            return render(request, 'auth/login.html', status=400)
+        
         try:
             validate_email(email_address)
         except ValidationError:
+            cache.set(cache_key, attempts + 1, 900)  # 15 minutes timeout
+            if request.headers.get('Accept') == 'application/json':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid email format',
+                    'status': 'error'
+                }, status=400)
             messages.error(request, 'Invalid email format')
-            return render(request, 'auth/login.html')
-
-        user = authenticate_user(email=email_address, password=password)
+            return render(request, 'auth/login.html', status=400)
+        
+        try:
+            user_obj = User.objects.get(email=email_address)
+            user = authenticate(request, username=user_obj.username, password=password)
+        except User.DoesNotExist:
+            user = None
+            time.sleep(0.1)
         
         if user is not None:
             if user.is_active:
+                cache.delete(cache_key)
+                request.session.set_expiry(28800)
+                request.session.set_test_cookie()
+                
                 login(request, user)
-
-                logger.info(f'User: {user.first_name + " " + user.email} logged in')
+                
+                logger.info(f'User: {user.first_name} {user.email} logged in successfully')
                 logger.info(f'User role: {user.role}')
-
-                # next_url = request.POST.get('next') or request.GET.get('next') or request.session.get('next_url')
                 
-                # if 'next_url' in request.session:
-                #     del request.session['next_url']
+                next_url = request.POST.get('next') or request.GET.get('next') or request.session.get('next_url')
                 
-                # if next_url:
-                #     # Validate the URL to prevent open redirect vulnerability
-                #     if is_safe_url(next_url, allowed_hosts={request.get_host()}):
-                #         return redirect(next_url)
-                    
+                if 'next_url' in request.session:
+                    del request.session['next_url']
+                
+                if request.headers.get('Accept') == 'application/json':
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Login successful',
+                        'status': 'success',
+                        'redirect_url': next_url if next_url and is_safe_url(next_url, allowed_hosts={request.get_host()}) else '/pos/'
+                    })
+                
+                if next_url:
+                    if is_safe_url(next_url, allowed_hosts={request.get_host()}):
+                        return redirect(next_url)
+                
                 return redirect('pos:pos')
             else:
-                messages.error(request, 'Your account is not active, contact admin')
-                return render(request, 'auth/login.html')
+                cache.set(cache_key, attempts + 1, 900)
+                if request.headers.get('Accept') == 'application/json':
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Your account is not active. Please contact the administrator.',
+                        'status': 'error'
+                    }, status=403)
+                messages.error(request, 'Your account is not active. Please contact the administrator.')
+                return render(request, 'auth/login.html', status=403)
         
-        messages.error(request, 'Invalid username or password')
-        return render(request, 'auth/login.html')
+        cache.set(cache_key, attempts + 1, 900)
+        if request.headers.get('Accept') == 'application/json':
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid email or password',
+                'status': 'error'
+            }, status=401)
+        messages.error(request, 'Invalid email or password')
+        return render(request, 'auth/login.html', status=401)
 
 
 @login_required
 @transaction.atomic
 def user_edit(request, user_id):
 
-    with transaction.atomic:
-        user = User.objects.select_for_update().get(id=user_id)
+    user = User.objects.select_for_update().get(id=user_id)
 
-        logger.info(f'User details: {user.first_name + " " + user.email}')
+    logger.info(f'Editing User: {user.first_name + " " + user.email}')
 
-        if request.method == 'POST':
-            form = UserDetailsForm2(request.POST, instance=user)
+    if request.method == 'POST':
+        form = UserDetailsForm2(request.POST, instance=user)
 
-            if form.is_valid():
-                form.save()
-                messages.success(request, 'User details updated successfully')
-                return redirect('users:user_detail', user_id=user.id)
+        if form.is_valid():
+            form.save()
             
-            messages.error(request, 'Invalid form data')
-            form = UserDetailsForm2(instance=user)
+            logger.info('provide')
+            messages.success(request, 'User details updated successfully')
+            return redirect('users:user_detail', user_id=user.id)
+        
+        messages.error(request, 'Invalid form data')
+        form = UserDetailsForm2(instance=user)
 
     return render(request, 'auth/users.html', {'user': user, 'form': form})
 
+@login_required
+def upload_profile(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+
+    if 'profile_image' not in request.FILES:
+        logger.warning('No profile_image key in request.FILES')
+        return JsonResponse({'success': False, 'message': 'No image uploaded'}, status=400)
+
+    image_file = request.FILES['profile_image']
+    logger.info(f"Uploaded file: {image_file.name}, type: {image_file.content_type}, size: {image_file.size}")
+
+    if not image_file.content_type.startswith('image/'):
+        return JsonResponse({'success': False, 'message': 'Invalid file type. Only images are allowed.'}, status=400)
+    
+    print('here')
+    
+    if image_file.size > 5 * 1024 * 1024:
+        return JsonResponse({'success': False, 'message': 'Image too large (max 5MB)'}, status=400)
+    
+    print('here')
+
+    try:
+        # profile = getattr(request.user, 'profile_image', None)
+        user = request.user
+        
+        user.profile_image = image_file
+        user.save()
+        
+        print('saved')
+
+        return JsonResponse({
+            'success': True,
+            'image_url': user.profile_image.url
+        })
+    except Exception as e:
+        logger.error(f"Error uploading profile image: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'message': 'An error occurred while uploading the image.'
+        }, status=500)
 
 @login_required
 def user_detail(request, user_id):
@@ -235,7 +320,7 @@ def user_detail(request, user_id):
     logger.info(f'User details: {user.first_name + " " + user.email}')
 
     if request.method == 'GET':
-        return render(request, 'user_detail.html', {'user': user, 'form': form})
+        return render(request, 'profile.html', {'user': user, 'form': form})
     
     if request.method == 'POST':
         form = UserDetailsForm(request.POST, instance=user)
@@ -246,7 +331,7 @@ def user_detail(request, user_id):
         else:
             messages.error(request, 'Invalid form data')
 
-        return render(request, 'users/user_detail.html', {'user': user, 'form': form})
+        return render(request, 'users/profile.html', {'user': user, 'form': form})
 
 @login_required
 @transaction.atomic
@@ -261,34 +346,16 @@ def register(request):
                 with transaction.atomic():
                     user = form.save(commit=False)
                     
-                    user.password = make_password(form.cleaned_data['password'])
-                    user.is_active = False
+                    user.set_password(form.cleaned_data['password'])
+                    user.is_active = True
                     
                     user.last_login = None
                     user.failed_login_attempts = 0
                     
                     user.save()
-
-                    # Send verification email
-                    # try:
-                    #     send_verification_email(user, request)
-                    #     messages.success(
-                    #         request, 
-                    #         f'Account created successfully. Please notify {user.first_name} to check their email to verify their account.'
-                    #     )
-                    # except EmailRateLimitExceeded:
-                    #     messages.error(
-                    #         request,
-                    #         'Too many verification emails sent. Please try again tomorrow.'
-                    #     )
-                    # except Exception as e:
-                    #     logger.error(f"Error in registration process: {str(e)}")
-                    #     messages.error(
-                    #         request,
-                    #         'An error occurred during registration. Please try again.'
-                    #     )
-                    #     raise
-            
+                    
+                    messages.success(request, "User registered successfully.")
+                    
             except Exception as e:
                 logger.error(f"Registration failed: {str(e)}")
                 messages.error(request, 'Registration failed. Please try again.')
@@ -296,7 +363,6 @@ def register(request):
     return render(request, 'auth/register.html', {'form': form})
 
 def verify_email(request, signed_token):
-    # Rate limit verification attempts by IP
     ip_address = request.META.get('REMOTE_ADDR')
     cache_key = f"verify_email_rate_{ip_address}"
     
@@ -307,7 +373,6 @@ def verify_email(request, signed_token):
     cache.set(cache_key, cache.get(cache_key, 0) + 1, timeout=3600)
     
     try:
-        # Verify signed token
         user_id, token = verify_signed_token(signed_token)
         if not user_id or not token:
             logger.warning(f"Invalid token attempt from IP: {ip_address}")
@@ -323,7 +388,6 @@ def verify_email(request, signed_token):
             if verification_token.is_valid():
                 user = verification_token.user
                 
-                # Verify user isn't already active
                 if user.is_active:
                     logger.warning(f"Attempt to re-verify active user {user_id} from IP: {ip_address}")
                     messages.warning(request, 'This account is already verified.')
@@ -332,11 +396,9 @@ def verify_email(request, signed_token):
                 user.is_active = True
                 user.email_verified_at = timezone.now()
                 user.save()
-                
-                # Delete the used token
+            
                 verification_token.delete()
                 
-                # Clear rate limit caches
                 cache.delete(f"email_verification_rate_{user.id}")
                 
                 messages.success(request, 'Email verified successfully. You can now log in.')
@@ -388,99 +450,257 @@ def get_user_data(request, user_id):
     return JsonResponse(user_data)
 
 @login_required
+def delete_user(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        user.is_active = False  
+        user.is_deleted = True
+
+        user.save()
+        return JsonResponse({'success': True, 'message': 'User deleted successfully'})
+
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'User not found'})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error: {str(e)}'})
+
+@login_required
 def logout_view(request):
     logout(request)
     return redirect('users:login')
 
-##############################################################################################################################################################
-""" User API End points """
-
-from django.contrib.auth import login
-from .serializers import(
-    UserSerializer,
-    RegisterSerializer,
-    LoginSerializer,
-    LogoutSerializer,
-    UserPermissionsSerializer,
-)
-from apps.company.models import Branch
-from .models import User, UserPermissions
-from django.contrib.auth.models import Group
-from rest_framework import generics, status, views, permissions, viewsets
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-
-class UserPermissionViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    queryset = UserPermissions.objects.all()
-    serializer_class = UserPermissionsSerializer
+@login_required
+def user_profile(request):
+    user = request.user  
+    return render(request, 'profile.html', {'user': user})
 
 
-class BranchSwitch(views.APIView):
-    """ Enables the admin or the ownwer to switch between branches """
-    # permission_classes = [IsAuthenticated]
+def send_verification_email(user, token):
+    subject = 'Verify your email address'
+    message = f'''
+    Hello {user.first_name},
 
-    def get(self, request, branch_id):
-        user = request.user
-        if user.role == 'Admin' or user.role == 'admin':
-            user.branch = Branch.objects.get(id=branch_id)
+    Please verify your email address by clicking the link below:
+    {settings.SITE_URL}/users/verify-email/{token}/
+
+    This link will expire in 24 hours.
+
+    If you didn't request this verification, please ignore this email.
+
+    Best regards,
+    Posflow Team
+    '''
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        fail_silently=False,
+    )
+
+def send_password_reset_otp(user, otp):
+    subject = 'Password Reset OTP'
+    message = f'''
+    Hello {user.first_name},
+
+    Your OTP for password reset is: {otp}
+
+    This OTP will expire in 10 minutes.
+
+    If you didn't request a password reset, please ignore this email.
+
+    Best regards,
+    Posflow Team
+    '''
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        fail_silently=False,
+    )
+    logger.info(f'OTP has been sent to {user.email}')
+
+def request_password_reset(request):
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        
+        try:
+            user = User.objects.get(email=email)
+            
+            if user.email_verified:
+                if request.headers.get('Accept') == 'application/json':
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Please verify your email first.',
+                        'status': 'error'
+                    }, status=400)
+                messages.error(request, 'Please verify your email first.')
+                return render(request, 'auth/request_password_reset.html')
+            
+            # Generate OTP
+            otp = PasswordResetOTP.generate_otp()
+            expires_at = timezone.now() + timedelta(minutes=10)
+            
+            # Save OTP
+            PasswordResetOTP.objects.create(
+                user=user,
+                otp=otp,
+                expires_at=expires_at
+            )
+            
+            # Send OTP via email
+            send_password_reset_otp(user, otp)
+            
+            if request.headers.get('Accept') == 'application/json':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'OTP has been sent to your email.',
+                    'status': 'success'
+                })
+            messages.success(request, 'OTP has been sent to your email.')
+            return redirect('users:verify_otp')
+            
+        except User.DoesNotExist:
+            if request.headers.get('Accept') == 'application/json':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'No user found with this email address.',
+                    'status': 'error'
+                }, status=404)
+            messages.error(request, 'No user found with this email address.')
+            return render(request, 'auth/request_password_reset.html')
+    
+    return render(request, 'auth/request_password_reset.html')
+
+def verify_otp(request):
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        otp = request.POST.get('otp', '').strip()
+        
+        try:
+            user = User.objects.get(email=email)
+            otp_obj = PasswordResetOTP.objects.filter(
+                user=user,
+                otp=otp,
+                is_used=False
+            ).latest('created_at')
+            
+            if not otp_obj.is_valid():
+                otp_obj.increment_attempts()
+                if request.headers.get('Accept') == 'application/json':
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Invalid or expired OTP.',
+                        'status': 'error'
+                    }, status=400)
+                messages.error(request, 'Invalid or expired OTP.')
+                return render(request, 'auth/verify_otp.html')
+            
+            otp_obj.mark_as_used()
+            
+            request.session['reset_email'] = email
+            
+            if request.headers.get('Accept') == 'application/json':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'OTP verified successfully.',
+                    'status': 'success',
+                    'redirect_url': reverse('users:reset_password')
+                })
+            return redirect('users:reset_password')
+            
+        except (User.DoesNotExist, PasswordResetOTP.DoesNotExist):
+            if request.headers.get('Accept') == 'application/json':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid OTP.',
+                    'status': 'error'
+                }, status=400)
+            messages.error(request, 'Invalid OTP.')
+            return render(request, 'auth/verify_otp.html')
+    
+    return render(request, 'auth/verify_otp.html')
+
+def reset_password(request):
+    if request.method == 'POST':
+        email = request.session.get('reset_email')
+        if not email:
+            if request.headers.get('Accept') == 'application/json':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid session.',
+                    'status': 'error'
+                }, status=400)
+            messages.error(request, 'Invalid session.')
+            return redirect('users:request_password_reset')
+        
+        password = request.POST.get('password', '').strip()
+        confirm_password = request.POST.get('confirm_password', '').strip()
+        
+        if password != confirm_password:
+            if request.headers.get('Accept') == 'application/json':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Passwords do not match.',
+                    'status': 'error'
+                }, status=400)
+            messages.error(request, 'Passwords do not match.')
+            return render(request, 'auth/reset_password.html')
+        
+        try:
+            user = User.objects.get(email=email)
+            user.set_password(password)
             user.save()
-        else:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-        data = {
-            'user': user,
-            'branch': user.branch
-        }
-        logger.info(data)
-        return Response(data, status=status.HTTP_200_OK)
+        
+            del request.session['reset_email']
+            
+            if request.headers.get('Accept') == 'application/json':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Password reset successful. Please login with your new password.',
+                    'status': 'success',
+                    'redirect_url': reverse('users:login')
+                })
+            messages.success(request, 'Password reset successful. Please login with your new password.')
+            return redirect('users:login')
+            
+        except User.DoesNotExist:
+            if request.headers.get('Accept') == 'application/json':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'User not found.',
+                    'status': 'error'
+                }, status=404)
+            messages.error(request, 'User not found.')
+            return redirect('users:request_password_reset')
+    
+    return render(request, 'auth/reset_password.html')
+
+def verify_email(request, token):
+    try:
+        verification = EmailVerificationToken.objects.get(token=token)
+        
+        if not verification.is_valid():
+            verification.increment_attempts()
+            messages.error(request, 'Invalid or expired verification link.')
+            return redirect('users:login')
+        
+        user = verification.user
+        user.email_verified = True
+        user.save()
+        
+        verification.is_verified = True
+        verification.save()
+        
+        messages.success(request, 'Email verified successfully. You can now log in.')
+        return redirect('users:login')
+        
+    except EmailVerificationToken.DoesNotExist:
+        messages.error(request, 'Invalid verification link.')
+        return redirect('users:login')
+
+##############################################################################################################################################################
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    An endpoint which allows viewers to be viewed or edited
-    """
-    permission_classes = [IsAuthenticated]
-    queryset = User.objects.all().order_by('-date_joined')
-    serializer_class = UserSerializer
-
-
-class RegisterView(generics.GenericAPIView):
-    """
-        User registration end point
-    """
-    serializer_class = RegisterSerializer
-
-    def post(self, request):
-        user = request.data
-        serializer = self.serializer_class(data=user)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        user_data = serializer.data
-        return Response(user_data, status=status.HTTP_201_CREATED)
-
-
-class LoginAPIView(generics.GenericAPIView):
-    """
-        Login API end point
-    """
-    serializer_class = LoginSerializer
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class LogoutAPIView(generics.GenericAPIView):
-    """
-        Logout Api End Point
-    """
-    serializer_class = LogoutSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)

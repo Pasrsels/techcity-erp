@@ -7,9 +7,11 @@
                 <img src="{% static 'assets/logo.png' %}" width="100px"/>
             </div>
             <div class="px-2">
-                <button class="btn" id='branchButton'>
-                    <i class='bx bxs-grid'></i>
-                </button>
+                {% if request.user.role == 'admin' or request.user.role == 'accountant'%}
+                    <button class="btn" id='branchBtn'>
+                        <i class='bx bxs-grid'></i>
+                    </button>
+                {% endif %}
             </div>
             
         </div>
@@ -30,7 +32,7 @@
                     <small class="dropdown-toggle">{{request.user}}</small>
                     <ul class="dropdown-menu shadow w-50 bg-light">
                         <li class="dropdown-link">
-                            <a href="" class="px-3 fs-6">Profile</a>
+                        <a href="{% url 'users:profile' %}" class="px-3 fs-6">Profile</a>
                         </li>
                         <li class="dropdown-link">
                             <a href="{% url 'users:logout' %}" class="px-3 fs-6">Logout</a>

@@ -1,103 +1,340 @@
 {% extends "base.html" %}
 {% load static%}
-{% block title%} Invoices {% endblock%}
+{% block title %} Quotations {% endblock %}
 {% block content %}
 <div class="finance d-flex">
-    <div class="px-2 main-content ">
-        <div class="finance-navbar">
-            <nav class="d-flex justify-content-between align-items-center bg-dark text-light rounded shadow p-2">
-                <div class='h5'>
-                    Qoutations
-                </div>
-                <div class='d-flex'>
-                    <form method="get" class="d-flex justify-content-between align-items-center">
+    <div class="px-2 main-content w-100 py-4">
+        <!-- Header Section -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-0 fw-bold">Quotations</h4>
+                <p class="text-muted mb-0">Manage qoutations</p>
+            </div>
+            <div class="d-flex align-items-center">
+                <form method="get" class="d-flex me-2">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bx bx-search"></i>
+                        </span>
                         <input
                             id="search"
                             name="q"
                             type="search"
                             value="{{search_query}}"
-                            class="form-control"
-                            placeholder="search..."
+                            class="form-control border-start-0"
+                            placeholder="Search quotations..."
                         />
-                    </form>
-                    {% comment %} <div class='d-flex px-2'>
-                        <button type="button" id='filterBtn' class='btn btn-light border rounded btn-sm'>Filters</button>
-                    </div> {% endcomment %}
-                </div>
-            </nav>
+                    </div>
+                </form>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                    <i class="bx bx-filter me-1"></i> Filter
+                </button>
+            </div>
         </div>
 
-        <div class='invoice-table mt-3 '>
-            <table class='table'>
-                <thead>
-                    <th>Qoute #</th>
-                    <th>Date</th>
-                    <th>Customer</th>
-                    <th>Products</th>
-                    <th>Amount</th>
-                    <th class="">Action</th>
-                </thead>
-                <tbody>
-                    {% for qoute in qoutations %}
-                        <tr>
-                            <td>
-                                <a href="{% url 'finance:quotation_preview' qoute.id %}">
-                                    <i class='bx bx-show text-dark'></i>
-                                    <small>{{qoute.qoute_reference}}</small>
-                                </a>
-                            </td>
-                            <td><small>{{qoute.date}}</small></td>
-                            <td>{{qoute.customer.name}}</td>
-                            <td>{{qoute.products}}</td>
-                            <td>{{qoute.amount}}</td>
-                            <td id='id_delete' data-id={{ qoute.id }}>
-                                <i class='bx bx-trash'></i>
-                            </td>
-                            <!-- <td class="text-center">
-                                {% if qoute.status == True %}
-                                    <small class='border rounded bg-success p-1 text-light'><small>Processed</small></small>
-                                {% else %}
-                                    <small class='border rounded bg-danger p-1 text-light'><small>Not yet processed</small></small>
-                                {% endif %}
-                            </td> -->
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body" id='delete_content'>
-                        <h5 class='fw-bold'>Delete Qoute</h5>
-                        <div>
-                            <button class='btn btn-secondary w-100' onclick='deleteInvoice();'>Yes</button>
+        <!-- Stats Section -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card shadow-sm">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="mb-0">Total Quotations</h6>
+                                <h3 class="mb-0">{{ qoutations.count }}</h3>
+                            </div>
+                            <div class="rounded-circle bg-white bg-opacity-25 p-3 d-flex align-items-center justify-content-center">
+                                <i class="bx bx-file fs-3"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="mb-0">Converted</h6>
+                                <h3 class="mb-0">0</h3>
+                            </div>
+                            <div class="rounded-circle bg-white bg-opacity-25 p-3 d-flex align-items-center justify-content-center">
+                                <i class="bx bx-check-circle fs-3"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="mb-0">Pending</h6>
+                                <h3 class="mb-0">0</h3>
+                            </div>
+                            <div class="rounded-circle bg-white bg-opacity-25 p-3 d-flex align-items-center justify-content-center">
+                                <i class="bx bx-time fs-3"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="mb-0">Total Value</h6>
+                                <h3 class="mb-0">$0</h3>
+                            </div>
+                            <div class="rounded-circle bg-white bg-opacity-25 p-3 d-flex align-items-center justify-content-center">
+                                <i class="bx bx-dollar-circle fs-3"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link active" href="#">All Quotations</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Recent</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Pending</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Converted</a>
+            </li>
+        </ul>
+
+        <!-- Quotation Cards -->
+        <div class="row g-3">
+            {% for qoute in qoutations %}
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge {% if qoute.status %}bg-success{% else %}bg-warning{% endif %} rounded-pill px-3 py-2">
+                                {% if qoute.status %}Converted{% else %}Pending{% endif %}
+                            </span>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light rounded-circle" type="button" id="dropdownMenu-{{ qoute.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bx bx-dots-vertical-rounded"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenu-{{ qoute.id }}">
+                                    <li><a class="dropdown-item" href="{% url 'finance:quotation_preview' qoute.id %}"><i class="bx bx-show me-2"></i>View</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="bx bx-edit me-2"></i>Edit</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="confirmDelete('{{ qoute.id }}')"><i class="bx bx-trash me-2"></i>Delete</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#"><i class="bx bx-file-blank me-2"></i>Convert to Invoice</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="bx bx-link me-2"></i>Link to Lead</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <h5 class="fw-bold text-truncate mb-1">
+                            <a href="{% url 'finance:quotation_preview' qoute.id %}" class="text-decoration-none text-dark">
+                                {{ qoute.qoute_reference }}
+                            </a>
+                        </h5>
+                        
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-light rounded-circle p-2 me-2">
+                                <i class="bx bx-user text-primary"></i>
+                            </div>
+                            <span class="text-truncate">{{ qoute.customer.name }}</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-muted">Date</small>
+                                <small>{{ qoute.date }}</small>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-muted">Products</small>
+                                <small class="text-truncate ms-2">{{ qoute.products }}</small>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Amount</small>
+                                <small class="fw-bold">${{ qoute.amount }}</small>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2 mt-3">
+                            <button type="button" onclick="previewQoute({{ qoute.id }})" class="btn btn-sm btn-outline-primary flex-grow-1">
+                                <i class="bx bx-show me-1"></i> View
+                            </button>
+                            <button class="btn btn-sm btn-outline-success flex-grow-1">
+                                <i class="bx bx-file-blank me-1"></i> Convert
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="bx bx-file-blank fs-1 text-muted mb-3"></i>
+                        <h5>No Quotations Found</h5>
+                        <p class="text-muted">You haven't created any quotations yet.</p>
+                        <button class="btn btn-primary">
+                            <i class="bx bx-plus me-1"></i> Create Quotation
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 
-<script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-<script type="text/javascript">
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="deleteModalLabel">Delete Quotation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-4">
+                    <i class="bx bx-error-circle text-danger" style="font-size: 5rem;"></i>
+                </div>
+                <h5>Are you sure you want to delete this quotation?</h5>
+                <p class="text-muted">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="deleteInvoice()">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalLabel">Filter Quotations</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="dateRange" class="form-label">Date Range</label>
+                        <select class="form-select" id="dateRange">
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status">
+                            <option value="all">All Statuses</option>
+                            <option value="converted">Converted</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="customer" class="form-label">Customer</label>
+                        <select class="form-select" id="customer">
+                            <option value="all">All Customers</option>
+                            <!-- Populate with customer options -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="amountRange" class="form-label">Amount Range</label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" placeholder="Min" aria-label="Minimum amount">
+                            <span class="input-group-text">-</span>
+                            <input type="number" class="form-control" placeholder="Max" aria-label="Maximum amount">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Link to Lead Modal -->
+<div class="modal fade" id="linkLeadModal" tabindex="-1" aria-labelledby="linkLeadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="linkLeadModalLabel">Link Quotation to Lead</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="leadSelect" class="form-label">Select Lead</label>
+                    <select class="form-select" id="leadSelect">
+                        <option selected disabled>Choose a lead...</option>
+                        <!-- Populate with lead options -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="linkNote" class="form-label">Note</label>
+                    <textarea class="form-control" id="linkNote" rows="3" placeholder="Add a note about this connection..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Link to Lead</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Link preview Modal -->
+<div class="modal fade" id="qouteModal" tabindex="-1" aria-labelledby="linkLeadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id='previewModal'></div>
+    </div>
+</div>
+
+<script>
     let qouteId = '';
-    const deleteBtn = document.querySelectorAll('#id_delete');
-    const deleteContent = document.querySelector('#delete_content');
+    const previewQModal = new bootstrap.Modal(document.getElementById('qouteModal'));
     const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
 
-    deleteBtn.forEach((btn)=>{
-        btn.addEventListener(
-            'click', ()=>{
-                qouteId = btn.dataset.id
-                console.log(qouteId)
-                deleteModal.show()
-            }   
-        )
-    })
+    function confirmDelete(id) {
+        qouteId = id;
+        deleteModal.show();
+    }
 
-    function deleteInvoice(){
+    function previewQoute(id){
+        fetch(`/finance/qoutation/preview/modal/${id}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success){
+                previewQModal.show();
+                document.getElementById('previewModal').innerHTML = data.html;
+            }
+        })
+    }
+
+    function deleteInvoice() {
         fetch(`/finance/qoutation/delete/${qouteId}/`, {
             method: 'POST',
             headers: {
@@ -107,18 +344,39 @@
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success){
-                deleteContent.innerHTML=''
-                deleteContent.innerHTML=data.message
-                setTimeout(()=>{
-                    window.location.reload()
-                }, 1000)
+            if (data.success) {
+                // Show success message
+                const toastEl = document.createElement('div');
+                toastEl.innerHTML = `
+                    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+                        <div class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <i class="bx bx-check-circle me-2"></i> ${data.message}
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(toastEl);
+                
+                const toast = new bootstrap.Toast(document.querySelector('.toast'));
+                toast.show();
+                
+                // Reload after delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             }
         })
         .catch(error => {
-            alert(error)
-            console.log(error)
+            console.error(error);
+            alert('An error occurred while deleting. Please try again.');
         });
+        
+        // Hide the modal
+        deleteModal.hide();
     }
 
     function getCookie(name) {
@@ -135,6 +393,5 @@
         }
         return cookieValue;
     }
-
 </script>
 {% endblock content %}

@@ -4,8 +4,12 @@ from rest_framework import routers
 from . consumer import InventoryConsumer
 from rest_framework.routers import DefaultRouter
 
+from .api import *
+from apps.finance.apis.cashbook_apis import *
+from .a import *
+
 router = DefaultRouter()
-router.register(r'products', InventoryViewset, basename='api_products')
+# router.register(r'products', InventoryViewset, basename='api_products')
 
 app_name = 'inventory'
 
@@ -25,17 +29,27 @@ urlpatterns = [
     path('detail/<int:id>/', inventory_detail, name='inventory_detail' ),
     path('create/product/', product, name='product'),
     path('delete_product', delete_product, name='delete'),
+    path('add-inventory', add_inventory_view, name="add-inventory"),
+    path('logs/page/', logs_page, name='logs-page'),
+    
+    # settings
+    path('settings/', settings, name='settings'),
+    path('update_notification_settings', update_notification_settings, name='update_notification_settings'),
 
     #Stocktake
-    path('stocktake/', stock_take_index, name= 'stocktake'),
+    path('stocktake/', stock_take_index, name='stocktake'),
     path('process_stock_take_item/', process_stock_take_item, name='process_stock_take_item'),
     path('stocktake/detail/<int:stocktake_id>/', stock_take_detail, name='stock_take_detail'),
-
+    path('undo_accept_stocktake/', undo_accept_stocktake_item, name="undo_accept_stocktake"),
+    path('accept_stock_take/', accept_stocktake_item, name='accept_stocktake_item'),
+    path('confirm_stocktake/<int:stocktake_id>/', confirm_stocktake, name='confirm_stocktake'),
+    path('stocktake_pdf/',  stocktake_pdf, name="stocktake_pdf"),
+    path('stocktake/<int:stocktake_id>/report/<str:report_type>/', stocktake_report_data, name='stocktake_report_data'),    
+    path('stocktake/<int:stocktake_id>/download/<str:report_type>/', stocktake_report_download, name='stocktake_report_download'),
+    path('adjust_stocktake_quantity/', adjust_stocktake_quantity, name='adjust_stocktake_quantity'),
+    
     #batch_code 
     path('batch_code/', batch_code, name='batch_code'),
-    
-    # product
-    
     
     # suppliers
     path("suppliers/", supplier_view, name="suppliers"),
@@ -73,6 +87,8 @@ urlpatterns = [
     path('mark_purchase_order_done/<int:po_id>/', mark_purchase_order_done, name='mark_done'),
     path('sales_price_list_pdf/<int:order_id>/', sales_price_list_pdf, name='sales_price_list'),
     path('confirm-purchase-order/<int:po_id>/', confirm_purchase_order_items, name='confirm_purchase_order'),
+    path('temporary_purchase_order/', temporary_purchase_order, name='temporary_purchase_order'),
+    path('get_temporary_purchase_order_items/<int:temp_po_id>/', get_temporary_purchase_order_items, name='get_temporary_purchase_order_items'),
 
     # delivery note
     path('download_delivery_note/<int:po_id>/', download_delivery_note, name='download_delivery_note'),
@@ -114,12 +130,11 @@ urlpatterns = [
     path('defective/', create_defective, name='create_defective'),
     path('write_off/', create_write_off, name='create_write_off'),
 
-    path('test/', test, name='test'),
-
     #API ENDPOINTS
     ################################################################################################
 
     #Categories
+    # path('api/v1/inventory/add/', AddInventoryView.as_view(), name='add-inventory'),
     path('api/v1/categories', CategoriesList.as_view(), name = 'api_categories'),
     path('api/v1/categories-add', AddCategories.as_view(), name = 'api_add_categories'),
 
@@ -136,6 +151,7 @@ urlpatterns = [
     path('api/v1/inventory-activate/<int:product_id>/', ActivateInventory.as_view(), name = 'api_inventory_activate'),
     path('api/v1/inventory-branch', BranchesInventory.as_view(), name = 'api_inventory_branch'),
     path('api/v1/defective-product-view-add/', DefectiveProductViewAdd.as_view(), name='api_defective_product_view_add'),
+    path('api/v1/inventory-detail/<int:id>/', InventoryDetail.as_view(), name='api_inventory_detail'),
 
     #Notification
     path('api/v1/notification-json', NotificationJson.as_view(), name = 'api_notification_json'),
@@ -143,7 +159,7 @@ urlpatterns = [
     #Stock Take
     path('api/v1/stocktake-view-and-edit', StockTakeViewEdit.as_view(), name = 'api_stock_take'),
     path('api/v1/process-stocktake-item', ProcessStockTakeItem.as_view(), name = 'api_process_stock_take'),
-    path('api/v1/stocktake-details', StockTakeDetail.as_view(), name = 'api_stock_take_detail'),
+    path('api/v1/stocktake-details/<int:stocktake_id>/', StockTakeDetail.as_view(), name = 'api_stock_take_detail'),
 
     #Branch
     path('api/v1/branch-view-and-add', BranchCode.as_view(), name = 'api_branch_code'),
@@ -193,4 +209,6 @@ urlpatterns = [
 
     #Accessories
     path('api/v1/accessories_view/<int:product_id>/', AccessoriesView.as_view(), name='api_accessories_view'),
+
+    path('get-cart-items/', get_cart_items, name='get_cart_items'),
 ]

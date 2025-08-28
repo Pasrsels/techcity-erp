@@ -15,6 +15,7 @@
         <link href='{% static "assets/boxicons/css/boxicons.css"%}' rel='stylesheet'>
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
         <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     {% endblock css %}
 
     <script src="{% static 'css/bootstrap/js/bootstrap.min.js'%}"></script>
@@ -28,10 +29,50 @@
     </title>
 </head>
 <style>
+    :root {
+        --primary: #11998e;
+        --primary-no-gradient: #11998e;
+        --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        --secondary: orange;
+        --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+        --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        --dark: #1a1a2e;
+        --dark-alt: #16213e;
+        --text-light: rgba(228, 230, 234, 1);
+        --text-dark: black;
+        --text-muted: black;
+        --glass: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+        --border-radius: 16px;
+        --border-radius-sm: 8px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --m-bottom: 20px;
+    }
+
+    .header-btn {
+        padding: 8px 16px;
+        border-radius: var(--border-radius-sm);
+        background: var(--primary-no-gradient);
+        border: 1px solid var(--glass-border);
+        color: var(--text-light);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .header-btn:hover {
+        background: var(--primary);
+        transform: translateY(-1px);
+    }
+
     table {
         width: 100%;
         border-collapse: collapse;
-        /* text-align: left; */
     }
 
     tbody tr:hover {
@@ -76,131 +117,130 @@
         color: #fff !important;
     }
 
+    .pos{
+        padding: 10px;
+        background-color: white;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    #payment-modal {
+        padding: 20px;
+        background: #fff;
+        min-height: 100vh;
+    }
+
 </style>
 <body class="techcity">
-    <div class="pos">
-        <div class="top-bar">
-          <div class="nav-bar">{% include "pos_navbar.html" %}</div>
+    <div class="">
+        <div>
+            <div class="top-bar">
+            <div class="nav-bar">{% include "pos_navbar.html" %}</div>
+            </div>
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            <div class="row  g-0">
+                <div class="aside-bar col-1 text-light">{% include "base/aside.html" %}</div>
+                <div class="col-7 mt-2">
+                        <div class="main-pos-area px-2">
+                            <div class="position-absolute start-0 ms-3">
+                                <button class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#laybyModal">L</button>
+                                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#PaylaterModal">P</button>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center w-100 mb-3">
+                                <div class="d-flex align-items-center product-search flex-grow-1">
+                                    <button id="menu-type" class="btn border me-1"><i class="bx bx-menu"></i></button>
+                                    <div class="search-container d-flex align-items-center flex-grow-1 border rounded">
+                                        <i class="bx bx-search ms-2"></i>
+                                        <input type="search" name="q" class="form-control border-0" id="id_search" placeholder="Search..." />
+                                    </div>
+                                    <button class="btn btn-light btn-sm border ms-2" id="out_of_stock">Out of Stock</button>
+                                </div>
+                                <div class="ms-3">
+                                    <select name="category" id="id_category" class="form-select">
+                                        <option value="0">All Categories</option>
+                                        {% for category in categories %}
+                                            <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="products">
+                                {% include 'components/loader.html' %}
+                                <div class="row g-2" id="product-list"></div>
+                            </div>
+                        </div>
+                        <div class="d-none" id="payment-modal">
+                                {% include 'pay_modal.html' %}
+                            </div>
+                    </div>
+                    <div class="col-4 cartSection mt-2">
+                        <div class="cart-container rounded shadow-sm bg-white h-100">
+                            <div class="d-flex justify-content-between align-items-center w-100 p-1">
+                            <select type="text" id="search-input" class="form-select">
+                                <option value=""></option>
+                            </select>
+                            <span class="px-1"></span>
+                            <button class="btn btn-sm btn-light bx bx-user" id="id_add_client"></button>
+                            <div id="due_balance" class="fw-bold text-muted px-1"></div>
+                        </div>
+
+    <!-- Due Summary -->
+    <div class="d-flex justify-content-between w-100 px-2 py-1 border-bottom">
+      <div class="text-muted">Due</div>
+      <div id="due_balance" class="fw-bold text-muted">$0.00</div>
+    </div>
+
+    <!-- Scrollable Cart Items -->
+    <div class="cart-items bg-light rounded m-2 mt-1 overflow-auto" style="flex: 1; min-height: 150px;">
+      <div class="table-responsive" id="cart_items">
+        <div class="text-center" style="color: var(--text-muted); padding: 40px 0;">
+            <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 10px; opacity: 0.3;"></i>
+            <div>Your cart is empty</div>
+            <div style="font-size: 14px;">Add products to get started</div>
         </div>
-        {% if messages %}
-          {% for message in messages %}
-          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-          {% endfor %}
-        {% endif %}
-        <div class="row g-0">
-          <div class="aside-bar col-1 text-light">{% include "base/aside.html" %}</div>
-          <div class="col-7 mt-2">
-            <div class="main-pos-area px-2">
-              <div class="position-absolute start-0 ms-3">
-                <button class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#laybyModal">L</button>
-                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#PaylaterModal">P</button>
-              </div>
-              <div class="d-flex justify-content-between align-items-center w-100 mb-3">
-                <div class="d-flex align-items-center product-search flex-grow-1">
-                  <button id="menu-type" class="btn border me-1"><i class="bx bx-menu"></i></button>
-                  <div class="search-container d-flex align-items-center flex-grow-1 border rounded">
-                    <i class="bx bx-search ms-2"></i>
-                    <input type="search" name="q" class="form-control border-0" id="id_search" placeholder="Search..." />
-                  </div>
-                  <button class="btn btn-light btn-sm border ms-2" id="out_of_stock">Out of Stock</button>
-                </div>
-                <div class="ms-3">
-                  <select name="category" id="id_category" class="form-select">
-                    <option value="0">All Categories</option>
-                    {% for category in categories %}
-                    <option value="{{ category.id }}">{{ category.name }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </div>
-              <div class="products">
-                {% include 'components/loader.html' %}
-                <div class="row g-2" id="product-list"></div>
-              </div>
-            </div>
-          </div>
-          <div class="col-4 mt-2">
-            <div class="cart-container rounded shadow-sm bg-white h-100">
-              <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
-                <div class="customer-search flex-grow-1">
-                  <select type="text" id="search-input" class="form-select">
-                    <option value=""></option>
-                  </select>
-                </div>
-                <div class="avatar-container ms-2">
-                  <img src="{% static 'assets/avatar.png' %}" alt="Avatar" class="avatar rounded-circle" width="40">
-                </div>
-                <div class="d-flex align-items-center ms-2">
-                  <div class="text-end">
-                    <small class="text-muted">Due</small>
-                    <div id="due_balance" class="fw-bold"></div>
-                  </div>
-                  <button class="btn btn-sm btn-primary ms-2" id="id_add_client">
-                    <i class="bx bx-plus"></i> Customer
-                  </button>
-                </div>
-              </div>
-              <small class="text-danger id_client_error"></small>
-              <div class="cart-items bg-light rounded m-2">
-                <div class="table-responsive">
-                  <table class="table table-sm">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Qty</th>
-                        <th>Product</th>
-                        <th>Price</th>
-                        <th>Subtotal</th>
-                      </tr>
-                    </thead>
-                    <tbody id="cart_items"></tbody>
-                  </table>
-                </div>
-              </div>
-              <div class="p-2">
-                <div class="row g-2 mb-3">
-                  <div class="col-6">
-                    <label for="id_discount" class="form-label small">Discount</label>
-                    <input id="id_discount" type="number" class="form-control text-center" placeholder="Discount" value="0" />
-                  </div>
-                  <div class="col-6">
-                    <label for="id_dc_input" class="form-label small">Delivery Charge</label>
-                    <input id="id_dc_input" type="number" class="form-control text-center" placeholder="Delivery Charge" value="0" />
-                  </div>
-                </div>
-                <div class="totals bg-light rounded p-2 mb-3">
-                  <table class="table table-sm mb-0">
-                    <tr>
-                      <td>Total Amount</td>
-                      <td class="text-end fw-bold" id="id_total_amount">0.00</td>
-                    </tr>
-                    <tr>
-                      <td>Tax Amount</td>
-                      <td class="text-end" id="id_vat_amount">0.00</td>
-                    </tr>
-                    <tr class="table-active">
-                      <td>Payable Amount</td>
-                      <td class="text-end fw-bold" id="id_payable">0.00</td>
-                    </tr>
-                  </table>
-                </div>
-                <button class="btn btn-primary w-100" id="id_pay">Proceed to Payment</button>
-              </div>
-            </div>
-          </div>
+      </div>
+    </div>
+
+    <!-- Bottom Section -->
+    <div class="p-2 border-top">
+      <div class="row g-2 mb-3">
+        <div class="col-6">
+          <label for="id_discount" class="form-label small">Discount</label>
+          <input id="id_discount" type="number" class="form-control text-center" placeholder="Discount" value="0" />
+        </div>
+        <div class="col-6">
+          <label for="id_dc_input" class="form-label small">Delivery Charge</label>
+          <input id="id_dc_input" type="number" class="form-control text-center" placeholder="Delivery Charge" value="0" />
         </div>
       </div>
 
-    <div class="modal fade" id="payment-modal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-fullscreen modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    {% include 'pay_modal.html' %}
-                </div>
-            </div>
-        </div>
+      <div class="totals bg-light rounded p-2 mb-3">
+        <table class="table table-sm mb-0">
+          <tr>
+            <td>Total Amount</td>
+            <td class="text-end fw-bold" id="id_total_amount">0.00</td>
+          </tr>
+          <tr>
+            <td>Tax Amount</td>
+            <td class="text-end" id="id_vat_amount">0.00</td>
+          </tr>
+          <tr class="table-active">
+            <td>Payable Amount</td>
+            <td class="text-end fw-bold" id="id_payable">0.00</td>
+          </tr>
+        </table>
+      </div>
+
+      <button class="btn btn-primary w-100" id="id_pay">Proceed to Payment</button>
+    </div>
+    </div>
+    </div>
     </div>
     
     <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
@@ -224,7 +264,7 @@
     </div>
 
     <div class="modal fade" id="endOfDayModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
                     {% include 'end_of_day_modal.html' %}
@@ -304,14 +344,14 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="laybyTableBody">
-                            </tbody>
+                            <tbody id="laybyTableBody"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
        </div>
     </div>   
+
     <div class="modal fade" id="PaylaterModal" tabindex="-1" aria-labelledby="PaylaterModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -330,8 +370,7 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="PaylaterTableBody">
-                            </tbody>
+                            <tbody id="PaylaterTableBody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -339,6 +378,120 @@
        </div>
     </div>   
 
+    <div class="modal fade" id="confirmPaymentModal" tabindex="-1" aria-labelledby="confirmPaymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header d-flex align-items-center justify-content-between w-100 py-2 mb-4">
+                    <h5 class="modal-title">Confirm Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                 </div>
+                    <div class="modal-body">
+                       <div class="mb-4">
+                            <label for="paid_amount">Amount paid</label>
+                            <input class="paid_amount form-control" id="paid_amount" readonly/>
+                       </div>
+                       <div class="mb-4">
+                            <label for="change_amount">Change</label>
+                            <input class="change_amount form-control" id="change_amount" readonly/>
+                       </div>
+                        <div class="mb-4">
+                            <label for="change_given">Change Given</label>
+                            <input class="change_amount form-control" id="change_given"/>
+                       </div>
+                       <div class="mb-4">
+                            <textarea name="note" id="invoice_note" class="form-control" placeholder="Notes (optional)"></textarea>
+                       </div>
+                       <div class="text-end">
+                            <button class="btn btn-success" id="processCart" data-name="invoice" onclick="processCart(this)">Confirm Sale</button>
+                       </div>
+                    </div>
+                </div>
+            </div>
+       </div>
+
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="salesActionsModal" aria-labelledby="salesActionsLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="salesActionsLabel">Sales Panel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+            <ul class="list-unstyled d-flex flex-column gap-2">
+
+                <!-- Currency Dropdown -->
+                <li>
+                    <select id="currency" class="text-light form-select border-0" style="background: #007bff;">
+                        <option value=''>Currency</option>
+                        {% for currency in currencies %}
+                            <option value='{{currency.id}}' {% if currency.default %}selected{% endif %}>{{currency.name}}</option>
+                        {% endfor %}
+                    </select>
+                </li>
+
+                <!-- Invoices -->
+                <li>
+                    <a href="{% url 'finance:invoice' %}" class="btn btn-primary w-100 d-flex justify-content-between align-items-center">
+                        <span>Invoices</span>
+                        <span class="badge bg-light text-dark">{{ invoice_count }}</span>
+                    </a>
+                </li>
+
+                <!-- Quotations -->
+                <li>
+                    <a href="{% url 'finance:qoutation_list' %}" class="btn btn-primary w-100">
+                        Quotations
+                    </a>
+                </li>
+
+                <!-- Cash Withdraw -->
+                <li>
+                    <a href="{% url 'finance:withdrawals' %}" class="btn btn-primary w-100">
+                        Cash Withdraw
+                    </a>
+                </li>
+
+                <li>
+                    <button id="end" class="btn btn-primary w-100">
+                        End Of Day
+                    </button>
+                </li>
+
+                <li>
+                    <a href="{% url 'inventory:branches_inventory' %}" class="btn btn-success w-100">
+                        <i class="bx bx-briefcase fs-5 text-light"></i>
+                    </a>
+                </li>
+
+                <!-- Notification Bell -->
+                <li>
+                    <button class="btn btn-success w-100">
+                        <i class="bx bx-bell fs-5 text-light"></i>
+                    </button>
+                </li>
+
+                <!-- User Dropdown -->
+                <li class="dropdown">
+                    <a class="dropdown-toggle text-dark" data-bs-toggle="dropdown" href="#">
+                        {{ request.user }}
+                    </a>
+                    <ul class="dropdown-menu bg-light">
+                        <li><a href="#" class="dropdown-item">Profile</a></li>
+                        <li><a href="{% url 'users:logout' %}" class="dropdown-item">Logout</a></li>
+                    </ul>
+                </li>
+
+                <!-- Profile Image -->
+                <li>
+                    {% if request.user.profile_image %}
+                        <img class="rounded-circle" src="{{ request.user.profile_image.url }}" width="25px" />
+                    {% else %}
+                        <img class="rounded-circle" src="{% static 'assets/avatar.png' %}" width="25px" />
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+
+        </div>
+    </div> 
     <div class="overlay hidden"></div>
 </body>
 
@@ -391,6 +544,9 @@
     const loaderModal = new bootstrap.Modal(document.getElementById('loaderModal'));
     const qouteModal = new bootstrap.Modal(document.getElementById('qouteModal'));
     const chooseCustomerModal= new bootstrap.Modal(document.getElementById('chooseCustomerModal'))
+    const modal = document.querySelector('#payment-modal');
+    const products = document.querySelector('.main-pos-area ')
+    const cartSection = document.querySelector('.col-4')
 
     const customerModal = new bootstrap.Modal(document.getElementById('customerModal'));
     const menuType = document.getElementById('menu-type');
@@ -400,10 +556,54 @@
     const loaderSpin = document.querySelector('#loader');
     const previousDueEl = document.querySelector('#previous_due');
     const holdBtn = document.getElementById('id_hold');
+    const confirmPayment = document.getElementById('confirm_payment');
+    const confirmPaymentModal = new bootstrap.Modal(document.getElementById('confirmPaymentModal'))
+    const paidAmount = document.getElementById('paid_amount')
+    const changeGiven = document.getElementById('change_given');
+    const  invoiceNote = document.getElementById('invoice_note')
+    let changeToBeDeposited = 0;
+
+
+    changeGiven.addEventListener('input', ()=>{
+        let totalAmount = calculateTotalAmount(cart);
+        console.log(totalAmount, parseFloat(changeGiven.value))
+
+        changeToBeDeposited = parseFloat(changeAmount - changeGiven.value)
+        console.log(parseFloat(changeAmount), changeGiven.value)
+        if(parseFloat(changeGiven.value) > totalAmount ){
+            Swal.fire({
+                icon:'error',
+                text:'Given change must not be more than the initial change', 
+                title: 'error'
+            })
+            return;
+        }
+    })
+
+    confirmPayment.addEventListener('click', ()=>{
+        const changeInput = document.getElementById('change_amount');
+        const amountPaidInput = document.getElementById('id_amount_paid');
+        const previousDue = document.getElementById('previous_due')
+        let totalAmount = calculateTotalAmount(cart);
+        let amount = parseFloat(previousDue.textContent.split(' ')[1])
+
+        let totalAmoutPrv = totalAmount + parseFloat(previousDue.textContent.split(' ')[1])
+        changeInput.value = parseFloat(amountPaidInput.value - (parseFloat(totalAmount) + parseFloat(previousDue.textContent.split(' ')[1]))) || 0.00;
+
+        if(changeInput.value < 0){
+            changeInput.value = 0.00;
+        }else if(changeInput.value > amountPaidInput){
+            changeInput.value = 0.00
+        }
+
+        paidAmount.value = parseFloat(amountPaidInput.value);
+        changeAmount = parseFloat(changeInput.value)
+        confirmPaymentModal.show()
+    })
 
     holdBtn.addEventListener('click', () => {
-            holdStatus = true;
-            processCart(holdBtn);
+        holdStatus = true;
+        processCart(holdBtn);
     })
 
     // set receipt items
@@ -411,8 +611,6 @@
         const receiptTableBody = document.querySelector('#receiptTable');
         const prvDue = document.getElementById('previous_due');
         const tpreviousDue = document.getElementById('tpreviousDue')
-
-        tpreviousDue.textContent = prvDue.textContent
         
         receiptTableBody.innerHTML = '';
 
@@ -448,8 +646,17 @@
     let paymentTerm = 'cash'; 
 
     document.getElementById('payment_modal_btn').addEventListener('click', () => {
-        document.querySelector('.payment-modal').classList.add('hidden');
+        const posEl = document.querySelector('.col-12')
+        if (!modal.classList.contains('d-none')){
+            posEl.classList.add('col-7')
+            posEl.classList.remove('col-12')
+            modal.classList.add('d-none');
+            products.classList.remove('d-none');
+            cartSection.classList.remove('d-none');
+        }
     })
+
+    paidAmount.value = 0.00
 
     function calculateBalance() {
         let total = parseFloat(totalBalanceDueElement.textContent.split(' ')[1]); 
@@ -557,6 +764,7 @@
         const id_amount_paid = document.getElementById('id_amount_paid');
         const depositedAmount = document.getElementById('id_deposited');
         const period = document.getElementById('id_period')
+        const paylaterPeriod = document.getElementById('id_paylater_period')
         const availableBalance = document.getElementById('availableBalance')
         const availableBal = document.getElementById('availableBal')
         const previousDue = document.getElementById('previous_due')
@@ -578,17 +786,26 @@
             displayDueDates(period.value)
         })
 
-        id_amount_paid.addEventListener('input', ()=>{
-            value = id_amount_paid.value;
-            depositedAmount.textContent = value;
-
-            const amountDue = parseFloat(previousDue.textContent.split(' ')[1]);
-        
-            // availabe balance 
-            availableBalance.textContent = parseFloat(value) - amountDue || 0;
-            availableBal.textContent = parseFloat(value) - amountDue || 0;
-            
+        paylaterPeriod.addEventListener('input', ()=>{
+            if(paylaterPeriod.value < 0){
+                Swal.fire({
+                    icon:'error',
+                    text:'Period interval can be less than 0', 
+                    title: 'error'
+                })
+                return;
+            }
+            const manualDateSection = document.querySelector('.manual-date');
+            if (paylaterPeriod.value === '') {
+                manualDateSection.classList.remove('d-none');
+                document.getElementById('paylater_payment_date').innerHTML = '';
+            } else {
+                manualDateSection.classList.add('d-none');
+                displayPaylaterDates(paylaterPeriod.value);
+            }
         })
+
+       
 
         const calculateNextDueDate = (period) => {
             const todayDate = new Date(); 
@@ -604,7 +821,6 @@
             return dueDates;
         };
 
-        
         const displayDueDates = (period) => {
             const dueDates = calculateNextDueDate(period);
             const paymentDateElement = document.getElementById('payment_date');
@@ -619,6 +835,27 @@
                 dateFields += `
                     <label for="payment_date_${index}">Payment ${index + 1}:</label>
                     <input type="date" id="payment_date_${index}" value="${formattedDate}">
+                    <br>
+                `;
+            });
+
+            paymentDateElement.innerHTML = dateFields; 
+        };
+
+        const displayPaylaterDates = (period) => {
+            const dueDates = calculateNextDueDate(period);
+            const paymentDateElement = document.getElementById('paylater_payment_date');
+
+            let dateFields = ''; 
+
+            dueDates.forEach((date, index) => {
+                // Format the date as yyyy-mm-dd for the date input field
+                const formattedDate = date.toISOString().split('T')[0];
+
+                // Create input fields for each payment date
+                dateFields += `
+                    <label for="paylater_date_${index}">Payment ${index + 1}:</label>
+                    <input type="date" id="paylater_date_${index}" value="${formattedDate}">
                     <br>
                 `;
             });
@@ -717,7 +954,7 @@
 
     // modals
     const overlay = document.querySelector(".overlay");
-    const modal = new bootstrap.Modal(document.querySelector('#payment-modal'));
+    <!-- const modal = new bootstrap.Modal(document.querySelector('#payment-modal')); -->
     const clientModal = new bootstrap.Modal(document.querySelector('#clientModal'));
     const closeModalBtn = document.querySelectorAll(".btn-close");
     const closebtn = document.getElementById('closebtn')
@@ -733,7 +970,14 @@
             if(clientName){
                 updateCartDisplay();
                 setReceiptItems()
-                modal.show()
+                const posEl = document.querySelector('.col-7')
+                if (modal.classList.contains('d-none')){
+                    posEl.classList.remove('col-7')
+                    posEl.classList.add('col-12')
+                    modal.classList.remove('d-none');
+                    products.classList.add('d-none');
+                    cartSection.classList.add('d-none');
+                }
             }else{
                 Swal.fire({
                     icon:'error',
@@ -913,7 +1157,6 @@
         });
     }
 
-
     // Cart 
     async function fetchProductData (product){
         if(initialCurrencyValue){
@@ -950,6 +1193,7 @@
         return Math.floor(Math.random() * 1000000000).toString(36);
     }
 
+<<<<<<< HEAD
     function addItem(button) {
         console.log(button)
         const id = button.getAttribute('data-id');
@@ -972,11 +1216,28 @@
 
         if (taxName !== 'Exempted' && taxPercent !== null) {
             taxAmount = (finalPrice * taxPercent) / (100 + taxPercent);
+=======
+    function addItem(product, value) {
+        let existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
+
+        console.log(value, 'value')
+
+        let priceType = '';
+
+        if(value === 'wp'){
+            price = product[0].dealer_price
+            priceType = `${product[0].dealer_price * parseFloat(currencyData[0][0]?.exchange_rate)}`
+            existingItem = false;
+        }else{
+            price = product[0].price
+            priceType = `${product[0].price * parseFloat(currencyData[0][0]?.exchange_rate)}`
+>>>>>>> origin/production
         }
 
         if (existingItem) {
             existingItem.quantity += 1;
         } else {
+<<<<<<< HEAD
             const newItem = {
                 id: generateUniqueId(),
                 inventory_id: id,
@@ -990,6 +1251,15 @@
                 tax_percent: taxPercent,
                 wholesale_price: wholesalePrice * exchangeRate,
                 price_type: value
+=======
+            const newTransfer = {
+                id:generateUniqueId(),
+                inventory_id:product[0].inventory_id, 
+                product_name: product[0].product_name,
+                product_description: product[0].description,
+                quantity:1,
+                price:priceType
+>>>>>>> origin/production
             };
             cart.push(newItem);
         }
@@ -1026,8 +1296,8 @@
             document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
             document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + payable.toFixed(2)}`;
 
-            payable_amount = payable
-            discount_amount = discount
+        payable_amount = payable
+        discount_amount = discountF
 
             updateTfoot(vatAmount, totalAmount, delivery, payable)
 
@@ -1204,14 +1474,21 @@
     async function processCart(el) {
         const amountReceived = document.getElementById('id_amount_paid');
 
-        if (!holdStatus) {
-            if (Number((amountReceived.value) <= 0) && (paymentTerms === 'cash')) {
+        let pay_later_dates = [];
+        if (paymentTerms === 'pay later') {
+            const paylaterPeriod = document.getElementById('id_paylater_period');
+            const manualDateInput = document.getElementById('manual_paylater_date');
+            
+            if (paylaterPeriod.value) {
+                const paylaterDateInputs = document.querySelectorAll('[id^="paylater_date_"]');
+                pay_later_dates = Array.from(paylaterDateInputs).map(input => input.value);
+            } else if (manualDateInput.value) {
+                pay_later_dates = [manualDateInput.value];
+            } else {
                 Swal.fire({
                     icon: 'error',
-                    text: 'Amount can’t be zero when payment method is cash.',
+                    text: 'Please either enter a period or select a manual due date',
                     title: 'Error'
-                }).then(() => {
-                    amountReceived.focus()
                 });
                 return;
             }
@@ -1229,16 +1506,21 @@
                 recourring: document.getElementById('id_reoccuring').checked,
                 paymentTerms: paymentTerms,
                 hold_status: holdStatus,
-                pay_later_date: document.getElementById('paylater_date').value
+                pay_later_dates: pay_later_dates,
+                change_deposit: changeToBeDeposited,
+                note: invoiceNote.value
             }
         ];
 
+        console.log(data)
+
+        console.log(pay_later_dates, 'pay_later_dates')
+    
         const url = el.dataset.name === 'qoutation' 
             ? "{% url 'finance:add_qoutation' %}" 
             : "{% url 'finance:create_invoice' %}";
 
         try {
-            // Show loading/processing Swal
             Swal.fire({
                 title: 'Processing...',
                 text: 'Please wait while we process the invoice.',
@@ -1286,32 +1568,50 @@
                     }
                 });
             } else {
-                
-                console.log(result, 'result');
 
-                if (result.success){
-                    displayReceipt(result.invoice_data);
-                    cart = [];
-                    updateCartDisplay();
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'No Invoice ID',
-                        text: 'Invoice ID not found in the response.'
-                    });
-                }
-                
+            const invoiceId = result.invoice_id;
+
+            if (invoiceId) {
+                Swal.fire({
+                    title: 'Printing...',
+                    text: 'Generating receipt, please wait...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                        console.log("Invoice data:", result.invoice_data);
+                        displayReceipt(result.invoice_data);
+                        cart = [];
+                        updateCartDisplay();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Receipt Printed',
+                            text: 'The receipt has been successfully generated!',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }
+                });
+            } else {
+                console.error("Invoice ID not found in response.");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Invoice',
+                    text: 'Invoice ID was not found. Please try again.',
+                });
             }
-        } catch (error) {
-            Swal.close(); 
-            console.error("Error during request:", error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops!',
-                text: 'Something went wrong while processing your request.',
-            });
+            
         }
+
+    } catch (error) {
+        Swal.close(); // Close the loading Swal if there's an error
+        console.error("Error during request:", error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: 'Something went wrong while processing your request.',
+        });
     }
+}
 
     function displayReceipt(data) {
         try {
@@ -1349,6 +1649,7 @@
         }
     }
 
+<<<<<<< HEAD
    function generateReceiptContent(data) {
     console.log('data, ', data)
     const { invoice, invoice_items: invoiceItems } = data;
@@ -1417,6 +1718,136 @@
                 <img src="{% static 'assets/logo.png' %}" width="180px"/>
                 <h2>Pasales Investments T/A Techcity</h2>
             </div>
+=======
+    function generateReceiptContent(data) {
+        const { invoice, invoice_items: invoiceItems } = data;
+        const {
+            invoice_number: invoiceNumber,
+            amount: invoiceTotal,
+            vat: vatAmount,
+            subtotal: subTotal,
+            currency_symbol: currencySymbol,
+            receipt_hash: receiptHash,
+            amount_paid: amountPaid,
+            payment_terms: paymentMethod,
+            device_id: deviceId,
+            device_serial_number: deviceSerialNumber,
+            receipt_signature: receiptSignature,
+            qr_code: qrCodeURL,
+            branch_name: branchName,
+            branch_phone: branchPhone,
+            branch_email: branchEmail,
+            code: code,
+            fiscal_day:fiscal_day
+        } = invoice;
+    
+        const vatRate = 15;
+    
+        return `
+            <style>
+                .receipt {
+                    font-family: Arial, sans-serif;
+                    font-size: 11px;
+                    width: 5.8cm;
+                    padding: 10px;
+                }
+                .receipt h2, .footer p, .center, .td {
+                    text-align: center;
+                }
+                .receipt-body table {
+                    width: 100%;
+                    margin-top: 10px;
+                    border-collapse: collapse;
+                }
+                .receipt-body th, .receipt-body td {
+                    padding: 2px;
+                    border-bottom: 1px dashed #000;
+                }
+                .qr-code {
+                    text-align: center;
+                    margin-top: 10px;
+                }
+                .footer {
+                    font-size: 11px;
+                    margin-top: 10px;
+                }
+                .terms {
+                    font-size: 9px;
+                    margin-top: 10px;
+                    text-align: left;
+                }
+                .terms li {
+                    list-style-type: none;
+                    margin-bottom: 4px;
+                    font-size:10px;
+                }
+            </style>
+
+            <div class="receipt">
+                <h2>Pasales Investments T/A Techcity</h2>
+                <div>
+                    <img src="{% static 'assets/logo.png' %}" width="250px;"/>
+                </div>
+                <p><strong>FISCAL TAX INVOICE</strong></p>
+                <p>Cashier: {{ request.user.get_full_name }}</p>
+                <div class="receipt-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align:left;">Item</th>
+                                <th>Qty</th>
+                                <th>Price</th>
+                                <th>VAT</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${invoiceItems.map(item => {
+                                const total = item.unit_price * item.quantity;
+                                const vat = total - (total / (1 + vatRate / 100));
+                                return `
+                                    <tr>
+                                        <td>${item.item__name}</td>
+                                        <td style="text-align:right;">${item.quantity}</td>
+                                        <td style="text-align:right;">${item.unit_price}</td>
+                                        <td style="text-align:right;">${vat.toFixed(2)}</td>
+                                        <td style="text-align:right;">${total}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr><td colspan="4">Subtotal</strong></td><td style="text-align:right;">${subTotal}</td></tr>
+                            <tr><td colspan="4">VAT (${vatRate}%)</strong></td><td style="text-align:right;">${vatAmount}</td></tr>
+                            <tr><td colspan="4">Total</strong></td><td style="text-align:right;">${invoiceTotal}</td></tr>
+                            <tr><td colspan="4">Amount Paid</strong></td><td style="text-align:right;">${amountPaid}</td></tr>
+                            <tr><td colspan="4">Payment Method</strong></td><td style="text-align:right;">${paymentMethod || 'Cash'}</td></tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="terms">
+                    <strong>Terms & Conditions:</strong>
+                    <ul>
+                        <li>All laptop batteries within laptops attract 1 month warranty.</li>
+                        <li>Warranty for all preowned laptops is 3 months. Tech City doesn't warrant laptops if damaged by water, liquids, or electrical power shorts. 3 hours to 21 days is required to fully warranty returned laptop.</li>
+                        <li>Any withdrawn deposits for any purchase will attract 10% administration fee.</li>
+                        <li>Tech City only accepts exchanges on faulty laptops or fixes them in the time frame already stated above.</li>
+                        <li>All laptop batteries outside laptops attract 48hrs warranty. No warranty on laptop screens.</li>
+                    </ul>
+                </div>
+                <div class="footer center">
+                    <hr>
+                    ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
+                    <p>Thank you for shopping with us</p>
+                    <hr>
+                </div>
+
+            </div>
+
+        `;
+    }
+>>>>>>> origin/production
 
             <div class="header-row">
                 <span><strong>TIN:</strong> 200102099</span>
@@ -1681,7 +2112,7 @@
             }
 
             previousDue = bal;
-            previousDueEl.textContent = balance ? `${balance.currency__symbol} ${bal}` : "0.00";
+            previousDueEl.textContent = (balance ? `${balance.currency__symbol} ${bal}` : "0.00");
 
             data.forEach((balance) => {
                 const balanceItem = document.createElement('small');
@@ -1763,6 +2194,8 @@
                 `
             })
         }
+
+        
 
         const apiUrl =''//update endpoint
             async function fetchCustomerData() {

@@ -1,0 +1,77 @@
+{% load static %}
+<style>
+    .total{
+        border-top: 1px solid black;
+        border-bottom: 1px solid black;
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        padding-top: 5px;        
+    }
+</style> 
+<div class="container">
+    <div class="row container mt-5">
+        <small>{{report_date}}</small>
+        <div class="col-12">
+            <h4>Stocktake</h4>
+            <hr style="border:1px solid #664147 !important;">
+            <div class='table-scroll'>
+                <table class="table table-borderless table-hover" id="stocktake_table">
+                    <thead class="background">
+                        <th style="text-align:left;">#</th>
+                        <th style="text-align:left;">Product</th>
+                        <th style="text-align:left;">System Quantity</th>
+                        <th style="text-align:left;">Physical Quantity</th>
+                        <th style="text-align:left;">Quantity Difference</th>
+                        <th style="text-align:left;">Cost Value</th>
+                        <th style="text-align:left;">Selling Value</th>
+                    </thead>
+                    <tbody>
+                        {% for product in stocktake_items %}
+                            <tr>
+                                <td><small>{{ forloop.counter }}</small></td>
+                                <td>
+                                    <small>
+                                        {{ product.product.name }}
+                                    </small>
+                                </td>
+                                <td  style="text-align:center;">
+                                    <small id="id_quantity_{{ product.id }}">
+                                        {{ product.now_quantity }}
+                                    </small>
+                                </td>
+                                <td  style="text-align:center;">
+                                    <small id="id_quantity_{{ product.id }}">
+                                        {{ product.quantity }}
+                                    </small>
+                                </td>
+                                <td  style="text-align:center;">
+                                    <small id="id_diff_{{ product.id }}">{{ product.quantity_difference }}</small>
+                                </td>
+                                <td  style="text-align:center;">
+                                    <small id="id_quantity_{{ product.id }}">
+                                        ${{ product.cost }}
+                                    </small>
+                                </td>
+                                <td  style="text-align:center;">
+                                    <small id="id_quantity_{{ product.id }}">
+                                        ${{ product.selling_value }}
+                                    </small>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td>Total</td>
+                            <td colspan="4"></td>
+                            <td class="total">${{ total_cost_value }}</td>
+                            <td class="total">${{ total_selling_value }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
