@@ -53,14 +53,11 @@ urlpatterns = [
     path('invoice/preview/json/<int:invoice_id>/', invoice_preview_json, name='invoice_preview_json'),
     path('invoice/preview/data/<int:invoice_id>/', invoice_preview_data, name='invoice_preview_data'),
     path('held/invoices', held_invoice_view, name='held_invoice'),
-<<<<<<< HEAD
     path('credit-note/create/', create_credit_note, name='create_credit_note'),
     path('credit-note/items/<int:invoice_id>/', get_credit_note_items, name='get_credit_note_items'),
-=======
     path('reset/', reset_pc_pasels_invoices, name='reset_pc_pasels_invoices'),
     
     # path('api/v1/invoices/', invoice_api, name='invoice-list'),
->>>>>>> origin/production
     
     #customer
     path('customers/', customer, name='customers'),

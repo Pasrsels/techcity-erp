@@ -78,10 +78,8 @@ from dotenv import load_dotenv
 from apps.settings.models import OfflineReceipt, FiscalDay, FiscalCounter
 from utils.zimra import ZIMRA
 from utils.zimra_sig_hash import run
-<<<<<<< HEAD
 from django.views.decorators.http import require_http_methods
 from apps.pos.utils.process_credit_note import generate_credit_note_data, submit_credit_note
-=======
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Avg, F, Value, CharField, ExpressionWrapper
@@ -92,7 +90,6 @@ import imghdr, base64
 from django.core.files.base import ContentFile
 from django.db.models.functions import ExtractMonth 
 import calendar 
->>>>>>> origin/production
  
 # load global zimra instance
 zimra = ZIMRA()
@@ -1349,7 +1346,6 @@ def create_invoice(request):
                 logger.info(invoice_items)
 
                 try:
-<<<<<<< HEAD
                     sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
                     logger.info(f"sig_data: {sig_data}")
                     hash_sig_data = run(sig_data)
@@ -1357,14 +1353,6 @@ def create_invoice(request):
                     # logger.info(hash_sig_data)
                     credit_note_data = []
                     submit_receipt_data(request, receipt_data, credit_note_data, hash_sig_data['hash'], hash_sig_data['signature'], invoice.id)
-=======
-                    # sig_data, receipt_data = generate_receipt_data(invoice, invoice_items, request)
-                    # logger.info(sig_data)
-                    # hash_sig_data = run(sig_data)
-                    
-                    # logger.info(hash_sig_data)
-                    # submit_receipt_data(request, receipt_data, hash_sig_data['hash'], hash_sig_data['signature'])
->>>>>>> origin/production
                     
                     invoice_data = invoice_preview_json(request, invoice.id)
                     logger.info(invoice_data)

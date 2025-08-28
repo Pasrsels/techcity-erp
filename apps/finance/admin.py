@@ -31,12 +31,9 @@ admin.site.register(MainExpenseCategory)
 admin.site.register(ExpenseSubCategory)
 admin.site.register(Income)
 admin.site.register(IncomeCategory)
-<<<<<<< HEAD
 admin.site.register(CreditNote)
 admin.site.register(ValueAddedTax)
-=======
 admin.site.register(Paylater)
 admin.site.register(paylaterDates)
 admin.site.register(InvoiceCategory)
->>>>>>> origin/production
 

@@ -578,13 +578,10 @@ def inventory_index(request):
     form = ServiceForm()
     q = request.GET.get('q', '')  
     category = request.GET.get('category', '')    
-<<<<<<< HEAD
-=======
     
     now = timezone.now() 
     today = now.date()  
     
->>>>>>> origin/production
     accessories = Accessory.objects.all()
     inventory = Inventory.objects.filter(
         branch=request.user.branch, 

@@ -342,13 +342,10 @@ class Invoice(models.Model):
     code = models.CharField(max_length=50, null=True)
     fiscal_day = models.CharField(max_length=50, null=True)
     cash_up_status = models.BooleanField(default=False, null=True)
-<<<<<<< HEAD
     zimra_inv_id = models.CharField(max_length=255, null=True)
     fiscal_day = models.IntegerField(null=True)
 
-=======
     category = models.ForeignKey(InvoiceCategory, on_delete=models.CASCADE, null=True)
->>>>>>> origin/production
     def generate_invoice_number(branch):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
         print(last_invoice.invoice_number)
@@ -550,19 +547,11 @@ class Cashbook(models.Model):
     director = models.BooleanField(default=False, null=True)
     cancelled = models.BooleanField(default=False, null=True)
     note = models.TextField(default='', null=True)
-<<<<<<< HEAD
-    created_by = models.ForeignKey('users.user', on_delete=models.CASCADE, null=True)
-    updated_by = models.ForeignKey('users.user', on_delete=models.CASCADE, related_name='updated_cashbook')
-    updated_at = models.DateTimeField(auto_now=True)
-    # status = models.BooleanField(default=True, null=True)
-
-=======
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     created_by = models.ForeignKey('users.user', on_delete=models.CASCADE, related_name='created_cashbook')
     updated_by = models.ForeignKey('users.user', on_delete=models.CASCADE, related_name='updated_cashbook')
     updated_at = models.DateTimeField(auto_now=True)
     
->>>>>>> origin/production
     def __str__(self):
         return f'{self.issue_date}'
 
@@ -574,8 +563,6 @@ class CashBookNote(models.Model):
 
     def __str__(self):
         return f"Note by {self.user.username} on {self.timestamp}"
-<<<<<<< HEAD
-=======
     
 class Recurrence(models.Model):
     class TimeUnit(models.TextChoices):
@@ -583,7 +570,6 @@ class Recurrence(models.Model):
         WEEKLY = 'weekly', _('Weekly')
         MONTHLY = 'monthly', _('Monthly')
         YEARLY = 'yearly', _('Yearly')
->>>>>>> origin/production
 
     expense = models.OneToOneField('finance.Expense', on_delete=models.CASCADE, related_name='recurrence')
     recurrence_value = models.PositiveIntegerField(help_text="Number of units between each recurrence (e.g., every 2 weeks)")
@@ -908,13 +894,8 @@ class Income(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     currency = models.ForeignKey('Currency', on_delete=models.CASCADE)
-<<<<<<< HEAD
-    category = models.ForeignKey('IncomeCategory', on_delete=models.PROTECT,  null=True)
-    note = models.CharField(max_length=200)
-=======
     category = models.ForeignKey('IncomeCategory', on_delete=models.PROTECT, null = True)
     note = models.CharField(max_length=200, null=True)
->>>>>>> origin/production
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     account = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='account_users', null=True)
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE)
@@ -938,8 +919,6 @@ class Income(models.Model):
         null=True,
         blank=True
     )
-<<<<<<< HEAD
-=======
     
     @classmethod
     def get_period_total(cls, start_date, end_date, branch_id=None, sale_only=None):
@@ -978,7 +957,6 @@ class Income(models.Model):
             total=Sum('amount')
         ).order_by('-total')[:limit]
 
->>>>>>> origin/production
 
     def __str__(self):
         return f"{self.created_at} - {self.category} - {self.note} - ${self.amount}"
@@ -996,7 +974,6 @@ class FinanceLog(models.Model):
 
     def __str__(self):
         return f"{self.get_type_display()} | {self.category} | ${self.amount}"
-<<<<<<< HEAD
 
 class CreditNote(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='credit_notes')
@@ -1079,41 +1056,7 @@ class ValueAddedTax(models.Model):
     
     def __str__(self):
         return self.name
-=======
     
-
-class LossAccount(models.Model):
-    name = models.CharField(max_length=100)
-    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    last_transaction_date = models.DateTimeField(null=True, blank=True)
-    
-    def __str__(self):
-        return f"{self.name} - {self.balance}"
-
-
-class BankAccount(models.Model):
-    name = models.CharField(max_length=100)
-    branch = models.CharField(max_length=100)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.name} - {self.balance}"
-    
-class BankAccountTransaction(models.Model):
-    bank_account = models.ForeignKey(BankAccount, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    transaction_type = models.CharField(max_length=10)
-    description = models.TextField()
-    date = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.bank_account} - {self.amount} - {self.transaction_type} - {self.description} - {self.date}"
-    
-
 class Contact(models.Model):
     CONTACT_TYPE_CHOICES = [
         ('Customer', 'Customer'),
@@ -1126,4 +1069,3 @@ class Contact(models.Model):
     def __str__(self):
         return self.name
 
->>>>>>> origin/production
