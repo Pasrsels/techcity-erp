@@ -10,7 +10,7 @@ from loguru import logger
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email', 'first_name', 'last_name', 'phonenumber']
+        fields = ['username', 'email', 'first_name', 'last_name', 'phonenumber', 'role']
         ref_name ="UserAppSerializer"
 
 
@@ -37,12 +37,15 @@ class LoginSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
     username = serializers.CharField(max_length=255, min_length=3)
     tokens = serializers.SerializerMethodField()
+    role = serializers.CharField(source='get_role_display', read_only=True)
 
+    class Meta:
+        model = User
+        fields = ['password', 'username', 'tokens', 'role']
+        
     def get_tokens(self, obj):
-        from loguru import logger
-
+    
         user = User.objects.get(username=obj['username'])
-
 
         logger.info(f'User: {user}')
         return {
@@ -50,16 +53,11 @@ class LoginSerializer(serializers.ModelSerializer):
             'access': user.tokens()['access']
         }
 
-    class Meta:
-        model = User
-        fields = ['password', 'username', 'tokens']
-
     def validate(self, attrs):
         username = attrs.get('username', '')
         password = attrs.get('password', '')
         print(username, password, 'password')
         user = auth.authenticate(username=username, password=password)
-
 
         if not user:
             logger.info('failed')
@@ -72,10 +70,9 @@ class LoginSerializer(serializers.ModelSerializer):
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'role': user.role,
+            'role': user.get_role_display(),
             'tokens': user.tokens
         }
-
 
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()

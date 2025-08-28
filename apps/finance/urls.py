@@ -2,15 +2,15 @@ from django.urls import path, include
 from . views import *
 # from apis.cashbook_apis import *
 from rest_framework.routers import DefaultRouter
-# from apps.finance.custom_views.cashbook_views import cashbook_data
-# from apps.finance.apis.cashbook_apis import *
-# from apps.finance.apis.invoice_apis import *
-
+from apps.finance.custom_views.cashbook_views import cashbook_data
+from apps.finance.apis.cashbook_apis import *
+from apps.finance.apis.invoice_apis import *
+from .views import InvoiceAPI
 
 app_name = 'finance'
 
 router = DefaultRouter()
-# router.register(r'api/v1/customers_list', CustomersViewset, basename='customers_list')
+router.register(r'api/v1/customers', CustomersViewset, basename='customers_list')
 # router.register(r'api/v1/currency', CurrencyViewset, basename= 'api_currency_crud')
 # router.register(r'api/v1/Cashwithrawals', CashWithdrawalsViewset, basename= 'api_cash_withrawals')
 # router.register(r'api/v1/quotation', QuatationCrud, basename= 'api_quotation')
@@ -20,7 +20,9 @@ router = DefaultRouter()
 urlpatterns = [
     path('', Finance.as_view(), name='finance'),
     path('generate-report/', generate_financial_report, name='generate-report'),
+    path('api/v1/invoices/', InvoiceAPI.as_view(), name='invoice-api'),
     # path('Income/', IncomeViewsets, name="income")
+    path('monthly_data/', finance_monthly_data , name="monthly_data"),
     
     # expenses
     path('expenses/', expenses, name='expenses'),
@@ -40,6 +42,7 @@ urlpatterns = [
 
     #invoice
     path('invoice/', invoice, name='invoice'),
+    # path('invoices/', invoice_api, name='invoices'), #temporary
     path('invoice/pdf/', invoice_pdf, name='invoice_pdf'),
     path('invoice/create/', create_invoice, name='create_invoice'),
     path('invoice/payments/', invoice_payment_track, name='payments'),
@@ -52,7 +55,7 @@ urlpatterns = [
     path('held/invoices', held_invoice_view, name='held_invoice'),
     path('reset/', reset_pc_pasels_invoices, name='reset_pc_pasels_invoices'),
     
-    # path('api/v1/invoices/', invoice_list, name='invoice-list'),
+    # path('api/v1/invoices/', invoice_api, name='invoice-list'),
     
     #customer
     path('customers/', customer, name='customers'),

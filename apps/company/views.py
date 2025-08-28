@@ -168,9 +168,9 @@ def branch_list(request):
 
 @login_required
 def branch_switch(request, branch_id):
-    """ Enables the admin or the ownwe to switch between branches """
+    """ Enables the admin or the owner to switch between branches """
     user = request.user
-    if user.role == 'Admin' or user.role == 'admin':
+    if user.role.lower() in ['admin', 'owner', 'accountant']:
         user.branch = Branch.objects.get(id=branch_id)
         user.save()
     else:
@@ -194,7 +194,6 @@ def add_branch(request):
         except Exception as e:
             return JsonResponse({'success': False, 'message': f'{e}'})
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
-
 
 # @permissions(['Admin'])
 @login_required

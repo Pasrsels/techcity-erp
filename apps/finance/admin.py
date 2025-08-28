@@ -33,4 +33,5 @@ admin.site.register(Income)
 admin.site.register(IncomeCategory)
 admin.site.register(Paylater)
 admin.site.register(paylaterDates)
+admin.site.register(InvoiceCategory)
 

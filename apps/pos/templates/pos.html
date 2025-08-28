@@ -1281,7 +1281,7 @@
         row.innerHTML = `
             <td>
                 <small class='d-flex align-items-center'>
-                    <small><input class='form-control form-control-sm' type='number' data-id=${item.inventory_id} value='${item.quantity}' oninput='addOrDreceaseQuantity(this);' style='width:4rem;'/></small>
+                    <small><input class='form-control form-control-sm' type='number' data-id=${item.inventory_id} value='${item.quantity}' onchange='addOrDreceaseQuantity(this);' style='width:4rem;'/></small>
                 </small>
             </td>
             <td style='text-align:left !important;'><small>${item.product_name}</small></td>
@@ -1575,7 +1575,6 @@
         }
     }
 
-
     function generateReceiptContent(data) {
         const { invoice, invoice_items: invoiceItems } = data;
         const {
@@ -1604,12 +1603,11 @@
             <style>
                 .receipt {
                     font-family: Arial, sans-serif;
-                    font-size: 12px;
+                    font-size: 11px;
                     width: 5.8cm;
-                    margin: auto;
                     padding: 10px;
                 }
-                .receipt h2, .footer p, .center {
+                .receipt h2, .footer p, .center, .td {
                     text-align: center;
                 }
                 .receipt-body table {
@@ -1629,32 +1627,34 @@
                     font-size: 11px;
                     margin-top: 10px;
                 }
+                .terms {
+                    font-size: 9px;
+                    margin-top: 10px;
+                    text-align: left;
+                }
+                .terms li {
+                    list-style-type: none;
+                    margin-bottom: 4px;
+                    font-size:10px;
+                }
             </style>
-    
+
             <div class="receipt">
-                <h2>Pasales Investments</h2>
+                <h2>Pasales Investments T/A Techcity</h2>
+                <div>
+                    <img src="{% static 'assets/logo.png' %}" width="250px;"/>
+                </div>
                 <p><strong>FISCAL TAX INVOICE</strong></p>
-    
-                <p><strong>Invoice No:</strong> ${invoiceNumber}</p>
-                <p><strong>Branch:</strong> ${branchName || 'Main'}<br>
-                <strong>Phone:</strong> ${branchPhone || 'N/A'}<br>
-                <strong>Email:</strong> ${branchEmail || 'N/A'}</p>
-    
-                <p>
-                    <strong>Fiscal Day No: ${fiscal_day}</strong><br>
-                    <strong>Device ID:</strong> ${deviceId}<br>
-                    <strong>Device Serial:</strong> ${deviceSerialNumber}
-                </p>
-    
+                <p>Cashier: {{ request.user.get_full_name }}</p>
                 <div class="receipt-body">
                     <table>
                         <thead>
                             <tr>
-                                <th>Item</th>
+                                <th style="text-align:left;">Item</th>
                                 <th>Qty</th>
-                                <th>${currencySymbol}Price</th>
-                                <th>${currencySymbol}VAT</th>
-                                <th>${currencySymbol}Total</th>
+                                <th>Price</th>
+                                <th>VAT</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1664,39 +1664,45 @@
                                 return `
                                     <tr>
                                         <td>${item.item__name}</td>
-                                        <td>${item.quantity}</td>
-                                        <td>${currencySymbol}${item.unit_price}</td>
-                                        <td>${currencySymbol}${vat.toFixed(2)}</td>
-                                        <td>${currencySymbol}${total}</td>
+                                        <td style="text-align:right;">${item.quantity}</td>
+                                        <td style="text-align:right;">${item.unit_price}</td>
+                                        <td style="text-align:right;">${vat.toFixed(2)}</td>
+                                        <td style="text-align:right;">${total}</td>
                                     </tr>
                                 `;
                             }).join('')}
                         </tbody>
                         <tfoot>
-                            <tr><td colspan="4"><strong>Subtotal</strong></td><td>${currencySymbol}${subTotal}</td></tr>
-                            <tr><td colspan="4"><strong>VAT (${vatRate}%)</strong></td><td>${currencySymbol}${vatAmount}</td></tr>
-                            <tr><td colspan="4"><strong>Total</strong></td><td>${currencySymbol}${invoiceTotal}</td></tr>
-                            <tr><td colspan="4"><strong>Amount Paid</strong></td><td>${currencySymbol}${amountPaid}</td></tr>
-                            <tr><td colspan="4"><strong>Payment Method</strong></td><td>${paymentMethod || 'Cash'}</td></tr>
+                            <tr><td colspan="4">Subtotal</strong></td><td style="text-align:right;">${subTotal}</td></tr>
+                            <tr><td colspan="4">VAT (${vatRate}%)</strong></td><td style="text-align:right;">${vatAmount}</td></tr>
+                            <tr><td colspan="4">Total</strong></td><td style="text-align:right;">${invoiceTotal}</td></tr>
+                            <tr><td colspan="4">Amount Paid</strong></td><td style="text-align:right;">${amountPaid}</td></tr>
+                            <tr><td colspan="4">Payment Method</strong></td><td style="text-align:right;">${paymentMethod || 'Cash'}</td></tr>
                         </tfoot>
                     </table>
                 </div>
-    
-                <div class="qr-code">
-                    <img src="${qrCodeURL}" alt="QR Code" width="100" height="100" style="display:block; margin: 0 auto;">
+
+                <div class="terms">
+                    <strong>Terms & Conditions:</strong>
+                    <ul>
+                        <li>All laptop batteries within laptops attract 1 month warranty.</li>
+                        <li>Warranty for all preowned laptops is 3 months. Tech City doesn't warrant laptops if damaged by water, liquids, or electrical power shorts. 3 hours to 21 days is required to fully warranty returned laptop.</li>
+                        <li>Any withdrawn deposits for any purchase will attract 10% administration fee.</li>
+                        <li>Tech City only accepts exchanges on faulty laptops or fixes them in the time frame already stated above.</li>
+                        <li>All laptop batteries outside laptops attract 48hrs warranty. No warranty on laptop screens.</li>
+                    </ul>
                 </div>
                 <div class="footer center">
-                    <p><strong>Verification Code: <br> </strong> ${code} <br>
-                        Verification Url: https://fdmstest.zimra.co.zw/
-                    </p>
                     <hr>
+                    ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
                     <p>Thank you for shopping with us</p>
                     <hr>
                 </div>
+
             </div>
+
         `;
     }
-    
 
     // Function to print the receipt silently
     function printReceiptSilently(content) {
