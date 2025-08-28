@@ -357,7 +357,7 @@
    */
 }
 [class*=hint--]:after {
-  text-shadow: 0 -1px 0px black;
+  text-shadow: 0 -1px 0px hsl(0, 0%, 0%);
   box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -378,7 +378,7 @@
  */
 .hint--error:after {
   background-color: hsl(1, 40%, 50%);
-  text-shadow: 0 -1px 0px #592726;
+  text-shadow: 0 -1px 0px hsl(1, 40%, 25%);
 }
 .hint--error.hint--top-left:before {
   border-top-color: hsl(1, 40%, 50%);
@@ -410,7 +410,7 @@
  */
 .hint--warning:after {
   background-color: hsl(38, 46%, 54%);
-  text-shadow: 0 -1px 0px #6c5328;
+  text-shadow: 0 -1px 0px hsl(38, 46%, 29%);
 }
 .hint--warning.hint--top-left:before {
   border-top-color: hsl(38, 46%, 54%);
@@ -442,7 +442,7 @@
  */
 .hint--info:after {
   background-color: hsl(200, 50%, 45%);
-  text-shadow: 0 -1px 0px #1a3c4d;
+  text-shadow: 0 -1px 0px hsl(200, 50%, 20%);
 }
 .hint--info.hint--top-left:before {
   border-top-color: hsl(200, 50%, 45%);
@@ -474,7 +474,7 @@
  */
 .hint--success:after {
   background-color: hsl(121, 32%, 40%);
-  text-shadow: 0 -1px 0px #1a321a;
+  text-shadow: 0 -1px 0px hsl(121, 32%, 15%);
 }
 .hint--success.hint--top-left:before {
   border-top-color: hsl(121, 32%, 40%);

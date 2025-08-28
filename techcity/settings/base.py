@@ -166,8 +166,8 @@ DATABASES = {
 
     'default': {
          'ENGINE': 'django.db.backends.postgresql',
-         'NAME':  'techcity_db',
-         'USER': 'postgres',
+         'NAME':  'final',
+         'USER': 'chantiey',
          'PASSWORD': 'neverfail',
          'HOST': 'localhost',
          'PORT': '5432'
