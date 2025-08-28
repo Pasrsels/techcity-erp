@@ -290,7 +290,13 @@ class Sale(models.Model):
     
     def __str__(self):
         return f"Sale to {self.transaction.customer} on {self.date} ({self.total_amount})"
+    
+class InvoiceCategory(models.Model): #to be checked
+    name = models.CharField(max_length=50, default="sales")
 
+    def __str__(self):
+        return self.name
+    
 class Invoice(models.Model):
     """
         Model representing an invoice.
@@ -336,7 +342,7 @@ class Invoice(models.Model):
     code = models.CharField(max_length=50, null=True)
     fiscal_day = models.CharField(max_length=50, null=True)
     cash_up_status = models.BooleanField(default=False, null=True)
-    
+    category = models.ForeignKey(InvoiceCategory, on_delete=models.CASCADE, null=True)
     def generate_invoice_number(branch):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
         print(last_invoice.invoice_number)

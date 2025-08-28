@@ -21,7 +21,7 @@
                 {% for product in products %}
                     <tr>
                         <td>{{ product.product.name }}</td>
-                        <td id="id_quantity">{{ product.quantity }}</td>
+                        <td id="id_quantity">{{ product.now_quantity }}</td>
                         <td>
                             <input id="p_quantity_{{ forloop.counter }}" 
                                 class="form-control form-control-sm quantity-input" 

@@ -74,6 +74,7 @@ logger = logging.getLogger(__name__)
 def create_cashbook_entry(sender, instance, **kwargs):
     if instance.cancelled or instance.invoice_return:
         Cashbook.objects.create(
+                invoice=instance,
                 issue_date=instance.issue_date,
                 description=f'Sales returns ({instance.invoice_number}: {instance.products_purchased})',
                 debit=False,
@@ -86,6 +87,7 @@ def create_cashbook_entry(sender, instance, **kwargs):
             )
     else:
         Cashbook.objects.create(
+            invoice=instance,
             issue_date=instance.issue_date,
             description=f'Sale  ({instance.invoice_number}: {instance.products_purchased})',
             debit=True,
