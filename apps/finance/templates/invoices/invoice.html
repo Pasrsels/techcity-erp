@@ -1149,7 +1149,7 @@ input[type="checkbox"] {
                                 const vat = item.vat_amount;
                                 const lineTotal = item.total_amount;
                                 return `<tr>
-                                        <td>${item.invoice_item__item__name}</td>
+                                        <td>$Discount:${item.invoice_item__item__name}</td>
                                         <td>${parseInt(item.quantity)}</td>
                                         <td>-${item.discount}</td>
                                         <td></td>

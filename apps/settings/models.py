@@ -46,20 +46,21 @@ class FiscalCounter(models.Model):
         (BANK_TRANSFER, "Bank Transfer"),
         (MOBILE_MONEY, "Mobile Money"),
     ]
-
+    
+    fiscal_day = models.ForeignKey(FiscalDay, on_delete=models.CASCADE, related_name='counters', null=True, blank=True)
     fiscal_counter_type = models.CharField(max_length=30, choices=COUNTER_TYPE_CHOICES, default=SALE_BY_TAX)
     fiscal_counter_currency = models.CharField(max_length=10, choices=[
         ('USD', 'usd'),
         ('ZWG', 'zwg')
     ], default='USD')
-    fiscal_counter_tax_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    fiscal_counter_tax_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, null=True, blank=True)
     fiscal_counter_tax_id = models.IntegerField(default=3)
     fiscal_counter_money_type = models.CharField(max_length=20, choices=MONEY_TYPE_CHOICES, default=CASH, null=True)
     fiscal_counter_value = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.fiscal_counter_type} - {self.fiscal_counter_currency} - {self.fiscal_counter_value}"
+        return f"{self.fiscal_day.day_no} : ({self.fiscal_counter_type} - {self.fiscal_counter_currency} - {self.fiscal_counter_value})"
 
 
 

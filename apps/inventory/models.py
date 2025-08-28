@@ -50,7 +50,7 @@ class SupplierAccount(models.Model):
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE)  
     balance = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     date = models.DateField(null= True)
-
+    
     class Meta:
         unique_together = ('currency', 'supplier') 
 

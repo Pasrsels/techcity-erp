@@ -55,7 +55,6 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
             # Generate QR code
             qr = qrcode.make(full_url)
 
-            qr = qrcode.make(full_url)
             qr_io = BytesIO()
             qr.save(qr_io, format='PNG')
             qr_io.seek(0)
@@ -92,71 +91,58 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
 
                 logger.info('Fiscale day incremented.')
 
-            # Updated fiscal counter logic using the improved approach from the second code
-            invoice_items = invoice.invoice_items.all()
-            grouped = defaultdict(lambda: {
-                "amount": Decimal("0.00"),
-                "vat": Decimal("0.00")
-            })
+          
+            for tax in receipt_data.get("receiptTaxes", []):
+                tax_id = tax["taxID"]
+                tax_percent = tax["taxPercent"]
+                tax_amount = tax["taxAmount"]
+                sales_amount_with_tax = tax["salesAmountWithTax"]
 
-            for item in invoice_items:
+
+                logger.info(f'Tax percent: {tax_percent}')
                 
-                rate = item.vat_rate.rate  
-                tax_id = item.item.tax_type.tax_id
-                key = (invoice.currency.name.lower(), rate, tax_id)
-                grouped[key]["amount"] += item.total_amount
-                grouped[key]["vat"] += item.vat_amount
-
-            today = now().date()
-
-            for (currency, rate, tax_id), values in grouped.items():
-                if values["amount"] == 0:
-                    continue 
-
-                # --- SALEBYTAX ---
-                sale_counter = FiscalCounter.objects.filter(
+                if tax_id == 1:
+                    tax_percent = None
+                if tax_id == 2:
+                    tax_percent = 0.00
+                if tax_id == 3:
+                    tax_percent = 15.00
+                    
+                sale_by_tax_counter, created_sbt = FiscalCounter.objects.get_or_create(
                     fiscal_counter_type='SaleByTax',
-                    fiscal_counter_currency=currency,
-                    fiscal_counter_tax_percent=rate,
-                    fiscal_counter_tax_id=tax_id,
-                    created_at__date=today
-                ).first()
+                    created_at__date=datetime.today(),
+                    fiscal_counter_currency=invoice.currency.name.lower(),
+                    fiscal_counter_tax_id= tax_id,
+                    fiscal_counter_tax_percent=tax_percent,
+                    fiscal_counter_money_type=receipt_data['receiptPayments'][0]['moneyTypeCode'],  
+                    fiscal_day=fiscal_day,
+                    
+                    defaults={
+                        "fiscal_counter_value": sales_amount_with_tax,
+                    }
+                )
+                if not created_sbt:
+                    sale_by_tax_counter.fiscal_counter_value += Decimal(sales_amount_with_tax)
+                    sale_by_tax_counter.save()
+                    logger.info(f'Updated SaleByTax counter: {sale_by_tax_counter}')
 
-                if sale_counter:
-                    sale_counter.fiscal_counter_value += values["amount"]
-                    sale_counter.save()
-                else:
-                    FiscalCounter.objects.create(
-                        fiscal_counter_type='SaleByTax',
-                        fiscal_counter_currency=currency,
-                        fiscal_counter_tax_percent=rate,
-                        fiscal_counter_tax_id=tax_id,
-                        fiscal_counter_money_type=None,
-                        fiscal_counter_value=values["amount"]
-                    )
-
-                # --- SALETAXBYTAX ---
-                if rate is not None and rate > 0:
-                    tax_counter = FiscalCounter.objects.filter(
+                if tax_percent != 0.00 :
+                    sale_tax_by_tax_counter, created_stbt = FiscalCounter.objects.get_or_create(
                         fiscal_counter_type='SaleTaxByTax',
-                        fiscal_counter_currency=currency,
-                        fiscal_counter_tax_percent=rate,
+                        created_at__date=datetime.today(),
+                        fiscal_counter_currency=invoice.currency.name.lower(),
                         fiscal_counter_tax_id=tax_id,
-                        created_at__date=today
-                    ).first()
-
-                    if tax_counter:
-                        tax_counter.fiscal_counter_value += values["vat"]
-                        tax_counter.save()
-                    else:
-                        FiscalCounter.objects.create(
-                            fiscal_counter_type='SaleTaxByTax',
-                            fiscal_counter_currency=currency,
-                            fiscal_counter_tax_percent=rate,
-                            fiscal_counter_tax_id=tax_id,
-                            fiscal_counter_money_type=None,
-                            fiscal_counter_value=values["vat"]
-                        )
+                        fiscal_counter_tax_percent=tax_percent,
+                        fiscal_counter_money_type=None,
+                        fiscal_day=fiscal_day,
+                        
+                        defaults={
+                            "fiscal_counter_value": tax_amount,
+                        }
+                    )
+                    if not created_stbt:
+                        sale_tax_by_tax_counter.fiscal_counter_value += Decimal(tax_amount)
+                        sale_tax_by_tax_counter.save()
             
             try:
                 # Balance By Money Type
@@ -164,20 +150,20 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
                     fiscal_counter_type="Balancebymoneytype",
                     created_at__date=datetime.today(),
                     fiscal_counter_currency=invoice.currency.name.lower(),
-
+                    fiscal_day=fiscal_day,
+                    
                     defaults={
                         "fiscal_counter_tax_percent": None,
-                        "fiscal_counter_tax_id": 0,
+                        "fiscal_counter_tax_id": tax_id,
                         "fiscal_counter_tax_percent": 0,
                         "fiscal_counter_money_type": invoice.payment_terms,
-                        "fiscal_counter_value": invoice.amount
+                        "fiscal_counter_value": invoice.amount, 
                     }
                 )
 
                 if not _:
                     fiscal_counter_bal_obj.fiscal_counter_value += invoice.amount
                     fiscal_counter_bal_obj.save()
-
             except Exception as e:
                 logger.error(f'{e}')
 

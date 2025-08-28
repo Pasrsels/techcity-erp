@@ -118,6 +118,8 @@ def get_last_receipt_numbers():
 
 def get_receipt_global_no(invoice):
     receipt = OfflineReceipt.objects.filter(invoice=invoice).first()
+    
+    print('receipt: {receipt}')
     return receipt.receipt_data["receiptGlobalNo"] if receipt else 0
 
 def generate_credit_note_data(invoice, invoice_items, request):
@@ -139,13 +141,16 @@ def generate_credit_note_data(invoice, invoice_items, request):
         logger.info(f'Global number: {new_receipt_global_no}, Receipt_counter:{fiscal_day.receipt_count}')
 
         previous_invoice = Invoice.objects.filter(branch=request.user.branch, issue_date__date=datetime.today()).last() 
-        
+         
         logger.info(f'Previous Invoice: {previous_invoice}, id: {previous_invoice.id}')
 
         logger.info(f'previous hash: {previous_invoice.receipt_hash}')
 
         total_line_amount = 0
         total_tax_amount = 0
+        
+        logger.info(f'Credit note items: {invoice_items}')
+        
         for index, item in enumerate(invoice_items, start=1):         
             if item.credit_note_issued:
                 logger.info(f'{item.item.name}, {item.credit_note_amount}')
@@ -166,6 +171,7 @@ def generate_credit_note_data(invoice, invoice_items, request):
                     "taxPercent": 15.00,
                     "taxID": 3
                 })
+                break
 
         logger.info(f'processing totals -> tax amount {tax_amount } total line amount: {total_line_amount} total_tax_amount: {total_tax_amount}')
 

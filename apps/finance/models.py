@@ -921,7 +921,7 @@ class CreditNoteItem(models.Model):
 class ValueAddedTax(models.Model):
     name = models.CharField(null=True, max_length=200)
     tax_id = models.IntegerField()
-    tax_percent = models.FloatField(null=True)
+    tax_percent = models.FloatField(null=True, blank=True)
     tax_code = models.CharField(max_length=3)
     
     def __str__(self):

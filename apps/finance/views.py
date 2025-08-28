@@ -2311,6 +2311,8 @@ def invoice_preview_json(request, invoice_id):
         'item__tax_type__tax_percent',
         'item__tax_type__name'
     )
+    
+    logger.info(f'invoice items: {invoice_items}')
 
     invoice_dict = {}
     invoice_dict['customer_name'] = invoice.customer.name
@@ -4506,12 +4508,12 @@ def check_fiscal_status(request):
     
     return JsonResponse({'success':False, 'message':True}, status=400)
 
-@login_required
+
 def close_fiscal_day(request):
     """
-    Close the fiscal day and generate a report with counter values following the FDMS signature format.
-    Handles two currencies (USD and ZIG) and multiple counter types
-    (BalanceByMoneyType, SaleByTax, SaleTaxByTax, CreditNoteByTax, CreditNoteTaxByTax).
+        Close the fiscal day and generate a report with counter values following the FDMS signature format.
+        Handles two currencies (USD and ZIG) and multiple counter types
+        (BalanceByMoneyType, SaleByTax, SaleTaxByTax, CreditNoteByTax, CreditNoteTaxByTax).
     """
     if request.method == 'GET':
         try:
@@ -4519,11 +4521,9 @@ def close_fiscal_day(request):
             if not fiscal_day:
                 return JsonResponse({'success': False, 'message': 'No open fiscal day found for today'}, status=404)
                 
-            fiscal_day_counters = FiscalCounter.objects.filter(created_at__date=datetime.datetime.today())
-            
-            logger.debug(f'fiscal counters: {fiscal_day_counters.values("fiscal_counter_type", "fiscal_counter_money_type", "fiscal_counter_currency")}')
+            fiscal_day_counters = FiscalCounter.objects.filter(fiscal_day=fiscal_day)
 
-            sale_by_tax_string = ""  
+            sale_by_tax_string = ""
             sale_tax_by_tax_string = ""
             balance_money_string = ""
             credit_note_by_tax_string = ""
@@ -4540,6 +4540,8 @@ def close_fiscal_day(request):
                 counter_type = counter.fiscal_counter_type.upper()
                 counter_currency = counter.fiscal_counter_currency.upper().replace("ZWL", "ZIG")
                 counter_value = int(counter.fiscal_counter_value * 100)
+                
+                logger.info(f'fiscal counter: {counter.fiscal_counter_tax_id}')
 
                 if counter_type == "BALANCEBYMONEYTYPE":
                     money_type = counter.fiscal_counter_money_type.upper()
@@ -4552,75 +4554,141 @@ def close_fiscal_day(request):
                             "money_type": money_type,
                             "value": 0
                         }
+                    
+                    balance_by_currency_and_type[key]["tax_percent"] = float(counter.fiscal_counter_tax_id)
                     balance_by_currency_and_type[key]["value"] += counter_value
-
+                        
                 elif counter_type == "SALEBYTAX":
-                    tax_percent = float(counter.fiscal_counter_tax_percent)
-                    key = f"{counter_currency}_{tax_percent}"
-                    if key not in sale_by_tax_dict:
-                        sale_by_tax_dict[key] = {
+                    if counter.fiscal_counter_tax_id != 1:
+                        tax_percent = counter.fiscal_counter_tax_percent
+                        key = f"{counter_currency}_{tax_percent}"
+                        if key not in sale_by_tax_dict:
+                            sale_by_tax_dict[key] = {
+                                "type": counter_type,
+                                "currency": counter_currency,
+                                "tax_percent": float(tax_percent),
+                                "value": 0
+                            }
+                    else: #exmpt
+                        sale_by_tax_dict[f'{counter_currency}_{counter_value}'] = {
                             "type": counter_type,
                             "currency": counter_currency,
-                            "tax_percent": tax_percent,
-                            "value": 0
+                            "value": counter_value,
+                            "tax_percent": -1, #FOR EXPMPT
                         }
-                    sale_by_tax_dict[key]["value"] += counter_value
+                    if counter.fiscal_counter_tax_id != 1:
+                        sale_by_tax_dict[key]["value"] += counter_value
 
                 elif counter_type == "SALETAXBYTAX":
-                    tax_percent = float(counter.fiscal_counter_tax_percent)
-                    key = f"{counter_currency}_{tax_percent}"
                     if key not in sale_tax_by_tax_dict:
-                        sale_tax_by_tax_dict[key] = {
-                            "type": counter_type,
-                            "currency": counter_currency,
-                            "tax_percent": tax_percent,
-                            "value": 0
+                        tax_percent = counter.fiscal_counter_tax_percent
+                        key = f"{counter_currency}_{tax_percent}"
+                        if counter.fiscal_counter_tax_id != 1:
+                            print(f"{counter.fiscal_counter_tax_id}")
+                            sale_tax_by_tax_dict[key] = {
+                                "type": counter_type,
+                                "currency": counter_currency,
+                                "tax_percent": float(tax_percent),
+                                "value": 0
                         }
-                    sale_tax_by_tax_dict[key]["value"] += counter_value
+                    if counter.fiscal_counter_tax_id != 1:
+                        sale_tax_by_tax_dict[key]["value"] += counter_value
 
                 elif counter_type == "CREDITNOTEBYTAX":
-                    tax_percent = float(counter.fiscal_counter_tax_percent)
-                    key = f"{counter_currency}_{tax_percent}"
                     if key not in credit_note_by_tax_dict:
-                        credit_note_by_tax_dict[key] = {
-                            "type": counter_type,
-                            "currency": counter_currency,
-                            "tax_percent": tax_percent,
-                            "value": 0
-                        }
-                    credit_note_by_tax_dict[key]["value"] += counter_value
+                        tax_percent = counter.fiscal_counter_tax_percent
+                        key = f"{counter_currency}_{tax_percent}"
+                        if counter.fiscal_counter_tax_id != 1:
+                            credit_note_by_tax_dict[key] = {
+                                "type": counter_type,
+                                "currency": counter_currency,
+                                "tax_percent": float(tax_percent),
+                                "value": 0
+                            }
+                        else:
+                            credit_note_by_tax_dict[f'{counter_currency}_{counter_value}']   = {
+                                "type": counter_type,
+                                "currency": counter_currency,
+                                "value": counter_value
+                            }
+                    if counter.fiscal_counter_tax_id != 1:
+                        credit_note_by_tax_dict[key]["value"] += counter_value
 
                 elif counter_type == "CREDITNOTETAXBYTAX":
-                    tax_percent = float(counter.fiscal_counter_tax_percent)
-                    key = f"{counter_currency}_{tax_percent}"
                     if key not in credit_note_tax_by_tax_dict:
-                        credit_note_tax_by_tax_dict[key] = {
-                            "type": counter_type,
-                            "currency": counter_currency,
-                            "tax_percent": tax_percent,
-                            "value": 0
-                        }
-                    credit_note_tax_by_tax_dict[key]["value"] += counter_value
-
+                        tax_percent = counter.fiscal_counter_tax_percent
+                        key = f"{counter_currency}_{tax_percent}"
+                        if counter.fiscal_counter_tax_id is not None:
+                            credit_note_tax_by_tax_dict[key] = {
+                                "type": counter_type,
+                                "currency": counter_currency,
+                                "tax_percent": float(tax_percent),
+                                "value": 0
+                            }
+                        else:
+                            credit_note_tax_by_tax_dict[f'{counter_currency}_{counter_value}']  = {
+                                "type": counter_type,
+                                "currency": counter_currency,
+                                "value": counter_value
+                            }
+                    if counter.fiscal_counter_tax_id != 1:
+                        credit_note_tax_by_tax_dict[key]["value"] += counter_value
+                        
             # Create strings for hashing
+            logger.info(f'sale_by_tax_dict: {sale_by_tax_dict}')
             for key, data in sorted(sale_by_tax_dict.items(), key=lambda x: (x[1]["currency"] != "USD", x[1]["currency"], x[1]["tax_percent"])):
-                tax_percent = format_tax_percent(data["tax_percent"])
-                sale_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
+                print(data, counter.fiscal_counter_tax_id )
+                if data['tax_percent'] == 0.0 or data['tax_percent'] == 15.0:
+                    print(f'fiscal counter: {counter.fiscal_counter_tax_id}')
+                    tax_percent = format_tax_percent(data["tax_percent"])
+                    sale_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
+                    print('sale_by_tax_string:')
+                    print(sale_by_tax_string)
+                    print('here')
+                else:
+                    print('here 2')
+                    sale_by_tax_string += f"{data['type']}{data['currency']}{data['value']}"
+                    print('sale_by_tax_string:')
+                    print(sale_by_tax_string)
 
             for key, data in sorted(sale_tax_by_tax_dict.items(), key=lambda x: (x[1]["currency"] != "USD", x[1]["currency"], x[1]["tax_percent"])):
-                tax_percent = format_tax_percent(data["tax_percent"])
-                sale_tax_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
-                
-            for key, data in sorted(credit_note_by_tax_dict.items(), key=lambda x: (x[1]["currency"] != "USD", x[1]["currency"], x[1]["tax_percent"])):
-                tax_percent = format_tax_percent(data["tax_percent"])
-                credit_note_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
+                print(data)
+                if counter.fiscal_counter_tax_id:
+                    tax_percent = format_tax_percent(data["tax_percent"])
+                    print('tax percent', tax_percent)
+                    sale_tax_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
+                    print('sale_tax_by_tax_string 1:')
+                    print(sale_tax_by_tax_string)
+                else:
+                    sale_tax_by_tax_string += f"{data['type']}{data['currency']}{data['value']}"
+                    print('sale_tax_by_tax_string 2:')
+                    print(sale_tax_by_tax_string)
 
-            for key, data in sorted(credit_note_tax_by_tax_dict.items(), key=lambda x: (x[1]["currency"] != "USD", x[1]["currency"], x[1]["tax_percent"])):
-                tax_percent = format_tax_percent(data["tax_percent"])
-                credit_note_tax_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
+            if credit_note_by_tax_dict:
+                print('credit_note_by_tax_string:')
+                for key, data in sorted(credit_note_by_tax_dict.items(), key=lambda x: (x[1]["currency"] != "USD", x[1]["currency"], x[1]["tax_percent"])):
+                    if counter.fiscal_counter_tax_id is not None:
+                        tax_percent = format_tax_percent(data["tax_percent"])
+                        credit_note_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
+                    else:
+                        credit_note_by_tax_string += f"{data['type']}{data['currency']}{data['value']}"
+                        print('credit_note_by_tax_string:')
+                        print(credit_note_by_tax_string)
 
+                for key, data in sorted(credit_note_tax_by_tax_dict.items(), key=lambda x: (x[1]["currency"] != "USD", x[1]["currency"], x[1]["tax_percent"])):
+                    if counter.fiscal_counter_tax_id is not None:
+                        tax_percent = format_tax_percent(data["tax_percent"])
+                        credit_note_tax_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
+                    else:
+                        credit_note_tax_by_tax_string += f"{data['type']}{data['currency']}{data['value']}"
+                        print('credit_note_tax_by_tax_string:')
+                        print(credit_note_tax_by_tax_string)
+
+
+            logger.info(f'Balance by currency and type: {balance_by_currency_and_type}')
             for key, data in sorted(balance_by_currency_and_type.items(), key=lambda x: (x[1]["currency"] != "USD", x[1]["currency"], x[1]["money_type"])):
                 balance_money_string += f"{data['type']}{data['currency']}{data['money_type']}{data['value']}"
+
         
             # Final concatenated string
             fiscal_day_counters_string = (
@@ -4632,9 +4700,8 @@ def close_fiscal_day(request):
             )
 
             hash_input = f"{ZIMRA.device_identification}{fiscal_day.day_no}{datetime.datetime.today().date()}{fiscal_day_counters_string}"
-            
-            logger.info(f'Hash input for fiscal day signature: {hash_input}')
-        
+            result = get_fiscal_counters_result_string()
+            logger.info(f'Hash input for fiscal day signature: {hash_input} -> {result}')
            
             return JsonResponse({
                 'success': True, 
@@ -4653,7 +4720,8 @@ def close_fiscal_day(request):
             if not signature_string:
                 return JsonResponse({'message':'Hash data missing.', 'success':False})
             
-            fiscal_day_counters = FiscalCounter.objects.filter(created_at__date=datetime.datetime.today())
+            fiscal_day = FiscalDay.objects.filter(created_at__date=datetime.datetime.today(), is_open=True).first()
+            fiscal_day_counters = FiscalCounter.objects.filter(fiscal_day=fiscal_day)
             
             day_signature = run(signature_string)
 
@@ -4662,7 +4730,38 @@ def close_fiscal_day(request):
             return JsonResponse({'message':close_day_response, 'success':True})
 
         except Exception as e:
+            logger.error(f'error closing day: {e}')
             return JsonResponse({'success':False, 'message':f'{e}'}, status=400)
+        
+def get_fiscal_counters_result_string():
+    result = ""
+
+    fiscal_counters = FiscalCounter.objects.all() # change
+
+    for counter in fiscal_counters:
+        type_upper = counter.fiscal_counter_type.upper().replace(" ", "")
+        currency = counter.fiscal_counter_currency.upper()
+
+        if counter.fiscal_counter_type == FiscalCounter.SALE_BY_TAX:
+            tax_percent = format(counter.fiscal_counter_tax_id, '.2f')
+            value = str(counter.fiscal_counter_value).replace('.', '')
+            result += f"{type_upper}{currency}{tax_percent}{value}"
+        
+        elif counter.fiscal_counter_type == FiscalCounter.SALE_TAX_BY_TAX:
+            tax_percent = format(counter.fiscal_counter_tax_id, '.2f')
+            value = str(counter.fiscal_counter_value).replace('.', '')
+            result += f"{type_upper}{currency}{tax_percent}{value}"
+        
+        elif counter.fiscal_counter_type == FiscalCounter.Balancebymoneytype:
+            money_type = counter.fiscal_counter_money_type.upper() if counter.fiscal_counter_money_type else "NONE"
+            value = str(counter.fiscal_counter_value).replace('.', '')
+            result += f"{type_upper}{currency}{money_type}{value}"
+        
+        else:
+            value = str(counter.fiscal_counter_value).replace('.', '')
+            result += f"{type_upper}{currency}{value}"
+
+    return result   
         
 def format_tax_percent(tax_percent):
         """Format tax percent to have 2 decimal places as required by the documentation."""

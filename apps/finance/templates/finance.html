@@ -302,8 +302,8 @@
                   </div>
                 </a>
               </div>
-
             </div>
+
           </div>
         </main>
       </div>
@@ -402,115 +402,32 @@
     }
   </style>
   
-  <script>
-    // Toggle sidebar on mobile
-    function toggleSidebar() {
-      const sidebar = document.getElementById('finance-sidebar');
-      sidebar.classList.toggle('show');
-    }
-    
-    // Toggle custom date fields based on selection
-    function toggleCustomDates() {
-      const timeFrame = document.getElementById('timeFrame');
-      const customTimeFrame = document.getElementById('customTimeFrame');
-      
-      if (timeFrame.value === 'custom') {
-        customTimeFrame.classList.remove('d-none');
-      } else {
-        customTimeFrame.classList.add('d-none');
-      }
-    }
-    
-  </script>
 <script>
     function toggleSidebar() {
     const sidebar = document.getElementById('sidebar-section');
     sidebar.classList.toggle('d-none');
 }
+
 fetch('/finance/days_data')
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log(data)
-        populateTable(data);
-    })
-    .catch(error => {
-        console.error('There was a problem with the fetch operation:', error);
-    });
+  .then(response => {
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+      return response.json();
+  })
+  .then(data => {
+      console.log(data)
+      populateTable(data);
+  })
+  .catch(error => {
+      console.error('There was a problem with the fetch operation:', error);
+  });
 
 function getWeekday(dateStr) {
     const date = new Date(dateStr);
     return date.toLocaleString('en-us', { weekday: 'long' });
 }
-function populateTable(data) {
-    const tbody = document.getElementById('table-body');
 
-    for (const week in data) {
-        const weekData = data[week];
-
-        const dailySales = { "Monday": 0, "Tuesday": 0, "Wednesday": 0, "Thursday": 0, "Friday": 0, "Saturday": 0, "Sunday": 0 };
-        const dailyCOGS = { "Monday": 0, "Tuesday": 0, "Wednesday": 0, "Thursday": 0, "Friday": 0, "Saturday": 0, "Sunday": 0 };
-
-        weekData.sales.forEach(sale => {
-            const day = getWeekday(sale.date);
-            dailySales[day] += parseFloat(sale.total_amount);
-        });
-
-        weekData.cogs.forEach(cogs => {
-            const day = getWeekday(cogs.date);
-            dailyCOGS[day] += parseFloat(cogs.product__cost);
-        });
-
-        const totalSales = Object.values(dailySales).reduce((a, b) => a + b, 0);
-        const totalCOGS = Object.values(dailyCOGS).reduce((a, b) => a + b, 0);
-        const grossProfit = totalSales - totalCOGS;
-
-        const salesRow = document.createElement('tr');
-        const cogsRow = document.createElement('tr');
-        const grossProfitRow = document.createElement('tr');
-        const gapRow = document.createElement('tr');
-        const daysRow = document.createElement('tr');
-
-        salesRow.innerHTML = `<td></td><td class=''>Sales</td>`;
-        cogsRow.innerHTML = `<td class='fw-bold'>${week}</td><td class='text-danger'>COS</td>`;
-        grossProfitRow.innerHTML = `<td></td><td class=''>Gross Profit</td>`;
-        gapRow.innerHTML += `<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>`;
-        daysRow.innerHTML += `
-                <td class="bg-primary text-light"></td>
-                <td class="bg-primary text-light"></td>
-                <td class="bg-primary text-light">Monday</td>
-                <td class="bg-primary text-light">Tuesday</td>
-                <td class="bg-primary text-light">Wednesday</td>
-                <td class="bg-primary text-light">Thursday</td>
-                <td class="bg-primary text-light">Friday</td>
-                <td class="bg-primary text-light">Saturday</td>
-                <td class="bg-primary text-light">Sunday</td>
-                <td class="bg-primary text-light"></td>
-            `;
-
-        ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach(day => {
-            salesRow.innerHTML += `<td>${dailySales[day].toFixed(2)}</td>`;
-            cogsRow.innerHTML += `<td class='text-danger'>${dailyCOGS[day].toFixed(2)}</td>`;
-            grossProfitRow.innerHTML += `<td>${(dailySales[day] - dailyCOGS[day]).toFixed(2)}</td>`;
-        });
-
-        salesRow.innerHTML += `<td class='fw-bold'>${totalSales.toFixed(2)}</td>`;
-        cogsRow.innerHTML += `<td class='fw-bold  text-danger'>${totalCOGS.toFixed(2)}</td>`;
-        grossProfitRow.innerHTML += `<td class='fw-bold' style='background#fcd298'>${grossProfit.toFixed(2)}</td>`;
-
-        tbody.appendChild(salesRow);
-        tbody.appendChild(cogsRow);
-        tbody.appendChild(grossProfitRow);
-
-        if (['week 1', 'week 2', 'week 3'].includes(week)) {
-            tbody.appendChild(daysRow);
-        }
-    }
-}
 
 document.getElementById('timeFrame').addEventListener('change', function () {
     const customTimeFrame = document.getElementById('customTimeFrame');
@@ -586,7 +503,9 @@ function fetchData(filter) {
             }
         });
 }
+
 fetchData('today');
+
 document.addEventListener('DOMContentLoaded', function () {
 
     {% comment %} const monthSelect = document.createElement('select');

@@ -149,7 +149,6 @@ class ZIMRA:
             return f"Fiscal Day {active_day.day_no} is already open."
 
         last_day = FiscalDay.objects.order_by('-created_at').first()
-        print(last_day)
         next_day_no = (last_day.day_no + 1) if last_day else 1
     
         payload = {
@@ -163,8 +162,6 @@ class ZIMRA:
             "deviceModelVersion": self.device_model_version
         }
 
-        logger.info(f'Payload: {payload}')
-
         try:
             response = requests.post(f"{self.base_url}/openDay", json=payload, headers=headers, cert=(self.certificate_path, self.certificate_key))
             response.raise_for_status()
@@ -174,11 +171,10 @@ class ZIMRA:
                 is_open=True,
                 receipt_count=0
             )
-
-            logger.info(f"Fiscal Day {next_day_no} opened successfully.")
+            return f"Fiscal day opened"
         except Exception as e:
             logger.error(f"Error opening fiscal day: {e}")
-
+            return f"Error opening fiscal day: {e}"
 
     def submit_receipt(
             self, 
@@ -310,14 +306,105 @@ class ZIMRA:
             logger.error(f"Error submitting receipt: {e},")
             return e
 
+    # def close_day(
+    #         self,
+    #         hash,
+    #         signature,
+    #         counters
+    #     ):
+    #     """
+    #     Closes the active fiscal day and submits the necessary data to ZIMRA FDMS.
+    #     """
+    #     active_day = FiscalDay.objects.filter(is_open=True).first()
+
+    #     if not active_day: 
+    #         logger.info("No active fiscal day to close.")
+    #         return
+        
+    #     logger.info(f'signature: {signature}')
+    #     logger.info(f'signature: {hash}')
+    #     logger.info(f'signature: {counters}')
+
+    #     regular_counters = []
+    #     sale_tax_by_tax_counter = [] 
+    #     balance_by_money_counter = [] 
+
+    #     for counter in counters:
+    #         fiscal_counter_data = {
+    #             "fiscalCounterType": counter.fiscal_counter_type,
+    #             "fiscalCounterCurrency": counter.fiscal_counter_currency,
+    #             "fiscalCounterTaxPercent": float(counter.fiscal_counter_tax_percent) if counter.fiscal_counter_tax_percent != 0.00 else None,
+    #             "fiscalCounterTaxID": counter.fiscal_counter_tax_id if counter.fiscal_counter_tax_percent != 0.00 else None,
+    #             "fiscalCounterMoneyType": counter.fiscal_counter_money_type if counter.fiscal_counter_tax_percent == 0.00 else None,
+    #             "fiscalCounterValue": float(round(counter.fiscal_counter_value, 2)),
+    #         }
+
+    #         if counter.fiscal_counter_type == "SaleTaxByTax":
+    #             sale_tax_by_tax_counter.append(fiscal_counter_data)  
+    #         elif counter.fiscal_counter_type == "BalanceByMoneyType":
+    #             balance_by_money_counter.append(fiscal_counter_data) 
+    #         else:
+    #             logger.info(fiscal_counter_data)
+    #             regular_counters.append(fiscal_counter_data)
+
+    #     fiscal_day_counters = regular_counters + sale_tax_by_tax_counter + balance_by_money_counter
+        
+    #     logger.debug(fiscal_day_counters)
+        
+        
+        
+    #     payload = {
+    #         "fiscalDayNo": active_day.day_no,
+    #         "fiscaleDate": active_day.created_at.date().isoformat(),
+    #         "fiscalDayCounters": fiscal_day_counters,
+    #         "fiscalDayDeviceSignature": {
+    #             "hash": hash,
+    #             "signature": signature
+    #         },
+    #         "receiptCounter": active_day.receipt_count
+    #     }
+
+    #     logger.info(f"Closing Fiscal Day with payload: {payload}")
+
+    #     headers = {
+    #         "Content-Type": "application/json",
+    #         "deviceModelName": self.device_model_name,
+    #         "deviceModelVersion": self.device_model_version
+    #     }
+
+    #     try:
+    #         import json
+    #         json_payload = json.dumps(payload)
+        
+    #         logger.info(f"JSON payload: {json_payload}")
+            
+    #         response = requests.post(
+    #             f"{self.base_url}/CloseDay", 
+    #             data=json_payload, 
+    #             headers=headers, 
+    #             cert=(self.certificate_path, self.certificate_key)
+    #         )
+    #         response.raise_for_status()
+
+    #         active_day.is_open = False
+    #         active_day.save()
+
+    #         logger.info(f"Fiscal Day {active_day.day_no} closed successfully.")
+    #         return response.json()
+    #     except requests.RequestException as e:
+    #         logger.error(f"Error closing fiscal day: {e}")
+    #         return f"Error closing fiscal day: {e}"
+    
+    
     def close_day(
             self,
             hash,
             signature,
             counters
         ):
+        
         """
-        Closes the active fiscal day and submits the necessary data to ZIMRA FDMS.
+            Closes the active fiscal day and submits the necessary data to ZIMRA FDMS.
         """
         active_day = FiscalDay.objects.filter(is_open=True).first()
 
@@ -334,14 +421,25 @@ class ZIMRA:
         balance_by_money_counter = [] 
 
         for counter in counters:
-            fiscal_counter_data = {
-                "fiscalCounterType": counter.fiscal_counter_type,
-                "fiscalCounterCurrency": counter.fiscal_counter_currency,
-                "fiscalCounterTaxPercent": float(counter.fiscal_counter_tax_percent) if counter.fiscal_counter_tax_percent != 0.00 else None,
-                "fiscalCounterTaxID": counter.fiscal_counter_tax_id if counter.fiscal_counter_tax_percent != 0.00 else None,
-                "fiscalCounterMoneyType": counter.fiscal_counter_money_type if counter.fiscal_counter_tax_percent == 0.00 else None,
-                "fiscalCounterValue": float(round(counter.fiscal_counter_value, 2)),
-            }
+            if counter.fiscal_counter_type == "Balancebymoneytype":
+                fiscal_counter_data = {
+                    "fiscalCounterType": counter.fiscal_counter_type,
+                    "fiscalCounterCurrency": counter.fiscal_counter_currency,
+                    "fiscalCounterMoneyType": counter.fiscal_counter_money_type or 0,
+                    "fiscalCounterValue": float(round(counter.fiscal_counter_value, 2)),
+                }
+                
+            elif float(round(counter.fiscal_counter_value, 2))== 0.00:
+                continue
+            
+            else:
+                fiscal_counter_data = {
+                    "fiscalCounterType": counter.fiscal_counter_type,
+                    "fiscalCounterCurrency": counter.fiscal_counter_currency,
+                    "fiscalCounterTaxPercent": float(counter.fiscal_counter_tax_percent) if counter.fiscal_counter_tax_id != 1 else None,
+                    "fiscalCounterTaxID": counter.fiscal_counter_tax_id,
+                    "fiscalCounterValue": float(round(counter.fiscal_counter_value, 2)),
+                }
 
             if counter.fiscal_counter_type == "SaleTaxByTax":
                 sale_tax_by_tax_counter.append(fiscal_counter_data)  
@@ -354,8 +452,6 @@ class ZIMRA:
         fiscal_day_counters = regular_counters + sale_tax_by_tax_counter + balance_by_money_counter
         
         logger.debug(fiscal_day_counters)
-        
-        
         
         payload = {
             "fiscalDayNo": active_day.day_no,
