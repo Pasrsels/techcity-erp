@@ -103,6 +103,13 @@ from django.db.models import Sum
 from .models import CashUp, Invoice, Expense
 from django.utils import timezone
 
+
+def register_device(request):
+    try:
+        zimra.register_device()
+    except Exception as e:
+        logger.error(f"Device registration failed: {e}")
+
 def get_previous_month():
     first_day_of_current_month = datetime.datetime.now().replace(day=1)
     last_day_of_previous_month = first_day_of_current_month - timedelta(days=1)
@@ -14688,6 +14695,8 @@ def user_accounts(request):
 
 @login_required
 def tax(request):
+    zimra = ZIMRA()
+    zimra.get_status()
     tax_receipts = OfflineReceipt.objects.all()
     return render(request, 'tax/tax.html', {
         'tax_receipts':tax_receipts,

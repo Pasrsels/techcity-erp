@@ -36,8 +36,8 @@ class ZIMRA:
         self.device_id = os.getenv("DEVICE_ID")
         self.certificate_path = os.getenv("CERTIFICATE_PATH", "cert.pem")
         self.certificate_key = os.getenv("CERTIFICATE_KEY", "cert_private.pem")
-        self.registration_url = f'https://fdmsapitest.zimra.co.zw/Public/v1/{self.device_id}'
-        self.base_url = f'https://fdmsapitest.zimra.co.zw/Device/v1/{self.device_id}'
+        self.registration_url = f'https://fdmsapi.zimra.co.zw/Public/v1/{self.device_id}'
+        self.base_url = f'https://fdmsapi.zimra.co.zw/Device/v1/{self.device_id}'
 
     def register_device(self):
         payload = {
@@ -51,10 +51,14 @@ class ZIMRA:
             "deviceModelVersion": self.device_model_version
         }
         
+        logger.info(f"Registering device with payload: {payload}")
+        
         try:
             response = requests.post(f"{self.registration_url}/RegisterDevice", json=payload, headers=headers)
+            logger.info(f"Device registration response: {response.json()}")
             response.raise_for_status()
             signed_certificate = response.json().get("certificate")
+            logger.info(f"Device registration response: {response.json()}")
             if signed_certificate:
                 self.save_certificate(signed_certificate)
                 logger.info("Device registered successfully.")
@@ -81,7 +85,7 @@ class ZIMRA:
             logger.error(f"Failed to save signed certificate")
 
     def issue_certificate(self):
-        url = f"https://fdmsapitest.zimra.co.zw/Device/v1/{self.device_id}/IssueCertificate"
+        url = f"https://fdmsapi.zimra.co.zw/Device/v1/{self.device_id}/IssueCertificate"
         
         headers = {
             "accept": "application/json",
@@ -120,10 +124,10 @@ class ZIMRA:
         try:
             response = requests.get(f"{self.base_url}/getStatus", headers=headers, cert=(self.certificate_path, self.certificate_key))
             response.raise_for_status()  
-            print("GetConfig Response:", response.json())
+            logger.info("GetStatus Response:", response.json())
             return response.json()
         except requests.exceptions.RequestException as e:
-            print("Error:", e)
+            logger.error("Error:", e)
             return None
 
     def get_config(self):
@@ -139,6 +143,22 @@ class ZIMRA:
         except requests.exceptions.RequestException as e:
             print("Error:", e)
             return None
+        
+    def get_status(self):
+        headers = {
+            "Content-Type": "application/json",
+            "deviceModelName": self.device_model_name,
+            "deviceModelVersion": self.device_model_version
+        }
+        try:
+            response = requests.get(f"{self.base_url}/getStatus", headers=headers, cert=(self.certificate_path, self.certificate_key))
+            response.raise_for_status()  
+            logger.success("Status Response:", response)
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            logger.success("Error:", e)
+            return None
+    
 
     def open_day(self):
 
@@ -504,7 +524,7 @@ class ZIMRA:
         }
         try:    
             response = requests.post(
-                f"https://fdmsapitest.zimra.co.zw/Device/v1/23265/Ping", 
+                f"https://fdmsapi.zimra.co.zw/Device/v1/31213/Ping", 
                 headers=headers, 
                 cert=(os.getenv("CERTIFICATE_PATH", "cert.pem"), os.getenv("CERTIFICATE_KEY", "cert_private.pem"))
             )

@@ -18,6 +18,7 @@ router.register(r'api/v1/customers', CustomersViewset, basename='customers_list'
 # router.register(r'api/v1/expenses', CreateExpenseAPI.as_view(), basename='api_expense')
 
 urlpatterns = [
+    path('register_device/', register_device, name='register_device'),
     path('', Finance.as_view(), name='finance'),
     path('generate-report/', generate_financial_report, name='generate-report'),
     path('api/v1/invoices/', InvoiceAPI.as_view(), name='invoice-api'),
