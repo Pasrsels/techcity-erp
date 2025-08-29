@@ -346,6 +346,7 @@ class Invoice(models.Model):
     fiscal_day = models.IntegerField(null=True)
 
     category = models.ForeignKey(InvoiceCategory, on_delete=models.CASCADE, null=True)
+    
     def generate_invoice_number(branch):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
         print(last_invoice.invoice_number)
@@ -1050,9 +1051,9 @@ class CreditNoteItem(models.Model):
 
 class ValueAddedTax(models.Model):
     name = models.CharField(null=True, max_length=200)
-    tax_id = models.IntegerField()
+    tax_id = models.IntegerField(null=True)
     tax_percent = models.FloatField(null=True, blank=True)
-    tax_code = models.CharField(max_length=3)
+    tax_code = models.CharField(max_length=3, null=True)
     
     def __str__(self):
         return self.name

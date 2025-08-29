@@ -1113,7 +1113,6 @@ def create_invoice(request):
             logger.info(request.user.branch.name)
             with transaction.atomic():
                 invoice = Invoice.objects.create(
-                    invoice_number=Invoice.generate_invoice_number(request.user.branch.name),
                     customer=customer,
                     issue_date=timezone.now(),
                     amount=invoice_total_amount,
@@ -2704,7 +2703,9 @@ def invoice_preview_json(request, invoice_id):
         'quantity',
         'item__description',
         'total_amount',
-        'unit_price'
+        'unit_price',
+        'item__tax_type__tax_percent',
+        'item__tax_type__name'
     )
 
     invoice_dict = {}
@@ -12079,7 +12080,9 @@ def invoice_preview_json(request, invoice_id):
         'quantity',
         'item__description',
         'total_amount',
-        'unit_price'
+        'unit_price',
+        'item__tax_type__tax_percent',
+        'item__tax_type__name'
     )
 
     invoice_dict = {}

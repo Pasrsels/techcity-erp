@@ -71,7 +71,7 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
             try:
                 invoice.code=code
                 invoice.fiscal_day=fiscal_day.day_no
-                invoice.invoice_number = f"{receipt_data['receiptGlobalNo']}"
+                invoice.invoice_number = f"{invoice.branch.name[:3]}-{receipt_data['receiptGlobalNo']}"
 
                 if invoiceId:
                     invoice.zimra_inv_id = invoiceId

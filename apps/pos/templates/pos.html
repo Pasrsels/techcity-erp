@@ -497,6 +497,7 @@
 
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.8.6/jsrsasign-all-min.js"></script>
 <script src={% static "js/app_modules/signature_sign.js" %}></script>
@@ -925,15 +926,10 @@
             endOfDayModal.show()
         }
     )
-    
-    let currency_id = null;
 
     currencySelect.addEventListener(
         'change', ()=>{
-
-            const data = {id:currencySelect.value};
-            currency_id = currencySelect.value;
-
+            const data = {id:currencySelect.value}
             $.ajax({
                 url: '{% url "finance:currency_json" %}',
                 type: 'GET',
@@ -1059,6 +1055,7 @@
     cartButton()
 
     function displayProducts(products) {
+
         productListContainer.innerHTML = '';
         products.forEach(product => {
             if (menuName === 'tiles' || menuName === '') {
@@ -1067,37 +1064,15 @@
                     productDiv.className = 'col-3';
                     productDiv.innerHTML = `
                         <div class="card mb-4" id='id_product_card' data-product='${JSON.stringify(product)}'>
-                            <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart">
+                            <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart" data-product='${product.inventory_id}'>
                                 <div>
                                     <img src="${product.image ? product.image : '{% static "placeholder.png" %}'}" alt="${product.product_name}">
                                 </div>
                                 <p class='text-center mt-2'><small class="fw-bold">${product.product_name}</small></p>
                                 <p class='text-center'><small class="text-muted">${product.description}</small></p>
                                 <p class='text-center'><small class="text-muted">[${product.quantity}]</small></p>
-
-                                <span class='btn btn-outline-secondary btn-sm w-100'
-                                    data-id='${product.inventory_id}'
-                                    data-name='${product.product_name}'
-                                    data-price='${product.price}'
-                                    data-wholesale-price='${product.dealer_price}'
-                                    data-tax-code='${product.tax_code}'
-                                    data-tax-name='${product.tax_name}'
-                                    data-tax-percent='${product.tax_percent}'
-                                    onclick='addItem(this)'>
-                                    RP USD${product.price}
-                                </span>
-
-                                <span class='btn btn-outline-secondary btn-sm mt-2 w-100'
-                                    data-id='${product.inventory_id}'
-                                    data-name='${product.product_name}'
-                                    data-price='${product.dealer_price}'
-                                    data-wholesale-price='${product.dealer_price}'
-                                    data-tax-code='${product.tax_code}'
-                                    data-tax-name='${product.tax_name}'
-                                    data-tax-percent='${product.tax_percent}'
-                                    onclick='addItem(this)'>
-                                    WP USD${product.dealer_price}
-                                </span> 
+                                <span class='btn btn-outline-secondary btn-sm w-100' data-product='${product.inventory_id}' data-price='rp' onclick='fetchProductData(this)'>RP ${product.price}</span>
+                                <span class='btn btn-outline-secondary btn-sm mt-2 w-100' data-product='${product.inventory_id}' data-price='wp' onclick='fetchProductData(this)'>WP${product.dealer_price}</span> 
                             </div>
                         </div>
                     `;
@@ -1109,7 +1084,7 @@
                     productDiv.className = 'col-3';
                     productDiv.innerHTML = `
                         <div class="card bg-danger" id='id_product_card' data-product='${JSON.stringify(product)}'>
-                            <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart">
+                            <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart" data-product='${product.inventory_id}' onclick='fetchProductData(this)'>
                                 <div class="d-flex align-items-center mb-3">
                                     <i style="font-size:30px" class='bx bx-barcode'></i>
                                 </div>
@@ -1118,7 +1093,7 @@
                                 <p><small class="text-muted">[${product.quantity}]</small></p>
                                 <p>
                                     <small class="text-muted mx-1">USD${product.price}</small>
-                                    <small class='text-muted'>Wholesale Price USD${product.dealer_price}</small>
+                                    <small class='text-muted'>Wholesale PriceUSD${product.dealer_price}</small>
                                 </p>
                             </div>
                         </div>
@@ -1135,14 +1110,7 @@
                 const productListItem = document.createElement('li');
                 productListItem.id = 'id_add_to_cart';
                 productListItem.setAttribute('data-product', product.inventory_id);
-                productListItem.setAttribute('onclick', 'addItem(this)');
-                productListItem.setAttribute('data-id', product.inventory_id);
-                productListItem.setAttribute('data-name', product.product_name);
-                productListItem.setAttribute('data-price', product.price);
-                productListItem.setAttribute('data-wholesale-price', product.dealer_price);
-                productListItem.setAttribute('data-tax-code', product.tax_code);
-                productListItem.setAttribute('data-tax-name', product.tax_name);
-                productListItem.setAttribute('data-tax-percent', product.tax_percent);
+                productListItem.setAttribute('onclick', 'fetchProductData(this)');
                 productListItem.className = `product-list-item ${product.quantity <= 0 ? 'text-danger' : ''}`;
                 productListItem.innerHTML = `
                     <i class='bx bx-barcode'></i>
@@ -1193,30 +1161,6 @@
         return Math.floor(Math.random() * 1000000000).toString(36);
     }
 
-<<<<<<< HEAD
-    function addItem(button) {
-        console.log(button)
-        const id = button.getAttribute('data-id');
-        const name = button.getAttribute('data-name');
-        const price = parseFloat(button.getAttribute('data-price'));
-        const wholesalePrice = parseFloat(button.getAttribute('data-wholesale-price'));
-        const taxCode = button.getAttribute('data-tax-code');
-        const taxName = button.getAttribute('data-tax-name');
-        const taxPercent = button.getAttribute('data-tax-percent') 
-            ? parseFloat(button.getAttribute('data-tax-percent')) 
-            : null;
-
-        const value = price === wholesalePrice ? 'wp' : 'rp';
-        const exchangeRate = parseFloat(currencyData[0][0]?.exchange_rate || 1);
-
-        const finalPrice = price * exchangeRate;
-
-        let existingItem = cart.find(item => item.inventory_id === id);
-        let taxAmount = 0;
-
-        if (taxName !== 'Exempted' && taxPercent !== null) {
-            taxAmount = (finalPrice * taxPercent) / (100 + taxPercent);
-=======
     function addItem(product, value) {
         let existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
 
@@ -1231,27 +1175,11 @@
         }else{
             price = product[0].price
             priceType = `${product[0].price * parseFloat(currencyData[0][0]?.exchange_rate)}`
->>>>>>> origin/production
         }
 
         if (existingItem) {
             existingItem.quantity += 1;
         } else {
-<<<<<<< HEAD
-            const newItem = {
-                id: generateUniqueId(),
-                inventory_id: id,
-                product_name: name,
-                product_description: '', 
-                quantity: 1,
-                price: finalPrice,
-                tax_amount: parseFloat(taxAmount.toFixed(2)),
-                tax_code: taxCode,
-                tax_name: taxName,
-                tax_percent: taxPercent,
-                wholesale_price: wholesalePrice * exchangeRate,
-                price_type: value
-=======
             const newTransfer = {
                 id:generateUniqueId(),
                 inventory_id:product[0].inventory_id, 
@@ -1259,18 +1187,13 @@
                 product_description: product[0].description,
                 quantity:1,
                 price:priceType
->>>>>>> origin/production
             };
-            cart.push(newItem);
+            cart.push(newTransfer);
         }
-
-        console.log(cart)
-
-        updateCartDisplay();
-        cartButton();
-        totals();
+        updateCartDisplay(); 
+        cartButton()
+        totals()
     }
-
 
     function totals(){
 
@@ -1321,20 +1244,21 @@
     }
 
     function calculateTotalAmount(cart) {
-        let total = cart.reduce((total, item) => total + item.price * item.quantity, 0);
-        return total.toFixed(2)
+    let total = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    return total.toFixed(2)
     }
 
-    function calculateVAT() {
-        let vatTotal = 0;
-
-        cart.forEach(item => {
-            vatTotal += (item.tax_amount || 0) * item.quantity;
-        });
-
-        return parseFloat(vatTotal.toFixed(2));
+    function calculateVAT(totalAmount) {
+        if( taxMethod === 'Exclusive'){
+            return calculateExclusiveTax(totalAmount, 0.15)
+        }else if( taxMethod === 'Inclusive'){
+            return calculateExclusiveTax(totalAmount, 0.15)
+        }else{
+            return 0;
+        }
     }
 
+    // events for discount and delivery charge
     document.querySelector('#id_discount').addEventListener(
         'input', ()=>{
             totals()
@@ -1561,6 +1485,7 @@
                                 Swal.showLoading();
                             }
                         });
+
                         setTimeout(() => {
                             qouteModal.hide();
                             window.location.href = `/finance/qoutation/preview/${result.qoute_id}`;
@@ -1613,6 +1538,7 @@
     }
 }
 
+
     function displayReceipt(data) {
         try {
             let content = generateReceiptContent(data);
@@ -1649,32 +1575,34 @@
         }
     }
 
-<<<<<<< HEAD
-   function generateReceiptContent(data) {
-    console.log('data, ', data)
-    const { invoice, invoice_items: invoiceItems } = data;
-    const {
-        invoice_number: invoiceNumber,
-        amount: invoiceTotal,
-        subtotal: subTotal,
-        currency_symbol: currencySymbol,
-        receipt_hash: receiptHash,
-        amount_paid: amountPaid,
-        payment_terms: paymentMethod,
-        device_id: deviceId,
-        device_serial_number: deviceSerialNumber,
-        qr_code: qrCodeURL,
-        branch_name: branchName,
-        branch_phone: branchPhone,
-        branch_email: branchEmail,
-        code: code,
-        fiscal_day: fiscal_day,
-        customer_name: customer_name
-    } = invoice;
+    function generateReceiptContent(data) {
+        const { invoice, invoice_items: invoiceItems } = data;
+        const {
+            invoice_number: invoiceNumber,
+            amount: invoiceTotal,
+            vat: vatAmount,
+            subtotal: subTotal,
+            currency_symbol: currencySymbol,
+            receipt_hash: receiptHash,
+            amount_paid: amountPaid,
+            payment_terms: paymentMethod,
+            device_id: deviceId,
+            device_serial_number: deviceSerialNumber,
+            receipt_signature: receiptSignature,
+            qr_code: qrCodeURL,
+            branch_name: branchName,
+            branch_phone: branchPhone,
+            branch_email: branchEmail,
+            code: code,
+            fiscal_day:fiscal_day,
+            customer_name: customer_name
+        } = invoice;
+    
+        const vatRate = 15;
 
-    const vatRate = 15;
-
-    return `
+        console.log('qrCodeURL', qrCodeURL)
+    
+        return `
         <style>
             .receipt {
                 font-family: Arial, sans-serif;
@@ -1699,7 +1627,6 @@
             }
             .receipt-body th, .receipt-body td {
                 padding: 2px;
-                border-bottom: 1px dashed #000;
             }
             .receipt-body th { font-weight: bold; }
             .qr-code {
@@ -1711,85 +1638,66 @@
                 margin-top: 10px;
                 text-align: center;
             }
+           .receipt {
+                font-family: Arial, sans-serif;
+                font-size: 12px;
+                width: 6.5cm;
+                margin: auto;
+                padding: 8px;
+            }
+            .center { text-align: center; }
+            .right { text-align: right; }
+            .left { text-align: left; }
+            .receipt h2 { margin: 5px 0; font-size: 14px; }
+            .header-row {
+                display: flex;
+                justify-content: space-between;
+                font-size: 11px;
+            }
+            .receipt-body table {
+                width: 100%;
+                margin-top: 8px;
+                border-collapse: collapse;
+            }
+            .receipt-body th, .receipt-body td {
+                padding: 2px;
+            }
+            .receipt-body th { font-weight: bold; }
+            .qr-code {
+                text-align: center;
+                margin-top: 10px;
+            }
+            .footer {
+                font-size: 11px;
+                margin-top: 10px;
+                text-align: center;
+            } 
         </style>
-
-        <div class="receipt">
-            <div class="center">
-                <img src="{% static 'assets/logo.png' %}" width="180px"/>
-                <h2>Pasales Investments T/A Techcity</h2>
-            </div>
-=======
-    function generateReceiptContent(data) {
-        const { invoice, invoice_items: invoiceItems } = data;
-        const {
-            invoice_number: invoiceNumber,
-            amount: invoiceTotal,
-            vat: vatAmount,
-            subtotal: subTotal,
-            currency_symbol: currencySymbol,
-            receipt_hash: receiptHash,
-            amount_paid: amountPaid,
-            payment_terms: paymentMethod,
-            device_id: deviceId,
-            device_serial_number: deviceSerialNumber,
-            receipt_signature: receiptSignature,
-            qr_code: qrCodeURL,
-            branch_name: branchName,
-            branch_phone: branchPhone,
-            branch_email: branchEmail,
-            code: code,
-            fiscal_day:fiscal_day
-        } = invoice;
-    
-        const vatRate = 15;
-    
-        return `
-            <style>
-                .receipt {
-                    font-family: Arial, sans-serif;
-                    font-size: 11px;
-                    width: 5.8cm;
-                    padding: 10px;
-                }
-                .receipt h2, .footer p, .center, .td {
-                    text-align: center;
-                }
-                .receipt-body table {
-                    width: 100%;
-                    margin-top: 10px;
-                    border-collapse: collapse;
-                }
-                .receipt-body th, .receipt-body td {
-                    padding: 2px;
-                    border-bottom: 1px dashed #000;
-                }
-                .qr-code {
-                    text-align: center;
-                    margin-top: 10px;
-                }
-                .footer {
-                    font-size: 11px;
-                    margin-top: 10px;
-                }
-                .terms {
-                    font-size: 9px;
-                    margin-top: 10px;
-                    text-align: left;
-                }
-                .terms li {
-                    list-style-type: none;
-                    margin-bottom: 4px;
-                    font-size:10px;
-                }
-            </style>
 
             <div class="receipt">
                 <h2>Pasales Investments T/A Techcity</h2>
                 <div>
                     <img src="{% static 'assets/logo.png' %}" width="250px;"/>
                 </div>
-                <p><strong>FISCAL TAX INVOICE</strong></p>
-                <p>Cashier: {{ request.user.get_full_name }}</p>
+                <p class="center"><strong>FISCAL TAX INVOICE</strong></p>
+                <p><strong>Cashier:</strong> {{ request.user.get_full_name }}</p>
+                <p><strong>Buyer:</strong> ${customer_name || 'N/A'}</p>
+
+                <div class="header-row">
+                    <p>
+                        <strong>Fiscal Day No:</strong> ${fiscal_day}<br>
+                        <strong>Device ID:</strong> ${deviceId}<br>
+                        <strong>Device Serial:</strong> ${deviceSerialNumber}
+                    </p>
+
+                    <p>
+                        <strong>Invoice No:</strong> ${invoiceNumber}<br>
+                        <strong>Branch:</strong> ${branchName || 'Main'}<br>
+                        <strong>Phone:</strong> ${branchPhone || 'N/A'}<br>
+                        <strong>Email:</strong> ${branchEmail || 'N/A'}
+                    </p>
+                </div>
+                <p><strong>Base Currency:</strong> ${currencySymbol}</p>
                 <div class="receipt-body">
                     <table>
                         <thead>
@@ -1811,97 +1719,15 @@
                                         <td style="text-align:right;">${item.quantity}</td>
                                         <td style="text-align:right;">${item.unit_price}</td>
                                         <td style="text-align:right;">${vat.toFixed(2)}</td>
-                                        <td style="text-align:right;">${total}</td>
+                                        <td style="text-align:right;">${total.toFixed(2)}</td>
                                     </tr>
                                 `;
                             }).join('')}
+                            <tr><td colspan="5"><hr></td></tr>
                         </tbody>
                         <tfoot>
-                            <tr><td colspan="4">Subtotal</strong></td><td style="text-align:right;">${subTotal}</td></tr>
-                            <tr><td colspan="4">VAT (${vatRate}%)</strong></td><td style="text-align:right;">${vatAmount}</td></tr>
-                            <tr><td colspan="4">Total</strong></td><td style="text-align:right;">${invoiceTotal}</td></tr>
-                            <tr><td colspan="4">Amount Paid</strong></td><td style="text-align:right;">${amountPaid}</td></tr>
-                            <tr><td colspan="4">Payment Method</strong></td><td style="text-align:right;">${paymentMethod || 'Cash'}</td></tr>
-                        </tfoot>
-                    </table>
-                </div>
-
-                <div class="terms">
-                    <strong>Terms & Conditions:</strong>
-                    <ul>
-                        <li>All laptop batteries within laptops attract 1 month warranty.</li>
-                        <li>Warranty for all preowned laptops is 3 months. Tech City doesn't warrant laptops if damaged by water, liquids, or electrical power shorts. 3 hours to 21 days is required to fully warranty returned laptop.</li>
-                        <li>Any withdrawn deposits for any purchase will attract 10% administration fee.</li>
-                        <li>Tech City only accepts exchanges on faulty laptops or fixes them in the time frame already stated above.</li>
-                        <li>All laptop batteries outside laptops attract 48hrs warranty. No warranty on laptop screens.</li>
-                    </ul>
-                </div>
-                <div class="footer center">
-                    <hr>
-                    ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
-                    <p>Thank you for shopping with us</p>
-                    <hr>
-                </div>
-
-            </div>
-
-        `;
-    }
->>>>>>> origin/production
-
-            <div class="header-row">
-                <span><strong>TIN:</strong> 200102099</span>
-                <span><strong>VAT:</strong> 220356643</span>
-            </div>
-
-            <p class="center"><strong>FISCAL TAX INVOICE</strong></p>
-
-            <p><strong>Buyer:</strong> ${customer_name || 'N/A'}</p>
-
-            <p>
-                <strong>Invoice No:</strong> ${invoiceNumber}<br>
-                <strong>Branch:</strong> ${branchName || 'Main'}<br>
-                <strong>Phone:</strong> ${branchPhone || 'N/A'}<br>
-                <strong>Email:</strong> ${branchEmail || 'N/A'}
-            </p>
-
-            <p>
-                <strong>Fiscal Day No:</strong> ${fiscal_day}<br>
-                <strong>Device ID:</strong> ${deviceId}<br>
-                <strong>Device Serial:</strong> ${deviceSerialNumber}
-            </p>
-
-            <p><strong>Base Currency:</strong> ${currencySymbol}</p>
-
-            <div class="receipt-body">
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="left">Item</th>
-                            <th>Qty</th>
-                            <th>Price</th>
-                            <th>VAT</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${invoiceItems.map(item => {
-                            const total = item.unit_price * item.quantity;
-                            const vat = total - (total / (1 + vatRate / 100));
-                            return `
-                                <tr>
-                                    <td class="left">${item.item__name}</td>
-                                    <td class="right">${item.quantity}</td>
-                                    <td class="right">${item.unit_price}</td>
-                                    <td class="right">${vat.toFixed(2)}</td>
-                                    <td class="right">${total}</td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                    <tfoot>
-                        <tr><td colspan="4"><strong>Subtotal</strong></td><td class="right">${currencySymbol}${subTotal}</td></tr>
-
+                        <tr><td colspan="4"><strong>Subtotal</strong></td><td class="right">${subTotal}</td></tr>
+                        <tr><td colspan="5"><hr></td></tr>
                         ${(() => {
                             const taxGroups = {};
                             invoiceItems.forEach(item => {
@@ -1912,7 +1738,7 @@
                                     taxGroups[taxName] = { net: 0, vat: 0, gross: 0, percent: taxPercent };
                                 }
 
-                                const gross = item.total_amount;
+                                const gross = Number(item.total_amount);
                                 const vat = taxPercent > 0 ? (gross - (gross / ((taxPercent / 100) + 1))) : 0;
                                 const net = gross - vat;
 
@@ -1926,46 +1752,66 @@
                                     return `
                                         <tr><td colspan="4">Net Amount</td><td class="right">${group.net.toFixed(2)}</td></tr>
                                         <tr><td colspan="4">VAT (Exempt)</td><td class="right">0.00</td></tr>
-                                        <tr><td colspan="4">Gross Amount</td><td class="right">${group.gross}</td></tr>
+                                        <tr><td colspan="4">Gross Amount</td><td class="right">${group.gross.toFixed(2)}</td></tr>
                                     `;
                                 } else if (group.percent === 0) {
                                     return `
                                         <tr><td colspan="4">Net Amount</td><td class="right">${group.net.toFixed(2)}</td></tr>
                                         <tr><td colspan="4">VAT (0%)</td><td class="right">0.00</td></tr>
-                                        <tr><td colspan="4">Gross Amount</td><td class="right">${group.gross}</td></tr>
+                                        <tr><td colspan="4">Gross Amount</td><td class="right">${group.gross.toFixed(2)}</td></tr>
                                     `;
                                 } else {
                                     return `
                                         <tr><td colspan="4">Net Amount</td><td class="right">${group.net.toFixed(2)}</td></tr>
                                         <tr><td colspan="4">VAT (${group.percent}%)</td><td class="right">${group.vat.toFixed(2)}</td></tr>
-                                        <tr><td colspan="4">Gross Amount</td><td class="right">${group.gross}</td></tr>
+                                        <tr><td colspan="4">Gross Amount</td><td class="right">${group.gross.toFixed(2)}</td></tr>
                                     `;
                                 }
                             }).join('');
                         })()}
-                        <tr><td colspan="4"><strong>Total</strong></td><td class="right">${currencySymbol}${invoiceTotal}</td></tr>
-                        <tr><td colspan="4"><strong>Amount Paid</strong></td><td class="right">${currencySymbol}${amountPaid}</td></tr>
+                        <tr><td colspan="5"><hr></td></tr>
+                        <tr><td colspan="4"><strong>Total</strong></td><td class="right">${invoiceTotal}</td></tr>
+                        <tr><td colspan="4"><strong>Amount Paid</strong></td><td class="right">${amountPaid}</td></tr>
                         <tr><td colspan="4"><strong>Payment Method</strong></td><td class="right">${paymentMethod || 'Cash'}</td></tr>
                     </tfoot>
-                </table>
-            </div>
+                    </table>
+                </div>
 
-            <div class="qr-code">
-                <img src="${qrCodeURL}" alt="QR Code" width="100" height="100">
-            </div>
-
-            <div class="footer">
-                <p><strong>Verification Code:</strong> ${code}<br>
-                   Verification URL: https://fdmstest.zimra.co.zw/
-                </p>
                 <hr>
-                <p>Thank you for shopping with us!</p>
-                <hr>
-            </div>
-        </div>
-    `;
-}
+                <br>
 
+                <div class="terms">
+                    <strong>Terms & Conditions:</strong>
+                    <ul>
+                        <li>All laptop batteries within laptops attract 1 month warranty.</li>
+                        <li>Warranty for all preowned laptops is 3 months. Tech City doesn't warrant laptops if damaged by water, liquids, or electrical power shorts. 3 hours to 21 days is required to fully warranty returned laptop.</li>
+                        <li>Any withdrawn deposits for any purchase will attract 10% administration fee.</li>
+                        <li>Tech City only accepts exchanges on faulty laptops or fixes them in the time frame already stated above.</li>
+                        <li>All laptop batteries outside laptops attract 48hrs warranty. No warranty on laptop screens.</li>
+                    </ul>
+                </div>
+
+                <div class="qr-code">
+                    <img src="${qrCodeURL}" alt="QR Code" width="100" height="100">
+                </div>
+
+                <div class="footer center">
+                    <p>
+                        <strong>Verification Code:</strong> ${code}<br>
+                        Verification URL: https://fdms.zimra.co.zw/
+                    </p>
+                    <hr>
+                    ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
+                    <p>Thank you for shopping with us</p>
+                    <hr>
+                </div>
+
+            </div>
+
+        `;
+    }
+
+    // Function to print the receipt silently
     function printReceiptSilently(content) {
         let printFrame = document.getElementById("print-frame");
 
@@ -2000,6 +1846,7 @@
         `);
         frameDoc.document.close();
     }
+
     
     // customer get and post
     function submitClient() {

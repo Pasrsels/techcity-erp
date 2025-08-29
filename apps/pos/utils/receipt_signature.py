@@ -220,7 +220,7 @@ def generate_receipt_data(invoice, invoice_items, request):
             "receiptCurrency": invoice.currency.name.upper(),
             "receiptCounter": fiscal_day.receipt_count  + 1,
             "receiptGlobalNo": new_receipt_global_no,
-            "invoiceNo": f"a{new_receipt_global_no}",
+            "invoiceNo": f"{invoice.branch.name}{new_receipt_global_no}",
             "receiptNotes": "Thank you for shopping with us!",
             "receiptDate": datetime.now().replace(microsecond=0).isoformat(),
             "receiptLinesTaxInclusive": True,
