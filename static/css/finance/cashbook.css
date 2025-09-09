@@ -1,0 +1,336 @@
+.amount-display {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.amount-text {
+    font-size: 3rem;
+    font-weight: bold;
+    color: white;
+    padding: 40px 20px;
+    border: none;
+    border-radius: 15px;
+    margin: 20px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.amount-text:hover {
+    transform: scale(1.02);
+}
+
+.amount-input {
+    font-size: 3rem;
+    font-weight: bold;
+    color: white;
+    border: none;
+    padding: 40px 20px;
+    border-radius: 15px;
+    margin: 20px 20px;
+}
+
+.amount-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.amount-input:focus {
+    outline: none;
+}
+
+.btn-record {
+    border: none;
+    color: white;
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.btn-record-expense {
+    border: none;
+    color: white;
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.btn-record:hover {
+    transform: translateY(-2px);
+    color: white;
+}
+
+.attachment-area {
+    border: 2px dashed #e9ecef;
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    margin: 20px 0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.attachment-area:hover {
+    border-color: #ccc;
+    background-color: #f8f9fa;
+}
+
+.option-links a {
+    color: #6c757d;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.option-links a:hover {
+    text-decoration: underline;
+}
+
+.dropdown-toggle {
+    border: 1px solid #e9ecef !important;
+}
+
+.dropdown-toggle:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.1);
+    border-color: #ccc !important;
+}
+
+.form-control:focus {
+    border-color: #ccc;
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.1);
+}
+
+.input-group-text {
+    color: #6c757d;
+}
+
+.offcanvas-body {
+    padding: 20px;
+}
+
+#offcanvasIncome .amount-text {
+    background: #009788;
+}
+
+#offcanvasIncome .amount-text:hover {
+    box-shadow: 0 8px 25px #009788;
+}
+
+#offcanvasIncome .amount-input {
+    background: #009788;
+}
+
+#offcanvasIncome .amount-input:focus {
+    box-shadow: 0 0 0 0.2rem #009788;
+}
+
+#offcanvasIncome .btn-record {
+    background: #009788;
+}
+
+#offcanvasIncome .btn-record:hover {
+    box-shadow: 0 8px 25px #009788;
+}
+
+#offcanvasExpense .amount-text {
+    background: #e57373;
+}
+
+#offcanvasExpense .amount-text:hover {
+    box-shadow: 0 8px 25px #e57373;
+}
+
+#offcanvasExpense .amount-input {
+    background: #e57373;
+}
+
+#offcanvasExpense .amount-input:focus {
+    box-shadow: 0 0 0 0.2rem #e57373;
+}
+
+#offcanvasExpense .btn-record-expense {
+    background: #e57373 !important;
+}
+#offcanvasExpense .btn-record-expense:hover {
+    box-shadow: 0 8px 25px #e57373;
+}
+
+.transactions-header {
+    background: linear-gradient(135deg, #a8e6a3 0%, #7dd87a 100%);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.balance-card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.tab-buttons {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    border: none;
+    background: white;
+    padding: 15px 30px;
+    flex: 1;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    background: #28a745;
+    color: white;
+}
+
+.filter-tabs {
+    background: #a8e6a3;
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.filter-btn {
+    background: white;
+    border: none;
+    padding: 8px 15px;
+    margin: 2px;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.filter-btn.active {
+    background: #28a745;
+    color: white;
+}
+
+.transactions-table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.table th {
+    background: #f8f9fa;
+    border: none;
+    font-weight: 600;
+    color: #495057;
+    padding: 15px;
+}
+
+.table td {
+    border: none;
+    padding: 15px;
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.amount-positive {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.amount-negative {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.category-badge {
+    background: #e9ecef;
+    color: #495057;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.mode-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.mode-bank { background: #e3f2fd; color: #1976d2; }
+.mode-cash { background: #f3e5f5; color: #7b1fa2; }
+.mode-ecocash { background: #fff3e0; color: #f57c00; }
+.mode-paypal { background: #e8f5e8; color: #388e3c; }
+.mode-cheque { background: #fce4ec; color: #c2185b; }
+
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+}
+
+.search-box {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .transactions-header {
+        padding: 15px;
+    }
+    
+    .tab-btn {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+    
+    .table-responsive {
+        border-radius: 12px;
+    }
+    
+    .table td, .table th {
+        padding: 10px 8px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 376px) {
+    .slide-content {
+        width: 100%;
+        left: -100%;
+    }
+    
+    .container-fluid {
+        width: 100% !important;
+        padding: 1rem !important;
+    }
+
+}
+@media (min-width: 377px) and (max-width: 768px) {
+    .slide-content {
+        width: 400px;
+        left: -400px;
+    }
+}
+@media (min-width: 769px) and (max-width: 992px) {
+    .slide-content {
+        width: 500px;
+        left: -500px;
+    }
+}

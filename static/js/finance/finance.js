@@ -1,0 +1,690 @@
+const canvas = document.getElementById('financeChart');
+const ctx = canvas.getContext('2d');
+const tooltip = document.getElementById('tooltip');
+const container = document.querySelector('.graph-scrollable-container');
+
+let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+let incomeData = [1000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 1000, 1000, 2000, 1000];
+let expenseData = [10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000, 2000, 1000, 500, 250];
+let scale = 1;
+let panX = 0;
+let panY = 0;
+let isDragging = false;
+let startX, startY;
+
+if (container) {
+    container.style.position = 'relative';
+    container.style.overflow = 'hidden';
+    container.style.cursor = 'grab';
+    container.style.userSelect = 'none';
+}
+
+const canvasContainer = document.createElement('div');
+canvasContainer.style.position = 'relative';
+canvasContainer.style.transformOrigin = '0 0';
+canvasContainer.style.transition = 'transform 0.1s ease-out';
+canvas.parentNode.insertBefore(canvasContainer, canvas);
+canvasContainer.appendChild(canvas);
+
+function loadFinanceData() {
+    fetch("/finance/monthly_data/") 
+        .then(res => res.json())
+        .then(data => {
+            console.log('data', data);
+            drawGraph(); 
+        })
+        .catch(err => {
+            console.error("Error loading finance data:", err);
+            months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            generateNewData();
+        });
+}
+
+loadFinanceData();
+
+const padding = 60;
+let isAnimating = false;
+let animationProgress = 0;
+const graphWidth = canvas.width - padding * 2;
+const graphHeight = canvas.height - padding * 2;
+
+function generateNewData() {
+    incomeData = months.map((_, i) => 4000 + Math.random() * 3000 + i * 200);
+    expenseData = months.map((_, i) => 2500 + Math.random() * 2500 + i * 150);
+    animateGraph();
+}
+
+function drawGraph(progress = 1) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const allValues = [...incomeData, ...expenseData];
+    const minValue = 0;
+    const maxValue = Math.max(...allValues) * 1.1;
+
+    drawGrid(minValue, maxValue);
+    drawAxes();
+
+    const pointsToShow = Math.floor(incomeData.length * progress);
+
+    if (pointsToShow > 0) {
+        drawBars(incomeData.slice(0, pointsToShow), expenseData.slice(0, pointsToShow), minValue, maxValue);
+    }
+
+    drawLabels(minValue, maxValue);
+}
+
+function drawGrid(minValue, maxValue) {
+    ctx.strokeStyle = '#f0f0f0';
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i <= 10; i++) {
+        const y = padding + (graphHeight / 10) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(padding + graphWidth, y);
+        ctx.stroke();
+    }
+
+    for (let i = 0; i < months.length; i++) {
+        const x = padding + (graphWidth / months.length) * i + (graphWidth / months.length)/2;
+        ctx.beginPath();
+        ctx.moveTo(x, padding);
+        ctx.lineTo(x, padding + graphHeight);
+        ctx.stroke();
+    }
+}
+
+function drawAxes() {
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, padding + graphHeight);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(padding, padding + graphHeight);
+    ctx.lineTo(padding + graphWidth, padding + graphHeight);
+    ctx.stroke();
+}
+
+function drawBars(incomeSlice, expenseSlice, minValue, maxValue) {
+    const barWidth = (graphWidth / months.length) / 6;
+    const barSpacing = 4;
+
+    for (let i = 0; i < incomeSlice.length; i++) {
+        const xBase = padding + (graphWidth / months.length) * i + (graphWidth / months.length) / 6;
+
+        const incomeHeight = ((incomeSlice[i] - minValue) / (maxValue - minValue)) * graphHeight;
+        ctx.fillStyle = '#198754';
+        ctx.fillRect(xBase, padding + graphHeight - incomeHeight, barWidth, incomeHeight);
+        
+        ctx.strokeStyle = '#198754';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(xBase, padding + graphHeight - incomeHeight, barWidth, incomeHeight);
+
+        const expenseHeight = ((expenseSlice[i] - minValue) / (maxValue - minValue)) * graphHeight;
+        ctx.fillStyle = '#953829';
+        ctx.fillRect(xBase + barWidth + barSpacing, padding + graphHeight - expenseHeight, barWidth, expenseHeight);
+
+        ctx.strokeStyle = '#953829';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(xBase + barWidth + barSpacing, padding + graphHeight - expenseHeight, barWidth, expenseHeight);
+    }
+}
+
+function drawLabels(minValue, maxValue) {
+    ctx.fillStyle = '#333';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+
+    for (let i = 0; i < months.length; i++) {
+        const x = padding + (graphWidth / months.length) * i + (graphWidth / months.length)/2;
+        ctx.fillText(months[i], x, padding + graphHeight + 20);
+    }
+
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 10; i++) {
+        const value = minValue + ((maxValue - minValue) / 10) * (10 - i);
+        const y = padding + (graphHeight / 10) * i + 4;
+        ctx.fillText('$' + Math.round(value).toLocaleString(), padding - 10, y);
+    }
+}
+
+function animateGraph() {
+    if (isAnimating) return;
+
+    isAnimating = true;
+    animationProgress = 0;
+
+    function animate() {
+        animationProgress += 0.03;
+        drawGraph(animationProgress);
+
+        if (animationProgress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            isAnimating = false;
+            animationProgress = 1;
+        }
+    }
+    animate();
+}
+
+function showTooltip(x, y, monthIndex, isIncome) {
+  let popup = document.getElementById('hoverPopup');
+  if (!popup) {
+    popup = document.createElement('div');
+    popup.id = 'hoverPopup';
+    popup.style.cssText = `
+      position: absolute;
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      z-index: 1000;
+      font-size: 14px;
+      color: #333;
+      pointer-events: none;
+      min-width: 200px;
+      border: 1px solid #e1e5e9;
+    `;
+    document.body.appendChild(popup);
+  }
+
+  const income = incomeData[monthIndex];
+  const expenses = expenseData[monthIndex];
+  const difference = income - expenses;
+
+  popup.innerHTML = `
+    <div style="display:flex; align-items:center; gap:8px; font-weight:700; font-size:15px; margin-bottom:10px; color:#2c3e50;">
+      <span style="width:10px; height:10px; border-radius:50%; background:${difference >= 0 ? '#28a745' : '#dc3545'}; display:inline-block;"></span>
+      <span>${months[monthIndex]} Financial Summary</span>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+      <span style="color:#666;">Income</span>
+      <span style="font-weight:600;">$${income.toLocaleString()}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+      <span style="color:#666;">Expenses</span>
+      <span style="font-weight:600;">$${expenses.toLocaleString()}</span>
+    </div>
+    <hr style="margin:8px 0; border:none; border-top:1px solid #e1e5e9;">
+    <div style="display:flex; justify-content:space-between;">
+      <span style="color:#666;">Net</span>
+      <span style="font-weight:700; color:${difference >= 0 ? '#28a745' : '#dc3545'};">
+        $${difference.toLocaleString()} ${difference >= 0 ? '(Profit)' : '(Loss)'}
+      </span>
+    </div>
+  `;
+
+  popup.style.display = 'block';
+  popup.style.left = (x + 15) + 'px';
+  popup.style.top = (y - 100) + 'px';
+}
+
+function hideTooltip() {
+    const popup = document.getElementById('hoverPopup');
+    if (popup) {
+        popup.style.display = 'none';
+    }
+}
+
+function updateTransform() {
+    canvasContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    updateZoomInfo();
+}
+
+function constrainPan() {
+    const containerRect = container.getBoundingClientRect();
+    
+    const scaledWidth = canvas.width * scale;
+    const scaledHeight = canvas.height * scale;
+    
+    const margin = 2;
+    
+    const maxPanX = margin;
+    const minPanX = containerRect.width - scaledWidth - margin; 
+    const maxPanY = margin;
+    const minPanY = containerRect.height - scaledHeight - margin; 
+    
+    panX = Math.max(minPanX, Math.min(maxPanX, panX));
+    panY = Math.max(minPanY, Math.min(maxPanY, panY));
+}
+
+function updateZoomInfo() {
+    const zoomInfo = document.getElementById('zoomInfo') || createZoomInfo();
+    zoomInfo.textContent = `Zoom: ${Math.round(scale * 100)}%`;
+}
+
+function createZoomInfo() {
+    const zoomInfo = document.createElement('div');
+    zoomInfo.id = 'zoomInfo';
+    zoomInfo.className = 'zoom-info';
+    zoomInfo.style.cssText = `
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        z-index: 100;
+        pointer-events: none;
+    `;
+    container.appendChild(zoomInfo);
+    return zoomInfo;
+}
+
+canvas.addEventListener('mousemove', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left) / scale - panX / scale;
+    const mouseY = (e.clientY - rect.top) / scale - panY / scale;
+
+    const barWidth = (graphWidth / months.length) / 6;
+    const barSpacing = 4;
+    let tooltipShown = false;
+
+    for (let i = 0; i < months.length; i++) {
+        const xBase = padding + (graphWidth / months.length) * i + (graphWidth / months.length) / 6;
+        const allValues = [...incomeData, ...expenseData];
+        const maxValue = Math.max(...allValues) * 1.1;
+
+        const incomeHeight = (incomeData[i] / maxValue) * graphHeight;
+        const expenseHeight = (expenseData[i] / maxValue) * graphHeight;
+
+        if (mouseX >= xBase && mouseX <= xBase + barWidth && 
+            mouseY >= padding + graphHeight - incomeHeight && mouseY <= padding + graphHeight) {
+            showTooltip(e.clientX, e.clientY, i, true);
+            tooltipShown = true;
+            canvas.style.cursor = 'pointer';
+            break;
+        }
+
+        if (mouseX >= xBase + barWidth + barSpacing && mouseX <= xBase + 2 * barWidth + barSpacing && 
+            mouseY >= padding + graphHeight - expenseHeight && mouseY <= padding + graphHeight) {
+            showTooltip(e.clientX, e.clientY, i, false);
+            tooltipShown = true;
+            canvas.style.cursor = 'pointer';
+            break;
+        }
+    }
+
+    if (!tooltipShown) {
+        hideTooltip();
+        canvas.style.cursor = isDragging ? 'grabbing' : 'grab';
+    }
+});
+
+canvas.addEventListener('click', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left) / scale - panX / scale;
+    const mouseY = (e.clientY - rect.top) / scale - panY / scale;
+
+    const barWidth = (graphWidth / months.length) / 6;
+    const barSpacing = 4;
+
+    for (let i = 0; i < months.length; i++) {
+        const xBase = padding + (graphWidth / months.length) * i + (graphWidth / months.length) / 6;
+        const allValues = [...incomeData, ...expenseData];
+        const maxValue = Math.max(...allValues) * 1.1;
+
+        const incomeHeight = (incomeData[i] / maxValue) * graphHeight;
+        const expenseHeight = (expenseData[i] / maxValue) * graphHeight;
+
+        if (
+            mouseX >= xBase && mouseX <= xBase + barWidth && 
+            mouseY >= padding + graphHeight - incomeHeight && mouseY <= padding + graphHeight
+        ) {
+            const difference = incomeData[i] - expenseData[i];
+            const message = `Income: $${incomeData[i].toLocaleString()}<br>` +
+                            `Expenses: $${expenseData[i].toLocaleString()}<br>` +
+                            `Net: $${difference.toLocaleString()} ${difference >= 0 ? '(Profit)' : '(Loss)'}`;
+            showTooltip(e.clientX, e.clientY, i, true);
+            return;
+        }
+
+        if (
+            mouseX >= xBase + barWidth + barSpacing &&
+            mouseX <= xBase + 2 * barWidth + barSpacing &&
+            mouseY >= padding + graphHeight - expenseHeight &&
+            mouseY <= padding + graphHeight
+        ) {
+            const difference = incomeData[i] - expenseData[i];
+            const message = `Income: $${incomeData[i].toLocaleString()}<br>` +
+                            `Expenses: $${expenseData[i].toLocaleString()}<br>` +
+                            `Net: $${difference.toLocaleString()} ${difference >= 0 ? '(Profit)' : '(Loss)'}`;
+            showTooltip(e.clientX, e.clientY, i, true);
+            return;
+        }
+    }
+});
+
+canvas.addEventListener('mouseleave', hideTooltip);
+
+container.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    
+    if (e.ctrlKey || e.metaKey) {
+        const zoomFactor = e.deltaY < 0 ? 1.1 : 0.98;
+        const newScale = Math.max(0.98, Math.min(3, scale * zoomFactor));
+        
+        if (newScale !== scale) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            const scaleDiff = newScale / scale;
+            panX = mouseX - (mouseX - panX) * scaleDiff;
+            panY = mouseY - (mouseY - panY) * scaleDiff;
+            
+            scale = newScale;
+            constrainPan();
+            updateTransform();
+        }
+    } else {
+        panX -= e.deltaX * 0.5;
+        panY -= e.deltaY * 0.5;
+        constrainPan();
+        updateTransform();
+    }
+});
+
+container.addEventListener('mousedown', function(e) {
+    if (e.target === canvas || e.target === canvasContainer) {
+        isDragging = true;
+        startX = e.clientX - panX;
+        startY = e.clientY - panY;
+        container.style.cursor = 'grabbing';
+        e.preventDefault();
+    }
+});
+
+document.addEventListener('mousemove', function(e) {
+    if (isDragging) {
+        panX = e.clientX - startX;
+        panY = e.clientY - startY;
+        constrainPan();
+        updateTransform();
+    }
+});
+
+document.addEventListener('mouseup', function() {
+    if (isDragging) {
+        isDragging = false;
+        container.style.cursor = 'grab';
+    }
+});
+
+let lastTouchDistance = 0;
+
+container.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 1) {
+        isDragging = true;
+        startX = e.touches[0].clientX - panX;
+        startY = e.touches[0].clientY - panY;
+    } else if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
+    }
+    e.preventDefault();
+});
+
+container.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 1 && isDragging) {
+        panX = e.touches[0].clientX - startX;
+        panY = e.touches[0].clientY - startY;
+        constrainPan();
+        updateTransform();
+    } else if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (lastTouchDistance > 0) {
+            const zoomFactor = distance / lastTouchDistance;
+            scale = Math.max(0.98, Math.min(3, scale * zoomFactor));
+            constrainPan();
+            updateTransform();
+        }
+        lastTouchDistance = distance;
+    }
+    e.preventDefault();
+});
+
+container.addEventListener('touchend', function() {
+    isDragging = false;
+    lastTouchDistance = 0;
+});
+
+function resetZoom() {
+    scale = 1;
+    panX = 0;
+    panY = 0;
+    updateTransform();
+    
+    canvasContainer.style.transition = 'transform 0.3s ease-out';
+    setTimeout(() => {
+        canvasContainer.style.transition = 'transform 0.1s ease-out';
+    }, 300);
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'r' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        resetZoom();
+    }
+    if (e.key === '=' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        scale = Math.min(3, scale * 1.2);
+        constrainPan();
+        updateTransform();
+    }
+    if (e.key === '-' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        scale = Math.max(0.98, scale / 1.2);
+        constrainPan();
+        updateTransform();
+    }
+});
+
+canvas.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
+
+if (months.length === 0) {
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    generateNewData();
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar-section');
+    if (sidebar) {
+        sidebar.classList.toggle('d-none');
+    }
+}
+
+function showLoader(form) {
+    event.preventDefault();
+    const btn = form.querySelector('#generateBtn');
+    const spinner = form.querySelector('#loader');
+    if (btn) btn.disabled = true;
+    if (spinner) spinner.classList.remove('d-none');
+    
+    setTimeout(() => {
+        if (btn) btn.disabled = false;
+        if (spinner) spinner.classList.add('d-none');
+    }, 3000); 
+}
+
+function toggleCustomDates() {
+    const timeFrame = document.getElementById("timeFrame");
+    const customTimeFrame = document.getElementById("customTimeFrame");
+    if (timeFrame && customTimeFrame) {
+        if (timeFrame.value === "custom") {
+            customTimeFrame.classList.remove("d-none");
+        } else {
+            customTimeFrame.classList.add("d-none");
+        }
+    }
+}
+
+const timeFrameElement = document.getElementById('timeFrame');
+if (timeFrameElement) {
+    timeFrameElement.addEventListener('change', function () {
+        const customTimeFrame = document.getElementById('customTimeFrame');
+        if (customTimeFrame) {
+            if (this.value === 'custom') {
+                customTimeFrame.classList.remove('d-none');
+            } else {
+                customTimeFrame.classList.add('d-none');
+            }
+        }
+    });
+}
+
+const timeFrameForm = document.getElementById("timeFrameForm");
+if (timeFrameForm) {
+    timeFrameForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const submitBtn = form.querySelector("button[type='submit']");
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Generating...`;
+        }
+
+        fetch('/finance/generate-report/', {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie('csrftoken'),
+                "Accept": "application/json"
+            },
+            body: new FormData(form)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const reportContent = document.getElementById("reportBodyContent");
+                if (reportContent) {
+                    reportContent.innerHTML = data.html;
+                }
+                const reportModal = document.getElementById("reportModal");
+                if (reportModal && typeof bootstrap !== 'undefined') {
+                    new bootstrap.Modal(reportModal).show();
+                }
+                if (typeof Toastify !== 'undefined') {
+                    Toastify({ 
+                        text: "Report generated!", 
+                        duration: 3000, 
+                        gravity: "top", 
+                        position: "right", 
+                        backgroundColor: "#28a745" 
+                    }).showToast();
+                }
+            } else {
+                if (typeof Toastify !== 'undefined') {
+                    Toastify({ 
+                        text: data.message, 
+                        backgroundColor: "#dc3545" 
+                    }).showToast();
+                }
+            }
+        })
+        .catch(() => {
+            if (typeof Toastify !== 'undefined') {
+                Toastify({ 
+                    text: "Something went wrong!", 
+                    backgroundColor: "#dc3545" 
+                }).showToast();
+            }
+        })
+        .finally(() => {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = "Generate Report";
+            }
+        });
+    });
+}
+
+function fetchData(filter) {
+    fetch(`/finance/income_json/?filter=${filter}`)
+        .then(response => response.json())
+        .then(data => {
+            const sales = data.sales_total;
+            const incomeElement = document.getElementById('id_income');
+            if (incomeElement) {
+                incomeElement.textContent = `$${sales}`;
+            }
+        })
+        .catch(err => console.error('Error fetching income data:', err));
+
+    fetch(`/finance/expense_json/?filter=${filter}`)
+        .then(response => response.json())
+        .then(data => {
+            const expenses = data.expense_total;
+            const expenseElement = document.getElementById('id_expense');
+            if (expenseElement) {
+                expenseElement.textContent = `$${expenses}`;
+            }
+        })
+        .catch(err => console.error('Error fetching expense data:', err));
+
+    fetch(`/finance/pl_overview/?filter=${filter}`)
+        .then(response => response.json())
+        .then(data => {
+            const netIncomeElement = document.getElementById('net_income_amount');
+            const cogsElement = document.getElementById('id_cogs');
+            const gpMetrixElement = document.getElementById('id_gp_metrix_amount');
+            const gpmMetrixElement = document.getElementById('id_gpm_metrix');
+            const expensesMetrixElement = document.getElementById('id_expenses_metrix_amount');
+            const netMetrixElement = document.getElementById('id_net_metrix_amount');
+            const plOverviewElement = document.getElementById('pl_overview_total');
+
+            if (netIncomeElement) netIncomeElement.textContent = `$${data.current_net_income}`;
+            if (cogsElement) cogsElement.textContent = `$${data.cogs_total}`;
+            if (gpMetrixElement) gpMetrixElement.textContent = `$${data.current_gross_profit}`;
+            if (gpmMetrixElement) gpmMetrixElement.textContent = `${data.current_gross_profit_margin}%`;
+            if (expensesMetrixElement) expensesMetrixElement.textContent = `$${data.current_expenses}`;
+            if (netMetrixElement) netMetrixElement.textContent = `$${data.current_net_profit}`;
+            if (plOverviewElement) plOverviewElement.textContent = `$${data.current_net_profit}`;
+
+            if (data.current_net_profit < 0 && plOverviewElement) {
+                plOverviewElement.classList.add('text-danger');
+            }
+        })
+        .catch(err => console.error('Error fetching P&L data:', err));
+}
+
+fetchData('today');
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+        const openBtn = document.getElementById('openFinanceCashOut');
+        const recordTransactionOffcanvas = document.getElementById('recordTransactionOffcanvas');
+        if (openBtn && recordTransactionOffcanvas && typeof bootstrap !== 'undefined') {
+            const bsOffcanvas = new bootstrap.Offcanvas(recordTransactionOffcanvas);
+            openBtn.addEventListener('click', function () {
+                bsOffcanvas.show();
+            });
+        }
+});

@@ -364,6 +364,7 @@ class InvoiceItem(models.Model):
     vat_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0, editable=False)  
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
     cash_up_status = models.BooleanField(default=False, null=True)
+    credit_note_issued = models.BooleanField(default=False, null=True)
     
     @property
     def subtotal(self):
