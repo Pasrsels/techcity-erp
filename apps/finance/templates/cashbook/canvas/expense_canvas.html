@@ -1,112 +1,436 @@
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasExpense" aria-labelledby="offcanvasExpenseLabel">
-  <div class="offcanvas-header">
-    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
+<div class="offcanvas offcanvas-end" style="width: 30%; background-color: #f6f6f6;" tabindex="-1" id="offcanvasExpense" aria-labelledby="offcanvasExpenseLabel">
+    <div class="offcanvas-header p-4 justify-content-around">
+        <button class="btn bg-white text-success" data-bs-toggle="offcanvas" data-bs-target="#offcanvasIncome" aria-controls="offcanvasIncome" type="button">
+            <i class="bx bx-plus-circle"></i> Income
+        </button>
+        <button class="btn bg-white text-dark" data-bs-toggle="offcanvas" data-bs-target="#offcanvasTransfer" aria-controls="offcanvasTransfer" type="button">
+            <i class="bx bx-transfer"></i> Transfers
+        </button>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
 
-  <div class="offcanvas-body">
-    <form id="expenseForm">
-          <div class="p-2 pb-0">
-      <div class="d-flex justify-content-between align-items-center mb-1">
-        <div class="dropdown">
-          <button class="btn btn-link text-danger p-0 dropdown-toggle text-decoration-none" type="button" data-bs-toggle="dropdown">
-            CASH
-          </button>
-          <ul class="dropdown-menu text-danger">
-            <li><a class="dropdown-item" href="#">CASH</a></li>
-            <li><a class="dropdown-item" href="#">BANK</a></li>
-            <li><a class="dropdown-item" href="#">ECOCASH</a></li>
-          </ul>
-        </div>
+    <div class="offcanvas-body">
+        <form id="expenseForm">
+            <div class="p-2 pb-0">
+                <div class="d-flex justify-content-center align-items-center mb-1">
+                    <div class="dropdown me-3">
+                        <button class="btn btn-link text-danger p-0 dropdown-toggle text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            CASH
+                        </button>
+                        <ul class="dropdown-menu text-danger">
+                            <li><a class="dropdown-item" href="#" data-method="CASH">CASH</a></li>
+                            <li><a class="dropdown-item" href="#" data-method="BANK">BANK</a></li>
+                            <li><a class="dropdown-item" href="#" data-method="ECOCASH">ECOCASH</a></li>
+                        </ul>
+                    </div>
 
-        <div class="dropdown">
-          <button class="btn btn-link text-danger p-0 dropdown-toggle text-decoration-none" type="button" data-bs-toggle="dropdown">
-            USD
-          </button>
-          <ul class="dropdown-menu text-danger">
-            <li><a class="dropdown-item" href="#">USD</a></li>
-            <li><a class="dropdown-item" href="#">ZWG</a></li>
-            <li><a class="dropdown-item" href="#">RAND</a></li>
-          </ul>
-        </div>
-      </div>
+                    <div class="dropdown">
+                        <button class="btn btn-link text-danger p-0 dropdown-toggle text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            USD
+                        </button>
+                        <ul class="dropdown-menu text-danger">
+                            <li><a class="dropdown-item" href="#" data-currency="USD">USD</a></li>
+                            <li><a class="dropdown-item" href="#" data-currency="ZWG">ZWG</a></li>
+                            <li><a class="dropdown-item" href="#" data-currency="RAND">RAND</a></li>
+                        </ul>
+                    </div>
+                </div>
 
-      <input id="amountInputExpense"
-        type="number"
-        inputmode="decimal"
-        class="amount-text text-center" 
-        style="width: 280px;"
-        placeholder="0.00"
-      />
+                <div class="form-field">
+                    <div class="field-icon">
+                        <i class="bx bx-dollar"></i>
+                    </div>
+                    <input type="number" class="field-input" placeholder="Amount" id="expenseAmount" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-field two-column">  
+                    <div class="mb-3">
+                        <div class="field-icon">
+                            <i class="bx bx-text"></i>
+                        </div>
+                        <input type="text" class="field-input" placeholder="Title" id="expenseTitle" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="dropdown w-100">
+                            <button type="button" class="field-input text-black dropdown-toggle" style="cursor: pointer; border: none; background: #d7d8da; text-align: left; color: #9ca3af;" data-bs-toggle="offcanvas" data-bs-target="#offcanvasCategory" aria-controls="offcanvasCategory">
+                                Select or add category
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-field">
+                    <div class="field-icon">
+                        <i class="bx bx-file-blank"></i>
+                    </div>
+                    <textarea class="field-textarea" placeholder="Description" rows="1" id="expenseDescription"></textarea>
+                </div>
+
+                <div class="form-field customer-field">
+                    <div class="field-icon">
+                        <i class="bx bx-user"></i>
+                    </div>
+                    <input type="text" class="field-input" placeholder="Enter customer name" id="expenseCustomer">
+                    <div class="customer-right-icon">
+                        <i class="bx bx-group"></i>
+                    </div>
+                </div>
+
+                <div class="dropdown mb-3">
+                    <button type="button" class="select-button branch-button dropdown-toggle w-100" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span>
+                            <i class="bx bx-map-pin branch-icon"></i>Branch
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu w-100">
+                        <li><a class="dropdown-item" href="#" data-branch="HARARE">HARARE</a></li>
+                        <li><a class="dropdown-item" href="#" data-branch="PC PASELS">PC PASELS</a></li>
+                        <li><a class="dropdown-item" href="#" data-branch="MUTARE">MUTARE</a></li>
+                    </ul>
+                </div>
+
+                <div id="attachment-Area" class="attachment-area">
+                    <i class="bx bx-paperclip text-muted" style="font-size: 1.5rem;"></i>
+                    <p class="text-muted mb-0 mt-2">Drag & drop files or click to browse</p>
+                    <input type="file" class="d-none" id="fileInputExpense" multiple accept="image/*,application/pdf,.doc,.docx">
+                </div>
+
+                <div class="option-links justify-content-between d-flex mb-4 flex-wrap gap-2">
+                    <a class="loan" data-bs-toggle="offcanvas" data-bs-target="#loanSettingsOffcanvas" aria-controls="loanSettingsOffcanvas" type="button">Loan?</a>
+                    <a class="recExp" href="#" data-toggle="recurring">Recurring Expense?</a>
+                    <a class="expRem" href="#" data-toggle="reminder">Set a Reminder?</a>
+                </div>
+
+                <div id="recurringExpenseSection" class="additional-section" style="display: none;">
+                    <div class="section-header">
+                        <i class="bx bx-repeat"></i>
+                        <span>Recurring Expense Settings</span>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4">
+                            <label class="form-label small">Repeat every</label>
+                            <input type="number" class="form-control" value="1" min="1" id="expenseRepeatEvery">
+                        </div>
+                        <div class="col-8">
+                            <label class="form-label small">Period</label>
+                            <div class="dropdown w-100">
+                                <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Month(s)
+                                </button>
+                                <ul class="dropdown-menu w-100">
+                                    <li><a class="dropdown-item" href="#" data-period="Day(s)">Day(s)</a></li>
+                                    <li><a class="dropdown-item" href="#" data-period="Week(s)">Week(s)</a></li>
+                                    <li><a class="dropdown-item" href="#" data-period="Month(s)">Month(s)</a></li>
+                                    <li><a class="dropdown-item" href="#" data-period="Year(s)">Year(s)</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <label class="form-label small"><i class="bx bx-calendar me-1"></i>From Date</label>
+                            <input type="date" class="form-control" id="expenseFromDate">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small"><i class="bx bx-calendar me-1"></i>To Date</label>
+                            <input type="date" class="form-control" id="expenseToDate">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="expenseReminderSection" class="additional-section" style="display: none;">
+                    <div class="section-header">
+                        <i class="bx bx-bell"></i>
+                        <span>Reminder Settings</span>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label small"><i class="bx bx-calendar me-1"></i>Reminder Date & Time</label>
+                            <input type="datetime-local" class="form-control" id="expenseReminderDate">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-record-expense">
+                    Record Expense
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-end" style="width: 40%; background-color: #f8f9fa;" tabindex="-1" id="loanSettingsOffcanvas" aria-labelledby="loanSettingsLabel" data-parent-canvas="offcanvasExpense">
+    <div class="offcanvas-header" style="border:none;">
+        <h5 class="offcanvas-title fw-bold text-success" id="loanSettingsLabel">
+            <i class="fas fa-handshake me-2"></i>Loan Settings
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
     
-      
-      <div class="mb-3">
-        <div class="input-group">
-          <span class="input-group-text bg-white border-end-0" style="border-radius: 25px 0 0 25px; border-right: none;">
-            <i class="bx bx-text"></i>
-          </span>
-          <input type="text" class="form-control border-start-0 ps-0" placeholder="Title" style="border-radius: 0 25px 25px 0;">
-        </div>
-      </div>
+    <div class="offcanvas-body" style="border:none;">
+        <form id="loanSettingsForm">
+            <div class="mb-4 bg-white p-3 rounded" style="border:none;">
+                <h6 class="section-header">
+                    <i class="fas fa-dollar-sign section-icon"></i>
+                    Principal Amount
+                </h6>
+                <div class="form-floating mb-3" style="border:none;">
+                    <input type="number" class="form-control" id="principalAmount" placeholder="0.0" min="0" step="0.01">
+                    <label for="principalAmount">Enter Principal Amount</label>
+                </div>
+            </div>
 
-      <div class="mb-3">
-        <div class="dropdown w-100">
-          <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown" style="border-radius: 25px; border-color: #e9ecef; padding: 15px 20px;">
-            Select or add category
-          </button>
-          <ul class="dropdown-menu w-100">
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#"><i class="bx bx-plus"></i> Add new category</a></li>
-          </ul>
-        </div>
-      </div>
+            <div class="mb-4" style="border:none;">
+                <h6 class="alert alert-info bg-light text-success py-2" style="border:none;">
+                    <small><i class="fas fa-info-circle"></i> Repayment Amount: <span id="repaymentDisplay">0.00</span></small>
+                </h6>
+            </div>  
 
-      <div class="mb-3">
-        <div class="input-group">
-          <span class="input-group-text bg-white border-end-0" style="border-radius: 25px 0 0 25px;">
-            <i class="bx bx-file-blank"></i>
-          </span>
-          <textarea class="form-control border-start-0 ps-0" placeholder="Description" rows="3" style="border-radius: 0 25px 25px 0;"></textarea>
-        </div>
-      </div>
 
-      <div class="mb-3">
-        <div class="input-group">
-          <span class="input-group-text bg-white border-end-0" style="border-radius: 25px 0 0 25px;">
-            <i class="bx bx-user"></i>
-          </span>
-          <input type="text" class="form-control border-start-0 ps-0" placeholder="" style="border-radius: 0 25px 25px 0;">
-        </div>
-      </div>
+            <div class="mb-4 bg-white p-3 rounded" style="border:none;">
+                <h6 class="section-header">
+                    <i class="fas fa-percentage section-icon"></i>
+                    Interest Settings
+                </h6>
+                <div class="row" style="border:none;">
+                    <div class="col-md-6 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <select class="form-select" id="interestType">
+                                <option value="flat" selected>Flat</option>
+                                <option value="reducing">Reducing Balance</option>
+                                <option value="compound">Compound</option>
+                            </select>
+                            <label for="interestType">Interest Type</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <input type="number" class="form-control" id="defaultRate" placeholder="5.0" min="0" max="100" step="0.1" value="5.0">
+                            <label for="defaultRate">Default Rate (%)</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-floating mb-3" style="border:none;">
+                    <select class="form-select" id="interestFrequency">
+                        <option value="monthly" selected>Monthly</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="annually">Annually</option>
+                    </select>
+                    <label for="interestFrequency">Interest Calculation Frequency</label>
+                </div>
+            </div>
 
-      <div class="mb-3">
-        <div class="dropdown w-100">
-          <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start d-flex align-items-center" type="button" data-bs-toggle="dropdown" style="border-radius: 25px; border-color: #e9ecef; padding: 15px 20px;">
-            <i class="bx bx-map-pin me-2"></i>
-            Branch
-          </button>
-          <ul class="dropdown-menu w-100">
-            <li><a class="dropdown-item" href="#">HARARE</a></li>
-            <li><a class="dropdown-item" href="#">PC PASELS</a></li>
-            <li><a class="dropdown-item" href="#">MUTARE</a></li>
-          </ul>
-        </div>
-      </div>
+            <div class="mb-4 bg-white p-3 rounded" style="border:none;">
+                <h6 class="section-header">
+                    <i class="fas fa-clock section-icon"></i>
+                    Loan Term Settings
+                </h6>
+                <div class="row" style="border:none;">
+                    <div class="col-6 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <input type="number" class="form-control" id="minDuration" placeholder="1" min="1" value="1">
+                            <label for="minDuration">Min Duration</label>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <input type="number" class="form-control" id="maxDuration" placeholder="12" min="1" value="12">
+                            <label for="maxDuration">Max Duration</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="border:none;">
+                    <div class="col-6 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <input type="number" class="form-control" id="defaultDuration" placeholder="6" min="1" value="6">
+                            <label for="defaultDuration">Default Duration</label>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <select class="form-select" id="termUnit">
+                                <option value="months" selected>Months</option>
+                                <option value="weeks">Weeks</option>
+                                <option value="days">Days</option>
+                                <option value="years">Years</option>
+                            </select>
+                            <label for="termUnit">Term Unit</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-      <div id="attachment-Area" class="attachment-area">
-        <i class="bx bx-paperclip text-muted" style="font-size: 1.5rem;"></i>
-        <p class="text-muted mb-0 mt-2">Drag & drop files or click to browse</p>
-        <input type="file" class="d-none" id="fileInputExpense" multiple>
-      </div>
+            <div class="mb-4 bg-white p-3 rounded" style="border:none;">
+                <h6 class="section-header">
+                    <i class="fas fa-redo section-icon"></i>
+                    Repayment Settings
+                </h6>
+                <div class="form-floating mb-3" style="border:none;">
+                    <select class="form-select" id="repaymentFrequency">
+                        <option value="monthly" selected>Monthly</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="bi-weekly">Bi-weekly</option>
+                        <option value="quarterly">Quarterly</option>
+                    </select>
+                    <label for="repaymentFrequency">Repayment Frequency</label>
+                </div>
+                
+                <div class="row" style="border:none;">
+                    <div class="col-4 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <input type="number" class="form-control" id="gracePeriod" placeholder="0" min="0" value="0">
+                            <label for="gracePeriod">Grace Period (days)</label>
+                        </div>
+                    </div>
+                    <div class="col-4 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <select class="form-select" id="latePenaltyType">
+                                <option value="flat" selected>Flat Fee</option>
+                                <option value="percentage">Percentage</option>
+                                <option value="compound">Compound</option>
+                            </select>
+                            <label for="latePenaltyType">Late Penalty Type</label>
+                        </div>
+                    </div>
+                    <div class="col-4 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <input type="number" class="form-control" id="penaltyValue" placeholder="0.0" min="0" step="0.01" value="0.0">
+                            <label for="penaltyValue">Penalty Value</label>
+                        </div>
+                    </div>
+                </div>
 
-      <div class="option-links justify-content-between d-flex mb-4 flex-wrap gap-2">
-        <a class="loan" href="#">Loan?</a>
-        <a class="recExp" href="#">Recurring Expense?</a>
-        <a class="expRem" href="#">Set a Reminder?</a>
-      </div>
+                <div class="custom-switch mb-3 d-flex align-items-center gap-2" style="border:none;">
+                    <i class="fas fa-credit-card section-icon me-2"></i>
+                    <span>Auto Deduction</span>
+                    <div class="form-check form-switch m-0">
+                        <input class="form-check-input" type="checkbox" id="autoDeduction">
+                    </div>
+                </div>
+            </div>
 
-      <button type="submit" class="btn-record-expense">
-        Record Expense
-      </button>
-    </form>
-  </div>
+            <div class="mb-4 bg-white p-3 rounded" style="border:none;">
+                <h6 class="section-header">
+                    <i class="fas fa-check-circle section-icon"></i>
+                    Eligibility Rules
+                </h6>
+                <div class="row" style="border:none;">
+                    <div class="col-md-4 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <input type="number" class="form-control" id="minIncome" placeholder="0.0" min="0" step="0.01" value="0.0">
+                            <label for="minIncome">Min Income/Balance</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <input type="number" class="form-control" id="minMembership" placeholder="0" min="0" value="0">
+                            <label for="minMembership">Min Membership Duration</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <input type="number" class="form-control" id="minCreditScore" placeholder="0.0" min="0" max="850" step="0.1" value="0.0">
+                            <label for="minCreditScore">Min Credit Score</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4 bg-white p-3 rounded" style="border:none;">
+                <h6 class="section-header">
+                    <i class="fas fa-shield-alt section-icon"></i>
+                    Collateral Requirement
+                </h6>
+                <div class="custom-switch mb-3 d-flex align-items-center gap-2" style="border:none;">
+                    <i class="fas fa-lock section-icon me-2"></i>
+                    <span>Collateral Required</span>
+                    <div class="form-check form-switch m-0">
+                        <input class="form-check-input" type="checkbox" id="collateralRequired">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4 bg-white p-3 rounded" style="border:none;">
+                <h6 class="section-header">
+                    <i class="fas fa-chart-line section-icon"></i>
+                    Loan Limits
+                </h6>
+                <div class="row" style="border:none;">
+                    <div class="col-md-6 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <select class="form-select" id="limitType">
+                                <option value="salary" selected>% of Salary</option>
+                                <option value="fixed">Fixed Amount</option>
+                                <option value="balance">% of Balance</option>
+                            </select>
+                            <label for="limitType">Limit Type</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <input type="number" class="form-control" id="maxLoanAmount" placeholder="50.0" min="0" step="0.1" value="50.0">
+                            <label for="maxLoanAmount">Max Loan Amount</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="custom-switch mb-3 d-flex align-items-center gap-2" style="border:none;">
+                    <i class="fas fa-layer-group section-icon me-2"></i>
+                    <span>Multiple Loans Allowed</span>
+                    <div class="form-check form-switch m-0">
+                        <input class="form-check-input" type="checkbox" id="multipleLoans">
+                    </div>
+                </div>
+
+                <div class="form-floating mb-3" style="border:none;">
+                    <select class="form-select" id="userRole">
+                        <option value="admin" selected>Admin</option>
+                        <option value="manager">Manager</option>
+                        <option value="supervisor">Supervisor</option>
+                        <option value="employee">Employee</option>
+                    </select>
+                    <label for="userRole">Limit Based on User Role</label>
+                </div>
+            </div>
+
+            <div class="mb-4 bg-white p-3 rounded" style="border:none;">
+                <h6 class="section-header">
+                    <i class="fas fa-tasks section-icon"></i>
+                    Approval Workflow
+                </h6>
+                <div class="row" style="border:none;">
+                    <div class="col-md-6 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <input type="number" class="form-control" id="approversRequired" placeholder="1" min="0" value="1">
+                            <label for="approversRequired">Approvers Required</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3" style="border:none;">
+                        <div class="form-floating" style="border:none;">
+                            <select class="form-select" id="approvalRoles" multiple>
+                                <option value="manager">Manager</option>
+                                <option value="senior_manager">Senior Manager</option>
+                            </select>
+                            <label for="approvalRoles">Approval Roles</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="custom-switch mb-3 d-flex align-items-center gap-2" style="border:none;">
+                    <i class="fas fa-magic section-icon me-2"></i>
+                    <span>Auto-approval for Small Loans</span>
+                    <div class="form-check form-switch m-0">
+                        <input class="form-check-input" type="checkbox" id="autoApproval">
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 pt-3 border-top" style="border:none;">
+                <button type="button" class="btn btn-outline-secondary flex-fill" id="cancelLoanSettings">Cancel</button>
+                <button type="submit" class="btn text-light bg-success flex-fill loan-save-btn">Save</button>
+            </div>
+        </form>
+    </div>
 </div>

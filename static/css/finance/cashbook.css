@@ -96,7 +96,7 @@
 
 .dropdown-toggle:focus {
     box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.1);
-    border-color: #ccc !important;
+    border-color:  #ccc!important;
 }
 
 .form-control:focus {
@@ -159,6 +159,122 @@
     box-shadow: 0 8px 25px #e57373;
 }
 
+.form-field {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 0;
+    margin-bottom: 20px;
+    min-height: 60px;
+}
+
+.form-field.two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    background: none;
+    padding: 0;
+}
+
+.form-field.two-column > div {
+    background: #ffffff;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    min-height: 60px;
+}
+
+.field-icon {
+    padding: 0 20px;
+    font-size: 20px;
+    color: #6c757d;
+}
+
+.field-input {
+    flex: 1;
+    border: none;
+    background: white;
+    padding: 18px 20px 18px 0;
+    font-size: 16px;
+    color: #333;
+    outline: none;
+}
+
+.field-input::placeholder {
+    color: #9ca3af;
+    font-size: 16px;
+}
+
+.field-textarea {
+    flex: 1;
+    border: none;
+    background: white;
+    padding: 18px 20px 18px 0;
+    font-size: 16px;
+    color: #333;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+}
+
+.field-textarea::placeholder {
+    color: #9ca3af;
+    font-size: 16px;
+}
+
+.customer-field {
+    position: relative;
+}
+
+.customer-right-icon {
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #d7d8da;
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 18px;
+    color: #686a6d;
+}
+
+.select-button {
+    width: 100%;
+    background: #ffffff;
+    border: none;
+    border-radius: 15px;
+    padding: 18px 20px;
+    text-align: left;
+    font-size: 16px;
+    color: #9ca3af;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 60px;
+}
+
+.select-button:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.select-button .dropdown-arrow {
+    font-size: 14px;
+    color: #9ca3af;
+}
+
+.branch-button {
+    color: #6c757d;
+}
+
+.branch-button .branch-icon {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+
 .transactions-header {
     background: linear-gradient(135deg, #a8e6a3 0%, #7dd87a 100%);
     border-radius: 15px;
@@ -195,7 +311,7 @@
 }
 
 .filter-tabs {
-    background: #a8e6a3;
+    background: #c8e6ca;
     border-radius: 12px;
     padding: 10px;
     margin-bottom: 20px;
@@ -224,16 +340,17 @@
 }
 
 .table th {
-    background: #f8f9fa;
+    background: #c8e6ca;
     border: none;
     font-weight: 600;
     color: #495057;
-    padding: 15px;
+    padding: 0;
 }
 
 .table td {
     border: none;
-    padding: 15px;
+    padding: 0 15px 15px 0;
+    width: 17.5%;
     vertical-align: middle;
 }
 

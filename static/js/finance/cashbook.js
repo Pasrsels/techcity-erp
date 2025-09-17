@@ -15,6 +15,7 @@ const recurringIncomeSection = document.createElement('div');
 const incomeReminderSection = document.createElement('div');
 const recurringExpenseSection = document.createElement('div');
 const expenseReminderSection = document.createElement('div');
+const loanSection = document.createElement('div'); 
 
 let filteredTransactions = [];
 let currentFilter = 'all';
@@ -114,7 +115,7 @@ if (attachmentAreaExpense && fileInputExpense) {
     });
 }
 
-function removeFile(button) {
+window.removeFile = function(button) {
     button.parentElement.remove();
     const container = button.closest('#attachmentArea, #attachment-Area');
     if (container && !container.querySelector('.file-item')) {
@@ -159,8 +160,7 @@ function resetAttachmentArea(container, id) {
 }
 
 recurringIncomeSection.innerHTML = `
-    <div class="mb-3" style="padding: 15px; background-color: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
-        <h6 class="text-success mb-3"><i class="bx bx-repeat me-2"></i>Recurring Income Settings</h6>
+    <div class="mb-3" style="padding: 15px; background: transparent; border-radius: 10px; border: 1px solid #e9ecef;">
         <div class="row mb-3">
             <div class="col-4">
                 <label class="form-label small">Repeat every</label>
@@ -195,8 +195,7 @@ recurringIncomeSection.innerHTML = `
 `;
 
 incomeReminderSection.innerHTML = `
-    <div class="mb-3" style="padding: 15px; background-color: #fff3cd; border-radius: 10px; border: 1px solid #ffeaa7;">
-        <h6 class="text-warning mb-3"><i class="bx bx-bell me-2"></i>Income Reminder</h6>
+    <div class="mb-3" style="padding: 15px; background: transparent; border-radius: 10px; border: 1px solid #e9ecef;">
         <div class="row">
             <div class="col-12">
                 <label class="form-label small"><i class="bx bx-calendar me-1"></i>Reminder Date & Time</label>
@@ -207,8 +206,7 @@ incomeReminderSection.innerHTML = `
 `;
 
 recurringExpenseSection.innerHTML = `
-    <div class="mb-3" style="padding: 15px; background-color: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
-        <h6 class="text-danger mb-3"><i class="bx bx-repeat me-2"></i>Recurring Expense Settings</h6>
+    <div class="mb-3" style="padding: 15px; background: transparent; border-radius: 10px; border: 1px solid #e9ecef;">
         <div class="row mb-3">
             <div class="col-4">
                 <label class="form-label small">Repeat every</label>
@@ -243,8 +241,7 @@ recurringExpenseSection.innerHTML = `
 `;
 
 expenseReminderSection.innerHTML = `
-    <div class="mb-3" style="padding: 15px; background-color: #fff3cd; border-radius: 10px; border: 1px solid #ffeaa7;">
-        <h6 class="text-warning mb-3"><i class="bx bx-bell me-2"></i>Expense Reminder</h6>
+    <div class="mb-3" style="padding: 15px; background: transparent; border-radius: 10px; border: 1px solid #e9ecef;">
         <div class="row">
             <div class="col-12">
                 <label class="form-label small"><i class="bx bx-calendar me-1"></i>Reminder Date & Time</label>
@@ -296,8 +293,13 @@ if (incomeReminderLink) {
 if (loanLink) {
     loanLink.addEventListener('click', function(event) {
         event.preventDefault();
-        toggleSection(loanSection, this);
-        
+        // Open the loan offcanvas modal
+        const loanOffcanvas = document.getElementById('offcanvasLoan');
+        if (loanOffcanvas && typeof bootstrap !== 'undefined' && bootstrap.Offcanvas) {
+            const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(loanOffcanvas);
+            bsOffcanvas.show();
+        }
+        // Set default due date to next month
         const nextMonth = new Date();
         nextMonth.setMonth(nextMonth.getMonth() + 1);
         const loanDateInput = document.getElementById('loanDueDate');
@@ -343,15 +345,17 @@ function toggleSection(section, link) {
     }
 }
 
-function updateDropdownText(element) {
+window.updateDropdownText = function(element) {
     const dropdownButton = element.closest('.dropdown').querySelector('.dropdown-toggle');
     if (dropdownButton) {
         dropdownButton.textContent = element.textContent;
     }
     
     if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
-        const dropdown = new bootstrap.Dropdown(dropdownButton);
-        dropdown.hide();
+        const dropdown = bootstrap.Dropdown.getInstance(dropdownButton);
+        if (dropdown) {
+            dropdown.hide();
+        }
     }
 }
 
@@ -361,6 +365,13 @@ document.addEventListener('click', function(event) {
         if (dropdownButton && !event.target.getAttribute('href')) {
             event.preventDefault();
             dropdownButton.textContent = event.target.textContent;
+            
+            if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
+                const dropdown = bootstrap.Dropdown.getInstance(dropdownButton);
+                if (dropdown) {
+                    dropdown.hide();
+                }
+            }
         }
     }
 });
@@ -391,6 +402,17 @@ if (document.getElementById('incomeForm')) {
             files: fileInput ? Array.from(fileInput.files) : []
         };
         
+        const errors = validateForm(incomeData);
+        if (errors.length > 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                html: errors.join('<br>'),
+                confirmButtonColor: '#009788'
+            });
+            return;
+        }
+        
         if (incomeData.isRecurring) {
             const repeatInput = recurringIncomeSection.querySelector('input[type="number"]');
             const periodButton = recurringIncomeSection.querySelector('.dropdown-toggle');
@@ -411,25 +433,19 @@ if (document.getElementById('incomeForm')) {
         }
         
         console.log('Income recorded:', incomeData);
+        saveToLocalStorage('income', incomeData);
         
-        if (incomeData.amount && incomeData.title) {
-            alert('Income recorded successfully!');
-            this.reset();
-            if (attachmentArea) resetAttachmentArea(attachmentArea, 'attachmentArea');
-            recurringIncomeSection.style.display = 'none';
-            incomeReminderSection.style.display = 'none';
-            
-            if (recurringIncomeLink) {
-                recurringIncomeLink.classList.remove('text-primary', 'fw-bold');
-                recurringIncomeLink.innerHTML = 'Recurring Income?';
-            }
-            if (incomeReminderLink) {
-                incomeReminderLink.classList.remove('text-primary', 'fw-bold');
-                incomeReminderLink.innerHTML = 'Set a Reminder?';
-            }
-        } else {
-            alert('Please fill in required fields: Amount and Title');
-        }
+        Swal.fire({
+            icon: 'success',
+            title: 'Income recorded successfully!',
+            confirmButtonColor: '#009788'
+        });
+        this.reset();
+        if (attachmentArea) resetAttachmentArea(attachmentArea, 'attachmentArea');
+        recurringIncomeSection.style.display = 'none';
+        incomeReminderSection.style.display = 'none';
+        
+        resetToggleLinks();
     });
 }
 
@@ -459,6 +475,17 @@ if (document.getElementById('expenseForm')) {
             hasReminder: expenseReminderSection.style.display === 'block',
             files: fileInputExpense ? Array.from(fileInputExpense.files) : []
         };
+        
+        const errors = validateForm(expenseData);
+        if (errors.length > 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                html: errors.join('<br>'),
+                confirmButtonColor: '#e57373'
+            });
+            return;
+        }
         
         if (expenseData.isLoan) {
             const interestRateInput = loanSection.querySelector('input[type="number"]');
@@ -492,30 +519,20 @@ if (document.getElementById('expenseForm')) {
         }
         
         console.log('Expense recorded:', expenseData);
+        saveToLocalStorage('expense', expenseData);
         
-        if (expenseData.amount && expenseData.title) {
-            alert('Expense recorded successfully!');
-            this.reset();
-            if (attachmentAreaExpense) resetAttachmentArea(attachmentAreaExpense, 'attachment-Area');
-            loanSection.style.display = 'none';
-            recurringExpenseSection.style.display = 'none';
-            expenseReminderSection.style.display = 'none';
-            
-            if (loanLink) {
-                loanLink.classList.remove('text-primary', 'fw-bold');
-                loanLink.innerHTML = 'Loan?';
-            }
-            if (recurringExpenseLink) {
-                recurringExpenseLink.classList.remove('text-primary', 'fw-bold');
-                recurringExpenseLink.innerHTML = 'Recurring Expense?';
-            }
-            if (expenseReminderLink) {
-                expenseReminderLink.classList.remove('text-primary', 'fw-bold');
-                expenseReminderLink.innerHTML = 'Set a Reminder?';
-            }
-        } else {
-            alert('Please fill in required fields: Amount and Title');
-        }
+        Swal.fire({
+            icon: 'success',
+            title: 'Expense recorded successfully!',
+            confirmButtonColor: '#e57373'
+        });
+        this.reset();
+        if (attachmentAreaExpense) resetAttachmentArea(attachmentAreaExpense, 'attachment-Area');
+        loanSection.style.display = 'none';
+        recurringExpenseSection.style.display = 'none';
+        expenseReminderSection.style.display = 'none';
+        
+        resetToggleLinks();
     });
 }
 
@@ -534,22 +551,80 @@ if (document.getElementById('transferForm')) {
             toUser: dropdownButtons.length > 3 ? dropdownButtons[3].textContent.trim() : ''
         };
         
-        console.log('Transfer submitted:', transferData);
-        
-        if (transferData.amount) {
-            alert('Transfer completed successfully!');
-            this.reset();
-            
-            dropdownButtons.forEach(btn => {
-                if (btn.textContent.includes('Branch')) btn.textContent = 'Branch';
-                if (btn.textContent.includes('Select Branch')) btn.textContent = 'Select Branch';
-                if (btn.textContent.includes('User Account')) btn.textContent = 'User Account';
-                if (btn.textContent.includes('Select User')) btn.textContent = 'Select User';
+        if (!transferData.amount || parseFloat(transferData.amount) <= 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Please enter a valid transfer amount',
+                confirmButtonColor: '#009788'
             });
-        } else {
-            alert('Please enter transfer amount');
+            return;
+        }
+        
+        console.log('Transfer submitted:', transferData);
+        saveToLocalStorage('transfer', transferData);
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Transfer completed successfully!',
+            confirmButtonColor: '#009788'
+        });
+        this.reset();
+        resetDropdowns();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const transferBtn = document.querySelector('[data-bs-target="#offcanvasTransfer"]');
+    const transferCanvas = document.getElementById('offcanvasTransfer');
+    if (transferBtn && transferCanvas && typeof bootstrap !== 'undefined' && bootstrap.Offcanvas) {
+        transferBtn.addEventListener('click', function(e) {
+            try {
+                const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(transferCanvas);
+                offcanvas.show();
+                console.log('DEBUG: Transfer offcanvas forced to show.');
+            } catch (err) {
+                console.error('DEBUG: Error showing transfer offcanvas:', err);
+            }
+        });
+    } else {
+        console.warn('DEBUG: Transfer button or canvas not found, or Bootstrap not loaded.');
+    }
+});
+setDefaultDates();
+initializeDropdowns();
+initializeCategories();
+
+function resetDropdowns() {
+    const dropdowns = document.querySelectorAll('.dropdown-toggle');
+    dropdowns.forEach(dropdown => {
+        const defaultText = dropdown.getAttribute('data-default-text');
+        if (defaultText) {
+            dropdown.textContent = defaultText;
         }
     });
+}
+
+function resetToggleLinks() {
+    if (recurringIncomeLink) {
+        recurringIncomeLink.classList.remove('text-primary', 'fw-bold');
+        recurringIncomeLink.innerHTML = 'Recurring Income?';
+    }
+    if (incomeReminderLink) {
+        incomeReminderLink.classList.remove('text-primary', 'fw-bold');
+        incomeReminderLink.innerHTML = 'Set a Reminder?';
+    }
+    if (loanLink) {
+        loanLink.classList.remove('text-primary', 'fw-bold');
+        loanLink.innerHTML = 'Loan?';
+    }
+    if (recurringExpenseLink) {
+        recurringExpenseLink.classList.remove('text-primary', 'fw-bold');
+        recurringExpenseLink.innerHTML = 'Recurring Expense?';
+    }
+    if (expenseReminderLink) {
+        expenseReminderLink.classList.remove('text-primary', 'fw-bold');
+        expenseReminderLink.innerHTML = 'Set a Reminder?';
+    }
 }
 
 function setDefaultDates() {
@@ -570,15 +645,23 @@ function setDefaultDates() {
 function initializeDropdowns() {
     const dropdownItems = document.querySelectorAll('.dropdown-item');
     dropdownItems.forEach(item => {
-        if (!item.onclick) {
+        if (!item.onclick && !item.hasAttribute('data-listener-added')) {
             item.addEventListener('click', function(e) {
                 e.preventDefault();
                 const dropdown = this.closest('.dropdown');
                 const button = dropdown.querySelector('.dropdown-toggle');
                 if (button && !this.querySelector('i.bx-plus')) {
                     button.textContent = this.textContent;
+                    
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
+                        const dropdownInstance = bootstrap.Dropdown.getInstance(button);
+                        if (dropdownInstance) {
+                            dropdownInstance.hide();
+                        }
+                    }
                 }
             });
+            item.setAttribute('data-listener-added', 'true');
         }
     });
 }
@@ -587,7 +670,7 @@ function initializeCategories() {
     const categoryDropdowns = document.querySelectorAll('#categoryDropdown');
     categoryDropdowns.forEach(dropdown => {
         const addCategoryItem = dropdown.parentElement.querySelector('.dropdown-menu li:last-child a');
-        if (addCategoryItem && addCategoryItem.querySelector('i.bx-plus')) {
+        if (addCategoryItem && addCategoryItem.querySelector('i.bx-plus') && !addCategoryItem.hasAttribute('data-listener-added')) {
             addCategoryItem.addEventListener('click', function(e) {
                 e.preventDefault();
                 const categoryName = prompt('Enter new category name:');
@@ -600,48 +683,20 @@ function initializeCategories() {
                     newCategoryItem.querySelector('a').addEventListener('click', function(e) {
                         e.preventDefault();
                         dropdown.textContent = this.textContent;
+                        
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
+                            const dropdownInstance = bootstrap.Dropdown.getInstance(dropdown);
+                            if (dropdownInstance) {
+                                dropdownInstance.hide();
+                            }
+                        }
                     });
                 }
             });
+            addCategoryItem.setAttribute('data-listener-added', 'true');
         }
     });
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    setDefaultDates();
-    initializeDropdowns();
-    initializeCategories();
-    
-    setTimeout(() => {
-        const categorySearch = document.getElementById('categorySearch');
-        if (categorySearch) {
-            categorySearch.addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                const categoryItems = document.querySelectorAll('.category-item');
-                categoryItems.forEach(item => {
-                    const categoryName = item.textContent.toLowerCase();
-                    item.style.display = categoryName.includes(searchTerm) ? 'block' : 'none';
-                });
-            });
-        }
-
-        const contactSearch = document.getElementById('contactSearch');
-        if (contactSearch) {
-            contactSearch.addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                const contactItems = document.querySelectorAll('.contact-item');
-                contactItems.forEach(item => {
-                    const nameElement = item.querySelector('.fw-semibold');
-                    const emailElement = item.querySelector('.text-muted');
-                    const contactName = nameElement ? nameElement.textContent.toLowerCase() : '';
-                    const contactEmail = emailElement ? emailElement.textContent.toLowerCase() : '';
-                    const matches = contactName.includes(searchTerm) || contactEmail.includes(searchTerm);
-                    item.style.display = matches ? 'flex' : 'none';
-                });
-            });
-        }
-    }, 100);
-});
 
 function formatCurrency(amount, currency = 'USD') {
     const numAmount = parseFloat(amount) || 0;
@@ -666,59 +721,6 @@ function validateForm(formData) {
     return errors;
 }
 
-function updateCashSummary() {
-    const cashInElement = document.querySelector('.card-body h5:contains("Cash In")');
-    const cashOutElement = document.querySelector('.card-body h5:contains("Cash Out")');
-    const balanceElement = document.querySelector('.card-body h5:contains("Balance")');
-    
-    const storedData = JSON.parse(localStorage.getItem('cashbookData') || '{"income": [], "expenses": []}');
-    
-    const totalIncome = storedData.income.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
-    const totalExpenses = storedData.expenses.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
-    const balance = totalIncome - totalExpenses;
-    
-    if (cashInElement) {
-        const incomeIcon = cashInElement.querySelector('i');
-        cashInElement.innerHTML = '';
-        if (incomeIcon) cashInElement.appendChild(incomeIcon);
-        cashInElement.appendChild(document.createTextNode(formatCurrency(totalIncome)));
-    }
-    
-    if (cashOutElement) {
-        const expenseIcon = cashOutElement.querySelector('i');
-        cashOutElement.innerHTML = '';
-        if (expenseIcon) cashOutElement.appendChild(expenseIcon);
-        cashOutElement.appendChild(document.createTextNode(formatCurrency(totalExpenses)));
-    }
-    
-    if (balanceElement) {
-        const balanceIcon = balanceElement.querySelector('i');
-        balanceElement.innerHTML = '';
-        if (balanceIcon) balanceElement.appendChild(balanceIcon);
-        balanceElement.appendChild(document.createTextNode(formatCurrency(balance)));
-        
-        balanceElement.className = balance >= 0 ? 'text-success mb-4' : 'text-danger mb-4';
-    }
-}
-
-function saveToLocalStorage(type, data) {
-    const storedData = JSON.parse(localStorage.getItem('cashbookData') || '{"income": [], "expenses": [], "transfers": []}');
-    
-    data.id = Date.now();
-    data.timestamp = new Date().toISOString();
-    
-    if (type === 'income') {
-        storedData.income.push(data);
-    } else if (type === 'expense') {
-        storedData.expenses.push(data);
-    } else if (type === 'transfer') {
-        storedData.transfers.push(data);
-    }
-    
-    localStorage.setItem('cashbookData', JSON.stringify(storedData));
-    updateCashSummary();
-}
-
 function resetDropdowns() {
     const dropdowns = document.querySelectorAll('.dropdown-toggle');
     dropdowns.forEach(dropdown => {
@@ -726,12 +728,18 @@ function resetDropdowns() {
         if (originalText) {
             dropdown.textContent = originalText;
         } else {
-            if (dropdown.textContent.includes('CASH')) dropdown.textContent = 'CASH';
-            if (dropdown.textContent.includes('USD')) dropdown.textContent = 'USD';
-            if (dropdown.textContent.includes('Branch')) dropdown.textContent = 'Branch';
-            if (dropdown.textContent.includes('Select')) dropdown.textContent = dropdown.textContent.split(' ')[0] + ' ' + dropdown.textContent.split(' ')[1];
-            if (dropdown.textContent.includes('category')) dropdown.textContent = 'Select or add category';
-            if (dropdown.textContent.includes('User Account')) dropdown.textContent = 'User Account';
+            const text = dropdown.textContent;
+            if (text.includes('CASH')) dropdown.textContent = 'CASH';
+            else if (text.includes('USD')) dropdown.textContent = 'USD';
+            else if (text.includes('Branch')) dropdown.textContent = 'Branch';
+            else if (text.includes('Select')) {
+                const parts = text.split(' ');
+                if (parts.length >= 2) {
+                    dropdown.textContent = parts[0] + ' ' + parts[1];
+                }
+            }
+            else if (text.includes('category')) dropdown.textContent = 'Select or add category';
+            else if (text.includes('User Account')) dropdown.textContent = 'User Account';
         }
     });
 }
@@ -746,29 +754,140 @@ function initializeOriginalTexts() {
 }
 
 function handleAmountInput() {
-    const amountInputs = document.querySelectorAll('#amountInput, #amountInputExpense');
+    const amountInputs = document.querySelectorAll('#amountInput, #amountInputExpense, input[placeholder="Enter Amount"]');
     amountInputs.forEach(input => {
-        input.addEventListener('input', function() {
-            const value = parseFloat(this.value);
-            if (value < 0) {
-                this.value = '';
-            } else if (value > 999999999) {
-                this.value = '999999999';
-            }
-        });
-        
-        input.addEventListener('blur', function() {
-            if (this.value) {
-                const formatted = parseFloat(this.value).toFixed(2);
-                this.value = formatted;
-            }
-        });
+        if (!input.hasAttribute('data-listener-added')) {
+            input.addEventListener('input', function() {
+                const value = parseFloat(this.value);
+                if (value < 0) {
+                    this.value = '';
+                } else if (value > 999999999) {
+                    this.value = '999999999';
+                }
+            });
+            
+            input.addEventListener('blur', function() {
+                if (this.value && !isNaN(this.value)) {
+                    const formatted = parseFloat(this.value).toFixed(2);
+                    this.value = formatted;
+                }
+            });
+            
+            input.setAttribute('data-listener-added', 'true');
+        }
     });
 }
 
+function initializeSearchFunctionality() {
+    const categorySearch = document.getElementById('categorySearch');
+    if (categorySearch && !categorySearch.hasAttribute('data-listener-added')) {
+        categorySearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const categoryItems = document.querySelectorAll('.category-item');
+            categoryItems.forEach(item => {
+                const categoryName = item.textContent.toLowerCase();
+                item.style.display = categoryName.includes(searchTerm) ? 'block' : 'none';
+            });
+        });
+        categorySearch.setAttribute('data-listener-added', 'true');
+    }
+
+    const contactSearch = document.getElementById('contactSearch');
+    if (contactSearch && !contactSearch.hasAttribute('data-listener-added')) {
+        contactSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const contactItems = document.querySelectorAll('.contact-item');
+            contactItems.forEach(item => {
+                const nameElement = item.querySelector('.fw-semibold');
+                const emailElement = item.querySelector('.text-muted');
+                const contactName = nameElement ? nameElement.textContent.toLowerCase() : '';
+                const contactEmail = emailElement ? emailElement.textContent.toLowerCase() : '';
+                const matches = contactName.includes(searchTerm) || contactEmail.includes(searchTerm);
+                item.style.display = matches ? 'flex' : 'none';
+            });
+        });
+        contactSearch.setAttribute('data-listener-added', 'true');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    initializeOriginalTexts();
-    handleAmountInput();
-    updateCashSummary();
+    console.log('Initializing financial management system...');
+    
+    try {
+        setDefaultDates();
+        initializeOriginalTexts();
+        initializeDropdowns();
+        initializeCategories();
+        handleAmountInput();
+        initializeSearchFunctionality();
+        
+        console.log('Financial management system initialized successfully');
+    } catch (error) {
+        console.error('Error initializing system:', error);
+    }
+    
+    setTimeout(() => {
+        try {
+            initializeDropdowns();
+            initializeCategories();
+            handleAmountInput();
+            initializeSearchFunctionality();
+        } catch (error) {
+            console.error('Error in delayed initialization:', error);
+        }
+    }, 500);
 });
 
+document.addEventListener('click', function(event) {
+    if (event.target.matches('.dropdown-item:not([data-listener-added])')) {
+        const dropdown = event.target.closest('.dropdown');
+        const button = dropdown ? dropdown.querySelector('.dropdown-toggle') : null;
+        
+        if (button && !event.target.querySelector('i.bx-plus')) {
+            event.preventDefault();
+            button.textContent = event.target.textContent;
+            
+            if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
+                const dropdownInstance = bootstrap.Dropdown.getInstance(button);
+                if (dropdownInstance) {
+                    dropdownInstance.hide();
+                }
+            }
+        }
+        
+        event.target.setAttribute('data-listener-added', 'true');
+    }
+});
+
+window.addEventListener('error', function(event) {
+    console.error('JavaScript error:', event.error);
+});
+
+window.debugFinancialSystem = function() {
+    const elements = {
+        incomeForm: document.getElementById('incomeForm'),
+        expenseForm: document.getElementById('expenseForm'),
+        transferForm: document.getElementById('transferForm'),
+        attachmentArea: document.getElementById('attachmentArea'),
+        attachmentAreaExpense: document.getElementById('attachment-Area'),
+        recurringIncomeLink: document.querySelector('.incomeRec'),
+        incomeReminderLink: document.querySelector('.incomeRem'),
+        loanLink: document.querySelector('.loan'),
+        recurringExpenseLink: document.querySelector('.recExp'),
+        expenseReminderLink: document.querySelector('.expRem')
+    };
+    
+    console.log('System elements status:', elements);
+    
+    return elements;
+};
+
+ document.getElementById('principalAmount').addEventListener('input', function() {
+            const principal = parseFloat(this.value) || 0;
+            const rate = parseFloat(document.getElementById('defaultRate').value) || 0;
+            const duration = parseFloat(document.getElementById('defaultDuration').value) || 0;
+            
+            // Simple flat rate calculation
+            const repayment = principal + (principal * rate / 100 * duration / 12);
+            document.getElementById('repaymentDisplay').textContent = repayment.toFixed(2);
+        });

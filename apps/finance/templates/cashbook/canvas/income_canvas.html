@@ -1,110 +1,161 @@
-<div class="offcanvas p-3 offcanvas-end" tabindex="-1" id="offcanvasIncome" aria-labelledby="offcanvasRightLabel">
-  <div class="offcanvas-header">
-    {% comment %} <h5 id="offcanvasRightLabel">Offcanvas right</h5> {% endcomment %}
-    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
-  <div class="offcanvas-body">
-    <form id="incomeForm">
-     <div class="p-2 pb-0">
-        <div class="d-flex justify-content-between align-items-center mb-1">
-                <div class="dropdown">
-                    <button class="btn btn-link text-success p-0 dropdown-toggle text-decoration-none" type="button" data-bs-toggle="dropdown">
-                        CASH
-                    </button>
-                    <ul class="dropdown-menu text-success">
-                        <li><a class="dropdown-item" href="#">CASH</a></li>
-                        <li><a class="dropdown-item" href="#">BANK</a></li>
-                        <li><a class="dropdown-item" href="#">ECOCASH</a></li>
-                    </ul>
-                </div>
-                <div class="dropdown">
-                    <button class="btn btn-link text-success p-0 dropdown-toggle text-decoration-none" type="button" data-bs-toggle="dropdown">
-                        USD
-                    </button>
-                    <ul class="dropdown-menu text-success">
-                        <li><a class="dropdown-item" href="#">USD</a></li>
-                        <li><a class="dropdown-item" href="#">ZWG</a></li>
-                        <li><a class="dropdown-item" href="#">RAND</a></li>
-                    </ul>
-                </div>
-            </div>       
-        </div>
-        <input id="amountInput"
-            type="number"
-            inputmode="decimal"
-            class="amount-input text-center" 
-            style="width: 280px;"
-            placeholder="0.00"
-            />
-            
-        <div class="mb-3">
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0" style="border-radius: 25px 0 0 25px; border-right: none;">
-                    <i class="bx bx-text"></i>
-                </span>
-                <input type="text" class="form-control border-start-0 ps-0" placeholder="Title" style="border-radius: 0 25px 25px 0;">
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <div class="dropdown w-100">
-                <button id="categoryDropdown" class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown" style="border-radius: 25px; border-color: #e9ecef; padding: 15px 20px;">
-                    Select or add category
-                </button>
-                <ul class="dropdown-menu w-100">
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#"><i class="bx bx-plus"></i> Add new category</a></li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0" style="border-radius: 25px 0 0 25px;">
-                    <i class="bx bx-file-blank"></i>
-                </span>
-                <textarea class="form-control border-start-0 ps-0" placeholder="Description" rows="1" style="border-radius: 0 25px 25px 0;"></textarea>
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0" style="border-radius: 25px 0 0 25px;">
-                    <i class="bx bx-user"></i>
-                </span>
-                <input type="text" class="form-control border-start-0 ps-0" placeholder="" style="border-radius: 0 25px 25px 0;">
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <div class="dropdown w-100">
-                <button id="branchDropdown" class="btn btn-outline-secondary dropdown-toggle w-100 text-start d-flex align-items-center" type="button" data-bs-toggle="dropdown" style="border-radius: 25px; border-color: #e9ecef; padding: 15px 20px;">
-                    <i class="bx bx-map-pin me-2"></i>
-                    Branch
-                </button>
-                <ul class="dropdown-menu w-100">
-                    <li><a class="dropdown-item" href="#">HARARE</a></li>
-                    <li><a class="dropdown-item" href="#">PC PASELS</a></li>
-                    <li><a class="dropdown-item" href="#">MUTARE</a></li>
-                </ul>
-            </div>
-        </div>
-
-        <div id="attachmentArea" class="attachment-area">
-            <i class="bx bx-paperclip text-muted" style="font-size: 1.5rem;"></i>
-            <p class="text-muted mb-0 mt-2">Drag & drop files or click to browse</p>
-            <input type="file" class="d-none" id="fileInput" multiple>
-        </div>
-
-        <div class="option-links justify-content-between d-flex mb-4">
-            <a class="incomeRec" href="#">Recurring Income?</a>
-            <a class="incomeRem" href="#">Set a Reminder?</a>
-        </div>
-
-        <button type="submit" class="btn-record">
-            Record Income
+<div class="offcanvas offcanvas-end" style="width: 30%; background-color:#f6f6f6" tabindex="-1" id="offcanvasIncome" aria-labelledby="offcanvasIncomeLabel">
+    <div class="offcanvas-header p-4 justify-content-around">
+        <button class="btn bg-white text-danger" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExpense" aria-controls="offcanvasExpense" type="button">
+            <i class="bx bx-minus-circle"></i> Expense
         </button>
-    </form>
-  </div>
-</div>
+        <button class="btn bg-white text-dark" data-bs-toggle="offcanvas" data-bs-target="#offcanvasTransfer" aria-controls="offcanvasTransfer" type="button">
+            <i class="bx bx-transfer"></i> Transfers
+        </button>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    
+    <div class="offcanvas-body">
+        <form id="incomeForm">
+            <div class="p-2 pb-0">
+                <div class="d-flex justify-content-center align-items-center mb-3">
+                    <div class="dropdown me-3">
+                        <button class="btn btn-link text-success p-0 dropdown-toggle text-decoration-none border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            CASH
+                        </button>
+                        <ul class="dropdown-menu text-success">
+                            <li><a class="dropdown-item" href="#" data-method="CASH">CASH</a></li>
+                            <li><a class="dropdown-item" href="#" data-method="BANK">BANK</a></li>
+                            <li><a class="dropdown-item" href="#" data-method="ECOCASH">ECOCASH</a></li>
+                        </ul>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-link text-success p-0 dropdown-toggle text-decoration-none border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            USD
+                        </button>
+                        <ul class="dropdown-menu text-success">
+                            <li><a class="dropdown-item" href="#" data-currency="USD">USD</a></li>
+                            <li><a class="dropdown-item" href="#" data-currency="ZWG">ZWG</a></li>
+                            <li><a class="dropdown-item" href="#" data-currency="RAND">RAND</a></li>
+                        </ul>
+                    </div>
+                </div>       
+            </div>
 
+            <div class="form-field">
+                <div class="field-icon">
+                    <i class="bx bx-dollar"></i>
+                </div>
+                <input type="number" class="field-input" placeholder="Amount" id="incomeAmount" min="0" step="0.01" required>
+            </div>
+                
+            <div class="form-field two-column">  
+                <div class="mb-3">
+                    <div class="field-icon">
+                        <i class="bx bx-text"></i>
+                    </div>
+                    <input type="text" class="field-input" placeholder="Title" id="incomeTitle" required>
+                </div>
+
+                <div class="mb-3">
+                    <div class="dropdown w-100">
+                        <button type="button" class="field-input text-black dropdown-toggle" data-bs-toggle="offcanvas" data-bs-target="#offcanvasCategory" aria-controls="offcanvasCategory" style="cursor: pointer; border: none; background: #d7d8da; text-align: left; color: #9ca3af;" >
+                            Select or add category
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-field">
+                <div class="field-icon">
+                    <i class="bx bx-file-blank"></i>
+                </div>
+                <textarea class="field-textarea" placeholder="Description" rows="1" id="incomeDescription"></textarea>
+            </div>
+
+            <div class="form-field customer-field">
+                <div class="field-icon">
+                    <i class="bx bx-user"></i>
+                </div>
+                <input type="text" class="field-input" placeholder="Enter customer name" id="incomeCustomer">
+                <div class="customer-right-icon">
+                    <i class="bx bx-group"></i>
+                </div>
+            </div>
+
+            <div class="dropdown mb-3">
+                <button type="button" class="select-button branch-button dropdown-toggle w-100" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span>
+                        <i class="bx bx-map-pin branch-icon"></i>Branch
+                    </span>
+                </button>
+                <ul class="dropdown-menu w-100">
+                    <li><a class="dropdown-item" href="#" data-branch="HARARE">HARARE</a></li>
+                    <li><a class="dropdown-item" href="#" data-branch="PC PASELS">PC PASELS</a></li>
+                    <li><a class="dropdown-item" href="#" data-branch="MUTARE">MUTARE</a></li>
+                </ul>
+            </div>
+
+            <div id="attachmentArea" class="attachment-area">
+                <i class="bx bx-paperclip text-muted" style="font-size: 1.5rem;"></i>
+                <p class="text-muted mb-0 mt-2">Drag & drop files or click to browse</p>
+                <input type="file" class="d-none" id="fileInput" multiple accept="image/*,application/pdf,.doc,.docx">
+            </div>
+
+            <div class="option-links justify-content-between d-flex mb-4">
+                <a class="incomeRec" href="#" data-toggle="recurring">Recurring Income?</a>
+                <a class="incomeRem" href="#" data-toggle="reminder">Set a Reminder?</a>
+            </div>
+
+            <!-- Recurring Income Section -->
+            <div id="recurringIncomeSection" class="additional-section" style="display: none;">
+                <div class="section-header">
+                    <i class="bx bx-repeat"></i>
+                    <span>Recurring Income Settings</span>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-4">
+                        <label class="form-label small">Repeat every</label>
+                        <input type="number" class="form-control" value="1" min="1" id="incomeRepeatEvery">
+                    </div>
+                    <div class="col-8">
+                        <label class="form-label small">Period</label>
+                        <div class="dropdown w-100">
+                            <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Month(s)
+                            </button>
+                            <ul class="dropdown-menu w-100">
+                                <li><a class="dropdown-item" href="#" data-period="Day(s)">Day(s)</a></li>
+                                <li><a class="dropdown-item" href="#" data-period="Week(s)">Week(s)</a></li>
+                                <li><a class="dropdown-item" href="#" data-period="Month(s)">Month(s)</a></li>
+                                <li><a class="dropdown-item" href="#" data-period="Year(s)">Year(s)</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label class="form-label small"><i class="bx bx-calendar me-1"></i>From Date</label>
+                        <input type="date" class="form-control" id="incomeFromDate">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small"><i class="bx bx-calendar me-1"></i>To Date</label>
+                        <input type="date" class="form-control" id="incomeToDate">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reminder Section -->
+            <div id="incomeReminderSection" class="additional-section" style="display: none;">
+                <div class="section-header">
+                    <i class="bx bx-bell"></i>
+                    <span>Reminder Settings</span>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <label class="form-label small"><i class="bx bx-calendar me-1"></i>Reminder Date & Time</label>
+                        <input type="datetime-local" class="form-control" id="incomeReminderDate">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-record">
+                Record Income
+            </button>
+        </form>
+    </div>
+</div>
