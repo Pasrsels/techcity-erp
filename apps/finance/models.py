@@ -347,10 +347,10 @@ class Invoice(models.Model):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
         print(last_invoice.invoice_number)
         if last_invoice:
-            return f"INV{branch}-{int(last_invoice.invoice_number.split('-')[1]) + 1}"
+            return f"INV{branch.split(" ")[0]}-{int(last_invoice.invoice_number.split('-')[1]) + 1}"
         else:
             new_invoice_number = 1
-            return f"INV{branch}-{new_invoice_number}"  
+            return f"INV{branch.split(" ")[0]}-{new_invoice_number}"  
 
     def __str__(self):
         return f"Invoice #{self.invoice_number} - {self.customer.name}"
@@ -364,6 +364,7 @@ class InvoiceItem(models.Model):
     vat_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0, editable=False)  
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
     cash_up_status = models.BooleanField(default=False, null=True)
+    credit_note_issued = models.BooleanField(default=False, null=True)
     
     @property
     def subtotal(self):
@@ -825,6 +826,7 @@ class CashUp(models.Model):
     status = models.BooleanField(default=False)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_cashups')
     created_at = models.DateTimeField(auto_now_add=True)
+    
     updated_at = models.DateTimeField(auto_now=True)
     sales_status = models.BooleanField(default=False)
     expenses_status = models.BooleanField(default=False)

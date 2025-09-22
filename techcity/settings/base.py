@@ -364,7 +364,6 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-
 # Logging
 LOGGING = {
     'version': 1,
@@ -382,5 +381,12 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+    },
+}
+
+CELERY_BEAT_SCHEDULE = {
+    'run-scheduled-db-backup-every-minute': {
+        'task': 'settings.tasks.run_scheduled_db_backup',
+        'schedule': crontab(),  
     },
 }

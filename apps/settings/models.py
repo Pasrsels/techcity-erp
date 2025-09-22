@@ -124,3 +124,12 @@ class TaxSettings(models.Model):
 
     def __str__(self):
         return self.name
+    
+class DatabaseBackupSchedule(models.Model):
+    time = models.TimeField(help_text="Time of day to run the backup (24h format)")
+    enabled = models.BooleanField(default=False)
+    created_by = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True, blank=True)
+    last_run = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"Backup at {self.time} (enabled: {self.enabled})"

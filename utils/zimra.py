@@ -282,10 +282,11 @@ class ZIMRA:
         Closes the active fiscal day and submits the necessary data to ZIMRA FDMS.
         """
         active_day = FiscalDay.objects.filter(is_open=True).first()
+        logger.info(active_day)
 
-        if not active_day: 
-            logger.info("No active fiscal day to close.")
-            return
+        # if not active_day: 
+        #     logger.info("No active fiscal day to close.")
+        #     return
         
         logger.info(f'signature: {signature}')
         logger.info(f'signature: {hash}')

@@ -15,6 +15,17 @@ TAX_CHOICES = [
     ('zero rated', 'Zero Rated')
 ]
 
+
+class UpdateModel(models.Model):
+    """logs all creations and updates to models that inherit from it"""
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        abstract = True
+        
+        
+        
 class BatchCode(models.Model):
     code = models.CharField(max_length=255)
 
@@ -284,7 +295,7 @@ class PurchaseOrderItem(models.Model):
 
     def check_received(self):
         """
-        Checks if all related items in the purchase order with the same order_number are received and updates the purchase order's "received" flag.
+            Checks if all related items in the purchase order with the same order_number are received and updates the purchase order's "received" flag.
         """
         order_number = self.purchase_order.order_number
         purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order__order_number=order_number)
@@ -469,7 +480,7 @@ class ActivityLog(models.Model):
     
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE) 
-    stocktake = models.ForeignKey('inventory.Stocktake', on_delete=models.CASCADE, null=True)
+    stocktake = models.ForeignKey('inventory.Stocktake', on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True)
     action = models.CharField(max_length=100, choices=ACTION_CHOICES)
     quantity = models.IntegerField()
@@ -562,6 +573,7 @@ class StockTake(models.Model):
     positive = models.IntegerField(default=0)
     negative_cost = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     positive_cost = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    
 
     def stocktake_number(self, branch):
         prv_stock_take = StockTake.objects.filter(branch__name=branch).order_by('-id').first()
@@ -572,8 +584,8 @@ class StockTake(models.Model):
             new_stocktake_number = 1
 
         return new_stocktake_number
-        
-class StocktakeItem(models.Model):
+
+class StocktakeItem(UpdateModel):
     stocktake = models.ForeignKey(StockTake, on_delete=models.CASCADE, null=True)
     product = models.ForeignKey(Inventory, on_delete=models.CASCADE)
     now_quantity = models.IntegerField(default=0)
@@ -585,6 +597,10 @@ class StocktakeItem(models.Model):
     company_loss = models.BooleanField(null=True, default=False)
     recorded = models.BooleanField(null=True, default=False)
     has_diff = models.BooleanField(default=False)
+    still_open = models.BooleanField(default=True)
+    sold_quantity = models.IntegerField(default=0, null=True) # sold during stocktake
+    received_quantity = models.IntegerField(default=0, null=True) # received during stocktake
+    transfer_quantity = models.IntegerField(default=0, null=True) # transferred during stocktake
 
 # Inventory loss models
 class WriteOff(models.Model):
