@@ -590,7 +590,7 @@ class StocktakeItem(UpdateModel):
     product = models.ForeignKey(Inventory, on_delete=models.CASCADE)
     now_quantity = models.IntegerField(default=0)
     quantity = models.IntegerField(null=True)
-    quantity_difference = models.IntegerField()
+    quantity_difference = models.IntegerField(null=True, default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
     note = models.TextField(null=True, default='')
     accepted = models.BooleanField(default=False,null=True)

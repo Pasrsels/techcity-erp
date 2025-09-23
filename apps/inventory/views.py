@@ -321,6 +321,7 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                     branch_objects = []
                     for branch in branches_data:
                         if branch.get('value'):
+                            logger.info(branch['value'])
                             branch_obj = Branch.objects.get(id=branch['value'])
                         else:
                             branch_obj = Branch.objects.get(name=branch['name'])
@@ -387,10 +388,15 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
                         inventory.quantity -= int(transfer_item.quantity)
                         inventory.save()
                         
-                        stocktake_item = StocktakeItem(still_open=True, stocktake_branch=request.user.branch, product=inventory)
-            
+                        logger.info(f'inventory after transfer {inventory}[]')
+                        
+
+                        stocktake_item = StocktakeItem.objects.filter(still_open=True, stocktake__branch=request.user.branch, product=inventory).first()
+                        
+                        logger.info(stocktake_item)
+
                         if stocktake_item:
-                            stocktake_item.transfer_quantity += transfer_item.quantity
+                            stocktake_item.transfer_quantity -= transfer_item.quantity
                             stocktake_item.save()
                             process_stocktake_item_util(stocktake_item, transfer_item.quantity)
 
@@ -1306,7 +1312,7 @@ def receive_inventory(request):
                 transfer_obj.receive_status = True
                 transfer_obj.save()
                 
-            stocktake_item = StocktakeItem(still_open=True, stocktake_branch=request.user.branch, product=branch_transfer.product)
+            stocktake_item = StocktakeItem.objects.filter(still_open=True, stocktake__branch=request.user.branch, product=branch_transfer.product).first()
             
             if stocktake_item:
                 stocktake_item.transfer_quantity += quantity_received

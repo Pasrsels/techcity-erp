@@ -94,9 +94,6 @@ def process_stocktake_item_util(stocktake_item, physical_quantity):
     stocktake_item.quantity_difference = difference
     stocktake_item.cost = product.cost * difference
 
-    stocktake_item.stocktake.negative = difference
-    stocktake_item.stocktake.positive = phy_quantity
-
     stocktake_item.recorded = True
     stocktake_item.stocktake.save()
     stocktake_item.save()

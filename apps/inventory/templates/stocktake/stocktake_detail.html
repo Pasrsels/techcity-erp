@@ -373,9 +373,6 @@
         placeholder: 'Select Employee'
     })
 
-    filterButton.addEventListener('click', ()=>{
-        filterModal.show()
-    })
 
     document.addEventListener("DOMContentLoaded", function () {
         const diagramContainer = document.querySelector('.col-12');
@@ -386,18 +383,22 @@
         }
     });
 
-    document.getElementById("stocktake-search").addEventListener("keyup", function () {
-        const input = this.value.toLowerCase();
-        const rows = document.querySelectorAll("#stocktake_table tbody tr");
-
-        rows.forEach(function (row) {
-            const text = row.textContent.toLowerCase();
-            if (text.includes(input)) {
-                row.style.display = "";
-            } else {
-                row.style.display = "none";
-            }
-        });
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchInput = document.getElementById("stocktake-search");
+        if (searchInput) {
+            searchInput.addEventListener("keyup", function () {
+                const input = this.value.toLowerCase();
+                const rows = document.querySelectorAll("#stocktake_table tbody tr");
+                rows.forEach(function (row) {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(input)) {
+                        row.style.display = "";
+                    } else {
+                        row.style.display = "none";
+                    }
+                });
+            });
+        }
     });
 
     function showAccpetModal(id){
