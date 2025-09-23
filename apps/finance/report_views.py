@@ -27,7 +27,7 @@ def get_transactions_preview(request):
         transactions = transactions.filter(issue_date__gte=start_date)
     if end_date:
         transactions = transactions.filter(issue_date__lte=end_date)
-    
+
     # Apply transaction type filter
     if transaction_type == 'cash_in':
         transactions = transactions.filter(credit=True)
