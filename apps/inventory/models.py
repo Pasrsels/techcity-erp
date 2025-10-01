@@ -445,7 +445,7 @@ class ActivityLog(models.Model):
     """Model for activity logs."""
 
     ACTION_CHOICES = [
-        ('stock in', 'stock in'),
+        ('transfer in', 'transfer in'),
         ('Stock update', 'Stock update'),
         ('stock adjustment', 'stock adjustment'),
         ('update', 'Update'),

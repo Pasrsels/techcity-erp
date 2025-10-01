@@ -1,11 +1,14 @@
 <div class="offcanvas offcanvas-end" style="width: 30%; background-color:#f6f6f6" tabindex="-1" id="offcanvasIncome" aria-labelledby="offcanvasIncomeLabel">
     <div class="offcanvas-header p-4 justify-content-around">
-        <button class="btn bg-white text-danger" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExpense" aria-controls="offcanvasExpense" type="button">
-            <i class="bx bx-minus-circle"></i> Expense
-        </button>
-        <button class="btn bg-white text-dark" data-bs-toggle="offcanvas" data-bs-target="#offcanvasTransfer" aria-controls="offcanvasTransfer" type="button">
-            <i class="bx bx-transfer"></i> Transfers
-        </button>
+        <button class="btn bg-danger text-white" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExpense" aria-controls="offcanvasExpense" type="button">
+                Expense
+            </button>
+            <button class="btn bg-success text-white" data-bs-toggle="offcanvas" data-bs-target="#offcanvasIncome" aria-controls="offcanvasIncome" type="button">
+                Income
+            </button>
+            <button class="btn bg-secondary text-white" data-bs-toggle="offcanvas" data-bs-target="#offcanvasTransfer" aria-controls="offcanvasTransfer" type="button">
+                Transfers
+            </button>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     
@@ -51,9 +54,13 @@
                     <input type="text" class="field-input" placeholder="Title" id="incomeTitle" required>
                 </div>
 
-                <div class="mb-3">
+                 <div class="mb-3">
                     <div class="dropdown w-100">
-                        <button type="button" class="field-input text-black dropdown-toggle" data-bs-toggle="offcanvas" data-bs-target="#offcanvasCategory" aria-controls="offcanvasCategory" style="cursor: pointer; border: none; background: #d7d8da; text-align: left; color: #9ca3af;" >
+                        <button type="button" class="field-input text-black w-100" 
+                                style="cursor: pointer; border: none; background: #d7d8da; text-align: center; color: #9ca3af;" 
+                                data-bs-toggle="offcanvas" 
+                                data-bs-target="#offcanvasCategory" 
+                                data-type="income">
                             Select or add category
                         </button>
                     </div>
@@ -159,3 +166,5 @@
         </form>
     </div>
 </div>
+
+{% include 'cashbook/canvas/category.html' %} 

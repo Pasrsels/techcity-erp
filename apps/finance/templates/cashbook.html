@@ -4,26 +4,31 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/finance/cashbook.css' %}">
 
+<div class="header p-0">
+    <div class="header-options d-flex justify-content-between mt-2">
+        <button class="back-btn bg-light border-0 ps-4" type="button"><i class="bx bx-arrow-back"></i></button>
+        <p class="header-title d-flex justify-content-center mb-0" style="font-size:1.5em;">Transactions</p>
+        <div class="justify-content-end pe-4 gap-2">
+            <button class="filter-btn text-success border-0 dropdown-toggle" type="button" data-bs-toggle="dropdown">By Date</button>
+            <button class="filter-btn text-success border-0 dropdown-toggle" type="button" data-bs-toggle="dropdown">USD</button>
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid p-4" style="max-width: 1750px;">
     <div class="d-flex justify-content-between w-100 flex-wrap">
         <div class="mb-3">
             <h4 class="mb-2">Cashbook</h4>
             <p class="text-muted mb-0">Manage and create cashbook transactions</p>
         </div>
-        <div class="finance-buttons align-items-center d-flex gap-3 pe-4">
-            <button class="btn bg-white text-success" data-bs-toggle="offcanvas" data-bs-target="#offcanvasIncome" aria-controls="offcanvasIncome" type="button">
-                <i class="bx bx-plus-circle"></i> Income
-            </button>
-            <button class="btn bg-white text-danger" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExpense" aria-controls="offcanvasExpense" type="button">
-                <i class="bx bx-minus-circle"></i> Expense
-            </button>
-            <button class="btn bg-white text-dark" data-bs-toggle="offcanvas" data-bs-target="#offcanvasTransfer" aria-controls="offcanvasTransfer" type="button">
-                <i class="bx bx-transfer"></i> Transfers
+        <div class="finance-buttons align-items-center d-flex gap-3 pe-2">
+            <button class="btn text-success" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExpense" aria-controls="offcanvasExpense" type="button">
+                Record transaction
             </button>
         </div>
     </div>
     
-    <div class="p-3 w-100">
+    <div class="p-0 w-100">
         <div class="justify-content-between p-2 mt-2 mb-4">
             <div class="row g-3">
                 <div class="col-md-4">
@@ -33,7 +38,7 @@
                                 <h5 class="card-subtitle mb-2 text-muted">Cash In</h5>
                             </div>
                             <div class="text-end">
-                                <h5 class="mb-4" id="cashInAmount">
+                                <h5 class="mb-3" id="cashInAmount">
                                     <i class="bx bx-dollar"></i>0.00
                                 </h5>
                             </div>
@@ -47,7 +52,7 @@
                                 <h5 class="card-subtitle mb-2 text-muted">Cash Out</h5>
                             </div>
                             <div class="text-end">
-                                <h5 class="mb-4" id="cashOutAmount">
+                                <h5 class="mb-3" id="cashOutAmount">
                                     <i class="bx bx-dollar"></i>0.00
                                 </h5>
                             </div>
@@ -61,7 +66,7 @@
                                 <h5 class="card-subtitle mb-2 text-muted">Balance</h5>
                             </div>
                             <div class="text-end">
-                                <h5 class="mb-4" id="balanceAmount">
+                                <h5 class="mb-3" id="balanceAmount">
                                     <i class="bx bx-dollar"></i>0.00
                                 </h5>
                             </div>
@@ -72,75 +77,201 @@
         </div>
     </div>
 
-
-    <div class='d-flex filter-tabs justify-content-around align-items-center filter-tabs-mobile flex-wrap'>
-        <th><button class="filter-btn" id="search"><i class="bx bx-search"></i></button></th>
-        <th><button class="filter-btn active" data-filter="all">Transaction</button></th>
-        <th><button class="filter-btn" data-filter="persons">Persons</button></th>
-        <th><button class="filter-btn" data-filter="branches">Branches</button></th>
-        <th><button class="filter-btn" data-filter="mode">Mode</button></th>
-        <th><button class="filter-btn" data-filter="categories">Categories</button></th>
-        <th><button class="filter-btn" data-filter="logs">Logs</button></th>
-    </div>
-
-    <div class="table-responsive">
-        <table class="table table-borderless w-100 mb-0">
-            <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>USD 100.00</td>
-                    <td>John Doe</td>
-                    <td>Harare</td>
-                    <td>Cash</td>
-                    <td>Sales</td>
-                    <td>2025-09-16</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>USD 250.00</td>
-                    <td>Jane Smith</td>
-                    <td>Mutare</td>
-                    <td>Bank</td>
-                    <td>Purchase</td>
-                    <td>2025-09-15</td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td>USD 75.00</td>
-                    <td>Mike Brown</td>
-                    <td>Head Office</td>
-                    <td>Wallet</td>
-                    <td>Refund</td>
-                    <td>2025-09-14</td>
-                </tr>
-                <tr>
-                    <td>4</td>
-                    <td>USD 500.00</td>
-                    <td>Lisa White</td>
-                    <td>Harare</td>
-                    <td>Cash</td>
-                    <td>Deposit</td>
-                    <td>2025-09-13</td>
-                </tr>
-                <tr>
-                    <td>5</td>
-                    <td>USD 320.00</td>
-                    <td>Chris Green</td>
-                    <td>Mutare</td>
-                    <td>Bank</td>
-                    <td>Withdrawal</td>
-                    <td>2025-09-12</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
         
-    <div id="noData" class="no-data d-none">
-        <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
-        <h5>No transactions found</h5>
-        <p class="text-muted">Add some transactions to get started</p>
-    </div>
+        <div class="bg-white rounded shadow-sm">
+                <div class="filter-section d-flex justify-content-between mb-2">
+                    <button class="filter-btn" id="search">
+                        <i class="bx bx-search"></i>
+                    </button>
 
+                    <div class="dropdown justify-content-end">
+                        <button class="filter-btn dropdown-toggle justify-content-end" type="button" data-bs-toggle="dropdown">
+                            Logs
+                        </button>
+                        <ul class="dropdown-menu" id="logs-dropdown">
+                            <li><a class="dropdown-item" href="#" data-filter="log" data-value="all">All Logs</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" data-filter="log" data-value="Edited">Edited</a></li>
+                            <li><a class="dropdown-item" href="#" data-filter="log" data-value="Deleted">Deleted</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+            <div class="content-section active" id="all-section">
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table class="table table-borderless w-100 mb-0">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <div class="dropdown">
+                                            <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                Transaction
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item active" href="#" data-filter="all">Transactions</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="transaction" data-value="income">Income</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="transaction" data-value="expenses">Expenses</a></li>
+                                            </ul>
+                                        </div>
+                                    </th>
+                                    <th>Amount</th>
+                                    <th>
+                                        <div class="dropdown">
+                                            <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                Persons
+                                            </button>
+                                            <ul class="dropdown-menu" id="persons-dropdown">
+                                                <li><a class="dropdown-item active" href="#" data-filter="person" data-value="all">Persons</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><i class="bx bx-search ms-2"></i><input type="search" name="a" class="form-control bg-light border-0" id="id_search" placeholder="Search..."></li>
+                                                <div class="justify-content-between">
+                                                    <li><button class="btn text-primary" type="button">View Contacts</button></li>
+                                                     <li><button class="btn text-primary" type="button">Add Person</button></li>                                                    
+                                            </ul>
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div class="dropdown">
+                                            <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                Branches
+                                            </button>
+                                            <ul class="dropdown-menu" id="branches-dropdown">
+                                                <li><a class="dropdown-item active" href="#" data-filter="branch" data-value="all">Branches</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="branch" data-value="Harare">Harare</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="branch" data-value="Mutare">PC Pasels</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="branch" data-value="Head Office">Mutare</a></li>
+                                            </ul>
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div class="dropdown">
+                                            <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                Mode
+                                            </button>
+                                            <ul class="dropdown-menu" id="mode-dropdown">
+                                                <li><a class="dropdown-item active" href="#" data-filter="mode" data-value="all">All Modes</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Cash">Cash</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Bank">Bank</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Ecocash">Ecocash</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Pay Pal">Pay Pal</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Cheque">Cheque</a></li>
+                                            </ul>
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div class="dropdown">
+                                            <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                Categories
+                                            </button>
+                                            <ul class="dropdown-menu" id="categories-dropdown">
+                                                <li><a class="dropdown-item active" href="#" data-filter="category" data-value="all">Categories</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Car">Car</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Lunch">Lunch</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Bike">Bike</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Phone">Phone</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Laptop">Laptop</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Home">Home</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Monthly">Monthly</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Bonus">Bonus</a></li>
+                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Freelance">Freelance</a></li>
+                                            </ul>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            
+                            <tbody id="transaction-tbody">
+                                <tr>
+                                    <td>2025-09-16</td>
+                                    <td>USD 100.00</td>
+                                    <td>John Doe</td>
+                                    <td>Harare</td>
+                                    <td>Cash</td>
+                                    <td>Sales</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-09-15</td>
+                                    <td>USD 250.50</td>
+                                    <td>Jane Smith</td>
+                                    <td>Mutare</td>
+                                    <td>Bank</td>
+                                    <td>Purchase</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-09-14</td>
+                                    <td>USD 75.25</td>
+                                    <td>Bob Johnson</td>
+                                    <td>Head Office</td>
+                                    <td>Ecocash</td>
+                                    <td>Refund</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-09-13</td>
+                                    <td>USD 500.00</td>
+                                    <td>Alice Brown</td>
+                                    <td>Harare</td>
+                                    <td>Cheque</td>
+                                    <td>Deposit</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-09-12</td>
+                                    <td>USD 125.75</td>
+                                    <td>Charlie Davis</td>
+                                    <td>Mutare</td>
+                                    <td>Wallet</td>
+                                    <td>Withdrawal</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-09-11</td>
+                                    <td>USD 300.00</td>
+                                    <td>Diana Wilson</td>
+                                    <td>Head Office</td>
+                                    <td>Pay Pal</td>
+                                    <td>Sales</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-09-10</td>
+                                    <td>USD 87.50</td>
+                                    <td>Edward Moore</td>
+                                    <td>Harare</td>
+                                    <td>Cash</td>
+                                    <td>Lunch</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-09-09</td>
+                                    <td>USD 1200.00</td>
+                                    <td>Fiona Taylor</td>
+                                    <td>Mutare</td>
+                                    <td>Bank</td>
+                                    <td>Laptop</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-09-08</td>
+                                    <td>USD 45.25</td>
+                                    <td>George Anderson</td>
+                                    <td>Head Office</td>
+                                    <td>Ecocash</td>
+                                    <td>Phone</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-09-07</td>
+                                    <td>USD 2500.00</td>
+                                    <td>Hannah Thomas</td>
+                                    <td>Harare</td>
+                                    <td>Cheque</td>
+                                    <td>Bonus</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+        </div>
+    </div>
     <!-- canvases -->
     {% include 'cashbook/canvas/income_canvas.html' %} <!-- income -->
     {% include 'cashbook/canvas/expense_canvas.html' %} <!-- expense -->

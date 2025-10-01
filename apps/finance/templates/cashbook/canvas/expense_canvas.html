@@ -1,11 +1,14 @@
 <div class="offcanvas offcanvas-end" style="width: 30%; background-color: #f6f6f6;" tabindex="-1" id="offcanvasExpense" aria-labelledby="offcanvasExpenseLabel">
     <div class="offcanvas-header p-4 justify-content-around">
-        <button class="btn bg-white text-success" data-bs-toggle="offcanvas" data-bs-target="#offcanvasIncome" aria-controls="offcanvasIncome" type="button">
-            <i class="bx bx-plus-circle"></i> Income
-        </button>
-        <button class="btn bg-white text-dark" data-bs-toggle="offcanvas" data-bs-target="#offcanvasTransfer" aria-controls="offcanvasTransfer" type="button">
-            <i class="bx bx-transfer"></i> Transfers
-        </button>
+        <button class="btn bg-danger text-white" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExpense" aria-controls="offcanvasExpense" type="button">
+                Expense
+            </button>
+            <button class="btn bg-success text-white" data-bs-toggle="offcanvas" data-bs-target="#offcanvasIncome" aria-controls="offcanvasIncome" type="button">
+                Income
+            </button>
+            <button class="btn bg-secondary text-white" data-bs-toggle="offcanvas" data-bs-target="#offcanvasTransfer" aria-controls="offcanvasTransfer" type="button">
+                Transfers
+            </button>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
 
@@ -53,7 +56,11 @@
 
                     <div class="mb-3">
                         <div class="dropdown w-100">
-                            <button type="button" class="field-input text-black dropdown-toggle" style="cursor: pointer; border: none; background: #d7d8da; text-align: left; color: #9ca3af;" data-bs-toggle="offcanvas" data-bs-target="#offcanvasCategory" aria-controls="offcanvasCategory">
+                             <button type="button" class="field-input text-black w-100" 
+                                    style="cursor: pointer; border: none; background: #d7d8da; text-align: center; color: #9ca3af;" 
+                                    data-bs-toggle="offcanvas" 
+                                    data-bs-target="#offcanvasCategory" 
+                                    data-type="expense">
                                 Select or add category
                             </button>
                         </div>
@@ -160,7 +167,7 @@
     </div>
 </div>
 
-<div class="offcanvas offcanvas-end" style="width: 40%; background-color: #f8f9fa;" tabindex="-1" id="loanSettingsOffcanvas" aria-labelledby="loanSettingsLabel" data-parent-canvas="offcanvasExpense">
+<div class="offcanvas offcanvas-end" style="width: 35%; background-color: #f8f9fa;" tabindex="-1" id="loanSettingsOffcanvas" aria-labelledby="loanSettingsLabel" data-parent-canvas="offcanvasExpense">
     <div class="offcanvas-header" style="border:none;">
         <h5 class="offcanvas-title fw-bold text-success" id="loanSettingsLabel">
             <i class="fas fa-handshake me-2"></i>Loan Settings
@@ -178,7 +185,8 @@
                 <div class="form-floating mb-3" style="border:none;">
                     <input type="number" class="form-control" id="principalAmount" placeholder="0.0" min="0" step="0.01">
                     <label for="principalAmount">Enter Principal Amount</label>
-                </div>
+                </div>nd: #e9ecef; color: #6c757d; border: none; border-radius: 0 20px 20px 0; padding: 12px 24px; font-weight: 600; font-size: 14px;">
+                Expense
             </div>
 
             <div class="mb-4" style="border:none;">
@@ -409,7 +417,7 @@
                     </div>
                     <div class="col-md-6 mb-3" style="border:none;">
                         <div class="form-floating" style="border:none;">
-                            <select class="form-select" id="approvalRoles" multiple>
+                            <select class="form-select" id="approvalRoles">
                                 <option value="manager">Manager</option>
                                 <option value="senior_manager">Senior Manager</option>
                             </select>
@@ -434,3 +442,5 @@
         </form>
     </div>
 </div>
+
+{% include 'cashbook/canvas/category.html' %} 

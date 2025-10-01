@@ -1,56 +1,561 @@
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasCategory" aria-labelledby="offcanvasCategoryLabel1">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasCategoryLabel1">Categories</h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-        <div class="incomeCat">
-            <div class="d-flex gap-2 mb-3">
-                <button class="btn btn-success flex-fill">Income</button>
-                <button class="btn btn-outline-secondary flex-fill">Expense</button>
-            </div>
-            
-            <div class="mb-4">
-                <h6 class="mb-3"><i class="bi bi-currency-dollar"></i> Salary</h6>
-                <div class="d-flex gap-2 mb-3">
-                    <span class="badge bg-light text-dark px-3 py-2">Monthly</span>
-                    <span class="badge bg-light text-dark px-3 py-2">Bonus</span>
-                    <span class="badge bg-light text-dark px-3 py-2">Freelance</span>
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <h6 class="mb-3"><i class="bi bi-graph-up"></i> Investment</h6>
-                <div class="d-flex gap-2 mb-3">
-                    <span class="badge bg-light text-dark px-3 py-2">Stocks</span>
-                    <span class="badge bg-light text-dark px-3 py-2">Real Estate</span>
-                    <span class="badge bg-light text-dark px-3 py-2">Dividends</span>
-                </div>
-            </div>
-        </div>
-           
-        <div class="expenseCat">
-            <div class="mb-4">
-                <h6 class="mb-3"><i class="bi bi-house"></i> Housing</h6>
-                <div class="d-flex gap-2 mb-3">
-                    <span class="badge bg-light text-dark px-3 py-2">Rent</span>
-                    <span class="badge bg-light text-dark px-3 py-2">Utilities</span>
-                    <span class="badge bg-light text-dark px-3 py-2">Maintenance</span>
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <h6 class="mb-3"><i class="bi bi-car-front"></i> Transportation</h6>
-                <div class="d-flex gap-2 mb-3">
-                    <span class="badge bg-light text-dark px-3 py-2">Fuel</span>
-                    <span class="badge bg-light text-dark px-3 py-2">Insurance</span>
-                    <span class="badge bg-light text-dark px-3 py-2">Maintenance</span>
-                </div>
-            </div>
-        </div>
-
-            <button class="btn btn-outline-primary w-100">
-                <i class="bi bi-plus-circle"></i> Add New Category
+<div class="offcanvas offcanvas-end" style="width: 25%; background-color: #f6f6f6;" tabindex="-1" id="offcanvasCategory" aria-labelledby="offcanvasCategoryLabel">
+ <div class="header" style="display: flex; align-items: center; justify-content: space-between; padding: 16px; background: white; border-bottom: 1px solid #e9ecef;">
+    <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
+            <button type="button" class="btn-close-custom" data-bs-dismiss="offcanvas" aria-label="Close" style="background: none; border: none; font-size: 20px; color: #333;">
+                <i class="bx bx-chevron-left"></i>
             </button>
+            <input type="text" placeholder="search categories" style="flex: 1; background: #f1f3f4; border: none; border-radius: 20px; padding: 8px 16px; font-size: 14px; color: #666;">
+        </div>
+        <div style="display: flex; gap: 16px; margin-left: 16px;">
+            <button id="headerAddCategoryBtn" style="background: none; border: none; font-size: 20px; color: #17a2b8;">
+                <i class="bx bx-plus"></i>
+            </button>
+            <button id="headerEditBtn" style="background: none; border: none; font-size: 20px; color: #17a2b8;">
+                <i class="bx bx-edit"></i>
+            </button>
+            <button id="headerDeleteBtn" style="background: none; border: none; font-size: 20px; color: #dc3545;">
+                <i class="bx bx-trash"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="offcanvas-body" style="padding: 0; background: #f8f9fa;">
+        <div id="categoriesContainer" style="padding: 0 16px;">
+            <div id="incomeCategories" class="categories-section">
+                <div class="category-group" style="margin-bottom: 32px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 24px; height: 24px; background: #20c997; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                            <span style="color: white; font-size: 16px; font-weight: 600;">$</span>
+                        </div>
+                        <h6 style="margin: 0; font-size: 16px; font-weight: 600; color: #333;">Salary</h6>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-left: 36px;">
+                        <span class="category-badge" data-category="Monthly" data-type="income" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Monthly</span>
+                        <span class="category-badge" data-category="Bonus" data-type="income" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Bonus</span>
+                        <span class="category-badge" data-category="Freelance" data-type="income" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Freelance</span>
+                    </div>
+                </div>
+
+                <div class="category-group" style="margin-bottom: 32px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 24px; height: 24px; background: #20c997; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bx bx-trending-up" style="color: white; font-size: 14px;"></i>
+                        </div>
+                        <h6 style="margin: 0; font-size: 16px; font-weight: 600; color: #333;">Investment</h6>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-left: 36px;">
+                        <span class="category-badge" data-category="Stocks" data-type="income" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Stocks</span>
+                        <span class="category-badge" data-category="Real Estate" data-type="income" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Real Estate</span>
+                        <span class="category-badge" data-category="Dividends" data-type="income" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Dividends</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="expenseCategories" class="categories-section" style="display: none;">
+                <div class="category-group" style="margin-bottom: 32px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 24px; height: 24px; background: #dc3545; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bx bx-home" style="color: white; font-size: 14px;"></i>
+                        </div>
+                        <h6 style="margin: 0; font-size: 16px; font-weight: 600; color: #333;">Housing</h6>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-left: 36px;">
+                        <span class="category-badge" data-category="Rent" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Rent</span>
+                        <span class="category-badge" data-category="Utilities" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Utilities</span>
+                        <span class="category-badge" data-category="Maintenance" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Maintenance</span>
+                        <span class="category-badge" data-category="Insurance" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Insurance</span>
+                    </div>
+                </div>
+
+                <div class="category-group" style="margin-bottom: 32px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 24px; height: 24px; background: #dc3545; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bx bx-car" style="color: white; font-size: 14px;"></i>
+                        </div>
+                        <h6 style="margin: 0; font-size: 16px; font-weight: 600; color: #333;">Transportation</h6>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-left: 36px;">
+                        <span class="category-badge" data-category="Fuel" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Fuel</span>
+                        <span class="category-badge" data-category="Car Insurance" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Car Insurance</span>
+                        <span class="category-badge" data-category="Car Maintenance" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Car Maintenance</span>
+                        <span class="category-badge" data-category="Public Transport" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Public Transport</span>
+                    </div>
+                </div>
+
+                <div class="category-group" style="margin-bottom: 32px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 24px; height: 24px; background: #dc3545; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bx bx-restaurant" style="color: white; font-size: 14px;"></i>
+                        </div>
+                        <h6 style="margin: 0; font-size: 16px; font-weight: 600; color: #333;">Food & Dining</h6>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-left: 36px;">
+                        <span class="category-badge" data-category="Groceries" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Groceries</span>
+                        <span class="category-badge" data-category="Restaurant" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Restaurant</span>
+                        <span class="category-badge" data-category="Fast Food" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Fast Food</span>
+                        <span class="category-badge" data-category="Coffee" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Coffee</span>
+                    </div>
+                </div>
+
+                <div class="category-group" style="margin-bottom: 32px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 24px; height: 24px; background: #dc3545; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bx bx-plus-medical" style="color: white; font-size: 14px;"></i>
+                        </div>
+                        <h6 style="margin: 0; font-size: 16px; font-weight: 600; color: #333;">Healthcare</h6>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-left: 36px;">
+                        <span class="category-badge" data-category="Medical Bills" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Medical Bills</span>
+                        <span class="category-badge" data-category="Pharmacy" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Pharmacy</span>
+                        <span class="category-badge" data-category="Dental" data-type="expense" style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">Dental</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 0 16px 32px 16px;">
+            <button id="addNewCategoryBtn" style="width: 100%; background: none; border: none; color: #17a2b8; font-size: 16px; font-weight: 500; padding: 16px; text-align: center;">
+                <i class="bx bx-plus-circle" style="margin-right: 8px; color: #17a2b8;"></i>
+                Add New Category
+            </button>
+        </div>
     </div>
 </div>
+
+<style>
+.category-badge {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.category-badge:hover {
+    background-color: #007bff !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0, 123, 255, 0.3);
+}
+
+.selected-category {
+    background-color: #007bff !important;
+    color: white !important;
+    border-color: #007bff !important;
+}
+</style>
+
+<script>
+class CategoryManager {
+    constructor() {
+        this.currentType = 'income';
+        this.selectedCategory = null;
+        this.pendingSubcategories = [];
+        this.categories = {
+            income: {
+                'Salary': ['Monthly', 'Bonus', 'Freelance'],
+                'Investment': ['Stocks', 'Real Estate', 'Dividends']
+            },
+            expense: {
+                'Housing': ['Rent', 'Utilities', 'Maintenance', 'Insurance'],
+                'Transportation': ['Fuel', 'Car Insurance', 'Car Maintenance', 'Public Transport'],
+                'Food & Dining': ['Groceries', 'Restaurant', 'Fast Food', 'Coffee'],
+                'Healthcare': ['Medical Bills', 'Pharmacy', 'Dental']
+            }
+        };
+        
+        this.init();
+    }
+    
+    init() {
+        this.bindEvents();
+    }
+    
+    bindEvents() {
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('category-badge')) {
+                this.selectCategory(e.target);
+            }
+        });
+        
+        const addBtn = document.getElementById('addNewCategoryBtn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => this.showAddCategoryForm());
+        }
+        
+        const headerAddBtn = document.getElementById('headerAddCategoryBtn');
+        if (headerAddBtn) {
+            headerAddBtn.addEventListener('click', () => this.showAddCategoryForm());
+        }
+        
+        const editBtn = document.getElementById('headerEditBtn');
+        if (editBtn) {
+            editBtn.addEventListener('click', () => this.toggleEditMode());
+        }
+        
+        const deleteBtn = document.getElementById('headerDeleteBtn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => this.toggleEditMode());
+        }
+        
+        const offcanvas = document.getElementById('offcanvasCategory');
+        if (offcanvas) {
+            offcanvas.addEventListener('show.bs.offcanvas', (e) => {
+                const triggerButton = e.relatedTarget;
+                const type = triggerButton ? triggerButton.getAttribute('data-type') : 'income';
+                this.switchType(type);
+            });
+        }
+        
+        const searchInput = document.querySelector('input[placeholder*="search"]');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => this.searchCategories(e.target.value));
+        }
+    }
+    
+    switchType(type) {
+        this.currentType = type;
+        
+        if (type === 'income') {
+            document.getElementById('incomeCategories').style.display = 'block';
+            document.getElementById('expenseCategories').style.display = 'none';
+        } else {
+            document.getElementById('incomeCategories').style.display = 'none';
+            document.getElementById('expenseCategories').style.display = 'block';
+        }
+    }
+    
+    selectCategory(element) {
+        document.querySelectorAll('.category-badge').forEach(badge => {
+            badge.classList.remove('selected-category');
+        });
+        
+        element.classList.add('selected-category');
+        
+        this.selectedCategory = {
+            name: element.getAttribute('data-category'),
+            type: element.getAttribute('data-type')
+        };
+        
+        const categoryButtons = document.querySelectorAll('[data-bs-target="#offcanvasCategory"]');
+        categoryButtons.forEach(button => {
+            if (this.selectedCategory) {
+                button.textContent = this.selectedCategory.name;
+                button.style.color = '#000';
+            }
+        });
+        
+        setTimeout(() => {
+            const offcanvasEl = document.getElementById('offcanvasCategory');
+            const offcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
+            if (offcanvas) offcanvas.hide();
+        }, 300);
+    }
+    
+    showAddCategoryForm() {
+        const isIncome = this.currentType === 'income';
+        const titleColor = isIncome ? '#20c997' : '#dc3545';
+        const titleText = isIncome ? 'Add New Income Category' : 'Add New Expense Category';
+        
+        this.pendingSubcategories = [];
+        
+        const overlay = document.createElement('div');
+        overlay.id = 'categoryFormOverlay';
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+        `;
+        
+        overlay.innerHTML = `
+            <div style="background: white; padding: 30px; border-radius: 16px; max-width: 500px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                <h3 style="color: ${titleColor}; font-size: 20px; font-weight: 600; margin-bottom: 20px;">
+                    ${titleText}
+                </h3>
+                
+                <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                    <input type="text" id="mainCategoryName" placeholder="Add Main Category" 
+                        style="flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                    <button type="button" id="selectIconBtn"
+                        style="padding: 12px 20px; border: 2px solid #e0e0e0; border-radius: 8px; background: white; cursor: pointer;">
+                        Select Icon
+                    </button>
+                </div>
+                
+                <div style="display: flex; gap: 12px; margin-bottom: 15px;">
+                    <input type="text" id="subcategoryName" placeholder="Add Subcategory name" 
+                        style="flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                    <button type="button" id="addSubcategoryBtn"
+                        style="padding: 12px 24px; border: 2px solid #17a2b8; border-radius: 8px; background: white; color: #17a2b8; cursor: pointer; font-weight: 500;">
+                        Add
+                    </button>
+                </div>
+                
+                <div id="subcategoriesList" style="margin-bottom: 20px; max-height: 120px; overflow-y: auto;"></div>
+                
+                <div style="display: flex; gap: 12px;">
+                    <button type="button" id="closeCategoryForm"
+                        style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #6c757d; color: white; cursor: pointer; font-weight: 500;">
+                        Close
+                    </button>
+                    <button type="button" id="saveCategoryForm"
+                        style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #28a745; color: white; cursor: pointer; font-weight: 500;">
+                        Save
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        this.setupFormHandlers();
+    }
+    
+    setupFormHandlers() {
+        const mainInput = document.getElementById('mainCategoryName');
+        const subInput = document.getElementById('subcategoryName');
+        const addSubBtn = document.getElementById('addSubcategoryBtn');
+        const closeBtn = document.getElementById('closeCategoryForm');
+        const saveBtn = document.getElementById('saveCategoryForm');
+        const selectIconBtn = document.getElementById('selectIconBtn');
+        const overlay = document.getElementById('categoryFormOverlay');
+        
+        addSubBtn.onclick = () => this.addSubcategory();
+        closeBtn.onclick = () => this.closeForm();
+        saveBtn.onclick = () => this.saveCategory();
+        selectIconBtn.onclick = () => this.showIconPicker();
+        
+        subInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.addSubcategory();
+            }
+        });
+        
+        overlay.onclick = (e) => {
+            if (e.target === overlay) this.closeForm();
+        };
+        
+        this.validateForm();
+    }
+    
+    addSubcategory() {
+        const input = document.getElementById('subcategoryName');
+        const name = input.value.trim();
+        
+        if (!name) {
+            alert('Please enter a subcategory name');
+            return;
+        }
+        
+        if (this.pendingSubcategories.includes(name)) {
+            alert('Subcategory already added');
+            return;
+        }
+        
+        this.pendingSubcategories.push(name);
+        
+        const list = document.getElementById('subcategoriesList');
+        const item = document.createElement('div');
+        item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px;';
+        item.innerHTML = `
+            <span style="font-size: 14px;">${name}</span>
+            <button type="button" style="background: #dc3545; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 14px;">×</button>
+        `;
+        
+        item.querySelector('button').onclick = () => {
+            const idx = this.pendingSubcategories.indexOf(name);
+            if (idx > -1) this.pendingSubcategories.splice(idx, 1);
+            item.remove();
+            this.validateForm();
+        };
+        
+        list.appendChild(item);
+        input.value = '';
+        this.validateForm();
+    }
+    
+    validateForm() {
+        const mainInput = document.getElementById('mainCategoryName');
+        const saveBtn = document.getElementById('saveCategoryForm');
+        
+        if (!mainInput || !saveBtn) return;
+        
+        const isValid = mainInput.value.trim() && this.pendingSubcategories.length > 0;
+        saveBtn.disabled = !isValid;
+        saveBtn.style.opacity = isValid ? '1' : '0.5';
+        saveBtn.style.cursor = isValid ? 'pointer' : 'not-allowed';
+    }
+    
+    saveCategory() {
+        const mainInput = document.getElementById('mainCategoryName');
+        const mainCategory = mainInput.value.trim();
+        
+        if (!mainCategory || this.pendingSubcategories.length === 0) {
+            alert('Please enter a main category and at least one subcategory');
+            return;
+        }
+        
+        if (!this.categories[this.currentType][mainCategory]) {
+            this.categories[this.currentType][mainCategory] = [];
+        }
+        
+        this.pendingSubcategories.forEach(sub => {
+            if (!this.categories[this.currentType][mainCategory].includes(sub)) {
+                this.categories[this.currentType][mainCategory].push(sub);
+            }
+        });
+        
+        this.addMainCategoryToDOM(mainCategory);
+        this.closeForm();
+        alert(`Category "${mainCategory}" added successfully!`);
+    }
+    
+    addMainCategoryToDOM(mainCategory) {
+        const container = document.getElementById(this.currentType + 'Categories');
+        const color = this.currentType === 'income' ? '#20c997' : '#dc3545';
+        const iconBtn = document.getElementById('selectIconBtn');
+        const icon = iconBtn?.getAttribute('data-icon') || '📁';
+        
+        const group = document.createElement('div');
+        group.className = 'category-group';
+        group.style.cssText = 'margin-bottom: 32px;';
+        group.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div style="width: 24px; height: 24px; background: ${color}; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                    <span style="font-size: 14px;">${icon}</span>
+                </div>
+                <h6 style="margin: 0; font-size: 16px; font-weight: 600; color: #333;">${mainCategory}</h6>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-left: 36px;">
+                ${this.pendingSubcategories.map(sub => `
+                    <span class="category-badge" data-category="${sub}" data-type="${this.currentType}" 
+                        style="background: #e9ecef; color: #495057; padding: 8px 16px; border-radius: 16px; font-size: 14px; cursor: pointer; border: none;">
+                        ${sub}
+                    </span>
+                `).join('')}
+            </div>
+        `;
+        
+        container.appendChild(group);
+    }
+    
+    showIconPicker() {
+        const icons = ['💰', '📊', '🏠', '🚗', '🍽️', '🏥', '💼', '📈', '🎯', '⭐', '🎓', '🎮', '✈️', '🛍️'];
+        
+        const picker = document.createElement('div');
+        picker.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 10001;';
+        picker.innerHTML = `
+            <h4 style="margin-bottom: 15px; text-align: center; font-size: 16px;">Select an Icon</h4>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 15px;">
+                ${icons.map(icon => `
+                    <button type="button" class="icon-btn" data-icon="${icon}" 
+                        style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: white; font-size: 20px; cursor: pointer;">
+                        ${icon}
+                    </button>
+                `).join('')}
+            </div>
+            <button type="button" id="closeIconPicker" 
+                style="width: 100%; padding: 10px; border: none; background: #6c757d; color: white; border-radius: 8px; cursor: pointer;">
+                Close
+            </button>
+        `;
+        
+        document.body.appendChild(picker);
+        
+        picker.querySelectorAll('.icon-btn').forEach(btn => {
+            btn.onclick = () => {
+                const icon = btn.getAttribute('data-icon');
+                const selectBtn = document.getElementById('selectIconBtn');
+                if (selectBtn) {
+                    selectBtn.textContent = icon;
+                    selectBtn.setAttribute('data-icon', icon);
+                }
+                picker.remove();
+            };
+        });
+        
+        picker.querySelector('#closeIconPicker').onclick = () => picker.remove();
+    }
+    
+    closeForm() {
+        const overlay = document.getElementById('categoryFormOverlay');
+        if (overlay) overlay.remove();
+    }
+    
+    searchCategories(query) {
+        const term = query.toLowerCase().trim();
+        const container = document.getElementById(this.currentType + 'Categories');
+        
+        if (!container) return;
+        
+        const badges = container.querySelectorAll('.category-badge');
+        const groups = container.querySelectorAll('.category-group');
+        
+        if (!term) {
+            badges.forEach(b => b.style.display = '');
+            groups.forEach(g => g.style.display = '');
+            return;
+        }
+        
+        groups.forEach(group => {
+            const groupBadges = group.querySelectorAll('.category-badge');
+            let hasVisible = false;
+            
+            groupBadges.forEach(badge => {
+                if (badge.textContent.toLowerCase().includes(term)) {
+                    badge.style.display = '';
+                    hasVisible = true;
+                } else {
+                    badge.style.display = 'none';
+                }
+            });
+            
+            group.style.display = hasVisible ? '' : 'none';
+        });
+    }
+    
+    toggleEditMode() {
+        const badges = document.querySelectorAll('.category-badge');
+        const isEditMode = document.body.classList.contains('edit-mode');
+        
+        if (isEditMode) {
+            document.body.classList.remove('edit-mode');
+            badges.forEach(badge => {
+                const deleteBtn = badge.querySelector('.delete-btn');
+                if (deleteBtn) deleteBtn.remove();
+            });
+        } else {
+            document.body.classList.add('edit-mode');
+            badges.forEach(badge => {
+                badge.style.position = 'relative';
+                const deleteBtn = document.createElement('span');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.style.cssText = 'position: absolute; top: -5px; right: -5px; background: #dc3545; color: white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; z-index: 10;';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Delete "${badge.textContent}"?`)) {
+                        badge.remove();
+                    }
+                };
+                badge.appendChild(deleteBtn);
+            });
+        }
+    }
+    
+    getSelectedCategory() {
+        return this.selectedCategory;
+    }
+    
+    resetSelection() {
+        this.selectedCategory = null;
+        document.querySelectorAll('.category-badge').forEach(badge => {
+            badge.classList.remove('selected-category');
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('offcanvasCategory')) {
+        window.categoryManager = new CategoryManager();
+    }
+});
+</script>

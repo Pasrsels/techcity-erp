@@ -344,12 +344,11 @@
     border: none;
     font-weight: 600;
     color: #495057;
-    padding: 0;
+    padding: 10px;
 }
 
 .table td {
     border: none;
-    padding: 0 15px 15px 0;
     width: 17.5%;
     vertical-align: middle;
 }
@@ -360,6 +359,28 @@
 
 .table tbody tr:hover {
     background-color: #f8f9fa;
+}
+
+.table td:last-child, 
+.table th:last-child {
+    min-width: 120px;
+    white-space: nowrap;
+}
+
+.table th:first-child {
+    padding-left: 150px;
+}
+
+.table td:first-child{
+    padding-left: 40px;
+}
+
+.table th:not(:first-child) {
+    padding-right: 110px;
+}
+
+.table td:not(:first-child) {
+    padding-right: 150px;
 }
 
 .amount-positive {
@@ -399,12 +420,106 @@
     padding: 40px;
     color: #6c757d;
 }
+.content-area {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 1rem;
+}
 
-.search-box {
-    border: 2px solid #e9ecef;
-    border-radius: 10px;
-    padding: 10px 15px;
-    margin-bottom: 20px;
+.filter-tabs {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+
+.filter-btn {
+    background: none;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.filter-btn:hover {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.filter-btn.active {
+    background-color: #198754;
+    color: white;
+}
+
+.dropdown-menu {
+    border: 1px solid #e9ecef;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 0.5rem 0;
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    color: #495057;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #198754;
+}
+
+.dropdown-item.active {
+    background-color: #198754;
+    color: white;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.search-popup {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-popup-content {
+    width: 90%;
+    max-width: 500px;
+}
+
+.no-data {
+    color: #6c757d;
+}
+
+.filtered-row {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .filter-tabs {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .filter-btn {
+        width: 100%;
+        text-align: left;
+    }
 }
 
 @media (max-width: 768px) {
