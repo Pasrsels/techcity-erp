@@ -52,7 +52,6 @@
                         </div>
                     </div>
             
-                    <!-- Mobile Dropdown -->
                     <div class="d-md-none">
                         <button
                             class="btn btn-outline-dark btn-sm dropdown-toggle"
@@ -64,18 +63,18 @@
                             Menu
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-                            <li class="dropdown-item bg-light"> <!-- Light background -->
+                            <li class="dropdown-item bg-light">
                                 <a href="{% url 'inventory:add_transfer' %}" class="text-dark">
                                     <i class="bx bx-plus"></i>
                                     Transfer
                                 </a>
                             </li>
-                            <li class="dropdown-item bg-white"> <!-- White background -->
+                            <li class="dropdown-item bg-white"> 
                                 <a href="{% url 'inventory:over_less_list_stock' %}" class="text-dark flick">
                                     Over/Less Received Stocks
                                 </a>
                             </li>
-                            <li class="dropdown-item bg-light"> <!-- Light background -->
+                            <li class="dropdown-item bg-light"> 
                                 <button class="btn btn-secondary btn-sm w-100 pdf-gen">
                                     Transfers Report
                                     <i class="bx bx-file text-light"></i>

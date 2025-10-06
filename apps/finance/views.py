@@ -88,12 +88,6 @@ import imghdr, base64
 from django.core.files.base import ContentFile
 from django.db.models.functions import ExtractMonth 
 import calendar 
- 
-# load global zimra instance
-zimra = ZIMRA()
-
-load_dotenv()
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -101,6 +95,13 @@ from django.db.models import Sum
 from .models import CashUp, Invoice, Expense
 from django.utils import timezone
 from apps.finance.services import create_invoice_service
+from apps.inventory.models import StocktakeItem
+from apps.inventory.utils import process_stocktake_item_util
+
+# load global zimra instance
+zimra = ZIMRA()
+
+load_dotenv()
 
 def get_previous_month():
     first_day_of_current_month = datetime.datetime.now().replace(day=1)
@@ -1106,6 +1107,7 @@ def paylater(request):
     return JsonResponse({'success':True, 'data':list(paylaters)})
 
 def paylater_details(request, paylater_id):
+    
     logger.info(f'paylater_id: {paylater_id}')
     paylater = Paylater.objects.filter(id=paylater_id).select_related('invoice', 'invoice__customer').values(
         'id',
@@ -1127,6 +1129,8 @@ def paylater_details(request, paylater_id):
         'amount_paid',
         'paid'
     )
+
+    logger.info(f'paylater: {paylater_dates}')
     
     return JsonResponse({'success':True, 'data':list(paylater), 'payment_schedule':list(paylater_dates)})
 
@@ -10507,7 +10511,11 @@ def delete_invoice(request, invoice_id):
                 product.quantity += abs(stock_transaction.quantity)
                 product.save()
 
-                logger.info(f'product quantity {stock_transaction.quantity}')
+                stocktake_item = StocktakeItem.objects.filter(product=product, stocktake__status=False, still_open=True).first()
+                if stocktake_item:
+                    stocktake_item.sold_quantity += stock_transaction.quantity
+                    stocktake_item.save()
+                    process_stocktake_item_util(stocktake_item, stock_transaction.quantity)
 
                 ActivityLog.objects.create(
                     invoice=invoice,
@@ -10559,7 +10567,7 @@ def process_paylater_payment(request):
             payment_method = data.get('payment_method')
             payment_date = data.get('payment_date')
             
-            if not paylater_id or not amount or not payment_method or not payment_date:
+            if not paylater_id or not payment_method or not payment_date:
                 return JsonResponse({'success': False, 'message': 'All fields are required.'}, status=400)
             
             paylater = Paylater.objects.get(id=paylater_id)

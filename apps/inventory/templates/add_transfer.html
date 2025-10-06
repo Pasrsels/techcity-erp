@@ -287,7 +287,7 @@
       }
 
   if (userRole === 'sales'){
-      salesPerson = true
+      salesPerson = true;
     }
 
     new SlimSelect({
@@ -317,7 +317,7 @@
     document.getElementById('toggleButton').addEventListener('click', function() {
         let branchesDiv = document.getElementById('div_id_transfer_to');
         let toggleIcon = document.getElementById('toggleIcon');
-        let text = document.getElementById('id_text')
+        let text = document.getElementById('id_text');
 
         // Toggle visibility
         if (branchesDiv.style.display === "none") {
@@ -842,11 +842,13 @@
                     text: 'Your transfer has been successfully processed.',
                     icon: 'success',
                     confirmButtonText: 'OK'
-                })
+                }).then(() => {
+                    localStorage.removeItem('transfers');
+                    window.location.href = '/inventory/transfers/';
+                });
             }
         });
     } 
-
 
   function getCookie(name) {
     let cookieValue = null;

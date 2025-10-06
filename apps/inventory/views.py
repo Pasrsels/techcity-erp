@@ -393,7 +393,6 @@ class ProcessTransferCartView(LoginRequiredMixin, View):
 
                         stocktake_item = StocktakeItem.objects.filter(still_open=True, stocktake__branch=request.user.branch, product=inventory).first()
                         
-                        logger.info(stocktake_item)
 
                         if stocktake_item:
                             stocktake_item.transfer_quantity -= transfer_item.quantity
@@ -467,6 +466,11 @@ def delete_transfer(request, transfer_id):
                 product = update['product']
                 product.quantity += update['increment']
                 inventory_updates.append(product)
+
+                stocktake_item = StocktakeItem.objects.filter(still_open=True, stocktake__branch=request.user.branch, product=product).first()
+                if stocktake_item:  
+                    stocktake_item.transfer_quantity += update['increment']
+                    process_stocktake_item_util(stocktake_item, -update['increment'])
 
                 activity_logs.append(ActivityLog(
                     invoice=None,
@@ -768,8 +772,7 @@ def edit_inventory(request, product_id):
                 Inventory.objects.filter(name__exact=product.name)
             )
             
-            logger.info(f'Products: {inv_products}')
-
+            logger.info(f'Products: {inv_products}') 
             if request.method == 'POST':
                 try:
                     selling_price = Decimal(request.POST.get('price', 0))
@@ -1232,28 +1235,14 @@ def receive_inventory(request):
             received = True
 
             branch_transfer = get_object_or_404(TransferItems, id=transfer_id)
-            logger.info(branch_transfer)
             transfer_obj = get_object_or_404(Transfer, id=branch_transfer.transfer.id)
-            logger.info(transfer_obj)
-
-            # if quantity_received > branch_transfer.quantity:
-            #     return JsonResponse({'success': False, 'message': 'Quantity received cannot be more than quantity transferred'}, status=400)
-
-            logger.info(branch_transfer)
-
+        
             if received:
                 logger.info(received)
                 if quantity_received != branch_transfer.quantity:
                     branch_transfer.over_less_quantity = branch_transfer.quantity - quantity_received
                     branch_transfer.over_less = True
                     branch_transfer.save()
-                
-                logger.info(branch_transfer)
-
-                # # validation for more quantity received
-                # if quantity_received > branch_transfer.quantity:
-                #     return JsonResponse({'success': False, 'message': 'Quantity received cannot be more than quantity transferred'}, status=400)
-
                 
                 with transaction.atomic():
                     product, created = Inventory.objects.get_or_create(
@@ -1277,6 +1266,12 @@ def receive_inventory(request):
                         product.cost = branch_transfer.cost
                         product.dealer_price = branch_transfer.dealer_price
                         product.save()
+
+                    stocktake_item = StocktakeItem.objects.filter(still_open=True, stocktake__branch=request.user.branch, product=product).first()
+                    if stocktake_item:
+                        stocktake_item.transfer_quantity += quantity_received
+                        stocktake_item.save()
+                        process_stocktake_item_util(stocktake_item, quantity_received)
 
                     ActivityLog.objects.create(
                         branch=request.user.branch,
@@ -1312,12 +1307,12 @@ def receive_inventory(request):
                 transfer_obj.receive_status = True
                 transfer_obj.save()
                 
-            stocktake_item = StocktakeItem.objects.filter(still_open=True, stocktake__branch=request.user.branch, product=branch_transfer.product).first()
+            # stocktake_item = StocktakeItem.objects.filter(still_open=True, stocktake__branch=request.user.branch, product=branch_transfer.product).first()
             
-            if stocktake_item:
-                stocktake_item.transfer_quantity += quantity_received
-                stocktake_item.save()
-                process_stocktake_item_util(stocktake_item, quantity_received)
+            # if stocktake_item:
+            #     stocktake_item.transfer_quantity += quantity_received
+            #     stocktake_item.save()
+            #     process_stocktake_item_util(stocktake_item, quantity_received)
 
             return JsonResponse({'success': True, 'message': 'Product received successfully'}, status=200)
         except TransferItems.DoesNotExist:
@@ -2849,7 +2844,11 @@ def process_received_order(request):
             order_item.received = True
             
             stocktake_item = StocktakeItem.objects.filter(product=order_item.product, stocktake__branch=request.user.branch, still_open=True).first()
-            
+            if stocktake_item:
+                stocktake_item.received_quantity += quantity
+                stocktake_item.save()
+                process_stocktake_item_util(stocktake_item, quantity)
+
             # Update or create inventory
             system_quantity = 0 # if new product
             try:
@@ -2874,14 +2873,7 @@ def process_received_order(request):
 
                     inventory.cost = Decimal(round(cost, 2))
                     
-                    logger.info(f'Inventory cost: {inventory.cost}')
-                    
                     inventory.save()
-                    
-                    if stocktake_item:
-                        stocktake_item.received_quantity += quantity
-                        stocktake_item.save()
-                        process_stocktake_item_util(stocktake_item, quantity)
                     
                     log = ActivityLog(
                         purchase_order=order_item.purchase_order,

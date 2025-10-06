@@ -161,6 +161,8 @@ def update_stocktake_item(product_id, quantity):
         stocktake_item = StocktakeItem.objects.get(product_id=product_id, stocktake__status=False, still_open=True)
         stocktake_item.sold_quantity += quantity
         stocktake_item.save()
+
+        logger.info(f"Processing stocktake item for product_id={product_id} with quantity={quantity}")
         
         process_stocktake_item_util(stocktake_item, stocktake_item.quantity)
         logger.info(f"Updated StocktakeItem for product_id={product_id} with quantity={quantity}")
