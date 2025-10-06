@@ -4,59 +4,113 @@
         <div class="col-12 mt-2 mb-2">
             <h5 class="text-dark fw-bold">{{ date_key }}</h5>
         </div>
-
         {% for log in data.logs %}
-        <div class="col-12 mb-2">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h6 class="card-title mb-0">{{ log.inventory.name }}</h6>
-                        <span class="badge bg-success bg-success-subtle text-success rounded-pill">{{ log.action }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between">
+            <div class="col-12 mb-2">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title mb-0">
+                                {{ log.inventory.name }}
+                                <button type="button" 
+                                        class="btn btn-sm ms-1 border-0 p-0" 
+                                        onclick="showActivityModal({{ log.inventory.id }})"
+                                        aria-label="View activity details">
+                                    <i class="bx bx-info-circle text-primary fs-5"></i>
+                                </button>
+                            </h6>
+                            <span class="badge bg-success bg-success-subtle text-success rounded-pill">{{ log.action }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="bx bx-user"></i> {{ log.user.username }}
+                                </small>
+                                <span class="badge bg-light text-dark">
+                                    <i class="bx bx-box"></i> × {{ log.quantity }}
+                                </span>
+                            </p>
+                            <p class="card-text">
+                                <span class="text-muted fw-bold">
+                                    ${{ log.inventory.cost|default:log.inventory.price }}
+                                </span>
+                            </p>
+                        </div>
                         <p class="card-text">
                             <small class="text-muted">
-                                <i class="bx bx-user"></i> {{ log.user.username }}
+                                <i class="bx bx-time"></i> {{ log.timestamp|time:"H:i A" }}
                             </small>
-                            <span class="badge bg-light text-dark">
-                                <i class="bx bx-box"></i> × {{ log.quantity }}
-                            </span>
-                        </p>
-                        <p class="card-text">
-                            <span class="text-muted fw-bold">
-                                {% if log.inventory.cost %}
-                                    ${{ log.inventory.cost }}
-                                {% else %}
-                                    ${{ log.inventory.price }}
-                                {% endif %}
-                            </span>
                         </p>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Activity Info Modal -->
+            <div class="modal fade" id="activityModal" tabindex="-1" aria-labelledby="activityModalLabel{{ log.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="activityModalLabel{{ log.id }}">
+                                <i class="bx bx-info-circle text-primary"></i> Inventory Activity Log
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" id='activityBody'>
+                            {% comment %} populate by js {% endcomment %}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         {% endfor %}
     {% endfor %}
 </div>
 
 <!-- Infinite scroll trigger -->
-<tr id="loading-indicator"
-    hx-get="{% url 'inventory:logs-page' %}?page={{ next_page }}"
-    hx-trigger="revealed"
-    hx-indicator="#spinner"
-    hx-swap="beforebegin">
-    <td colspan="4" class="text-center">
-        <div id="spinner" class="spinner-border spinner-border-sm" role="status" style="display:none">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    </td>
-</tr>
+<div id="loading-indicator"
+     hx-get="{% url 'inventory:logs-page' %}?page={{ next_page }}"
+     hx-trigger="revealed"
+     hx-indicator="#spinner"
+     hx-swap="beforebegin"
+     class="col-12 text-center py-3">
+    <div id="spinner" class="spinner-border spinner-border-sm" role="status" style="display:none">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
 
 <script>
+    function showActivityModal(id) {
+        const modal = new bootstrap.Modal(document.getElementById(`activityModal`));
+        fetch(`/inventory/stocktake/detail/${id}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ inventory_id: id })
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.info(data, 'data');
+                const modalBody = document.getElementById('activityBody');
+                if (data.success) {
+                    modalBody.innerHTML = data.html;
+                } else {
+                    modalBody.innerHTML = `<div class="text-danger">${data.message}</div>`;
+                }
+                modal.show();
+            })
+            .catch(error => console.error('Error fetching activity details:', error));
+    }
+
     document.body.addEventListener('htmx:afterOnLoad', function(event) {
-        if (event.detail.xhr.responseText.trim() === "" || 
+        if (event.detail.xhr.responseText.trim() === "" ||
             event.detail.xhr.getResponseHeader('X-No-More-Data') === 'true') {
-            document.getElementById('loading-indicator').remove();
+            const indicator = document.getElementById('loading-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
         }
     });
 </script>

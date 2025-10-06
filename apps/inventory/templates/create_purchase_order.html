@@ -96,6 +96,7 @@
   .search-input {
       width: 100%;
       padding: 15px 50px 15px 20px;
+      margin-left: 20px;
       border-radius: var(--border-radius);
       background: var(--glass);
       border: 1px solid var(--glass-border);
@@ -127,18 +128,18 @@
 </style>
 <div class="inventory">
   <div class='add-purchase-order'>
-    <div class='p-2'>
+    <div class='p-2 ms-2'>
       <div>
         <h4>Create Purchase order</h4>
         <p> Add purchase order items </p>
       </div>
     </div>
-    <div class="row mt-2 main" id="main-section">
+    <div class="row mt-2 main ms-2" id="main-section">
       <div class="col-9">
         <div class="d-flex flex-column rounded p-2" style="background: #fff;">
           <div class="search-container bg-white border rounded">
             <input type="text" id="search-input" class="search-input" placeholder="Search products..." oninput="searchTable()" style='text-align:left;'>
-              <i class="fas fa-search search-icon"></i>
+              <i class="fas fa-search search-icon ms-2"></i>
           </div>
           <table class="table table-borderless rounder p-2" id="cart-table">
             <thead class='background'>
@@ -200,7 +201,7 @@
       </div>
       <div class="col-3 rounded" style="background: #fff;">
         <div class=''>
-          <p id="cart-title" class="fw-bold fs-6 mt-3 background p-2 rounded text-white">Add Product</p>
+          <p id="cart-title" class="fw-bold fs-6 mt-3 me-1 background p-2 rounded text-white">Add Product</p>
           <form class='d-flex flex-column mt-2 w-100 mt-2 w-100 px-2' method='post'>
             {% csrf_token %}
             <div class="mb-1 position-relative">
@@ -270,6 +271,19 @@
                 <option value="15">Standard (15%)</option>
               </select>
             </div>
+           <div class="mb-3 mt-2">
+            <h6 class="fw-bold">Available in</h6>
+            <div class="d-flex flex-column justify-content-between">
+              {% for branch in branches %}
+              <div id="branch" class="form-check">
+                <input type="checkbox" name="{{branch.name}}" class="checkboxinput form-check-input" id="{{branch.id}}">
+                <label for="{{branch.name}}" class="form-check-label">
+                  {{ branch.name }}
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
             <div class='d-flex justify-content-end mt-2'>
               <button type='button' class='btn-save w-100' id="id_add_to_cart" onclick="addItem();">
                 <i class='bx bx-save'></i>
@@ -457,7 +471,7 @@
             </select>
           </div>
           <div id="div_id_name" class="mb-3 form-group">
-            <label for="id_name" class="form-label requiredField">
+            <label for="id_name" class="form-label ">
               Product Image
               <span class="asteriskField">*</span>
             </label>
@@ -488,6 +502,9 @@
               <button class='btn border small' type="button" id='id_add_category'>
                 <i class='bx bx-plus'></i>
               </button>
+              <button class='btn border small' type="button" id='settings'>
+                <i class='bx bx-cog'></i>
+              </button>
             </div>
           </div>
           <div id="div_id_tax_type" class="mb-3">
@@ -502,6 +519,19 @@
               <option value="zero rated">Zero Rated</option>
             </select>
           </div>
+          <div class="mb-3">
+            <h6 class="fw-bold">Available in</h6>
+            <div class="d-flex flex-column justify-content-between">
+              {% for branch in branches %}
+              <div id="branch" class="form-check">
+                <input type="checkbox" name="{{branch.name}}" class="checkboxinput form-check-input" id="{{branch.id}}">
+                <label for="{{branch.name}}" class="form-check-label">
+                  {{ branch.name }}
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
           <div id="div_id_min_stock_level" class="mb-3">
             <label for="id_min_stock_level" class="form-label requiredField">
               Min stock level
@@ -511,11 +541,10 @@
               id="id_min_stock_level">
           </div>
           <div id="div_id_description" class="mb-3">
-            <label for="id_description" class="form-label requiredField">
+            <label for="id_description" class="form-label">
               Description<span class="asteriskField">*</span>
             </label>
-            <textarea name="description" cols="20" rows="2" class="textarea form-control" required
-              id="id_description"></textarea>
+            <textarea name="description" cols="20" rows="2" class="textarea form-control"></textarea>
           </div>
           <div class="mb-3">
             <div id="div_id_end_of_day" class="form-check">
@@ -855,30 +884,102 @@
   }
 
   // edit product modal call
-  const editModal = () => {
-    console.info(prodData)
-    if (prodData.length > 0 && prodData[0].length > 0) {
-      console.info('here');
-      document.getElementById('title').textContent = `Edit Product: ${prodData[0][0].name.toUpperCase()}`;
-      document.getElementById('id_name').value = prodData[0][0].name;
-      document.getElementById('id_min_stock_level').value = prodData[0][0].min_stock_level;
-      document.getElementById('id_description').value = prodData[0][0].description;
-      document.getElementById('id_tax_type').value = prodData[0][0].tax_type;
-      document.getElementById('id_category').value = prodData[0][0].category_id;
-      document.getElementById('id_image').value = '';
-    }
-    supplierFormModal.show()
+  const editModal = async () => {
+      const productSelect = document.getElementById('id_product');
+      const productId = productSelect.value;
+      
+      if (!productId) {
+          Swal.fire({
+              icon: 'warning',
+              title: 'No Product Selected',
+              text: 'Please select a product to edit.'
+          });
+          return;
+      }
+
+      try {
+          Swal.fire({
+              title: 'Loading product data...',
+              allowOutsideClick: false,
+              didOpen: () => {
+                  Swal.showLoading();
+              }
+          });
+
+          const response = await fetch(`/inventory/inventory/?id=${productId}`);
+          const data = await response.json();
+          
+          Swal.close();
+          
+          if (data && data.length > 0) {
+              const product = data[0];
+              
+              productID = productId;
+              
+              document.getElementById('title').textContent = `Edit Product: ${product.name.toUpperCase()}`;
+              document.getElementById('id_name').value = product.name || '';
+              document.getElementById('id_min_stock_level').value = product.min_stock_level || 0;
+              document.getElementById('id_tax_type').value = product.tax_type || '';
+              document.getElementById('id_category').value = product.category_id || '';
+              document.getElementById('id_end_of_day').checked = product.end_of_day || false;
+              document.getElementById('id_service').checked = product.service || false;
+              
+              document.getElementById('id_image').value = '';
+              
+              // Uncheck all branches first
+              const branchCheckboxes = document.querySelectorAll('#addProductModal #branch input[type="checkbox"]');
+              branchCheckboxes.forEach(checkbox => {
+                  checkbox.checked = false;
+              });
+              
+              // Check the branches where product is available
+              if (product.branches && Array.isArray(product.branches)) {
+                  product.branches.forEach(branchId => {
+                      const checkbox = document.querySelector(`#addProductModal #branch input[id="${branchId}"]`);
+                      if (checkbox) {
+                          checkbox.checked = true;
+                      }
+                  });
+              }
+              
+              supplierFormModal.show();
+          } else {
+              Swal.fire({
+                  icon: 'error',
+                  title: 'Product Not Found',
+                  text: 'Could not load product data.'
+              });
+          }
+      } catch (error) {
+          Swal.close();
+          console.error('Error fetching product data:', error);
+          Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Failed to load product data. Please try again.'
+          });
+      }
   };
 
   function clearForm() {
-    document.getElementById('id_name').value = '';
-    document.getElementById('id_min_stock_level').value = '';
-    document.getElementById('id_description').value = '';
-    document.getElementById('id_p_quantity').value = '';
-    document.getElementById('id_image').textContent = '';
-    document.getElementById('title').innerHTML = '';
-    productID = ''
+      document.getElementById('id_name').value = '';
+      document.getElementById('id_min_stock_level').value = '';
+      document.getElementById('id_p_quantity').value = '';
+      document.getElementById('id_image').textContent = '';
+      document.getElementById('title').innerHTML = 'Add Product'; // Set default title
+      productID = '';
+      
+      const branchCheckboxes = document.querySelectorAll('#addProductModal #branch input[type="checkbox"]');
+      branchCheckboxes.forEach(checkbox => {
+          checkbox.checked = false;
+      });
   }
+
+  productBtn.addEventListener('click', () => {
+      clearForm();
+      document.getElementById('title').textContent = 'Add Product';
+      supplierFormModal.show();
+  })
 
   // delete product 
   const deleteProduct = async () => {
@@ -972,7 +1073,7 @@
     //  count += 1;
   })
 
-  document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
 
     $('#id_product').select2({
       placeholder: 'Select Product',
@@ -985,9 +1086,14 @@
 
       console.log(productId, 'product id');
 
-      getProductData(productId)
-      getBestSupplierPrices(productId)
-
+      if (productId) {
+        getProductData(productId);
+        getBestSupplierPrices(productId);
+        displayProductBranches(productId); // Add this line
+      } else {
+        // Clear branches if no product selected
+        clearProductBranches();
+      }
     });
   });
 
@@ -1309,8 +1415,8 @@
       catElement.innerHTML += `<option value=${category.id}>${category.name}</option>`
     })
   }
+  
   const processProdData = async (file) => {
-
     const readFile = (file) =>
       new Promise((resolve, reject) => {
         if (!file) {
@@ -1331,22 +1437,30 @@
         category: document.getElementById('id_category').value.trim(),
         tax_type: document.getElementById('id_tax_type').value.trim(),
         min_stock_level: parseInt(document.getElementById('id_min_stock_level').value, 10) || 0,
-        description: document.getElementById('id_description').value.trim(),
+        description: document.getElementById('id_description')?.value.trim() || '',
         end_of_day: document.getElementById('id_end_of_day').checked,
         service: document.getElementById('id_service').checked,
-        image: image,
       };
+      
+      if (image) {
+        data.image = image;
+      }
+      
       return data;
     } catch (error) {
-      console.error('Error reading file:', error);
-      alert('Failed to process the image. Please try again.');
+      console.error('Error processing product data:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to process the product data. Please try again.'
+      });
       return null;
     }
-  }
+}
 
   const addProduct = async () => {
     const fileInput = document.getElementById('id_image');
-    const file = fileInput.files[0];
+    const file = fileInput.files[0] || null; // Handle case where no file is selected
 
     Swal.fire({
       title: 'Processing Product',
@@ -1357,58 +1471,74 @@
       }
     });
 
-    data = await processProdData(file)
+    // Get selected branches
+    const branchCheckboxes = document.querySelectorAll('#addProductModal #branch input[type="checkbox"]');
+    const selectedBranches = [];
+    branchCheckboxes.forEach(checkbox => {
+      if (checkbox.checked) {
+        selectedBranches.push(checkbox.id);
+      }
+    });
 
-    fetch("{% url 'inventory:product' %}", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": getCookie("csrftoken"),
-      },
-      body: JSON.stringify(data),
-    })
+    try {
+      const data = await processProdData(file);
+      
+      if (!data) {
+        Swal.close();
+        return; // Exit if data processing failed
+      }
+      
+      data.branches = selectedBranches; // Add branches to data
 
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          supplierFormModal.hide();
-          fetchProducts();
-          if (productID) {
-            Swal.fire({
-              icon: 'success',
-              title: 'Product successfully edited or deleted',
-              text: 'Success!',
-              timer: 2000,
-              showConfirmButton: false
-            });
+      const response = await fetch("{% url 'inventory:product' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify(data),
+      });
 
-          } else {
-            Swal.fire({
-              icon: 'success',
-              title: 'Product Added',
-              text: 'The product has been successfully added!',
-              timer: 2000,
-              showConfirmButton: false
-            });
-          }
-          clearForm()
-          prodData = []
+      const result = await response.json();
+      
+      if (result.success) {
+        supplierFormModal.hide();
+        fetchProducts();
+        if (productID) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Product successfully edited',
+            text: 'Success!',
+            timer: 2000,
+            showConfirmButton: false
+          });
         } else {
           Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: data.message,
+            icon: 'success',
+            title: 'Product Added',
+            text: 'The product has been successfully added!',
+            timer: 2000,
+            showConfirmButton: false
           });
         }
-      })
-      .catch((error) => {
+        clearForm();
+        prodData = [];
+      } else {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'Something went wrong while adding the product.',
+          text: result.message,
         });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Something went wrong while adding the product.',
       });
-  }
+    }
+}
 
   async function fetchProducts() {
     const productSelect = document.getElementById('id_product');
