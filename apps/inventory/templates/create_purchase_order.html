@@ -221,8 +221,8 @@
                   <div id="product_loader" class="spinner" style="display: none; position: absolute; top: 50%; right: 10px; transform: translateY(-50%); z-index: 10;"></div>
                 </div>
             
-                <button type="button" class="btn bx bx-edit border me-2" onclick="editModal()"></button>
-                <button type="button" class="btn bx bx-trash border me-2 m" onclick="deleteProduct()"></button>
+                <button type="button" class="btn bx bx-edit border me-1" onclick="editModal()"></button>
+                <button type="button" class="btn bx bx-trash border me-1" onclick="deleteProduct()"></button>
                 <button type="button" class="btn bx bx-plus border" id="id_add_supplier"></button>
               </div>
             </div>            
@@ -271,7 +271,7 @@
                 <option value="15">Standard (15%)</option>
               </select>
             </div>
-           <div class="mb-3 mt-2">
+           <div class="mb-3 mt-3">
             <h6 class="fw-bold">Available in</h6>
             <div class="d-flex flex-column justify-content-between">
               {% for branch in branches %}
@@ -361,7 +361,6 @@
                 </div>
                 <small id='id_error'></small>
                 <div class="d-flex justify-content-end">
-                  <div class="">
                     <button type="reset" class="btn btn-danger btn-sm w-100">
                       <i class='bx bx-reset'></i>
                       reset
@@ -523,7 +522,7 @@
             <h6 class="fw-bold">Available in</h6>
             <div class="d-flex flex-column justify-content-between">
               {% for branch in branches %}
-              <div id="branch" class="form-check">
+              <div id="branch" class="mb-3">
                 <input type="checkbox" name="{{branch.name}}" class="checkboxinput form-check-input" id="{{branch.id}}">
                 <label for="{{branch.name}}" class="form-check-label">
                   {{ branch.name }}
@@ -885,81 +884,83 @@
 
   // edit product modal call
   const editModal = async () => {
-      const productSelect = document.getElementById('id_product');
-      const productId = productSelect.value;
-      
-      if (!productId) {
-          Swal.fire({
-              icon: 'warning',
-              title: 'No Product Selected',
-              text: 'Please select a product to edit.'
-          });
-          return;
-      }
+    const productSelect = document.getElementById('id_product');
+    const productId = productSelect.value;
+    
+    if (!productId) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Product Selected',
+            text: 'Please select a product to edit.'
+        });
+        return;
+    }
 
-      try {
-          Swal.fire({
-              title: 'Loading product data...',
-              allowOutsideClick: false,
-              didOpen: () => {
-                  Swal.showLoading();
-              }
-          });
+    try {
+        Swal.fire({
+            title: 'Loading product data...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
-          const response = await fetch(`/inventory/inventory/?id=${productId}`);
-          const data = await response.json();
-          
-          Swal.close();
-          
-          if (data && data.length > 0) {
-              const product = data[0];
-              
-              productID = productId;
-              
-              document.getElementById('title').textContent = `Edit Product: ${product.name.toUpperCase()}`;
-              document.getElementById('id_name').value = product.name || '';
-              document.getElementById('id_min_stock_level').value = product.min_stock_level || 0;
-              document.getElementById('id_tax_type').value = product.tax_type || '';
-              document.getElementById('id_category').value = product.category_id || '';
-              document.getElementById('id_end_of_day').checked = product.end_of_day || false;
-              document.getElementById('id_service').checked = product.service || false;
-              
-              document.getElementById('id_image').value = '';
-              
-              // Uncheck all branches first
-              const branchCheckboxes = document.querySelectorAll('#addProductModal #branch input[type="checkbox"]');
-              branchCheckboxes.forEach(checkbox => {
-                  checkbox.checked = false;
-              });
-              
-              // Check the branches where product is available
-              if (product.branches && Array.isArray(product.branches)) {
-                  product.branches.forEach(branchId => {
-                      const checkbox = document.querySelector(`#addProductModal #branch input[id="${branchId}"]`);
-                      if (checkbox) {
-                          checkbox.checked = true;
-                      }
-                  });
-              }
-              
-              supplierFormModal.show();
-          } else {
-              Swal.fire({
-                  icon: 'error',
-                  title: 'Product Not Found',
-                  text: 'Could not load product data.'
-              });
-          }
-      } catch (error) {
-          Swal.close();
-          console.error('Error fetching product data:', error);
-          Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: 'Failed to load product data. Please try again.'
-          });
-      }
-  };
+        const response = await fetch(`/inventory/inventory/?id=${productId}`);
+        const data = await response.json();
+        
+        Swal.close();
+        
+        if (data && data.length > 0) {
+            const product = data[0];
+            
+            productID = productId;
+            
+            document.getElementById('title').textContent = `Edit Product: ${product.name.toUpperCase()}`;
+            document.getElementById('id_name').value = product.name || '';
+            document.getElementById('id_min_stock_level').value = product.min_stock_level || 0;
+            document.getElementById('id_tax_type').value = product.tax_type || '';
+            document.getElementById('id_category').value = product.category_id || '';
+            document.getElementById('id_end_of_day').checked = product.end_of_day || false;
+            document.getElementById('id_service').checked = product.service || false;
+            document.getElementById('id_image').value = '';
+
+            // Show branches where product is available
+            const branchContainer = document.querySelector('#addProductModal #branch');
+            branchContainer.innerHTML = ''; // Clear previous
+
+            // Assume you have a list of all branches available as `allBranches`
+            // Example: [{id: 1, name: "Branch A"}, {id: 2, name: "Branch B"}, ...]
+            // You may need to fetch this list if not available globally
+            const allBranches = window.allBranches || []; // Replace with your actual source
+
+            allBranches.forEach(branch => {
+                const checked = product.branches && product.branches.includes(branch.id) ? 'checked' : '';
+                branchContainer.innerHTML += `
+                    <label>
+                        <input type="checkbox" id="${branch.id}" ${checked}>
+                        ${branch.name}
+                    </label><br>
+                `;
+            });
+
+            supplierFormModal.show();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Product Not Found',
+                text: 'Could not load product data.'
+            });
+        }
+    } catch (error) {
+        Swal.close();
+        console.error('Error fetching product data:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to load product data. Please try again.'
+        });
+    }
+};
 
   function clearForm() {
       document.getElementById('id_name').value = '';
@@ -1459,85 +1460,83 @@ document.addEventListener('DOMContentLoaded', function () {
 }
 
   const addProduct = async () => {
-    const fileInput = document.getElementById('id_image');
-    const file = fileInput.files[0] || null; // Handle case where no file is selected
+  const fileInput = document.getElementById('id_image');
+  const file = fileInput.files[0] || null;
 
-    Swal.fire({
-      title: 'Processing Product',
-      text: 'Please wait...',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading()
-      }
+  Swal.fire({
+    title: 'Processing Product',
+    text: 'Please wait...',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading()
+    }
+  });
+
+  const branchCheckboxes = document.querySelectorAll('#addProductModal #branch input[type="checkbox"]');
+  const selectedBranches = [];
+  branchCheckboxes.forEach(checkbox => {
+    if (checkbox.checked) {
+      selectedBranches.push(checkbox.id);
+    }
+  });
+
+  try {
+    const data = await processProdData(file);
+
+    if (!data) {
+      Swal.close();
+      return;
+    }
+
+    data.branches = selectedBranches;
+
+    const response = await fetch("{% url 'inventory:product' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+      body: JSON.stringify(data),
     });
 
-    // Get selected branches
-    const branchCheckboxes = document.querySelectorAll('#addProductModal #branch input[type="checkbox"]');
-    const selectedBranches = [];
-    branchCheckboxes.forEach(checkbox => {
-      if (checkbox.checked) {
-        selectedBranches.push(checkbox.id);
-      }
-    });
+    const result = await response.json();
 
-    try {
-      const data = await processProdData(file);
-      
-      if (!data) {
-        Swal.close();
-        return; // Exit if data processing failed
-      }
-      
-      data.branches = selectedBranches; // Add branches to data
-
-      const response = await fetch("{% url 'inventory:product' %}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCookie("csrftoken"),
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        supplierFormModal.hide();
-        fetchProducts();
-        if (productID) {
-          Swal.fire({
-            icon: 'success',
-            title: 'Product successfully edited',
-            text: 'Success!',
-            timer: 2000,
-            showConfirmButton: false
-          });
-        } else {
-          Swal.fire({
-            icon: 'success',
-            title: 'Product Added',
-            text: 'The product has been successfully added!',
-            timer: 2000,
-            showConfirmButton: false
-          });
+    if (result.success) {
+      supplierFormModal.hide();
+      fetchProducts().then(() => {
+        if (result.product_id) {
+          const prodElement = document.getElementById('id_product');
+          prodElement.value = result.product_id;
+          prodElement.dispatchEvent(new Event('change'));
+          if ($(prodElement).data('select2')) {
+            $('#id_product').val(result.product_id).trigger('change');
+          }
         }
-        clearForm();
-        prodData = [];
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: result.message,
-        });
-      }
-    } catch (error) {
-      console.error('Error:', error);
+      });
+      Swal.fire({
+        icon: 'success',
+        title: productID ? 'Product successfully edited' : 'Product Added',
+        text: productID ? 'Success!' : 'The product has been successfully added!',
+        timer: 2000,
+        showConfirmButton: false
+      });
+      clearForm();
+      prodData = [];
+    } else {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'Something went wrong while adding the product.',
+        text: result.message,
       });
     }
+  } catch (error) {
+    console.error('Error:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Something went wrong while adding the product.',
+    });
+  }
 }
 
   async function fetchProducts() {
@@ -1777,11 +1776,21 @@ document.addEventListener('DOMContentLoaded', function () {
       const price = parseFloat(document.getElementById('id_p_price').value);
       const quantity = Number(document.getElementById('id_p_quantity').value);
 
-      if (!product || !quantity || !price || !supplier) {
+      const branchCheckboxes = document.querySelectorAll('#addProductModal input[type="checkbox"].checkboxinput');
+      const selectedBranchIds = [];
+      const selectedBranchNames = [];
+      branchCheckboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+          selectedBranchIds.push(checkbox.id);
+          selectedBranchNames.push(checkbox.nextElementSibling.textContent.trim());
+        }
+      });
+
+      if (!product || !quantity || !price || !supplier || selectedBranchIds.length === 0) {
         Swal.fire({
           icon: 'error',
           title: 'Missing Information',
-          text: 'Please fill in all the fields: Product, Quantity, Price, and Supplier.',
+          text: 'Please fill in all the fields and select at least one branch.',
         });
         return;
       }
@@ -1797,7 +1806,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
-      itemCount += 1;
+    itemCount += 1;
       const newTransfer = {
         count: itemCount,
         id: generateUniqueId(),
@@ -1807,14 +1816,10 @@ document.addEventListener('DOMContentLoaded', function () {
         price: price,
         supplierName: supplierName,
         supplier: supplier.value,
+        branches: selectedBranchNames // Store branch names for display
       };
 
       cart.push(newTransfer);
-      
-      // Save to localStorage
-      {% comment %} if (!LocalStorageHelper.saveCart(cart)) {
-        throw new Error('Failed to save cart to localStorage');
-      } {% endcomment %}
 
       updateCartDisplay();
       calculateTotals();

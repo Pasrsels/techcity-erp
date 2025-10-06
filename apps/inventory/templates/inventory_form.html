@@ -2,175 +2,453 @@
 {% load static%}
 {% load crispy_forms_tags %}
 {% block title%} Edit Inventory {% endblock%}
+
 {% block content %}
-   <div class="edit-inventory">
-        <div 
-            class="add-product-nav d-flex py-2 px-2 align-items-center shadow rounded justify-content-between align-items-center sticky-top bg-white" 
-            style="z-index: 1000;">
+<style>
+    .edit-inventory {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .product-header {
+        background: var(--primary-no-gradient);
+        color: white;
+        
+        padding: 24px 32px;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        margin-bottom: 24px;
+        position: sticky;
+        top: 20px;
+        z-index: 1000;
+    }
+
+    .product-header .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .product-header .back-btn {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        margin-right: 16px;
+    }
+
+    .product-header .back-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateX(-4px);
+    }
+
+    .product-header h5 {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0;
+        letter-spacing: 0.5px;
+    }
+
+    .product-header .logs-btn {
+        background: white;
+        color: var(--primary-no-gradient);
+        border: none;
+        padding: 10px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .product-header .logs-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.4);
+    }
+
+    .form-container {
+        background: white;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .form-grid .full-width {
+        grid-column: 1 / -1;
+    }
+
+    .mb-3 {
+        margin-bottom: 0 !important;
+    }
+
+    .form-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .asteriskField {
+        color: #ef4444;
+        margin-left: 2px;
+    }
+
+    .form-control, .form-select {
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 15px;
+        transition: all 0.2s ease;
+        width: 100%;
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        background: white;
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .category-wrapper .d-flex {
+        gap: 8px;
+    }
+
+    .category-wrapper .form-select {
+        flex: 1;
+    }
+
+    #id_add_category {
+        background: var(--primary-no-gradient);
+        border: none;
+        color: white;
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        padding: 0;
+    }
+
+    #id_add_category:hover {
+        background: #5568d3;
+        transform: scale(1.05);
+    }
+
+    #id_add_category i {
+        font-size: 20px;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 2px solid #f3f4f6;
+    }
+
+    .form-actions .btn {
+        padding: 12px 32px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .btn-danger {
+        background: white;
+        border: 2px solid #e5e7eb !important;
+        color: #6b7280;
+    }
+
+    .btn-danger:hover {
+        border-color: #ef4444 !important;
+        color: #ef4444;
+        background: #fef2f2;
+    }
+
+    .btn-secondary {
+        background: var(--primary-no-gradient);
+        color: white;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-secondary:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+    }
+
+    .text-danger {
+        font-size: 13px;
+        margin-top: 4px;
+        display: block;
+    }
+
+    .modal-content {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-body {
+        padding: 32px;
+    }
+
+    .add-product-category-nav h6 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .modal .form-control {
+        margin-top: 8px;
+    }
+
+    .modal .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .modal .btn i {
+        margin-right: 4px;
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .product-header {
+            padding: 20px;
+        }
+
+        .form-container {
+            padding: 24px 20px;
+        }
+
+        .product-header .header-content {
+            flex-direction: column;
+            gap: 16px;
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<div class="edit-inventory">
+    <div class="product-header">
+        <div class="header-content">
             <div class="d-flex align-items-center">
                 <div class="hint--bottom" aria-label="products">
-                    <a href="{% url 'inventory:inventory' %}" class="btn btn-outline-dark bx bx-left-arrow-alt" ></a>
+                    <a href="{% url 'inventory:inventory' %}" class="back-btn bx bx-left-arrow-alt"></a>
                 </div>
-                <h5 class="fw-normal px-2 text-uppercase">Edit / Update Product - {{ product.name }}</h5>
+                <h5>EDIT / UPDATE PRODUCT - {{ product.name }}</h5>
             </div>
             <div>
-                <a href="{% url 'inventory:inventory_detail' product.id %}" class="btn btn-outline-dark btn-sm">Logs</a>
-            </div>
-        </div>
-
-        <form method="post" class="rounded border mt-2 p-2">
-            {% csrf_token %}
-            <div id="div_id_name" class="mb-3">
-                <label for="id_name" class="form-label requiredField">
-                   Name
-                   <span class="asteriskField">*</span> 
-               </label> 
-               <input 
-                   type="text" 
-                   name="name" 
-                   value='{{product.name}}'
-                   class="textinput form-control" 
-                   required id="id_name"
-               > 
-           </div>
-           <div id="div_id_category form-group" class="mb-3"> 
-            <label for="id_category" class="form-label requiredField" >
-                Category<span class="asteriskField">*</span> 
-            </label> 
-            <div class='d-flex align-items-center'>
-                <select name="category" class="select form-select" value="{{product.category}}" required id="id_category"> 
-                    {% for category in categories %}
-                        <option value="{{ category.id }}">{{ category.name }}</option> 
-                    {% endfor %}
-                </select> 
-                <button class='btn border small' type="button" id='id_add_category'>
-                    <i class='bx bx-plus'></i>
-                </button>
-            </div>
-        </div> 
-            <div id="div_id_cost" class="mb-3"> 
-                <label for="id_cost" class="form-label requiredField">
-                    Cost
-                    <span class="asteriskField">*</span> 
-                </label>
-                <input type="number" name="cost" value={{product.cost}} step="0.01" class="numberinput form-control" required id="id_cost"> 
-                <p id="cost_error" class="fs-6 text-danger"></p>
-            </div> 
-            <div id="div_id_price" class="mb-3"> 
-                <label for="id_price" class="form-label requiredField">
-                    Price
-                    <span class="asteriskField">*</span> 
-                </label> 
-                <input type="number" name="price" value={{product.price}} step="0.01" class="numberinput form-control" required id="id_price">
-                <p id="price_error" class="fs-6 text-danger"></p>
-            </div>
-            <div id="div_id_dealer_price" class="mb-3">
-                <label for="id_dealer_price" class="form-label requiredField">
-                    Wholesale Price
-                    <span class="asteriskField">*</span>
-                </label>
-                <input type="number" name="dealer_price" value={{product.dealer_price}} step="0.01" class="numberinput form-control" required id="id_dealer_price">
-                <p id="price_error" class="fs-6 text-danger"></p>
-            </div>
-            <div id="div_id_quantity" class="mb-3"> 
-                <label for="id_quantity" class="form-label requiredField">
-                    Quantity
-                    <span class="asteriskField">*</span> 
-                </label> 
-                <input type="number" name="quantity" value={{product.quantity}} class="numberinput form-control" required id="id_quantit"> 
-                <p id="quantity_error" class="fs-6 text-danger"></p>
-            </div>
-            <div id="div_id_min_stock_level" class="mb-3"> 
-                <label for="id_min_stock_level" class="form-label requiredField">
-                    Min stock level
-                    <span class="asteriskField">*</span> 
-                </label> 
-                <input 
-                    type="number" 
-                    name="min_stock_level" 
-                    value="{{ product.stock_level_threshold }}" 
-                    class="numberinput form-control" 
-                    required id="id_min_stock_level"
-                > 
-            </div>
-            <div id="div_id_description" class="mb-3"> 
-                <label for="id_description" class="form-label">
-                    Description<span class="asteriskField">*</span> 
-                </label> 
-                <textarea 
-                    name="description" 
-                    cols="20" 
-                    rows="2" 
-                    class="form-control" 
-                    value="{{product.description}}"
-                >{{ product.description }}</textarea> 
-            </div>
-            <!-- <div class="mb-3"> 
-                <div id="div_id_end_of_day" class="form-check">
-                    <input type="checkbox" name="end_of_day" class="checkboxinput form-check-input" id="id_end_of_day" {% if product.product.end_of_day %} checked {% endif %}>
-                    <label for="id_end_of_day" class="form-check-label">
-                        End of day
-                    </label>
-                </div>
-            </div> -->
-            <div class="d-flex justify-content-end">
-                <div class="">
-                    <button type="reset" class="btn btn-danger btn-sm w-100">Reset</button>
-                </div>
-                <span class="px-1"></span>
-                <div class="">
-                    <button type="submit" class="btn btn-secondary btn-sm y w-100">Save</button>
-                </div>
-            </div>
-        </form>
-   </div>
-
-   <!-- category modal -->
-    <div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div class="category">
-                        <div class='add-product-category' id="id_category_form">
-                            <div class='add-product-category-nav d-flex mt-2 py-3 px-2 align-items-center'>
-                                <div>
-                                    <h6 class='mt-2 fw-bold'>Add Category</h6>
-                                </div>
-                            </div>
-                            <form method='post' class='px-2'>
-                                {% csrf_token %}
-                                <div class='mb-2'>
-                                    <label for='id_name'>Category Name</label>
-                                    <input 
-                                        name='name' 
-                                        id='id_category_name' 
-                                        type='text' 
-                                        class='form-control'
-                                    />
-                                </div>
-                                <small id='id_error'></small>
-                                <div class="d-flex justify-content-end">
-                                    <div class="">
-                                        <button type="reset" class="btn btn-danger btn-sm w-100">
-                                            <i class='bx bx-reset'></i>
-                                            reset
-                                        </button>
-                                    </div>
-                                    <span class="px-1"></span>
-                                    <div class="">
-                                        <button type="button" onclick="categorySubmit();" class="btn btn-secondary btn-sm w-100">
-                                            <i class='bx bx-save'></i>
-                                            save
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div> 
-                </div>
+                <a href="{% url 'inventory:inventory_detail' product.id %}" class="logs-btn">Logs</a>
             </div>
         </div>
     </div>
+
+    <div class="form-container">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div id="div_id_name" class="mb-3 full-width">
+                    <label for="id_name" class="form-label requiredField">
+                       Name
+                       <span class="asteriskField">*</span> 
+                   </label> 
+                   <input 
+                       type="text" 
+                       name="name" 
+                       value='{{product.name}}'
+                       class="textinput form-control" 
+                       required id="id_name"
+                   > 
+               </div>
+
+               <div id="div_id_category form-group" class="mb-3 full-width category-wrapper"> 
+                <label for="id_category" class="form-label requiredField">
+                    Category<span class="asteriskField">*</span> 
+                </label> 
+                <div class='d-flex align-items-center'>
+                    <select name="category" class="select form-select" value="{{product.category}}" required id="id_category"> 
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option> 
+                        {% endfor %}
+                    </select> 
+                    <button class='btn' type="button" id='id_add_category'>
+                        <i class='bx bx-plus'></i>
+                    </button>
+                </div>
+            </div>
+
+                <div id="div_id_cost" class="mb-3"> 
+                    <label for="id_cost" class="form-label requiredField">
+                        Cost
+                        <span class="asteriskField">*</span> 
+                    </label>
+                    <input type="number" name="cost" value={{product.cost}} step="0.01" class="numberinput form-control" required id="id_cost"> 
+                    <p id="cost_error" class="fs-6 text-danger"></p>
+                </div>
+
+                <div id="div_id_price" class="mb-3"> 
+                    <label for="id_price" class="form-label requiredField">
+                        Price
+                        <span class="asteriskField">*</span> 
+                    </label> 
+                    <input type="number" name="price" value={{product.price}} step="0.01" class="numberinput form-control" required id="id_price">
+                    <p id="price_error" class="fs-6 text-danger"></p>
+                </div>
+
+                <div id="div_id_dealer_price" class="mb-3 full-width">
+                    <label for="id_dealer_price" class="form-label requiredField">
+                        Wholesale Price
+                        <span class="asteriskField">*</span>
+                    </label>
+                    <input type="number" name="dealer_price" value={{product.dealer_price}} step="0.01" class="numberinput form-control" required id="id_dealer_price">
+                    <p id="price_error" class="fs-6 text-danger"></p>
+                </div>
+
+                <div id="div_id_quantity" class="mb-3"> 
+                    <label for="id_quantity" class="form-label requiredField">
+                        Quantity
+                        <span class="asteriskField">*</span> 
+                    </label> 
+                    <input type="number" name="quantity" value={{product.quantity}} class="numberinput form-control" required id="id_quantit"> 
+                    <p id="quantity_error" class="fs-6 text-danger"></p>
+                </div>
+
+                <div id="div_id_min_stock_level" class="mb-3"> 
+                    <label for="id_min_stock_level" class="form-label requiredField">
+                        Min stock level
+                        <span class="asteriskField">*</span> 
+                    </label> 
+                    <input 
+                        type="number" 
+                        name="min_stock_level" 
+                        value="{{ product.stock_level_threshold }}" 
+                        class="numberinput form-control" 
+                        required id="id_min_stock_level"
+                    > 
+                </div>
+
+                <div class="mb-3 mt-3">
+                    <h6 class="fw-bold">Available in</h6>
+                    <div class="d-flex flex-column justify-content-between">
+                        {% for branch in branches %}
+                        <div id="branch" class="form-check">
+                        <input type="checkbox" name="{{branch.name}}" class="checkboxinput form-check-input" id="{{branch.id}}">
+                        <label for="{{branch.name}}" class="form-check-label">
+                            {{ branch.name }}
+                        </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div id="div_id_description" class="mb-3 full-width"> 
+                    <label for="id_description" class="form-label">
+                        Description<span class="asteriskField">*</span> 
+                    </label> 
+                    <textarea 
+                        name="description" 
+                        cols="20" 
+                        rows="2" 
+                        class="form-control" 
+                        value="{{product.description}}"
+                    >{{ product.description }}</textarea> 
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <div>
+                    <button type="reset" class="btn btn-danger">Reset</button>
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-secondary">Save Changes</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- category modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="category">
+                    <div class='add-product-category' id="id_category_form">
+                        <div class='add-product-category-nav d-flex mt-2 py-3 px-2 align-items-center'>
+                            <div>
+                                <h6 class='mt-2 fw-bold'>Add Category</h6>
+                            </div>
+                        </div>
+                        <form method='post' class='px-2'>
+                            {% csrf_token %}
+                            <div class='mb-2'>
+                                <label for='id_name'>Category Name</label>
+                                <input 
+                                    name='name' 
+                                    id='id_category_name' 
+                                    type='text' 
+                                    class='form-control'
+                                />
+                            </div>
+                            <small id='id_error'></small>
+                            <div class="d-flex justify-content-end">
+                                <div class="">
+                                    <button type="reset" class="btn btn-danger btn-sm w-100">
+                                        <i class='bx bx-reset'></i>
+                                        reset
+                                    </button>
+                                </div>
+                                <span class="px-1"></span>
+                                <div class="">
+                                    <button type="button" onclick="categorySubmit();" class="btn btn-secondary btn-sm w-100">
+                                        <i class='bx bx-save'></i>
+                                        save
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div> 
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     const categoryModal = new bootstrap.Modal(document.querySelector('#categoryModal'));
@@ -250,6 +528,5 @@
                 
             })
         }
-  
-   </script>
+</script>
 {% endblock content %}
