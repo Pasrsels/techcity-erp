@@ -1,42 +1,58 @@
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasTransfer" aria-labelledby="offcanvasTransferLabel">
-    <div class="offcanvas-header">
+<div class="offcanvas offcanvas-end" style="width: 25%; background-color: #f6f6f6;" tabindex="-1" id="offcanvasTransfer" aria-labelledby="offcanvasTransferLabel">
+    <div class="offcanvas-header p-4 justify-content-around">
+           <button class="btn bg-danger text-white" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExpense" aria-controls="offcanvasExpense" type="button">
+                Expense
+            </button>
+            <button class="btn bg-success text-white" data-bs-toggle="offcanvas" data-bs-target="#offcanvasIncome" aria-controls="offcanvasIncome" type="button">
+                Income
+            </button>
+            <button class="btn bg-secondary text-white" data-bs-toggle="offcanvas" data-bs-target="#offcanvasTransfer" aria-controls="offcanvasTransfer" type="button">
+                Transfers
+            </button>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
+    
     <div class="offcanvas-body transfer-bg">
         <div class="transfer-card mx-auto">
             <div class="drag-handle mx-auto"></div>
             <h5 class="text-center text-teal fw-bold mb-4" style="font-size: 24px;">Transfer Funds</h5>
             
             <form id="transferForm">
-                <div class="mb-4">
-                    <label class="form-label text-teal fw-bold">Amount</label>
-                    <input type="number" class="form-control" placeholder="Enter amount" min="0" step="0.01">
+                <div class="form-field">
+                    <div class="field-icon">
+                        <i class="bx bx-dollar"></i>
+                    </div>
+                    <input type="number" class="field-input" placeholder="Amount" id="expenseAmount" min="0" step="0.01" required>
                 </div>
                 
                 <div class="mb-4">
                     <div class="form-label text-teal fw-bold mb-2">From</div>
-                    <div class="row g-3">
-                        <div class="col-12 col-md-6">
+                    <div class="row g-3 d-flex flex-row">
+                        <div class="col">
                             <div class="dropdown w-100">
-                                <button class="btn btn-outline-secondary dropdown-toggle form-pill w-100 text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Branch
+                                <button type="button" class="select-button branch-button dropdown-toggle w-100" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span>
+                                        <i class="bx bx-map-pin branch-icon"></i>Branch
+                                    </span>
                                 </button>
                                 <ul class="dropdown-menu w-100">
-                                    <li><a class="dropdown-item" href="#" onclick="selectDropdownItem(event)">Head Office</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="selectDropdownItem(event)">Harare</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="selectDropdownItem(event)">Mutare</a></li>
+                                    <li><a class="dropdown-item" href="#" data-from-branch="Harare">Harare</a></li>
+                                    <li><a class="dropdown-item" href="#" data-from-branch="Bulawayo">PC PASELS</a></li>
+                                    <li><a class="dropdown-item" href="#" data-from-branch="Mutare">Mutare</a></li>
                                 </ul>
                             </div>
                         </div>
-                        <div class="col-12 col-md-6">
+                        <div class="col">
                             <div class="dropdown w-100">
-                                <button class="btn btn-outline-secondary dropdown-toggle form-pill w-100 text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #999;">
-                                    Select Branch
+                                <button type="button" class="select-button branch-button dropdown-toggle w-100" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span>
+                                        <i class="bx bx-map-pin branch-icon"></i>Account Type
+                                    </span>
                                 </button>
                                 <ul class="dropdown-menu w-100">
-                                    <li><a class="dropdown-item" href="#" onclick="selectDropdownItem(event)">Head Office</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="selectDropdownItem(event)">Harare</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="selectDropdownItem(event)">Mutare</a></li>
+                                    <li><a class="dropdown-item" href="#" data-from-account="Cash">Cash</a></li>
+                                    <li><a class="dropdown-item" href="#" data-from-account="Bank">Bank</a></li>
+                                    <li><a class="dropdown-item" href="#" data-from-account="Mobile Money">Ecocash</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -46,25 +62,30 @@
                 <div class="mb-4">
                     <div class="form-label text-teal fw-bold mb-2">To</div>
                     <div class="row g-3">
-                        <div class="col-12 col-md-6">
+                        <div class="col">
                             <div class="dropdown w-100">
-                                <button class="btn btn-outline-secondary dropdown-toggle form-pill w-100 text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    User Account
+                                <button type="button" class="select-button branch-button dropdown-toggle w-100" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span>
+                                        <i class="bx bx-map-pin branch-icon"></i>User Account
+                                    </span>
                                 </button>
                                 <ul class="dropdown-menu w-100">
-                                    <li><a class="dropdown-item" href="#" onclick="selectDropdownItem(event)">Wallet</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="selectDropdownItem(event)">Bank</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="selectDropdownItem(event)">Cash</a></li>
+                                    <li><a class="dropdown-item" href="#">Branch</a></li>
+                                    <li><a class="dropdown-item" href="#">User Account</a></li>
                                 </ul>
                             </div>
                         </div>
-                        <div class="col-12 col-md-6">
+                        <div class="col">
                             <div class="dropdown w-100">
-                                <button class="btn btn-outline-secondary dropdown-toggle form-pill w-100 text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #999;">
-                                    Select User
+                                <button type="button" class="select-button branch-button dropdown-toggle w-100" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span>
+                                        <i class="bx bx-map-pin branch-icon"></i>Select User
+                                    </span>
                                 </button>
                                 <ul class="dropdown-menu w-100">
-                                    <li><a class="dropdown-item" href="#" onclick="selectDropdownItem(event)">Admin</a></li>
+                                    <li><a class="dropdown-item" href="#" data-to-user="Cash">Chan</a></li>
+                                    <li><a class="dropdown-item" href="#" data-to-user="Bank">Nova</a></li>
+                                    <li><a class="dropdown-item" href="#" data-to-user="Mobile Money">Von</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -72,8 +93,8 @@
                 </div>
                 
                 <div class="pt-2">
-                    <button type="submit" class="btn btn-teal form-pill w-100 py-3 fw-semibold">
-                        Submit Transfer
+                    <button type="submit" class="btn btn-teal bg-success-subtle form-pill w-100 py-3 fw-semibold">
+                        <i class="bx bx-send me-2"></i>Submit Transfer
                     </button>
                 </div>
             </form>

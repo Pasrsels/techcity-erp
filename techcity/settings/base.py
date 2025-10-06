@@ -133,7 +133,8 @@ TEMPLATES = [
                 # "settings.context_processors.tax_method",
                 
                 #users
-                "users.context_processor.users"
+                "users.context_processor.users",
+                "users.context_processor.branches",
             ],
         },
     },
