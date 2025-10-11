@@ -343,11 +343,12 @@ class Invoice(models.Model):
     fiscal_day = models.CharField(max_length=50, null=True)
     cash_up_status = models.BooleanField(default=False, null=True)
     category = models.ForeignKey(InvoiceCategory, on_delete=models.CASCADE, null=True)
+
     def generate_invoice_number(branch):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
         print(last_invoice.invoice_number)
         if last_invoice:
-            return f"INV{branch.split(" ")[0]}-{int(last_invoice.invoice_number.split('-')[1]) + 1}"
+            return f"INV{branch.split(" ")[0]}-{int(last_invoice.invoice_number.split('-')[1]) + 10000}"
         else:
             new_invoice_number = 1
             return f"INV{branch.split(" ")[0]}-{new_invoice_number}"  

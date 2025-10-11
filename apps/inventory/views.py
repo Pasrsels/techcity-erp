@@ -772,7 +772,6 @@ def edit_inventory(request, product_id):
                 Inventory.objects.filter(name__exact=product.name)
             )
             
-            logger.info(f'Products: {inv_products}') 
             if request.method == 'POST':
                 try:
                     selling_price = Decimal(request.POST.get('price', 0))
@@ -780,44 +779,63 @@ def edit_inventory(request, product_id):
                     cost = Decimal(request.POST.get('cost', 0))
                     quantity = int(request.POST.get('quantity', 0))
                     stock_level_threshold = int(request.POST.get('min_stock_level', 0))
+                    name = request.POST.get('name').strip()
 
                     category = ProductCategory.objects.get(id=int(request.POST.get('category')))
 
                     if selling_price < cost:
-                        messages.warning(request, "Selling price cannot be less than cost")
+                        return JsonResponse({'success':False, 'message':'Selling price cannot be less than cost'}, status=400)
+                    
                     if quantity < 0:
-                        messages.warning(request, "Quantity cannot be negative")
-                        
-                        
-                    for inv_product in inv_products:
-                        
-                        original_quantity = inv_product.quantity
-                        
-                        inv_product.name = request.POST.get('name')
-                        inv_product.description = request.POST.get('description')
-                        inv_product.price = selling_price
-                        inv_product.cost = cost
-                        inv_product.dealer_price = dealer_price
-                        inv_product.stock_level_threshold = stock_level_threshold
-                        inv_product.quantity = quantity
-                        inv_product.category = category 
+                        return JsonResponse({'success':False, 'message':'Quantity cannot be negative'}, status=400)
+                    
+                    with transaction.atomic():
+                        for inv_product in inv_products:
+                            
+                            original_quantity = inv_product.quantity
+                            original_cost = inv_product.cost
+                            original_selling = inv_product.price
+                            original_name = inv_product.name.strip()
 
-                        inv_product.end_of_day = request.POST.get('end_of_day') == 'on'
+                            quantity_difference = 0
+                            if original_quantity != inv_product.quantity:
+                                quantity_difference = quantity - original_quantity
+                                description = "quantity edited"
+                            
+                            if original_selling != inv_product.price:
+                                description = "selling price edited"
 
-                        inv_product.save()
+                            if original_cost != inv_product.cost:
+                                description = "selling price edited"
+                            
+                            if original_name != name:
+                                description ="product name edited"
 
-                    ActivityLog.objects.create(
-                        branch=request.user.branch,
-                        user=request.user,
-                        action='Edit',
-                        inventory=inv_product,
-                        quantity=original_quantity,
-                        total_quantity=quantity,
-                        dealer_price=dealer_price,
-                        selling_price=selling_price
-                    )
+                            inv_product.name = name
+                            inv_product.category = category 
+                            
+                            if request.user.branch == inv_product.branch:
+                                inv_product.description = request.POST.get('description')
+                                inv_product.price = selling_price
+                                inv_product.cost = cost
+                                inv_product.dealer_price = dealer_price
+                                inv_product.stock_level_threshold = stock_level_threshold
+                                inv_product.quantity = quantity
+                                inv_product.end_of_day = request.POST.get('end_of_day') == 'on'
 
-                    logger.info(inv_product.category)
+                                ActivityLog.objects.create(
+                                    branch=request.user.branch,
+                                    user=request.user,
+                                    action='Edit',
+                                    inventory=inv_product,
+                                    quantity=quantity_difference,
+                                    total_quantity=quantity,
+                                    dealer_price=dealer_price,
+                                    selling_price=selling_price,
+                                    description=description
+                                )
+
+                            inv_product.save()
 
                     messages.success(request, f'{inv_product.name} updated successfully')
                     return redirect('inventory:inventory')

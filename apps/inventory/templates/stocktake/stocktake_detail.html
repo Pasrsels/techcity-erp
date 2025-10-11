@@ -76,6 +76,7 @@
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-dark);
+    margin-right: 20px;
     }
  .background{
     background: var(--primary);
@@ -150,7 +151,7 @@
 }
 </style>
 
-<div class="stocktake">
+<div class="stocktake p-4">
     <div class="d-flex align-items-center justify-content-between">
         <div>
             <h4 class="px-1">Stocktake #{{ stocktake.id }}</h4>
@@ -170,7 +171,7 @@
 
     <div class="search-container border mt-2 ">
         <input type="text" class="search-input" placeholder="Search products..." id="stocktake-search">
-        <i class="fas fa-search search-icon"></i>
+        <!-- <i class="fas fa-search search-icon"></i> -->
     </div>
 
     <div id="">
@@ -373,10 +374,6 @@
         placeholder: 'Select Employee'
     })
 
-    filterButton.addEventListener('click', ()=>{
-        filterModal.show()
-    })
-
     document.addEventListener("DOMContentLoaded", function () {
         const diagramContainer = document.querySelector('.col-12');
         
@@ -391,6 +388,7 @@
         const rows = document.querySelectorAll("#stocktake_table tbody tr");
 
         rows.forEach(function (row) {
+            console.log('row', row)
             const text = row.textContent.toLowerCase();
             if (text.includes(input)) {
                 row.style.display = "";
