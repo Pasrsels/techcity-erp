@@ -7,7 +7,7 @@ class CompanySetupMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        from apps.company.models import Company
+        from apps.core.company.models import Company
         if not Company.objects.exists():
             create_company_url = reverse('company:register_company')
             if request.path != create_company_url and\

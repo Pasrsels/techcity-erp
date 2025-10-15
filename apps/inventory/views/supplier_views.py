@@ -58,11 +58,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from channels.generic.websocket import  AsyncJsonWebsocketConsumer
 from django.shortcuts import render, redirect, get_object_or_404, get_list_or_404
-from permissions.permissions import (
-    admin_required,
-    # sales_required,
-    # accountant_required
-)
+# from permissions.permissions import (
+#     admin_required,
+#     # sales_required,
+#     # accountant_required
+# )
 from utils.account_name_identifier import account_identifier
 from loguru import logger
 from xhtml2pdf import pisa
