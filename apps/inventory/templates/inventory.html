@@ -205,7 +205,7 @@
         </div>
         
         {% if request.user.role == 'admin' %}
-          <button class="d-none d-sm-inline-block header-btn btn-sm action-btn" data-bs-toggle="modal" data-bs-target="#addProductModal">
+          <button class="d-none d-sm-inline-block btn btn-primary btn-sm action-btn" data-bs-toggle="modal" data-bs-target="#addProductModal">
               <i class="bx bx-plus mr-1"></i>Add New Product
           </button>
         {% endif %}
@@ -220,9 +220,9 @@
                           <i class="bx bx-plus"></i> Product
                       </a>
                     {% endif %}
-                    <!-- <a href="{% url 'inventory:reorder_list' %}" class="header-btn action-btn">
+                    <a href="{% url 'inventory:reorder_list' %}" class="header-btn action-btn">
                         <i class="bx bx-list-check mr-1"></i>Reorder List
-                    </a> -->
+                    </a>
                     <a href="{% url 'inventory:purchase_orders' %}" class="header-btn action-btn">
                         <i class="bx bx-package mr-1"></i>Purchase Orders
                     </a>
@@ -232,15 +232,15 @@
                     <a href="{% url 'inventory:stocktake' %}" class="header-btn action-btn">
                         <i class="bx bx-clipboard mr-1"></i>Stocktake
                     </a>
-                    <!-- <a href="{% url 'inventory:loss_management' %}" class="header-btn btn-outline-secondary action-btn" disabled>
+                    <a href="{% url 'inventory:loss_management' %}" class="header-btn btn-outline-secondary action-btn" disabled>
                         <i class="bx bx-error-circle mr-1"></i>Loss Management
-                    </a> -->
-                    <!-- <a href="{% url 'inventory:settings' %}" class="header-btn btn-outline-secondary action-btn">
+                    </a>
+                    <a href="{% url 'inventory:settings' %}" class="header-btn btn-outline-secondary action-btn">
                         <i class='bx bx-cog'></i> Settings
-                    </a> -->
+                    </a>
                 </div>
                 
-                <div>
+                <div class="d-flex align-items-center gap-2">
                     <a href="?download=true&excel=true" class="btn btn-outline-secondary  btn-sm action-btn">
                         <i class="bx bx-download mr-1"></i>Export Excel
                     </a>
