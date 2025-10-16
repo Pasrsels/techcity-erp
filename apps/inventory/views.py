@@ -84,6 +84,9 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from io import BytesIO
 
+now = timezone.now() 
+today = now.date()  
+
 @login_required
 def notifications_json(request):
     notifications = StockNotifications.objects.filter(inventory__branch=request.user.branch).select_related('inventory, inventory__branch').values(
@@ -585,23 +588,53 @@ def add_inventory_view(request):
 @login_required
 def inventory_index(request):
     form = ServiceForm()
-    q = request.GET.get('q', '')  
-    category = request.GET.get('category', '')    
     
-    now = timezone.now() 
-    today = now.date()  
+    category = request.GET.get('category', '')    
+    q = request.GET.get('q', '')  
+    page = request.GET.get('page', 1)
+    
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    logger.info(f'category, {category} {request.GET}')
     
     accessories = Accessory.objects.all()
     inventory = Inventory.objects.filter(
         branch=request.user.branch, 
-        status=True, 
-        disable=False,
-        category__name=category
-    ).select_related(
-        'category',
-        'branch'
-    ).order_by('name')
+        status=True
+    ).select_related('branch', 'category')
+
+    if category == 'inactive':
+        inventory = Inventory.objects.filter(
+            branch=request.user.branch, 
+            status=False
+        ).select_related('branch', 'category')
+    elif category:
+        inventory = inventory.filter(category__name=category)
     
+    if q:
+        inventory = inventory.filter(
+            Q(name__icontains=q) | 
+            Q(description__icontains=q)
+        )
+
+    paginator = Paginator(inventory, 50)
+    products_page = paginator.get_page(page)
+    
+    if is_ajax:
+        html = render_to_string(
+            'components/inventory_rows.html', 
+            {
+                'products': products_page,
+                'accessories': accessories,
+                'forloop': {'counter': (products_page.number - 1) * 50}
+            }
+        )
+        return JsonResponse({
+            'html': html,
+            'has_next': products_page.has_next(),
+            'next_page': products_page.next_page_number() if products_page.has_next() else None
+        })
+
     logs = ActivityLog.objects.filter(branch=request.user.branch).select_related('branch').order_by('-id')
     
     grouped_logs = {}
@@ -634,54 +667,6 @@ def inventory_index(request):
 
     for date_key, data in remaining_dates:
         ordered_grouped_logs[date_key] = data
-    
-
-    if 'download' and 'excel' in request.GET:
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = f'attachment; filename={request.user.branch.name} stock.xlsx'
-        workbook = openpyxl.Workbook()
-        worksheet = workbook.active
-        
-        # Add products data
-        products = Inventory.objects.all()
-        branches = Branch.objects.all().values_list('name', flat=True).distinct()
-        row_offset = 0
-        for branch in branches:
-            worksheet['A' + str(row_offset + 1)] = f'{branch} Products'
-            worksheet.merge_cells('A' + str(row_offset + 1) + ':D' + str(row_offset + 1))
-            cell = worksheet['A' + str(row_offset + 1)]
-            cell.alignment = Alignment(horizontal='center')
-            cell.font = Font(size=16, bold=True)
-            cell.fill = PatternFill(fgColor='AAAAAA', fill_type='solid')
-
-            row_offset += 1 
-            
-            category_headers = ['Name', 'Cost', 'Price', 'Quantity']
-            for col_num, header_title in enumerate(category_headers, start=1):
-                cell = worksheet.cell(row=3, column=col_num)
-                cell.value = header_title
-                cell.font = Font(bold=True)
-                cell.alignment = Alignment(horizontal='center')
-
-            categories = Inventory.objects.filter(branch=request.user.branch).values_list('category__name', flat=True).distinct()
-            for category in categories:
-                products_in_category = products.filter(branch__name=branch, category__name=category)
-                if products_in_category.exists():
-                    worksheet['A' + str(row_offset + 1)] = category
-                    cell = worksheet['A' + str(row_offset + 1)]
-                    cell.font = Font(color='FFFFFF')
-                    cell.fill = PatternFill(fgColor='0066CC', fill_type='solid')
-                    worksheet.merge_cells('A' + str(row_offset + 1) + ':D' + str(row_offset + 1))
-                    row_offset += 2
-
-                for product in products.filter(branch__name=branch):
-                    if product.category:
-                        if category == product.category.name:
-                            worksheet.append([product.name, product.cost, product.price, product.quantity])
-                            row_offset += 1
-
-        workbook.save(response)
-        return response
 
     context = {
         'form': form,
@@ -690,10 +675,13 @@ def inventory_index(request):
         'search_query': q,
         'category': category,
         'accessories': accessories,
-        'grouped_logs':ordered_grouped_logs
+        'grouped_logs': ordered_grouped_logs,
+        'products': products_page,
+        'has_next': products_page.has_next()
     }
 
     return render(request, 'inventory.html', context)
+
 
 def logs_page(request):
     page_number = request.GET.get('page', 1)
@@ -796,6 +784,7 @@ def edit_inventory(request, product_id):
                             original_cost = inv_product.cost
                             original_selling = inv_product.price
                             original_name = inv_product.name.strip()
+                            description = ''
 
                             quantity_difference = 0
                             if original_quantity != inv_product.quantity:
@@ -836,6 +825,7 @@ def edit_inventory(request, product_id):
                                 )
 
                             inv_product.save()
+                            break
 
                     messages.success(request, f'{inv_product.name} updated successfully')
                     return redirect('inventory:inventory')
@@ -869,7 +859,6 @@ def inventory_detail(request, id):
     ).order_by('-timestamp__date', '-timestamp__time')
     
 
-    # stock account data and totals (costs and quantities)
     stock_account_data = get_stock_account_data(logs)
     total_debits = sum(entry['cost'] for entry in stock_account_data if entry['type'] == 'debits')
     total_credits = sum(entry['cost'] for entry in stock_account_data if entry['type'] == 'credits')
@@ -902,10 +891,7 @@ def inventory_detail(request, id):
                         aggregate(Sum('invoice__amount'))['invoice__amount__sum'] or 0
             }
         )
-    
-    logger.info(f'inventory value: {inventory_sold_value}')
 
-    # logs = ActivityLog.objects.annotate(hour=Extract('timestamp', 'hour')).order_by('-hour')
 
     """ create log data structure for the activity log graph """
     sales_data = {}

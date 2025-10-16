@@ -348,7 +348,7 @@ class Invoice(models.Model):
         last_invoice = Invoice.objects.filter(branch__name=branch).order_by('-id').first()
         print(last_invoice.invoice_number)
         if last_invoice:
-            return f"INV{branch.split(" ")[0]}-{int(last_invoice.invoice_number.split('-')[1]) + 10000}"
+            return f"INV{branch.split(" ")[0]}-{int(last_invoice.invoice_number.split('-')[1]) + 50000 }"
         else:
             new_invoice_number = 1
             return f"INV{branch.split(" ")[0]}-{new_invoice_number}"  

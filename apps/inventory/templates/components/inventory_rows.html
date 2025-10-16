@@ -1,0 +1,73 @@
+{% load static %}
+{% for product in products %}
+    <tr>
+        <td><span class='hint--bottom' aria-label='{{ product.description }}'>
+            {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" width="20px" class="rounded-3">
+                {% else %}
+                    <img src="{% static 'placeholder.png'%}" alt="{{ product.name }}" width="20px" class="rounded-3">
+            {% endif %}
+            {{ product.name }}</span>
+            <br>
+            <span>Cost:{{ product.cost }}</span><br>
+            <span>Price: {{ product.price }}</span><br>
+            <span>W/Price:{{ product.dealer_price }}</span>
+            <br>
+            <small class="text-muted">
+                {% if product.description %}
+                    <i class='bx bx-detail'></i>
+                    {{ product.description }}
+                {% else %}
+                    <span class="text-muted">no description</span>
+                {% endif %}
+            </small>
+        </td>
+        <!-- <td>
+            <small>
+                {% for accessory in accessories %}
+                    {% if accessory.main_product ==  product %}
+                        <ul class="list-unstyled">
+                            {% for acc in accessory.accessory_product.all %}
+                                <li>{{ acc.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endfor %}
+            </small>
+        </td> -->
+        <td><span>{{ product.quantity }}</span></td>
+        <td>
+            <span>  
+                <span>
+                    <a href="{% url 'inventory:inventory_detail' product.id %}" class='text-dark'>
+                        <i class='bx bx-show'></i>
+                    </a>
+                </span>
+    
+                <span class='px-2'>
+                    <a href="{% url 'inventory:edit_inventory' product.id %}" class="text-dark">
+                        <i class='bx bx-edit-alt'></i>
+                    </a>
+                </span>
+                
+                <span>
+                    <span id='delete' data-id="{{ product.id }}" onclick="productId(this)" class="text-dark">
+                        <i class='bx bx-trash-alt'></i>
+                    </span>
+                </span>
+
+                <span>
+                    {%if product.status == False %}
+                    <a href='{% url "inventory:activate_inventory" product.id %}' class="btn btn-sm btn-primary text-primary">
+                        activate
+                    </a>
+                    {% endif %}
+                </span>
+
+                <!-- <span class="px-2">
+                    <button class="btn btn-sm btn-secondary btn-sm bx bx-cart-add" data-bs-toggle="modal" data-bs-target="#accessoriesModal" onclick="setProductForAccessories({{ product.id }},'{{ product.name }}')"></button>
+                </span> -->
+            </span>
+        </td>
+    </tr>
+{% endfor %}

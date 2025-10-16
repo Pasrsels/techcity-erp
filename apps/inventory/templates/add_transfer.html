@@ -844,7 +844,7 @@
                     confirmButtonText: 'OK'
                 }).then(() => {
                     localStorage.removeItem('transfers');
-                    window.location.href = '/inventory/transfers/';
+                    window.location.href = "{% url 'inventoty:inventory_transfer_index'%}";
                 });
             }
         });
