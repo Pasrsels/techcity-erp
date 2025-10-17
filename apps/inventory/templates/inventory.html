@@ -6,280 +6,1148 @@
 <style>
    :root {
         --primary: #11998e;
-        --primary-no-gradient: #11998e;
-        --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-        --secondary: orange;
-        --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
-        --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-        --dark: #1a1a2e;
-        --dark-alt: #16213e;
-        --text-light: rgba(228, 230, 234, 1);
-        --text-dark: black;
-        --text-muted: black;
-        --glass: rgba(255, 255, 255, 0.1);
-        --glass-border: rgba(255, 255, 255, 0.2);
-        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
-        --border-radius: 12px;
-        --border-radius-sm: 8px;
+        --primary-light: #38ef7d;
+        --primary-dark: #0d6b61;
+        --text-dark: #2c3e50;
+        --text-muted: #6c757d;
+        --bg-light: #f8f9fa;
+        --shadow: 0 2px 8px rgba(17, 153, 142, 0.08);
+        --shadow-md: 0 4px 12px rgba(17, 153, 142, 0.12);
+        --shadow-lg: 0 8px 24px rgba(17, 153, 142, 0.15);
+        --shadow-hover: 0 6px 20px rgba(17, 153, 142, 0.2);
+        --border-radius: 16px;
+        --border-radius-sm: 10px;
         --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        --m-bottom: 20px;
     }
 
-    .header-btn {
-        padding: 8px 16px;
+    * {
+        box-sizing: border-box;
+    }
+
+    .container-fluid {
+        padding: 1.5rem;
+        background: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    /* Stats Section */
+    .stats-header {
+        background: #f8f9fa;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 0.5rem;
+        box-shadow: var(--shadow);
+    }
+
+    .stats-card {
+        background: white;
         border-radius: var(--border-radius-sm);
-        background: var(--primary-no-gradient);
-        border: 1px solid var(--glass-border);
-        color: var(--text-light);
+        padding: 0;
+        transition: var(--transition);
+        border: none;
+        box-shadow: var(--shadow);
+        height: 100%;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .stats-card .card-body {
+        padding: 1.5rem;
+    }
+
+    .stats-card .text-xs {
+        color: black;
+        font-size: 1.2rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+
+    .stats-card .h5 {
+        color: black;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0;
+    }
+
+    .stats-card i {
+        color: black;
+        font-size: 2.5rem;
+    }
+
+    /* Header Button */
+    .header-btn {
+        padding: 10px 20px;
+        border-radius: var(--border-radius-sm);
+        background: var(--primary);
+        margin-right: -50px;
+        border: none;
+        color: white;
         text-decoration: none;
         transition: var(--transition);
         font-size: 14px;
+        font-weight: 500;
         cursor: pointer;
+        box-shadow: var(--shadow);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
 
     .header-btn:hover {
-        background: var(--primary);
-        transform: translateY(-1px);
-    }
-
-    .search-container {
-        position: relative;
-        margin-bottom: 5px;
-    }
-
-    .search-input {
-        width: 100%;
-        padding: 15px 50px 15px 20px;
-        border-radius: var(--border-radius);
-        background: var(--glass);
-        border: 1px solid var(--glass-border);
-        color: var(--text-dark);
-        font-size: 16px;
-        transition: var(--transition);
-    }
-
-    .search-input:focus {
-        outline: none;
-        border-color: rgba(102, 126, 234, 0.5);
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-
-    .search-input::placeholder {
-        color: var(--text-dark);
-    }
-
-    .search-icon {
-        position: absolute;
-        right: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-dark);
-    }
-
-    .inventory-card {
-        border-radius: var(--border-radius);
-        transition: transform 0.2s ease;
-        border: none;
-    }
-    
-    .inventory-card:hover {
+        background: var(--primary-dark);
         transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+        color: white;
     }
-    
-    .stats-card {
-        height: 100%;
-        border: none;
+
+    .header-btn i {
+        font-size: 16px;
     }
-    
-    .action-btn {
+
+    /* Navigation Card */
+    .inventory-card {
+        background: white;
         border-radius: var(--border-radius);
-        transition: all 0.2s;
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+    
+    .inventory-card .card-body {
+        padding: 1.25rem;
+    }
+
+    /* Action Buttons */
+    .action-btn {
+        padding: 8px 16px;
+        border-radius: var(--border-radius-sm);
+        font-size: 13px;
+        font-weight: 500;
+        transition: var(--transition);
+        border: 1px solid #e0e0e0;
+        background: var(--primary);
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        white-space: nowrap;
     }
     
     .action-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--shadow-md);
+        background: white;
+        color: var(--primary);
+        border-color: var(--primary);
     }
-    
-    .inventory-table {
+
+    .action-btn i {
+        font-size: 16px;
+    }
+
+    .btn-outline-secondary.action-btn {
+        border-color: #e0e0e0;
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-outline-secondary.action-btn:hover {
+        background: white;
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    /* Filters */
+    .form-select,
+    .form-control[type="search"],
+    input[type="search"] {
+        border-radius: var(--border-radius-sm);
+        border: 1px solid #e0e0e0;
+        padding: 8px 16px;
+        font-size: 14px;
+        transition: var(--transition);
+        background-color: white;
+        cursor: pointer;
+        box-shadow: none;
+        outline: none;
+    }
+
+    .form-select:focus,
+    .form-control[type="search"]:focus,
+    input[type="search"]:focus {
+        border-color: var(--primary);
+        box-shadow: none;
+        outline: none;
+    }
+
+    .form-select:hover,
+    .form-control[type="search"]:hover,
+    input[type="search"]:hover {
+        border-color: var(--primary);
+    }
+
+    /* Remove default search input styling */
+    input[type="search"]::-webkit-search-decoration,
+    input[type="search"]::-webkit-search-cancel-button,
+    input[type="search"]::-webkit-search-results-button,
+    input[type="search"]::-webkit-search-results-decoration {
+        display: none;
+    }
+
+    /* Table Section */
+    .table-wrapper {
+        background: white;
+        border: none;
+        box-shadow: var(--shadow);
         border-radius: var(--border-radius);
         overflow: hidden;
+        padding: 1.5rem;
+    }
+
+    .inventory-table {
+        margin-bottom: 0;
+        width: 100%;
     }
     
     .inventory-table thead th {
-        background-color: var(--light-bg);
-        border-bottom: 2px solid #e3e6f0;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-bottom: 2px solid var(--primary);
         font-weight: 600;
+        color: var(--text-dark);
+        padding: 1rem;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .inventory-table tbody tr {
+        transition: var(--transition);
+    }
+
+    .inventory-table tbody tr:hover {
+        background: rgba(17, 153, 142, 0.05);
+    }
+
+    .inventory-table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f0f0;
     }
     
-    .table-wrapper {
-        border-radius: var(--border-radius);
-        overflow: hidden;
-        background-color: #fff;
+    /* Activity Logs */
+    .logs-section {
+        height: 100%;
     }
-    
+
     .log-container {
+        background: white;
         border-radius: var(--border-radius);
-        background-color: #fff;
+        box-shadow: var(--shadow);
+        padding: 1.5rem;
+        height: 100%;
+        max-height: calc(100vh - 200px);
+        display: flex;
+        flex-direction: column;
     }
-    
+
+    .log-container h5 {
+        color: var(--text-dark);
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1.1rem;
+    }
+
+    .log-container h5 i {
+        color: #0000ff;
+        font-size: 1rem;
+    }
+
+    .log-container > div {
+        overflow-y: auto;
+        overflow-x: hidden;
+        flex: 1;
+        scrollbar-width: thin;
+        scrollbar-color: var(--primary) #f0f0f0;
+    }
+
+    .log-container > div::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .log-container > div::-webkit-scrollbar-track {
+        background: #f0f0f0;
+        border-radius: 10px;
+    }
+
+    .log-container > div::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 10px;
+    }
+
+    .log-container > div::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-dark);
+    }
+
     .log-table {
         margin-bottom: 0;
+        width: 100%;
     }
-    
+
     .log-table thead th {
         position: sticky;
         top: 0;
-        background-color: var(--light-bg);
+        background: white;
         z-index: 10;
+        font-size: 12px;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .log-table tbody td {
+        font-size: 13px;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    /* Modal */
+    .modal-content {
+        border-radius: var(--border-radius);
+        border: none;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #f0f0f0;
+        padding: 10px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+    }
+
+    .modal-title {
+        color: var(--text-dark);
+        font-weight: 600;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+        font-size: 14px;
+    }
+
+    .form-control {
+        border-radius: var(--border-radius-sm);
+        border: 1px solid #e0e0e0;
+        padding: 10px 14px;
+        transition: var(--transition);
+        font-size: 14px;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
+        outline: none;
+    }
+
+    .input-group {
+        border-radius: var(--border-radius-sm);
+    }
+
+    .input-group .btn {
+        border: 1px solid #e0e0e0;
+    }
+
+    .input-group .form-control:not(:last-child),
+    .input-group .form-select:not(:last-child) {
+        border-right: none;
+    }
+
+    .input-group .btn:not(:first-child) {
+        border-left: none;
+    }
+
+    .btn-success {
+        background: var(--primary);
+        border: none;
+        border-radius: var(--border-radius-sm);
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: var(--transition);
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-danger {
+        background: #dc3545;
+        border: none;
+        border-radius: var(--border-radius-sm);
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: var(--transition);
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-outline-secondary {
+        border: 1px solid #e0e0e0;
+        background: white;
+        color: var(--text-muted);
+        border-radius: var(--border-radius-sm);
+        padding: 8px 16px;
+        font-size: 13px;
+        transition: var(--transition);
+    }
+
+    .btn-outline-secondary:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+
+    /* Responsive */
+@media (min-width: 1920px) {
+    .container-fluid {
+        padding: 2rem;
+        max-width: 2400px;
+        margin: 0 auto;
     }
     
-    .search-filters {
+    .stats-header {
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stats-card .card-body {
+        padding: 2rem;
+    }
+    
+    .stats-card .h5 {
+        font-size: 2rem;
+    }
+    
+    .stats-card .text-xs {
+        font-size: 1rem;
+    }
+    
+    .stats-card i {
+        font-size: 1.5rem;
+    }
+    
+    .inventory-card .card-body {
+        padding: 1.75rem;
+    }
+    
+    .action-btn {
+        font-size: 14px;
+        padding: 10px 20px;
+    }
+    
+    .header-btn {
+        font-size: 15px;
+        padding: 12px 24px;
+    }
+    
+    .table-wrapper {
+        padding: 2rem;
+    }
+    
+    .log-container {
+        padding: 2rem;
+    }
+    
+    .log-container h5 {
+        font-size: 1.25rem;
+    }
+    
+    .log-container > div {
+        max-height: 700px;
+    }
+}
+
+/* Large screens (1200px to 1919px) */
+@media (min-width: 1200px) and (max-width: 1919px) {
+    .container-fluid {
+        padding: 1rem;
+    }
+    
+    .stats-header {
+        padding: 1rem;
+    }
+    
+    .stats-card .h5 {
+        font-size: 1.75rem;
+    }
+    
+    .stats-card .text-xs {
+        font-size: 0.875rem;
+    }
+    
+    .action-btn {
+        font-size: 13px;
+        padding: 8px 16px;
+    }
+    
+    .header-btn {
+        font-size: 14px;
+        padding: 10px 20px;
+    }
+    
+    .log-container > div {
+        max-height: 600px;
+    }
+}
+
+/* Medium-large screens (992px to 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+    .container-fluid {
+        padding: 1.25rem;
+    }
+    
+    .stats-header {
+        padding: 1.25rem;
+    }
+    
+    .stats-card .h5 {
+        font-size: 1.6rem;
+    }
+    
+    .stats-card .text-xs {
+        font-size: 0.85rem;
+    }
+    
+    .action-btn {
+        font-size: 12px;
+        padding: 7px 14px;
+    }
+    
+    .header-btn {
+        font-size: 13px;
+        padding: 9px 18px;
+    }
+    
+    .log-container > div {
+        max-height: 550px;
+    }
+}
+
+/* Medium screens/tablets (768px to 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+    .container-fluid {
+        padding: 1rem;
+    }
+    
+    .stats-header {
+        padding: 1rem;
+    }
+    
+    .stats-card .h5 {
+        font-size: 1.5rem;
+    }
+    
+    .stats-card .text-xs {
+        font-size: 0.825rem;
+    }
+    
+    .action-btn {
+        font-size: 12px;
+        padding: 7px 13px;
+    }
+    
+    .header-btn {
+        font-size: 13px;
+        padding: 8px 16px;
+    }
+    
+    .log-container > div {
+        max-height: 500px;
+    }
+    
+    .table-wrapper {
+        overflow-x: auto;
+    }
+}
+
+/* Small tablets (576px to 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+    .container-fluid {
+        padding: 0.875rem;
+    }
+    
+    .stats-header {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-card {
+        margin-bottom: 0.875rem;
+    }
+    
+    .stats-card .card-body {
+        padding: 1.25rem;
+    }
+    
+    .stats-card .h5 {
+        font-size: 1.5rem;
+    }
+    
+    .stats-card .text-xs {
+        font-size: 0.825rem;
+    }
+    
+    .stats-card i {
+        font-size: 1.125rem;
+    }
+    
+    .inventory-card {
+        margin-bottom: 1rem;
+    }
+    
+    .inventory-card .card-body {
+        padding: 1rem;
+    }
+    
+    .action-btn {
+        font-size: 12px;
+        padding: 7px 13px;
+    }
+    
+    .header-btn {
+        font-size: 13px;
+        padding: 8px 16px;
+    }
+    
+    .table-wrapper {
+        padding: 1rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+    
+    .log-container {
+        padding: 1rem;
+    }
+    
+    .log-container > div {
+        max-height: 450px;
+    }
+    
+    .form-select,
+    .form-control {
+        font-size: 13px;
+        padding: 7px 13px;
+    }
+}
+
+/* Mobile screens (360px to 575px) - Keep side-by-side layout */
+@media (min-width: 360px) and (max-width: 575px) {
+    .container-fluid {
+        padding: 0.5rem;
+    }
+    
+    .stats-header {
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Keep stats cards in row */
+    .stats-header .row {
+        display: flex !important;
+        flex-direction: row !important;
+    }
+    
+    .stats-header .col-xl-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+        padding: 0 0.25rem;
+    }
+    
+    .stats-card {
+        margin-bottom: 0;
+    }
+    
+    .stats-card .card-body {
+        padding: 0.75rem;
+    }
+    
+    .stats-card .row.no-gutters {
         display: flex;
+        flex-direction: column !important;
+    }
+    
+    .stats-card .row.no-gutters .col {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .stats-card .row.no-gutters .col-auto {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-top: 0.5rem;
+    }
+    
+    .stats-card .h5 {
+        font-size: 1.1rem;
+    }
+    
+    .stats-card .text-xs {
+        font-size: 0.65rem;
+        line-height: 1.2;
+    }
+    
+    .stats-card i {
+        font-size: 0.8rem;
+    }
+    
+    .header-btn {
+        font-size: 9px;
+        padding: 4px 8px;
+        gap: 3px;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .header-btn i {
+        font-size: 10px;
+    }
+    
+    .inventory-card {
+        margin-bottom: 0.5rem;
+    }
+    
+    .inventory-card .card-body {
+        padding: 0.5rem;
+    }
+    
+    .action-btn {
+        font-size: 9px;
+        padding: 4px 8px;
+        gap: 2px;
+    }
+    
+    .action-btn i {
+        font-size: 11px;
+    }
+    
+    /* Keep table and logs side by side */
+    .row .col-lg-9,
+    .row .col-lg-3 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Split view for table and logs */
+    .row .col-lg-9 {
+        flex: 0 0 60% !important;
+        max-width: 60% !important;
+        padding-right: 0.25rem;
+    }
+    
+    .row .col-lg-3 {
+        flex: 0 0 40% !important;
+        max-width: 40% !important;
+        padding-left: 0.25rem;
+    }
+    
+    .table-wrapper {
+        padding: 0.5rem;
+        overflow-x: auto;
+    }
+    
+    .inventory-table thead th {
+        font-size: 9px;
+        padding: 0.5rem 0.25rem;
+        white-space: nowrap;
+    }
+    
+    .inventory-table tbody td {
+        font-size: 10px;
+        padding: 0.5rem 0.25rem;
+    }
+    
+    .log-container {
+        padding: 0.5rem;
+    }
+    
+    .log-container h5 {
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .log-container h5 i {
+        font-size: 0.75rem;
+    }
+    
+    .log-container > div {
+        max-height: 400px;
+        font-size: 9px;
+    }
+    
+    .form-select,
+    .form-control {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+    
+    .d-flex.flex-wrap.gap-2 {
+        gap: 0.25rem !important;
+    }
+}
+
+/* Small mobile screens (320px to 359px) */
+@media (min-width: 320px) and (max-width: 359px) {
+    .container-fluid {
+        padding: 0.375rem;
+    }
+    
+    .stats-header {
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Keep stats cards in row */
+    .stats-header .row {
+        display: flex !important;
+        flex-direction: row !important;
+    }
+    
+    .stats-header .col-xl-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+        padding: 0 0.2rem;
+    }
+    
+    .stats-card .card-body {
+        padding: 0.5rem;
+    }
+    
+    .stats-card .row.no-gutters {
+        display: flex;
+        flex-direction: column !important;
+    }
+    
+    .stats-card .row.no-gutters .col {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .stats-card .row.no-gutters .col-auto {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-top: 0.4rem;
+    }
+    
+    .stats-card .h5 {
+        font-size: 0.95rem;
+    }
+    
+    .stats-card .text-xs {
+        font-size: 0.6rem;
+    }
+    
+    .stats-card i {
+        font-size: 0.7rem;
+    }
+    
+    .header-btn {
+        font-size: 8px;
+        padding: 3px 6px;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .action-btn {
+        font-size: 8px;
+        padding: 3px 6px;
+    }
+    
+    /* Keep table and logs side by side */
+    .row .col-lg-9 {
+        flex: 0 0 58% !important;
+        max-width: 58% !important;
+        padding-right: 0.2rem;
+    }
+    
+    .row .col-lg-3 {
+        flex: 0 0 42% !important;
+        max-width: 42% !important;
+        padding-left: 0.2rem;
+    }
+    
+    .table-wrapper,
+    .log-container {
+        padding: 0.375rem;
+    }
+    
+    .inventory-table thead th {
+        font-size: 8px;
+        padding: 0.375rem 0.2rem;
+    }
+    
+    .inventory-table tbody td {
+        font-size: 9px;
+        padding: 0.375rem 0.2rem;
+    }
+    
+    .log-container h5 {
+        font-size: 0.75rem;
+    }
+    
+    .log-container > div {
+        max-height: 350px;
+        font-size: 8px;
+    }
+    
+    .form-select,
+    .form-control {
+        font-size: 9px;
+        padding: 3px 6px;
+    }
+}
+
+/* Extra small mobile (under 320px) */
+@media (max-width: 319px) {
+    .container-fluid {
+        padding: 0.25rem;
+    }
+    
+    .stats-header {
+        padding: 0.375rem;
+    }
+    
+    /* Keep stats cards in row */
+    .stats-header .row {
+        display: flex !important;
+        flex-direction: row !important;
+    }
+    
+    .stats-header .col-xl-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+        padding: 0 0.15rem;
+    }
+    
+    .stats-card .card-body {
+        padding: 0.375rem;
+    }
+    
+    .stats-card .row.no-gutters {
+        display: flex;
+        flex-direction: column !important;
+    }
+    
+    .stats-card .row.no-gutters .col {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .stats-card .row.no-gutters .col-auto {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-top: 0.3rem;
+    }
+    
+    .stats-card .h5 {
+        font-size: 0.85rem;
+    }
+    
+    .stats-card .text-xs {
+        font-size: 0.55rem;
+    }
+    
+    .header-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Keep table and logs side by side */
+    .row .col-lg-9 {
+        flex: 0 0 55% !important;
+        max-width: 55% !important;
+    }
+    
+    .row .col-lg-3 {
+        flex: 0 0 45% !important;
+        max-width: 45% !important;
+    }
+    
+    .table-wrapper,
+    .log-container {
+        padding: 0.25rem;
+    }
+    
+    .log-container > div {
+        max-height: 300px;
+    }
+}
+    /* Spacing utilities */
+    .gap-2 {
+        gap: 0.5rem !important;
+    }
+
+    .d-flex.justify-content-between {
+        display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: 0.5rem;
     }
-    
-    /* Improved responsive behavior */
-    @media screen and (max-width: 992px) {
-        .stats-cards {
-            flex-direction: column;
+
+    .d-flex.flex-wrap {
+        flex-wrap: wrap;
+    }
+
+    /* Smooth animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
         }
-        
-        .stat-card {
-            margin-bottom: 1rem;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
     }
-    
-    @media screen and (max-width: 768px) { 
-        .logs-section {
-            margin-top: 1.5rem;
-        }
-        
-        .search-filters {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        
-        .search-filters > * {
-            margin-bottom: 0.5rem;
-        }
+
+    .inventory-card,
+    .table-wrapper,
+    .log-container,
+    .stats-card {
+        animation: fadeIn 0.5s ease-out;
     }
 </style>
+
 <div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between bg-white p-2">
-        <div class="row bg-white mt-2 justify-content-between w-100">
-            <div class="col-xl-6 col-md-6">
-                <div class="card stats-card bg-gradient-light h-100 py-2">
+    <div class="stats-header">
+        <div class="row align-items-center justify-content-between">
+            <div class="col-xl-6 col-md-6 mb-3 mb-xl-0">
+                <div class="stats-card">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Inventory Cost</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">USD {{total_cost}}</div>
+                                <div class="text-xs" style= "color: #0000ff">Total Inventory Cost <i class="bx bx-dollar-circle mb-0"></i></div>
+                                <div class="h5">USD {{total_cost}}</div>
                             </div>
-                            <div class="col-auto">
-                                <i class="bx bx-dollar-circle fa-2x text-gray-300"></i>
-                            </div>
+                            {% comment %} <div class="col-auto">
+                                
+                            </div> {% endcomment %}
                         </div>
                     </div>
                 </div>
             </div>
             
             <div class="col-xl-6 col-md-6">
-                <div class="card stats-card bg-gradient-light h-100 py-2">
+                <div class="stats-card">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Inventory Price</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">USD {{total_price}}</div>
+                                <div class="text-xs text-primary">Total Inventory Price <i class="bx bx-cart mb-0"></i></div>
+                                <div class="h5 d-flex ">USD {{total_price}}</div>
                             </div>
-                            <div class="col-auto">
-                                <i class="bx bx-cart fa-2x text-gray-300"></i>
+
+                            <div class="col mr-2">
+                            {% if request.user.role == 'admin' %}
+                            <div class="col-12 mt-3 d-none d-sm-block text-end">
+                                <button class="header-btn" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                                    <i class="bx bx-plus"></i>Add New Product
+                                </button>
                             </div>
+                            {% endif %}
+                            </div>
+                            {% comment %} <div class="col-auto">
+                                
+                            </div> {% endcomment %}
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        {% if request.user.role == 'admin' %}
-          <button class="d-none d-sm-inline-block header-btn btn-sm action-btn" data-bs-toggle="modal" data-bs-target="#addProductModal">
-              <i class="bx bx-plus mr-1"></i>Add New Product
-          </button>
-        {% endif %}
-    </div> 
 
-    <div class="card inventory-card mt-2">
-        <div class="card-body p-3">
+        </div>
+    </div>
+
+    <div class="card inventory-card mb-2">
+        <div class="card-body">
             <div class="d-flex flex-wrap justify-content-between align-items-center">
                 <div class="d-flex flex-wrap gap-2 mb-3 mb-md-0">
                     {% if request.user.role == 'admin' %}
-                      <a href="{% url 'inventory:create_purchase_order' %}" class="btn btn-sm btn-outline-primary action-btn d-md-none">
-                          <i class="bx bx-plus"></i> Product
-                      </a>
+                    <a href="{% url 'inventory:create_purchase_order' %}" class="btn btn-sm btn-outline-primary action-btn d-md-none">
+                        <i class="bx bx-plus"></i>Product
+                    </a>
                     {% endif %}
-                    <a href="{% url 'inventory:reorder_list' %}" class="header-btn action-btn">
-                        <i class="bx bx-list-check mr-1"></i>Reorder List
+                    <a href="{% url 'inventory:reorder_list' %}" class="action-btn">
+                        <i class="bx bx-list-check"></i>Reorder List
                     </a>
-                    <a href="{% url 'inventory:purchase_orders' %}" class="header-btn action-btn">
-                        <i class="bx bx-package mr-1"></i>Purchase Orders
+                    <a href="{% url 'inventory:purchase_orders' %}" class="action-btn">
+                        <i class="bx bx-package"></i>Purchase Orders
                     </a>
-                    <a href="{% url 'inventory:suppliers' %}" class="header-btn action-btn">
-                        <i class="bx bx-store mr-1"></i>Suppliers
+                    <a href="{% url 'inventory:suppliers' %}" class="action-btn">
+                        <i class="bx bx-store"></i>Suppliers
                     </a>
-                    <a href="{% url 'inventory:stocktake' %}" class="header-btn action-btn">
-                        <i class="bx bx-clipboard mr-1"></i>Stocktake
+                    <a href="{% url 'inventory:stocktake' %}" class="action-btn">
+                        <i class="bx bx-clipboard"></i>Stocktake
                     </a>
-                    <a href="{% url 'inventory:loss_management' %}" class="header-btn btn-outline-secondary action-btn" disabled>
-                        <i class="bx bx-error-circle mr-1"></i>Loss Management
+                    <a href="{% url 'inventory:loss_management' %}" class="btn-outline-secondary action-btn">
+                        <i class="bx bx-error-circle"></i>Loss Management
                     </a>
-                    <a href="{% url 'inventory:settings' %}" class="header-btn btn-outline-secondary action-btn">
-                        <i class='bx bx-cog'></i> Settings
+                    <a href="{% url 'inventory:settings' %}" class="btn-outline-secondary action-btn">
+                        <i class='bx bx-cog'></i>Settings
                     </a>
                 </div>
                 
-                <div>
-                    <a href="?download=true&excel=true" class="btn btn-outline-secondary  btn-sm action-btn">
-                        <i class="bx bx-download mr-1"></i>Export Excel
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <a href="?download=true&excel=true" class="btn btn-outline-secondary btn-sm action-btn">
+                        <i class="bx bx-download"></i>Export Excel
                     </a>
-                    <form method="get" class="d-flex gap-2" id="filter-form">
-                      <select name="category" class="form-select form-select-sm" id="id_category">
-                          <option value="">All Categories</option>
-                          <option value="inactive" {% if request.GET.category == "inactive" %}selected{% endif %}>Inactive</option>
-                          {% for category in categories %}
-                              <option value="{{ category.name }}" {% if category.name == request.GET.category %}selected{% endif %}>
-                                  {{ category.name }}
-                              </option>
-                          {% endfor %}
-                      </select>
+                    <form method="get" id="filter-form">
+                        <select name="category" class="form-select form-select-sm me-3 pt-2 pb-2" id="id_category">
+                            <option value="">All Categories</option>
+                            <option value="inactive" {% if request.GET.category == "inactive" %}selected{% endif %}>Inactive</option>
+                            {% for category in categories %}
+                            <option value="{{ category.name }}" {% if category.name == request.GET.category %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
                     </form>
-
-                  <script>
-                      document.getElementById('id_category').addEventListener('change', function() {
-                          document.getElementById('filter-form').submit();
-                      });
-                  </script>
-
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="row bg-white mt-2">
-        <div class="col-9">
+    <div class="row">
+        <div class="col-lg-9 mb-3 mb-lg-0">
             <div class="table-wrapper">
                 {% include "components/inventory_table.html" %}
             </div>
         </div>
         
-        <div class="col-3 logs-section">
-            <div class="log-container p-2 mt-1">
-                <h5 class="mb-1 d-flex align-items-center"><i class="bx bx-history bx-lg mr-2"></i><span class="ms-2">Activity Logs</span></h5>
-                <div style="height: 70vh; overflow-y: auto;">
-                    {% include "partials/logs_page.html" %}
+        <div class="col-lg-3">
+            <div class="log-container">
+                <h5><i class="bx bx-history"></i>Activity Logs</h5>
+                <div style="height: 70vh;">
+                    <div class="row" id="log-rows">
+                        {% include "partials/logs_page.html" %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -301,195 +1169,204 @@
 </div>
 
 <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content shadow rounded-4">
-      <div class="modal-header border-0">
-        <h5 class="modal-title fw-semibold" id="addProductModalLabel">Add Product</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body pt-0">
-        <form method="post" class="px-3">
-          {% csrf_token %}
-
-          <div class="mb-3 d-none" id="div_id_batch_code">
-            <label for="id_batch_code" class="form-label required">Batch Code <span class="text-danger">*</span></label>
-            <div class="input-group">
-              <select class="form-select" id="id_code_select">
-                <option value="">-----</option>
-              </select>
-              <button type="button" class="btn btn-outline-secondary" id="add_batch_modal">
-                <i class="bx bx-plus"></i>
-              </button>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProductModalLabel">Add Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-          </div>
 
-          <div class="mb-3 d-none">
-            <select class="form-select" id="id_search" data-clearable="true" data-searchable="true">
-              <option value="">Search Product</option>
-              {% for product in inventory %}
-              <option value="{{ product.product.id }}">{{ product.product.name }} [{{ product.quantity }}]</option>
-              {% endfor %}
-            </select>
-          </div>
+            <div class="modal-body">
+                <form method="post" class="px-3">
+                    {% csrf_token %}
 
-          <div class="mb-3">
-            <label for="id_image" class="form-label required">Product Image <span class="text-danger">*</span></label>
-            <input type="file" name="image" class="form-control" required id="id_image">
-          </div>
+                    <div class="mb-3 d-none" id="div_id_batch_code">
+                        <label for="id_batch_code" class="form-label required">Batch Code <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <select class="form-select" id="id_code_select">
+                                <option value="">-----</option>
+                            </select>
+                            <button type="button" class="btn btn-outline-secondary" id="add_batch_modal">
+                                <i class="bx bx-plus"></i>
+                            </button>
+                        </div>
+                    </div>
 
-          <div class="mb-3">
-            <label for="id_name" class="form-label required">Name <span class="text-danger">*</span></label>
-            <div class="input-group">
-              <input type="text" name="name" class="form-control" required id="id_name">
-              <button class="btn btn-light border" type="button">s</button>
-              <button class="btn btn-light border bx bx-edit" type="button"></button>
-              <button class="btn btn-light border bx bx-trash" type="button"></button>
+                    <div class="mb-3 d-none">
+                        <select class="form-select" id="id_search" data-clearable="true" data-searchable="true">
+                            <option value="">Search Product</option>
+                            {% for product in inventory %}
+                            <option value="{{ product.product.id }}">{{ product.product.name }} [{{ product.quantity }}]</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_image" class="form-label required">Product Image <span class="text-danger">*</span></label>
+                        <input type="file" name="image" class="form-control" required id="id_image">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_name" class="form-label required">Name <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" name="name" class="form-control" required id="id_name">
+                            <button class="btn btn-light border" type="button">s</button>
+                            <button class="btn btn-light border bx bx-edit" type="button"></button>
+                            <button class="btn btn-light border bx bx-trash" type="button"></button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_category" class="form-label required">Category <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <select name="category" class="form-select" required id="id_category">
+                                <option value="">---------</option>
+                                {% for category in categories %}
+                                <option value="{{ category.name }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-outline-secondary" type="button" id="id_add_category">
+                                <i class="bx bx-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_quantity" class="form-label required">Quantity <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <button type="button" class="btn btn-outline-secondary" id="decrease_quantity">−</button>
+                            <input type="number" name="quantity" class="form-control text-center" id="id_quantity" value="1" min="1" required>
+                            <button type="button" class="btn btn-outline-secondary" id="increase_quantity">+</button>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="id_cost_price" class="form-label required">Cost Price <span class="text-danger">*</span></label>
+                            <input type="number" name="cost_price" class="form-control" id="id_cost_price" step="0.01" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_selling_price" class="form-label required">Selling Price <span class="text-danger">*</span></label>
+                            <input type="number" name="selling_price" class="form-control" id="id_selling_price" step="0.01" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_wholesale_price" class="form-label">Wholesale Price</label>
+                            <input type="number" name="wholesale_price" class="form-control" id="id_wholesale_price" step="0.01">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_tax_type" class="form-label required">Tax Type <span class="text-danger">*</span></label>
+                        <select name="tax_type" class="form-select" required id="id_tax_type">
+                            <option value="" selected>---------</option>
+                            <option value="exempted">Exempted</option>
+                            <option value="standard">Standard</option>
+                            <option value="zero rated">Zero Rated</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_min_stock_level" class="form-label required">Min Stock Level <span class="text-danger">*</span></label>
+                        <input type="number" name="min_stock_level" value="0" class="form-control" required id="id_min_stock_level">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-check mb-2">
+                        <input type="checkbox" name="end_of_day" class="form-check-input" id="id_end_of_day">
+                        <label for="id_end_of_day" class="form-check-label">End of Day</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" name="service" class="form-check-input" id="id_service">
+                        <label for="id_service" class="form-check-label">Service</label>
+                    </div>
+
+                    <p class="text-danger small" id="error"></p>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="reset" class="btn btn-danger btn-sm">
+                            <i class="bx bx-reset"></i> Reset
+                        </button>
+                        <button type="button" id="id_submit_product" class="btn btn-success btn-sm">
+                            <i class="bx bx-save"></i> Save
+                        </button>
+                    </div>
+                </form>
             </div>
-          </div>
-
-          <div class="mb-3">
-            <label for="id_category" class="form-label required">Category <span class="text-danger">*</span></label>
-            <div class="input-group">
-              <select name="category" class="form-select" required id="id_category">
-                <option value="">---------</option>
-                {% for category in categories %}
-                <option value="{{ category.name }}">{{ category.name }}</option>
-                {% endfor %}
-              </select>
-              <button class="btn btn-outline-secondary" type="button" id="id_add_category">
-                <i class="bx bx-plus"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label for="id_quantity" class="form-label required">Quantity <span class="text-danger">*</span></label>
-            <div class="input-group">
-              <button type="button" class="btn btn-outline-secondary" id="decrease_quantity">−</button>
-              <input type="number" name="quantity" class="form-control text-center" id="id_quantity" value="1" min="1" required>
-              <button type="button" class="btn btn-outline-secondary" id="increase_quantity">+</button>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-4 mb-3">
-              <label for="id_cost_price" class="form-label required">Cost Price <span class="text-danger">*</span></label>
-              <input type="number" name="cost_price" class="form-control" id="id_cost_price" step="0.01" required>
-            </div>
-            <div class="col-md-4 mb-3">
-              <label for="id_selling_price" class="form-label required">Selling Price <span class="text-danger">*</span></label>
-              <input type="number" name="selling_price" class="form-control" id="id_selling_price" step="0.01" required>
-            </div>
-            <div class="col-md-4 mb-3">
-              <label for="id_wholesale_price" class="form-label">Wholesale Price</label>
-              <input type="number" name="wholesale_price" class="form-control" id="id_wholesale_price" step="0.01">
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label for="id_tax_type" class="form-label required">Tax Type <span class="text-danger">*</span></label>
-            <select name="tax_type" class="form-select" required id="id_tax_type">
-              <option value="" selected>---------</option>
-              <option value="exempted">Exempted</option>
-              <option value="standard">Standard</option>
-              <option value="zero rated">Zero Rated</option>
-            </select>
-          </div>
-
-          <div class="mb-3">
-            <label for="id_min_stock_level" class="form-label required">Min Stock Level <span class="text-danger">*</span></label>
-            <input type="number" name="min_stock_level" value="0" class="form-control" required id="id_min_stock_level">
-          </div>
-
-          <div class="mb-3">
-            <label for="id_description" class="form-label ">Description <span class="text-danger">*</span></label>
-            <textarea name="description" class="form-control" rows="3" ></textarea>
-          </div>
-
-          <div class="form-check mb-2">
-            <input type="checkbox" name="end_of_day" class="form-check-input" id="id_end_of_day">
-            <label for="id_end_of_day" class="form-check-label">End of Day</label>
-          </div>
-          <div class="form-check mb-3">
-            <input type="checkbox" name="service" class="form-check-input" id="id_service">
-            <label for="id_service" class="form-check-label">Service</label>
-          </div>
-
-          <p class="text-danger small" id="error"></p>
-
-          <!-- Buttons -->
-          <div class="d-flex justify-content-end gap-2">
-            <button type="reset" class="btn btn-danger btn-sm">
-              <i class="bx bx-reset"></i> Reset
-            </button>
-            <button type="button" id="id_submit_product" class="btn btn-success btn-sm">
-              <i class="bx bx-save"></i> Save
-            </button>
-          </div>
-        </form>
-      </div>
+        </div>
     </div>
-  </div>
 </div>
+
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
 <script>
-  document.getElementById('id_submit_product').addEventListener('click', function () {
+document.getElementById('id_submit_product').addEventListener('click', function () {
     const form = document.querySelector('#addProductModal form');
     const formData = new FormData(form);
-  //a
+
     fetch("{% url 'inventory:add-inventory' %}", {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
-      },
-      body: formData
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: formData
     })
     .then(response => response.json())
     .then(data => {
-      if (data.status === 'success') {
-        Toastify({
-          text: data.message,
-          duration: 3000,
-          gravity: "top",
-          position: 'right',
-          backgroundColor: "#4fbe87"
-        }).showToast();
-  
-        form.reset();
-        //$('#addProductModal').modal('hide');
-      } else {
-        document.getElementById('error').textContent = data.message;
-      }
+        if (data.status === 'success') {
+            Toastify({
+                text: data.message,
+                duration: 3000,
+                gravity: "top",
+                position: 'right',
+                backgroundColor: "#4fbe87"
+            }).showToast();
+            form.reset();
+        } else {
+            document.getElementById('error').textContent = data.message;
+        }
     })
     .catch(error => {
-      document.getElementById('error').textContent = 'An unexpected error occurred.';
-      console.error(error);
+        document.getElementById('error').textContent = 'An unexpected error occurred.';
+        console.error(error);
     });
-  });
+});
 
-  document.getElementById('increase_quantity').addEventListener('click', function () {
+document.getElementById('increase_quantity').addEventListener('click', function () {
     let quantityInput = document.getElementById('id_quantity');
     quantityInput.value = parseInt(quantityInput.value || 0) + 1;
-  });
+});
 
-  document.getElementById('decrease_quantity').addEventListener('click', function () {
+document.getElementById('decrease_quantity').addEventListener('click', function () {
+    let quantityInput = document.getElementById('id_quantity');
+    let currentValue = parseInt(quantityInput.value || 1);
+    if (currentValue > 1) {
+        quantityInput.value = currentValue - 1;
+    }
+});
+
+document.getElementById('id_category').addEventListener('change', function() {
+    document.getElementById('filter-form').submit();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
     
-  });
+    const categorySelect = document.getElementById('id_category');
+    if (categorySelect) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const category = urlParams.get('category');
+        if (category) {
+            categorySelect.value = category;
+        }
+    }
+});
 
-  document.addEventListener('DOMContentLoaded', function() {
-      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-      const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-          return new bootstrap.Tooltip(tooltipTriggerEl)
-      });
-      
-      const categorySelect = document.getElementById('id_category');
-      if (categorySelect) {
-          const urlParams = new URLSearchParams(window.location.search);
-          const category = urlParams.get('category');
-          if (category) {
-              categorySelect.value = category;
-          }
-      }
-  });
 </script>
-{% endblock content %} 
+{% endblock content %}

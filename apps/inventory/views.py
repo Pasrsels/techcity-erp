@@ -692,6 +692,76 @@ def logs_page(request):
         'next_page_number': page_obj.next_page_number() if page_obj.has_next() else None
     })
 
+
+@login_required
+def logs_page(request):
+    """
+    Paginated activity logs view with infinity scroll support
+    """
+    page_number = request.GET.get('page', 1)
+    logs_per_page = 20 
+    
+    now = timezone.now() 
+    today = now.date()
+
+    logs = ActivityLog.objects.filter(
+        branch=request.user.branch
+    ).select_related(
+        'branch', 
+        'user', 
+        'inventory'
+    ).order_by('-timestamp')
+    
+    paginator = Paginator(logs, logs_per_page)
+    page_obj = paginator.get_page(page_number)
+    
+    grouped_logs = {}
+    ordered_grouped_logs = {}
+    
+    for log in page_obj:
+        log_date = log.timestamp.date()
+        
+        if log_date == today:
+            date_key = 'Today'
+        elif log_date == today - timedelta(days=1):
+            date_key = 'Yesterday'
+        else:
+            date_key = log_date.strftime('%A, %d %B %Y')
+        
+        if not log.invoice:
+            if date_key not in grouped_logs:
+                grouped_logs[date_key] = {'logs': []}
+            grouped_logs[date_key]['logs'].append(log)
+    
+    for special_day in ['Today', 'Yesterday']:
+        if special_day in grouped_logs:
+            ordered_grouped_logs[special_day] = grouped_logs[special_day]
+    
+    remaining_dates = sorted(
+        [(k, v) for k, v in grouped_logs.items() if k not in ['Today', 'Yesterday']],
+        key=lambda x: datetime.datetime.strptime(x[0], '%A, %d %B %Y') if x[0] not in ['Today', 'Yesterday'] else today,
+        reverse=True
+    )
+    
+    for date_key, data in remaining_dates:
+        ordered_grouped_logs[date_key] = data
+    
+    context = {
+        'grouped_logs': ordered_grouped_logs,
+        'has_next': page_obj.has_next(),
+        'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
+        'current_page': page_obj.number,
+    }
+    
+    if request.headers.get('HX-Request'):
+        if not page_obj.has_next():
+            response = render(request, 'partials/logs_page.html', context)
+            response['X-No-More-Data'] = 'true'
+            return response
+        return render(request, 'partials/logs_page.html', context)
+    
+    return render(request, 'partials/logs_page.html', context)
+
 @login_required
 def edit_service(request, service_id):
     service = get_object_or_404(Service, id=service_id)

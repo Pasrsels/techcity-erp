@@ -1,53 +1,430 @@
 {% load static%}
+
 <style>
 :root {
     --primary: #11998e;
-    --primary-no-gradient: #11998e;
-    --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-    --secondary: orange;
-    --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
-    --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-    --dark: #1a1a2e;
-    --dark-alt: #16213e;
-    --text-light: rgba(228, 230, 234, 1);
-    --text-dark: black;
-    --text-muted: black;
-    --glass: rgba(255, 255, 255, 0.1);
-    --glass-border: rgba(255, 255, 255, 0.2);
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
-    --border-radius: 12px;
-    --border-radius-sm: 8px;
+    --primary-light: #38ef7d;
+    --primary-dark: #0d6b61;
+    --text-dark: #2c3e50;
+    --text-muted: #6c757d;
+    --bg-light: #f8f9fa;
+    --shadow: 0 2px 8px rgba(17, 153, 142, 0.08);
+    --shadow-md: 0 4px 12px rgba(17, 153, 142, 0.12);
+    --shadow-lg: 0 8px 24px rgba(17, 153, 142, 0.15);
+    --shadow-hover: 0 6px 20px rgba(17, 153, 142, 0.2);
+    --border-radius: 16px;
+    --border-radius-sm: 10px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --m-bottom: 20px;
 }
 
-.header-btn {
-    padding: 8px 16px;
+.table-responsive {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 0;
+}
+
+.table-container {
+    background: #fff;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+/* Search Input */
+.search-container {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: white;
+    padding: 5px;
+    border-bottom: 1px solid #e0e0e0;
+    margin: 0 !important;
+}
+
+.search-input {
+    width: 90%;
+    padding: 12px 45px 12px 20px;
     border-radius: var(--border-radius-sm);
-    background: var(--primary-no-gradient);
-    border: 1px solid var(--glass-border);
-    color: var(--text-light);
-    text-decoration: none;
+    border: none;
+    font-size: 14px;
+    background-color: white;
+    box-shadow: none;
+    outline: white;
+    margin: 0 !important;
+}
+
+.search-input:focus {
+    border-color: var(--primary);
+    box-shadow: none;
+    outline: none;
+}
+
+.search-input:hover {
+    border-color: var(--primary);
+}
+
+.search-input::placeholder {
+    color: #adb5bd;
+}
+
+.search-icon {
+    position: absolute;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+/* Table Styling */
+.table {
+    margin-bottom: 0;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table thead {
+    position: sticky;
+    top: 65px;
+    z-index: 1;
+}
+
+.table thead th {
+    background: #f8f9fa;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: capitalize;
+    letter-spacing: 0.3px;
+    padding: 0.875rem 0.75rem;
+    border: none;
+    white-space: nowrap;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.table thead th:first-child {
+    padding-left: 1.5rem;
+}
+
+.table thead th[style*="background: #ebeced"],
+.table thead th:nth-child(5),
+.table thead th:nth-child(6),
+.table thead th:nth-child(7),
+.table thead th:nth-child(8) {
+    background: #ebeced !important;
+    color: var(--text-dark);
+}
+
+.table tbody tr {
+    transition: var(--transition);
+    border-bottom: 1px solid #f0f0f0;
+    background: white;
+}
+
+.table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.table tbody td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+    border: none;
+    color: var(--text-dark);
+    font-size: 13px;
+}
+
+.table tbody td:first-child {
+    padding-left: 1.5rem;
+    color: var(--text-muted);
+}
+
+.table tbody td small {
+    font-size: 13px;
+}
+
+/* Product Image */
+.table tbody td img {
+    border-radius: 6px;
+    object-fit: cover;
+    box-shadow: none;
+    transition: var(--transition);
+    margin-right: 8px;
+}
+
+.table tbody td img:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow);
+}
+
+/* Action Icons */
+.table tbody td a,
+.table tbody td span {
+    transition: var(--transition);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+}
+
+.table tbody td a:hover i,
+.table tbody td span:hover i {
+    color: var(--primary) !important;
+}
+
+.table tbody td i {
+    font-size: 16px;
+    transition: var(--transition);
+    color: #6c757d;
+}
+
+.table tbody td .btn {
+    padding: 4px 8px;
+    background: #6c757d;
+    border: none;
+    border-radius: 6px;
+    color: white;
+}
+
+.table tbody td .btn:hover {
+    background: var(--primary);
+}
+
+/* Buttons */
+.btn {
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+    transition: var(--transition);
+    border: none;
+}
+
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 13px;
+}
+
+.btn-secondary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-outline-secondary {
+    border: 1px solid #e0e0e0;
+    background: white;
+    color: var(--text-muted);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Modal Styling */
+.modal-content {
+    border-radius: var(--border-radius);
+    border: none;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 10px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.modal-title {
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+/* Form Controls */
+.form-control,
+.form-select {
+    border-radius: var(--border-radius-sm);
+    border: 1px solid #e0e0e0;
+    padding: 10px 14px;
     transition: var(--transition);
     font-size: 14px;
-    cursor: pointer;
+    box-shadow: none;
+    outline: none;
 }
 
-.header-btn:hover {
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary);
+    box-shadow: none;
+    outline: none;
+}
+
+.form-control:hover,
+.form-select:hover {
+    border-color: var(--primary);
+}
+
+/* List Group */
+.list-group-item {
+    border: 1px solid #e0e0e0;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 0.5rem;
+    transition: var(--transition);
+}
+
+.list-group-item:hover {
+    background: rgba(17, 153, 142, 0.05);
+    border-color: var(--primary);
+}
+
+/* Services Table */
+#serviceTable {
+    background: white;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+#serviceTable thead {
+    background: #f8f9fa;
+}
+
+#serviceTable thead th {
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: capitalize;
+    letter-spacing: 0.3px;
+    padding: 0.875rem 0.75rem;
+    border: none;
+    border-bottom: 2px solid #e9ecef;
+}
+
+#serviceTable tbody tr {
+    transition: var(--transition);
+    background: white;
+}
+
+#serviceTable tbody tr:hover {
+    background: #f8f9fa;
+}
+
+/* Scrollbar Styling */
+.table-responsive::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
     background: var(--primary);
-    transform: translateY(-1px);
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+.text-primary {
+    color: var(--primary) !important;
+}
+
+.text-success {
+    color: var(--primary-light) !important;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+    .search-input {
+        padding: 10px 40px 10px 15px;
+        font-size: 13px;
+    }
+
+    .table thead th {
+        font-size: 11px;
+        padding: 0.75rem 0.5rem;
+    }
+
+    .table tbody td {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .table tbody td small {
+        font-size: 12px;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.table-container {
+    animation: fadeIn 0.5s ease-out;
 }
 </style>
+
 {% block content %}
-   <div class="table-responsive mt-2" style="height: 70vh; overflow-y: auto;">
+   <div class="table-responsive mt-2" style="height: 70vh; border: none; overflow-y: auto;">
         <!-- inventory table -->
         {% include 'components/loader.html' %}
         <div class='product table-container p-1 rounded' style="background: #fff; position: relative;">
             <div class="search-container border rounded" id="fixed-search" style="position: sticky; top: 0; z-index: 2; background: white;">
-                <input type="text" class="search-input" placeholder="Search products..." id="searchInput" style="margin-left: 20px !important;">
+                <input type="text" class="search-input mt-1" placeholder="Search products..." id="searchInput" style="margin-left: 20px !important;">
                 <i class="fas fa-search search-icon"></i>
             </div>
             <table class='table table-borderless table-hover table-responsive table-sm rounded p-2 ' style="width:100%;" id='inventory'>

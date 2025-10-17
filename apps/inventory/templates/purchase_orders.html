@@ -96,6 +96,1026 @@
     .background{
         background: var(--primary);
     }
+
+    
+.inventory .nav.nav-tabs {
+    margin-left: 1px;
+    margin-right: 20px;
+    margin-top: 20px;
+    margin-bottom: 0;                      
+    border-bottom: none;                  
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    background: var(--primary);         
+    box-shadow: none;
+}
+
+.inventory .nav.nav-tabs .nav-link {
+    background: var(--primary);
+    border: none;
+    color: #fff !important;
+    padding: 10px 16px;
+}
+
+.inventory .nav.nav-tabs .nav-link.active {
+    background: transparent;
+    color: #fff !important;
+    font-weight: 600;
+    position: relative;
+}
+.inventory .nav.nav-tabs .nav-link.active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;               /* sits exactly at seam */
+    height: 3px;
+    background: var(--primary-no-gradient);
+    border-radius: 2px 2px 0 0;
+}
+
+.inventory > .nav.nav-tabs,
+.inventory > .tab-content {
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.inventory > .nav.nav-tabs {
+    margin-top: 20px;
+    margin-bottom: 0;                            
+    border-bottom: none !important;
+    border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+    background: var(--primary) !important;        
+    box-shadow: none !important;
+}
+
+.tab-pane {
+    margin-left: -0.5px !important;
+    padding: 0 !important;
+
+}
+
+.inventory > .nav.nav-tabs .nav-link {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    color: #fff !important;
+    padding: 10px 16px;
+}
+
+.inventory > .nav.nav-tabs .nav-link.active {
+    background: transparent !important;
+    color: #fff !important;
+    font-weight: 600;
+    position: relative;
+}
+
+.inventory > .nav.nav-tabs .nav-link.active::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: -1px;
+    height: 3px;
+    background: white;
+    border-radius: 2px 2px 0 0;
+}
+
+.inventory > .tab-content {
+    margin-top: 0px;                                  
+    border-radius: 0 0 var(--border-radius) var(--border-radius) !important;
+    padding: 0px;
+    margin-bottom: 0px;
+    overflow: hidden;
+}
+
+.inventory .tab-content .table,
+.inventory .tab-content .table-responsive {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+@media (max-width: 767px) {
+    .inventory > .nav.nav-tabs,
+    .inventory > .tab-content {
+        margin-left: 12px;
+        margin-right: 12px;
+    }
+    .inventory > .tab-content { 
+        padding: 12px; 
+    }
+}
+
+    .inventory-navbar {
+        background: #ffffff;
+        color: black;
+        padding: 10px 0;
+        box-shadow: var(--shadow);
+        border-radius: var(--border-radius);
+        margin: 20px;
+    }
+    .inventory-navbar h4 {
+        font-weight: 700;
+        font-size: 1.75rem;
+    }
+    .inventory-navbar p {
+        font-size: 0.875rem;
+        color: black;
+    }
+    .inventory-navbar .add-btn {
+        padding: 8px 16px;  
+        border-radius: var(--border-radius-sm);
+        background: var(--primary-no-gradient);
+        border: 1px solid var(--glass-border);
+        color: var(--text-light);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 14px;
+        cursor: pointer;
+    }
+    .inventory-navbar .add-btn:hover {
+        background: var(--primary); 
+        transform: translateY(-1px);
+    }
+    .inventory {
+        min-height: 100vh;      
+        background: #f8f9fa;
+        padding-bottom: 40px;
+    }
+    .tab-content {
+    }
+    #tab-loader {
+        background: var(--glass);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+    }
+    .modal-content {
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-lg);
+    }
+    .modal-header {
+        border-bottom: none;
+        background: var(--primary);
+        color: #fff;
+        border-top-left-radius: var(--border-radius);
+        border-top-right-radius: var(--border-radius);
+    }
+    .modal-footer {
+        border-top: none;
+        border-bottom-left-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
+    }
+    .modal-body h5 {
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+    .modal-body p {
+        font-size: 1rem;
+        color: var(--text-dark);
+    }
+    .btn-secondary {
+        background: var(--primary);
+        border: none;
+    }
+    .btn-secondary:hover {
+        background: var(--primary-dark);
+    }
+    .btn-danger {
+        background: var(--danger);
+        border: none;
+    }
+    .btn-danger:hover {
+        background: #ff4d4d;
+    }
+    .btn:focus {
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+    }
+    .btn:active {
+        transform: translateY(1px);
+    }
+    .form-control:focus {
+        border-color: rgba(102, 126, 234, 0.5);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .form-control {
+        border-radius: var(--border-radius-sm);
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        color: var(--text-dark);
+        transition: var(--transition);
+    }
+    .form-control::placeholder {
+        color: var(--text-muted);
+    }
+    .form-select {
+        border-radius: var(--border-radius-sm);
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        color: var(--text-dark);
+        transition: var(--transition);
+    }
+    .form-select:focus {
+        border-color: rgba(102, 126, 234, 0.5);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .form-select option {
+        background: #fff;
+        color: var(--text-dark);
+    }
+    .form-select option:hover {
+        background: var(--primary);
+        color: #fff;
+    }
+    .form-select option:checked {
+        background: var(--primary);
+        color: #fff;
+    }
+    .form-label {
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+    .form-text {
+        color: var(--text-muted);
+    }   
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+        border-radius: var(--border-radius-sm);
+    }
+    .btn-sm i {
+        font-size: 1rem;
+    }
+    .table {
+        background: #fff;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+    }
+    .table th {
+        background: #e9f7f0;
+        color: black;
+        border-bottom: none;
+    }   
+    .table td, .table th {
+        padding: 12px 15px;
+        vertical-align: middle;
+        border-top: none;
+    }
+    .table tbody tr:hover {
+        background: var(--glass);
+        cursor: pointer;
+    }
+    .table-responsive {
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+    .action-btn {
+        padding: 6px 12px;
+        border-radius: var(--border-radius-sm);
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        color: var(--text-dark);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 14px;
+        cursor: pointer;
+    }
+    .action-btn:hover {
+        background: var(--primary);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .action-btn i {
+        font-size: 1rem;
+        vertical-align: middle;
+    }
+
+@media (min-width: 1920px) {
+    .inventory {
+        padding-left: 40px;
+        padding-right: 40px;
+        padding-bottom: 60px;
+    }
+    
+    .inventory-navbar {
+        margin: 32px 40px;
+        padding: 20px 0;
+        border-radius: 20px;
+    }
+    
+    .inventory-navbar h4 {
+        font-size: 2.25rem;
+    }
+    
+    .inventory-navbar p {
+        font-size: 1.125rem;
+    }
+    
+    .inventory-navbar .add-btn {
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 12px;
+    }
+    
+    .search-container {
+        margin-bottom: 40px;
+        margin-left: 40px;
+        margin-right: 40px;
+    }
+    
+    .search-input {
+        padding: 18px 60px 18px 54px;
+        margin-left: 0;
+        font-size: 18px;
+        border-radius: 20px;
+    }
+    
+    .search-icon {
+        font-size: 1.5rem;
+        right: 24px;
+    }
+    
+    .nav {
+        margin-left: 40px;
+        margin-right: 40px;
+        border-radius: 16px;
+    }
+    
+    .nav-link {
+        font-size: 1.125rem;
+        padding: 16px 24px;
+    }
+    
+    .tab-content {
+        padding: 32px 40px;
+    }
+    
+    .table td, .table th {
+        padding: 16px 20px;
+        font-size: 1.0625rem;
+    }
+    
+    .btn-sm {
+        padding: 8px 16px;
+        font-size: 1rem;
+    }
+    
+    .modal-content {
+        border-radius: 20px;
+    }
+    
+    .modal-header {
+        padding: 24px;
+    }
+    
+    .modal-body {
+        padding: 32px;
+    }
+    
+    .modal-body h5 {
+        font-size: 1.5rem;
+    }
+    
+    .modal-body p {
+        font-size: 1.125rem;
+    }
+}
+
+/* Large screens (1200px to 1919px) */
+@media (min-width: 1200px) and (max-width: 1919px) {
+    .inventory {
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+    
+    .inventory-navbar {
+        margin: 24px;
+    }
+    
+    .inventory-navbar h4 {
+        font-size: 1.875rem;
+    }
+    
+    .search-container {
+        margin-left: 24px;
+        margin-right: 24px;
+    }
+    
+    .nav {
+        margin-left: 24px;
+        margin-right: 24px;
+    }
+    
+    .tab-content {
+        padding: 24px;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .inventory {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
+    .inventory-navbar {
+        margin: 20px 16px;
+        padding: 12px 0;
+    }
+    
+    .inventory-navbar h4 {
+        font-size: 1.625rem;
+    }
+    
+    .inventory-navbar p {
+        font-size: 0.8125rem;
+    }
+    
+    .inventory-navbar .add-btn {
+        padding: 7px 14px;
+        font-size: 13px;
+    }
+    
+    .search-container {
+        margin-bottom: 24px;
+        margin-left: 16px;
+        margin-right: 16px;
+    }
+    
+    .search-input {
+        padding: 13px 45px 13px 38px;
+        font-size: 15px;
+    }
+    
+    .nav {
+        margin-left: 16px;
+        margin-right: 16px;
+    }
+    
+    .nav-link {
+        padding: 10px 16px;
+        font-size: 0.9375rem;
+    }
+    
+    .tab-content {
+        padding: 20px 16px;
+    }
+    
+    .table td, .table th {
+        padding: 10px 12px;
+        font-size: 0.9375rem;
+    }
+}
+
+/* Medium screens/tablets (768px to 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+    .inventory {
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-bottom: 32px;
+    }
+    
+    .inventory-navbar {
+        margin: 16px 12px;
+        padding: 12px 0;
+    }
+    
+    .inventory-navbar nav {
+        flex-direction: row;
+        gap: 16px;
+        align-items: flex-start !important;
+    }
+    
+    .inventory-navbar h4 {
+        font-size: 1.5rem;
+    }
+    
+    .inventory-navbar p {
+        font-size: 0.8125rem;
+    }
+    
+    .inventory-navbar .add-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .search-container {
+        margin-bottom: 20px;
+        margin-left: 12px;
+        margin-right: 12px;
+    }
+    
+    .search-input {
+        padding: 12px 45px 12px 46px;
+        margin-left: 0;
+        font-size: 14px;
+    }
+    
+    .search-icon {
+        right: 16px;
+        font-size: 1.125rem;
+    }
+    
+    .nav {
+        margin-left: 12px;
+        margin-right: 12px;
+    }
+    
+    .nav-link {
+        padding: 10px 14px;
+        font-size: 0.875rem;
+    }
+    
+    .tab-content {
+        padding: 16px 12px;
+    }
+    
+    .table td, .table th {
+        padding: 10px 12px;
+        font-size: 0.875rem;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 0.8125rem;
+    }
+    
+    .modal-body h5 {
+        font-size: 1.125rem;
+    }
+    
+    .modal-body p {
+        font-size: 0.9375rem;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+    .inventory {
+        padding-left: 12px;
+        padding-right: 12px;
+        padding-bottom: 28px;
+    }
+    
+    .inventory-navbar {
+        margin: 12px 8px;
+        padding: 10px 0;
+    }
+    
+    .inventory-navbar nav {
+        flex-direction: row;
+        gap: 12px;
+        align-items: flex-start !important;
+        padding: 12px !important;
+    }
+    
+    .inventory-navbar h4 {
+        font-size: 1.375rem;
+    }
+    
+    .inventory-navbar p {
+        font-size: 0.75rem;
+    }
+    
+    .inventory-navbar .add-btn {
+        padding: 8px 14px;
+        font-size: 12px;
+        width: 100%;
+    }
+    
+    .search-container {
+        margin-bottom: 16px;
+        margin-left: 8px;
+        margin-right: 8px;
+    }
+    
+    .search-input {
+        padding: 11px 42px 11px 44px;
+        margin-left: 0;
+        font-size: 13px;
+        border-radius: 12px;
+    }
+    
+    .search-icon {
+        right: 14px;
+        font-size: 1rem;
+    }
+    
+    .nav {
+        margin-left: 8px;
+        margin-right: 8px;
+        border-radius: 12px;
+    }
+    
+    .nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+    
+    .nav-link {
+        padding: 8px 12px;
+        font-size: 0.8125rem;
+        white-space: nowrap;
+    }
+    
+    .tab-content {
+        padding: 14px 8px;
+    }
+    
+    .table td, .table th {
+        padding: 8px 10px;
+        font-size: 0.8125rem;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+    }
+    
+    .modal-content {
+        border-radius: 12px;
+    }
+    
+    .modal-header {
+        padding: 16px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .modal-body h5 {
+        font-size: 1.0625rem;
+    }
+    
+    .modal-body p {
+        font-size: 0.875rem;
+    }
+}
+
+/* Mobile screens (360px to 575px) */
+@media (min-width: 360px) and (max-width: 575px) {
+    .inventory {
+        padding-left: 8px;
+        padding-right: 8px;
+        padding-bottom: 24px;
+    }
+    
+    .inventory-navbar {
+        margin: 10px 6px;
+        padding: 8px 0;
+        border-radius: 12px;
+    }
+    
+    .inventory-navbar nav {
+        flex-direction: row;
+        gap: 10px;
+        align-items: flex-start !important;
+        padding: 10px !important;
+    }
+    
+    .inventory-navbar h4 {
+        font-size: 1.25rem;
+    }
+    
+    .inventory-navbar p {
+        font-size: 0.6875rem;
+    }
+    
+    .inventory-navbar .add-btn {
+        padding: 7px 12px;
+        font-size: 11px;
+        width: 100%;
+        border-radius: 8px;
+    }
+    
+    .inventory-navbar .add-btn i {
+        font-size: 14px;
+    }
+    
+    .search-container {
+        margin-bottom: 14px;
+        margin-left: 6px;
+        margin-right: 6px;
+    }
+    
+    .search-input {
+        padding: 10px 38px 10px 46px;
+        margin-left: 0;
+        font-size: 12px;
+        border-radius: 10px;
+    }
+    
+    .search-icon {
+        right: 12px;
+        font-size: 0.9375rem;
+    }
+    
+    .nav {
+        margin-left: 6px;
+        margin-right: 6px;
+        border-radius: 10px;
+    }
+    
+    .nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .nav-tabs::-webkit-scrollbar {
+        height: 4px;
+    }
+    
+    .nav-tabs::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 4px;
+    }
+    
+    .nav-link {
+        padding: 7px 10px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+    
+    .tab-content {
+        padding: 12px 6px;
+    }
+    
+    .table {
+        font-size: 0.75rem;
+    }
+    
+    .table td, .table th {
+        padding: 7px 8px;
+        font-size: 0.8em;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+        border-radius: 10px;
+    }
+    
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 0.6875rem;
+    }
+    
+    .btn-sm i {
+        font-size: 0.875rem;
+    }
+    
+    .modal-content {
+        border-radius: 10px;
+    }
+    
+    .modal-header {
+        padding: 14px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+    
+    .modal-body {
+        padding: 16px;
+    }
+    
+    .modal-body h5 {
+        font-size: 1rem;
+    }
+    
+    .modal-body p {
+        font-size: 0.8125rem;
+    }
+    
+    .modal-footer {
+        padding: 12px;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+    }
+    
+    .form-control, .form-select {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .form-label {
+        font-size: 12px;
+    }
+    
+    #tab-loader {
+        border-radius: 10px;
+    }
+}
+
+/* Small mobile screens (320px to 359px) */
+@media (min-width: 320px) and (max-width: 359px) {
+    .inventory {
+        padding-left: 6px;
+        padding-right: 6px;
+        padding-bottom: 20px;
+    }
+    
+    .inventory-navbar {
+        margin: 8px 4px;
+        padding: 6px 0;
+        border-radius: 10px;
+    }
+    
+    .inventory-navbar nav {
+        padding: 8px !important;
+        gap: 8px;
+    }
+    
+    .inventory-navbar h4 {
+        font-size: 1.125rem;
+    }
+    
+    .inventory-navbar p {
+        font-size: 0.625rem;
+    }
+    
+    .inventory-navbar .add-btn {
+        padding: 6px 10px;
+        font-size: 10px;
+    }
+    
+    .inventory-navbar .add-btn i {
+        font-size: 12px;
+    }
+    
+    .search-container {
+        margin-bottom: 12px;
+        margin-left: 4px;
+        margin-right: 4px;
+    }
+    
+    .search-input {
+        padding: 8px 36px 8px 10px;
+        font-size: 11px;
+        border-radius: 8px;
+    }
+    
+    .search-icon {
+        right: 10px;
+        font-size: 0.875rem;
+    }
+    
+    .nav {
+        margin-left: 4px;
+        margin-right: 4px;
+        border-radius: 8px;
+    }
+    
+    .nav-link {
+        padding: 6px 8px;
+        font-size: 0.6875rem;
+    }
+    
+    .tab-content {
+        padding: 10px 4px;
+    }
+    
+    .table td, .table th {
+        padding: 6px 6px;
+        font-size: 0.6875rem;
+    }
+    
+    .table-responsive {
+        border-radius: 8px;
+    }
+    
+    .btn-sm {
+        padding: 3px 6px;
+        font-size: 0.625rem;
+    }
+    
+    .btn-sm i {
+        font-size: 0.75rem;
+    }
+    
+    .modal-content {
+        border-radius: 8px;
+    }
+    
+    .modal-header {
+        padding: 12px;
+    }
+    
+    .modal-body {
+        padding: 14px;
+    }
+    
+    .modal-body h5 {
+        font-size: 0.9375rem;
+    }
+    
+    .modal-body p {
+        font-size: 0.75rem;
+    }
+    
+    .modal-footer {
+        padding: 10px;
+    }
+    
+    .form-control, .form-select {
+        padding: 7px 10px;
+        font-size: 11px;
+    }
+    
+    .form-label {
+        font-size: 11px;
+    }
+}
+
+/* Extra small mobile (under 320px) */
+@media (max-width: 319px) {
+    .inventory {
+        padding-left: 4px;
+        padding-right: 4px;
+        padding-bottom: 16px;
+    }
+    
+    .inventory-navbar {
+        margin: 6px 3px;
+        padding: 5px 0;
+    }
+    
+    .inventory-navbar nav {
+        padding: 6px !important;
+    }
+    
+    .inventory-navbar h4 {
+        font-size: 1rem;
+    }
+    
+    .inventory-navbar p {
+        font-size: 0.5625rem;
+    }
+    
+    .inventory-navbar .add-btn {
+        padding: 5px 8px;
+        font-size: 9px;
+    }
+    
+    .search-container {
+        margin-left: 3px;
+        margin-right: 3px;
+    }
+    
+    .search-input {
+        padding: 7px 32px 7px 8px;
+        font-size: 10px;
+    }
+    
+    .nav {
+        margin-left: 3px;
+        margin-right: 3px;
+    }
+    
+    .nav-link {
+        padding: 5px 6px;
+        font-size: 0.625rem;
+    }
+    
+    .tab-content {
+        padding: 8px 3px;
+    }
+    
+    .table td, .table th {
+        padding: 5px 4px;
+        font-size: 0.625rem;
+    }
+    
+    .btn-sm {
+        padding: 3px 5px;
+        font-size: 0.5625rem;
+    }
+    
+    .modal-header {
+        padding: 10px;
+    }
+    
+    .modal-body {
+        padding: 12px;
+    }
+    
+    .modal-body h5 {
+        font-size: 0.875rem;
+    }
+    
+    .modal-body p {
+        font-size: 0.6875rem;
+    }
+}
 </style>
 <div class="inventory">
     <div class="inventory-navbar">
@@ -132,22 +1152,22 @@
         </li>
     </ul>
 
-    <div class="w-100">
-       <div class="tab-content" id="orderTabsContent">
-            <div class="tab-pane fade show active" id="all" role="tabpanel">
-                {% include 'partials/order_table.html' with orders=orders %}
-            </div>
-            <div class="tab-pane fade" id="received" role="tabpanel">
-                {% include 'partials/order_table.html' with orders=orders_received %}
-            </div>
-            <div class="tab-pane fade" id="onhold" role="tabpanel">
-                {% include 'partials/order_table.html' with orders=orders_on_hold %}
-            </div>
-            <div class="tab-pane fade" id="notreceived" role="tabpanel">
-                {% include 'partials/order_table.html' with orders=orders_not_received %}
-            </div>
+   
+    <div class="tab-content mt-0 mb-0 pt-0 pb-0 ps-0 ms-0" id="orderTabsContent">
+        <div class="tab-pane fade show active" id="all" role="tabpanel">
+            {% include 'partials/order_table.html' with orders=orders %}
+        </div>
+        <div class="tab-pane fade" id="received" role="tabpanel">
+            {% include 'partials/order_table.html' with orders=orders_received %}
+        </div>
+        <div class="tab-pane fade" id="onhold" role="tabpanel">
+            {% include 'partials/order_table.html' with orders=orders_on_hold %}
+        </div>
+        <div class="tab-pane fade" id="notreceived" role="tabpanel">
+            {% include 'partials/order_table.html' with orders=orders_not_received %}
         </div>
     </div>
+
 
      <div id="tab-loader" class="text-center py-3" style="display: none;">
         <div class="spinner-border text-primary" role="status">
