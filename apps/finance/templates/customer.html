@@ -491,6 +491,10 @@
         border-radius: var(--border-radius-sm);
         font-weight: 600;
     }
+    .badge.bg-info {
+        background: #3b82f6;
+        color: white;
+    }
 
     @keyframes fadeIn {
         from {
@@ -969,7 +973,6 @@
     })
 
     function show(name) {
-        // Hide both transactions and payments sections initially
         const tableEls = document.querySelectorAll('#dTables');
         tableEls.forEach((t)=>{
             t.classList.add('hidden');
@@ -985,8 +988,6 @@
         displayDepositTable(depositData);
     }
     
-
-    // transactions
     $.ajax({
         url: '{% url "finance:customer_transactions_json" %}',
         type: 'GET',
@@ -997,7 +998,6 @@
             displayTransactionTable(data)
     })
 
-    // transaction search 
     document.querySelector('#invoice_q').addEventListener('input', ()=>{
         const search_q = document.querySelector('#invoice_q').value
         let filteredData = transactionsData[0].filter((data)=>{
@@ -1007,7 +1007,6 @@
         displayTransactionTable(filteredData)
     })
 
-    // transaction display
     function displayTransactionTable(data){
         data.forEach((data)=>{
             transactionsTable.innerHTML += `
@@ -1246,7 +1245,7 @@
           }
         }
         return cookieValue;
-      } 
+    } 
 
 </script>
 {% endblock content %}
