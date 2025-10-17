@@ -416,10 +416,66 @@
 .table-container {
     animation: fadeIn 0.5s ease-out;
 }
+
+.loading-spinner {
+    text-align: center;
+    padding: 20px;
+    display: none;
+}
+
+.loading-spinner.active {
+    display: block;
+}
+
+.skeleton-row {
+    animation: skeleton-loading 1s linear infinite alternate;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-color: hsl(200, 20%, 80%);
+    }
+    100% {
+        background-color: hsl(200, 20%, 95%);
+    }
+}
+
+.skeleton-box {
+    display: inline-block;
+    height: 1em;
+    position: relative;
+    overflow: hidden;
+    background-color: #dddbdd;
+    border-radius: 4px;
+}
+
+.skeleton-box::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0,
+        rgba(255, 255, 255, 0.2) 20%,
+        rgba(255, 255, 255, 0.5) 60%,
+        rgba(255, 255, 255, 0)
+    );
+    animation: shimmer 2s infinite;
+    content: '';
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
 </style>
 
 {% block content %}
-   <div class="table-responsive mt-2" style="height: 70vh; border: none; overflow-y: auto;">
+   <div class="table-responsive mt-2" style="height: 70vh; overflow-y: auto;">
         <!-- inventory table -->
         {% include 'components/loader.html' %}
         <div class='product table-container p-1 rounded' style="background: #fff; position: relative;">
@@ -429,82 +485,30 @@
             </div>
             <table class='table table-borderless table-hover table-responsive table-sm rounded p-2 ' style="width:100%;" id='inventory'>
                 <thead style="position: sticky; top: 28px; background-color: var(--primary); z-index: 1;">
-                    <th>#</th>
-                    <th>Image</th>
-                    <th>Description</th>
-                    <th>Accessories</th>
-                    <!-- <th>Average Sales Per</th> -->
-                    <th style="background: #ebeced;">Quantity</th>
-                    <th style="background: #ebeced;">Cost</th>
+                    <th>Details</th>
+                    <!-- <th>Description</th> -->
+                    <!-- <th>Accessories</th> -->
+                    <th>Quantity</th>
+                    <!-- <th style="background: #ebeced;">Cost</th>
                     <th style="background: #ebeced;">Price</th>
-                    <th style="background: #ebeced;">W/Price</th>
+                    <th style="background: #ebeced;">W/Price</th> -->
                     <th>Actions</th>
                 </thead>
                 <tbody id='inventory_table'>
-                    {% for product in inventory %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td><small><span class='hint--bottom' aria-label='{{ product.description }}'>
-                                {% if product.image %}
-                                        <img src="{{ product.image.url }}" alt="{{ product.name }}" width="20px" class="rounded-3">
-                                    {% else %}
-                                        <img src="{% static 'placeholder.png'%}" alt="{{ product.name }}" width="20px" class="rounded-3">
-                                {% endif %}
-                                {{ product.name }}</span></small></td>
-                            <td><small>{{ product.description }}</small></td>
-                            <td>
-                                <small>
-                                    {% for accessory in accessories %}
-                                        {% if accessory.main_product ==  product %}
-                                            <ul class="list-unstyled">
-                                                {% for acc in accessory.accessory_product.all %}
-                                                    <li>{{ acc.name }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                        {% endif %}
-                                    {% endfor %}
-                                </small>
-                            </td>
-                            <!-- <td></td> -->
-                            <td><small>{{ product.quantity }}</small></td>
-                            <td><small>{{ product.cost }}</small></td>
-                            <td><small>{{ product.price }}</small></td>
-                            <td><small>{{ product.dealer_price }}</small></td>
-                            <td>
-                                <small>  
-                                    <span>
-                                        <a href="{% url 'inventory:inventory_detail' product.id %}" class='text-dark'>
-                                            <i class='bx bx-show'></i>
-                                        </a>
-                                    </span>
-                        
-                                    <span class='px-2'>
-                                        <a href="{% url 'inventory:edit_inventory' product.id %}" class="text-dark">
-                                            <i class='bx bx-edit-alt'></i>
-                                        </a>
-                                    </span>
-                                    
-                                    <span>
-                                        <span id='delete' data-id="{{ product.id }}" onclick="productId(this)" class="text-dark">
-                                            <i class='bx bx-trash-alt'></i>
-                                        </span>
-                                    </span>
-
-                                    <span>
-                                        {%if product.status == False %}
-                                        <a href='{% url "inventory:activate_inventory" product.id %}' class="btn btn-sm text-primary">
-                                            activate product
-                                        </a>
-                                        {% endif %}
-                                    </span>
-
-                                    <span class="px-2">
-                                        <button class="btn btn-sm btn-secondary btn-sm bx bx-cart-add" data-bs-toggle="modal" data-bs-target="#accessoriesModal" onclick="setProductForAccessories({{ product.id }},'{{ product.name }}')"></button>
-                                    </span>
-                                </small>
-                            </td>
-                        </tr>
-                    {% endfor %}
+                    {% include 'components/inventory_rows.html' %}
+                </tbody>
+            </table>
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="d-flex align-items-center justify-content-center" style="gap: 10px;">
+                    <div class="spinner-border text-primary spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span class="text-muted">Loading more products...</span>
+                </div>
+            </div>
+            <table class='table table-borderless table-hover table-responsive table-sm rounded p-2' style="width:100%; display: none;" id='skeletonLoader'>
+                <tbody id='skeleton_rows'>
+                    <!-- Skeleton rows  -->
                 </tbody>
             </table>
         </div>
@@ -527,23 +531,13 @@
                             <td><small>{{ service.price }}</small></td>
                             <td>
                                 <small>
-                                    {% comment %} <span>
-                                        <a href="{% url 'inventory:inventory_detail' service.id %}" class='text-dark'>
-                                            <i class='bx bx-show'></i>
-                                        </a>
-                                    </span> {% endcomment %}
                                     <span class='px-2'>
                                         <a href="{% url 'inventory:edit_service' service.id %}" class="text-dark">
                                             <i class='bx bx-edit-alt'></i>
                                         </a>
                                     </span>
-                                    {% comment %} <span>
-                                        <span id='delete' data-id="{{ service.id }}" onclick="productId(this)" class="text-dark">
-                                            <i class='bx bx-trash-alt'></i>
-                                        </span>
-                                    </span> {% endcomment %}
                                 </small>
-                                </td>
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -554,7 +548,7 @@
         <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-body" id='payment_content'>
+                    <div class="modal-body">
                         <p class="h5 fw-bold">Confirm Product deletion</p>
                             <div>
                                 <button class="w-100 btn btn-secondary btn-sm yes">
@@ -578,7 +572,6 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <!-- Add Accessory -->
                         <div class="mb-3">
                             <div class="form-group d-flex">
                                 <select class="form-select form-select-sm me-2" id="accessorries" data-clearable="true" data-searchable="true">
@@ -609,7 +602,6 @@
             </div>
         </div>
         
-        <!-- Error Modal -->
         <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -620,7 +612,6 @@
             </div>
         </div>
         
-        <!-- Success Modal -->
         <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -642,25 +633,130 @@
     const loader = document.querySelector('#loader');
     const tableEl = document.querySelector('#inventory');
     const serviceTable = document.querySelector('#serviceTable');
-
     const inventoryTable = document.querySelector('#inventory_table'); 
-
     const products = $('.products')
     const services = $('.services')
     const navButtons = document.querySelectorAll('.nav-item');
+
+    // Infinite scroll variables
+    let currentPage = 1;
+    let isLoading = false;
+    let hasMore = {{ has_next|yesno:"true,false" }};
+    const scrollContainer = document.getElementById('scrollContainer');
+    const loadingSpinner = document.getElementById('loadingSpinner');
 
     loader.classList.add('hidden');
     loader.classList.remove('d-flex')
     tableEl.classList.remove('hidden')
 
+    // Infinite Scroll Implementation
+    scrollContainer.addEventListener('scroll', function() {
+        const scrollTop = scrollContainer.scrollTop;
+        const scrollHeight = scrollContainer.scrollHeight;
+        const clientHeight = scrollContainer.clientHeight;
+        
+        // Load more when user is 200px from bottom
+        if (scrollHeight - scrollTop - clientHeight < 200 && !isLoading && hasMore) {
+            loadMoreProducts();
+        }
+    });
+
+    // Create skeleton loader rows
+    function createSkeletonRows(count = 5) {
+        // const skeletonHTML = Array(count).fill(0).map(() => `
+        //     // <tr class="skeleton-row">
+        //     //     <td><div class="skeleton-box" style="width: 30px;"></div></td>
+        //     //     <td><div class="skeleton-box" style="width: 80px;"></div></td>
+        //     //     <td><div class="skeleton-box" style="width: 150px;"></div></td>
+        //     //     <td><div class="skeleton-box" style="width: 100px;"></div></td>
+        //     //     <td><div class="skeleton-box" style="width: 50px;"></div></td>
+        //     //     <td><div class="skeleton-box" style="width: 60px;"></div></td>
+        //     //     <td><div class="skeleton-box" style="width: 60px;"></div></td>
+        //     //     <td><div class="skeleton-box" style="width: 60px;"></div></td>
+        //     //     <td><div class="skeleton-box" style="width: 120px;"></div></td>
+        //     // </tr>
+        // `).join('');
+        
+        // return skeletonHTML;
+    }
+
+    async function loadMoreProducts() {
+        if (isLoading || !hasMore) return;
+        
+        isLoading = true;
+        
+        // Show skeleton loader
+        loadingSpinner.classList.add('active');
+        const skeletonRows = document.getElementById('skeleton_rows');
+        skeletonRows.innerHTML = createSkeletonRows(5);
+        inventoryTable.insertAdjacentHTML('beforeend', createSkeletonRows(5));
+        
+        try {
+            currentPage++;
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('page', currentPage);
+            
+            const response = await fetch(`${window.location.pathname}?${urlParams.toString()}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const data = await response.json();
+            
+            // const skeletonElements = inventoryTable.querySelectorAll('.skeleton-row');
+            // skeletonElements.forEach(el => el.remove());
+            
+            if (data.html) {
+                inventoryTable.insertAdjacentHTML('beforeend', data.html);
+                hasMore = data.has_next;
+                
+                attachDeleteListeners();
+            }
+        } catch (error) {
+            console.error('Error loading more products:', error);
+            const skeletonElements = inventoryTable.querySelectorAll('.skeleton-row');
+            skeletonElements.forEach(el => el.remove());
+            
+            // Show error message
+            const errorRow = `
+                <tr>
+                    <td colspan="9" class="text-center text-danger">
+                        <i class='bx bx-error-circle'></i> Failed to load more products. Please try again.
+                    </td>
+                </tr>
+            `;
+            inventoryTable.insertAdjacentHTML('beforeend', errorRow);
+            setTimeout(() => {
+                const errorElement = inventoryTable.querySelector('tr:last-child');
+                if (errorElement && errorElement.textContent.includes('Failed to load')) {
+                    errorElement.remove();
+                }
+            }, 3000);
+        } finally {
+            isLoading = false;
+            loadingSpinner.classList.remove('active');
+        }
+    }
+
+    function attachDeleteListeners() {
+        const deleteButtons = document.querySelectorAll('#delete');
+        deleteButtons.forEach((button) => {
+            button.removeEventListener('click', handleDeleteClick);
+            button.addEventListener('click', handleDeleteClick);
+        });
+    }
+
+    function handleDeleteClick(e) {
+        modal.show();
+    }
+
     navButtons.forEach((btn)=>{
         btn.addEventListener(
             'click', ()=>{
                 let name = event.target.getAttribute('data-name')
-
                 navButtons.forEach(b => b.classList.remove('active')); 
                 event.target.classList.add('active'); 
-
                 show(name)
             }
         )
@@ -671,17 +767,21 @@
         const table = document.getElementById('inventory');
         const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
 
+        let searchTimeout;
         searchInput.addEventListener('keyup', function () {
-            const filter = searchInput.value.toLowerCase();
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const filter = searchInput.value.toLowerCase();
 
-            for (let i = 0; i < rows.length; i++) {
-                let rowText = rows[i].innerText.toLowerCase();
-                if (rowText.includes(filter)) {
-                    rows[i].style.display = '';
-                } else {
-                    rows[i].style.display = 'none';
+                for (let i = 0; i < rows.length; i++) {
+                    let rowText = rows[i].innerText.toLowerCase();
+                    if (rowText.includes(filter)) {
+                        rows[i].style.display = '';
+                    } else {
+                        rows[i].style.display = 'none';
+                    }
                 }
-            }
+            }, 300); // Debounce search for 300ms
         });
     });
 
@@ -709,8 +809,6 @@
 
     function displayAccessoryList() {
         const list = document.getElementById("list");
-
-        console.log(list)
         list.innerHTML = ""; 
 
         accessory.forEach((acc, index) => {
@@ -727,17 +825,15 @@
     }
 
     function removeAccessory(index) {
-        accessories.splice(index, 1);
+        accessory.splice(index, 1);
         displayAccessoryList();
     }
 
     function show(name) {
         products.addClass('hidden');
         services.addClass('hidden'); 
-
         $(`.${name}`).removeClass('hidden'); 
     }
-
 
     const productId=(element)=>{
         product_id = element.dataset.id
@@ -745,16 +841,13 @@
     }
 
     deleteButtons.forEach((button)=>{
-        button.addEventListener(
-            'click', ()=>{
-                modal.show()
-            }
-        )
+        button.addEventListener('click', ()=>{
+            modal.show()
+        })
     })
     
     document.querySelector('.yes').addEventListener(
         'click', ()=>{
-            console.log(product_id)
             $.ajax({
                 url: "{% url 'inventory:delete_inventory' %}?product_id=" + product_id,
                 type: 'GET',
@@ -769,52 +862,9 @@
         }
     )
 
-    // $.ajax({
-    //     url: '{% url "inventory:inventory_index_json" %}',
-    //     type: 'GET',
-    //     }).done(function(response) {
-    //         const data = response
-    //         console.log(data)
-    //         inventoryData.push(data)
-    //     }
-    // )
-
-    // let accessories = []; // List of added accessories
-    // let availableAccessories = []; // List of available accessories fetched from the API
-    // let prodId = ''
     function setProductForAccessories(id, productName) {
         product_id = id;
         document.getElementById('product-name').textContent = `for product ${productName}` || "PRODUCT";
-    }
-    
-    // async function fetchAccessories(id) {
-    //     try {
-    //         const response = await fetch(`/inventory/accessory_view/${id}/`, {
-    //             method: "GET",
-    //         });
-    //         const data = await response.json();
-    //         console.log(data, 'data')
-    //         if (data.success) {
-                
-    //             availableAccessories = data.accessories;
-    //             populateDropdown("accessoryDropdown", availableAccessories);
-    //         } else {
-    //             showError("Failed to fetch accessories.");
-    //         }
-    //     } catch (error) {
-    //         console.log(error)
-    //     }
-    // }
-
-    function populateDropdown(dropdownId, options) {
-        const dropdown = document.getElementById(dropdownId);
-        dropdown.innerHTML = `<option value="" disabled selected>Select an accessory</option>`;
-        options.forEach(option => {
-            const opt = document.createElement("option");
-            opt.value = option.id;
-            opt.textContent = option.name;
-            dropdown.appendChild(opt);
-        });
     }
 
     async function saveAccessories() {
@@ -881,7 +931,6 @@
         }
     }
 
-
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -896,6 +945,5 @@
         }
         return cookieValue;
     }
-
 </script>
 {% endblock content %}

@@ -492,9 +492,9 @@
 
         function getTableHeaders(reportType) {
             const headerMap = {
-                'all': ['Product', 'Category', 'Expected', 'Actual', 'Difference', 'Value'],
-                'negative': ['Product', 'Category', 'Expected', 'Actual', 'Loss', 'Loss Value'],
-                'positive': ['Product', 'Category', 'Expected', 'Actual', 'Gain', 'Gain Value'],
+                'all': ['Product', 'Category', 'Actual', 'Expected', 'Difference', 'Value'],
+                'negative': ['Product', 'Category', 'Actual', 'Expected', 'Loss', 'Loss Value'],
+                'positive': ['Product', 'Category', 'Actual', 'Expected', 'Gain', 'Gain Value'],
                 'product': ['Product', 'Total Difference', 'Total Value'],
                 'category': ['Category', 'Total Difference', 'Total Value']
             };
@@ -509,8 +509,8 @@
                     return `
                         <td>${item.product_name || 'N/A'}</td>
                         <td>${item.category_name || 'N/A'}</td>
-                        <td>${item.expected_quantity || 0}</td>
                         <td>${item.actual_quantity || 0}</td>
+                        <td>${item.expected_quantity || 0}</td>
                         <td class="${item.quantity_difference >= 0 ? 'text-success' : 'text-danger'}">
                             ${item.quantity_difference || 0}
                         </td>
@@ -551,6 +551,7 @@
 
             try {
                 const downloadBtn = document.getElementById('downloadBtn');
+                
                 downloadBtn.disabled = true;
                 downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Downloading...';
 

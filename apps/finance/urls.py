@@ -224,7 +224,7 @@ urlpatterns = [
     # path('api/v1/finance-notification/', FinanceNotification.as_view(), name='api_finance_notification'),
 
     # #End of Day
-    # path('api/v1/end-of-day/', EndOfDay.as_view(), name='api_end_of_day'),
+    path('api/v1/end-of-day/', EndOfDay.as_view(), name='api_end_of_day'),
 
     # #Quotation
     # # path('api/v1/quotation-list/', QuotationList.as_view(), name='api_quotation_list'),
@@ -257,9 +257,12 @@ urlpatterns = [
     # path('api/v1/update_transaction_status/<int:pk>/', UpdateTransactionStatus.as_view(), name='api_update_transaction_status'),
 
     # #Cash flow
-    # path("api/v1/cashflows", CashFlowView.as_view(), name="api_cash_flow"),
-    # path("api/v1/cash-up-list", CashUpList.as_view(), name="api_cash_up_list"),
-    
+    path("api/v1/cashflows", CashFlowView.as_view(), name="api_cash_flow"),
+    path("api/v1/cash-up-list", CashUpList.as_view(), name="api_cash_up_list"),
+    path('api/v1/cashups/<int:pk>/', CashUpListDetail.as_view(), name='cashup-detail'),
+    path('api/paylaters/process-payment/', ProcessPaylaterPaymentView.as_view(), name='process-paylater-payment'),
+
+
     # path('api/v1/expenses/create/', CreateExpenseAPI.as_view(), name='create-expense-api'),
     # path('api/v1/income/record/', RecordIncomeAPI.as_view(), name='record-income-api'),
 
@@ -282,4 +285,9 @@ urlpatterns = [
 
     # #User accounts
     # path('api/v1/user_accounts/', UserAccountsView.as_view(), name='api_user_accounts'),
+    
+    #paylaters
+    path('api/paylaters/', PaylaterListView.as_view(), name='paylater-list'),
+    path('api/paylaters/<int:pk>/', PaylaterDetailView.as_view(), name='paylater-detail'),
+
 ]
