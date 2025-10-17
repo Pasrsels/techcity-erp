@@ -263,9 +263,10 @@
     // Infinite scroll variables
     let currentPage = 1;
     let isLoading = false;
-    let hasMore = {{ has_next|yesno:"true,false" }};
+    let hasMore = "{{ has_next|yesno:'true,false' }}" === 'true';
     const scrollContainer = document.getElementById('scrollContainer');
     const loadingSpinner = document.getElementById('loadingSpinner');
+    let requestToken = 0; // prevent race conditions
 
     loader.classList.add('hidden');
     loader.classList.remove('d-flex')
@@ -386,24 +387,74 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         const searchInput = document.getElementById('searchInput');
-        const table = document.getElementById('inventory');
-        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialQuery = urlParams.get('q') || '';
+        if (initialQuery) {
+            searchInput.value = initialQuery;
+        }
 
         let searchTimeout;
+
+        async function fetchPage(pageNumber, replace = false, token) {
+            isLoading = true;
+            loadingSpinner.classList.add('active');
+            try {
+                const params = new URLSearchParams(window.location.search);
+                params.set('page', pageNumber);
+                const res = await fetch(`${window.location.pathname}?${params.toString()}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await res.json();
+                // Ignore if outdated
+                if (token !== requestToken) return;
+
+                if (replace) {
+                    inventoryTable.innerHTML = '';
+                }
+                if (data.html) {
+                    inventoryTable.insertAdjacentHTML('beforeend', data.html);
+                }
+                hasMore = !!data.has_next;
+                currentPage = pageNumber;
+                attachDeleteListeners();
+            } catch (e) {
+                console.error('Search fetch failed', e);
+            } finally {
+                if (token === requestToken) {
+                    isLoading = false;
+                    loadingSpinner.classList.remove('active');
+                }
+            }
+        }
+
+        function updateUrlQuery(q) {
+            const params = new URLSearchParams(window.location.search);
+            if (q) {
+                params.set('q', q);
+            } else {
+                params.delete('q');
+            }
+            params.delete('page');
+            const newUrl = `${window.location.pathname}?${params.toString()}`;
+            window.history.replaceState({}, '', newUrl);
+        }
+
+        function resetAndSearch(q) {
+            requestToken++;
+            hasMore = true;
+            currentPage = 1;
+            scrollContainer.scrollTop = 0;
+            updateUrlQuery(q);
+            fetchPage(1, true, requestToken);
+        }
+
+        // Debounced search that queries server and resets pagination
         searchInput.addEventListener('keyup', function () {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                const filter = searchInput.value.toLowerCase();
-
-                for (let i = 0; i < rows.length; i++) {
-                    let rowText = rows[i].innerText.toLowerCase();
-                    if (rowText.includes(filter)) {
-                        rows[i].style.display = '';
-                    } else {
-                        rows[i].style.display = 'none';
-                    }
-                }
-            }, 300); // Debounce search for 300ms
+                const q = searchInput.value.trim();
+                resetAndSearch(q);
+            }, 300);
         });
     });
 

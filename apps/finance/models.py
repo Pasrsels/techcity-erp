@@ -308,7 +308,7 @@ class Invoice(models.Model):
         PAID = 'Paid', _('Paid')
         OVERDUE = 'Overdue', _('Overdue')
 
-    invoice_number = models.CharField(max_length=50, unique=True, null=True)       
+    invoice_number = models.CharField(max_length=50, null=True)       
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT)  
     issue_date = models.DateTimeField()
     amount = models.DecimalField(max_digits=15, decimal_places=2, default=0) 

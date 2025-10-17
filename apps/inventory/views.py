@@ -635,39 +635,6 @@ def inventory_index(request):
             'next_page': products_page.next_page_number() if products_page.has_next() else None
         })
 
-    logs = ActivityLog.objects.filter(branch=request.user.branch).select_related('branch').order_by('-id')
-    
-    grouped_logs = {}
-    ordered_grouped_logs = {}
-
-    for log in logs:
-        log_date = log.timestamp.date()  
-
-        if log_date == today:
-            date_key = 'Today'
-        elif log_date == today - timedelta(days=1):
-            date_key = 'Yesterday'
-        else:
-            date_key = log_date.strftime('%A, %d %B %Y')
-
-        if not log.invoice:
-            if date_key not in grouped_logs:
-                grouped_logs[date_key] = {'logs': []}
-            grouped_logs[date_key]['logs'].append(log)
-
-    for special_day in ['Today', 'Yesterday']:
-        if special_day in grouped_logs:
-            ordered_grouped_logs[special_day] = grouped_logs[special_day]
-
-    remaining_dates = sorted(
-        [(k, v) for k, v in grouped_logs.items() if k not in ['Today', 'Yesterday']],
-        key=lambda x: datetime.datetime.strptime(x[0], '%A, %d %B %Y'),
-        reverse=True
-    )
-
-    for date_key, data in remaining_dates:
-        ordered_grouped_logs[date_key] = data
-
     context = {
         'form': form,
         'total_cost': inventory.aggregate(total_cost=Sum(F('quantity') * F('cost')))['total_cost'] or 0,
@@ -675,7 +642,6 @@ def inventory_index(request):
         'search_query': q,
         'category': category,
         'accessories': accessories,
-        'grouped_logs': ordered_grouped_logs,
         'products': products_page,
         'has_next': products_page.has_next()
     }
@@ -685,15 +651,35 @@ def inventory_index(request):
 
 def logs_page(request):
     page_number = request.GET.get('page', 1)
-    logs = ActivityLog.objects.select_related('inventory').order_by('-timestamp')
-    paginator = Paginator(logs, 10) 
+    logs_qs = ActivityLog.objects.filter(branch=request.user.branch).select_related('inventory').order_by('-timestamp')
+    paginator = Paginator(logs_qs, 10)
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'partials/logs_page.html', {
-        'logs': page_obj.object_list,
+    # Group logs by date similar to inventory_index
+    grouped_logs = {}
+    for log in page_obj.object_list:
+        log_date = log.timestamp.date()
+        if log_date == today:
+            date_key = 'Today'
+        elif log_date == today - timedelta(days=1):
+            date_key = 'Yesterday'
+        else:
+            date_key = log_date.strftime('%A, %d %B %Y')
+
+        if date_key not in grouped_logs:
+            grouped_logs[date_key] = {'logs': []}
+        grouped_logs[date_key]['logs'].append(log)
+
+    context = {
+        'grouped_logs': grouped_logs,
         'has_next': page_obj.has_next(),
-        'next_page_number': page_obj.next_page_number() if page_obj.has_next() else None
-    })
+        'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
+    }
+
+    response = render(request, 'partials/logs_page.html', context)
+    if not page_obj.has_next():
+        response['X-No-More-Data'] = 'true'
+    return response
 
 @login_required
 def edit_service(request, service_id):

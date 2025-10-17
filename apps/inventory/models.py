@@ -18,8 +18,8 @@ TAX_CHOICES = [
 
 class UpdateModel(models.Model):
     """logs all creations and updates to models that inherit from it"""
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
     
     class Meta:
         abstract = True

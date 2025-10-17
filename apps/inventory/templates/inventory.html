@@ -142,7 +142,6 @@
         gap: 0.5rem;
     }
     
-    /* Improved responsive behavior */
     @media screen and (max-width: 992px) {
         .stats-cards {
             flex-direction: column;
@@ -277,9 +276,41 @@
         <div class="col-3 logs-section">
             <div class="log-container p-2 mt-1">
                 <h5 class="mb-1 d-flex align-items-center"><i class="bx bx-history bx-lg mr-2"></i><span class="ms-2">Activity Logs</span></h5>
-                <div style="height: 70vh; overflow-y: auto;">
-                    {% include "partials/logs_page.html" %}
+                <div id="logsScroll" style="height: 70vh; overflow-y: auto;"
+                     hx-get="{% url 'inventory:logs-page' %}?page=1"
+                     hx-trigger="load"
+                     hx-swap="innerHTML">
+                    <div class="text-center py-3 text-muted">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                        <div>Loading logs...</div>
+                    </div>
                 </div>
+                <script>
+                    (function() {
+                        const logsScroll = document.getElementById('logsScroll');
+                        let ticking = false;
+                        function maybeLoadMore() {
+                            const indicator = logsScroll.querySelector('#loading-indicator');
+                            if (!indicator) return; // no more data
+                            const threshold = 150; // px from bottom
+                            const remaining = logsScroll.scrollHeight - logsScroll.scrollTop - logsScroll.clientHeight;
+                            if (remaining < threshold) {
+                                if (window.htmx) {
+                                    window.htmx.trigger(indicator, 'revealed');
+                                }
+                            }
+                        }
+                        logsScroll.addEventListener('scroll', function() {
+                            if (!ticking) {
+                                window.requestAnimationFrame(function() {
+                                    maybeLoadMore();
+                                    ticking = false;
+                                });
+                                ticking = true;
+                            }
+                        });
+                    })();
+                </script>
             </div>
         </div>
     </div>
