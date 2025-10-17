@@ -6,42 +6,65 @@
 {% block content %}
 <style>
      :root {
-        --primary: #11998e;
-        --primary-no-gradient: #11998e;
-        --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-        --secondary: orange;
-        --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
-        --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        --primary: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --primary-solid: #11998e;
+        --primary-light: rgba(17, 153, 142, 0.1);
+        --primary-dark: #0d7a72;
+        --secondary: #ff6b6b;
+        --accent: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success: #38ef7d;
+        --warning: #ffd93d;
+        --danger: #ff6b6b;
         --dark: #1a1a2e;
-        --dark-alt: #16213e;
-        --text-light: rgba(228, 230, 234, 1);
-        --text-dark: black;
-        --text-muted: black;
-        --glass: rgba(255, 255, 255, 0.1);
-        --glass-border: rgba(255, 255, 255, 0.2);
-        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
+        --dark-alt: #2d3748;
+        --text-light: #ffffff;
+        --text-dark: #2d3748;
+        --text-muted: #718096;
+        --glass: rgba(255, 255, 255, 0.95);
+        --glass-border: rgba(255, 255, 255, 0.3);
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+        --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.15);
         --border-radius: 16px;
-        --border-radius-sm: 8px;
+        --border-radius-sm: 12px;
+        --border-radius-lg: 20px;
         --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        --m-bottom: 20px;
+        --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .header {
-        grid-area: header;
-        padding: 20px 30px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        box-shadow: var(--shadow);
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
     }
 
-    .logo {
-        font-size: 24px;
+    .customer {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        color: var(--text-dark);
+        padding: 2rem 0;
+    }
+
+    .main-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    /* Header Section */
+    .page-header {
+        margin-bottom: 2rem;
+        animation: slideDown 0.5s ease-out;
+    }
+
+    .page-header h3 {
+        color: var(--text-dark);
         font-weight: 700;
-        background: var(--primary);
+        font-size: 2rem;
+        margin: 0;
+        background: var(--primary-solid);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -49,139 +72,620 @@
 
     .header-actions {
         display: flex;
-        gap: 15px;
+        gap: 1rem;
         align-items: center;
     }
 
-    .customer {
-        font-family: 'Inter', sans-serif !important;
-        min-height: 100vh;
-        color: var(--text-light);
-        overflow-x: hidden;
-    }
-
-    /* Animated background */
-    .customer::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: transparent;
-        z-index: -1;
-    }
-
     .header-btn {
-        padding: 8px 16px;
+        padding: 0.75rem 1.5rem;
         border-radius: var(--border-radius-sm);
-        background: var(--primary-no-gradient);
-        border: 1px solid var(--glass-border);
+        background: var(--primary-solid);
+        border: none;
         color: var(--text-light);
-        text-decoration: none;
-        transition: var(--transition);
-        font-size: 14px;
+        font-weight: 600;
+        font-size: 0.95rem;
         cursor: pointer;
-    }
-
-    .header h5{
-        color: var(--text-dark);
+        transition: var(--transition);
+        box-shadow: var(--shadow-md);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .header-btn:hover {
-        background: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .header-btn:active {
+        transform: translateY(0);
+    }
+
+    /* Customer Profile Card */
+    .customer-profile-section {
+        margin-bottom: 2rem;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .card {
+        background: var(--glass);
+        border-radius: var(--border-radius);
+        border: none;
+        box-shadow: var(--shadow-md);
+        transition: var(--transition);
+        overflow: hidden;
+    }
+
+    .card:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    /* Avatar */
+    .customer-avatar {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid #f1f5f9;
+    }
+
+    .avatar {
+        width: 80px;
+        height: 80px;
+        background: var(--primary-solid);
+        color: var(--text-light);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+        box-shadow: var(--shadow-md);
+        transition: var(--transition);
+    }
+
+    .avatar:hover {
+        transform: scale(1.05);
+    }
+
+    .customer-avatar h5 {
+        color: var(--text-dark);
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    /* Customer Details */
+    .customer-details {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.875rem 1rem;
+        background: #f8fafc;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid #e2e8f0;
+        transition: var(--transition);
+    }
+
+    .detail-item:hover {
+        background: var(--primary-light);
+        border-color: var(--primary-solid);
+        transform: translateX(4px);
+    }
+
+    .detail-item i {
+        color: var(--primary-solid);
+        font-size: 1.25rem;
+    }
+
+    .customer-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid #f1f5f9;
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+    .balance-card {
+        background: var(--primary-solid);
+        color: var(--text-light);
+        border-radius: var(--border-radius);
+        padding: 2.5rem;
+        text-align: center;
+        box-shadow: var(--shadow-xl);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .balance-card h6 {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 1rem;
+    }
+
+    .balance-amount {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .tabs-section {
+        margin-bottom: 2rem;
+        animation: fadeInUp 0.7s ease-out;
+    }
+
+    .nav-tabs {
+        border: none;
+        background: var(--glass);
+        padding: 0.5rem;
+        border-radius: var(--border-radius-sm);
+        box-shadow: var(--shadow);
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .nav-tabs .nav-link {
+        border: none;
+        padding: 0.875rem 1.5rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        border-radius: var(--border-radius-sm);
+        transition: var(--transition);
+        background: transparent;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: var(--primary-solid);
+        background: var(--primary-light);
+    }
+
+    .nav-tabs .nav-link.active {
+        background: var(--primary-solid);
+        color: var(--text-light);
+        box-shadow: var(--shadow-md);
+    }
+
+    .search-box {
+        margin-bottom: 1.5rem;
+    }
+
+    .input-group {
+        box-shadow: var(--shadow);
+        border-radius: var(--border-radius-sm);
+        overflow: hidden;
+        transition: var(--transition);
+    }
+
+    .input-group:focus-within {
+        box-shadow: var(--shadow-lg);
         transform: translateY(-1px);
     }
-    .customer .avatar{
+
+    .input-group-text {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-right: none;
+        color: var(--text-muted);
+    }
+
+    .form-control {
+        border: 1px solid #e2e8f0;
+        border-left: none;
+        padding: 0.875rem 1rem;
+        transition: var(--transition);
+    }
+
+    .form-control:focus {
+        outline: none;
+        box-shadow: none;
+        border-color: var(--primary-solid);
+    }
+
+    /* Table */
+    .table-responsive {
+        background: var(--glass);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .table {
+        margin: 0;
+    }
+
+    .table thead {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+
+    .table thead th {
+        border: none;
+        padding: 1.25rem 1rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+    }
+
+    .table tbody tr {
+        border-bottom: 1px solid #f1f5f9;
+        transition: var(--transition);
+    }
+
+    .table tbody tr:hover {
+        background: var(--primary-light);
+        transform: scale(1.01);
+    }
+
+    .table tbody td {
+        padding: 1.25rem 1rem;
+        vertical-align: middle;
+        border: none;
+    }
+
+    .table tbody td small {
+        font-size: 0.875rem;
+    }
+
+    .table tbody td a {
+        color: var(--primary-solid);
+        font-size: 1.25rem;
+        transition: var(--transition);
+    }
+
+    .table tbody td a:hover {
+        color: var(--primary-dark);
+        transform: scale(1.2);
+    }
+
+    /* Empty State */
+    .text-center.py-5 {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    .text-center.py-5 i {
+        animation: bounce 2s ease-in-out infinite;
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: var(--border-radius-sm);
+        font-weight: 600;
+        transition: var(--transition);
+        border: none;
+    }
+
+    .btn-primary {
         background: var(--primary);
+        color: var(--text-light);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .btn-outline-primary {
+        border: 2px solid var(--primary-solid);
+        color: var(--primary-solid);
+        background: transparent;
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--primary);
+        color: var(--text-light);
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-secondary {
+        border: 2px solid var(--text-muted);
+        color: var(--text-muted);
+    }
+
+    .btn-outline-danger {
+        border: 2px solid var(--danger);
+        color: var(--danger);
+    }
+
+    .btn-secondary {
+        background: var(--text-muted);
+        color: white;
+    }
+
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-xl);
+        overflow: hidden;
+    }
+
+    .modal-header {
+        background: var(--primary-solid);
+        color: var(--text-light);
+        border: none;
+        padding: 1.5rem 2rem;
+    }
+
+    .modal-header .modal-title {
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .modal-footer {
+        border: none;
+        padding: 1.5rem 2rem;
+        background: #f8fafc;
+    }
+
+    .success-icon i {
+        animation: scaleIn 0.5s ease-out;
+    }
+
+    .alert {
+        border: none;
+        border-radius: var(--border-radius-sm);
+        padding: 1rem 1.25rem;
+    }
+
+    .alert-danger {
+        background: rgba(255, 107, 107, 0.1);
+        color: var(--danger);
+        border-left: 4px solid var(--danger);
+    }
+
+    .badge {
+        padding: 0.5rem 0.75rem;
+        border-radius: var(--border-radius-sm);
+        font-weight: 600;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+        }
+        to {
+            transform: scale(1);
+        }
+    }
+
+    @keyframes bounce {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    @keyframes rotate {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .main-content {
+            padding: 0 1rem;
+        }
+
+        .page-header h3 {
+            font-size: 1.5rem;
+        }
+
+        .customer-avatar {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .customer-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .balance-amount {
+            font-size: 2rem;
+        }
+
+        .nav-tabs {
+            flex-direction: column;
+        }
+
+        .table {
+            font-size: 0.875rem;
+        }
+    }
+
+    .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
     }
 </style>
+
 <div class="customer">
     <div class="main-content">
-        <div class="d-flex align-items-center justify-content-between mt-2">
-            <h3 class="text-dark">Customer Account</h3>
+        <!-- Page Header -->
+        <div class="d-flex align-items-center justify-content-between mt-2 page-header">
+            <h3>Customer Account</h3>
             <div class="header-actions">
                 <div class="header-btn" id="id_add_deposit">
-                   <i class='bx bx-plus me-1'></i>Add Deposit
+                   <i class='bx bx-plus'></i>Add Deposit
                 </div>
             </div>
         </div>
         
-        <div class="row mb-4 mt-4 bg-white">
-            <div class="col-md-6">
-                <div class="card rounded border-0 h-100">
+        <!-- Customer Profile Section -->
+        <div class="row mb-4 customer-profile-section">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <div class="card h-100">
                     <div class="card-body">
-                        <div class="d-flex flex-column">
-                            <div class="customer-avatar d-flex align-items-center me-3">
-                                {% with name_parts=customer.name|split_name %}
-                                    {% if name_parts.first_name and name_parts.last_name %}
-                                        <div class="avatar text-white me-5 rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 20px;">
-                                            {{ name_parts.first_name.0 }}{{ name_parts.last_name.0 }}
-                                        </div>
-                                    {% else %}
-                                        <div class="avatar me-5 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 20px;">
-                                            {{ name_parts.first_name.0 }}
-                                        </div>
-                                    {% endif %}
-                                {% endwith %}
-                                <h5 class="mb-1">{{ customer.name }}</h5>
+                        <div class="customer-avatar">
+                            {% with name_parts=customer.name|split_name %}
+                                {% if name_parts.first_name and name_parts.last_name %}
+                                    <div class="avatar">
+                                        {{ name_parts.first_name.0 }}{{ name_parts.last_name.0 }}
+                                    </div>
+                                {% else %}
+                                    <div class="avatar">
+                                        {{ name_parts.first_name.0 }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                            <h5>{{ customer.name }}</h5>
+                        </div>
+                        
+                        <div class="customer-details">
+                            <div class="detail-item">
+                                <i class='bx bx-phone'></i>
+                                <span>{{customer.phone_number}}</span>
                             </div>
-                            <div>
-                                <div class="customer-details mt-4">
-                                    <div class="me-3 mb-1 d-flex align-items-center border p-1"><i class='bx bx-phone fs-4 me-1'></i>{{customer.phone_number}}</div><br>
-                                    <div class="me-3 mb-1  d-flex align-items-center border p-1 rounded"><i class='bx bx-envelope fs-4 me-1'></i>{{customer.email}}</div><br>
-                                    <div class="d-flex align-items-center mb-2"><i class='bx bx-building fs-4 me-1'></i>{{customer.address}}</div>
-                                </div>
-                                <div class="mt-1">mb-
-                                    <span class="text-muted">Life time sales: {{invoice_count}}</span>
-                                    <span class="text-muted ms-4">Number of returns: {{invoice_count}}</span>
-                                </div>
+                            <div class="detail-item">
+                                <i class='bx bx-envelope'></i>
+                                <span>{{customer.email}}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class='bx bx-building'></i>
+                                <span>{{customer.address}}</span>
+                            </div>
+                        </div>
+
+                        <div class="customer-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Lifetime Sales</span>
+                                <span class="stat-value">{{invoice_count}}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Returns</span>
+                                <span class="stat-value">0</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Financial Summary Cards -->
+            <!-- Balance Card -->
             <div class="col-md-6">
-                <div class="row h-100">
-                    <div class=" mb-3 mb-md-0">
-                        <div class="card border-0 h-100">
-                            <div class="card-body text-center">
-                                <h6 class="text-muted mb-3">Account Balance</h6>
-                                {% for balance in account %}
-                                    <h4 class="{% if balance.balance < 0 %}text-danger{% else %}text-success{% endif %}">
-                                        {{balance.currency.symbol}} {{balance.balance}}
-                                    </h4>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    <!-- <div class="col-md-6">
-                        <div class="card shadow-sm border-0 h-100">
-                            <div class="card-body text-center">
-                                <h6 class="text-muted mb-3">Invoice Count</h6>
-                                <h4 class="text-primary">{{invoice_count}}</h4>
-                            </div>
-                        </div>
-                    </div> -->
+                <div class="balance-card h-100">
+                    <h6>Account Balance</h6>
+                    {% for balance in account %}
+                        <h2 class="balance-amount {% if balance.balance < 0 %}text-warning{% else %}text-white{% endif %}">
+                            {{balance.currency.symbol}} {{balance.balance}}
+                        </h2>
+                    {% endfor %}
                 </div>
             </div>
         </div>
         
         <!-- Navigation Tabs -->
-        <div class="tabs-section mb-4">
+        <div class="tabs-section">
             <ul class="nav nav-tabs" id="customerTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="transactions-tab" data-bs-toggle="tab" data-bs-target="#transactions" 
                             type="button" role="tab" aria-controls="transactions" aria-selected="true" data-name="transactions">
-                        Transactions
+                        <i class='bx bx-receipt me-2'></i>Transactions
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" 
                             type="button" role="tab" aria-controls="payments" aria-selected="false" data-name="payments">
-                        Account Payments
+                        <i class='bx bx-credit-card me-2'></i>Payments
                     </button>
                 </li>
                 {% for currency in account %}
@@ -189,7 +693,7 @@
                     <button class="nav-link" id="deposits-{{ currency.currency.symbol }}-tab" data-bs-toggle="tab" 
                             data-bs-target="#deposits-{{ currency.currency.symbol }}" type="button" role="tab" 
                             aria-controls="deposits-{{ currency.currency.symbol }}" aria-selected="false" data-name="{{ currency.currency.symbol }}">
-                        {{ currency.currency.name }} Deposits
+                        <i class='bx bx-wallet me-2'></i>{{ currency.currency.name }} Deposits
                     </button>
                 </li>
                 {% endfor %}
@@ -203,19 +707,19 @@
         <div class="tab-content" id="customerTabsContent">
             <!-- Transactions Tab -->
             <div class="tab-pane fade show active" id="transactions" role="tabpanel" aria-labelledby="transactions-tab">
-                <div class="search-box mb-3">
+                <div class="search-box">
                     <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0">
+                        <span class="input-group-text">
                             <i class='bx bx-search'></i>
                         </span>
                         <input type="search" id="invoice_q" name="invoice_q" placeholder="Search by invoice number" 
-                               class="form-control border-start-0" aria-label="Search transactions">
+                               class="form-control" aria-label="Search transactions">
                     </div>
                 </div>
-                <div class="table-responsive shadow-sm rounded">
+                <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead>
-                            <tr class="bg-light">
+                            <tr>
                                 <th>Date</th>
                                 <th>Invoice #</th>
                                 <th>Product(s)</th>
@@ -237,22 +741,22 @@
             
             <!-- Payments Tab -->
             <div class="tab-pane fade" id="payments" role="tabpanel" aria-labelledby="payments-tab">
-                <div class="d-flex mb-3 align-items-center">
-                    <div class="input-group me-3">
-                        <span class="input-group-text bg-white border-end-0">
+                <div class="d-flex mb-3 align-items-center flex-wrap gap-2">
+                    <div class="input-group flex-grow-1" style="max-width: 500px;">
+                        <span class="input-group-text">
                             <i class='bx bx-search'></i>
                         </span>
                         <input type="search" id="trans_q" name="trans_q" placeholder="Search by invoice number" 
-                               class="form-control border-start-0" aria-label="Search payments">
+                               class="form-control" aria-label="Search payments">
                     </div>
                     <button type="button" id="viewBtn" class="btn btn-outline-primary">
                         <i class='bx bx-file me-1'></i>View Statement
                     </button>
                 </div>
-                <div class="table-responsive shadow-sm rounded">
+                <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead>
-                            <tr class="bg-light">
+                            <tr>
                                 <th>Date</th>
                                 <th>Invoice #</th>
                                 <th>Product(s)</th>
@@ -275,20 +779,20 @@
             {% for currency in account %}
             <div class="tab-pane fade" id="deposits-{{ currency.currency.symbol }}" role="tabpanel" 
                  aria-labelledby="deposits-{{ currency.currency.symbol }}-tab">
-                <div class="search-box mb-3">
+                <div class="search-box">
                     <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0">
+                        <span class="input-group-text">
                             <i class='bx bx-search'></i>
                         </span>
                         <input type="search" id="deposit_q_{{ currency.currency.symbol }}" name="deposit_q" 
-                               placeholder="Search by payment reference" class="form-control border-start-0 deposit-search" 
+                               placeholder="Search by payment reference" class="form-control deposit-search" 
                                aria-label="Search deposits" data-currency="{{ currency.currency.symbol }}">
                     </div>
                 </div>
-                <div class="table-responsive shadow-sm rounded">
+                <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead>
-                            <tr class="bg-light">
+                            <tr>
                                 <th>Date</th>
                                 <th>Reference</th>
                                 <th>Amount</th>
@@ -316,7 +820,9 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="depositModalLabel">Add Deposit</h5>
+                <h5 class="modal-title" id="depositModalLabel">
+                    <i class='bx bx-plus-circle me-2'></i>Add Deposit
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -341,7 +847,9 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="accountModalLabel">Account Statement</h5>
+                <h5 class="modal-title" id="accountModalLabel">
+                    <i class='bx bx-file-blank me-2'></i>Account Statement
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -378,7 +886,9 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="refundModalLabel">Process Deposit Refund</h5>
+                <h5 class="modal-title" id="refundModalLabel">
+                    <i class='bx bx-undo me-2'></i>Process Deposit Refund
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -410,6 +920,7 @@
         </div>
     </div>
 </div>
+
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>
 <script>
     let tableName = '';
@@ -653,10 +1164,12 @@
                 }, 200)
             }else{
                 refundError.textContent=rData.message;
+                refundError.classList.remove('d-none');
             }
     
         } catch (error) {
             refundError.textContent=error;
+            refundError.classList.remove('d-none');
         }
     }
 
@@ -666,9 +1179,11 @@
         const amount = parseFloat(depositAmount.value.trim());
         if (isNaN(amount) || amount <= 0) {
           depositError.textContent = 'Deposit amount must be a positive number and can not be zero.';
+          depositError.classList.remove('d-none');
           submitBtn.disabled = true;
         } else {
           depositError.textContent = '';
+          depositError.classList.add('d-none');
           submitBtn.disabled = false;
         }
     });
@@ -709,10 +1224,12 @@
                 }, 300)
             }else{
                 depositError.textContent=rData.message;
+                depositError.classList.remove('d-none');
             }
     
         } catch (error) {
             depositError.textContent=error;
+            depositError.classList.remove('d-none');
         }
     }
     
