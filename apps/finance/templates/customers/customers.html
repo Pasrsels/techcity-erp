@@ -3,43 +3,735 @@
 {% load static%}
 {% block title%} Customers {% endblock%}
 {% block content %}
+<style>
+    :root {
+        --primary: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --primary-solid: #11998e;
+        --primary-light: rgba(17, 153, 142, 0.1);
+        --primary-dark: #0d7a72;
+        --secondary: #667eea;
+        --accent: #764ba2;
+        --success: #38ef7d;
+        --warning: #ffd93d;
+        --danger: #ff6b6b;
+        --dark: #1a1a2e;
+        --dark-alt: #2d3748;
+        --text-light: #ffffff;
+        --text-dark: #2d3748;
+        --text-muted: #718096;
+        --glass: rgba(255, 255, 255, 0.95);
+        --glass-dark: rgba(26, 26, 46, 0.95);
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+        --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.15);
+        --border-radius: 16px;
+        --border-radius-sm: 12px;
+        --border-radius-lg: 20px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .customer {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        padding: 2rem 0;
+    }
+
+    .main-content {
+        max-width: 1600px;
+        margin: 0 auto;
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    .customer-navbar {
+        margin-bottom: 1.5rem;
+        animation: slideDown 0.5s ease-out;
+    }
+
+    .customer-navbar nav {
+        background: var(--glass-dark);
+        backdrop-filter: blur(10px);
+        border-radius: var(--border-radius);
+        padding: 1.5rem 2rem;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .customer-navbar h5 {
+        color: var(--text-light);
+        font-weight: 700;
+        font-size: 1.75rem;
+        margin: 0;
+        background: var(--primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .customer-navbar .d-flex {
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: var(--border-radius-sm);
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: var(--transition);
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+    }
+
+    .btn-outline-dark {
+        background: var(--primary);
+        color: var(--text-light);
+        border: 2px solid transparent;
+    }
+
+    .btn-outline-dark:hover {
+        background: linear-gradient(135deg, #0d7a72 0%, #2bc97d 100%);
+        color: var(--text-light);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        color: var(--text-light);
+    }
+
+    .btn-danger:hover {
+        background: linear-gradient(135deg, #ee5a24 0%, #c0392b 100%);
+    }
+
+    .btn-success {
+        background: lvar(--primary-solid);
+        color: var(--text-light);
+    }
+
+    .btn-success:hover {
+        background: linear-gradient(135deg, #11998e 0%, #0d7a72 100%);
+    }
+
+    .btn i {
+        font-size: 1.1rem;
+    }
+
+    .balances {
+        background: var(--primary-solid);
+        border-radius: var(--border-radius);
+        padding: 1.5rem 2rem;
+        box-shadow: var(--shadow-xl);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .balances h5 {
+        color: var(--text-light);
+        font-weight: 700;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+        font-size: 1.25rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-container {
+        background: var(--glass);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+        animation: fadeInUp 0.7s ease-out;
+    }
+
+    .table {
+        margin: 0;
+        width: 100%;
+    }
+
+    .table thead {
+        background: var(--primary);
+        color: var(--text-light);
+    }
+
+    .table thead th {
+        border: none;
+        padding: 1.25rem 1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        color: black;
+    }
+
+    .table tbody tr {
+        border-bottom: 1px solid #f1f5f9;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .table tbody tr:hover {
+        background: var(--primary-light);
+        transform: scale(1.005);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border: none;
+    }
+
+    .table tbody td small {
+        font-size: 0.9rem;
+        color: var(--text-dark);
+    }
+
+    .initials {
+        width: 40px;
+        height: 40px;
+        background: var(--primary);
+        color: var(--text-light);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        box-shadow: var(--shadow-md);
+        transition: var(--transition);
+        flex-shrink: 0;
+    }
+
+    .initials:hover {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .initials .content {
+        font-size: 0.9rem;
+    }
+
+    .table a {
+        color: var(--text-dark);
+        text-decoration: none;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .table a:hover {
+        color: var(--primary-solid);
+    }
+
+    .table a i {
+        color: var(--primary-solid);
+        font-size: 1.25rem;
+        transition: var(--transition);
+    }
+
+    .table a:hover i {
+        transform: scale(1.2);
+    }
+
+    .td-contents {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .text-danger {
+        color: var(--danger) !important;
+        font-weight: 600;
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-xl);
+        overflow: hidden;
+        animation: scaleIn 0.3s ease-out;
+    }
+
+    .modal-body {
+        padding: 2.5rem;
+    }
+
+    .modal-body .text-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .modal-body i {
+        font-size: 4rem;
+        color: var(--success);
+        animation: scaleIn 0.5s ease-out;
+    }
+
+    .modal-body h4 {
+        color: var(--text-dark);
+        font-weight: 700;
+        margin: 0;
+    }
+
+
+  .client-wrapper {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    padding: 40px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .client {
+    max-width: 600px;
+    width: 100%;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    padding: 40px;
+    animation: slideUp 0.4s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .client h5 {
+    color: var(--primary);
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .client h5::before {
+    content: '';
+    width: 4px;
+    height: 32px;
+    background: var(--primary-solid);
+    border-radius: 4px;
+  }
+
+  .client-subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 32px;
+    padding-left: 14px;
+  }
+
+  .form-group-wrapper {
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .client label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    transition: var(--transition);
+  }
+
+  .client .form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: var(--border-radius-sm);
+    font-size: 14px;
+    transition: var(--transition);
+    background: #fafbfc;
+  }
+
+  .client .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(17, 153, 142, 0.1);
+  }
+
+  .client .form-control::placeholder {
+    color: #adb5bd;
+  }
+
+  .client .form-control:hover {
+    border-color: #c0c0c0;
+    background: white;
+  }
+
+  .form-group-wrapper::before {
+    content: '';
+    position: absolute;
+    left: 16px;
+    top: 42px;
+    width: 20px;
+    height: 20px;
+    background-size: contain;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .input-with-icon .form-control {
+    padding-left: 44px;
+  }
+
+  #id_client_error {
+    font-size: 13px;
+    margin-top: 16px;
+    margin-bottom: 0;
+    padding: 12px;
+    border-radius: var(--border-radius-sm);
+    background: #fee;
+    border-left: 4px solid #dc3545;
+    display: none;
+  }
+
+  #id_client_error:not(:empty) {
+    display: block;
+  }
+
+  .client-btn {
+    margin-top: 32px;
+    gap: 12px;
+  }
+
+  .client-btn .btn {
+    min-width: 140px;
+    padding: 12px 24px;
+    border-radius: var(--border-radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    cursor: pointer;
+  }
+
+  .client-btn .btn i {
+    font-size: 18px;
+    color: white;
+  }
+
+  .client-btn .btn-secondary {
+    background: var(--primary-solid);
+    color: white;
+    box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3);
+  }
+
+  .client-btn .btn-secondary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(17, 153, 142, 0.4);
+  }
+
+  .client-btn .btn-secondary:active {
+    transform: translateY(0);
+  }
+
+  .client-btn .btn-reset {
+    background: #e9ecef;
+    color: #495057;
+  }
+
+  .client-btn .btn-reset:hover {
+    background: #dee2e6;
+    color: #212529;
+  }
+
+  .form-control.is-invalid {
+    border-color: #dc3545;
+    background: #fff5f5;
+  }
+
+  .form-control.is-valid {
+    border-color: #28a745;
+    background: #f0fdf4;
+  }
+
+  .btn-loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+  }
+
+  @keyframes spinner {
+    to { transform: rotate(360deg); }
+  }
+
+    .dataTables_wrapper {
+        padding: 1.5rem;
+    }
+
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        margin-bottom: 1rem;
+    }
+
+    .dataTables_wrapper .dataTables_length select,
+    .dataTables_wrapper .dataTables_filter input {
+        border: 2px solid #e2e8f0;
+        border-radius: var(--border-radius-sm);
+        padding: 0.5rem 1rem;
+        transition: var(--transition);
+        margin: 0 0.5rem;
+    }
+
+    .dataTables_wrapper .dataTables_length select:focus,
+    .dataTables_wrapper .dataTables_filter input:focus {
+        outline: none;
+        border-color: var(--primary-solid);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 1rem;
+        color: var(--text-muted);
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        padding: 0.5rem 1rem;
+        margin: 0 0.25rem;
+        border-radius: var(--border-radius-sm);
+        border: 2px solid #e2e8f0;
+        background: white;
+        color: var(--text-dark);
+        transition: var(--transition);
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        background: var(--primary-light);
+        border-color: var(--primary-solid);
+        color: var(--primary-solid);
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background: var(--primary);
+        color: var(--text-light);
+        border-color: transparent;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    @keyframes rotate {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .customer-navbar nav {
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .customer-navbar .d-flex {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .balances {
+            padding: 1rem;
+        }
+
+        .balances h5 {
+            font-size: 1rem;
+        }
+
+        .dataTables_wrapper {
+            padding: 0.5rem;
+        }
+
+        .table {
+            font-size: 0.85rem;
+        }
+
+        .table thead th,
+        .table tbody td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .initials {
+            width: 35px;
+            height: 35px;
+        }
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        h
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-dark);
+    }
+</style>
+
 <div class="customer">
-    <div class="px-2 main-content ">
+    <div class="px-2 main-content">
+        <!-- Navigation Bar -->
         <div class="customer-navbar">
-            <nav class="d-flex justify-content-between rounded align-items-center p-2 text-light bg-dark shadow">
-                <div class="mt-2">
+            <nav class="d-flex justify-content-between align-items-center">
+                <div>
                     <h5 class='fw-bold'>Customers</h5>
                 </div>
                 <div class='d-flex'>
-                    <button class=" btn btn-outline-dark" id='id_add_client'>
+                    <button class="btn btn-outline-dark" id='id_add_client'>
                         <i class="bx bx-plus"></i>
-                        Customer
+                        Add Customer
                     </button>
-                    <a href="?receivable=true" class="mx-2 btn btn-danger" id="id_receivables">Account Receivables</a>
+                    <a href="?receivable=true" class="btn btn-danger" id="id_receivables">
+                        <i class='bx bx-dollar-circle'></i>
+                        Account Receivables
+                    </a>
                     <a href="?download=true" class="btn btn-success">
-                        <i class='bx bx-download mt-1'></i>
-                        Excel
+                        <i class='bx bx-download'></i>
+                        Export Excel
                     </a> 
                 </div>
             </nav>
         </div>
 
-        <div class="balances mt-2 mb-2 bg-warning p-2 rounded d-flex align-items-center">
-            <h5 class="fw-bold mt-1">Total Customer Balances -> |
+        <!-- Balance Banner -->
+        <div class="balances">
+            <h5 class="fw-bold">
+                <i class='bx bx-wallet me-2'></i>
+                Total Customer Balances
                 {% for totals in total_balances_per_currency %}
-                  {{ totals.currency__name}}: {{ totals.total_balance}} |
+                  | {{ totals.currency__name}}: {{ totals.total_balance}}
                 {% endfor %}
             </h5>
         </div>
-        <div class=''>
-            <table class="table border table-hover rounded p-2 mt-3 mt-2" id='customerTable' style='width:100%;'>
-                <thead class='bg-primary'>
+
+        <!-- Customer Table -->
+        <div class='table-container'>
+            <table class="table table-hover" id='customerTable' style='width:100%;'>
+                <thead>
                     <tr>
                         <th>Name</th>
                         <th>Cellphone</th>
                         <th>Email</th>
-                        <th>USD Account Balance(s)</th>
-                        <th>ZIG Account Balance(s)</th>
+                        <th>USD Balance</th>
+                        <th>ZIG Balance</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -47,7 +739,7 @@
                         <tr>
                             <td>
                                 <small>
-                                    <a href="{% url 'finance:customer' customer.id%}" class="text-dark d-flex align-items-center">
+                                    <a href="{% url 'finance:customer' customer.id%}" class="text-dark">
                                         {% with name_parts=customer.name|split_name %}
                                             {% if name_parts.first_name and name_parts.last_name %}
                                                 <div class='initials'>
@@ -87,7 +779,9 @@
                                 <small>
                                     {% for balance in accounts %}
                                         {% if balance.account.customer.id == customer.id and balance.currency.symbol == 'USD' %}
-                                            <span class='text-center {% if balance.balance < 0 %}text-danger{% endif %}'>{{balance.currency.symbol}} {{balance.balance}}</span>
+                                            <span class='{% if balance.balance < 0 %}text-danger{% endif %}'>
+                                                <strong>{{balance.currency.symbol}} {{balance.balance}}</strong>
+                                            </span>
                                         {% endif %}
                                     {% endfor %}
                                 </small>
@@ -96,7 +790,9 @@
                                 <small>
                                     {% for balance in accounts %}
                                         {% if balance.account.customer.id == customer.id and balance.currency.symbol == 'Z'%}
-                                            <span class='text-center {% if balance.balance < 0 %}text-danger{% endif %}'>{{balance.currency.symbol}} {{balance.balance}}</span>
+                                            <span class='{% if balance.balance < 0 %}text-danger{% endif %}'>
+                                                <strong>{{balance.currency.symbol}} {{balance.balance}}</strong>
+                                            </span>
                                         {% endif %}
                                     {% endfor %}
                                 </small>
@@ -106,7 +802,10 @@
                 </tbody>  
             </table>
         </div>
-    <div class="modal fade" id="endOfDayModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    </div>
+
+    <!-- End of Day Modal -->
+    <div class="modal fade" id="endOfDayModal" tabindex="-1" aria-labelledby="endOfDayModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
@@ -116,7 +815,8 @@
         </div>
     </div>
 
-    <div class="modal fade" id="clientModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <!-- Add Client Modal -->
+    <div class="modal fade" id="clientModal" tabindex="-1" aria-labelledby="clientModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
@@ -126,11 +826,12 @@
         </div>
     </div>
 
-    <div class="modal fade" id="customerModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <!-- Success Modal -->
+    <div class="modal fade" id="customerModal" tabindex="-1" aria-labelledby="customerModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body text-center">
-                    <i class='bx bx-check-circle h3'></i>
+                    <i class='bx bx-check-circle'></i>
                     <h4>Customer Successfully Created</h4>
                 </div>
             </div>
@@ -138,6 +839,7 @@
     </div>
     
 </div> 
+
 <script>
     new DataTable('#customerTable');
 

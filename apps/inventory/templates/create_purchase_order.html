@@ -27,6 +27,7 @@
       --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       --m-bottom: 20px;
   }
+
 .po-input {
     border: none !important;
   }
@@ -61,7 +62,6 @@
     text-align: left;
   }
 
-
   .spinner {
       border: 2px solid #f3f3f3;
       border-top: 2px solid #3498db;
@@ -95,6 +95,7 @@
 
   .search-input {
       width: 100%;
+      max-width: 100%;
       padding: 15px 50px 15px 20px;
       margin-left: 20px;
       border-radius: var(--border-radius);
@@ -125,6 +126,757 @@
   .background{
     background: var(--primary);
   }
+
+  .inventory {
+      padding-left: 16px;
+      padding-right: 16px;
+      padding-bottom: 32px;
+  } 
+  .inventory-navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+  }
+  .inventory-navbar nav {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: flex-start !important;
+      width: 100%;
+      padding: 16px !important;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+  }
+  .inventory-navbar nav:hover {
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(10px);
+      background: var(--glass);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  .inventory-navbar nav .nav-link {
+      color: var(--text-light);
+      font-size: 16px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: var(--transition);
+  }
+  .inventory-navbar nav .nav-link:hover {
+      color: var(--text-dark);
+  }
+  .inventory-navbar nav .nav-link.active {
+      color: var(--primary-no-gradient);
+      font-weight: 600;
+  }
+  .inventory-navbar .btn {
+      padding: 8px 16px;
+      border-radius: var(--border-radius-sm);
+      background: var(--primary-no-gradient);
+      border: 1px solid var(--glass-border);
+      color: var(--text-light);
+      text-decoration: none;
+      transition: var(--transition);
+      font-size: 14px;
+      cursor: pointer;
+  }
+
+.col-3 {
+    padding: 16px;
+  }
+  
+.inventory {
+    background: #f8f9fa;
+}
+
+.add-purchase-order .p-2 {
+    padding: 1rem !important;
+}
+
+.add-purchase-order .p-2 h4 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.add-purchase-order .p-2 p {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+/* Mobile Add Product Button */
+.mobile-add-product-btn {
+    display: none;
+}
+
+/* Card improvements */
+.col-9 .d-flex.flex-column,
+.col-3 {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Search container */
+.search-container {
+    margin-bottom: 1rem;
+    padding: 0;
+}
+
+.search-input {
+    padding: 12px 40px 12px 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 14px;
+    background: #fff;
+}
+
+.search-icon {
+    font-size: 18px;
+    color: #6c757d;
+}
+
+/* Table improvements */
+#cart-table {
+    margin-top: 0;
+}
+
+#cart-table thead {
+    background: var(--primary) !important;
+}
+
+#cart-table thead th {
+    padding: 12px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+#cart-table tbody td {
+    padding: 12px 10px;
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+#cart-table tfoot td {
+    padding: 10px;
+    font-size: 13px;
+}
+
+/* Button improvements */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-dark {
+    border: 1px solid #343a40;
+    color: #343a40;
+}
+
+.btn-outline-dark:hover {
+    background: #343a40;
+    color: #fff;
+}
+
+.btn-dark {
+    background: #343a40;
+    border: none;
+}
+
+.btn-dark:hover {
+    background: #23272b;
+}
+
+/* Form improvements */
+.form-label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #495057;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    font-size: 14px;
+    padding: 10px 12px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
+}
+
+.btn.bx {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    border-radius: 8px;
+    margin-left: 6px;
+}
+
+.btn.border {
+    border: 1px solid #e0e0e0 !important;
+}
+
+.btn.bx:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary) !important;
+}
+
+#cart-title {
+    background: var(--primary);
+    color: #fff;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+/* Spinner positioning */
+.spinner {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+}
+
+/* CRITICAL: Modal z-index hierarchy */
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.modal {
+    z-index: 1050;
+}
+
+/* Mobile drawer should be below modals */
+.col-3.mobile-drawer {
+    z-index: 1030 !important;
+}
+
+.mobile-drawer-backdrop {
+    z-index: 1025 !important;
+}
+
+/* When modal is open over drawer, ensure proper stacking */
+.modal.show ~ .mobile-drawer-backdrop {
+    z-index: 1045;
+}
+
+/* Nested modals (modals opened from drawer) */
+.modal.show .modal-dialog {
+    z-index: 1055;
+}
+
+/* Select2 dropdowns in modals */
+.select2-container {
+    z-index: 1060 !important;
+}
+
+.select2-dropdown {
+    z-index: 1070 !important;
+}
+
+/* Select2 in drawer */
+.mobile-drawer .select2-container {
+    z-index: 1035 !important;
+}
+
+.mobile-drawer .select2-dropdown {
+    z-index: 1036 !important;
+}
+
+@media (min-width: 1920px) {
+    .inventory {
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1919px) {
+    .inventory {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .inventory {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+    
+    .btn.bx {
+        width: 34px;
+        height: 34px;
+        font-size: 17px;
+    }
+}
+
+@media (max-width: 991px) {
+  .col-3.mobile-drawer {
+    display: block !important;
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 92%;
+    max-width: 420px;
+    z-index: 1030;
+    overflow-y: auto;
+    padding: 1rem;
+    background: #fff;
+    box-shadow: -8px 0 24px rgba(0,0,0,0.12);
+    transform: translateX(100%);
+    transition: transform 280ms ease-in-out;
+    border-radius: 0;
+  }
+  
+  .col-3.mobile-drawer.open {
+    transform: translateX(0);
+  }
+  
+  .mobile-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1025;
+    opacity: 0;
+    transition: opacity 180ms ease-in-out;
+    pointer-events: none;
+  }
+  
+  .mobile-drawer-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  .mobile-drawer-close {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    z-index: 1035;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    color: #333;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .col-3 .form-select,
+  .col-3 .form-control,
+  .col-3 .select {
+    width: 100% !important;
+    text-align: left;
+    -webkit-appearance: none;
+  }
+
+  .col-3 .form-label {
+    text-align: left;
+    margin-bottom: 6px;
+  }
+
+  /* Tablet and mobile button adjustments */
+  .mobile-add-product-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    padding: 10px 16px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .col-3 {
+    display: none;
+  }
+
+  .add-purchase-order .p-2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+.col-3 input,
+.col-3 textarea,
+.col-3 select {
+  text-align: left;
+}
+
+.col-3 .spinner {
+  right: 12px;
+}
+
+@media (min-width: 992px) {
+  .col-3.mobile-drawer {
+    position: relative;
+    transform: none;
+    box-shadow: none;
+    z-index: auto;
+  }
+  
+  .mobile-add-product-btn {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .inventory {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+    
+    .add-purchase-order .p-2 h4 {
+        font-size: 1.25rem;
+    }
+    
+    .add-purchase-order .p-2 p {
+        font-size: 0.8125rem;
+    }
+    
+    .btn.bx {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+        margin-left: 4px;
+    }
+    
+    #cart-table thead th {
+        padding: 10px 6px;
+        font-size: 11px;
+    }
+    
+    #cart-table tbody td {
+        padding: 10px 6px;
+        font-size: 12px;
+    }
+    
+    .search-input {
+        padding: 10px 36px 10px 12px;
+        font-size: 13px;
+        margin-left: 0;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+    .inventory {
+        padding: 12px;
+    }
+    
+    .add-purchase-order .p-2 {
+        padding: 0.875rem !important;
+    }
+    
+    .add-purchase-order .p-2 h4 {
+        font-size: 1.125rem;
+    }
+    
+    .add-purchase-order .p-2 p {
+        font-size: 0.75rem;
+    }
+    
+    .mobile-add-product-btn {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+    
+    .row.main {
+        flex-direction: column;
+        margin: 0 !important;
+    }
+    
+    .col-9 {
+        width: 100% !important;
+        max-width: 100%;
+        padding: 12px !important;
+        margin-bottom: 12px;
+    }
+    
+    .search-container {
+        margin-left: 0 !important;
+        margin-bottom: 10px;
+        padding: 0 !important;
+    }
+    
+    .search-input {
+        padding: 10px 36px 10px 12px;
+        font-size: 13px;
+        margin-left: 0 !important;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .search-icon {
+        right: 12px;
+    }
+    
+    .btn.bx {
+        width: 30px;
+        height: 30px;
+        font-size: 15px;
+        margin-left: 4px;
+    }
+    
+    #cart-title {
+        font-size: 13px;
+        padding: 10px;
+    }
+    
+    .form-label {
+        font-size: 12px;
+    }
+    
+    .form-control, .form-select {
+        font-size: 13px;
+        padding: 9px 11px;
+    }
+    
+    #cart-table {
+        font-size: 11px;
+    }
+    
+    #cart-table thead th {
+        padding: 8px 4px;
+        font-size: 10px;
+        white-space: nowrap;
+    }
+    
+    #cart-table tbody td {
+        padding: 8px 4px;
+        font-size: 11px;
+    }
+    
+    #cart-table tbody td input {
+        font-size: 11px;
+        padding: 4px 6px;
+    }
+    
+    #cart-table tfoot td {
+        padding: 8px 4px;
+        font-size: 11px;
+    }
+    
+    .subtotal-container .table td {
+        font-size: 11px;
+        padding: 6px 4px;
+    }
+    
+    .btn-sm {
+        padding: 7px 12px;
+        font-size: 12px;
+    }
+    
+    .d-flex.justify-content-end .btn {
+        padding: 8px 14px;
+        font-size: 12px;
+    }
+}
+
+@media (min-width: 400px) and (max-width: 575px) {
+    .inventory {
+        padding: 10px;
+    }
+
+    .add-purchase-order .p-2 {
+        padding: 0.75rem !important;
+    }
+    
+    .add-purchase-order .p-2 h4 {
+        font-size: 1.0625rem;
+    }
+    
+    .add-purchase-order .p-2 p {
+        font-size: 0.6875rem;
+    }
+    
+    .mobile-add-product-btn {
+        padding: 7px 12px;
+        font-size: 12px;
+    }
+    
+    .search-input {
+        padding: 9px 34px 9px 11px;
+        font-size: 12px;
+        margin-left: 0;
+    }
+    
+    .btn.bx {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+        margin-left: 3px;
+    }
+    
+    #cart-table thead th {
+        padding: 7px 3px;
+        font-size: 9px;
+    }
+    
+    #cart-table tbody td {
+        padding: 7px 3px;
+        font-size: 10px;
+    }
+    
+    #cart-table tfoot td {
+        padding: 7px 3px;
+        font-size: 10px;
+    }
+    
+    .form-control, .form-select {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+}
+
+@media (min-width: 360px) and (max-width: 399px) {
+    .inventory {
+        padding: 8px;
+    }
+
+    .add-purchase-order .p-2 {
+        padding: 0.625rem !important;
+    }
+    
+    .add-purchase-order .p-2 h4 {
+        font-size: 1rem;
+    }
+    
+    .add-purchase-order .p-2 p {
+        font-size: 0.625rem;
+    }
+    
+    .mobile-add-product-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+    
+    .search-input {
+        padding: 8px 32px 8px 10px;
+        font-size: 11px;
+        margin-left: 0;
+    }
+    
+    .btn.bx {
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
+        margin-left: 2px;
+    }
+    
+    #cart-table thead th {
+        padding: 6px 2px;
+        font-size: 8px;
+    }
+    
+    #cart-table tbody td {
+        padding: 6px 2px;
+        font-size: 9px;
+    }
+    
+    #cart-table tfoot td {
+        padding: 6px 2px;
+        font-size: 9px;
+    }
+    
+    .form-control, .form-select {
+        font-size: 11px;
+        padding: 7px 9px;
+    }
+}
+
+@media (max-width: 359px) {
+    .inventory {
+        padding: 6px;
+    }
+    
+    .add-purchase-order .p-2 {
+        padding: 0.5rem !important;
+    }
+    
+    .add-purchase-order .p-2 h4 {
+        font-size: 0.9375rem;
+    }
+    
+    .add-purchase-order .p-2 p {
+        font-size: 0.5625rem;
+    }
+    
+    .mobile-add-product-btn {
+        padding: 5px 8px;
+        font-size: 10px;
+    }
+    
+    .search-input {
+        padding: 7px 30px 7px 9px;
+        font-size: 10px;
+        margin-left: 0;
+    }
+    
+    .search-icon {
+        font-size: 12px;
+        right: 8px;
+    }
+    
+    .btn.bx {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+        margin-left: 2px;
+    }
+    
+    #cart-table thead th {
+        padding: 5px 2px;
+        font-size: 7px;
+    }
+    
+    #cart-table tbody td {
+        padding: 5px 2px;
+        font-size: 8px;
+    }
+    
+    #cart-table tfoot td {
+        padding: 5px 2px;
+        font-size: 8px;
+    }
+    
+    .form-control, .form-select {
+        font-size: 10px;
+        padding: 6px 8px;
+    }
+    
+    .btn-save {
+        padding: 7px 12px;
+        font-size: 11px;
+    }
+}
+
 </style>
 <div class="inventory">
   <div class='add-purchase-order'>
@@ -133,6 +885,9 @@
         <h4>Create Purchase order</h4>
         <p> Add purchase order items </p>
       </div>
+      <button type="button" class="btn mobile-add-product-btn" onclick="openMobileAddProduct()">
+        <i class='bx bx-plus'></i> Add Product
+      </button>
     </div>
     <div class="row mt-2 main ms-2" id="main-section">
       <div class="col-9">
@@ -152,47 +907,50 @@
               <th class="text-center">Total</th>
             </thead>
             <tbody id="cart-items"></tbody>
-            <tfoot>
-              <tr>
-                <td colspan="5"></td>
-                <td class="fw-bold">Subtotal</td>
-                <td class="text-center fw-bold" id="subtotal"></td>
-              </tr>
-              <tr>
-                <td colspan="5"></td>
-                <td class="fw-bold">Discount</td>
-                <td>
-                  <input id="id_discount" class="form-control text-center fw-bold" oninput="calculateTotals()">
-                </td>
-              </tr>
-              <tr>
-                <td colspan="5"></td>
-                <td class="fw-bold">Tax Total</td>
-                <td id="tax" class="fw-bold text-center"></td>
-              </tr>
-              <tr>
-                <td colspan="5"></td>
-                <td class="fw-bold">Expenses</td>
-                <td>
-                  <input id="id_other" style="border:none;" value="0.00" class="form-control text-center fw-bold"
-                    oninput="calculateTotals()" readonly>
-                </td>
-              </tr>
-              <!-- Add dynamic rows for other expenses here -->
-              <tr id="other-expense-row">
-                <td colspan="6"></td>
-                <td>
-                  <button class="btn btn-outline-dark btn-sm w-100" id="add-expense-btn" onclick="addExpense()">Add
-                    Expense</button>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="5"></td>
-                <td class="fw-bold">Total</td>
-                <td class="fw-bold text-center" id="id_total"></td>
-              </tr>
-            </tfoot>
           </table>
+          <div class="subtotal-container">
+            <table class="table table-borderless mb-0" id="totals-table">
+              <tbody>
+                <tr>
+                  <td colspan="5"></td>
+                  <td class="fw-bold">Subtotal</td>
+                  <td class="text-center fw-bold" id="subtotal"></td>
+                </tr>
+                <tr>
+                  <td colspan="5"></td>
+                  <td class="fw-bold">Discount</td>
+                  <td>
+                    <input id="id_discount" class="form-control text-center fw-bold" oninput="calculateTotals()">
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="5"></td>
+                  <td class="fw-bold">Tax Total</td>
+                  <td id="tax" class="fw-bold text-center"></td>
+                </tr>
+                <tr>
+                  <td colspan="5"></td>
+                  <td class="fw-bold">Expenses</td>
+                  <td>
+                    <input id="id_other" style="border:none;" value="0.00" class="form-control text-center fw-bold"
+                      oninput="calculateTotals()" readonly>
+                  </td>
+                </tr>
+                <tr id="other-expense-row">
+                  <td colspan="6"></td>
+                  <td>
+                    <button class="btn btn-outline-dark btn-sm w-100" id="add-expense-btn" onclick="addExpense()">Add
+                      Expense</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="5"></td>
+                  <td class="fw-bold">Total</td>
+                  <td class="fw-bold text-center" id="id_total"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <div class="d-flex justify-content-end">
             <button class="btn btn-outline-dark btn-sm flex mx-2" onclick="reload();">Clear</button>
             <button class="btn btn-dark btn-sm flex" id="confirm_btn">Next</button>
@@ -221,8 +979,8 @@
                   <div id="product_loader" class="spinner" style="display: none; position: absolute; top: 50%; right: 10px; transform: translateY(-50%); z-index: 10;"></div>
                 </div>
             
-                <button type="button" class="btn bx bx-edit border me-2" onclick="editModal()"></button>
-                <button type="button" class="btn bx bx-trash border me-2 m" onclick="deleteProduct()"></button>
+                <button type="button" class="btn bx bx-edit border me-1" onclick="editModal()"></button>
+                <button type="button" class="btn bx bx-trash border me-1" onclick="deleteProduct()"></button>
                 <button type="button" class="btn bx bx-plus border" id="id_add_supplier"></button>
               </div>
             </div>            
@@ -271,7 +1029,7 @@
                 <option value="15">Standard (15%)</option>
               </select>
             </div>
-           <div class="mb-3 mt-2">
+           <div class="mb-3 mt-3">
             <h6 class="fw-bold">Available in</h6>
             <div class="d-flex flex-column justify-content-between">
               {% for branch in branches %}
@@ -361,7 +1119,6 @@
                 </div>
                 <small id='id_error'></small>
                 <div class="d-flex justify-content-end">
-                  <div class="">
                     <button type="reset" class="btn btn-danger btn-sm w-100">
                       <i class='bx bx-reset'></i>
                       reset
@@ -523,7 +1280,7 @@
             <h6 class="fw-bold">Available in</h6>
             <div class="d-flex flex-column justify-content-between">
               {% for branch in branches %}
-              <div id="branch" class="form-check">
+              <div id="branch" class="mb-3">
                 <input type="checkbox" name="{{branch.name}}" class="checkboxinput form-check-input" id="{{branch.id}}">
                 <label for="{{branch.name}}" class="form-check-label">
                   {{ branch.name }}
@@ -730,6 +1487,7 @@
   const noteModal = new bootstrap.Modal(document.getElementById('noteStatusModal'));
   const productFormModal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
   const supplierFormModal = new bootstrap.Modal(document.getElementById('addProductModal'));
+  const addProd = document.getElementById('cart-title');
 
   const poSuccessModal = new bootstrap.Modal(document.querySelector('#poSuccessModal'));
   const successModal = new bootstrap.Modal(document.querySelector('#successModal'));
@@ -752,6 +1510,119 @@
 
   const overideModal = new bootstrap.Modal(document.getElementById('overideModal'));
 
+  // Function to open mobile add product form
+  document.addEventListener('DOMContentLoaded', function () {
+  try {
+    if (window.jQuery && $.fn && $.fn.select2) {
+      // existing inits for product/supplier...
+      $('#id_product').select2({ placeholder: 'Select Product', width: 'resolve' });
+      $('#id_supplier').select2({ width: 'resolve' });
+
+      // Initialize tax select so we can re-parent its dropdown on mobile
+      const $tax = $('#id_tax');
+      if ($tax.length) {
+        try { $tax.select2('destroy'); } catch (e) {}
+        $tax.select2({ width: 'resolve' });
+      }
+    }
+  } catch (e) {
+    console.warn('Select2 init error:', e);
+  }
+});
+
+// Replace arrays in openMobileAddProduct / closeMobileDrawer to include '#id_tax'
+function openMobileAddProduct() {
+  clearForm();
+  document.getElementById('cart-title').textContent = 'Add Product';
+
+  const drawer = document.querySelector('.col-3');
+  if (window.innerWidth <= 991 && drawer) {
+    drawer.classList.add('mobile-drawer');
+
+    let backdrop = document.querySelector('.mobile-drawer-backdrop');
+    if (!backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.className = 'mobile-drawer-backdrop';
+      document.body.appendChild(backdrop);
+    }
+
+    if (!drawer.querySelector('.mobile-drawer-close')) {
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'mobile-drawer-close';
+      closeBtn.setAttribute('aria-label', 'Close');
+      closeBtn.innerHTML = '&times;';
+      closeBtn.addEventListener('click', closeMobileDrawer);
+      drawer.appendChild(closeBtn);
+    }
+
+    requestAnimationFrame(() => {
+      backdrop.classList.add('visible');
+      drawer.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    });
+
+    backdrop.addEventListener('click', closeMobileDrawer, { once: false });
+
+    // Re-init Select2 controls to render their dropdowns inside the drawer (above backdrop).
+    try {
+      if (window.jQuery && $.fn && $.fn.select2) {
+        const $drawer = $(drawer);
+        ['#id_product', '#id_supplier', '#id_search', '#id_category', '#id_tax_type', '#id_tax'].forEach(selector => {
+          const $el = $(selector);
+          if ($el.length) {
+            try { $el.select2('destroy'); } catch (e) {}
+            $el.select2({ dropdownParent: $drawer, width: 'resolve' });
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('Select2 re-init failed:', err);
+    }
+
+    const firstInput = drawer.querySelector('select, input, textarea, button');
+    if (firstInput) firstInput.focus();
+    return;
+  }
+
+  if (typeof supplierFormModal !== 'undefined' && supplierFormModal) {
+    supplierFormModal.show();
+  } else {
+    if (drawer) drawer.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function closeMobileDrawer() {
+  const drawer = document.querySelector('.col-3.mobile-drawer');
+  const backdrop = document.querySelector('.mobile-drawer-backdrop');
+  if (drawer) drawer.classList.remove('open');
+  if (backdrop) {
+    backdrop.classList.remove('visible');
+    setTimeout(() => {
+      if (backdrop && backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+    }, 220);
+  }
+  document.body.style.overflow = '';
+
+  if (drawer) {
+    const closeBtn = drawer.querySelector('.mobile-drawer-close');
+    if (closeBtn && closeBtn.parentNode) closeBtn.parentNode.removeChild(closeBtn);
+  }
+
+  // restore Select2 to default parent (document.body) so it behaves normally on desktop again
+  try {
+    if (window.jQuery && $.fn && $.fn.select2) {
+      ['#id_product', '#id_supplier', '#id_search', '#id_category', '#id_tax_type', '#id_tax'].forEach(selector => {
+        const $el = $(selector);
+        if ($el.length) {
+          try { $el.select2('destroy'); } catch (e) {}
+          $el.select2({ width: 'resolve' });
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('Select2 cleanup failed:', err);
+  }
+}
 
   const nextBtn = () => {
     noteModal.hide()
@@ -885,94 +1756,92 @@
 
   // edit product modal call
   const editModal = async () => {
-      const productSelect = document.getElementById('id_product');
-      const productId = productSelect.value;
-      
-      if (!productId) {
-          Swal.fire({
-              icon: 'warning',
-              title: 'No Product Selected',
-              text: 'Please select a product to edit.'
-          });
-          return;
-      }
+    const productSelect = document.getElementById('id_product');
+    const productId = productSelect.value;
+    
+    if (!productId) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Product Selected',
+            text: 'Please select a product to edit.'
+        });
+        return;
+    }
 
-      try {
-          Swal.fire({
-              title: 'Loading product data...',
-              allowOutsideClick: false,
-              didOpen: () => {
-                  Swal.showLoading();
-              }
-          });
+    try {
+        Swal.fire({
+            title: 'Loading product data...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
-          const response = await fetch(`/inventory/inventory/?id=${productId}`);
-          const data = await response.json();
-          
-          Swal.close();
-          
-          if (data && data.length > 0) {
-              const product = data[0];
-              
-              productID = productId;
-              
-              document.getElementById('title').textContent = `Edit Product: ${product.name.toUpperCase()}`;
-              document.getElementById('id_name').value = product.name || '';
-              document.getElementById('id_min_stock_level').value = product.min_stock_level || 0;
-              document.getElementById('id_tax_type').value = product.tax_type || '';
-              document.getElementById('id_category').value = product.category_id || '';
-              document.getElementById('id_end_of_day').checked = product.end_of_day || false;
-              document.getElementById('id_service').checked = product.service || false;
-              
-              document.getElementById('id_image').value = '';
-              
-              // Uncheck all branches first
-              const branchCheckboxes = document.querySelectorAll('#addProductModal #branch input[type="checkbox"]');
-              branchCheckboxes.forEach(checkbox => {
-                  checkbox.checked = false;
-              });
-              
-              // Check the branches where product is available
-              if (product.branches && Array.isArray(product.branches)) {
-                  product.branches.forEach(branchId => {
-                      const checkbox = document.querySelector(`#addProductModal #branch input[id="${branchId}"]`);
-                      if (checkbox) {
-                          checkbox.checked = true;
-                      }
-                  });
-              }
-              
-              supplierFormModal.show();
-          } else {
-              Swal.fire({
-                  icon: 'error',
-                  title: 'Product Not Found',
-                  text: 'Could not load product data.'
-              });
-          }
-      } catch (error) {
-          Swal.close();
-          console.error('Error fetching product data:', error);
-          Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: 'Failed to load product data. Please try again.'
-          });
-      }
-  };
+        const response = await fetch(`/inventory/inventory/?id=${productId}`);
+        const data = await response.json();
+        
+        Swal.close();
+        
+        if (data && data.length > 0) {
+            const product = data[0];
+            
+            productID = productId;
+            
+            document.getElementById('title').textContent = `Edit Product: ${product.name.toUpperCase()}`;
+            document.getElementById('id_name').value = product.name || '';
+            document.getElementById('id_min_stock_level').value = product.min_stock_level || 0;
+            document.getElementById('id_tax_type').value = product.tax_type || '';
+            document.getElementById('id_category').value = product.category_id || '';
+            document.getElementById('id_end_of_day').checked = product.end_of_day || false;
+            document.getElementById('id_service').checked = product.service || false;
+            document.getElementById('id_image').value = '';
+
+            // Show branches where product is available
+            const branchCheckboxes = document.querySelectorAll('#addProductModal #branch input[type="checkbox"]');
+            branchCheckboxes.forEach(checkbox => {
+                if (product.branches && Array.isArray(product.branches)) {
+                    checkbox.checked = product.branches.includes(parseInt(checkbox.id));
+                } else {
+                    checkbox.checked = false;
+                }
+            });
+
+            supplierFormModal.show();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Product Not Found',
+                text: 'Could not load product data.'
+            });
+        }
+    } catch (error) {
+        Swal.close();
+        console.error('Error fetching product data:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to load product data. Please try again.'
+        });
+    }
+};
 
   function clearForm() {
       document.getElementById('id_name').value = '';
       document.getElementById('id_min_stock_level').value = '';
       document.getElementById('id_p_quantity').value = '';
       document.getElementById('id_image').textContent = '';
-      document.getElementById('title').innerHTML = 'Add Product'; // Set default title
+      document.getElementById('title').innerHTML = 'Add Product';
       productID = '';
       
       const branchCheckboxes = document.querySelectorAll('#addProductModal #branch input[type="checkbox"]');
       branchCheckboxes.forEach(checkbox => {
           checkbox.checked = false;
       });
+      
+      const endOfDayCheckbox = document.getElementById('id_end_of_day');
+      if (endOfDayCheckbox) {
+          endOfDayCheckbox.checked = false;
+      }
   }
 
   productBtn.addEventListener('click', () => {
@@ -1070,7 +1939,6 @@
           </div>
         </div>
       `
-    //  count += 1;
   })
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -1089,13 +1957,55 @@ document.addEventListener('DOMContentLoaded', function () {
       if (productId) {
         getProductData(productId);
         getBestSupplierPrices(productId);
-        displayProductBranches(productId); // Add this line
+        displayProductBranches(productId);
       } else {
-        // Clear branches if no product selected
         clearProductBranches();
       }
     });
   });
+
+  // Function to display product branches
+  function displayProductBranches(productId) {
+    fetch(`/inventory/inventory/?id=${productId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data && data[0]) {
+          const product = data[0];
+          
+          // Update branch checkboxes in the main form (col-3)
+          const branchCheckboxes = document.querySelectorAll('.col-3 .form-check-input.checkboxinput');
+          branchCheckboxes.forEach(checkbox => {
+            if (product.branches && Array.isArray(product.branches)) {
+              checkbox.checked = product.branches.includes(parseInt(checkbox.id));
+            } else {
+              checkbox.checked = false;
+            }
+          });
+          
+          // Update end_of_day checkbox
+          const endOfDayCheckbox = document.getElementById('id_end_of_day');
+          if (endOfDayCheckbox) {
+            endOfDayCheckbox.checked = product.end_of_day || false;
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching product branches:', error);
+      });
+  }
+
+  // Function to clear product branches
+  function clearProductBranches() {
+    const branchCheckboxes = document.querySelectorAll('.col-3 .form-check-input.checkboxinput');
+    branchCheckboxes.forEach(checkbox => {
+      checkbox.checked = false;
+    });
+    
+    const endOfDayCheckbox = document.getElementById('id_end_of_day');
+    if (endOfDayCheckbox) {
+      endOfDayCheckbox.checked = false;
+    }
+  }
 
   // fetch prodcut data
   const getProductData = (productId) => {
@@ -1103,7 +2013,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const loaderEl = document.getElementById('loader');
     const errorEl = document.getElementById('price_error');
   
-    // Reset previous state
     loaderEl.style.display = 'inline-block';
     unitPriceEl.disabled = true;
     errorEl.textContent = '';
@@ -1113,6 +2022,24 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(data => {
         if (data && data[0]) {
           unitPriceEl.value = data[0].cost;
+          
+          // Set end_of_day checkbox in the col-3 form
+          const endOfDayCheckbox = document.querySelector('.col-3 #id_end_of_day');
+          if (endOfDayCheckbox) {
+            endOfDayCheckbox.checked = data[0].end_of_day || false;
+          }
+          
+          // Set branch checkboxes based on product's branches in col-3
+          if (data[0].branches && Array.isArray(data[0].branches)) {
+            const branchCheckboxes = document.querySelectorAll('.col-3 .form-check-input.checkboxinput');
+            branchCheckboxes.forEach(checkbox => {
+              if (data[0].branches.includes(parseInt(checkbox.id))) {
+                checkbox.checked = true;
+              } else {
+                checkbox.checked = false;
+              }
+            });
+          }
         } else {
           unitPriceEl.value = '';
           errorEl.textContent = 'Price not found for this product.';
@@ -1151,7 +2078,7 @@ document.addEventListener('DOMContentLoaded', function () {
             data.suppliers.forEach((sup) => {
               console.info(sup)
               supplierPrices.innerHTML += `
-                        <button type='button' aria-label='Click to choose supplier.' class='btn btn-outline-dark hint--bottom mb-1' onclick="selectedSupplier(${sup?.id})">$${sup?.price}</button>
+                        <button type='button' aria-label='Click to choose supplier.' class='btn btn-outline-dark hint--bottom mb-1' onclick="selectedSupplier(${sup?.id})">${sup?.price}</button>
                       `
             })
           }
@@ -1219,7 +2146,6 @@ document.addEventListener('DOMContentLoaded', function () {
       totalExpense += amount;
     }
 
-    // Set the total in the 'Other' field
     document.getElementById('id_other').value = totalExpense.toFixed(2);
     calculateTotals();
   }
@@ -1257,7 +2183,6 @@ document.addEventListener('DOMContentLoaded', function () {
   batchModalBtn.addEventListener('click', () => {
     batchModal.show()
     supplierFormModal.hide()
-    // productFormModal.hide()
   })
 
   function isCartEmpty() {
@@ -1267,8 +2192,6 @@ document.addEventListener('DOMContentLoaded', function () {
       confirmBtn.disabled = true;
     }
   }
-
-  // isCartEmpty()
 
   function reload() {
     localStorage.removeItem('cart')
@@ -1459,85 +2382,83 @@ document.addEventListener('DOMContentLoaded', function () {
 }
 
   const addProduct = async () => {
-    const fileInput = document.getElementById('id_image');
-    const file = fileInput.files[0] || null; // Handle case where no file is selected
+  const fileInput = document.getElementById('id_image');
+  const file = fileInput.files[0] || null;
 
-    Swal.fire({
-      title: 'Processing Product',
-      text: 'Please wait...',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading()
-      }
+  Swal.fire({
+    title: 'Processing Product',
+    text: 'Please wait...',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading()
+    }
+  });
+
+  const branchCheckboxes = document.querySelectorAll('#addProductModal #branch input[type="checkbox"]');
+  const selectedBranches = [];
+  branchCheckboxes.forEach(checkbox => {
+    if (checkbox.checked) {
+      selectedBranches.push(checkbox.id);
+    }
+  });
+
+  try {
+    const data = await processProdData(file);
+
+    if (!data) {
+      Swal.close();
+      return;
+    }
+
+    data.branches = selectedBranches;
+
+    const response = await fetch("{% url 'inventory:product' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+      body: JSON.stringify(data),
     });
 
-    // Get selected branches
-    const branchCheckboxes = document.querySelectorAll('#addProductModal #branch input[type="checkbox"]');
-    const selectedBranches = [];
-    branchCheckboxes.forEach(checkbox => {
-      if (checkbox.checked) {
-        selectedBranches.push(checkbox.id);
-      }
-    });
+    const result = await response.json();
 
-    try {
-      const data = await processProdData(file);
-      
-      if (!data) {
-        Swal.close();
-        return; // Exit if data processing failed
-      }
-      
-      data.branches = selectedBranches; // Add branches to data
-
-      const response = await fetch("{% url 'inventory:product' %}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCookie("csrftoken"),
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        supplierFormModal.hide();
-        fetchProducts();
-        if (productID) {
-          Swal.fire({
-            icon: 'success',
-            title: 'Product successfully edited',
-            text: 'Success!',
-            timer: 2000,
-            showConfirmButton: false
-          });
-        } else {
-          Swal.fire({
-            icon: 'success',
-            title: 'Product Added',
-            text: 'The product has been successfully added!',
-            timer: 2000,
-            showConfirmButton: false
-          });
+    if (result.success) {
+      supplierFormModal.hide();
+      fetchProducts().then(() => {
+        if (result.product_id) {
+          const prodElement = document.getElementById('id_product');
+          prodElement.value = result.product_id;
+          prodElement.dispatchEvent(new Event('change'));
+          if ($(prodElement).data('select2')) {
+            $('#id_product').val(result.product_id).trigger('change');
+          }
         }
-        clearForm();
-        prodData = [];
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: result.message,
-        });
-      }
-    } catch (error) {
-      console.error('Error:', error);
+      });
+      Swal.fire({
+        icon: 'success',
+        title: productID ? 'Product successfully edited' : 'Product Added',
+        text: productID ? 'Success!' : 'The product has been successfully added!',
+        timer: 2000,
+        showConfirmButton: false
+      });
+      clearForm();
+      prodData = [];
+    } else {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'Something went wrong while adding the product.',
+        text: result.message,
       });
     }
+  } catch (error) {
+    console.error('Error:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Something went wrong while adding the product.',
+    });
+  }
 }
 
   async function fetchProducts() {
@@ -1576,7 +2497,6 @@ document.addEventListener('DOMContentLoaded', function () {
       prodElement.appendChild(option);
     });
 
-    // Automatically select the newly added product
     if (newProductId) {
       prodElement.value = newProductId;
     }
@@ -1777,11 +2697,21 @@ document.addEventListener('DOMContentLoaded', function () {
       const price = parseFloat(document.getElementById('id_p_price').value);
       const quantity = Number(document.getElementById('id_p_quantity').value);
 
-      if (!product || !quantity || !price || !supplier) {
+      const branchCheckboxes = document.querySelectorAll('.col-3 input[type="checkbox"].checkboxinput');
+      const selectedBranchIds = [];
+      const selectedBranchNames = [];
+      branchCheckboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+          selectedBranchIds.push(checkbox.id);
+          selectedBranchNames.push(checkbox.nextElementSibling.textContent.trim());
+        }
+      });
+
+      if (!product || !quantity || !price || !supplier || selectedBranchIds.length === 0) {
         Swal.fire({
           icon: 'error',
           title: 'Missing Information',
-          text: 'Please fill in all the fields: Product, Quantity, Price, and Supplier.',
+          text: 'Please fill in all the fields and select at least one branch.',
         });
         return;
       }
@@ -1797,7 +2727,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
-      itemCount += 1;
+    itemCount += 1;
       const newTransfer = {
         count: itemCount,
         id: generateUniqueId(),
@@ -1807,14 +2737,10 @@ document.addEventListener('DOMContentLoaded', function () {
         price: price,
         supplierName: supplierName,
         supplier: supplier.value,
+        branches: selectedBranchNames
       };
 
       cart.push(newTransfer);
-      
-      // Save to localStorage
-      {% comment %} if (!LocalStorageHelper.saveCart(cart)) {
-        throw new Error('Failed to save cart to localStorage');
-      } {% endcomment %}
 
       updateCartDisplay();
       calculateTotals();
@@ -1841,11 +2767,6 @@ document.addEventListener('DOMContentLoaded', function () {
       const id = el.dataset.id;
       cart = cart.filter((item) => item.id !== id);
       
-      // Save updated cart to localStorage
-      {% comment %} if (!LocalStorageHelper.saveCart(cart)) {
-        throw new Error('Failed to save cart to localStorage');
-      } {% endcomment %}
-      
       updateCartDisplay();
       calculateTotals();
     } catch (error) {
@@ -1860,19 +2781,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function processCart(status) {
     suppliers_payment_data = []
-
-    {% comment %} for (let i = 1; i <= count; i++) {
-      suppliers_payment_data.push(
-        {
-          'id': document.getElementById(`other_form_supplier_${count}`).value,
-          'payment_method': document.getElementById(`other_form_pmethod_${count}`).value,
-          'amount': parseFloat(document.getElementById(`other_form_amount_${count}`).value),
-          'currency': document.getElementById(`other_form_currency_${count}`).value
-        }
-      )
-    } {% endcomment %}
-
-    console.info('supplier paymetnt data: ', suppliers_payment_data)
 
     const data = {
       'po_items': cart,
@@ -1895,7 +2803,6 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
-    // Show processing Swal
     Swal.fire({
       title: 'Processing...',
       text: 'Please wait while your purchase order is being created.',
@@ -1957,7 +2864,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     finalTotal = discountedTotal + other;
 
-    // Update the table
     document.getElementById('subtotal').innerText = subtotal.toFixed(2);
     document.getElementById('tax').innerText = tax.toFixed(2);
     document.getElementById('id_total').innerText = finalTotal.toFixed(2);
@@ -1970,7 +2876,6 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log(el)
   }
 
-  // if its a manual overide
   const manualOverid = (row) => {
     row.innerHTML = `
             <td id='${item.id}'><small>${item.product}</small></td>
@@ -2012,7 +2917,6 @@ document.addEventListener('DOMContentLoaded', function () {
           `;
   }
 
-  // cost apportionment
   const showAllTable = (overideType => {
     let overide = overideType
 
@@ -2037,7 +2941,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
       apportionmentTable.innerHTML = '';
 
-      // populate the table 
       cart.forEach((item) => {
         const row = document.createElement("tr");
 
@@ -2046,10 +2949,8 @@ document.addEventListener('DOMContentLoaded', function () {
         let result = allocateCost(cost, item.price, item.quantity, totalExpenses)
 
         console.info(result)
-        // add actual cost price 
         actualCostPrice = result.expCost;
 
-        // add to cart
         item.actualPrice = actualCostPrice;
 
         let total = parseFloat(item.price * item.quantity) + parseFloat(result.allocated);
@@ -2170,7 +3071,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const expenseName = document.getElementById(`expense-name-${i}`).value;
             const expenseAmount = parseFloat(document.getElementById(`expense-amount-${i}`).value) || 0;
 
-            // Push each expense as an object to the expensesData array
             let expenseExist = expensesData.filter((exp) => exp.name === expenseName)
 
             expensesData.push({
@@ -2180,7 +3080,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             console.info(expensesData)
 
-            // Create and append the expense row to the footer
             const expenseRow = document.createElement('tr');
             expenseRow.innerHTML += `
               <td>${expenseName}</td>
@@ -2225,7 +3124,6 @@ document.addEventListener('DOMContentLoaded', function () {
       existItem = cart.find((item) => item.product === data.product)
       existItem.actualPrice = parseFloat(input.value)
 
-      // push product 
       products.push(data.product)
       console.info(data.tB, exp, 'expenses')
 
@@ -2241,9 +3139,7 @@ document.addEventListener('DOMContentLoaded', function () {
           td.classList.add('text-light');
         })
       } else {
-        // If product exists, update the amount
         updateProductAmount(existingProduct, data);
-        // console.info('Updated product:', data.product);
       }
 
     } else {
@@ -2325,7 +3221,6 @@ document.addEventListener('DOMContentLoaded', function () {
           let totalBuying = item.price * item.quantity;
           let total = totalBuying + parseFloat(result.allocated);
 
-          // Update the row content with new values
           row.innerHTML = `
                         <td id='${item.id}'><small>${item.product}</small></td>
                         <td id='${item.id}'><small>${item.quantity}</small></td>
@@ -2447,7 +3342,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Function to collect data from the table and submit it to the backend
   function submitTableData() {
     const rows = document.querySelectorAll('#apportionment-table tr');
 
@@ -2535,12 +3429,6 @@ document.addEventListener('DOMContentLoaded', function () {
     return cookieValue;
   }    
 
-  // Initialize cart from localStorage on page load
-  {% comment %} document.addEventListener('DOMContentLoaded', function() {
-    cart = LocalStorageHelper.getCart();
-    itemCount = LocalStorageHelper.updateItemCount(cart);
-    updateCartDisplay();
-  }); {% endcomment %}
 </script>
 
 {% endblock content %}

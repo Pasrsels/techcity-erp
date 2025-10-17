@@ -11,14 +11,16 @@
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h6 class="card-title mb-0">
                                 {{ log.inventory.name }}
-                                <button type="button" 
-                                        class="btn btn-sm ms-1 border-0 p-0" 
-                                        onclick="showActivityModal({{ log.inventory.id }})"
-                                        aria-label="View activity details">
-                                    <i class="bx bx-info-circle text-primary fs-5"></i>
-                                </button>
                             </h6>
-                            <span class="badge bg-success bg-success-subtle text-success rounded-pill">{{ log.action }}</span>
+                        </div>
+                        <div class="d-flex align-items-start mb-2">
+                            <span class="badge bg-success bg-success-subtle text-primary rounded-pill">{{ log.action }}</span>
+                            <button type="button" 
+                                    class="btn btn-sm ms-1 border-0 p-0" 
+                                    onclick="showActivityModal({{ log.inventory.id }})"
+                                    aria-label="View activity details">
+                                <i class="bx bx-info-circle fs-5" style="color: #0000ff"></i>
+                            </button>
                         </div>
                         <div class="d-flex justify-content-between">
                             <p class="card-text">
@@ -43,45 +45,52 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Activity Info Modal -->
-            <div class="modal fade" id="activityModal" tabindex="-1" aria-labelledby="activityModalLabel{{ log.id }}" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-xl">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="activityModalLabel{{ log.id }}">
-                                <i class="bx bx-info-circle text-primary"></i> Inventory Activity Log
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body" id='activityBody'>
-                            {% comment %} populate by js {% endcomment %}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
         {% endfor %}
     {% endfor %}
 </div>
 
-<!-- Infinite scroll trigger -->
-<div id="loading-indicator"
-     hx-get="{% url 'inventory:logs-page' %}?page={{ next_page }}"
+<!-- Infinite scroll trigger - Only show if there are more pages -->
+{% if has_next %}
+<div id="loading-indicator-{{ current_page }}"
+     hx-get="{% url 'inventory:logs_page' %}?page={{ next_page }}"
      hx-trigger="revealed"
-     hx-indicator="#spinner"
+     hx-indicator="#spinner-{{ current_page }}"
      hx-swap="beforebegin"
      class="col-12 text-center py-3">
-    <div id="spinner" class="spinner-border spinner-border-sm" role="status" style="display:none">
-        <span class="visually-hidden">Loading...</span>
+    <div id="spinner-{{ current_page }}" class="spinner-border spinner-border-sm" role="status" style="display:none">
+        <span class="visually-hidden">Loading more logs...</span>
+    </div>
+</div>
+{% else %}
+<div class="col-12 text-center py-3">
+    <small class="text-muted">No more logs to load</small>
+</div>
+{% endif %}
+
+<!-- Activity Info Modal (only include once in the parent page) -->
+{% if current_page == 1 %}
+<div class="modal fade" id="activityModal" tabindex="-1" aria-labelledby="activityModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="activityModalLabel">
+                    <i class="bx bx-info-circle"></i> Inventory Activity Log
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id='activityBody'>
+                <!-- populated by js -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
     function showActivityModal(id) {
-        const modal = new bootstrap.Modal(document.getElementById(`activityModal`));
+        const modal = new bootstrap.Modal(document.getElementById('activityModal'));
         fetch(`/inventory/stocktake/detail/${id}/`, {
             method: 'POST',
             headers: {
@@ -103,14 +112,30 @@
             })
             .catch(error => console.error('Error fetching activity details:', error));
     }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 
     document.body.addEventListener('htmx:afterOnLoad', function(event) {
         if (event.detail.xhr.responseText.trim() === "" ||
             event.detail.xhr.getResponseHeader('X-No-More-Data') === 'true') {
-            const indicator = document.getElementById('loading-indicator');
-            if (indicator) {
+            const indicator = event.detail.target;
+            if (indicator && indicator.id && indicator.id.startsWith('loading-indicator')) {
                 indicator.remove();
             }
         }
     });
 </script>
+{% endif %}
