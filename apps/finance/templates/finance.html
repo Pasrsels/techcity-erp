@@ -79,8 +79,7 @@
     }
     
     canvas {
-        border: 1px solid #999;
-        background-color: white;
+        border: none;
     }
     
     .legend {
@@ -125,8 +124,6 @@
       }
     }
 </style>
-<div class="finance-dashboard">
-    <div class="container-fluid p-0 g-light">	$0.00
 <div class="finance-dashboard mt-0">
     <div class="container-fluid p-0">
       <div class="row g-0">
@@ -208,7 +205,6 @@
                 </div>
               </div>
             </div>
-
           </div>
         </aside>
   
@@ -248,7 +244,7 @@
                       <div class="container-fluid justify-content-start p-3">
                         <div class="graph pt-3">  
                           <div class="graph-scrollable-container pt-3 mt-5">
-                              <canvas id="financeChart" width="1500" height="450"></canvas>
+                              <canvas class="bg-light" id="financeChart" width="1500" height="450"></canvas>
                               <div class="tooltip" id="tooltip"></div>
                           </div>
                           
