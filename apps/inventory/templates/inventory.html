@@ -19,33 +19,8 @@
         --border-radius-sm: 10px;
         --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-<<<<<<< HEAD
-
-    * {
-        box-sizing: border-box;
-    }
-
-    .container-fluid {
-        padding: 1.5rem;
-        background: #f8f9fa;
-        min-height: 100vh;
-    }
-
-    /* Stats Section */
-    .stats-header {
-        background: #f8f9fa;
-        border-radius: var(--border-radius);
-        padding: 1.5rem;
-        margin-bottom: 0.5rem;
-        box-shadow: var(--shadow);
-    }
-
-    .stats-card {
-        background: white;
-=======
     .header-btn {
         padding: 8px 16px;
->>>>>>> origin/production
         border-radius: var(--border-radius-sm);
         padding: 0;
         transition: var(--transition);
@@ -1086,18 +1061,6 @@
                     </div>
                 </div>
             </div>
-<<<<<<< HEAD
-=======
-        </div>
-        
-        {% if request.user.role == 'admin' %}
-          <button class="d-none d-sm-inline-block btn btn-primary btn-sm action-btn" data-bs-toggle="modal" data-bs-target="#addProductModal">
-              <i class="bx bx-plus mr-1"></i>Add New Product
-          </button>
-        {% endif %}
-    </div> 
->>>>>>> origin/production
-
         </div>
     </div>
 
@@ -1130,15 +1093,9 @@
                     </a>
                 </div>
                 
-<<<<<<< HEAD
-                <div class="d-flex gap-2 align-items-center flex-wrap">
-                    <a href="?download=true&excel=true" class="btn btn-outline-secondary btn-sm action-btn">
-                        <i class="bx bx-download"></i>Export Excel
-=======
                 <div class="d-flex align-items-center gap-2">
                     <a href="?download=true&excel=true" class="btn btn-outline-secondary  btn-sm action-btn">
                         <i class="bx bx-download mr-1"></i>Export Excel
->>>>>>> origin/production
                     </a>
                     <form method="get" id="filter-form">
                         <select name="category" class="form-select form-select-sm me-3 pt-2 pb-2" id="id_category">
