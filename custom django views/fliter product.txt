@@ -1,0 +1,29 @@
+from django.shortcuts import render
+from .models import Product, Category
+
+def product_list(request):
+    categories = Category.objects.all()
+
+    category_filter = request.GET.get('category', '')
+    price_filter = request.GET.get('price', '')
+
+    products = Product.objects.all()
+
+    # Filter by category if specified
+    if category_filter:
+        if category_filter == 'inactive':
+            products = products.filter(active=False)
+        else:
+            products = products.filter(category__id=category_filter)
+
+    # Filter by price if specified
+    if price_filter:
+        if price_filter == 'asc':
+            products = products.order_by('price')  # Low to High
+        elif price_filter == 'desc':
+            products = products.order_by('-price')  # High to Low
+
+    return render(request, 'your_template.html', {
+        'products': products,
+        'categories': categories,
+    })

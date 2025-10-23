@@ -211,4 +211,6 @@ urlpatterns = [
     path('api/v1/accessories_view/<int:product_id>/', AccessoriesView.as_view(), name='api_accessories_view'),
 
     path('get-cart-items/', get_cart_items, name='get_cart_items'),
+
+
 ]

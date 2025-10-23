@@ -242,6 +242,93 @@
     .modal .btn i {
         margin-right: 4px;
     }
+    /* Compact UI */
+    .compact-ui {
+    font-size: 0.875rem;
+}
+
+.compact-header {
+    padding: 0.5rem 0;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.compact-form .form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.compact-form .form-row {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.compact-form .form-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.compact-form .form-group.full-width {
+    flex: 1 0 100%;
+}
+
+.compact-form .form-label {
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.compact-form .form-control-sm,
+.compact-form .form-select-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+.compact-form .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+.compact-form .branches-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.5rem;
+}
+
+.compact-form .form-check {
+    margin-bottom: 0.25rem;
+}
+
+.compact-form .form-check-label {
+    font-size: 0.8rem;
+}
+
+.compact-form .error-text {
+    font-size: 0.7rem;
+    margin-top: 0.125rem;
+    margin-bottom: 0;
+}
+
+.compact-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #dee2e6;
+}
+
+@media (max-width: 768px) {
+    .compact-form .form-row {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .compact-form .branches-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* Compact UI */
 
 @media (min-width: 1920px) {
     .edit-inventory {
@@ -868,144 +955,147 @@
 }
 </style>
 
-<div class="edit-inventory">
-    <div class="product-header">
-        <div class="header-content">
+<div class="edit-inventory compact-ui">
+    <div class="product-header compact-header">
+        <div class="header-content d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
                 <div class="hint--bottom" aria-label="products">
                     <a href="{% url 'inventory:inventory' %}" class="back-btn bx bx-left-arrow-alt"></a>
                 </div>
-                <h5>EDIT / UPDATE PRODUCT - {{ product.name }}</h5>
+                <h6 class="mb-0">EDIT: {{ product.name }}</h6>
             </div>
             <div>
-                <a href="{% url 'inventory:inventory_detail' product.id %}" class="logs-btn">Logs</a>
+                <a href="{% url 'inventory:inventory_detail' product.id %}" class="logs-btn btn-sm">Logs</a>
             </div>
         </div>
     </div>
 
-    <div class="form-container">
+    <div class="form-container compact-form">
         <form method="post">
             {% csrf_token %}
-            <div class="form-grid">
-                <div id="div_id_name" class="mb-3 full-width">
-                    <label for="id_name" class="form-label requiredField">
-                       Name
-                       <span class="asteriskField">*</span> 
-                   </label> 
-                   <input 
-                       type="text" 
-                       name="name" 
-                       value='{{product.name}}'
-                       class="textinput form-control" 
-                       required id="id_name"
-                   > 
-               </div>
-
-               <div id="div_id_category form-group" class="mb-3 full-width category-wrapper"> 
-                <label for="id_category" class="form-label requiredField">
-                    Category<span class="asteriskField">*</span> 
-                </label> 
-                <div class='d-flex align-items-center'>
-                    <select name="category" class="select form-select" value="{{product.category}}" required id="id_category"> 
-                        {% for category in categories %}
-                            <option value="{{ category.id }}">{{ category.name }}</option> 
-                        {% endfor %}
-                    </select> 
-                    <button class='btn' type="button" id='id_add_category'>
-                        <i class='bx bx-plus'></i>
-                    </button>
-                </div>
-            </div>
-
-                <div id="div_id_cost" class="mb-3"> 
-                    <label for="id_cost" class="form-label requiredField">
-                        Cost
-                        <span class="asteriskField">*</span> 
-                    </label>
-                    <input type="number" name="cost" value={{product.cost}} step="0.01" class="numberinput form-control" required id="id_cost"> 
-                    <p id="cost_error" class="fs-6 text-danger"></p>
-                </div>
-
-                <div id="div_id_price" class="mb-3"> 
-                    <label for="id_price" class="form-label requiredField">
-                        Price
-                        <span class="asteriskField">*</span> 
-                    </label> 
-                    <input type="number" name="price" value={{product.price}} step="0.01" class="numberinput form-control" required id="id_price">
-                    <p id="price_error" class="fs-6 text-danger"></p>
-                </div>
-
-                <div id="div_id_dealer_price" class="mb-3 full-width">
-                    <label for="id_dealer_price" class="form-label requiredField">
-                        Wholesale Price
-                        <span class="asteriskField">*</span>
-                    </label>
-                    <input type="number" name="dealer_price" value={{product.dealer_price}} step="0.01" class="numberinput form-control" required id="id_dealer_price">
-                    <p id="price_error" class="fs-6 text-danger"></p>
-                </div>
-
-                <div id="div_id_quantity" class="mb-3"> 
-                    <label for="id_quantity" class="form-label requiredField">
-                        Quantity
-                        <span class="asteriskField">*</span> 
-                    </label> 
-                    <input type="number" name="quantity" value={{product.quantity}} class="numberinput form-control" required id="id_quantit"> 
-                    <p id="quantity_error" class="fs-6 text-danger"></p>
-                </div>
-
-                <div id="div_id_min_stock_level" class="mb-3"> 
-                    <label for="id_min_stock_level" class="form-label requiredField">
-                        Min stock level
-                        <span class="asteriskField">*</span> 
-                    </label> 
-                    <input 
-                        type="number" 
-                        name="min_stock_level" 
-                        value="{{ product.stock_level_threshold }}" 
-                        class="numberinput form-control" 
-                        required id="id_min_stock_level"
-                    > 
-                </div>
-
-                <div class="mb-3 mt-3">
-                    <h6 class="fw-bold">Available in</h6>
-                    <div class="d-flex flex-column justify-content-between">
-                        {% for branch in branches %}
-                        <div id="branch" class="form-check">
-                        <input type="checkbox" name="{{branch.name}}" class="checkboxinput form-check-input" id="{{branch.id}}">
-                        <label for="{{branch.name}}" class="form-check-label">
-                            {{ branch.name }}
+            <div class="form-grid compact-grid">
+                <!-- Row 1: Name and Category -->
+                <div class="form-row">
+                    <div class="form-group compact-group">
+                        <label for="id_name" class="form-label requiredField">
+                            Name<span class="asteriskField">*</span>
                         </label>
+                        <input 
+                            type="text" 
+                            name="name" 
+                            value='{{product.name}}'
+                            class="textinput form-control form-control-sm" 
+                            required id="id_name"
+                        >
+                    </div>
+
+                    <div class="form-group compact-group">
+                        <label for="id_category" class="form-label requiredField">
+                            Category<span class="asteriskField">*</span>
+                        </label>
+                        <div class='d-flex align-items-center'>
+                            <select name="category" class="select form-select form-select-sm" value="{{product.category}}" required id="id_category">
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class='btn btn-sm btn-outline-secondary ms-1' type="button" id='id_add_category' title="Add Category">
+                                <i class='bx bx-plus'></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Cost, Price, and Wholesale Price -->
+                <div class="form-row">
+                    <div class="form-group compact-group">
+                        <label for="id_cost" class="form-label requiredField">
+                            Cost<span class="asteriskField">*</span>
+                        </label>
+                        <input type="number" name="cost" value={{product.cost}} step="0.01" class="numberinput form-control form-control-sm" required id="id_cost">
+                        <p id="cost_error" class="error-text"></p>
+                    </div>
+
+                    <div class="form-group compact-group">
+                        <label for="id_price" class="form-label requiredField">
+                            Price<span class="asteriskField">*</span>
+                        </label>
+                        <input type="number" name="price" value={{product.price}} step="0.01" class="numberinput form-control form-control-sm" required id="id_price">
+                        <p id="price_error" class="error-text"></p>
+                    </div>
+
+                    <div class="form-group compact-group">
+                        <label for="id_dealer_price" class="form-label requiredField">
+                            Wholesale<span class="asteriskField">*</span>
+                        </label>
+                        <input type="number" name="dealer_price" value={{product.dealer_price}} step="0.01" class="numberinput form-control form-control-sm" required id="id_dealer_price">
+                        <p id="wholesale_error" class="error-text"></p>
+                    </div>
+                </div>
+
+                <!-- Row 3: Quantity and Min Stock -->
+                <div class="form-row">
+                    <div class="form-group compact-group">
+                        <label for="id_quantity" class="form-label requiredField">
+                            Qty<span class="asteriskField">*</span>
+                        </label>
+                        <input type="number" name="quantity" value={{product.quantity}} class="numberinput form-control form-control-sm" required id="id_quantity">
+                        <p id="quantity_error" class="error-text"></p>
+                    </div>
+
+                    <div class="form-group compact-group">
+                        <label for="id_min_stock_level" class="form-label requiredField">
+                            Min Stock<span class="asteriskField">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            name="min_stock_level" 
+                            value="{{ product.stock_level_threshold }}" 
+                            class="numberinput form-control form-control-sm" 
+                            required id="id_min_stock_level"
+                        >
+                    </div>
+                </div>
+
+                <!-- Row 4: Available Branches -->
+                <div class="form-group compact-group full-width">
+                    <label class="form-label fw-bold">Available in</label>
+                    <div class="branches-grid">
+                        {% for branch in branches %}
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" name="{{branch.name}}" class="checkboxinput form-check-input" id="{{branch.id}}">
+                            <label for="{{branch.name}}" class="form-check-label">
+                                {{ branch.name }}
+                            </label>
                         </div>
                         {% endfor %}
                     </div>
                 </div>
 
-                <div id="div_id_description" class="mb-3 full-width"> 
+                <!-- Row 5: Description -->
+                <div class="form-group compact-group full-width">
                     <label for="id_description" class="form-label">
-                        Description<span class="asteriskField">*</span> 
-                    </label> 
+                        Description<span class="asteriskField">*</span>
+                    </label>
                     <textarea 
                         name="description" 
                         cols="20" 
                         rows="2" 
-                        class="form-control" 
+                        class="form-control form-control-sm" 
                         value="{{product.description}}"
-                    >{{ product.description }}</textarea> 
+                    >{{ product.description }}</textarea>
                 </div>
             </div>
 
-            <div class="form-actions">
-                <div>
-                    <button type="reset" class="btn btn-danger">Reset</button>
-                </div>
-                <div>
-                    <button type="submit" class="btn btn-secondary">Save Changes</button>
-                </div>
+            <!-- Form Actions -->
+            <div class="form-actions compact-actions">
+                <button type="reset" class="btn btn-sm btn-outline-secondary">Reset</button>
+                <button type="submit" class="btn btn-sm btn-primary">Save Changes</button>
             </div>
         </form>
     </div>
 </div>
+
 
 <!-- category modal -->
 <div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">

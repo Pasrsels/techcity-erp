@@ -167,21 +167,13 @@ DATABASES = {
 
     'default': {
          'ENGINE': 'django.db.backends.postgresql',
-         'NAME':  'techcity',
+         'NAME':  'techcity_erp',
          'USER': 'postgres',
-         'PASSWORD': 'alora21',
+         'PASSWORD': 'mashawi3054',
          'HOST': 'localhost',
          'PORT': '5432'
      }
-    
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME':  'testt',
-    #     'USER': 'postgres',
-    #     'PASSWORD': 'neverfail',
-    #     'HOST': 'localhost',
-    #     'PORT': '5432'
-    # }
+
 }
 
 if os.environ.get('TESTING'):

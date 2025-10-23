@@ -30,22 +30,19 @@
 
     .search-container {
         position: relative;
-        margin-bottom: 30px;
-        margin-left: 20px;
+        margin: 20px;
     }
 
     .search-input {
         width: 100%;
-        padding: 15px 50px 15px 20px;
-        margin-left: 20px;
-        border-radius: var(--border-radius);
-        background: var(--glass);
+        padding: 10px 30px 10px 10px;
+        border-radius: var(--border-radius-sm);
         border: 1px solid var(--glass-border);
-        color: var(--text-light);
-        font-size: 16px;
+        background: #fff;
+        color: var(--text-dark);
+        font-size: 14px;
         transition: var(--transition);
     }
-
 
     .search-input:focus {
         outline: none;
@@ -54,16 +51,19 @@
     }
 
     .search-input::placeholder {
-        color: var(--text-dark);
+        color: var(--text-muted);
     }
 
     .search-icon {
         position: absolute;
-        right: 15px;
+        right: 10px;
         top: 50%;
         transform: translateY(-50%);
         color: var(--text-dark);
+        font-size: 14px;
+        pointer-events: none;
     }
+
     .add-btn {
         padding: 8px 16px;
         border-radius: var(--border-radius-sm);
@@ -419,21 +419,19 @@
     }
     
     .search-container {
-        margin-bottom: 40px;
-        margin-left: 40px;
-        margin-right: 40px;
+        margin: 32px 40px;
     }
     
     .search-input {
-        padding: 18px 60px 18px 54px;
-        margin-left: 0;
-        font-size: 18px;
-        border-radius: 20px;
+        padding: 12px 36px 12px 12px;
+        font-size: 16px;
+        border-radius: 12px;
     }
     
     .search-icon {
-        font-size: 1.5rem;
-        right: 24px;
+        right: 12px;
+        font-size: 16px;
+        pointer-events: none;
     }
     
     .nav {
@@ -498,8 +496,7 @@
     }
     
     .search-container {
-        margin-left: 24px;
-        margin-right: 24px;
+        margin: 24px;
     }
     
     .nav {
@@ -512,6 +509,7 @@
     }
 }
 
+/* Medium screens/tablets (992px to 1199px) */
 @media (min-width: 992px) and (max-width: 1199px) {
     .inventory {
         padding-left: 20px;
@@ -537,14 +535,18 @@
     }
     
     .search-container {
-        margin-bottom: 24px;
-        margin-left: 16px;
-        margin-right: 16px;
+        margin: 20px 16px;
     }
     
     .search-input {
-        padding: 13px 45px 13px 38px;
-        font-size: 15px;
+        padding: 10px 30px 10px 10px;
+        font-size: 13px;
+    }
+    
+    .search-icon {
+        right: 10px;
+        font-size: 13px;
+        pointer-events: none;
     }
     
     .nav {
@@ -602,20 +604,18 @@
     }
     
     .search-container {
-        margin-bottom: 20px;
-        margin-left: 12px;
-        margin-right: 12px;
+        margin: 16px 12px;
     }
     
     .search-input {
-        padding: 12px 45px 12px 46px;
-        margin-left: 0;
-        font-size: 14px;
+        padding: 10px 30px 10px 10px;
+        font-size: 13px;
     }
     
     .search-icon {
-        right: 16px;
-        font-size: 1.125rem;
+        right: 10px;
+        font-size: 13px;
+        pointer-events: none;
     }
     
     .nav {
@@ -655,6 +655,7 @@
     }
 }
 
+/* Mobile screens (576px to 767px) */
 @media (min-width: 576px) and (max-width: 767px) {
     .inventory {
         padding-left: 12px;
@@ -689,21 +690,19 @@
     }
     
     .search-container {
-        margin-bottom: 16px;
-        margin-left: 8px;
-        margin-right: 8px;
+        margin: 12px 8px;
     }
     
     .search-input {
-        padding: 11px 42px 11px 44px;
-        margin-left: 0;
-        font-size: 13px;
-        border-radius: 12px;
+        padding: 8px 28px 8px 8px;
+        font-size: 12px;
+        border-radius: 10px;
     }
     
     .search-icon {
-        right: 14px;
-        font-size: 1rem;
+        right: 8px;
+        font-size: 12px;
+        pointer-events: none;
     }
     
     .nav {
@@ -803,21 +802,19 @@
     }
     
     .search-container {
-        margin-bottom: 14px;
-        margin-left: 6px;
-        margin-right: 6px;
+        margin: 10px 6px;
     }
     
     .search-input {
-        padding: 10px 38px 10px 46px;
-        margin-left: 0;
+        padding: 8px 28px 8px 8px;
         font-size: 12px;
-        border-radius: 10px;
+        border-radius: 8px;
     }
     
     .search-icon {
-        right: 12px;
-        font-size: 0.9375rem;
+        right: 8px;
+        font-size: 12px;
+        pointer-events: none;
     }
     
     .nav {
@@ -861,7 +858,6 @@
     }
     
     .table-responsive {
-        overflow-x: auto;
         border-radius: 10px;
     }
     
@@ -911,7 +907,7 @@
         font-size: 12px;
     }
     
-    #tab-loader {
+    .tab-loader {
         border-radius: 10px;
     }
 }
@@ -953,20 +949,19 @@
     }
     
     .search-container {
-        margin-bottom: 12px;
-        margin-left: 4px;
-        margin-right: 4px;
+        margin: 8px 4px;
     }
     
     .search-input {
-        padding: 8px 36px 8px 10px;
+        padding: 6px 24px 6px 6px;
         font-size: 11px;
         border-radius: 8px;
     }
     
     .search-icon {
-        right: 10px;
-        font-size: 0.875rem;
+        right: 6px;
+        font-size: 11px;
+        pointer-events: none;
     }
     
     .nav {
@@ -1067,13 +1062,18 @@
     }
     
     .search-container {
-        margin-left: 3px;
-        margin-right: 3px;
+        margin: 6px 3px;
     }
     
     .search-input {
-        padding: 7px 32px 7px 8px;
+        padding: 6px 24px 6px 6px;
         font-size: 10px;
+    }
+    
+    .search-icon {
+        right: 6px;
+        font-size: 10px;
+        pointer-events: none;
     }
     
     .nav {
@@ -1132,9 +1132,9 @@
         </nav>
     </div>
 
-    <div class="search-container bg-white rounded mt-2">
+    <div class="search-container">
         <input type="text" class="search-input" placeholder="Search purchase order ..." id="purchase_order-search">
-        <i class="fas fa-search search-icon ms-2"></i>
+        <i class="fas fa-search search-icon"></i>
     </div>
 
     <ul class="nav nav-tabs" id="orderTabs" role="tablist">
@@ -1257,7 +1257,6 @@
         });
     });
 
-
     document.addEventListener('DOMContentLoaded', function () {
         const tabButtons = document.querySelectorAll('#orderTabs button');
         const loader = document.getElementById('tab-loader');
@@ -1272,7 +1271,6 @@
             });
         });
     });
-
 
     function status(td) {
         orderID = td.dataset.id;
@@ -1309,7 +1307,6 @@
                 });
             });
     }
-
 
     /*
    function showSupplierDetails(orderId) {

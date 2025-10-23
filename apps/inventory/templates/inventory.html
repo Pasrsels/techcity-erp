@@ -183,12 +183,14 @@
 
     /* Table Section */
     .table-wrapper {
-        background: white;
+        background: rgb(254, 254, 254);
         border: none;
         box-shadow: var(--shadow);
         border-radius: var(--border-radius);
         overflow: hidden;
-        padding: 1.5rem;
+        /* padding: 1.5rem; */
+        padding: 0 !important;
+        margin: 0 !important;
     }
 
     .inventory-table {
@@ -408,17 +410,113 @@
         color: white;
     }
 
+    /* Drag and Drop Image Upload */
+    .image-upload-container {
+        border: 2px dashed #e0e0e0;
+        border-radius: var(--border-radius-sm);
+        padding: 1.5rem;
+        text-align: center;
+        background: #f8f9fa;
+        transition: var(--transition);
+        position: relative;
+        margin-top: 1rem;
+    }
+
+    .image-upload-container.dragover {
+        border-color: var(--primary);
+        background: rgba(17, 153, 142, 0.1);
+    }
+
+    .image-upload-container img.cloud-icon {
+        width: 50px;
+        height: 50px;
+        margin-bottom: 1rem;
+    }
+
+    .image-preview {
+        max-width: 100%;
+        max-height: 200px;
+        margin-top: 1rem;
+        border-radius: var(--border-radius-sm);
+        display: none;
+    }
+
+    .image-upload-container p {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin: 0.5rem 0 0;
+    }
+
+/* 
+    //new styling */
+    #filter-form {
+    display: flex;
+    align-items: center;  /* Vertically align the elements in the middle */
+    gap: 1rem;            /* Adds spacing between elements */
+}
+
+#filter-form select {
+    width: auto;  /* Ensures the select boxes are not stretched */
+}
+
+#filter-form button {
+    margin-left: 10px !important;  /* Optional: space out the button from the selects */
+}
+
+.form-select-custom {
+        height: 32px; 
+        margin-top: 5px;  /* Adjust the value as needed */
+         width: 70%;
+            /* Position the dropdown icon properly */
+    background-position: right 10px center;  /* Adjust position */
+    background-size: 16px;  
+    }
+
+
+    /* lable on top left */
+      /* Floating label style */
+  .floating-label-group {
+      position: relative;
+      margin-bottom: 1rem;
+  }
+
+  .floating-label-group .form-label {
+      position: absolute;
+      top: -0.6rem;
+      left: 0.75rem;
+      background: white;
+      padding: 0 0.25rem;
+      font-size: 0.75rem;
+      color: #6c757d;
+      z-index: 1;
+      pointer-events: none;
+      line-height: 1;
+  }
+
+  .floating-label-group input,
+  .floating-label-group select,
+  .floating-label-group textarea {
+      position: relative;
+      z-index: 0;
+  }
+
+    
+
+
     /* Responsive */
 @media (min-width: 1920px) {
     .container-fluid {
         padding: 2rem;
+        padding-top: 0; /* Changed to move content to top */
         max-width: 2400px;
         margin: 0 auto;
     }
     
     .stats-header {
         padding: 2rem;
+        padding-top: 0; /* Changed to move cards to top */
         margin-bottom: 2rem;
+        margin-top: 0; /* Changed to ensure no top margin */
     }
     
     .stats-card .card-body {
@@ -472,10 +570,13 @@
 @media (min-width: 1200px) and (max-width: 1919px) {
     .container-fluid {
         padding: 1rem;
+        padding-top: 0; /* Changed to move content to top */
     }
     
     .stats-header {
         padding: 1rem;
+        padding-top: 0; /* Changed to move cards to top */
+        margin-top: 0; /* Changed to ensure no top margin */
     }
     
     .stats-card .h5 {
@@ -505,10 +606,13 @@
 @media (min-width: 992px) and (max-width: 1199px) {
     .container-fluid {
         padding: 1.25rem;
+        padding-top: 0; /* Changed to move content to top */
     }
     
     .stats-header {
         padding: 1.25rem;
+        padding-top: 0; /* Changed to move cards to top */
+        margin-top: 0; /* Changed to ensure no top margin */
     }
     
     .stats-card .h5 {
@@ -538,10 +642,13 @@
 @media (min-width: 768px) and (max-width: 991px) {
     .container-fluid {
         padding: 1rem;
+        padding-top: 0; /* Changed to move content to top */
     }
     
     .stats-header {
         padding: 1rem;
+        padding-top: 0; /* Changed to move cards to top */
+        margin-top: 0; /* Changed to ensure no top margin */
     }
     
     .stats-card .h5 {
@@ -575,11 +682,14 @@
 @media (min-width: 576px) and (max-width: 767px) {
     .container-fluid {
         padding: 0.875rem;
+        padding-top: 0; /* Changed to move content to top */
     }
     
     .stats-header {
         padding: 1rem;
+        padding-top: 0; /* Changed to move cards to top */
         margin-bottom: 1rem;
+        margin-top: 0; /* Changed to ensure no top margin */
     }
     
     .stats-card {
@@ -645,11 +755,14 @@
 @media (min-width: 360px) and (max-width: 575px) {
     .container-fluid {
         padding: 0.5rem;
+        padding-top: 0; /* Changed to move content to top */
     }
     
     .stats-header {
         padding: 0.75rem;
+        padding-top: 0; /* Changed to move cards to top */
         margin-bottom: 0.75rem;
+        margin-top: 0; /* Changed to ensure no top margin */
     }
     
     /* Keep stats cards in row */
@@ -800,11 +913,14 @@
 @media (min-width: 320px) and (max-width: 359px) {
     .container-fluid {
         padding: 0.375rem;
+        padding-top: 0; /* Changed to move content to top */
     }
     
     .stats-header {
         padding: 0.5rem;
+        padding-top: 0; /* Changed to move cards to top */
         margin-bottom: 0.5rem;
+        margin-top: 0; /* Changed to ensure no top margin */
     }
     
     /* Keep stats cards in row */
@@ -911,10 +1027,13 @@
 @media (max-width: 319px) {
     .container-fluid {
         padding: 0.25rem;
+        padding-top: 0; /* Changed to move content to top */
     }
     
     .stats-header {
         padding: 0.375rem;
+        padding-top: 0; /* Changed to move cards to top */
+        margin-top: 0; /* Changed to ensure no top margin */
     }
     
     /* Keep stats cards in row */
@@ -1017,16 +1136,17 @@
     }
 </style>
 
+
 <div class="container-fluid">
     <div class="stats-header">
         <div class="row align-items-center justify-content-between">
-            <div class="col-xl-6 col-md-6 mb-3 mb-xl-0">
+            <div class="col-xl-3 col-md-3 mb-3 mb-xl-0">
                 <div class="stats-card">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs" style= "color: #0000ff">Total Inventory Cost <i class="bx bx-dollar-circle mb-0"></i></div>
-                                <div class="h5">USD {{total_cost}}</div>
+                                <div class="text-xs" style= "color: #b1b1c2">Total Inventory Cost </div>
+                                <div class="h5">USD {{total_cost}} <i class="bx bx-dollar-circle mb-0" style="font-size: 30px;"></i> </div>
                             </div>
                             {% comment %} <div class="col-auto">
                                 
@@ -1036,21 +1156,24 @@
                 </div>
             </div>
             
-            <div class="col-xl-6 col-md-6">
+            <div class="col-xl-4 col-md-4">
                 <div class="stats-card">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs text-primary">Total Inventory Price <i class="bx bx-cart mb-0"></i></div>
-                                <div class="h5 d-flex ">USD {{total_price}}</div>
+                                <div class="text-xs" style="color: #b1b1c2">Total Inventory Price</div>
+                                <div class="h5 d-flex align-items-center" style="margin-right: 15px;">
+                                    USD {{total_price}}
+                                    <i class="bx bx-cart mb-0" style="font-size: 32px; position: relative; top: -3px;"></i>
+                                </div>
                             </div>
 
                             <div class="col mr-2">
                             {% if request.user.role == 'admin' %}
                             <div class="col-12 mt-3 d-none d-sm-block text-end">
-                                <button class="header-btn" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                                <!-- <button class="header-btn" data-bs-toggle="modal" data-bs-target="#addProductModal">
                                     <i class="bx bx-plus"></i>Add New Product
-                                </button>
+                                </button> -->
                             </div>
                             {% endif %}
                             </div>
@@ -1061,6 +1184,37 @@
                     </div>
                 </div>
             </div>
+                <div class="col-xl-3 col-md-3 mb-3 mb-xl-0">
+                <div class="stats-card">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs" style= "color: #b1b1c2">Expected Profit </div>
+                                <div class="h5">USD {{total_cost}} XX <i class="bx bx-dollar-circle mb-0" style="font-size: 30px;"></i> </div>
+                            </div>
+                            {% comment %} <div class="col-auto">
+                                
+                            </div> {% endcomment %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-2 col-md-2 mb-3 mb-xl-0">
+                <div class="stats-card">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <button class="header-btn" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                                    <i class="bx bx-plus"></i>Add New Product
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
         </div>
     </div>
 
@@ -1091,26 +1245,67 @@
                     <a href="{% url 'inventory:settings' %}" class="btn-outline-secondary action-btn">
                         <i class='bx bx-cog'></i>Settings
                     </a>
-                </div>
-                
-                <div class="d-flex align-items-center gap-2">
-                    <a href="?download=true&excel=true" class="btn btn-outline-secondary  btn-sm action-btn">
-                        <i class="bx bx-download mr-1"></i>Export Excel
-                    </a>
-                    <form method="get" id="filter-form">
-                        <select name="category" class="form-select form-select-sm me-3 pt-2 pb-2" id="id_category">
+
+                    <form method="get" id="filter-form" class="d-flex align-items-center">
+                        <!-- Category Filter with custom margin -->
+                        <select name="category" class="form-select form-select-sm me-3 pt-2 pb-2 form-select-custom" id="id_category_filter" onchange="this.form.submit();">
                             <option value="">All Categories</option>
                             <option value="inactive" {% if request.GET.category == "inactive" %}selected{% endif %}>Inactive</option>
                             {% for category in categories %}
-                            <option value="{{ category.name }}" {% if category.name == request.GET.category %}selected{% endif %}>
-                                {{ category.name }}
-                            </option>
+                                <option value="{{ category.id }}" {% if category.id|stringformat:"s" == request.GET.category %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
                             {% endfor %}
                         </select>
+
+                        <!-- Price Filter with custom margin -->
+                        <select name="price" class="form-select form-select-sm me-3 pt-2 pb-2 form-select-custom" id="id_price_filter" onchange="this.form.submit();">
+                            <option value="">Price</option>
+                            <option value="asc" {% if request.GET.price == "asc" %}selected{% endif %}>Low to High</option>
+                            <option value="desc" {% if request.GET.price == "desc" %}selected{% endif %}>High to Low</option>
+                        </select>
                     </form>
+
+                </div>
+                
+                <div class="d-flex align-items-center gap-2">
+                    <a href="?download=true&excel=true" class="btn btn-outline-secondary btn-sm action-btn">
+                        <i class="bx bx-download mr-1"></i>Export Excel
+                    </a>
+
+                    
                 </div>
             </div>
+            
         </div>
+        <!-- Stock Status Row -->
+
+                        <!-- Compact Stock Status Row -->
+                <div class="row g-2 mb-3" style="max-width: 600px;">
+                    <div class="col-md-6">
+                        <div class="border rounded bg-light p-2 d-flex justify-content-between align-items-center">
+                            <i class="bx bx-error-circle me-1 text-warning"></i> 
+                            <span class="fw-medium text-warning small">Low Stock Items</span>
+                            <span class="fw-bold text-warning small">5
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded bg-light p-2 d-flex justify-content-between align-items-center">
+                            <i class="bx bx-error-circle me-1 text-danger"></i>
+                            <span class="fw-medium text-danger small ">Out of Stock Items</span>
+                            <span class="fw-bold text-danger small">
+                                 0
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+             <!-- Stock Status Row -->
+
+                        <!-- Compact Stock Status Row -->
+
+
     </div>
     
     <div class="row">
@@ -1150,126 +1345,158 @@
 <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addProductModalLabel">Add Product</h5>
+            <div class="modal-header bg-light py-3">
+                <h5 class="modal-title fw-semibold text-dark" id="addProductModalLabel">
+                    <i class="bx bx-plus-circle me-2"></i>Add Product
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
+            <div class="modal-body p-4">
+<form method="post" id="addProductForm">
+    {% csrf_token %}
+    
+    <!-- Compact Row for Name and Category -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-6 floating-label-group">
+            <label class="form-label fw-medium text-sm">Product Name <span class="text-danger">*</span></label>
+            <div class="input-group input-group-sm">
+                <input type="text" name="name" class="form-control form-control-sm" placeholder="Enter product name" required id="id_name">
+                <button class="btn btn-outline-secondary" type="button" title="Search">
+                    <i class="bx bx-search"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-md-6 floating-label-group">
+            <label class="form-label fw-medium text-sm">Category <span class="text-danger">*</span></label>
+            <div class="input-group input-group-sm">
+                <select name="category" class="form-select form-select-sm" required id="id_category">
+                    <option value="">Select Category</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-outline-secondary" type="button" id="id_add_category" title="Add Category">
+                    <i class="bx bx-plus"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compact Row for Quantity and Prices -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-3 floating-label-group">
+            <label class="form-label fw-medium text-sm">Quantity <span class="text-danger">*</span></label>
+            <div class="input-group input-group-sm">
+                <button type="button" class="btn btn-outline-secondary px-2" id="decrease_quantity">−</button>
+                <input type="number" name="quantity" class="form-control text-center px-1" id="id_quantity" value="1" min="1" required>
+                <button type="button" class="btn btn-outline-secondary px-2" id="increase_quantity">+</button>
+            </div>
+        </div>
+        <div class="col-md-3 floating-label-group">
+            <label class="form-label fw-medium text-sm">Cost <span class="text-danger">*</span></label>
+            <input type="number" name="cost_price" class="form-control form-control-sm" placeholder="0.00" step="0.01" min="0" required id="id_cost_price">
+        </div>
+        <div class="col-md-3 floating-label-group">
+            <label class="form-label fw-medium text-sm">Selling <span class="text-danger">*</span></label>
+            <input type="number" name="selling_price" class="form-control form-control-sm" placeholder="0.00" step="0.01" min="0" required id="id_selling_price">
+        </div>
+        <div class="col-md-3 floating-label-group">
+            <label class="form-label fw-medium text-sm">Wholesale</label>
+            <input type="number" name="wholesale_price" class="form-control form-control-sm" placeholder="0.00" step="0.01" min="0" id="id_wholesale_price">
+        </div>
+    </div>
+
+    <!-- Compact Row for Tax and Stock -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-6 floating-label-group">
+            <label class="form-label fw-medium text-sm">Tax Type <span class="text-danger">*</span></label>
+            <select name="tax_type" class="form-select form-select-sm" required id="id_tax_type">
+                <option value="" selected>Select Tax Type</option>
+                <option value="exempted">Exempted</option>
+                <option value="standard">Standard</option>
+                <option value="zero rated">Zero Rated</option>
+            </select>
+        </div>
+        <div class="col-md-6 floating-label-group">
+            <label class="form-label fw-medium text-sm">Min Stock <span class="text-danger">*</span></label>
+            <input type="number" name="min_stock_level" value="0" class="form-control form-control-sm" required id="id_min_stock_level" min="0">
+        </div>
+    </div>
+
+    <!-- Description -->
+    <div class="mb-3 floating-label-group">
+        <label class="form-label fw-medium text-sm">Description</label>
+        <textarea name="description" class="form-control form-control-sm" rows="2" placeholder="Product description..."></textarea>
+    </div>
+
+    <!-- Checkboxes in Row -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <div class="form-check">
+                <input type="checkbox" name="end_of_day" class="form-check-input" id="id_end_of_day">
+                <label for="id_end_of_day" class="form-check-label text-sm">End of Day</label>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-check">
+                <input type="checkbox" name="service" class="form-check-input" id="id_service">
+                <label for="id_service" class="form-check-label text-sm">Service</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Upload -->
+    <div class="mb-4">
+        <label class="form-label fw-medium text-sm">Product Image</label>
+        <div class="image-upload-container border-dashed rounded p-3 text-center cursor-pointer" id="imageUpload">
+            <i class="bx bx-cloud-upload text-muted mb-2" style="font-size: 2rem;"></i>
+            <p class="text-muted small mb-2">Click or drag image here</p>
+            <small class="text-muted">JPG, PNG (Max 5MB)</small>
+            <input type="file" name="image" class="d-none" accept="image/*" id="id_image">
+            <img id="imagePreview" class="image-preview mt-2 rounded" alt="Preview" style="max-height: 100px; display: none;">
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div class="alert alert-danger py-2 d-none" id="error" role="alert"></div>
+
+    <!-- Actions -->
+    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+        <button type="reset" class="btn btn-outline-secondary btn-sm">
+            <i class="bx bx-reset"></i> Clear
+        </button>
+        <button type="button" id="id_submit_product" class="btn btn-primary btn-sm">
+            <i class="bx bx-save"></i> Save Product
+        </button>
+    </div>
+</form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCategoryModalLabel">Add New Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
             <div class="modal-body">
-                <form method="post" class="px-3">
+                <form method="post" id="addCategoryForm">
                     {% csrf_token %}
-
-                    <div class="mb-3 d-none" id="div_id_batch_code">
-                        <label for="id_batch_code" class="form-label required">Batch Code <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <select class="form-select" id="id_code_select">
-                                <option value="">-----</option>
-                            </select>
-                            <button type="button" class="btn btn-outline-secondary" id="add_batch_modal">
-                                <i class="bx bx-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="mb-3 d-none">
-                        <select class="form-select" id="id_search" data-clearable="true" data-searchable="true">
-                            <option value="">Search Product</option>
-                            {% for product in inventory %}
-                            <option value="{{ product.product.id }}">{{ product.product.name }} [{{ product.quantity }}]</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
                     <div class="mb-3">
-                        <label for="id_image" class="form-label required">Product Image <span class="text-danger">*</span></label>
-                        <input type="file" name="image" class="form-control" required id="id_image">
+                        <label for="id_category_name" class="form-label required">Category Name <span class="text-danger">*</span></label>
+                        <input type="text" name="category_name" class="form-control" required id="id_category_name" placeholder="e.g., Mouse, Keyboard, Speakers">
                     </div>
-
-                    <div class="mb-3">
-                        <label for="id_name" class="form-label required">Name <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <input type="text" name="name" class="form-control" required id="id_name">
-                            <button class="btn btn-light border" type="button">s</button>
-                            <button class="btn btn-light border bx bx-edit" type="button"></button>
-                            <button class="btn btn-light border bx bx-trash" type="button"></button>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="id_category" class="form-label required">Category <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <select name="category" class="form-select" required id="id_category">
-                                <option value="">---------</option>
-                                {% for category in categories %}
-                                <option value="{{ category.name }}">{{ category.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <button class="btn btn-outline-secondary" type="button" id="id_add_category">
-                                <i class="bx bx-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="id_quantity" class="form-label required">Quantity <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <button type="button" class="btn btn-outline-secondary" id="decrease_quantity">−</button>
-                            <input type="number" name="quantity" class="form-control text-center" id="id_quantity" value="1" min="1" required>
-                            <button type="button" class="btn btn-outline-secondary" id="increase_quantity">+</button>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="id_cost_price" class="form-label required">Cost Price <span class="text-danger">*</span></label>
-                            <input type="number" name="cost_price" class="form-control" id="id_cost_price" step="0.01" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="id_selling_price" class="form-label required">Selling Price <span class="text-danger">*</span></label>
-                            <input type="number" name="selling_price" class="form-control" id="id_selling_price" step="0.01" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="id_wholesale_price" class="form-label">Wholesale Price</label>
-                            <input type="number" name="wholesale_price" class="form-control" id="id_wholesale_price" step="0.01">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="id_tax_type" class="form-label required">Tax Type <span class="text-danger">*</span></label>
-                        <select name="tax_type" class="form-select" required id="id_tax_type">
-                            <option value="" selected>---------</option>
-                            <option value="exempted">Exempted</option>
-                            <option value="standard">Standard</option>
-                            <option value="zero rated">Zero Rated</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="id_min_stock_level" class="form-label required">Min Stock Level <span class="text-danger">*</span></label>
-                        <input type="number" name="min_stock_level" value="0" class="form-control" required id="id_min_stock_level">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="id_description" class="form-label">Description</label>
-                        <textarea name="description" class="form-control" rows="3"></textarea>
-                    </div>
-
-                    <div class="form-check mb-2">
-                        <input type="checkbox" name="end_of_day" class="form-check-input" id="id_end_of_day">
-                        <label for="id_end_of_day" class="form-check-label">End of Day</label>
-                    </div>
-                    <div class="form-check mb-3">
-                        <input type="checkbox" name="service" class="form-check-input" id="id_service">
-                        <label for="id_service" class="form-check-label">Service</label>
-                    </div>
-
-                    <p class="text-danger small" id="error"></p>
-
+                    <p class="text-danger small" id="category_error"></p>
                     <div class="d-flex justify-content-end gap-2">
-                        <button type="reset" class="btn btn-danger btn-sm">
-                            <i class="bx bx-reset"></i> Reset
+                        <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">
+                            <i class="bx bx-x"></i> Cancel
                         </button>
-                        <button type="button" id="id_submit_product" class="btn btn-success btn-sm">
+                        <button type="button" id="id_submit_category" class="btn btn-success btn-sm">
                             <i class="bx bx-save"></i> Save
                         </button>
                     </div>
@@ -1279,12 +1506,88 @@
     </div>
 </div>
 
+
+
+
+
+
+
+
+<!-- category modal -->
+<!-- <div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="category">
+                    <div class='add-product-category' id="id_category_form">
+                        <div class='add-product-category-nav d-flex mt-2 py-3 px-2 align-items-center'>
+                            <div>
+                                <h6 class='mt-2 fw-bold'>Add Category</h6>
+                            </div>
+                        </div>
+                        <form method='post' class='px-2'>
+                            {% csrf_token %}
+                            <div class='mb-2'>
+                                <label for='id_name'>Category Name</label>
+                                <input 
+                                    name='name' 
+                                    id='id_category_name' 
+                                    type='text' 
+                                    class='form-control'
+                                />
+                            </div>
+                            <small id='id_error'></small>
+                            <div class="d-flex justify-content-end">
+                                <div class="">
+                                    <button type="reset" class="btn btn-danger btn-sm w-100">
+                                        <i class='bx bx-reset'></i>
+                                        reset
+                                    </button>
+                                </div>
+                                <span class="px-1"></span>
+                                <div class="">
+                                    <button type="button" onclick="categorySubmit();" class="btn btn-secondary btn-sm w-100">
+                                        <i class='bx bx-save'></i>
+                                        save
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div> 
+            </div>
+        </div>
+    </div>
+</div> -->
+
+
 <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
 <script>
 document.getElementById('id_submit_product').addEventListener('click', function () {
     const form = document.querySelector('#addProductModal form');
     const formData = new FormData(form);
+    const nameInput = document.getElementById('id_name');
+    const costPrice = document.getElementById('id_cost_price');
+    const sellingPrice = document.getElementById('id_selling_price');
+    const wholesalePrice = document.getElementById('id_wholesale_price');
+
+    // Trim product name
+    formData.set('name', nameInput.value.trim());
+
+    // Validate prices as positive floats
+    const priceFields = [
+        { input: costPrice, name: 'Cost Price' },
+        { input: sellingPrice, name: 'Selling Price' },
+        { input: wholesalePrice, name: 'Wholesale Price' }
+    ];
+    for (const field of priceFields) {
+        const value = parseFloat(field.input.value);
+        if (field.input.value && (isNaN(value) || value < 0)) {
+            document.getElementById('error').textContent = `${field.name} must be a valid positive number.`;
+            return;
+        }
+    }
 
     fetch("{% url 'inventory:add-inventory' %}", {
         method: 'POST',
@@ -1304,6 +1607,7 @@ document.getElementById('id_submit_product').addEventListener('click', function 
                 backgroundColor: "#4fbe87"
             }).showToast();
             form.reset();
+            document.getElementById('imagePreview').style.display = 'none';
         } else {
             document.getElementById('error').textContent = data.message;
         }
@@ -1327,17 +1631,162 @@ document.getElementById('decrease_quantity').addEventListener('click', function 
     }
 });
 
-document.getElementById('id_category').addEventListener('change', function() {
+document.getElementById('id_category_filter').addEventListener('change', function() {
     document.getElementById('filter-form').submit();
 });
 
+// Drag and Drop Image Upload
+const imageUpload = document.getElementById('imageUpload');
+const imageInput = document.getElementById('id_image');
+const imagePreview = document.getElementById('imagePreview');
+
+imageUpload.addEventListener('click', () => imageInput.click());
+
+imageUpload.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    imageUpload.classList.add('dragover');
+});
+
+imageUpload.addEventListener('dragleave', () => {
+    imageUpload.classList.remove('dragover');
+});
+
+imageUpload.addEventListener('drop', (e) => {
+    e.preventDefault();
+    imageUpload.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    handleImage(file);
+});
+
+imageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    handleImage(file);
+});
+
+function handleImage(file) {
+    if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+            document.getElementById('error').textContent = 'Image size must not exceed 5MB.';
+            return;
+        }
+        if (!file.type.startsWith('image/')) {
+            document.getElementById('error').textContent = 'Please upload a valid image file.';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imagePreview.src = e.target.result;
+            imagePreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+        imageInput.files = new DataTransfer().files;
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        imageInput.files = dataTransfer.files;
+    }
+}
+
+// Add Category Modal
+document.getElementById('id_add_category').addEventListener('click', () => {
+    const addProductModal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'));
+    addProductModal.hide();
+    const addCategoryModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+    addCategoryModal.show();
+});
+
+document.getElementById('id_submit_category').addEventListener('click', (event) => {
+    event.preventDefault();
+    const form = document.getElementById('addCategoryForm');
+    const categoryNameInput = document.getElementById('id_category_name');
+
+    // Verify input element exists
+    if (!categoryNameInput) {
+        console.error('Input element with id "id_category_name" not found.');
+        document.getElementById('category_error').textContent = 'Form error: Category input not found.';
+        return;
+    }
+
+    const categoryName = categoryNameInput.value.trim();
+
+    // Clear previous error
+    document.getElementById('category_error').textContent = '';
+
+    // Validate input
+    if (!categoryName) {
+        document.getElementById('category_error').textContent = 'Category name is required.';
+        return;
+    }
+
+    // Validate: Minimum length and allowed characters
+    if (categoryName.length < 2) {
+        document.getElementById('category_error').textContent = 'Category name must be at least 2 characters long.';
+        return;
+    }
+    if (!/^[a-zA-Z0-9\s\-&]+$/.test(categoryName)) {
+        document.getElementById('category_error').textContent = 'Category name can only contain letters, numbers, spaces, hyphens, and ampersands.';
+        return;
+    }
+
+    // Validate: Check for duplicate category names
+    const categorySelect = document.getElementById('id_category');
+    const existingCategories = Array.from(categorySelect.options)
+        .slice(1) // Skip the placeholder option
+        .map(option => option.text.toLowerCase());
+    if (existingCategories.includes(categoryName.toLowerCase())) {
+        document.getElementById('category_error').textContent = 'This category name already exists.';
+        return;
+    }
+
+    fetch("{% url 'inventory:add_product_category' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({ name: categoryName })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const categorySelect = document.getElementById('id_category');
+            const filterSelect = document.getElementById('id_category_filter');
+            // Add to product form dropdown
+            const newOption = new Option(data.name, data.id, true, true);
+            categorySelect.appendChild(newOption);
+            // Add to filter dropdown
+            const newFilterOption = new Option(data.name, data.id, false, false);
+            filterSelect.appendChild(newFilterOption);
+            // Autopopulate the new category in the product form
+            categorySelect.value = data.id;
+            Toastify({
+                text: `Category "${data.name}" added successfully!`,
+                duration: 3000,
+                gravity: 'top',
+                position: 'right',
+                backgroundColor: '#4fbe87'
+            }).showToast();
+            form.reset();
+            const addCategoryModal = bootstrap.Modal.getInstance(document.getElementById('addCategoryModal'));
+            addCategoryModal.hide();
+            const addProductModal = new bootstrap.Modal(document.getElementById('addProductModal'));
+            addProductModal.show();
+        } else {
+            document.getElementById('category_error').textContent = data.message || 'Failed to add category.';
+        }
+    })
+    .catch(error => {
+        document.getElementById('category_error').textContent = 'An unexpected error occurred.';
+        console.error('Fetch error:', error);
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function() {
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
     
-    const categorySelect = document.getElementById('id_category');
+    const categorySelect = document.getElementById('id_category_filter');
     if (categorySelect) {
         const urlParams = new URLSearchParams(window.location.search);
         const category = urlParams.get('category');
@@ -1347,5 +1796,87 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+
+
+// new category baba
+
+const categoryModal = new bootstrap.Modal(document.querySelector('#categoryModal'));
+    
+    document.querySelector('#id_add_category').addEventListener(
+        'click', ()=>{
+            categoryModal.show()
+        }
+    ) 
+
+     function categorySubmit(){
+        
+        const data = {name:$('#id_category_name').val()}
+          
+        fetch("{% url 'inventory:add_product_category' %}", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": getCookie("csrftoken"), 
+            },
+            body: JSON.stringify(data),
+          })
+            .then(response => response.json())
+            .then((response) => {
+              if (response.success) {
+                Swal.fire({
+                  title: 'success',
+                  text: 'Category successfully saved.',
+                  icon:'success',
+                  timer: 2000,
+                  showConfirmButton: false
+                })
+                fetchCategories()
+                categoryModal.hide()
+                supplierFormModal.show()
+              } else {
+                Swal.fire({
+                  title:'warning',
+                  text:response.message,
+                  icon:'warning',
+                })
+              }
+            })
+            .catch((error) => {
+              console.log(error)
+            });
+          }
+  
+        async function fetchCategories(){
+            try {
+                const response = await fetch('{% url "inventory:add_product_category" %}');
+    
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
+                const data = await response.json();
+                updateCategory(data);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            } 
+        }
+  
+        fetchCategories()
+  
+        function updateCategory(data){
+            const catElement = document.querySelector('#id_category')
+        
+            while(catElement.options.length > 1){
+                catElement.remove(1)
+            }
+            data.forEach((category)=>{
+                if({{ product.category.id }}  === category.id ){
+                    catElement.innerHTML += `<option selected value=${category.id}>${category.name}</option>`
+                }else{
+                    catElement.innerHTML += `<option value=${category.id}>${category.name}</option>`
+                }
+                
+            })
+        }
+        // new category 
 </script>
 {% endblock content %}
