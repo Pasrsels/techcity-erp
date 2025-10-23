@@ -254,7 +254,7 @@
         color: var(--text-dark);
     }
 
-    .customer-avatar {
+    .customer-avatar, .content {
         width: 35px;
         height: 35px;
         background: var(--primary);
@@ -764,6 +764,10 @@
                         <i class='bx bx-dollar-circle'></i>
                         Account Receivables
                     </a>
+                    <a href="?payable=true" class="action-btn">
+                        <i class='bx bx-money-withdraw'></i>
+                        Account Payables
+                    </a>
                 </div>
                 <a href="?download=true" class="action-btn btn-secondary">
                     <i class='bx bx-download'></i>
@@ -798,40 +802,44 @@
                                     <a href="{% url 'finance:customer' customer.id%}" class="customer-link">
                                         {% with name_parts=customer.name|split_name %}
                                             {% if name_parts.first_name and name_parts.last_name %}
-                                                <div class='customer-avatar'>
-                                                    {{ name_parts.first_name.0 }}{{ name_parts.last_name.0 }}
+                                                <div class='initials'>
+                                                    <span class='content'>{{ name_parts.first_name.0 }}{{ name_parts.last_name.0 }}</span>
                                                 </div>
                                             {% else %}
                                                 <div class='customer-avatar'>
-                                                    {{ name_parts.first_name.0 }}
+                                                    <span class='content'>{{ name_parts.first_name.0 }}</span>
                                                 </div>
                                             {% endif %}
                                         {% endwith %}
-                                        <span>{{customer.name}}</span>
+                                        <span class='px-2'>{{customer.name}}</span>
                                     </a>
                                 </small>
                             </td>
                             <td>
-                                <small>
-                                    <a href='https://wa.me/{{customer.phone_number}}' class="contact-link">
-                                        <i class='bx bxl-whatsapp'></i>
-                                        {{customer.phone_number}}
-                                    </a>
-                                </small>
+                                <div class='contact-link'>
+                                    <small>
+                                        <a href='https://wa.me/{{customer.account.customer.phone_number}}' class="customer-link">
+                                            <i class='bx bxl-whatsapp'></i>
+                                            {{customer.phone_number}}
+                                        </a>
+                                    </small>
+                                </div>
                             </td>
                             <td>
-                                <small>
-                                    <a href='mailto:{{customer.email}}' class="contact-link">
-                                        <i class='bx bx-envelope'></i>
-                                        {{customer.email}}
-                                    </a>
-                                </small>
+                               <div class='contact-link'>
+                                    <small>
+                                        <a href='mailto:{{customer.account.customer.email}}' class="customer-link">
+                                            <i class='bx bx-envelope'></i>
+                                            {{customer.email}}
+                                        </a>
+                                    </small>
+                               </div>
                             </td>
                             <td>
                                 <small>
                                     {% for balance in accounts %}
                                         {% if balance.account.customer.id == customer.id and balance.currency.symbol == 'USD' %}
-                                            <span class='balance-amount {% if balance.balance < 0 %}negative{% endif %}'>
+                                            <span class='{% if balance.balance < 0 %}text-danger{% endif %}'>
                                                 <strong>{{balance.currency.symbol}} {{balance.balance}}</strong>
                                             </span>
                                         {% endif %}
@@ -841,8 +849,8 @@
                             <td>
                                 <small>
                                     {% for balance in accounts %}
-                                        {% if balance.account.customer.id == customer.id and balance.currency.symbol == 'Z'%}
-                                            <span class='balance-amount {% if balance.balance < 0 %}negative{% endif %}'>
+                                        {% if balance.account.customer.id == customer.id and balance.currency.symbol == 'ZWD'%}
+                                            <span class='{% if balance.balance < 0 %}text-danger{% endif %}'>
                                                 <strong>{{balance.currency.symbol}} {{balance.balance}}</strong>
                                             </span>
                                         {% endif %}

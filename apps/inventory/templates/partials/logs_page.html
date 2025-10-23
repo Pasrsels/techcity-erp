@@ -69,7 +69,7 @@
 
 <!-- Activity Info Modal (only include once in the parent page) -->
 {% if current_page == 1 %}
-<div class="modal fade" id="activityModal" tabindex="-1" aria-labelledby="activityModalLabel" aria-hidden="true">
+<div class="modal fade" id="showActivityModal" tabindex="-1" aria-labelledby="activityModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
             <div class="modal-header">
@@ -90,7 +90,7 @@
 
 <script>
     function showActivityModal(id) {
-        const modal = new bootstrap.Modal(document.getElementById('activityModal'));
+        const modal = new bootstrap.Modal(document.getElementById('showActivityModal'));
         fetch(`/inventory/stocktake/detail/${id}/`, {
             method: 'POST',
             headers: {

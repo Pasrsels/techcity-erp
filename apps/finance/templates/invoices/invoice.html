@@ -6,8 +6,9 @@
 
 :root {
     --primary: #11998e;
+    --primary-light: #38ef7d;
     --primary-no-gradient: #11998e;
-    --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    --primary-dark: #0d6b61;
     --secondary: orange;
     --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
@@ -16,59 +17,125 @@
     --dark: #1a1a2e;
     --dark-alt: #16213e;
     --text-light: rgba(228, 230, 234, 1);
-    --text-dark: black;
-    --text-muted: black;
+    --text-dark: #2c3e50;
+    --text-muted: #6c757d;
     --glass: rgba(255, 255, 255, 0.1);
     --glass-border: rgba(255, 255, 255, 0.2);
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
-    --border-radius: 16px;
+    --bg-light: #f8f9fa;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.15);
+    --border-radius: 12px;
     --border-radius-sm: 8px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --m-bottom: 20px;
 }
 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.financ {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    background: #f5f7fa;
+}
+
 .header {
-    grid-area: header;
-    padding: 20px 30px;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    padding: 2rem;
+    margin: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.header .h5 {
+    color: var(--text-dark);
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0;
+    margin-bottom: 1.5rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    box-shadow: var(--shadow);
+    gap: 0.75rem;
+}
+
+.header .h5::before {
+    content: '';
+    width: 4px;
+    height: 28px;
+    background: var(--primary);
+    border-radius: 2px;
+}
+
+.form-select {
+    border: 2px solid #e0e0e0;
+    border-radius: var(--border-radius-sm);
+    padding: 10px 14px;
+    transition: var(--transition);
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    color: var(--text-dark);
+}
+
+.form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
+    outline: none;
+}
+
+.form-select:hover {
+    border-color: #c0c0c0;
 }
 
 .search-input {
     width: 100%;
-    padding: 15px 50px 15px 20px;
-    border-radius: var(--border-radius);
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    color: var(--text-light);
-    font-size: 16px;
+    padding: 12px 45px 12px 16px;
+    border-radius: var(--border-radius-sm);
+    background: white;
+    border: 2px solid #e0e0e0;
+    color: var(--text-dark);
+    font-size: 14px;
     transition: var(--transition);
 }
 
 .search-input:focus {
-        outline: none;
-        border-color: rgba(102, 126, 234, 0.5);
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
+}
 
 .search-input::placeholder {
-    color: var(--text-dark);
+    color: var(--text-muted);
 }
 
 .form-control {
     width: 100%;
-    padding: 8px;
+    padding: 10px 14px;
     border-radius: var(--border-radius-sm);
-    border: 1px solid var(--glass-border);
+    border: 2px solid #e0e0e0;
+    transition: var(--transition);
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
+    outline: none;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     color: var(--text-dark);
+    font-weight: 500;
+    font-size: 14px;
 }
 
 .modal {
@@ -90,6 +157,7 @@
     width: 80%;
     max-width: 500px;
     border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
 }
 
 .close-modal {
@@ -98,8 +166,13 @@
     top: 10px;
     font-size: 24px;
     cursor: pointer;
+    color: var(--text-muted);
+    transition: var(--transition);
 }
 
+.close-modal:hover {
+    color: var(--primary);
+}
 
 .search-icon {
     position: absolute;
@@ -107,6 +180,7 @@
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);
+    pointer-events: none;
 }
 
 .table-container {
@@ -114,19 +188,25 @@
     margin: auto;
     overflow-x: auto;
     background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    margin: 0 1.5rem 1.5rem;
 }
 
 ::-webkit-scrollbar {
-    width: 6px;
+    width: 10px;
+    height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--glass);
+    background: #f1f5f9;
+    border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
     background: var(--primary);
-    border-radius: 3px;
+    border-radius: 10px;
+    transition: var(--transition);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -140,41 +220,92 @@ table {
 }
 
 .btn {
-        flex: 1;
-        padding: 10px;
-        border-radius: var(--border-radius-sm);
-        border:none;
-        color: var(--text-dark);
-        cursor: pointer;
-        transition: var(--transition);
-        font-size: 12px;
-    }
+    flex: 1;
+    padding: 10px 20px;
+    border-radius: var(--border-radius-sm);
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 14px;
+    font-weight: 500;
+    background: var(--primary);
+    box-shadow: var(--shadow);
+}
 
+.btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
+}
+
+.btn-outline-dark {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+
+.btn-outline-dark:hover {
+    background: var(--primary);
+    color: white;
+}
 
 thead th {
-    background-color: #f9f9f9;
-    padding: 8px 10px;
-    border-bottom: 1px solid #ddd;
+    background: #f8f9fa;
+    padding: 14px 16px;
+    border-bottom: 2px solid #e9ecef;
     cursor: pointer;
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+thead th:hover {
+    background: #e9ecef;
 }
 
 tbody td {
-    padding: 8px 10px;
-    border-bottom: 1px solid #eee;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+    color: var(--text-dark);
+}
+
+tbody tr {
+    transition: var(--transition);
 }
 
 tbody tr:hover {
-    background-color: #f1f1f1;
+    background: #f8f9fa;
+}
+
+tbody td a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+tbody td a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
 }
 
 input[type="checkbox"] {
     cursor: pointer;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
 }
 
 .status {
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 0.9em;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 500;
 }
 
 .status.completed {
@@ -189,10 +320,12 @@ input[type="checkbox"] {
 
 .payment-btn {
     border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
+    padding: 6px 12px;
+    border-radius: 20px;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 0.8em;
+    font-weight: 500;
+    transition: var(--transition);
 }
 
 .payment-btn.paid {
@@ -203,6 +336,11 @@ input[type="checkbox"] {
 .payment-btn.due {
     background-color: #dc3545;
     color: white;
+}
+
+.payment-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
 }
 
 .table-container {
@@ -216,41 +354,279 @@ input[type="checkbox"] {
     top: 0;
     background-color: white;
     z-index: 100;
-    padding: 10px 0;
-    border-bottom: 2px solid #ccc;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
 }
 
 .sticky-header th {
     position: sticky;
-    top: 56px; 
+    top: 76px; 
     z-index: 99;
-    background-color: var(--primary); 
-    color: white;
+    background: #f8f9fa;
+    color: var(--text-dark);
 }
 
 .table-scroll {
     width: 100%;
     display: block;
 }
-.heading-item{
-    font-size: 12px;
+
+.date-heading-row {
+    padding: 1.25rem 1.5rem;
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+    color: var(--text-dark);
+    margin: 0;
+    font-weight: 600;
+}
+
+.date-heading-row span:first-child {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: var(--text-dark);
+}
+
+.heading-item {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
 }
 
 .footer-btn {
-    padding: 8px 16px;
+    padding: 10px 20px;
     border-radius: var(--border-radius-sm);
-    background: var(--primary-no-gradient);
-    border: 1px solid var(--glass-border);
-    color: var(--text-light);
+    background: var(--primary);
+    border: 2px solid var(--primary);
+    color: white;
     text-decoration: none;
     transition: var(--transition);
     font-size: 14px;
     cursor: pointer;
+    font-weight: 500;
+    box-shadow: var(--shadow);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .footer-btn:hover {
-    background: var(--primary);
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
     transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
+    color: white;
+}
+
+.invoice-preview {
+    padding: 1.5rem;
+}
+
+.invoice-preview h4 {
+    color: var(--text-dark);
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.invoice-preview p {
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.table-bordered {
+    border: 1px solid #dee2e6;
+}
+
+.table-bordered th,
+.table-bordered td {
+    border: 1px solid #dee2e6;
+    padding: 12px;
+}
+
+.badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+.bg-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.bg-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-primary {
+    background: var(--primary);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    padding: 8px 16px;
+    color: white;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-sm {
+    font-size: 0.875rem;
+    padding: 6px 12px;
+}
+
+.text-success {
+    color: #28a745 !important;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+}
+
+.action-icon {
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-icon:hover {
+    background: #f0f0f0;
+}
+
+.bg-success-icon {
+    background: #28a745;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.bg-danger-icon {
+    background: #dc3545;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header {
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    .table-container {
+        margin: 0 1rem 1rem;
+    }
+
+    .sticky-top-search {
+        padding: 1rem;
+    }
+
+    thead th,
+    tbody td {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+
+    .date-heading-row {
+        padding: 1rem;
+    }
+
+    .btn,
+    .footer-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.justify-content-end {
+    justify-content: flex-end;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.gap-3 {
+    gap: 1rem;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+.mt-1 {
+    margin-top: 0.25rem;
+}
+
+.mt-2 {
+    margin-top: 0.5rem;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem;
+}
+
+.px-2 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-end {
+    text-align: right;
+}
+
+.fw-bold {
+    font-weight: 700;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table-stripped tbody tr:nth-child(odd) {
+    background: #ffffff;
+}
+
+.table-stripped tbody tr:nth-child(even) {
+    background: #fafbfc;
 }
 
 </style>
@@ -259,7 +635,7 @@ input[type="checkbox"] {
         <div class='h5'>
             Invoices
         </div>
-        <div class="d-flex justify-content-between mt-1">
+        <div class="d-flex justify-content-between mt-1 flex-wrap gap-2">
             <div>
                 <select class="form-select" id="filterSelect" onchange="filterCashBook()">
                     <option value="today" {% if filter_option == 'today' %}selected{% endif %}>Today</option>
@@ -270,25 +646,27 @@ input[type="checkbox"] {
                     <option value="this_year" {% if filter_option == 'this_year' %}selected{% endif %}>This Year</option>
                 </select>
             </div>
-            <div id="customDateRange" class="d-flex mx-2">
+            <div id="customDateRange" class="d-flex gap-2">
                 <input type="date" id="startDate" value="{{ start_date }}" class="form-control" placeholder="Start Date">
-                <input type="date" id="endDate" value="{{ end_date}}" class="form-control mx-2" placeholder="End Date">
+                <input type="date" id="endDate" value="{{ end_date}}" class="form-control" placeholder="End Date">
                 <button class="btn btn-outline-dark btn-sm" onclick="applyCustomFilter()">Apply</button>
             </div>
             <button class="btn btn-outline-dark btn-sm" onclick="downloadReport()">Download Report</button>
         </div>
     </div>
         <!-- {% include 'components/loader.html' %} -->
-        <div class='table-responsive' style="height: 100vh;">
+        <div class='table-responsive table-container' style="height: 100vh;">
             <div class="search-container sticky-top-search">
-                <input type="text" id="searchInput" class="search-input" placeholder="Search invoices...">
-                <i class="fas fa-search search-icon"></i>
+                <div style="position: relative;">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search invoices...">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
             </div>
             {% for date_heading, data in grouped_invoices.items %}
-    <div class="mb-4">
-        <h4 class="mt-3 d-flex flex-column justify-content-center date-heading-row">
+    <div class="mb-4 invoice-section">
+        <h4 class="mt-3 date-heading-row">
             <span>{{ date_heading }}</span>
-            <div class="d-flex gap-3 text-muted">
+            <div class="d-flex gap-3">
                 <small class="heading-item">{{ data.invoices|length }} invoice{{ data.invoices|length|pluralize }}</small>
                 <small class="heading-item">Total: {{ data.invoices.0.currency.symbol }}{{ data.total_amount }}</small>
                 <small class="heading-item">Due: {{ data.invoices.0.currency.symbol }}{{ data.amount_due }}</small>
@@ -336,31 +714,31 @@ input[type="checkbox"] {
                     </td>
                     <td>
                         <span class='px-2'>
-                            <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Preview Invoice' data-id="{{ invoice.id }}" id='previewBtn'>
+                            <span class="action-icon text-dark hint--bottom" aria-label='Preview Invoice' data-id="{{ invoice.id }}" id='previewBtn'>
                                 <i class='bx bx-file'></i>
                             </span>
                         </span>
                         <span>
                             {% if invoice.amount_due > 0 %}
-                            <span style='cursor:pointer;' data-id="{{ invoice.id }}" data-amount="{{ invoice.amount_due }}" id='id_update' class="text-dark">
-                                <i class='bx bx-right-arrow bg-success'></i>
+                            <span class="action-icon text-dark" data-id="{{ invoice.id }}" data-amount="{{ invoice.amount_due }}" id='id_update'>
+                                <i class='bx bx-right-arrow bg-success-icon'></i>
                             </span>
                             {% else %}
-                            <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Invoice fully paid'>
-                                <i class='bx bx-bx-right-arrow bg-danger'></i>
+                            <span class="action-icon text-dark hint--bottom" aria-label='Invoice fully paid'>
+                                <i class='bx bx-check bg-success-icon'></i>
                             </span>
                             {% endif %}
                         </span>
                         <span>
                             {% if request.user.role == 'admin' %}
-                                <span id='id_delete' data-id="{{ invoice.id }}" class="text-dark hint--bottom" aria-label='sales return'>
+                                <span id='id_delete' data-id="{{ invoice.id }}" class="action-icon text-dark hint--bottom" aria-label='sales return'>
                                     <img width="18px" src="{% static 'assets/return.png' %}" />
                                 </span>
                             {% endif %}
                         </span>
                         {% if invoice.payment_terms == 'pay later' %}
                             <span class='px-2'>
-                                <span style='cursor:pointer;' class="text-dark" data-bs-toggle="modal" data-bs-target="#paylaterModal{{ invoice.id }}">
+                                <span class="action-icon text-dark" data-bs-toggle="modal" data-bs-target="#paylaterModal{{ invoice.id }}">
                                     <i class='bx bx-calendar'></i>
                                 </span>
                             </span>
@@ -497,8 +875,8 @@ input[type="checkbox"] {
 </div>
 
 <!-- Paylater Modals -->
-{% for date_heading, invoices in grouped_invoices.items %}
-    {% for invoice in invoices %}
+{% for date_heading, data in grouped_invoices.items %}
+    {% for invoice in data.invoices %}
         {% if invoice.payment_terms == 'pay later' %}
         <div class="modal fade" id="paylaterModal{{ invoice.id }}" tabindex="-1" aria-labelledby="paylaterModalLabel{{ invoice.id }}" aria-hidden="true">
             <div class="modal-dialog modal-lg">
@@ -653,15 +1031,13 @@ input[type="checkbox"] {
                 </div>
             </div>
             <div class="modal-footer">
-                <div class="d-flex justify-content-end w-100">
-                    <div>
-                        <button type="button" class="me-2 footer-btn" onclick="printInvoice()">
-                            <i class='bx bx-printer'></i> Print
-                        </button>
-                        <button type="button" class="footer-btn" onclick="sendInvoiceEmail()">
-                            <i class='bx bx-envelope'></i> Send Email
-                        </button>
-                    </div>
+                <div class="d-flex justify-content-end w-100 gap-2">
+                    <button type="button" class="footer-btn" onclick="printInvoice()">
+                        <i class='bx bx-printer'></i> Print
+                    </button>
+                    <button type="button" class="footer-btn" onclick="sendInvoiceEmail()">
+                        <i class='bx bx-envelope'></i> Send Email
+                    </button>
                 </div>
             </div>
         </div>
@@ -674,6 +1050,7 @@ input[type="checkbox"] {
     let invoiceAmountDue = '';
     let paymentMethod = '';
     let duePaid = 0;
+    let currentInvoiceId = '';
 
     const whatsappBtn = document.getElementById('whatsappBtn');
     const appModal = new bootstrap.Modal(document.getElementById('appModal'));
@@ -699,34 +1076,32 @@ input[type="checkbox"] {
     const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
 
     document.getElementById('searchInput').addEventListener('keyup', function() {
-    const searchValue = this.value.toLowerCase();
-    document.querySelectorAll('.mb-4').forEach(section => {
-        const rows = section.querySelectorAll('table#invoiceTable tbody tr');
-        let anyRowVisible = false;
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            let found = false;
-            if (cells.length > 1) {
-                if (cells[1].textContent.toLowerCase().includes(searchValue)) {
-                    found = true;
+        const searchValue = this.value.toLowerCase();
+        document.querySelectorAll('.invoice-section').forEach(section => {
+            const rows = section.querySelectorAll('table#invoiceTable tbody tr');
+            let anyRowVisible = false;
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                let found = false;
+                cells.forEach(cell => {
+                    if (cell.textContent.toLowerCase().includes(searchValue)) {
+                        found = true;
+                    }
+                });
+                if (found) {
+                    row.style.display = '';
+                    anyRowVisible = true;
+                } else {
+                    row.style.display = 'none';
                 }
-            }
-            if (found) {
-                row.style.display = '';
-                anyRowVisible = true;
+            });
+            if (anyRowVisible) {
+                section.style.display = '';
             } else {
-                row.style.display = 'none';
+                section.style.display = 'none';
             }
         });
-        if (anyRowVisible) {
-            section.style.display = '';
-            section.classList.add('search-match-section'); // Add a class for further actions
-        } else {
-            section.style.display = 'none';
-            section.classList.remove('search-match-section');
-        }
     });
-});
 
     // Column Sorting
     const headers = document.querySelectorAll("thead th");
@@ -752,13 +1127,6 @@ input[type="checkbox"] {
             rows.forEach(row => tableBody.appendChild(row));
         });
     });
-
-{% comment %}     
-    setTimeout(()=>{
-        loaderSpin.classList.add('hidden');
-        loaderSpin.classList.remove('d-flex')
-        // tableEl.classList.remove('hidden')
-    }, 300) {% endcomment %}
 
   
     document.querySelectorAll('.pm').forEach(button => {
@@ -996,30 +1364,6 @@ input[type="checkbox"] {
             fetchInvoiceData(tr.dataset.invoiceid);
         });
     });
-
-
-    //whatsappBtn.addEventListener('click', function() {
-    //    appModal.show(); 
-    //    whatsappBtn.disabled = true; 
-
-    //    const invoiceId = this.dataset.id;
-
-    //    fetch(`/finance/send_invoice_whatsapp/${invoiceId}/`, {
-    //        method: 'POST',
-    //        headers: {
-    //            'Content-Type': 'application/json',
-    //            'X-CSRFToken': getCookie('csrftoken')
-    //        }
-    //    })
-    //    .then(response => response.json())
-    //    .then(data => {
-    //        whatsappBtn.disabled = false;
-    //    })
-    //    .catch(error => {
-    //        whatsappBtn.disabled = false; 
-    //        console.error('Error:', error);
-    //    });
-    //});
 
     async function displayReceipt(invoiceId) {
     try {
