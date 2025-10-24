@@ -1,5 +1,5 @@
 aiohappyeyeballs==2.4.6
-aiohttp==3.10.5
+aiohttp==3.11.10
 aiohttp-retry==2.8.3
 aiosignal==1.3.1
 alabaster==1.0.0
@@ -81,6 +81,7 @@ djangorestframework-simplejwt==5.3.1
 djlint==1.34.0
 dnspython==2.6.1
 docutils==0.21.2
+drf-yasg==1.21.7
 EditorConfig==0.12.4
 et-xmlfile==1.1.0
 eventlet==0.33.3
@@ -102,7 +103,7 @@ html-tag-names==0.1.2
 html-void-elements==0.1.0
 html5lib==1.1
 httpcore==1.0.5
-httptools==0.6.1
+httptools==0.6.4
 httpx==0.27.2
 hyperlink==21.0.0
 identify==2.6.1
@@ -206,7 +207,7 @@ python-bidi==0.6.0
 python-crontab==3.2.0
 python-dateutil==2.9.0.post0
 python-decouple==3.8
-python-dotenv==1.0.0
+python-dotenv==1.0.1
 python-engineio==4.9.1
 python-json-logger==2.0.7
 python-slugify==8.0.1
@@ -268,7 +269,7 @@ tzlocal==5.2
 uri-template==1.3.0
 uritools==4.0.3
 urllib3==2.2.3
-uvicorn==0.23.2
+uvicorn==0.32.1
 vine==5.1.0
 virtualenv==20.26.4
 waitress==3.0.0
@@ -286,6 +287,6 @@ widgetsnbextension==4.0.13
 wrapt==1.16.0
 wsproto==1.2.0
 xhtml2pdf==0.2.15
-yarl==1.11.1
+yarl==1.17.2
 zope.interface==6.1
 zopfli==0.2.3.post1

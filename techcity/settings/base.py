@@ -169,7 +169,7 @@ DATABASES = {
          'ENGINE': 'django.db.backends.postgresql',
          'NAME':  'techcity',
          'USER': 'postgres',
-         'PASSWORD': 'alora21',
+         'PASSWORD': 'alora',
          'HOST': 'localhost',
          'PORT': '5432'
      }

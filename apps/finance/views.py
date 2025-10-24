@@ -84,7 +84,7 @@ from django.db.models import Sum, Avg, F, Value, CharField, ExpressionWrapper
 import datetime
 from itertools import chain
 from django.core.paginator import Paginator, EmptyPage
-import imghdr, base64
+import base64
 from django.core.files.base import ContentFile
 from django.db.models.functions import ExtractMonth 
 import calendar 
@@ -5052,7 +5052,7 @@ from django.db.models import Sum, Avg, F, Value, CharField, ExpressionWrapper
 import datetime
 from itertools import chain
 from django.core.paginator import Paginator, EmptyPage
-import imghdr, base64
+import base64
 from django.core.files.base import ContentFile
  
 # load global zimra instance
@@ -8788,7 +8788,7 @@ from django.db.models import Sum, Avg, F, Value, CharField, ExpressionWrapper
 import datetime
 from itertools import chain
 from django.core.paginator import Paginator, EmptyPage
-import imghdr, base64
+import base64
 from django.core.files.base import ContentFile
  
 # load global zimra instance
