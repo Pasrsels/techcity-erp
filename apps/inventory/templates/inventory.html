@@ -19,10 +19,10 @@
         --border-radius-sm: 10px;
         --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
+
     .header-btn {
         padding: 8px 16px;
         border-radius: var(--border-radius-sm);
-        padding: 0;
         transition: var(--transition);
         border: none;
         box-shadow: var(--shadow);
@@ -59,7 +59,6 @@
         font-size: 2.5rem;
     }
 
-    /* Header Button */
     .header-btn {
         padding: 10px 20px;
         border-radius: var(--border-radius-sm);
@@ -89,7 +88,6 @@
         font-size: 16px;
     }
 
-    /* Navigation Card */
     .inventory-card {
         background: white;
         border-radius: var(--border-radius);
@@ -103,7 +101,6 @@
         padding: 1.25rem;
     }
 
-    /* Action Buttons */
     .action-btn {
         padding: 8px 16px;
         border-radius: var(--border-radius-sm);
@@ -144,7 +141,6 @@
         color: var(--primary);
     }
 
-    /* Filters */
     .form-select,
     .form-control[type="search"],
     input[type="search"] {
@@ -173,7 +169,6 @@
         border-color: var(--primary);
     }
 
-    /* Remove default search input styling */
     input[type="search"]::-webkit-search-decoration,
     input[type="search"]::-webkit-search-cancel-button,
     input[type="search"]::-webkit-search-results-button,
@@ -181,14 +176,12 @@
         display: none;
     }
 
-    /* Table Section */
     .table-wrapper {
         background: rgb(254, 254, 254);
         border: none;
         box-shadow: var(--shadow);
         border-radius: var(--border-radius);
         overflow: hidden;
-        /* padding: 1.5rem; */
         padding: 0 !important;
         margin: 0 !important;
     }
@@ -223,7 +216,6 @@
         border-bottom: 1px solid #f0f0f0;
     }
     
-    /* Activity Logs */
     .logs-section {
         height: 100%;
     }
@@ -301,7 +293,6 @@
         border-bottom: 1px solid #f0f0f0;
     }
 
-    /* Modal */
     .modal-content {
         border-radius: var(--border-radius);
         border: none;
@@ -410,7 +401,6 @@
         color: white;
     }
 
-    /* Drag and Drop Image Upload */
     .image-upload-container {
         border: 2px dashed #e0e0e0;
         border-radius: var(--border-radius-sm);
@@ -447,661 +437,657 @@
         margin: 0.5rem 0 0;
     }
 
-/* 
-    //new styling */
     #filter-form {
-    display: flex;
-    align-items: center;  /* Vertically align the elements in the middle */
-    gap: 1rem;            /* Adds spacing between elements */
-}
-
-#filter-form select {
-    width: auto;  /* Ensures the select boxes are not stretched */
-}
-
-#filter-form button {
-    margin-left: 10px !important;  /* Optional: space out the button from the selects */
-}
-
-.form-select-custom {
-        height: 32px; 
-        margin-top: 5px;  /* Adjust the value as needed */
-         width: 70%;
-            /* Position the dropdown icon properly */
-    background-position: right 10px center;  /* Adjust position */
-    background-size: 16px;  
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
 
+    #filter-form select {
+        width: auto;
+    }
 
-    /* lable on top left */
-      /* Floating label style */
-  .floating-label-group {
-      position: relative;
-      margin-bottom: 1rem;
-  }
+    #filter-form button {
+        margin-left: 10px !important;
+    }
 
-  .floating-label-group .form-label {
-      position: absolute;
-      top: -0.6rem;
-      left: 0.75rem;
-      background: white;
-      padding: 0 0.25rem;
-      font-size: 0.75rem;
-      color: #6c757d;
-      z-index: 1;
-      pointer-events: none;
-      line-height: 1;
-  }
+    .form-select-custom {
+        height: 32px;
+        margin-top: 5px;
+        width: 70%;
+        background-position: right 10px center;
+        background-size: 16px;
+    }
 
-  .floating-label-group input,
-  .floating-label-group select,
-  .floating-label-group textarea {
-      position: relative;
-      z-index: 0;
-  }
-
-    
-
-
-    /* Responsive */
-@media (min-width: 1920px) {
-    .container-fluid {
-        padding: 2rem;
-        padding-top: 0; /* Changed to move content to top */
-        max-width: 2400px;
-        margin: 0 auto;
-    }
-    
-    .stats-header {
-        padding: 2rem;
-        padding-top: 0; /* Changed to move cards to top */
-        margin-bottom: 2rem;
-        margin-top: 0; /* Changed to ensure no top margin */
-    }
-    
-    .stats-card .card-body {
-        padding: 2rem;
-    }
-    
-    .stats-card .h5 {
-        font-size: 2rem;
-    }
-    
-    .stats-card .text-xs {
-        font-size: 1rem;
-    }
-    
-    .stats-card i {
-        font-size: 1.5rem;
-    }
-    
-    .inventory-card .card-body {
-        padding: 1.75rem;
-    }
-    
-    .action-btn {
-        font-size: 14px;
-        padding: 10px 20px;
-    }
-    
-    .header-btn {
-        font-size: 15px;
-        padding: 12px 24px;
-    }
-    
-    .table-wrapper {
-        padding: 2rem;
-    }
-    
-    .log-container {
-        padding: 2rem;
-    }
-    
-    .log-container h5 {
-        font-size: 1.25rem;
-    }
-    
-    .log-container > div {
-        max-height: 700px;
-    }
-}
-
-/* Large screens (1200px to 1919px) */
-@media (min-width: 1200px) and (max-width: 1919px) {
-    .container-fluid {
-        padding: 1rem;
-        padding-top: 0; /* Changed to move content to top */
-    }
-    
-    .stats-header {
-        padding: 1rem;
-        padding-top: 0; /* Changed to move cards to top */
-        margin-top: 0; /* Changed to ensure no top margin */
-    }
-    
-    .stats-card .h5 {
-        font-size: 1.75rem;
-    }
-    
-    .stats-card .text-xs {
-        font-size: 0.875rem;
-    }
-    
-    .action-btn {
-        font-size: 13px;
-        padding: 8px 16px;
-    }
-    
-    .header-btn {
-        font-size: 14px;
-        padding: 10px 20px;
-    }
-    
-    .log-container > div {
-        max-height: 600px;
-    }
-}
-
-/* Medium-large screens (992px to 1199px) */
-@media (min-width: 992px) and (max-width: 1199px) {
-    .container-fluid {
-        padding: 1.25rem;
-        padding-top: 0; /* Changed to move content to top */
-    }
-    
-    .stats-header {
-        padding: 1.25rem;
-        padding-top: 0; /* Changed to move cards to top */
-        margin-top: 0; /* Changed to ensure no top margin */
-    }
-    
-    .stats-card .h5 {
-        font-size: 1.6rem;
-    }
-    
-    .stats-card .text-xs {
-        font-size: 0.85rem;
-    }
-    
-    .action-btn {
-        font-size: 12px;
-        padding: 7px 14px;
-    }
-    
-    .header-btn {
-        font-size: 13px;
-        padding: 9px 18px;
-    }
-    
-    .log-container > div {
-        max-height: 550px;
-    }
-}
-
-/* Medium screens/tablets (768px to 991px) */
-@media (min-width: 768px) and (max-width: 991px) {
-    .container-fluid {
-        padding: 1rem;
-        padding-top: 0; /* Changed to move content to top */
-    }
-    
-    .stats-header {
-        padding: 1rem;
-        padding-top: 0; /* Changed to move cards to top */
-        margin-top: 0; /* Changed to ensure no top margin */
-    }
-    
-    .stats-card .h5 {
-        font-size: 1.5rem;
-    }
-    
-    .stats-card .text-xs {
-        font-size: 0.825rem;
-    }
-    
-    .action-btn {
-        font-size: 12px;
-        padding: 7px 13px;
-    }
-    
-    .header-btn {
-        font-size: 13px;
-        padding: 8px 16px;
-    }
-    
-    .log-container > div {
-        max-height: 500px;
-    }
-    
-    .table-wrapper {
-        overflow-x: auto;
-    }
-}
-
-/* Small tablets (576px to 767px) */
-@media (min-width: 576px) and (max-width: 767px) {
-    .container-fluid {
-        padding: 0.875rem;
-        padding-top: 0; /* Changed to move content to top */
-    }
-    
-    .stats-header {
-        padding: 1rem;
-        padding-top: 0; /* Changed to move cards to top */
-        margin-bottom: 1rem;
-        margin-top: 0; /* Changed to ensure no top margin */
-    }
-    
-    .stats-card {
-        margin-bottom: 0.875rem;
-    }
-    
-    .stats-card .card-body {
-        padding: 1.25rem;
-    }
-    
-    .stats-card .h5 {
-        font-size: 1.5rem;
-    }
-    
-    .stats-card .text-xs {
-        font-size: 0.825rem;
-    }
-    
-    .stats-card i {
-        font-size: 1.125rem;
-    }
-    
-    .inventory-card {
+    .floating-label-group {
+        position: relative;
         margin-bottom: 1rem;
     }
-    
-    .inventory-card .card-body {
-        padding: 1rem;
-    }
-    
-    .action-btn {
-        font-size: 12px;
-        padding: 7px 13px;
-    }
-    
-    .header-btn {
-        font-size: 13px;
-        padding: 8px 16px;
-    }
-    
-    .table-wrapper {
-        padding: 1rem;
-        overflow-x: auto;
-        overflow-y: hidden;
-    }
-    
-    .log-container {
-        padding: 1rem;
-    }
-    
-    .log-container > div {
-        max-height: 450px;
-    }
-    
-    .form-select,
-    .form-control {
-        font-size: 13px;
-        padding: 7px 13px;
-    }
-}
 
-/* Mobile screens (360px to 575px) - Keep side-by-side layout */
-@media (min-width: 360px) and (max-width: 575px) {
-    .container-fluid {
-        padding: 0.5rem;
-        padding-top: 0; /* Changed to move content to top */
-    }
-    
-    .stats-header {
-        padding: 0.75rem;
-        padding-top: 0; /* Changed to move cards to top */
-        margin-bottom: 0.75rem;
-        margin-top: 0; /* Changed to ensure no top margin */
-    }
-    
-    /* Keep stats cards in row */
-    .stats-header .row {
-        display: flex !important;
-        flex-direction: row !important;
-    }
-    
-    .stats-header .col-xl-6 {
-        flex: 0 0 50% !important;
-        max-width: 50% !important;
+    .floating-label-group .form-label {
+        position: absolute;
+        top: -0.6rem;
+        left: 0.75rem;
+        background: white;
         padding: 0 0.25rem;
-    }
-    
-    .stats-card {
-        margin-bottom: 0;
-    }
-    
-    .stats-card .card-body {
-        padding: 0.75rem;
-    }
-    
-    .stats-card .row.no-gutters {
-        display: flex;
-        flex-direction: column !important;
-    }
-    
-    .stats-card .row.no-gutters .col {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    .stats-card .row.no-gutters .col-auto {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin-top: 0.5rem;
-    }
-    
-    .stats-card .h5 {
-        font-size: 1.1rem;
-    }
-    
-    .stats-card .text-xs {
-        font-size: 0.65rem;
-        line-height: 1.2;
-    }
-    
-    .stats-card i {
-        font-size: 0.8rem;
-    }
-    
-    .header-btn {
-        font-size: 9px;
-        padding: 4px 8px;
-        gap: 3px;
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .header-btn i {
-        font-size: 10px;
-    }
-    
-    .inventory-card {
-        margin-bottom: 0.5rem;
-    }
-    
-    .inventory-card .card-body {
-        padding: 0.5rem;
-    }
-    
-    .action-btn {
-        font-size: 9px;
-        padding: 4px 8px;
-        gap: 2px;
-    }
-    
-    .action-btn i {
-        font-size: 11px;
-    }
-    
-    /* Keep table and logs side by side */
-    .row .col-lg-9,
-    .row .col-lg-3 {
-        flex: 0 0 100% !important;
-        max-width: 100% !important;
-    }
-    
-    /* Split view for table and logs */
-    .row .col-lg-9 {
-        flex: 0 0 60% !important;
-        max-width: 60% !important;
-        padding-right: 0.25rem;
-    }
-    
-    .row .col-lg-3 {
-        flex: 0 0 40% !important;
-        max-width: 40% !important;
-        padding-left: 0.25rem;
-    }
-    
-    .table-wrapper {
-        padding: 0.5rem;
-        overflow-x: auto;
-    }
-    
-    .inventory-table thead th {
-        font-size: 9px;
-        padding: 0.5rem 0.25rem;
-        white-space: nowrap;
-    }
-    
-    .inventory-table tbody td {
-        font-size: 10px;
-        padding: 0.5rem 0.25rem;
-    }
-    
-    .log-container {
-        padding: 0.5rem;
-    }
-    
-    .log-container h5 {
-        font-size: 0.8rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .log-container h5 i {
         font-size: 0.75rem;
+        color: #6c757d;
+        z-index: 1;
+        pointer-events: none;
+        line-height: 1;
     }
-    
-    .log-container > div {
-        max-height: 400px;
-        font-size: 9px;
-    }
-    
-    .form-select,
-    .form-control {
-        font-size: 10px;
-        padding: 4px 8px;
-    }
-    
-    .d-flex.flex-wrap.gap-2 {
-        gap: 0.25rem !important;
-    }
-}
 
-/* Small mobile screens (320px to 359px) */
-@media (min-width: 320px) and (max-width: 359px) {
-    .container-fluid {
-        padding: 0.375rem;
-        padding-top: 0; /* Changed to move content to top */
+    .floating-label-group input,
+    .floating-label-group select,
+    .floating-label-group textarea {
+        position: relative;
+        z-index: 0;
     }
-    
-    .stats-header {
-        padding: 0.5rem;
-        padding-top: 0; /* Changed to move cards to top */
-        margin-bottom: 0.5rem;
-        margin-top: 0; /* Changed to ensure no top margin */
-    }
-    
-    /* Keep stats cards in row */
-    .stats-header .row {
-        display: flex !important;
-        flex-direction: row !important;
-    }
-    
-    .stats-header .col-xl-6 {
-        flex: 0 0 50% !important;
-        max-width: 50% !important;
-        padding: 0 0.2rem;
-    }
-    
-    .stats-card .card-body {
-        padding: 0.5rem;
-    }
-    
-    .stats-card .row.no-gutters {
-        display: flex;
-        flex-direction: column !important;
-    }
-    
-    .stats-card .row.no-gutters .col {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    .stats-card .row.no-gutters .col-auto {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin-top: 0.4rem;
-    }
-    
-    .stats-card .h5 {
-        font-size: 0.95rem;
-    }
-    
-    .stats-card .text-xs {
-        font-size: 0.6rem;
-    }
-    
-    .stats-card i {
-        font-size: 0.7rem;
-    }
-    
-    .header-btn {
-        font-size: 8px;
-        padding: 3px 6px;
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .action-btn {
-        font-size: 8px;
-        padding: 3px 6px;
-    }
-    
-    /* Keep table and logs side by side */
-    .row .col-lg-9 {
-        flex: 0 0 58% !important;
-        max-width: 58% !important;
-        padding-right: 0.2rem;
-    }
-    
-    .row .col-lg-3 {
-        flex: 0 0 42% !important;
-        max-width: 42% !important;
-        padding-left: 0.2rem;
-    }
-    
-    .table-wrapper,
-    .log-container {
-        padding: 0.375rem;
-    }
-    
-    .inventory-table thead th {
-        font-size: 8px;
-        padding: 0.375rem 0.2rem;
-    }
-    
-    .inventory-table tbody td {
-        font-size: 9px;
-        padding: 0.375rem 0.2rem;
-    }
-    
-    .log-container h5 {
-        font-size: 0.75rem;
-    }
-    
-    .log-container > div {
-        max-height: 350px;
-        font-size: 8px;
-    }
-    
-    .form-select,
-    .form-control {
-        font-size: 9px;
-        padding: 3px 6px;
-    }
-}
 
-/* Extra small mobile (under 320px) */
-@media (max-width: 319px) {
-    .container-fluid {
-        padding: 0.25rem;
-        padding-top: 0; /* Changed to move content to top */
+    /* Minimized modal styling */
+    .modal.minimized {
+        transform: scale(0.7);
+        opacity: 0.5;
+        transition: var(--transition);
+        pointer-events: none;
     }
-    
-    .stats-header {
-        padding: 0.375rem;
-        padding-top: 0; /* Changed to move cards to top */
-        margin-top: 0; /* Changed to ensure no top margin */
+
+    .modal.minimized .modal-dialog {
+        margin-top: 20vh;
     }
-    
-    /* Keep stats cards in row */
-    .stats-header .row {
-        display: flex !important;
-        flex-direction: row !important;
+
+    #categoryModal {
+        z-index: 1060; /* Higher than addProductModal */
     }
-    
-    .stats-header .col-xl-6 {
-        flex: 0 0 50% !important;
-        max-width: 50% !important;
-        padding: 0 0.15rem;
+
+    #addProductModal {
+        z-index: 1050;
     }
-    
-    .stats-card .card-body {
-        padding: 0.375rem;
+
+    @media (min-width: 1920px) {
+        .container-fluid {
+            padding: 2rem;
+            padding-top: 0;
+            max-width: 2400px;
+            margin: 0 auto;
+        }
+        
+        .stats-header {
+            padding: 2rem;
+            padding-top: 0;
+            margin-bottom: 2rem;
+            margin-top: 0;
+        }
+        
+        .stats-card .card-body {
+            padding: 2rem;
+        }
+        
+        .stats-card .h5 {
+            font-size: 2rem;
+        }
+        
+        .stats-card .text-xs {
+            font-size: 1rem;
+        }
+        
+        .stats-card i {
+            font-size: 1.5rem;
+        }
+        
+        .inventory-card .card-body {
+            padding: 1.75rem;
+        }
+        
+        .action-btn {
+            font-size: 14px;
+            padding: 10px 20px;
+        }
+        
+        .header-btn {
+            font-size: 15px;
+            padding: 12px 24px;
+        }
+        
+        .table-wrapper {
+            padding: 2rem;
+        }
+        
+        .log-container {
+            padding: 2rem;
+        }
+        
+        .log-container h5 {
+            font-size: 1.25rem;
+        }
+        
+        .log-container > div {
+            max-height: 700px;
+        }
     }
-    
-    .stats-card .row.no-gutters {
-        display: flex;
-        flex-direction: column !important;
+
+    @media (min-width: 1200px) and (max-width: 1919px) {
+        .container-fluid {
+            padding: 1rem;
+            padding-top: 0;
+        }
+        
+        .stats-header {
+            padding: 1rem;
+            padding-top: 0;
+            margin-top: 0;
+        }
+        
+        .stats-card .h5 {
+            font-size: 1.75rem;
+        }
+        
+        .stats-card .text-xs {
+            font-size: 0.875rem;
+        }
+        
+        .action-btn {
+            font-size: 13px;
+            padding: 8px 16px;
+        }
+        
+        .header-btn {
+            font-size: 14px;
+            padding: 10px 20px;
+        }
+        
+        .log-container > div {
+            max-height: 600px;
+        }
     }
-    
-    .stats-card .row.no-gutters .col {
-        width: 100% !important;
-        max-width: 100% !important;
+
+    @media (min-width: 992px) and (max-width: 1199px) {
+        .container-fluid {
+            padding: 1.25rem;
+            padding-top: 0;
+        }
+        
+        .stats-header {
+            padding: 1.25rem;
+            padding-top: 0;
+            margin-top: 0;
+        }
+        
+        .stats-card .h5 {
+            font-size: 1.6rem;
+        }
+        
+        .stats-card .text-xs {
+            font-size: 0.85rem;
+        }
+        
+        .action-btn {
+            font-size: 12px;
+            padding: 7px 14px;
+        }
+        
+        .header-btn {
+            font-size: 13px;
+            padding: 9px 18px;
+        }
+        
+        .log-container > div {
+            max-height: 550px;
+        }
     }
-    
-    .stats-card .row.no-gutters .col-auto {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin-top: 0.3rem;
+
+    @media (min-width: 768px) and (max-width: 991px) {
+        .container-fluid {
+            padding: 1rem;
+            padding-top: 0;
+        }
+        
+        .stats-header {
+            padding: 1rem;
+            padding-top: 0;
+            margin-top: 0;
+        }
+        
+        .stats-card .h5 {
+            font-size: 1.5rem;
+        }
+        
+        .stats-card .text-xs {
+            font-size: 0.825rem;
+        }
+        
+        .action-btn {
+            font-size: 12px;
+            padding: 7px 13px;
+        }
+        
+        .header-btn {
+            font-size: 13px;
+            padding: 8px 16px;
+        }
+        
+        .log-container > div {
+            max-height: 500px;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+        }
     }
-    
-    .stats-card .h5 {
-        font-size: 0.85rem;
+
+    @media (min-width: 576px) and (max-width: 767px) {
+        .container-fluid {
+            padding: 0.875rem;
+            padding-top: 0;
+        }
+        
+        .stats-header {
+            padding: 1rem;
+            padding-top: 0;
+            margin-bottom: 1rem;
+            margin-top: 0;
+        }
+        
+        .stats-card {
+            margin-bottom: 0.875rem;
+        }
+        
+        .stats-card .card-body {
+            padding: 1.25rem;
+        }
+        
+        .stats-card .h5 {
+            font-size: 1.5rem;
+        }
+        
+        .stats-card .text-xs {
+            font-size: 0.825rem;
+        }
+        
+        .stats-card i {
+            font-size: 1.125rem;
+        }
+        
+        .inventory-card {
+            margin-bottom: 1rem;
+        }
+        
+        .inventory-card .card-body {
+            padding: 1rem;
+        }
+        
+        .action-btn {
+            font-size: 12px;
+            padding: 7px 13px;
+        }
+        
+        .header-btn {
+            font-size: 13px;
+            padding: 8px 16px;
+        }
+        
+        .table-wrapper {
+            padding: 1rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+        
+        .log-container {
+            padding: 1rem;
+        }
+        
+        .log-container > div {
+            max-height: 450px;
+        }
+        
+        .form-select,
+        .form-control {
+            font-size: 13px;
+            padding: 7px 13px;
+        }
     }
-    
-    .stats-card .text-xs {
-        font-size: 0.55rem;
+
+    @media (min-width: 360px) and (max-width: 575px) {
+        .container-fluid {
+            padding: 0.5rem;
+            padding-top: 0;
+        }
+        
+        .stats-header {
+            padding: 0.75rem;
+            padding-top: 0;
+            margin-bottom: 0.75rem;
+            margin-top: 0;
+        }
+        
+        .stats-header .row {
+            display: flex !important;
+            flex-direction: row !important;
+        }
+        
+        .stats-header .col-xl-6 {
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+            padding: 0 0.25rem;
+        }
+        
+        .stats-card {
+            margin-bottom: 0;
+        }
+        
+        .stats-card .card-body {
+            padding: 0.75rem;
+        }
+        
+        .stats-card .row.no-gutters {
+            display: flex;
+            flex-direction: column !important;
+        }
+        
+        .stats-card .row.no-gutters .col {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        .stats-card .row.no-gutters .col-auto {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-top: 0.5rem;
+        }
+        
+        .stats-card .h5 {
+            font-size: 1.1rem;
+        }
+        
+        .stats-card .text-xs {
+            font-size: 0.65rem;
+            line-height: 1.2;
+        }
+        
+        .stats-card i {
+            font-size: 0.8rem;
+        }
+        
+        .header-btn {
+            font-size: 9px;
+            padding: 4px 8px;
+            gap: 3px;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .header-btn i {
+            font-size: 10px;
+        }
+        
+        .inventory-card {
+            margin-bottom: 0.5rem;
+        }
+        
+        .inventory-card .card-body {
+            padding: 0.5rem;
+        }
+        
+        .action-btn {
+            font-size: 9px;
+            padding: 4px 8px;
+            gap: 2px;
+        }
+        
+        .action-btn i {
+            font-size: 11px;
+        }
+        
+        .row .col-lg-9,
+        .row .col-lg-3 {
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+        }
+        
+        .row .col-lg-9 {
+            flex: 0 0 60% !important;
+            max-width: 60% !important;
+            padding-right: 0.25rem;
+        }
+        
+        .row .col-lg-3 {
+            flex: 0 0 40% !important;
+            max-width: 40% !important;
+            padding-left: 0.25rem;
+        }
+        
+        .table-wrapper {
+            padding: 0.5rem;
+            overflow-x: auto;
+        }
+        
+        .inventory-table thead th {
+            font-size: 9px;
+            padding: 0.5rem 0.25rem;
+            white-space: nowrap;
+        }
+        
+        .inventory-table tbody td {
+            font-size: 10px;
+            padding: 0.5rem 0.25rem;
+        }
+        
+        .log-container {
+            padding: 0.5rem;
+        }
+        
+        .log-container h5 {
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .log-container h5 i {
+            font-size: 0.75rem;
+        }
+        
+        .log-container > div {
+            max-height: 400px;
+            font-size: 9px;
+        }
+        
+        .form-select,
+        .form-control {
+            font-size: 10px;
+            padding: 4px 8px;
+        }
+        
+        .d-flex.flex-wrap.gap-2 {
+            gap: 0.25rem !important;
+        }
     }
-    
-    .header-btn {
-        width: 100%;
-        justify-content: center;
+
+    @media (min-width: 320px) and (max-width: 359px) {
+        .container-fluid {
+            padding: 0.375rem;
+            padding-top: 0;
+        }
+        
+        .stats-header {
+            padding: 0.5rem;
+            padding-top: 0;
+            margin-bottom: 0.5rem;
+            margin-top: 0;
+        }
+        
+        .stats-header .row {
+            display: flex !important;
+            flex-direction: row !important;
+        }
+        
+        .stats-header .col-xl-6 {
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+            padding: 0 0.2rem;
+        }
+        
+        .stats-card .card-body {
+            padding: 0.5rem;
+        }
+        
+        .stats-card .row.no-gutters {
+            display: flex;
+            flex-direction: column !important;
+        }
+        
+        .stats-card .row.no-gutters .col {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        .stats-card .row.no-gutters .col-auto {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-top: 0.4rem;
+        }
+        
+        .stats-card .h5 {
+            font-size: 0.95rem;
+        }
+        
+        .stats-card .text-xs {
+            font-size: 0.6rem;
+        }
+        
+        .stats-card i {
+            font-size: 0.7rem;
+        }
+        
+        .header-btn {
+            font-size: 8px;
+            padding: 3px 6px;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .action-btn {
+            font-size: 8px;
+            padding: 3px 6px;
+        }
+        
+        .row .col-lg-9 {
+            flex: 0 0 58% !important;
+            max-width: 58% !important;
+            padding-right: 0.2rem;
+        }
+        
+        .row .col-lg-3 {
+            flex: 0 0 42% !important;
+            max-width: 42% !important;
+            padding-left: 0.2rem;
+        }
+        
+        .table-wrapper,
+        .log-container {
+            padding: 0.375rem;
+        }
+        
+        .inventory-table thead th {
+            font-size: 8px;
+            padding: 0.375rem 0.2rem;
+        }
+        
+        .inventory-table tbody td {
+            font-size: 9px;
+            padding: 0.375rem 0.2rem;
+        }
+        
+        .log-container h5 {
+            font-size: 0.75rem;
+        }
+        
+        .log-container > div {
+            max-height: 350px;
+            font-size: 8px;
+        }
+        
+        .form-select,
+        .form-control {
+            font-size: 9px;
+            padding: 3px 6px;
+        }
     }
-    
-    /* Keep table and logs side by side */
-    .row .col-lg-9 {
-        flex: 0 0 55% !important;
-        max-width: 55% !important;
+
+    @media (max-width: 319px) {
+        .container-fluid {
+            padding: 0.25rem;
+            padding-top: 0;
+        }
+        
+        .stats-header {
+            padding: 0.375rem;
+            padding-top: 0;
+            margin-top: 0;
+        }
+        
+        .stats-header .row {
+            display: flex !important;
+            flex-direction: row !important;
+        }
+        
+        .stats-header .col-xl-6 {
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+            padding: 0 0.15rem;
+        }
+        
+        .stats-card .card-body {
+            padding: 0.375rem;
+        }
+        
+        .stats-card .row.no-gutters {
+            display: flex;
+            flex-direction: column !important;
+        }
+        
+        .stats-card .row.no-gutters .col {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        .stats-card .row.no-gutters .col-auto {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-top: 0.3rem;
+        }
+        
+        .stats-card .h5 {
+            font-size: 0.85rem;
+        }
+        
+        .stats-card .text-xs {
+            font-size: 0.55rem;
+        }
+        
+        .header-btn {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .row .col-lg-9 {
+            flex: 0 0 55% !important;
+            max-width: 55% !important;
+        }
+        
+        .row .col-lg-3 {
+            flex: 0 0 45% !important;
+            max-width: 45% !important;
+        }
+        
+        .table-wrapper,
+        .log-container {
+            padding: 0.25rem;
+        }
+        
+        .log-container > div {
+            max-height: 300px;
+        }
     }
-    
-    .row .col-lg-3 {
-        flex: 0 0 45% !important;
-        max-width: 45% !important;
-    }
-    
-    .table-wrapper,
-    .log-container {
-        padding: 0.25rem;
-    }
-    
-    .log-container > div {
-        max-height: 300px;
-    }
-}
-    /* Spacing utilities */
+
     .gap-2 {
         gap: 0.5rem !important;
     }
@@ -1116,7 +1102,6 @@
         flex-wrap: wrap;
     }
 
-    /* Smooth animations */
     @keyframes fadeIn {
         from {
             opacity: 0;
@@ -1136,7 +1121,6 @@
     }
 </style>
 
-
 <div class="container-fluid">
     <div class="stats-header">
         <div class="row align-items-center justify-content-between">
@@ -1145,12 +1129,9 @@
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs" style= "color: #b1b1c2">Total Inventory Cost </div>
+                                <div class="text-xs" style="color: #b1b1c2">Total Inventory Cost </div>
                                 <div class="h5">USD {{total_cost}} <i class="bx bx-dollar-circle mb-0" style="font-size: 30px;"></i> </div>
                             </div>
-                            {% comment %} <div class="col-auto">
-                                
-                            </div> {% endcomment %}
                         </div>
                     </div>
                 </div>
@@ -1167,34 +1148,22 @@
                                     <i class="bx bx-cart mb-0" style="font-size: 32px; position: relative; top: -3px;"></i>
                                 </div>
                             </div>
-
-                            <div class="col mr-2">
                             {% if request.user.role == 'admin' %}
                             <div class="col-12 mt-3 d-none d-sm-block text-end">
-                                <!-- <button class="header-btn" data-bs-toggle="modal" data-bs-target="#addProductModal">
-                                    <i class="bx bx-plus"></i>Add New Product
-                                </button> -->
                             </div>
                             {% endif %}
-                            </div>
-                            {% comment %} <div class="col-auto">
-                                
-                            </div> {% endcomment %}
                         </div>
                     </div>
                 </div>
             </div>
-                <div class="col-xl-3 col-md-3 mb-3 mb-xl-0">
+            <div class="col-xl-3 col-md-3 mb-3 mb-xl-0">
                 <div class="stats-card">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs" style= "color: #b1b1c2">Expected Profit </div>
+                                <div class="text-xs" style="color: #b1b1c2">Expected Profit </div>
                                 <div class="h5">USD {{total_cost}} XX <i class="bx bx-dollar-circle mb-0" style="font-size: 30px;"></i> </div>
                             </div>
-                            {% comment %} <div class="col-auto">
-                                
-                            </div> {% endcomment %}
                         </div>
                     </div>
                 </div>
@@ -1213,8 +1182,6 @@
                     </div>
                 </div>
             </div>
-
-            
         </div>
     </div>
 
@@ -1247,7 +1214,6 @@
                     </a>
 
                     <form method="get" id="filter-form" class="d-flex align-items-center">
-                        <!-- Category Filter with custom margin -->
                         <select name="category" class="form-select form-select-sm me-3 pt-2 pb-2 form-select-custom" id="id_category_filter" onchange="this.form.submit();">
                             <option value="">All Categories</option>
                             <option value="inactive" {% if request.GET.category == "inactive" %}selected{% endif %}>Inactive</option>
@@ -1257,55 +1223,37 @@
                                 </option>
                             {% endfor %}
                         </select>
-
-                        <!-- Price Filter with custom margin -->
                         <select name="price" class="form-select form-select-sm me-3 pt-2 pb-2 form-select-custom" id="id_price_filter" onchange="this.form.submit();">
                             <option value="">Price</option>
                             <option value="asc" {% if request.GET.price == "asc" %}selected{% endif %}>Low to High</option>
                             <option value="desc" {% if request.GET.price == "desc" %}selected{% endif %}>High to Low</option>
                         </select>
                     </form>
-
                 </div>
                 
                 <div class="d-flex align-items-center gap-2">
                     <a href="?download=true&excel=true" class="btn btn-outline-secondary btn-sm action-btn">
                         <i class="bx bx-download mr-1"></i>Export Excel
                     </a>
-
-                    
                 </div>
             </div>
-            
         </div>
-        <!-- Stock Status Row -->
-
-                        <!-- Compact Stock Status Row -->
-                <div class="row g-2 mb-3" style="max-width: 600px;">
-                    <div class="col-md-6">
-                        <div class="border rounded bg-light p-2 d-flex justify-content-between align-items-center">
-                            <i class="bx bx-error-circle me-1 text-warning"></i> 
-                            <span class="fw-medium text-warning small">Low Stock Items</span>
-                            <span class="fw-bold text-warning small">5
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="border rounded bg-light p-2 d-flex justify-content-between align-items-center">
-                            <i class="bx bx-error-circle me-1 text-danger"></i>
-                            <span class="fw-medium text-danger small ">Out of Stock Items</span>
-                            <span class="fw-bold text-danger small">
-                                 0
-                            </span>
-                        </div>
-                    </div>
+        <div class="row g-2 mb-3" style="max-width: 600px;">
+            <div class="col-md-6">
+                <div class="border rounded bg-light p-2 d-flex justify-content-between align-items-center">
+                    <i class="bx bx-error-circle me-1 text-warning"></i> 
+                    <span class="fw-medium text-warning small">Low Stock Items</span>
+                    <span class="fw-bold text-warning small">5</span>
                 </div>
-
-             <!-- Stock Status Row -->
-
-                        <!-- Compact Stock Status Row -->
-
-
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded bg-light p-2 d-flex justify-content-between align-items-center">
+                    <i class="bx bx-error-circle me-1 text-danger"></i>
+                    <span class="fw-medium text-danger small">Out of Stock Items</span>
+                    <span class="fw-bold text-danger small">0</span>
+                </div>
+            </div>
+        </div>
     </div>
     
     <div class="row">
@@ -1328,15 +1276,36 @@
     </div>
 </div>
 
-<div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true">
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="categoryModalLabel">Manage Categories</h5>
+                <h5 class="modal-title" id="categoryModalLabel">Add Category</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                {% include 'components/category_modal.html' %}
+                <form method='post' id="categoryForm">
+                    {% csrf_token %}
+                    <div class='mb-2'>
+                        <label for='id_category_name' class="form-label">Category Name</label>
+                        <input 
+                            name='name' 
+                            id='id_category_name' 
+                            type='text' 
+                            class='form-control'
+                            required
+                        />
+                    </div>
+                    <small id='id_error' class="text-danger"></small>
+                    <div class="d-flex justify-content-end gap-2 pt-3">
+                        <button type="reset" class="btn btn-danger btn-sm">
+                            <i class='bx bx-reset'></i> Reset
+                        </button>
+                        <button type="button" onclick="categorySubmit();" class="btn btn-primary btn-sm">
+                            <i class='bx bx-save'></i> Save
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -1351,153 +1320,106 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-
             <div class="modal-body p-4">
-<form method="post" id="addProductForm">
-    {% csrf_token %}
-    
-    <!-- Compact Row for Name and Category -->
-    <div class="row g-3 mb-3">
-        <div class="col-md-6 floating-label-group">
-            <label class="form-label fw-medium text-sm">Product Name <span class="text-danger">*</span></label>
-            <div class="input-group input-group-sm">
-                <input type="text" name="name" class="form-control form-control-sm" placeholder="Enter product name" required id="id_name">
-                <button class="btn btn-outline-secondary" type="button" title="Search">
-                    <i class="bx bx-search"></i>
-                </button>
-            </div>
-        </div>
-        <div class="col-md-6 floating-label-group">
-            <label class="form-label fw-medium text-sm">Category <span class="text-danger">*</span></label>
-            <div class="input-group input-group-sm">
-                <select name="category" class="form-select form-select-sm" required id="id_category">
-                    <option value="">Select Category</option>
-                    {% for category in categories %}
-                    <option value="{{ category.id }}">{{ category.name }}</option>
-                    {% endfor %}
-                </select>
-                <button class="btn btn-outline-secondary" type="button" id="id_add_category" title="Add Category">
-                    <i class="bx bx-plus"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Compact Row for Quantity and Prices -->
-    <div class="row g-3 mb-3">
-        <div class="col-md-3 floating-label-group">
-            <label class="form-label fw-medium text-sm">Quantity <span class="text-danger">*</span></label>
-            <div class="input-group input-group-sm">
-                <button type="button" class="btn btn-outline-secondary px-2" id="decrease_quantity">−</button>
-                <input type="number" name="quantity" class="form-control text-center px-1" id="id_quantity" value="1" min="1" required>
-                <button type="button" class="btn btn-outline-secondary px-2" id="increase_quantity">+</button>
-            </div>
-        </div>
-        <div class="col-md-3 floating-label-group">
-            <label class="form-label fw-medium text-sm">Cost <span class="text-danger">*</span></label>
-            <input type="number" name="cost_price" class="form-control form-control-sm" placeholder="0.00" step="0.01" min="0" required id="id_cost_price">
-        </div>
-        <div class="col-md-3 floating-label-group">
-            <label class="form-label fw-medium text-sm">Selling <span class="text-danger">*</span></label>
-            <input type="number" name="selling_price" class="form-control form-control-sm" placeholder="0.00" step="0.01" min="0" required id="id_selling_price">
-        </div>
-        <div class="col-md-3 floating-label-group">
-            <label class="form-label fw-medium text-sm">Wholesale</label>
-            <input type="number" name="wholesale_price" class="form-control form-control-sm" placeholder="0.00" step="0.01" min="0" id="id_wholesale_price">
-        </div>
-    </div>
-
-    <!-- Compact Row for Tax and Stock -->
-    <div class="row g-3 mb-3">
-        <div class="col-md-6 floating-label-group">
-            <label class="form-label fw-medium text-sm">Tax Type <span class="text-danger">*</span></label>
-            <select name="tax_type" class="form-select form-select-sm" required id="id_tax_type">
-                <option value="" selected>Select Tax Type</option>
-                <option value="exempted">Exempted</option>
-                <option value="standard">Standard</option>
-                <option value="zero rated">Zero Rated</option>
-            </select>
-        </div>
-        <div class="col-md-6 floating-label-group">
-            <label class="form-label fw-medium text-sm">Min Stock <span class="text-danger">*</span></label>
-            <input type="number" name="min_stock_level" value="0" class="form-control form-control-sm" required id="id_min_stock_level" min="0">
-        </div>
-    </div>
-
-    <!-- Description -->
-    <div class="mb-3 floating-label-group">
-        <label class="form-label fw-medium text-sm">Description</label>
-        <textarea name="description" class="form-control form-control-sm" rows="2" placeholder="Product description..."></textarea>
-    </div>
-
-    <!-- Checkboxes in Row -->
-    <div class="row g-3 mb-3">
-        <div class="col-md-6">
-            <div class="form-check">
-                <input type="checkbox" name="end_of_day" class="form-check-input" id="id_end_of_day">
-                <label for="id_end_of_day" class="form-check-label text-sm">End of Day</label>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="form-check">
-                <input type="checkbox" name="service" class="form-check-input" id="id_service">
-                <label for="id_service" class="form-check-label text-sm">Service</label>
-            </div>
-        </div>
-    </div>
-
-    <!-- Image Upload -->
-    <div class="mb-4">
-        <label class="form-label fw-medium text-sm">Product Image</label>
-        <div class="image-upload-container border-dashed rounded p-3 text-center cursor-pointer" id="imageUpload">
-            <i class="bx bx-cloud-upload text-muted mb-2" style="font-size: 2rem;"></i>
-            <p class="text-muted small mb-2">Click or drag image here</p>
-            <small class="text-muted">JPG, PNG (Max 5MB)</small>
-            <input type="file" name="image" class="d-none" accept="image/*" id="id_image">
-            <img id="imagePreview" class="image-preview mt-2 rounded" alt="Preview" style="max-height: 100px; display: none;">
-        </div>
-    </div>
-
-    <!-- Error Message -->
-    <div class="alert alert-danger py-2 d-none" id="error" role="alert"></div>
-
-    <!-- Actions -->
-    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-        <button type="reset" class="btn btn-outline-secondary btn-sm">
-            <i class="bx bx-reset"></i> Clear
-        </button>
-        <button type="button" id="id_submit_product" class="btn btn-primary btn-sm">
-            <i class="bx bx-save"></i> Save Product
-        </button>
-    </div>
-</form>
-
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addCategoryModalLabel">Add New Category</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form method="post" id="addCategoryForm">
+                <form method="post" id="addProductForm">
                     {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="id_category_name" class="form-label required">Category Name <span class="text-danger">*</span></label>
-                        <input type="text" name="category_name" class="form-control" required id="id_category_name" placeholder="e.g., Mouse, Keyboard, Speakers">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6 floating-label-group">
+                            <label class="form-label fw-medium text-sm">Product Name <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="name" class="form-control form-control-sm" placeholder="Enter product name" required id="id_name">
+                                <button class="btn btn-outline-secondary" type="button" title="Search">
+                                    <i class="bx bx-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6 floating-label-group">
+                            <label class="form-label fw-medium text-sm">Category <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-sm">
+                                <select name="category" class="form-select form-select-sm" required id="id_category">
+                                    <option value="">Select Category</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn btn-outline-secondary" type="button" id="id_add_category" title="Add Category">
+                                    <i class="bx bx-plus"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <p class="text-danger small" id="category_error"></p>
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">
-                            <i class="bx bx-x"></i> Cancel
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3 floating-label-group">
+                            <label class="form-label fw-medium text-sm">Quantity <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-sm">
+                                <button type="button" class="btn btn-outline-secondary px-2" id="decrease_quantity">−</button>
+                                <input type="number" name="quantity" class="form-control text-center px-1" id="id_quantity" value="1" min="1" required>
+                                <button type="button" class="btn btn-outline-secondary px-2" id="increase_quantity">+</button>
+                            </div>
+                        </div>
+                        <div class="col-md-3 floating-label-group">
+                            <label class="form-label fw-medium text-sm">Cost <span class="text-danger">*</span></label>
+                            <input type="number" name="cost_price" class="form-control form-control-sm" placeholder="0.00" step="0.01" min="0" required id="id_cost_price">
+                        </div>
+                        <div class="col-md-3 floating-label-group">
+                            <label class="form-label fw-medium text-sm">Selling <span class="text-danger">*</span></label>
+                            <input type="number" name="selling_price" class="form-control form-control-sm" placeholder="0.00" step="0.01" min="0" required id="id_selling_price">
+                        </div>
+                        <div class="col-md-3 floating-label-group">
+                            <label class="form-label fw-medium text-sm">Wholesale</label>
+                            <input type="number" name="wholesale_price" class="form-control form-control-sm" placeholder="0.00" step="0.01" min="0" id="id_wholesale_price">
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6 floating-label-group">
+                            <label class="form-label fw-medium text-sm">Tax Type <span class="text-danger">*</span></label>
+                            <select name="tax_type" class="form-select form-select-sm" required id="id_tax_type">
+                                <option value="" selected>Select Tax Type</option>
+                                <option value="exempted">Exempted</option>
+                                <option value="standard">Standard</option>
+                                <option value="zero rated">Zero Rated</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 floating-label-group">
+                            <label class="form-label fw-medium text-sm">Min Stock <span class="text-danger">*</span></label>
+                            <input type="number" name="min_stock_level" value="0" class="form-control form-control-sm" required id="id_min_stock_level" min="0">
+                        </div>
+                    </div>
+                    <div class="mb-3 floating-label-group">
+                        <label class="form-label fw-medium text-sm">Description</label>
+                        <textarea name="description" class="form-control form-control-sm" rows="2" placeholder="Product description..."></textarea>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input type="checkbox" name="end_of_day" class="form-check-input" id="id_end_of_day">
+                                <label for="id_end_of_day" class="form-check-label text-sm">End of Day</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input type="checkbox" name="service" class="form-check-input" id="id_service">
+                                <label for="id_service" class="form-check-label text-sm">Service</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-medium text-sm">Product Image</label>
+                        <div class="image-upload-container border-dashed rounded p-3 text-center cursor-pointer" id="imageUpload">
+                            <i class="bx bx-cloud-upload text-muted mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted small mb-2">Click or drag image here</p>
+                            <small class="text-muted">JPG, PNG (Max 5MB)</small>
+                            <input type="file" name="image" class="d-none" accept="image/*" id="id_image">
+                            <img id="imagePreview" class="image-preview mt-2 rounded" alt="Preview" style="max-height: 100px; display: none;">
+                        </div>
+                    </div>
+                    <div class="alert alert-danger py-2 d-none" id="error" role="alert"></div>
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <button type="reset" class="btn btn-outline-secondary btn-sm">
+                            <i class="bx bx-reset"></i> Clear
                         </button>
-                        <button type="button" id="id_submit_category" class="btn btn-success btn-sm">
-                            <i class="bx bx-save"></i> Save
+                        <button type="button" id="id_submit_product" class="btn btn-primary btn-sm">
+                            <i class="bx bx-save"></i> Save Product
                         </button>
                     </div>
                 </form>
@@ -1506,76 +1428,35 @@
     </div>
 </div>
 
-
-
-
-
-
-
-
-<!-- category modal -->
-<!-- <div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="category">
-                    <div class='add-product-category' id="id_category_form">
-                        <div class='add-product-category-nav d-flex mt-2 py-3 px-2 align-items-center'>
-                            <div>
-                                <h6 class='mt-2 fw-bold'>Add Category</h6>
-                            </div>
-                        </div>
-                        <form method='post' class='px-2'>
-                            {% csrf_token %}
-                            <div class='mb-2'>
-                                <label for='id_name'>Category Name</label>
-                                <input 
-                                    name='name' 
-                                    id='id_category_name' 
-                                    type='text' 
-                                    class='form-control'
-                                />
-                            </div>
-                            <small id='id_error'></small>
-                            <div class="d-flex justify-content-end">
-                                <div class="">
-                                    <button type="reset" class="btn btn-danger btn-sm w-100">
-                                        <i class='bx bx-reset'></i>
-                                        reset
-                                    </button>
-                                </div>
-                                <span class="px-1"></span>
-                                <div class="">
-                                    <button type="button" onclick="categorySubmit();" class="btn btn-secondary btn-sm w-100">
-                                        <i class='bx bx-save'></i>
-                                        save
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div> 
-            </div>
-        </div>
-    </div>
-</div> -->
-
-
 <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 document.getElementById('id_submit_product').addEventListener('click', function () {
-    const form = document.querySelector('#addProductModal form');
+    const form = document.querySelector('#addProductForm');
     const formData = new FormData(form);
     const nameInput = document.getElementById('id_name');
     const costPrice = document.getElementById('id_cost_price');
     const sellingPrice = document.getElementById('id_selling_price');
     const wholesalePrice = document.getElementById('id_wholesale_price');
 
-    // Trim product name
     formData.set('name', nameInput.value.trim());
 
-    // Validate prices as positive floats
     const priceFields = [
         { input: costPrice, name: 'Cost Price' },
         { input: sellingPrice, name: 'Selling Price' },
@@ -1584,6 +1465,7 @@ document.getElementById('id_submit_product').addEventListener('click', function 
     for (const field of priceFields) {
         const value = parseFloat(field.input.value);
         if (field.input.value && (isNaN(value) || value < 0)) {
+            document.getElementById('error').classList.remove('d-none');
             document.getElementById('error').textContent = `${field.name} must be a valid positive number.`;
             return;
         }
@@ -1599,20 +1481,23 @@ document.getElementById('id_submit_product').addEventListener('click', function 
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            Toastify({
+            Swal.fire({
+                title: 'Success',
                 text: data.message,
-                duration: 3000,
-                gravity: "top",
-                position: 'right',
-                backgroundColor: "#4fbe87"
-            }).showToast();
+                icon: 'success',
+                timer: 3000,
+                showConfirmButton: false
+            });
             form.reset();
             document.getElementById('imagePreview').style.display = 'none';
+            bootstrap.Modal.getInstance(document.getElementById('addProductModal')).hide();
         } else {
+            document.getElementById('error').classList.remove('d-none');
             document.getElementById('error').textContent = data.message;
         }
     })
     .catch(error => {
+        document.getElementById('error').classList.remove('d-none');
         document.getElementById('error').textContent = 'An unexpected error occurred.';
         console.error(error);
     });
@@ -1635,7 +1520,6 @@ document.getElementById('id_category_filter').addEventListener('change', functio
     document.getElementById('filter-form').submit();
 });
 
-// Drag and Drop Image Upload
 const imageUpload = document.getElementById('imageUpload');
 const imageInput = document.getElementById('id_image');
 const imagePreview = document.getElementById('imagePreview');
@@ -1666,10 +1550,12 @@ imageInput.addEventListener('change', (e) => {
 function handleImage(file) {
     if (file) {
         if (file.size > 5 * 1024 * 1024) {
+            document.getElementById('error').classList.remove('d-none');
             document.getElementById('error').textContent = 'Image size must not exceed 5MB.';
             return;
         }
         if (!file.type.startsWith('image/')) {
+            document.getElementById('error').classList.remove('d-none');
             document.getElementById('error').textContent = 'Please upload a valid image file.';
             return;
         }
@@ -1686,99 +1572,117 @@ function handleImage(file) {
     }
 }
 
-// Add Category Modal
-document.getElementById('id_add_category').addEventListener('click', () => {
-    const addProductModal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'));
-    addProductModal.hide();
-    const addCategoryModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
-    addCategoryModal.show();
+const categoryModal = new bootstrap.Modal(document.querySelector('#categoryModal'));
+const addProductModal = new bootstrap.Modal(document.querySelector('#addProductModal'));
+
+document.querySelector('#id_add_category').addEventListener('click', () => {
+    const addProductModalEl = document.getElementById('addProductModal');
+    addProductModalEl.classList.add('minimized');
+    categoryModal.show();
 });
 
-document.getElementById('id_submit_category').addEventListener('click', (event) => {
-    event.preventDefault();
-    const form = document.getElementById('addCategoryForm');
+document.querySelector('#categoryModal .btn-close').addEventListener('click', () => {
+    const addProductModalEl = document.getElementById('addProductModal');
+    addProductModalEl.classList.remove('minimized');
+    categoryModal.hide();
+});
+
+function categorySubmit() {
+    const form = document.querySelector('#categoryForm');
     const categoryNameInput = document.getElementById('id_category_name');
-
-    // Verify input element exists
-    if (!categoryNameInput) {
-        console.error('Input element with id "id_category_name" not found.');
-        document.getElementById('category_error').textContent = 'Form error: Category input not found.';
-        return;
-    }
-
     const categoryName = categoryNameInput.value.trim();
+    const errorElement = document.getElementById('id_error');
 
-    // Clear previous error
-    document.getElementById('category_error').textContent = '';
+    errorElement.textContent = '';
 
-    // Validate input
     if (!categoryName) {
-        document.getElementById('category_error').textContent = 'Category name is required.';
+        errorElement.textContent = 'Category name is required.';
         return;
     }
 
-    // Validate: Minimum length and allowed characters
     if (categoryName.length < 2) {
-        document.getElementById('category_error').textContent = 'Category name must be at least 2 characters long.';
-        return;
-    }
-    if (!/^[a-zA-Z0-9\s\-&]+$/.test(categoryName)) {
-        document.getElementById('category_error').textContent = 'Category name can only contain letters, numbers, spaces, hyphens, and ampersands.';
+        errorElement.textContent = 'Category name must be at least 2 characters long.';
         return;
     }
 
-    // Validate: Check for duplicate category names
+    if (!/^[a-zA-Z0-9\s\-&]+$/.test(categoryName)) {
+        errorElement.textContent = 'Category name can only contain letters, numbers, spaces, hyphens, and ampersands.';
+        return;
+    }
+
     const categorySelect = document.getElementById('id_category');
     const existingCategories = Array.from(categorySelect.options)
-        .slice(1) // Skip the placeholder option
+        .slice(1)
         .map(option => option.text.toLowerCase());
     if (existingCategories.includes(categoryName.toLowerCase())) {
-        document.getElementById('category_error').textContent = 'This category name already exists.';
+        errorElement.textContent = 'This category name already exists.';
         return;
     }
 
     fetch("{% url 'inventory:add_product_category' %}", {
-        method: 'POST',
+        method: "POST",
         headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
         },
         body: JSON.stringify({ name: categoryName })
     })
     .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+    .then(response => {
+        if (response.success) {
+            Swal.fire({
+                title: 'Success',
+                text: 'Category successfully saved.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
             const categorySelect = document.getElementById('id_category');
             const filterSelect = document.getElementById('id_category_filter');
-            // Add to product form dropdown
-            const newOption = new Option(data.name, data.id, true, true);
+            const newOption = new Option(response.name, response.id, true, true);
             categorySelect.appendChild(newOption);
-            // Add to filter dropdown
-            const newFilterOption = new Option(data.name, data.id, false, false);
+            const newFilterOption = new Option(response.name, response.id, false, false);
             filterSelect.appendChild(newFilterOption);
-            // Autopopulate the new category in the product form
-            categorySelect.value = data.id;
-            Toastify({
-                text: `Category "${data.name}" added successfully!`,
-                duration: 3000,
-                gravity: 'top',
-                position: 'right',
-                backgroundColor: '#4fbe87'
-            }).showToast();
+            categorySelect.value = response.id;
             form.reset();
-            const addCategoryModal = bootstrap.Modal.getInstance(document.getElementById('addCategoryModal'));
-            addCategoryModal.hide();
-            const addProductModal = new bootstrap.Modal(document.getElementById('addProductModal'));
-            addProductModal.show();
+            categoryModal.hide();
+            const addProductModalEl = document.getElementById('addProductModal');
+            addProductModalEl.classList.remove('minimized');
         } else {
-            document.getElementById('category_error').textContent = data.message || 'Failed to add category.';
+            errorElement.textContent = response.message || 'Failed to add category.';
         }
     })
     .catch(error => {
-        document.getElementById('category_error').textContent = 'An unexpected error occurred.';
-        console.error('Fetch error:', error);
+        errorElement.textContent = 'An unexpected error occurred.';
+        console.error(error);
     });
-});
+}
+
+async function fetchCategories() {
+    try {
+        const response = await fetch('{% url "inventory:add_product_category" %}');
+        if (!response.ok) {
+            throw new Error('Network response was not ok.');
+        }
+        const data = await response.json();
+        updateCategory(data);
+    } catch (error) {
+        console.error('Error fetching categories:', error);
+    }
+}
+
+function updateCategory(data) {
+    const catElement = document.querySelector('#id_category');
+    while (catElement.options.length > 1) {
+        catElement.remove(1);
+    }
+    data.forEach(category => {
+        const option = new Option(category.name, category.id);
+        catElement.appendChild(option);
+    });
+}
+
+fetchCategories();
 
 document.addEventListener('DOMContentLoaded', function() {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -1795,88 +1699,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
-
-
-
-// new category baba
-
-const categoryModal = new bootstrap.Modal(document.querySelector('#categoryModal'));
-    
-    document.querySelector('#id_add_category').addEventListener(
-        'click', ()=>{
-            categoryModal.show()
-        }
-    ) 
-
-     function categorySubmit(){
-        
-        const data = {name:$('#id_category_name').val()}
-          
-        fetch("{% url 'inventory:add_product_category' %}", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": getCookie("csrftoken"), 
-            },
-            body: JSON.stringify(data),
-          })
-            .then(response => response.json())
-            .then((response) => {
-              if (response.success) {
-                Swal.fire({
-                  title: 'success',
-                  text: 'Category successfully saved.',
-                  icon:'success',
-                  timer: 2000,
-                  showConfirmButton: false
-                })
-                fetchCategories()
-                categoryModal.hide()
-                supplierFormModal.show()
-              } else {
-                Swal.fire({
-                  title:'warning',
-                  text:response.message,
-                  icon:'warning',
-                })
-              }
-            })
-            .catch((error) => {
-              console.log(error)
-            });
-          }
-  
-        async function fetchCategories(){
-            try {
-                const response = await fetch('{% url "inventory:add_product_category" %}');
-    
-                if (!response.ok) {
-                    throw new Error('Network response was not ok.');
-                }
-                const data = await response.json();
-                updateCategory(data);
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-            } 
-        }
-  
-        fetchCategories()
-  
-        function updateCategory(data){
-            const catElement = document.querySelector('#id_category')
-        
-            while(catElement.options.length > 1){
-                catElement.remove(1)
-            }
-            data.forEach((category)=>{
-                if({{ product.category.id }}  === category.id ){
-                    catElement.innerHTML += `<option selected value=${category.id}>${category.name}</option>`
-                }else{
-                    catElement.innerHTML += `<option value=${category.id}>${category.name}</option>`
-                }
-                
-            })
-        }
-        // new category 
 </script>
 {% endblock content %}
