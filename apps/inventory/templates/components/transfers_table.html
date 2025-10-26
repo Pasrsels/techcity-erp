@@ -55,84 +55,118 @@
         margin-right: 0.5rem;
     }
 </style>
-<div class="transfers-table mt-3">
+<div class="transfers-table">
     {% include 'components/loader.html' %}
     <div class='table-scroll'>
-        <table class='table table-bordered  rounded' id='transfers'>
-            <!-- <thead class="table-dark sticky-top">
+        <table class='table table-bordereless rounded' id='transfers'>
+            <thead class="bg bg-success-subtle sticky-top">
                 <tr>
-                    <th class="transfer-status">Transfer Status</th>
-                    <th class="transfer-quantity">Quantity/Amount</th>
-                    <th class="transfer-user">User</th>
-                    <th class="transfer-reference">Reference</th>
-                    <th class="transfer-description">Description</th>
-                    <th class="transfer-actions">Actions</th>
+                    <th></th>
+                    <th class="transfer-status">Details</th>
+                    <th class="text-end">Quanity</th>
+                    <th class="transfer-quantity text-end">Cost</th>
+                    <th class="transfer-actions text-end">Actions</th>
                 </tr>
-            </thead> -->
+            </thead>
             <tbody>
                 {% for transfer in transfers %}
                     <!-- Parent Row -->
-                    <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %} parent-row" data-id="{{ transfer.id }}">
-                        <td class="transfer-status" style="width: 50px;">
+                    <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %} parent-row" data-id="{{ transfer.id }}" style="width: 50px !important;">
+                        <td class="transfer-status">
                             {% if request.user.branch in transfer.transfer_to.all %}
-                                {% if  transfer.total_r_difference == 0 %}
-                                <small>
-                                    <img src="{% static 'assets/check.png' %}" width="30px">
-                                </small>
-                                {% else %}
-                                    <small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
-                                        <span class="text-light">{{ transfer.total_r_difference }}</span>
-                                    </small>
-                                {% endif %}
+                                <i class='bx bxs-right-arrow-alt text-success bx-md'></i>
+                                 {% if request.user.branch in transfer.transfer_to.all %}
+                                        {% if  transfer.total_r_difference == 0 %}
+                                        <small>
+                                            <img src="{% static 'assets/check.png' %}" width="30px">
+                                        </small>
+                                        {% else %}
+                                            <small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
+                                                <span class="text-light">{{ transfer.total_r_difference }}</span>
+                                            </small>
+                                        {% endif %}
+                                    {% else %}
+                                        {% if  transfer.total_r_difference == 0 %}
+                                        <small>
+                                            <img src="{% static 'assets/checkout.png' %}" width="30px">
+                                        </small>
+                                        {% else %}
+                                            <small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
+                                                <span class="text-light">{{ transfer.total_r_difference }}</span>
+                                            </small>
+                                        {% endif %}
+                                    {% endif %}
                             {% else %}
-                                {% if  transfer.total_r_difference == 0 %}
-                                <small>
-                                    <img src="{% static 'assets/checkout.png' %}" width="30px">
-                                </small>
-                                {% else %}
-                                    <small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
-                                        <span class="text-light">{{ transfer.total_r_difference }}</span>
+                                <i class='bx bxs-left-arrow-alt text-danger bx-md'></i>
+                                 {% if request.user.branch in transfer.transfer_to.all %}
+                                    {% if  transfer.total_r_difference == 0 %}
+                                    <small>
+                                        <img src="{% static 'assets/check.png' %}" width="30px">
                                     </small>
+                                    {% else %}
+                                        <small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
+                                            <span class="text-light">{{ transfer.total_r_difference }}</span>
+                                        </small>
+                                    {% endif %}
+                                {% else %}
+                                    {% if  transfer.total_r_difference == 0 %}
+                                    <small>
+                                        <img src="{% static 'assets/checkout.png' %}" width="30px">
+                                    </small>
+                                    {% else %}
+                                        <small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
+                                            <span class="text-light">{{ transfer.total_r_difference }}</span>
+                                        </small>
+                                    {% endif %}
                                 {% endif %}
                             {% endif %}
                         </td>
                         <td class="transfer-status">
                             <div class="d-flex align-items-center">
                                 {% if request.user.branch in transfer.transfer_to.all %}
-                                    <small class='d-flex justify-content-center align-items-center'>
-                                        <i class='bx bxs-right-arrow-alt text-success' style="font-size: 35px;"></i>
-                                        <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
-                                    </small>
-                                    {% else %}
-                                    <small>
-                                        <span class='d-flex justify-content-center align-items-center'>
-                                            <i class='bx bxs-left-arrow-alt' style="color: #dc3545eb; font-size: 35px;"></i>
-                                            <span class="ml-1">{{ transfer.time|date:"d/m/y H:i" }}</span>
+                                    <span>
+                                        {{ transfer.transfer_ref }}
+                                        <span>
+                                            <i class='bx bx-user'></i>
+                                            {{ transfer.user.username }}
                                         </span>
-                                    </small>
+                                        <br>
+                                        <span class="ml-1 text-muted">
+                                            <i class='bx bx-time'></i>
+                                            {{ transfer.time|date:"d/m/y H:i" }}
+                                        </span>
+                                    </span>
+                                    {% else %}
+                                    <span>
+                                        <span>
+                                            {{ transfer.transfer_ref }}
+                                         </span>
+                                        <span class="text-muted">
+                                            <i class='bx bx-user'></i>
+                                            {{ transfer.user.username }}
+                                        </span>
+                                        <br>
+                                        <span class="ml-1 text-muted">
+                                            <i class='bx bx-time'></i>
+                                            {{ transfer.time|date:"d/m/y H:i" }}
+                                        </span>
+                                    </span>
                                 {% endif %}
                             </div>
                         </td>
-                        <td class="transfer-quantity">
-                            <small class="d-flex justify-content-between">
-                                <span class="" style="width: 70px; display: block; position: relative;">
-                                    <span style="float: left;">{{ transfer.total_received_qnt }}</span>
-                                    <span>/</span>
-                                    <span style="float: right;">{{ transfer.total_quantity }}</span>
-                                </span>
-                                {% if not request.user.role == 'sales' %}
-                                    <span class="text-primary rounded" style="width: 140px; text-align: center;">
-                                        <span style="float: left;">${{ transfer.total_received_amount|floatformat:2 }}</span>
-                                        <span>/</span>
-                                        <span style="float: right;">${{ transfer.total_amount|floatformat:2 }}</span>
-                                    </span>
-                                {% endif %}
-                            </small>
+                        <td class="text-end">
+                            <span>
+                                <span>{{ transfer.total_received_qnt }}</span>
+                                <span>/</span>
+                                <span>{{ transfer.total_quantity }}</span>
+                            </span>
                         </td>
-                        <td class="transfer-user"><small>{{ transfer.user.username }}</small></td>
-                        <td class="transfer-reference"><small>{{ transfer.transfer_ref }}</small></td>
-                        <td class="transfer-description"><small>{{ transfer.description|default:"No description" }}</small></td>
-                        <td class="transfer-actions">
+                        <td class="transfer-quantity text-end">
+                            {% if not request.user.role == 'sales' %}
+                                <span>${{ transfer.total_amount|floatformat:2 }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="transfer-actions text-end">
                             <div class="btn-group">
                                 <a href="{% url 'inventory:print_transfer' transfer.id %}" class="btn border btn-sm">
                                     <i class='bx bx-printer'></i>
@@ -148,19 +182,8 @@
                     </tr>
                     <!-- Child Row -->
                     <tr class="child-rows d-none" data-parent-id="{{ transfer.id }}">
-                        <td colspan="6" class="p-0">
-                            <table class="table table-sm table-transfer table-hover table-striped child-table mb-0">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th class="transfer-none"></th>
-                                        <th class="transfer-status">Product Status</th>
-                                        <th class="transfer-quantity">Quantity Details</th>
-                                        <th class="transfer-user">Received By</th>
-                                        <th class="transfer-reference">From - To</th>
-                                        <th class="transfer-description">Description</th>
-                                        <th class="transfer-actions">Actions</th>
-                                    </tr>
-                                </thead>
+                        <td colspan="8" class="p-0">
+                            <table class="table table-transfer table-hover child-table mb-0">
                                 <tbody id="child-table-body"></tbody>
                             </table>
                         </td>
@@ -182,7 +205,7 @@
     </div>
     
     <div class="modal fade" id="itemsModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-fullscreen">
+        <div class="modal-dialog modal-fullscreen modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -195,18 +218,7 @@
                     </div> 
                     
                     <div class="mt-3 table-responsive">
-                        <table class="table table-hover table-stripped" id="table-child">
-                            <thead class="table-dark sticky-top">
-                                <th></th>
-                                <th>Product</th>
-                                <th>Product</th>
-                                <th>Total Cost</th>
-                                <th>Quantity</th>
-                                <th>Quanity Received</th>
-                                <th>Receieved_by</th>
-                                <th>Details</th>
-                                <th>Action</th>
-                            </thead>
+                        <table class="table table-hover table-striped" id="table-child">
                             <tbody class=""></tbody>
                         </table>
                     </div>
@@ -216,7 +228,7 @@
     </div>
 
     <div class="modal fade" id="ActionModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-sm">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -283,7 +295,7 @@
 
     <!-- receive quantity transfer _item modal -->
     <div class="modal fade" id="receiveModal" tabindex="-1" aria-labelledby="receiveModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="receiveModalLabel">Receive Inventory <span id="r_q"></span></h5>
@@ -381,6 +393,8 @@
     const receiveModal = new bootstrap.Modal(document.getElementById('receiveModal'));
     const editModal = new bootstrap.Modal(document.getElementById('editModal'));
 
+    const isReceivingBranch = null;
+
     rQuantity.textContent = total_quantity || 0;
 
     const showActionModal = (id, quantity) =>{
@@ -395,157 +409,19 @@
         editModal.show()
     }
 
-    // let page = 1;
-    // let loading = false;
-
-    // window.addEventListener('scroll', async () => {
-    //     if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 1000 && !loading) {
-    //         loading = true;
-    //         page++;
-
-    //         try {
-    //             const response = await fetch(`/inventory/transfers?page=${page}`, {
-    //                 headers: { 'x-requested-with': 'XMLHttpRequest' },
-    //             });
-                
-    //             const data = await response.json();
-    //             console.log(data)
-    //             if (data.transfers) {
-                    
-    //                 const transfers = data.transfers
-    //                 const tbody = document.querySelector('#transfers tbody'); 
-    //                 const userBranch = Number("{{ request.user.branch.id }}");
-    //                 const userRole = String({{request.user.branch.role}});
-
-    //                 const loader = document.querySelector('#loader');
-    //                 loader.style.display = 'block';
-
-    //                 console.log(transfers)
-                    
-    //                 transfers.forEach(transfer => {
-    //                     const row = document.createElement('tr');
-    //                     let branch = false;
-    //                     let change = transfer.transfer_to.includes({{request.user.branch.id}}) ? 'bg-success' : 'transfer-btn parent-row';
-    //                     row.dataset.id = transfer.id;
-                        
-
-    //                     if (Array.isArray(transfer.transfer_to) && transfer.transfer_to.includes(userBranch)) {
-    //                         branch = true;
-    //                     } else {
-    //                         branch = false;
-    //                     }
-    //                     row.innerHTML = `
-    //                     <tr class="change" data-id='${transfer.id}' onclick="showChild(this)">
-    //                         <td class="transfer-status" style="width: 50px;" data-id='${transfer.id}' onclick="showChild(this)">
-    //                             ${transfer.total_r_difference === 0 ? 
-    //                                 `<small><img src="{% static 'assets/check.png' %}" width="30px"></small>` : 
-    //                                 `<small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
-    //                                     <span class="text-light">${transfer.total_r_difference}</span>
-    //                                 </small>`}
-    //                         </td>
-    //                         <td class="transfer-status" data-id='${transfer.id}'>
-    //                             <div class="d-flex align-items-center">
-    //                                 <small class='d-flex justify-content-center align-items-center'>
-    //                                     <i class='bx bxs-${ branch ? 'right' : 'left'}-arrow-alt ${ branch  ? 'text-success' : ''}' style="font-size: 35px;"></i>
-    //                                     <span class="ml-1">${new Date(transfer.time).toLocaleString()}</span>
-    //                                 </small>
-    //                             </div>
-    //                         </td>
-    //                         <td class="transfer-quantity" data-id='${transfer.id}'>
-    //                             <small class="d-flex justify-content-between">
-    //                                 <span class="" style="width: 70px; display: block; position: relative;">
-    //                                     <span style="float: left;">${transfer.total_received_qnt}</span>
-    //                                     <span>/</span>
-    //                                     <span style="float: right;">${transfer.total_quantity}</span>
-    //                                 </span>
-    //                                 ${userRole !== 'sales' ? 
-    //                                     `<span class="text-primary rounded" style="width: 140px; text-align: center;">
-    //                                         <span style="float: left;">$${transfer.total_received_amount}</span>
-    //                                         <span>/</span>
-    //                                         <span style="float: right;">$${transfer.total_amount}</span>
-    //                                     </span>` : ''}
-    //                             </small>
-    //                         </td>
-    //                         <td class="transfer-user" data-id='${transfer.id}'><small>${transfer.username}</small></td>
-    //                         <td class="transfer-reference" data-id='${transfer.id}'><small>${transfer.transfer_ref}</small></td>
-    //                         <td class="transfer-description" data-id='${transfer.id}'><small>${transfer.description || "No description"}</small></td>
-    //                         <td class="transfer-actions" data-id='${transfer.id}'>
-    //                             <div class="btn-group">
-    //                                 <a href="" class="btn border btn-sm">
-    //                                     <i class='bx bx-printer'></i>
-    //                                 </a>
-    //                                 <button class="btn border mx-2 btn-outline-dark btn-sm">
-    //                                     <i class='bx bx-trash'></i>
-    //                                 </button>
-    //                                 <a href="" class="btn border btn-sm">
-    //                                     <i class='bx bx-plus'></i>
-    //                                 </a>
-    //                             </div>
-    //                         </td>
-    //                     </td>
-    //                     `;
-
-    //                     tbody.appendChild(row);
-                
-    //                     if (!data.has_next) {
-    //                         // Disable further requests if no more pages
-    //                         window.removeEventListener('scroll', arguments.callee);
-    //                     }
-    //                 });
-    //             }
-    //         } catch (error) {
-    //             console.error('Failed to fetch data:', error);
-    //         } finally {
-    //             loading = false;
-    //             // Hide loader after data is loaded
-    //             loader.style.display = 'none';
-    //         }
-    //     }
-    // });
-
-    // const showChild = (el) => {
-    //     const transferId = el.getAttribute('data-id');
-    //     const childRow = document.querySelector(`.child-rows[data-parent-id="${transferId}"]`);
-    //     const tbody = childRow.querySelector('tbody');
-    //     tableBody = tbody
-        
-    //     let tds = parentRow.getElementsByTagName('td');
-
-    //     // Loop through all <td> elements and apply the background color with !important
-    //     for (let td of tds) {
-    //         td.style.setProperty('background', '#5897fb59', 'important');
-    //     }
-
-
-    //     if (childRow.classList.contains('d-none')) {
-    //         tbody.innerHTML = `<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>`;
-    //         childRow.classList.remove('d-none');
-            
-    //         showFetch(transferId, tbody)
-    //     } else {
-    //         childRow.classList.toggle('d-none');
-    //         for (let td of tds) {
-    //         td.style.setProperty('background', '#fff', 'important');
-    //     }
-    //     }
-    // }
-
-
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.parent-row').forEach(parentRow => {
             parentRow.addEventListener('click', function () {
-                const transferId = this.getAttribute('data-id');
+                transferId = this.getAttribute('data-id');
                 const childRow = document.querySelector(`.child-rows[data-parent-id="${transferId}"]`);
                 const tbody = childRow.querySelector('tbody');
                 tableBody = tbody
                 
                 let tds = parentRow.getElementsByTagName('td');
 
-                // Loop through all <td> elements and apply the background color with !important
-                for (let td of tds) {
-                    td.style.setProperty('background', '#5897fb59', 'important');
-                }
-
+                // for (let td of tds) {
+                //     td.style.setProperty('background', '#5897fb59', 'important');
+                // }
 
                 if (childRow.classList.contains('d-none')) {
                     tbody.innerHTML = `<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>`;
@@ -569,7 +445,7 @@
                     <td stlye='width:50px'></td>
                     <td>${item.received_quantity}</td>
                     <td>${item.product__name}</td>
-                    <td>${(item.quantity * item.cost).toFixed(2)}</td>
+                    <td>${(item.quantity * item.cost)}</td>
                     <td>${item.quantity}</td>
                     <td>${item.received_by__username || 'Not received'}</td>
                     <td></td>
@@ -647,165 +523,135 @@
         receiveModal.show()
     }
 
-    const showFetch = (transfer_id, tbody) => {
-        const modal = document.getElementById('itemsModal');
-        // const tbody = modal.querySelector('tbody');
-        const loader = document.createElement('div');
-        transferId = transfer_id; 
+   const showFetch = (transfer_id, tbody) => {
+    const loader = document.createElement('div');
+    loader.className = 'spinner-border text-primary d-flex justify-content-center align-items-center';
+    loader.setAttribute('role', 'status');
+    loader.innerHTML = `<span class="visually-hidden">Loading...</span>`;
 
-        loader.className = 'spinner-border text-primary d-flex justify-content-center align-items-center';
-        loader.setAttribute('role', 'status');
-        loader.innerHTML = `<span class="visually-hidden">Loading...</span>`;
+    tbody.innerHTML = '';
+    tbody.appendChild(loader);
 
-        // itemModal.show();
-
-        tbody.innerHTML = '';
-        tbody.appendChild(loader);
-
-        fetch(`/inventory/transfer_items_data/${transferId}/`, {
-                method:'GET'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to fetch transfer items.');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log(data)
-                populateTable(data);
-            })
-            .catch(error => {
-                console.error(error);
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Failed to load data</td></tr>';
-            });
-
-            function populateTable(items) {
-                tbody.innerHTML = '';
-                
-                total_quantity = 0;
-                products_total_qauntity=0
-
-                products_total_cost=0
-                products_total_cost=0
-
-                // initialize total Quantiy with received quantity
-                items.forEach(item => {
-                    total_quantity += item.received_quantity;
-                    products_total_qauntity += item.quantity;
-
-                    total_cost += item.received_quantity * item.cost;
-                    products_total_cost += item.quantity * item.cost;
-                });
-
-                
-
-                rQuantity.textContent = total_quantity || 0;
-                tQuantity.textContent = products_total_qauntity || 0;
-
-                rCost.textContent = total_cost.toFixed(2) || 0;
-                tCost.textContent = (products_total_cost).toFixed(2) || 0;
-
-                items.forEach((item, index) => {
-                    const isQuantityMatch = item.received_quantity === item.quantity;
-                    const isUserBranch = item.to_branch__name === '{{ request.user.branch }}';
-                    const isReceived = item.received
-                    
-
-                    const badgeClass = isQuantityMatch ? 'bg-success' : 'bg-danger';
-                    const receivedContent = isQuantityMatch || !isUserBranch || isReceived
-                        ? `<small>${item.received_quantity || 0}</small>`
-                        : `
-                            <small>${item.received_quantity || 0 }</small>
-                        `;
-                    
-                    const isQuantityReceiveMatch = item.received_quantity < item.quantity;
-                    const actionContent = renderActionButton(item, "{{ request.user.branch }}");
-
-                    const isReceivedBackQuantity = item.received_back_quantity > 0;
-                    let iconContent = isReceivedBackQuantity 
-                        ? `<i class='bx bx-transfer mx-1'></i>`
-                        : ``;
-
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td stlye='width:50px'></td>
-                        <td><small>${iconContent} ${item.product__name} [${(item.quantity * item.cost).toFixed(2)}]</small></td>
-                        <td class="border p-1 rounded text-center" >${receivedContent}<small>/${item.quantity}</small></td>
-                        <td><small>${item.received_by__username || 'Not received'}</small></td>
-                        <td><small>${item.from_branch__name} - ${item.to_branch__name}</small><//td>
-                        <td colspan=''><small id='item_${item.id}'>${item.description || 'No details'}</small></td>
-                        <td><small>${actionContent}</small></td>
-                    `;
-
-                    tbody.appendChild(row);
-
-                    const input = row.querySelector('.clearable-input');
-                    if (input) {
-                        input.addEventListener('dblclick', () => {
-                            if (input.disabled) {
-                                input.disabled = false; 
-                            } else {
-                                input.value = ''; 
-                            }
-                        });
-
-                        input.addEventListener('keypress', (event) => {
-                            if (event.key === 'Enter') {
-                                event.preventDefault();
-                                submitReceivedQuantity(input, index);
-                            }
-                        });
-                    }
-                });
-            }
-    }
-
-    const renderActionButton = (item, userBranch) => {
-        const isReceivingBranch = item.from_branch__name !== userBranch;
-
-        const isFullyReceived = item.quantity === item.received_quantity;
+    fetch(`/inventory/transfer_items_data/${transfer_id}/`, { method: 'GET' })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to fetch transfer items.');
+            return response.json();
+        })
+        .then(data => populateTable(data))
+        .catch(error => {
+            console.error(error);
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-danger">Failed to load data</td>
+                </tr>`;
+        });
+function populateTable(items) {
+    tbody.innerHTML = '';
+    console.log('data', items);
+    
+    const userBranch = "{{ request.user.branch.name }}"; 
+    
+    const productGroups = {};
+    
+    items.forEach(item => {
+        const product = item.product__name || 'Unknown Product';
+        const cost = item.cost || 0;
         
-        if (!isReceivingBranch && !item.received) {
-            return  `
-                <button type="button"
-                    class="btn btn-primary btn-sm"
-                    id="edit-modal-${item.id}"
-                    onclick="showEditModal(${item.id}, ${item.quantity})"
-                >
-                    Edit
-                </button>
-            `;;
+        const productKey = `${product}_${cost}`;
+        
+        if (!productGroups[productKey]) {
+            productGroups[productKey] = {
+                product: product,
+                cost: cost,
+                date: item.date || '',
+                sent_by: item.from_branch__name || '',
+                branches: []
+            };
         }
         
-        // If fully received, only show status
-        if (isFullyReceived) {
-            return `<span class="badge bg-success">Fully Received</span>`;
-        }
+        productGroups[productKey].branches.push(item);
+    });
+    
+    Object.keys(productGroups).forEach(productKey => {
+        const group = productGroups[productKey];
+        const branches = group.branches;
         
-        // If not received at all
-        if (!item.received) {
-            return `
-                <button type="button" 
-                        class="btn btn-primary btn-sm" 
-                        id="receive-btn-${item.id}" 
-                        onclick="showReceive(${item.id}, '${item.product__name}', ${item.quantity})">
-                    Receive Inventory
-                </button>
-            `;
-        }
+        branches.forEach(branch => {
+            branch.defects = branch.received ? branch.quantity - branch.received_quantity : 0;
+            branch.pending = branch.received ? 0 : branch.quantity;
+        });
         
-        // If partially received, show action button
-        return `
-            <button type="button"
-                    class="btn btn-primary btn-sm"
-                    id="action-modal-${item.id}"
-                    onclick="showActionModal(${item.id}, ${item.quantity})">
-                Action
-            </button>
+        const productRow = document.createElement('tr');
+        productRow.classList.add('border-top');
+        productRow.innerHTML = `
+            <td rowspan="${branches.length}" class="align-middle fw-semibold bg-light">
+                <div class="mb-1">${group.product} — $${group.cost}</div>
+                <div class="text-muted small">Date: ${new Date(group.date).toLocaleDateString()}</div>
+                <div class="text-muted small">Sent by: ${group.sent_by}</div>
+            </td>
         `;
-    };
-
+        
+        const firstBranch = branches[0];
+        const totalCost = firstBranch.cost * firstBranch.quantity || 0;
+        
+        let actionButton = '';
+        if (firstBranch.from_branch__name === userBranch) {
+            actionButton = `<button class="btn btn-sm btn-warning" onclick="showEditModal(${firstBranch.id}, ${firstBranch.quantity})">Edit</button>`;
+        } else if (firstBranch.to_branch__name === userBranch) {
+            if (firstBranch.received) {
+                actionButton = `<button class="btn btn-sm btn-info" onclick="showActionModal(${firstBranch.id}, ${firstBranch.quantity})">Action</button>`;
+            } else {
+                actionButton = `<button class="btn btn-sm btn-success" onclick="showReceive(${firstBranch.id}, '${firstBranch.product__name}', ${firstBranch.quantity})">Receive</button>`;
+            }
+        } else {
+            actionButton = `<button class="btn btn-sm btn-secondary" disabled>N/A</button>`;
+        }
+        
+        productRow.innerHTML += `
+            <td>${firstBranch.to_branch__name || 'Unknown Branch'}</td>
+            <td>
+                <span class="text-success fw-semibold">${firstBranch.received_quantity}/${firstBranch.quantity}</span>
+                ${firstBranch.defects > 0 ? `<span class="text-danger ms-2">(${firstBranch.defects} not received)</span>` : ''}
+            </td>
+            <td>${firstBranch.received_by__username || 'N/A'}</td>
+            <td class="fw-semibold">$${totalCost}</td>
+            <td>${actionButton}</td>
+        `;
+        tbody.appendChild(productRow);
+        
+        for (let i = 1; i < branches.length; i++) {
+            const branchItem = branches[i];
+            const totalCost = branchItem.cost * branchItem.quantity || 0;
+            
+            let branchActionButton = '';
+            if (branchItem.from_branch__name === userBranch) {
+                branchActionButton = `<button class="btn btn-sm btn-warning" onclick="showEditModal(${branchItem.id}, ${branchItem.quantity})">Edit</button>`;
+            } else if (branchItem.to_branch__name === userBranch) {
+                if (branchItem.received) {
+                    branchActionButton = `<button class="btn btn-sm btn-info" onclick="showActionModal(${branchItem.id}, ${branchItem.quantity})">Action</button>`;
+                } else {
+                    branchActionButton = `<button class="btn btn-sm btn-success" onclick="showReceive(${branchItem.id}, '${branchItem.product__name}', ${branchItem.quantity})">Receive</button>`;
+                }
+            } else {
+                branchActionButton = `<button class="btn btn-sm btn-secondary" disabled>N/A</button>`;
+            }
+            
+            const branchRow = document.createElement('tr');
+            branchRow.innerHTML = `
+                <td>${branchItem.to_branch__name || 'Unknown Branch'}</td>
+                <td>
+                    <span class="text-success fw-semibold">${branchItem.received_quantity}/${branchItem.quantity}</span>
+                    ${branchItem.defects > 0 ? `<span class="text-danger ms-2">(${branchItem.defects} not received)</span>` : ''}
+                </td>
+                <td>${branchItem.received_by__username || 'N/A'}</td>
+                <td class="fw-semibold">$${totalCost}</td>
+                <td>${branchActionButton}</td>
+            `;
+            tbody.appendChild(branchRow);
+        }
+    });
+}
+};
 
     function submitReceivedQuantity() {
         const itemId = document.getElementById('item_id').value;

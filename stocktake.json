@@ -1,0 +1,10 @@
+[
+  {
+    "product": "Allison car charger",
+    "actual": 17,
+    "expected": 15,
+    "loss_qty": -2,
+    "loss_value": -6.00
+  }
+]
+ 

@@ -362,17 +362,45 @@
 </div>
 
 <script>
-    let stocktakeItemId = '';
-    const acceptBtn = document.querySelectorAll('#accept-btn');
+    function initializeSlimSelect() {
+        if (typeof SlimSelect !== 'undefined') {
+            new SlimSelect({
+                select: '#assigned_to',
+                placeholder: 'Select an employee',
+                allowDeselect: true,
+                deselectLabel: '<span class="text-danger">✖</span>'
+            });
+        } else {
+            setTimeout(initializeSlimSelect, 100);
+        }
+    }
+
+    document.getElementById("stocktake-search").addEventListener("keyup", function () {
+        const input = this.value.toLowerCase();
+        const rows = document.querySelectorAll("#stocktake_table tbody tr");
+
+        rows.forEach(function (row) {
+            console.log('row', row)
+            const text = row.textContent.toLowerCase();
+            if (text.includes(input)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    });
+
+    // Initialize when DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeSlimSelect();
+    })
+        
+        let stocktakeItemId = '';
+        const acceptBtn = document.querySelectorAll('#accept-btn');
     const acceptModal = new bootstrap.Modal(document.getElementById('acceptModal'));
     const selectedOptions = Array.from(document.querySelector('#assignToEmployee').selectedOptions).map(opt => opt.value);
     const filterButton = document.getElementById('filter')
     const filterModal = new bootstrap.Modal(document.getElementById('filterModal'))
-
-    new SlimSelect({
-        select: '#assignToEmployee',
-        placeholder: 'Select Employee'
-    })
 
     document.addEventListener("DOMContentLoaded", function () {
         const diagramContainer = document.querySelector('.col-12');
@@ -732,7 +760,6 @@ function adjustStocktake() {
         window.print();
 
         document.body.innerHTML = originalContent;
-        location.reload();
     }
 
     function handleQuantityChange(newQuantity, systemQty, cost, productId, stocktakeId) {

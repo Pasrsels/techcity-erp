@@ -26,7 +26,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = "django-insecure-rb&d1ur&gv!uedx9&nym9zthkk(32-kdvh1x_b0+c+&^hny!o9"
 
 DEBUG = True
-ALLOWED_HOSTS = ["192.168.1.242", '192.168.1.2']
+ALLOWED_HOSTS = []
 # Application definition
 
 DJANGO_APPS = [
@@ -133,8 +133,7 @@ TEMPLATES = [
                 # "settings.context_processors.tax_method",
                 
                 #users
-                "users.context_processor.users",
-                "users.context_processor.branches",
+                "users.context_processor.users"
             ],
         },
     },
@@ -365,6 +364,7 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+
 # Logging
 LOGGING = {
     'version': 1,
@@ -382,12 +382,5 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
-    },
-}
-
-CELERY_BEAT_SCHEDULE = {
-    'run-scheduled-db-backup-every-minute': {
-        'task': 'settings.tasks.run_scheduled_db_backup',
-        'schedule': crontab(),  
     },
 }

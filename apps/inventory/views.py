@@ -4345,11 +4345,11 @@ def undo_accept_stocktake_item(request):
         adjustment_log = ActivityLog.objects.filter(stocktake=stocktake_item.stocktake, inventory=stocktake_item.product).order_by('-id').first()
         product = Inventory.objects.get(id=stocktake_item.product.id)
         
-        logger.info(f'adjustment: {adjustment_log}:{product}')
+        logger.info(f'adjustment: {adjustment_log}:{product}, quantity {adjustment_log.quantity}')
         
         with transaction.atomic():
             if adjustment_log:
-                if adjustment_log.quantity > 0:
+                if adjustment_log.quantity < 0:
                     product.quantity += abs(adjustment_log.quantity)
                     logger.info(f'added')
                 else:
@@ -4383,7 +4383,7 @@ def undo_accept_stocktake_item(request):
                 stocktake=stocktake_item.stocktake,
                 action='Stocktake adjustments',
                 inventory=stocktake_item.product,
-                quantity= 0,
+                quantity= abs(adjustment_log.quantity),
                 total_quantity= stocktake_item.product.quantity,
                 description=f'Stock adjustment(undo): #{stocktake_item.stocktake.id}'
             )

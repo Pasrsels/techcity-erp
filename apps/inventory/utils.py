@@ -82,17 +82,13 @@ def process_stocktake_item_util(stocktake_item, physical_quantity):
     logger.info(f"Processing stocktake item: {stocktake_item.id} with physical_quantity: {physical_quantity}")
     product = stocktake_item.product
 
-    expected_quantity = stocktake_item.now_quantity + stocktake_item.received_quantity - stocktake_item.sold_quantity - stocktake_item.transfer_quantity - stocktake_item.transfer_quantity
+    expected_quantity = int(physical_quantity) - (stocktake_item.now_quantity + stocktake_item.received_quantity - stocktake_item.sold_quantity + stocktake_item.transfer_quantity) 
+    print(stocktake_item.now_quantity, stocktake_item.transfer_quantity, stocktake_item.sold_quantity, physical_quantity)
 
-    logger.info(f"Expected quantity: {expected_quantity}")
-
-    phy_quantity = int(physical_quantity)
-    difference = phy_quantity - expected_quantity
-    logger.info(f"Physical quantity: {phy_quantity}, Difference: {difference}")
-
-    stocktake_item.quantity = phy_quantity
-    stocktake_item.quantity_difference = difference
-    stocktake_item.cost = product.cost * difference
+ 
+    stocktake_item.quantity = int(physical_quantity)
+    stocktake_item.quantity_difference = expected_quantity
+    stocktake_item.cost = product.cost * expected_quantity
 
     stocktake_item.recorded = True
     stocktake_item.stocktake.save()
@@ -100,11 +96,11 @@ def process_stocktake_item_util(stocktake_item, physical_quantity):
 
     logger.info(
         f"Stocktake item updated: id={stocktake_item.id}, "
-        f"difference={difference}, expected_quantity={expected_quantity},"
+        f"difference={expected_quantity}, expected_quantity={expected_quantity},"
     )
 
     return {
         'item_id': stocktake_item.id,
-        'difference': difference,
+        'difference': expected_quantity,
         'expected_quantity': expected_quantity,
     }
