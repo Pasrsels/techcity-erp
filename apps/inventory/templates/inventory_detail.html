@@ -3,74 +3,471 @@
 {% load custom_filters %}
 {% block title%} Inventory detail {% endblock%}
 {% block content %}
+
 <style>
 :root {
     --primary: #11998e;
-    --primary-no-gradient: #11998e;
-    --primary-dark: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-    --secondary: orange;
-    --accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    --warning: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
-    --danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-    --dark: #1a1a2e;
-    --dark-alt: #16213e;
-    --text-light: rgba(228, 230, 234, 1);
-    --text-dark: black;
-    --text-muted: black;
-    --glass: rgba(255, 255, 255, 0.1);
-    --glass-border: rgba(255, 255, 255, 0.2);
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 8px 6px rgba(0, 0, 0, 0.12);
-    --border-radius: 12px;
-    --border-radius-sm: 8px;
+    --primary-light: #38ef7d;
+    --primary-dark: #0d6b61;
+    --primary-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --text-dark: #2c3e50;
+    --text-secondary: #718096;
+    --text-muted: #a0aec0;
+    --bg-light: #f8f9fa;
+    --white: #ffffff;
+    --border: #e2e8f0;
+    --shadow: 0 2px 8px rgba(17, 153, 142, 0.08);
+    --shadow-md: 0 4px 12px rgba(17, 153, 142, 0.12);
+    --shadow-lg: 0 8px 24px rgba(17, 153, 142, 0.15);
+    --shadow-hover: 0 6px 20px rgba(17, 153, 142, 0.2);
+    --border-radius: 16px;
+    --border-radius-sm: 10px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --m-bottom: 20px;
 }
 
- .search-container {
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-light);
+    color: var(--text-dark);
+}
+
+.inventory {
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.inventory-navbar .card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: none;
+    transition: var(--transition);
+    margin-bottom: 1.5rem;
+}
+
+.inventory-navbar .card:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.inventory-navbar h5 {
+    font-weight: 700;
+    font-size: 1.75rem;
+    color: var(--text-dark);
+    margin-bottom: 0.25rem;
+}
+
+.inventory-navbar p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.recent-nav {
+    background: transparent;
+    padding: 0;
+}
+
+.recent-nav .nav-item {
+    padding: 0.75rem 1.5rem;
+    margin: 0 0.25rem;
+    cursor: pointer;
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: var(--transition);
     position: relative;
-    margin-bottom: 5px;
+}
+
+.recent-nav .nav-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 3px;
+    background: var(--primary);
+    transition: var(--transition);
+    border-radius: 2px;
+}
+
+.recent-nav .nav-item:hover {
+    color: var(--primary);
+    background: rgba(17, 153, 142, 0.08);
+}
+
+.recent-nav .nav-item.active {
+    color: var(--primary);
+    background: rgba(17, 153, 142, 0.12);
+    font-weight: 600;
+}
+
+.recent-nav .nav-item.active::after {
+    width: 80%;
+}
+
+.stats-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border);
+}
+
+.stats-card .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.stats-card .stat-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: black;
+    margin: 0;
+}
+
+.stats-card .stat-value {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--primary);
+    padding: 0.5rem 1rem;
+    background: rgba(17, 153, 142, 0.08);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid rgba(17, 153, 142, 0.2);
+}
+
+.btn-outline-light {
+    border: 1px solid var(--border);
+    color: var(--text-dark);
+    background: white;
+    font-weight: 500;
+    padding: 0.625rem 1.5rem;
+    border-radius: var(--border-radius-sm);
+    transition: var(--transition);
+}
+
+.btn-outline-light:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.search-container {
+    position: relative;
+    margin-bottom: 1rem;
 }
 
 .search-input {
     width: 100%;
-    padding: 15px 50px 15px 20px;
-    border-radius: var(--border-radius);
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
+    padding: 1rem 3rem 1rem 2rem;
+    border-radius: var(--border-radius-sm);
+    background: white;
+    border: 1px solid var(--border);
     color: var(--text-dark);
-    font-size: 16px;
+    font-size: 1rem;
     transition: var(--transition);
+    box-shadow: var(--shadow);
 }
 
 .search-input:focus {
     outline: none;
-    border-color: rgba(102, 126, 234, 0.5);
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
 }
 
 .search-input::placeholder {
-    color: var(--text-dark);
+    color: var(--text-muted);
 }
 
 .search-icon {
     position: absolute;
-    right: 15px;
+    right: 1.25rem;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--text-dark);
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+}
+
+/* Table */
+.table-wrapper {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
 }
 
 .table-responsive {
-    overflow-x: auto;
+    max-height: 600px;
+    overflow-y: auto;
 }
-[x-cloak]{
-    display: none;
+
+.table {
+    margin-bottom: 0;
+    width: 100%;
+}
+
+.table thead {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table thead th {
+    padding: 1rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--primary);
+    color: var(--text-dark);
+    white-space: nowrap;
+}
+
+.table tbody tr {
+    transition: var(--transition);
+    border-bottom: 1px solid var(--border);
+}
+
+.table tbody tr:hover {
+    background: rgba(17, 153, 142, 0.05);
+}
+
+.table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    color: var(--text-dark);
+}
+
+.table tbody td small {
+    font-size: 0.875rem;
+}
+
+.fw-bold {
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.text-danger {
+    color: #dc3545 !important;
+    font-weight: 600;
+}
+
+.text-success {
+    color: var(--primary) !important;
+    font-weight: 600;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+#invoice, #transfer {
+    cursor: pointer;
+    transition: var(--transition);
+    padding: 0.5rem;
+    border-radius: var(--border-radius-sm);
+}
+
+#invoice:hover, #transfer:hover {
+    background: rgba(17, 153, 142, 0.1);
+    color: var(--primary);
+}
+
+.modal-content {
+    border-radius: var(--border-radius);
+    border: none;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-title {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 1.5rem;
+    margin: 0;
+    font-weight: 700;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-body p {
+    margin-bottom: 1rem;
+    color: var(--text-dark);
+}
+
+.modal-body a {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.modal-body a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.stock-account {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+}
+
+.stock-account h5 {
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 1.5rem;
+}
+
+.inventory-chart {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 2rem;
+}
+
+.hidden {
+    display: none !important;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+.bxs-down-arrow, .bxs-up-arrow {
+    font-size: 1rem;
+}
+
+@media (min-width: 1920px) {
+    .container-fluid {
+        padding: 2rem;
+        max-width: 2400px;
+        margin: 0 auto;
+    }
+    
+    .inventory-navbar h5 {
+        font-size: 2rem;
+    }
+    
+    .inventory-navbar p {
+        font-size: 1rem;
+    }
+    
+    .recent-nav .nav-item {
+        padding: 1rem 2rem;
+        font-size: 1.125rem;
+    }
+    
+    .stats-card {
+        padding: 2rem;
+    }
+    
+    .stats-card .stat-label {
+        font-size: 1rem;
+    }
+    
+    .stats-card .stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .table thead th {
+        padding: 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .table tbody td {
+        padding: 1.25rem 1.5rem;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 991px) {
+    .inventory-navbar .card-body {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .recent-nav {
+        width: 100%;
+        margin-top: 1rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .stats-card {
+        padding: 1rem;
+    }
+    
+    .stats-card .d-flex {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .btn-outline-light {
+        width: 100%;
+    }
+    
+    .table thead th {
+        font-size: 0.75rem;
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .table tbody td {
+        font-size: 0.8125rem;
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .inventory-navbar h5 {
+        font-size: 1.25rem;
+    }
+    
+    .recent-nav .nav-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .stats-card .stat-label {
+        font-size: 0.75rem;
+    }
+    
+    .stats-card .stat-value {
+        font-size: 0.9375rem;
+    }
+    
+    .table thead th {
+        font-size: 0.6875rem;
+        padding: 0.5rem 0.375rem;
+    }
+    
+    .table tbody td {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.375rem;
+    }
 }
 </style>
+
 <script src="https://unpkg.com/alpinejs" defer></script>
-<div class="inventory"
+<div class="container-fluid inventory"
     x-data="{
         open:false,
         download(type) {
@@ -95,73 +492,80 @@
             printArea.classList.add('m-2')
             let originalContent = document.body.innerHTML;
 
-            // Replace the body content with the selected print area
             document.body.innerHTML = printArea.outerHTML;
-
-            // Trigger the print dialog
             window.print();
 
-            // Restore the original content after printing
             setTimeout(() => {
                 document.body.innerHTML = originalContent;
             }, 1000);
-        
         }
-        
-    }"
-    >
-    <div class="inventory-navbar mb-3">
-        <nav class="d-flex justify-content-between align-items-center rounded p-2">
-            <div class="d-flex">
+    }">
+    
+    <!-- Header -->
+    <div class="inventory-navbar">
+        <div class="card">
+            <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
                     <h5>{{ inventory.name | capfirst }}</h5>
-                    <p>View product detail</p>
+                    <p>View product details and activity</p>
+                </div>
+                <nav class='recent-nav navbar navbar-expand-lg navbar-light'>
+                    <ul class='navbar-nav'>
+                        <li class='nav-item active' data-name="atable">Activity Table</li>
+                        <li class='nav-item' data-name="charts">Activity Chart</li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Card -->
+    <div class="stats-card">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div class="d-flex gap-4 flex-wrap">
+                <div class="stat-item">
+                    <div class="stat-label">Cost Value:</div>
+                    {% for value in inventory_value %}
+                        <span class="stat-value">{{ value.name }} {{ value.value|floatformat:2 }}</span>
+                    {% endfor %}
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Sold Value:</div>
+                    {% for value in inventory_sold_value %}
+                        <span class="stat-value">{{ value.name }} {{ value.value|floatformat:2 }}</span>
+                    {% endfor %}
                 </div>
             </div>
-            <nav class='recent-nav navbar navbar-expand-lg navbar-light rounded px-2'>
-                <ul class='navbar-nav items  mr-auto'>
-                    <li class='nav-item active' data-name="atable">Activity table</li>
-                    <li class='nav-item px-2' data-name="charts">Activity chart</li>
-                </ul>
-            </nav>
-        </nav>
-    </div>
-    <div class="d-flex justify-content-between text-light align-items-center p-2" style="background: var(--primary);">
-        <div class="d-flex">
-            <div class="p-1">Cost value:  
-                {% for value in inventory_value %}
-                    <span class="mx-2">{{ value.name }} {{ value.value|floatformat:2 }}</span>
-                {% endfor %}
-            </div>
-            <div class="mx-2 p-1">Sold value: 
-                {% for value in inventory_sold_value %}
-                    <span class="mx-1">{{ value.name }} {{ value.value|floatformat:2 }}</span>
-                {% endfor %}
+            <div class="d-flex gap-2 mt-3 mt-md-0">
+                <button 
+                    class="btn btn-outline-light" 
+                    @click="open =!open"
+                    x-text="open ? 'Logs' : 'Stock Account'">
+                    Stock Account
+                </button>
+                <button 
+                    class="btn btn-outline-light" 
+                    @click="download(!open ? 'logs' : 'account')">
+                    <i class="bx bx-printer"></i>
+                </button>
             </div>
         </div>
-        <div>
-            <button 
-                class="btn btn-outline-light" 
-                @click="open =!open"
-                x-text="open ? 'Logs' : 'Stock Account'">
-            >
-                Stock Account
-            </button>
-            <button 
-                class="btn btn-outline-light bx bx-printer bx-sm" 
-                @click="download(!open ? 'logs' : 'account')">
-            </button>
+    </div>
+    
+    <!-- Search -->
+    <div x-show="!open">
+        <div class="search-container">
+            <input type="text" id="search-input" class="search-input" placeholder="Search logs..." oninput="searchTable()">
+            <i class="bx bx-search search-icon"></i>
         </div>
     </div>
-    <div class="d-flex justify-content-between align-items-center mb-1 mt-1">
-    </div>
-        <div x-show="!open">
-            <input type="text" id="search-input" class=" search-input border rounded" placeholder="Search logs..." oninput="searchTable()">
-        </div>
-    <div>
-        <div class="table-detail mt-2 w-100 atable table-responsive" x-show="!open" x-transition>
-                <table class='table rounded table-borderless table-hover display p-2 table-responsive' style="width:100%" id='detailTable'>
-                    <thead style="background: var(--primary);">
+    
+    <!-- Activity Table -->
+    <div x-show="!open" x-transition>
+        <div class="table-wrapper atable">
+            <div class="table-responsive">
+                <table class='table table-hover' id='detailTable'>
+                    <thead>
                         <tr>
                             <th>#</th>
                             <th>Date</th>
@@ -178,7 +582,7 @@
                             <tr>
                                 <td><small>{{ forloop.counter }}</small></td>
                                 <td><small>{{ log.timestamp }}</small></td>
-                                <td data-id="{{log.invoice.id}}" id="invoice" style="cursor:pointer;">
+                                <td data-id="{{log.invoice.id}}" id="invoice">
                                     <small>
                                         {{ log.invoice.invoice_number }}
                                         {{ log.product_transfer.transfer.transfer_ref }}
@@ -197,11 +601,11 @@
                                 <td><small>{{ log.selling_price }}</small></td>
                                 <td><small>{{ log.dealer_price }}</small></td>
                                 <td>
-                                    <small class="d-flex justify-content-between">
-                                        {% if log.quantity < 0  and not log.action == 'sale return'%}
+                                    <small class="d-flex justify-content-between align-items-center">
+                                        {% if log.quantity < 0 and not log.action == 'sale return'%}
                                             <span class='text-danger'>{{log.quantity}}</span>
                                             <i class='bx bxs-down-arrow text-danger'></i>
-                                        {% elif log.quantity < 0  and log.action == 'sale return' %}
+                                        {% elif log.quantity < 0 and log.action == 'sale return' %}
                                             <span class='text-success'>{{log.quantity}}</span>
                                             <i class='bx bxs-up-arrow text-success'></i>
                                         {% else %}
@@ -215,83 +619,89 @@
                             </tr>
                         {% endfor %}
                     </tbody>
-                </table>  
-            <div class="modal fade" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                            <h5 class="modal-title fw-bold p-2" id="invoiceModalLabel">Invoice Details</h5>
-                        <div class="modal-body" id="invoiceDetails"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="modal fade" id="transferModal" tabindex="-1" aria-labelledby="transferModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <h5 class="modal-title fw-bold p-2" id="transferModalLabel">Transfer Details</h5>
-                        <div class="modal-body" id="transferDetails"></div>
-                    </div>
-                </div>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- stock account -->
-    <div x-show="open" x-transition class="mt-1">
-        <h5>Stock Account</h5>
-        <div class="table-responsive stock-account">
-            <table class="table table-borderless table-hover" >
-                <thead style="background: var(--primary);">
-                    <tr>
-                        <th>#</th>
-                        <th>Timestamp</th>
-                        <th>Description</th>
-                        <th>Quantity</th>
-                        <th>Debits</th>
-                        <th>Credits</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if stock_account_data %}
-                        {% for entry in stock_account_data %}
-                            <tr>
-                                <td><small>{{ forloop.counter }}</small></td>
-                                <td><small>{{ entry.timestamp }}</small></td>
-                                <td><small>{{ entry.description }}</small></td>
-                                <td><small>{{ entry.quantity }}</small></td>
-                                {% if entry.type == 'debits' %}
-                                    <td><small>{{ entry.cost|floatformat:2 }}</small></td>
-                                    <td></td>
-                                {% else %}
-                                    <td></td>
-                                    <td><small>{{ entry.cost|floatformat:2 }}</small></td>
-                                {% endif %}
-                            </tr>
-                        {% endfor %}
-                        
-                        <!-- Totals Row -->
-                        <tr class="fw-bold">
-                            <td class="text-start">Totals</td>
-                            <td colspan="2" ></td>
-                            <td><small>{{ remaining_stock_quantity }}</small></td>
-                            <td><small>{{ total_debits|floatformat:2 }}</small></td>
-                            <td><small>{{ total_credits|floatformat:2 }}</small></td>
-                        </tr>
-                    {% else %}
+    <!-- Stock Account -->
+    <div x-show="open" x-transition>
+        <div class="stock-account">
+            <h5>Stock Account</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
                         <tr>
-                            <td colspan="5" class="text-center">No stock account data available.</td>
+                            <th>#</th>
+                            <th>Timestamp</th>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Debits</th>
+                            <th>Credits</th>
                         </tr>
-                    {% endif %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {% if stock_account_data %}
+                            {% for entry in stock_account_data %}
+                                <tr>
+                                    <td><small>{{ forloop.counter }}</small></td>
+                                    <td><small>{{ entry.timestamp }}</small></td>
+                                    <td><small>{{ entry.description }}</small></td>
+                                    <td><small>{{ entry.quantity }}</small></td>
+                                    {% if entry.type == 'debits' %}
+                                        <td><small>{{ entry.cost|floatformat:2 }}</small></td>
+                                        <td></td>
+                                    {% else %}
+                                        <td></td>
+                                        <td><small>{{ entry.cost|floatformat:2 }}</small></td>
+                                    {% endif %}
+                                </tr>
+                            {% endfor %}
+                            
+                            <tr class="fw-bold">
+                                <td>Totals</td>
+                                <td colspan="2"></td>
+                                <td><small>{{ remaining_stock_quantity }}</small></td>
+                                <td><small>{{ total_debits|floatformat:2 }}</small></td>
+                                <td><small>{{ total_credits|floatformat:2 }}</small></td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">No stock account data available.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- chart -->
-    <div class="inventory-chart hidden text-center charts" style='width: 100vh; height: 100vh;'>
+    <!-- Chart -->
+    <div class="inventory-chart hidden charts">
         <canvas id="inventoryChart"></canvas>
     </div>
 </div>
+
+<!-- Invoice Modal -->
+<div class="modal fade" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <h5 class="modal-title" id="invoiceModalLabel">Invoice Details</h5>
+            <div class="modal-body" id="invoiceDetails"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Transfer Modal -->
+<div class="modal fade" id="transferModal" tabindex="-1" aria-labelledby="transferModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <h5 class="modal-title" id="transferModalLabel">Transfer Details</h5>
+            <div class="modal-body" id="transferDetails"></div>
+        </div>
+    </div>
+</div>
+
 <script>    
     const chart = $('.charts')
     const table = $('.atable')
@@ -302,57 +712,17 @@
     const transferModal = new bootstrap.Modal(document.getElementById('transferModal'));
     const transferDetails = document.getElementById('transferDetails');
 
-    // download function for the accounts and the logs 
-    const download = (type) =>{
-        let url = ''
-        if(type='logs'){
-            url = `?=logs${true}`
-        }else{
-            url = `?accounts=${true}`
-        }
-
-        Swal.fire({
-            title: 'Processing...',
-            text: 'Your download is being prepared.',
-            imageUrl: 'https://i.imgur.com/2ZduIl8.gif',  
-            imageWidth: 50,
-            imageHeight: 50,
-            showConfirmButton: false,
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        setTimeout(() => {
-            // Hide processing Swal and show success Swal
-            Swal.fire({
-                title: 'Download Complete!',
-                text: `Your ${type} file has been downloaded successfully.`,
-                icon: 'success',
-                confirmButtonText: 'Close'
-            });
-
-            window.location.href = url;
-
-        }, 2000);  
-    }
-
-    // search functionality of the table -> js
     const searchTable = () => {
-      const input = document.getElementById('search-input');
-      const filter = input.value.toLowerCase();
-      const table = document.getElementById('cart-table');
-      const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        const input = document.getElementById('search-input');
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('detailTable');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
     
-
-    //   search table
-      for (let i = 0; i < rows.length; i++) {
+        for (let i = 0; i < rows.length; i++) {
             const cells = rows[i].getElementsByTagName('td');
             let found = false;
 
-            // Check each cell in the row
-            for (let j = 2; j < cells.length; j++) {
+            for (let j = 1; j < cells.length; j++) {
                 const cell = cells[j];
                 if (cell) {
                     const txtValue = cell.textContent || cell.innerText;
@@ -363,13 +733,9 @@
                 }
             }
 
-            if (found) {
-                rows[i].style.display = "";
-            } else {
-                rows[i].style.display = "none";
-            }
+            rows[i].style.display = found ? "" : "none";
         }
-      }
+    }
 
     const salesData = {{ sales_data|safe }}; 
     const stockInData = {{ stock_in_data|safe }};
@@ -378,58 +744,55 @@
     const inventoryChart = new Chart(ctx, {
         type: 'line', 
         data: {
-        labels: {{ labels|safe }}, 
-        datasets: [
-            {
-            label: 'Sales',
-            data: salesData,
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            borderWidth: 1
-            },
-            {
-            label: 'Stock-Ins',
-            data: stockInData,
-            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-            },
-            {
-            label: 'Transfers',
-            data: transferData,
-            backgroundColor: 'rgba(255, 206, 86, 0.2)',
-            borderColor: 'rgba(255, 206, 86, 1)',
-            borderWidth: 1
-            }
-        ]
+            labels: {{ labels|safe }}, 
+            datasets: [
+                {
+                    label: 'Sales',
+                    data: salesData,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: 'Stock-Ins',
+                    data: stockInData,
+                    backgroundColor: 'rgba(17, 153, 142, 0.2)',
+                    borderColor: 'rgba(17, 153, 142, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: 'Transfers',
+                    data: transferData,
+                    backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 2
+                }
+            ]
         },
         options: {
-        scales: {
-            yAxes: [{
-            ticks: {
-                beginAtZero: true 
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
             }
-            }]
-        }
         }
     });
 
     navButtons.forEach((btn)=>{
-        btn.addEventListener(
-            'click', ()=>{
-                let name = event.target.getAttribute('data-name')
+        btn.addEventListener('click', ()=>{
+            let name = event.target.getAttribute('data-name')
 
-                navButtons.forEach(b => b.classList.remove('active')); 
-                event.target.classList.add('active'); 
-                show(name)
-            }
-        )
+            navButtons.forEach(b => b.classList.remove('active')); 
+            event.target.classList.add('active'); 
+            show(name)
+        })
     })
 
     function show(name) {
         chart.addClass('hidden');
         table.addClass('hidden'); 
-
         $(`.${name}`).removeClass('hidden'); 
     }
 
@@ -449,12 +812,11 @@
             .then(response => response.json())
             .then(data => {
                 invoiceDetails.innerHTML = `
-                    <p>Invoice Number: ${data[0]?.invoice_number}</p>
-                    <p>Customer: <a href='/finance/customer/account/${data[0]?.customer__id}/'>${data[0]?.customer__name}</a></p>
-                    <p>Items: ${data[0]?.products_purchased}</p>
-                    <p>Amount: ${data[0]?.amount}</p>
-                    <p>Payment Status: ${data[0]?.payment_status}</p>
-                    </div>
+                    <p><strong>Invoice Number:</strong> ${data[0]?.invoice_number}</p>
+                    <p><strong>Customer:</strong> <a href='/finance/customer/account/${data[0]?.customer__id}/'>${data[0]?.customer__name}</a></p>
+                    <p><strong>Items:</strong> ${data[0]?.products_purchased}</p>
+                    <p><strong>Amount:</strong> ${data[0]?.amount}</p>
+                    <p><strong>Payment Status:</strong> ${data[0]?.payment_status}</p>
                 `; 
                 invoiceModal.show(); 
             });
@@ -464,17 +826,15 @@
         fetch(`/inventory/transfer/detail/${transferId}/`)  
             .then(response => response.json())
             .then(data => {
-                console.log(data)
                 transferDetails.innerHTML = `
-                    <p>Transfer Reference: ${data[0]?.transfer__transfer_ref}</p>
-                    <p>Product Name: ${data[0]?.product__name}</p>
-                    <p>Quantity: ${data[0]?.quantity}</p>
-                    <p>Price: ${data[0]?.price}</p>
-                    <p>From Branch: ${data[0]?.from_branch__name}</p>
-                    <p>To Branch: ${data[0]?.to_branch__name}</p>
-                    </div>
+                    <p><strong>Transfer Reference:</strong> ${data[0]?.transfer__transfer_ref}</p>
+                    <p><strong>Product Name:</strong> ${data[0]?.product__name}</p>
+                    <p><strong>Quantity:</strong> ${data[0]?.quantity}</p>
+                    <p><strong>Price:</strong> ${data[0]?.price}</p>
+                    <p><strong>From Branch:</strong> ${data[0]?.from_branch__name}</p>
+                    <p><strong>To Branch:</strong> ${data[0]?.to_branch__name}</p>
                 `; 
-                transferModal.show(); l
+                transferModal.show();
             });
     }
 </script>  
