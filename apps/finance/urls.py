@@ -167,6 +167,7 @@ urlpatterns = [
     # layby
     path('layby/', layby_data, name='layby'),
     path('layby/pay/<int:layby_date_id>/', layby_payment, name='layby_payment'),
+    
 
     # tax
     path('tax', tax, name='tax'),
@@ -289,5 +290,6 @@ urlpatterns = [
     #paylaters
     path('api/paylaters/', PaylaterListView.as_view(), name='paylater-list'),
     path('api/paylaters/<int:pk>/', PaylaterDetailView.as_view(), name='paylater-detail'),
+
 
 ]

@@ -97,6 +97,8 @@ from django.utils import timezone
 from apps.finance.services import create_invoice_service
 from apps.inventory.models import StocktakeItem
 from apps.inventory.utils import process_stocktake_item_util
+from django.views.decorators.csrf import csrf_exempt
+
 
 # load global zimra instance
 zimra = ZIMRA()
@@ -110,6 +112,7 @@ def get_previous_month():
 
 def get_current_month():
     return datetime.datetime.now().month
+
 
 #image decoding method
 def decode_base64_file(data):
@@ -562,6 +565,8 @@ def get_expenses(request):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
 
 @login_required
 def save_expense_split(request):
@@ -17281,3 +17286,6 @@ class ProcessPaylaterPaymentView(APIView):
                 {"success": False, "message": "An error occurred while processing payment."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+

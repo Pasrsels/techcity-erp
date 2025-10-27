@@ -8,6 +8,7 @@
     <meta name="description" content="Techcity Pos System"/>
     <meta name="Author" content="casper moyo" />
     <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}"/>
+
     {% block css %}
         <link rel="stylesheet" href="{% static 'css/main.css'%}">
         <link rel="stylesheet" href="{% static 'css/bootstrap/css/bootstrap.min.css'%}">
@@ -16,12 +17,13 @@
         <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     {% endblock css %}
+
     <script src="{% static 'css/bootstrap/js/bootstrap.min.js'%}"></script>
     <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/jquery.js'%}"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
+    
     <title>
         {% block title %}Techcity POS{% endblock title %}
     </title>
@@ -55,31 +57,42 @@
         --text-primary: #212121;
         --text-secondary: #757575;
     }
+
+    /* new  product with image */
+
     .product-card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        border: 1px solid #e9ecef;
-        border-radius: 12px;
-    }
-    .product-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .product-image {
-        transition: transform 0.3s ease;
-    }
-    .product-card:hover .product-image {
-        transform: scale(1.05);
-    }
-    .image-container {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border: 1px solid #dee2e6;
-    }
-    .price-buttons .btn {
-        border-radius: 8px;
-        font-size: 0.8rem;
-        font-weight: 500;
-        padding: 0.4rem 0.5rem;
-    }
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.product-image {
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image {
+    transform: scale(1.05);
+}
+
+.image-container {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 1px solid #dee2e6;
+}
+
+.price-buttons .btn {
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.4rem 0.5rem;
+}
+
+/* new product with image */
+
     .header-btn {
         padding: 8px 16px;
         border-radius: var(--border-radius-sm);
@@ -91,17 +104,21 @@
         font-size: 14px;
         cursor: pointer;
     }
+
     .header-btn:hover {
         background: var(--primary);
         transform: translateY(-1px);
     }
+
     table {
         width: 100%;
         border-collapse: collapse;
     }
+
     tbody tr:hover {
         background-color: #f1f1f1;
     }
+
     .payment-modal {
         display: flex;
         justify-content: center;
@@ -109,42 +126,48 @@
         margin-top: 20px;
         width: 100%;
         max-width: 100%;
-        max-height: 100%;
+        max-height: 100%; 
         border-radius: 10px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        overflow-y: auto;
+        overflow-y: auto; 
         padding: 20px;
         position: relative;
     }
+
     .modal-overlay {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        display: none;
+        display: none; 
         z-index: 1;
     }
+
     .modal-content {
-        overflow-y: auto;
+        overflow-y: auto;  
     }
+
     .payment-modal {
         margin: 0px;
     }
+
     .btn:hover {
         color: #fff !important;
     }
+
     .pos {
         padding: 10px;
         background-color: white;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
-  
+    
     #payment-modal {
         padding: 20px;
         background: #fff;
         min-height: 100vh;
     }
+
     .cart-section {
         width: 100%;
         background: var(--white);
@@ -153,16 +176,19 @@
         flex-direction: column;
         box-shadow: -2px 0 8px rgba(0,0,0,0.05);
     }
+
     .cart-header {
         padding: 20px;
         border-bottom: 1px solid var(--border);
         background: var(--white);
     }
+
     .customer-select-wrapper {
         display: flex;
         gap: 10px;
         margin-bottom: 15px;
     }
+
     .customer-select-wrapper select {
         flex: 1;
         padding: 10px;
@@ -170,6 +196,7 @@
         border-radius: 8px;
         font-size: 14px;
     }
+
     .add-customer-btn {
         padding: 10px 15px;
         background: var(--primary);
@@ -178,474 +205,186 @@
         border-radius: 8px;
         cursor: pointer;
     }
+
     .due-balance {
         display: flex;
         justify-content: space-between;
         padding: 10px;
+        background: #FFF3E0;
         border-radius: 8px;
         font-size: 14px;
-        margin-bottom: 8px;
     }
-    .due-balance.credit {
-        background: #E8F5E9;
-    }
-    .due-balance.debit {
-        background: #FFEBEE;
-    }
+
     .due-balance-amount {
         font-weight: 700;
+        color: var(--accent);
     }
-    .due-balance-amount.credit {
-        color: #2E7D32;
+
+    .cart-items-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+        background: var(--light);
     }
-    .due-balance-amount.debit {
-        color: #C62828;
+
+    .cart-item {
+        background: var(--white);
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
-    .cart-section {
-    width: 100%;
-    background: var(--white);
-    border-left: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    box-shadow: -2px 0 8px rgba(0,0,0,0.05);
-    border-radius: var(--border-radius-sm);
-    overflow: hidden;
-    border: 1px solid var(--border);
-}
-.cart-header {
-    padding: 20px;
-    border-bottom: 1px solid var(--border);
-    background: var(--white);
-    border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
-}
-.customer-select-wrapper {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-.customer-select-wrapper select {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 14px;
-}
-.add-customer-btn {
-    padding: 10px 15px;
-    background: var(--primary);
-    color: var(--white);
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: var(--transition);
-}
-.add-customer-btn:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-}
-.due-balance {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 14px;
-    margin-bottom: 8px;
-    border: 1px solid var(--border);
-}
-.due-balance.credit {
-    background: #E8F5E9;
-}
-.due-balance.debit {
-    background: #FFEBEE;
-}
-.due-balance-amount {
-    font-weight: 700;
-}
-.due-balance-amount.credit {
-    color: #2E7D32;
-}
-.due-balance-amount.debit {
-    color: #C62828;
-}
-.cart-section {
-    width: 100%;
-    background: var(--white);
-    border-left: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    border: 1px solid var(--border);
-}
-.cart-header {
-    padding: 20px;
-    background: var(--white);
-}
-.customer-select-wrapper {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-.customer-select-wrapper select {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 14px;
-}
-.add-customer-btn {
-    padding: 10px 15px;
-    background: var(--primary);
-    color: var(--white);
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: var(--transition);
-}
-.add-customer-btn:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-}
-.due-balance {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 14px;
-    margin-bottom: 8px;
-    border: 1px solid var(--border);
-}
-.due-balance.credit {
-    background: #E8F5E9;
-}
-.due-balance.debit {
-    background: #FFEBEE;
-}
-.due-balance-amount {
-    font-weight: 700;
-}
-.due-balance-amount.credit {
-    color: #2E7D32;
-}
-.due-balance-amount.debit {
-    color: #C62828;
-}
-.cart-items-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 15px;
-    background: var(--light);
-    max-height: 400px;
-}
-.cart-items-container .table {
-    margin: 0;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-}
-.cart-items-container .table thead th {
-    background: var(--primary);
-    color: var(--white);
-    border: none;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-.cart-items-container .table tbody tr {
-    background: var(--white);
-    border-bottom: 1px solid var(--border);
-    transition: background-color 0.2s ease;
-}
-.cart-items-container .table tbody tr:hover {
-    background: var(--light);
-}
-.cart-items-container .table tbody tr:last-child {
-    border-bottom: none;
-}
-.cart-items-container .table td {
-    padding: 12px 15px;
-    vertical-align: middle;
-    border: none;
-}
-.cart-items-container .table td input {
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 14px;
-    width: 100%;
-    text-align: center;
-}
-.cart-items-container .table td input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(17, 153, 142, 0.2);
-}
-.cart-item-remove {
-    color: var(--danger);
-    cursor: pointer;
-    font-size: 18px;
-    transition: color 0.2s ease;
-}
-.cart-item-remove:hover {
-    color: #c62828;
-}
-.empty-cart-row td {
-    padding: 40px 20px;
-    text-align: center;
-    background: var(--white);
-    border: none;
-}
-.empty-cart-row i {
-    font-size: 48px;
-    opacity: 0.3;
-    margin-bottom: 10px;
-}
-.empty-cart-row div {
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 5px;
-}
-.empty-cart-row div:last-child {
-    font-size: 12px;
-    color: var(--text-secondary);
-}
-.cart-footer {
-    padding: 20px;
-    background: var(--white);
-}
-.discount-delivery {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-.input-group label {
-    font-size: 12px;
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-.input-group input {
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 14px;
-    transition: border-color 0.2s ease;
-}
-.input-group input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(17, 153, 142, 0.2);
-}
-.cart-totals {
-    background: var(--light);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    border: 1px solid var(--border);
-}
-.total-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    font-size: 14px;
-    align-items: center;
-}
-.total-row.grand-total {
-    border-top: 2px solid var(--border);
-    padding-top: 12px;
-    margin-top: 8px;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-.proceed-btn {
-    width: 100%;
-    padding: 15px;
-    background: var(--primary);
-    color: var(--white);
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    box-shadow: var(--shadow);
-}
-.proceed-btn:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-.proceed-btn:disabled {
-    background: var(--border);
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
-}
-.discount-delivery {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-.input-group label {
-    font-size: 12px;
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-.input-group input {
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 14px;
-    transition: border-color 0.2s ease;
-}
-.input-group input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(17, 153, 142, 0.2);
-}
-.cart-totals {
-    background: var(--light);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    border: 1px solid var(--border);
-}
-.total-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    font-size: 14px;
-    align-items: center;
-}
-.total-row.grand-total {
-    border-top: 2px solid var(--border);
-    padding-top: 12px;
-    margin-top: 8px;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-.proceed-btn {
-    width: 100%;
-    padding: 15px;
-    background: var(--primary);
-    color: var(--white);
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    box-shadow: var(--shadow);
-}
-.proceed-btn:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-.proceed-btn:disabled {
-    background: var(--border);
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
-}
-.discount-delivery {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-.input-group label {
-    font-size: 12px;
-    color: var(--text-secondary);
-}
-.input-group input {
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 14px;
-}
-.cart-totals {
-    background: var(--light);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-}
-.total-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    font-size: 14px;
-}
-.total-row.grand-total {
-    border-top: 2px solid var(--border);
-    padding-top: 12px;
-    margin-top: 8px;
-    font-size: 16px;
-    font-weight: 700;
-}
-.proceed-btn {
-    width: 100%;
-    padding: 15px;
-    background: var(--primary);
-    color: var(--white);
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.proceed-btn:hover {
-    background: var(--primary-dark);
-}
-.proceed-btn:disabled {
-    background: var(--border);
-    cursor: not-allowed;
-}
-.empty-cart {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-secondary);
-}
-.empty-cart i {
-    font-size: 64px;
-    margin-bottom: 15px;
-    opacity: 0.3;
-}
-#clientModal .modal-dialog {
-    max-width: 600px;
-    width: 90%;
-    margin: 1.75rem auto;
-}
-#clientModal .modal-content {
-    padding: 20px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-lg);
-}
-@media (max-width: 576px) {
+
+    .cart-item-qty {
+        width: 60px;
+    }
+
+    .cart-item-qty input {
+        width: 100%;
+        padding: 6px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        text-align: center;
+    }
+
+    .cart-item-details {
+        flex: 1;
+    }
+
+    .cart-item-name {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .cart-item-price-input {
+        width: 80px;
+        padding: 4px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-size: 13px;
+    }
+
+    .cart-item-total {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--primary);
+        min-width: 70px;
+        text-align: right;
+    }
+
+    .cart-item-remove {
+        color: var(--danger);
+        cursor: pointer;
+        padding: 5px;
+    }
+
+    .cart-footer {
+        padding: 20px;
+        background: var(--white);
+        border-top: 1px solid var(--border);
+    }
+
+    .discount-delivery {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .input-group label {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .input-group input {
+        padding: 10px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .cart-totals {
+        background: var(--light);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        font-size: 14px;
+    }
+
+    .total-row.grand-total {
+        border-top: 2px solid var(--border);
+        padding-top: 12px;
+        margin-top: 8px;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .proceed-btn {
+        width: 100%;
+        padding: 15px;
+        background: var(--primary);
+        color: var(--white);
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .proceed-btn:hover {
+        background: var(--primary-dark);
+    }
+
+    .proceed-btn:disabled {
+        background: var(--border);
+        cursor: not-allowed;
+    }
+
+    .empty-cart {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-secondary);
+    }
+
+    .empty-cart i {
+        font-size: 64px;
+        margin-bottom: 15px;
+        opacity: 0.3;
+    }
+
     #clientModal .modal-dialog {
-        max-width: 95%;
+        max-width: 600px; /* Increased width for better rendering */
+        width: 90%; /* Responsive width for smaller screens */
+        margin: 1.75rem auto; /* Centered with default Bootstrap margin */
     }
-}
+
+    #clientModal .modal-content {
+        padding: 20px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-lg);
+    }
+
+    @media (max-width: 576px) {
+        #clientModal .modal-dialog {
+            max-width: 95%; /* Slightly more width on smaller screens */
+        }
+    }
 </style>
 <body class="techcity">
     <div class="">
@@ -669,25 +408,26 @@
                             <button class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#laybyModal">L</button>
                             <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#PaylaterModal">P</button>
                         </div>
-                        <div class="d-flex justify-content-between align-items-stretch w-100 mb-3 gap-2" style="height: 42px;">
-                            <div class="d-flex align-items-stretch flex-grow-1">
-                                <button id="menu-type" class="btn border h-100"><i class="bx bx-show"></i></button>
-                              
-                                <div class="search-container d-flex align-items-center flex-grow-1 border rounded-0 mx-2 h-100" style="position: relative;">
-                                <i class="bx bx-search ms-2" style="position: absolute; left: 10px;"></i>
-                                <input type="search" name="q" class="form-control border-0 h-100" id="id_search" placeholder="Search For Product ." style="padding-left: 40px;" />
-                            </div>
-                                <button class="btn btn-light border h-100" id="out_of_stock">Out of Stock</button>
-                            </div>
-                            <div class="flex-shrink-0" style="min-width: 200px;">
-                                <select name="category" id="id_category" class="form-select h-100">
-                                    <option value="0">Categories</option>
-                                    {% for category in categories %}
-                                        <option value="{{ category.id }}">{{ category.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="flex-shrink-0" style="min-width: 200px;">
+                        <!-- added below -->
+                            <div class="d-flex justify-content-between align-items-stretch w-100 mb-3 gap-2" style="height: 42px;">
+                                <div class="d-flex align-items-stretch flex-grow-1">
+                                    <button id="menu-type" class="btn border h-100"><i class="bx bx-show"></i></button>
+                                    <div class="search-container d-flex align-items-center flex-grow-1 border rounded-0 mx-2 h-100">
+                                        <i class="bx bx-search ms-2"></i>
+                                        <input type="search" name="q" class="form-control border-0 h-100" id="id_search" placeholder="Search For Product ." />
+                                    </div>
+                                    <button class="btn btn-light border h-100" id="out_of_stock">Out of Stock</button>
+                                </div>
+                                <div class="flex-shrink-0" style="min-width: 200px;">
+                                    <select name="category" id="id_category" class="form-select h-100">
+                                        <option value="0">Categories</option>
+                                        {% for category in categories %}
+                                            <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+<!-- new filter -->
+                               <div class="flex-shrink-0" style="min-width: 200px;">
                                 <select name="sortby" id="id_sortby" class="form-select h-100">
                                     <option value="">Sort by</option>
                                     <option value="price_asc">Price: Low to High</option>
@@ -698,7 +438,10 @@
                                     <option value="stock_desc">Stock: High to Low</option>
                                 </select>
                             </div>
-                        </div>
+ <!-- new filter -->
+                            </div>
+
+                        <!-- added on top -->
                         <div class="products">
                             {% include 'components/loader.html' %}
                             <div class="row g-2" id="product-list"></div>
@@ -719,38 +462,17 @@
                                     <i class='bx bx-user-plus'></i>
                                 </button>
                             </div>
-                            <div style="display: flex;">
-                                <div class="due-balance credit" style="margin-right: 20px;">
-                                    <span>Credit: </span>
-                                    <span class="due-balance-amount credit" id="credit_balance">$0.00</span>
-                                </div>
-                                <div class="due-balance debit">
-                                    <span>Debit: </span>
-                                    <span class="due-balance-amount debit" id="debit_balance">$0.00</span>
-                                </div>
+                            <div class="due-balance">
+                                <span>Customer Due:</span>
+                                <span class="due-balance-amount" id="due_balance">$0.00</span>
                             </div>
                         </div>
-                        <div class="cart-items-container">
-                            <table class="table table-sm" style="background: white;">
-                                <thead style="position: sticky; top: 0; background: white; z-index: 1;">
-                                    <tr style="background-color: var(--primary); color: var(--white);">
-                                        <th style="width: 80px; padding: 15px; text-align: center;">Quantity</th>
-                                        <th style="padding: 15px; text-align: center;">Item Name</th>
-                                        <th style="width: 100px; padding: 15px; text-align: center;">Price</th>
-                                        <th style="width: 100px; padding: 15px; text-align: center;">Total</th>
-                                        <th style="width: 50px; padding: 15px; text-align: center;">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cart_items">
-                                    <tr class="empty-cart-row">
-                                        <td colspan="5" class="text-center py-5">
-                                            <i class="fas fa-shopping-cart" style="font-size: 48px; opacity: 0.3;"></i>
-                                            <div class="mt-2">Your cart is empty</div>
-                                            <div style="font-size: 12px; color: #757575;">Add products to get started</div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="cart-items-container" id="cart_items">
+                            <div class="empty-cart">
+                                <i class="fas fa-shopping-cart"></i>
+                                <div>Your cart is empty</div>
+                                <div style="font-size: 14px;">Add products to get started</div>
+                            </div>
                         </div>
                         <div class="cart-footer">
                             <div class="discount-delivery">
@@ -783,8 +505,7 @@
                 </div>
             </div>
         </div>
-      
-        <!-- All modals remain unchanged -->
+        
         <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -792,6 +513,7 @@
                 </div>
             </div>
         </div>
+
         <div class="modal fade" id="clientModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -801,6 +523,7 @@
                 </div>
             </div>
         </div>
+
         <div class="modal fade" id="endOfDayModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
@@ -810,6 +533,7 @@
                 </div>
             </div>
         </div>
+
         <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -819,6 +543,7 @@
                 </div>
             </div>
         </div>
+
         <div class="modal fade" id="loaderModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -829,6 +554,7 @@
                 </div>
             </div>
         </div>
+
         <div class="modal fade" id="customerModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -839,6 +565,7 @@
                 </div>
             </div>
         </div>
+
         <div class="modal fade" id="qouteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -849,6 +576,7 @@
                 </div>
             </div>
         </div>
+
         <div class="modal fade" id="chooseCustomerModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -858,6 +586,7 @@
                 </div>
             </div>
         </div>
+
         <div class="modal fade" id="laybyModal" tabindex="-1" aria-labelledby="laybyModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -881,7 +610,8 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div>   
+
         <div class="modal fade" id="PaylaterModal" tabindex="-1" aria-labelledby="PaylaterModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -905,7 +635,8 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div>   
+
         <div class="modal fade" id="confirmPaymentModal" tabindex="-1" aria-labelledby="confirmPaymentModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -936,6 +667,7 @@
                 </div>
             </div>
         </div>
+
         <div class="offcanvas offcanvas-end" tabindex="-1" id="salesActionsModal" aria-labelledby="salesActionsLabel">
             <div class="offcanvas-header">
                 <h5 class="offcanvas-title" id="salesActionsLabel">Sales Panel</h5>
@@ -1004,12 +736,13 @@
         <div class="overlay hidden"></div>
     </div>
 </body>
+
 <script src="{% static 'css/bootstrap/js/bootstrap.bundle.min.js'%}"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.8.6/jsrsasign-all-min.js"></script>
 <script src="{% static 'js/app_modules/signature_sign.js' %}"></script>
-<script>
+<script>   
     console.log(run())
     let cart = [];
     let data = [];
@@ -1017,10 +750,10 @@
     let currencyData = [];
     const customersData = [];
     let customerBalanceData = [];
+
     let holdStatus = false;
+
     let bal = 0;
-    let creditBalance = 0;
-    let debitBalance = 0;
     let previousDue = 0
     let discount_amount = 0;
     let delivery_amount = 0;
@@ -1036,9 +769,15 @@
     let sub = 0
     let vatAmount
     let price = 0
+
     const layby_dates = []
     const taxMethod = "{{ tax_method }}"
+
     let error = document.querySelector('#error_message');
+
+    // import { calculateInclusiveTax, calculateExclusiveTax } from "{% static 'js/app_modules/taxes.js' %}";
+    // console.log(calculateExclusiveTax)
+
     const currencySelect = document.querySelector('#currency')
     const endOfDayModal = new bootstrap.Modal(document.getElementById('endOfDayModal'));
     const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
@@ -1049,9 +788,11 @@
     const modal = document.querySelector('#payment-modal');
     const products = document.querySelector('.main-pos-area ')
     const cartSection = document.querySelector('.col-4')
+
     const customerModal = new bootstrap.Modal(document.getElementById('customerModal'));
     const menuType = document.getElementById('menu-type');
     const ostBtn = document.getElementById('out_of_stock');
+
     const tableEl = document.querySelector('#invoiceTable');
     const loaderSpin = document.querySelector('#loader');
     const previousDueEl = document.querySelector('#previous_due');
@@ -1060,49 +801,61 @@
     const confirmPaymentModal = new bootstrap.Modal(document.getElementById('confirmPaymentModal'))
     const paidAmount = document.getElementById('paid_amount')
     const changeGiven = document.getElementById('change_given');
-    const invoiceNote = document.getElementById('invoice_note')
+    const  invoiceNote = document.getElementById('invoice_note')
     let changeToBeDeposited = 0;
+
+
     changeGiven.addEventListener('input', ()=>{
         let totalAmount = calculateTotalAmount(cart);
         console.log(totalAmount, parseFloat(changeGiven.value))
+
         changeToBeDeposited = parseFloat(changeAmount - changeGiven.value)
         console.log(parseFloat(changeAmount), changeGiven.value)
         if(parseFloat(changeGiven.value) > totalAmount ){
             Swal.fire({
                 icon:'error',
-                text:'Given change must not be more than the initial change',
+                text:'Given change must not be more than the initial change', 
                 title: 'error'
             })
             return;
         }
     })
+
     confirmPayment.addEventListener('click', ()=>{
         const changeInput = document.getElementById('change_amount');
         const amountPaidInput = document.getElementById('id_amount_paid');
         const previousDue = document.getElementById('previous_due')
         let totalAmount = calculateTotalAmount(cart);
         let amount = parseFloat(previousDue.textContent.split(' ')[1])
+
         let totalAmoutPrv = totalAmount + parseFloat(previousDue.textContent.split(' ')[1])
         changeInput.value = parseFloat(amountPaidInput.value - (parseFloat(totalAmount) + parseFloat(previousDue.textContent.split(' ')[1]))) || 0.00;
+
         if(changeInput.value < 0){
             changeInput.value = 0.00;
         }else if(changeInput.value > amountPaidInput){
             changeInput.value = 0.00
         }
+
         paidAmount.value = parseFloat(amountPaidInput.value);
         changeAmount = parseFloat(changeInput.value)
         confirmPaymentModal.show()
     })
+
     holdBtn.addEventListener('click', () => {
         holdStatus = true;
         processCart(holdBtn);
     })
+
+    // set receipt items
     function setReceiptItems(){
         const receiptTableBody = document.querySelector('#receiptTable');
         const prvDue = document.getElementById('previous_due');
         const tpreviousDue = document.getElementById('tpreviousDue')
-      
+        
         receiptTableBody.innerHTML = '';
+
+        // Populate the table with invoice items
         cart.forEach(({ quantity, product_name, price, product_description }) => {
             const newRow = receiptTableBody.insertRow();
                 newRow.insertCell().textContent = `${product_name}`
@@ -1112,6 +865,7 @@
                 newRow.insertCell().textContent = `${quantity * price}`;
             });
     }
+
     const laybyButton = document.getElementById("layby");
     const installmentButton = document.getElementById("Installment");
     const cashButton = document.getElementById("cash");
@@ -1119,15 +873,19 @@
     const laybyTerms = document.querySelector(".layby-terms");
     const payLaterTerms = document.querySelector(".paylater");
     const monthlyInstallments = document.querySelector(".monthly-installments");
+
     laybyTerms.style.display = "none";
     monthlyInstallments.style.display = "none";
     payLaterTerms.style.display = "none";
+
     const amountPaidInput = document.getElementById('id_amount_paid');
     const totalBalanceDueElement = document.getElementById('total_balance_due');
     const balanceDueElement = document.getElementById('id_balance');
     const balanceLabel = document.getElementById('balance_label');
     const paymentButtons = document.querySelectorAll(".btn-terms");
-    let paymentTerm = 'cash';
+
+    let paymentTerm = 'cash'; 
+
     document.getElementById('payment_modal_btn').addEventListener('click', () => {
         const posEl = document.querySelector('.col-12')
         if (!modal.classList.contains('d-none')){
@@ -1138,42 +896,55 @@
             cartSection.classList.remove('d-none');
         }
     })
+
     paidAmount.value = 0.00
+
     function calculateBalance() {
-        let total = parseFloat(totalBalanceDueElement.textContent.split(' ')[1]);
+        let total = parseFloat(totalBalanceDueElement.textContent.split(' ')[1]); 
         let amountPaid = parseFloat(amountPaidInput.value) || 0;
         let balance;
+
         if (paymentTerm === 'cash') {
-            balance = amountPaid - total;
+            balance = amountPaid - total; 
+
             if (balance < 0) {
                 balance = 0
             }
+
             balanceLabel.textContent = 'Change';
             balanceDueElement.textContent = Math.abs(balance).toFixed(2);
         } else {
-            balance = total - amountPaid;
+            balance = total - amountPaid; 
+
             if (balance < 0) {
                 balance = 0
             }
+
             balanceLabel.textContent = 'Amount Due';
             balanceDueElement.textContent = balance.toFixed(2);
         }
     }
+
     amountPaidInput.addEventListener('input', calculateBalance);
     paymentButtons.forEach(button => {
         button.addEventListener('click', function () {
             paymentTerm = this.id === 'cash' ? 'cash' : 'layby_installment';
+
             paymentButtons.forEach(btn => btn.classList.remove("active"));
             this.classList.add("active");
+
             calculateBalance();
         });
     });
+
     function handlePaymentTypeClick(selectedButton) {
-      
+        
         cashButton.classList.remove("active");
         laybyButton.classList.remove("active");
         installmentButton.classList.remove("active");
+
         selectedButton.classList.add("active");
+
         if (selectedButton.id === "layby") {
             laybyTerms.style.display = "block";
             monthlyInstallments.style.display = "none";
@@ -1192,28 +963,34 @@
             payLaterTerms.style.display = "block";
         }
     }
+
     payLaterBtn.addEventListener('click', () => {
         handlePaymentTypeClick(payLaterBtn);
         paymentTerms = 'pay later';
     })
+
     laybyButton.addEventListener("click", function () {
         handlePaymentTypeClick(laybyButton);
         paymentTerms = 'layby';
     });
+
     installmentButton.addEventListener("click", function () {
         handlePaymentTypeClick(installmentButton);
         paymentTerms = 'installment';
     });
+
     function handlePaymentMethodClick(selectedButton) {
         paymentButtons.forEach(button => button.classList.remove("active"));
         selectedButton.classList.add("active");
     }
+
     const paymentMethodButtons = document.querySelectorAll(".payment-method button");
+
     paymentMethodButtons.forEach(button => {
         button.addEventListener("click", function () {
             paymentMethodButtons.forEach(btn => btn.classList.remove("active"));
             this.classList.add("active");
-            if (button.dataset.name === 'cash') {
+            if (button.dataset.name === 'cash') { 
                 paymentMethod = button.dataset.name;
             } else if (button.dataset.name === 'ecocash'){
                 paymentMethod = button.dataset.name;
@@ -1221,8 +998,9 @@
                 paymentMethod = button.dataset.name;
             }
         });
-      
+        
     });
+
     const receipt = () =>{
         const id_amount_paid = document.getElementById('id_amount_paid');
         const depositedAmount = document.getElementById('id_deposited');
@@ -1232,25 +1010,28 @@
         const availableBal = document.getElementById('availableBal')
         const previousDue = document.getElementById('previous_due')
         const termsButtons = document.querySelectorAll('.btn');
+
         let value;
         let amountDue = previousDue.textContent.split('')[0];
-      
+        // default if they is previous due
+        
         period.addEventListener('input', ()=>{
             if(period.value < 0){
                 Swal.fire({
                     icon:'error',
-                    text:'Period interval can be less than 0',
+                    text:'Period interval can be less than 0', 
                     title: 'error'
                 })
                 return;
             }
             displayDueDates(period.value)
         })
+
         paylaterPeriod.addEventListener('input', ()=>{
             if(paylaterPeriod.value < 0){
                 Swal.fire({
                     icon:'error',
-                    text:'Period interval can be less than 0',
+                    text:'Period interval can be less than 0', 
                     title: 'error'
                 })
                 return;
@@ -1264,50 +1045,71 @@
                 displayPaylaterDates(paylaterPeriod.value);
             }
         })
+
+       
+
         const calculateNextDueDate = (period) => {
-            const todayDate = new Date();
-            const dueDates = [];
+            const todayDate = new Date(); 
+            const dueDates = []; 
+
             for (let i = 1; i <= period; i++) {
-                const nextDueDate = new Date(todayDate);
-                nextDueDate.setDate(todayDate.getDate() + 30 * i);
+                const nextDueDate = new Date(todayDate); 
+                nextDueDate.setDate(todayDate.getDate() + 30 * i); 
                 layby_dates.push(nextDueDate);
-                dueDates.push(nextDueDate);
+                dueDates.push(nextDueDate); 
             }
+
             return dueDates;
         };
+
         const displayDueDates = (period) => {
             const dueDates = calculateNextDueDate(period);
             const paymentDateElement = document.getElementById('payment_date');
-            let dateFields = '';
+
+            let dateFields = ''; 
+
             dueDates.forEach((date, index) => {
+                // Format the date as yyyy-mm-dd for the date input field
                 const formattedDate = date.toISOString().split('T')[0];
+
+                // Create input fields for each payment date
                 dateFields += `
                     <label for="payment_date_${index}">Payment ${index + 1}:</label>
                     <input type="date" id="payment_date_${index}" value="${formattedDate}">
                     <br>
                 `;
             });
-            paymentDateElement.innerHTML = dateFields;
+
+            paymentDateElement.innerHTML = dateFields; 
         };
+
         const displayPaylaterDates = (period) => {
             const dueDates = calculateNextDueDate(period);
             const paymentDateElement = document.getElementById('paylater_payment_date');
-            let dateFields = '';
+
+            let dateFields = ''; 
+
             dueDates.forEach((date, index) => {
+                // Format the date as yyyy-mm-dd for the date input field
                 const formattedDate = date.toISOString().split('T')[0];
+
+                // Create input fields for each payment date
                 dateFields += `
                     <label for="paylater_date_${index}">Payment ${index + 1}:</label>
                     <input type="date" id="paylater_date_${index}" value="${formattedDate}">
                     <br>
                 `;
             });
-            paymentDateElement.innerHTML = dateFields;
+
+            paymentDateElement.innerHTML = dateFields; 
         };
     }
+
     receipt()
+
     document.addEventListener("DOMContentLoaded", function() {
         const currencySelect = document.getElementById("currency");
-        initialCurrencyValue = currencySelect.value;
+        initialCurrencyValue = currencySelect.value; 
         const data = {id:initialCurrencyValue}
         $.ajax({
             url: '{% url "finance:currency_json" %}',
@@ -1319,11 +1121,12 @@
                 currencyData.push(data)
         })
     });
-  
+    
     setTimeout(()=>{
         loaderSpin.classList.add('hidden');
         loaderSpin.classList.remove('d-flex')
     }, 300)
+
     $(document).ready(function() {
         $('#search-input').select2(
             {placeholder: 'Select Client'}
@@ -1333,8 +1136,9 @@
             fetchCustomerAccount(clientName)
             getLastInvoiceNumber(clientName)
         })
-      
+        
     })
+
     ostBtn.addEventListener('click', ()=>{
         if( menuName !== 'out of stock'){
             menuName = 'out of stock';
@@ -1343,6 +1147,7 @@
         }
         fetchData()
     });
+
     menuType.addEventListener('click', ()=>{
         if(menuType.classList.contains('bx-list-ul')){
             menuType.classList.remove('bx-list-ul');
@@ -1355,11 +1160,13 @@
         }
         fetchData();
     });
+
     document.querySelector('#end').addEventListener(
         'click', ()=>{
             endOfDayModal.show()
         }
     )
+
     currencySelect.addEventListener(
         'change', ()=>{
             const data = {id:currencySelect.value}
@@ -1374,17 +1181,26 @@
             })
         }
     )
+
+    //credit
     const cashBtn = document.querySelector('#id_cash_btn')
     const bankBtn = document.querySelector('.bank')
     const ecocash= document.querySelector('.ecocash')
+
+
+    // modals
     const overlay = document.querySelector(".overlay");
+    <!-- const modal = new bootstrap.Modal(document.querySelector('#payment-modal')); -->
     const clientModal = new bootstrap.Modal(document.querySelector('#clientModal'));
     const closeModalBtn = document.querySelectorAll(".btn-close");
     const closebtn = document.getElementById('closebtn')
+
     closebtn.addEventListener('click', ()=>{
         modal.classList.add('hidden');
         overlay.classList.add('hidden');
     })
+
+
     document.querySelector('#id_pay').addEventListener(
         'click', ()=>{
             if(clientName){
@@ -1407,11 +1223,13 @@
             }
         }
     )
+
     document.querySelector('#id_add_client').addEventListener(
         'click',()=>{
             clientModal.show()
         }
     )
+
     closeModalBtn.forEach((btn)=>{
         btn.addEventListener(
             'click', ()=>{
@@ -1421,42 +1239,51 @@
             }
         )
     })
+
+    //search filters and fetching data
     const productListContainer = document.getElementById('product-list');
     const categorySelect = document.getElementById('id_category');
     const search = document.getElementById('id_search');
+
     search.addEventListener('input', ()=>{
         fetchData(search.value)
     })
-  
+    
     categorySelect.addEventListener('change', function() {
         const selectedCategoryId = this.value;
         fetchData(parseInt(selectedCategoryId))
     });
+
     async function fetchData (param){
+
         let url = '/inventory/product/list/';
+
         if (typeof param ==="number" & param !== 0) {
-            url += `?category=${param}`;
+            url += `?category=${param}`; 
         }else if (typeof param === "string"){
-            url += `?q=${param}`;
+            url += `?q=${param}`; 
         }
-  
+    
         try {
             const response = await fetch(url);
+
             if (!response.ok) {
                 throw new Error('Network response was not ok.');
             }
             const products = await response.json();
-            productListContainer.innerHTML = '';
-          
+            productListContainer.innerHTML = ''; 
+            
             displayProducts(products);
-          
+            
         } catch (error) {
             console.error('Error fetching products:', error);
             productListContainer.innerHTML = '<p class="error-message">Error loading products. Please try again later.</p>';
         } finally {
         }
     }
+
     fetchData()
+
     function cartButton(){
         const cartBtn = document.querySelector('#id_pay')
         if(cart.length==0){
@@ -1466,6 +1293,7 @@
         }
     }
     cartButton()
+
     function displayProducts(products) {
     productListContainer.innerHTML = '';
     products.forEach(product => {
@@ -1476,37 +1304,42 @@
                 productDiv.innerHTML = `
                     <div class="card mb-4 product-card" id='id_product_card' data-product='${JSON.stringify(product)}'>
     <div class="card-body d-flex flex-column align-items-center justify-content-between p-3" id="id_add_to_cart" data-product='${product.inventory_id}'>
+        <!-- Product Image -->
         <div class="text-center mb-3 flex-grow-1 d-flex flex-column justify-content-center">
             <h6 class="fw-bold mb-2 text-truncate w-100" style="font-size: 0.9rem;">${product.product_name}</h6>
             <div class="image-container mx-auto mb-2" style="width: 100px; height: 100px; overflow: hidden; border-radius: 10px; background: #f8f9fa;">
-                <img src="{% static 'assets/laptop.png' %}"
-                     alt="${product.product_name}"
+                <img src="{% static 'assets/laptop.png' %}" 
+                     alt="${product.product_name}" 
                      class="product-image h-100 w-100"
                      style="object-fit: contain; padding: 5px;">
             </div>
         </div>
-      
+        
+        <!-- Product Details -->
         <div class="product-details w-100 text-center">
             <p class='mb-1'><small class="text-muted text-truncate d-block">${product.description}</small></p>
             <p class='mb-2'><small class="text-muted">Stock: ${product.quantity}</small></p>
-          
+            
+            <!-- Price Buttons -->
             <div class="price-buttons w-100">
-                <button class='btn btn-outline-primary btn-sm w-100 mb-1'
-                        data-price-type='rp'
-                        onclick='addFromUI(this)'>
-                    RP $ ${product.price}
+                <button class='btn btn-outline-primary btn-sm w-100 mb-1' 
+                        data-product='${product.inventory_id}' 
+                        data-price='rp' 
+                        onclick='fetchProductData(this)'>
+                    RP ${product.price}
                 </button>
-                <button class='btn btn-outline-success btn-sm w-100'
-                        data-price-type='wp'
-                        onclick='addFromUI(this)'>
-                    WP $ ${product.dealer_price}
+                <button class='btn btn-outline-success btn-sm w-100' 
+                        data-product='${product.inventory_id}' 
+                        data-price='wp' 
+                        onclick='fetchProductData(this)'>
+                    WP ${product.dealer_price}
                 </button>
             </div>
         </div>
     </div>
 </div>
                 `;
-                productListContainer.appendChild(productDiv);
+                productListContainer.appendChild(productDiv); 
             }
         } else if (menuName === 'out of stock') {
             if (product.quantity <= 0) {
@@ -1517,8 +1350,8 @@
                         <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart" data-product='${product.inventory_id}' onclick='fetchProductData(this)'>
                             <div class="text-center mb-3">
                                 <h6 class="fw-bold mb-3 text-white">${product.product_name}</h6>
-                                <img src="${product.image ? product.image : '{% static "images/laptop.png" %}'}"
-                                     alt="${product.product_name}"
+                                <img src="${product.image ? product.image : '{% static "images/laptop.png" %}'}" 
+                                     alt="${product.product_name}" 
                                      class="rounded"
                                      style="width: 120px; height: 120px; object-fit: cover; border-radius: 12px !important; background: white; padding: 8px;">
                             </div>
@@ -1531,7 +1364,7 @@
                         </div>
                     </div>
                 `;
-                productListContainer.appendChild(productDiv);
+                productListContainer.appendChild(productDiv); 
             }
         } else {
             if (!document.querySelector('ul.product-list')) {
@@ -1539,7 +1372,7 @@
                 productList.className = 'list-unstyled product-list';
                 productListContainer.appendChild(productList);
             }
-          
+            
             const productListItem = document.createElement('li');
             productListItem.id = 'id_add_to_cart';
             productListItem.setAttribute('data-product', product.inventory_id);
@@ -1547,8 +1380,8 @@
             productListItem.className = `product-list-item ${product.quantity <= 0 ? 'text-danger' : ''}`;
             productListItem.innerHTML = `
                 <div class="d-flex align-items-center gap-3 p-2">
-                    <img src="${product.image ? product.image : '{% static "images/laptop.png" %}'}"
-                         alt="${product.product_name}"
+                    <img src="${product.image ? product.image : '{% static "images/laptop.png" %}'}" 
+                         alt="${product.product_name}" 
                          class="rounded"
                          style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px !important;">
                     <div class="flex-grow-1">
@@ -1566,127 +1399,157 @@
         }
     });
 }
-    function addFromUI(button) {
-        if (!initialCurrencyValue) {
-            errorModal.show();
-            error.textContent = 'Choose Currency First';
-            return;
+
+    // Cart 
+    async function fetchProductData (product){
+        if(initialCurrencyValue){
+            const id = product.dataset.product
+            const value = product.dataset.price
+
+            let url = `/inventory/product/list/?product=${id}`;
+
+            try {
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
+                const product = await response.json();
+                addItem(product, value);
+                addedToCartProduct = [];
+                addedToCartProduct.push(product);
+                
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                productListContainer.innerHTML = '<p class="error-message">Error loading products. Please try again later.</p>';
+            } finally {
+            }
+        }else{
+            errorModal.show()
+            error.textContent=''
+            error.textContent=`Choose Currency`
         }
-        const priceType = button.dataset.priceType; // 'rp' or 'wp'
-        const card = button.closest('.product-card');
-        const productDataStr = card.dataset.product;
-        const product = JSON.parse(productDataStr);
-        console.log(`Adding product ${product.inventory_id} at ${priceType} price from UI:`, product); // Debug log
-        const exchangeRate = parseFloat(currencyData[0]?.[0]?.exchange_rate || 1); // Fallback to 1 if no rate
-        let itemPrice;
-        if (priceType === 'wp') {
-            itemPrice = product.dealer_price * exchangeRate;
-        } else { // 'rp'
-            itemPrice = product.price * exchangeRate;
-        }
-        console.log(`${priceType.toUpperCase()} price for ${product.product_name}: $${itemPrice.toFixed(2)}`); // Debug log
-        // Updated logic: Check for existing item with same inventory_id AND same price_type
-        let existingItem = cart.find((item) => item.inventory_id === product.inventory_id && item.price_type === priceType);
-        if (existingItem) {
-            // Increment quantity for matching price type
-            existingItem.quantity += 1;
-        } else {
-            // Add new item
-            const newItem = {
-                id: generateUniqueId(),
-                inventory_id: product.inventory_id,
-                product_name: product.product_name,
-                product_description: product.description,
-                quantity: 1,
-                price: itemPrice, // Numeric for easier math
-                price_type: priceType // Track the price type
-            };
-            cart.push(newItem);
-        }
-        updateCartDisplay();
-        cartButton();
-        totals();
+        
     }
-    function fetchProductData(element) {
-        // Default implementation for list/out-of-stock views: Add with RP price
-        const productId = element.dataset.product;
-        // Fetch full product data if needed, but for simplicity, assume we need to implement a modal or direct add
-        // For now, placeholder: Alert or add with default RP
-        console.log('fetchProductData called for product:', productId);
-        // You can extend this to open a modal for price selection, similar to tiles
-        // For example: addFromUI with default 'rp' after fetching product details
-        Swal.fire({
-            icon: 'info',
-            title: 'Product Details',
-            text: `Product ID: ${productId}. Please implement price selection modal if needed.`
-        });
-    }
+
     function generateUniqueId() {
         return Math.floor(Math.random() * 1000000000).toString(36);
     }
+
+    function addItem(product, value) {
+        let existingItem = cart.find((item) => item.inventory_id === product[0].inventory_id)
+
+        console.log(value, 'value')
+
+        let priceType = '';
+
+        if(value === 'wp'){
+            price = product[0].dealer_price
+            priceType = `${product[0].dealer_price * parseFloat(currencyData[0][0]?.exchange_rate)}`
+            existingItem = false;
+        }else{
+            price = product[0].price
+            priceType = `${product[0].price * parseFloat(currencyData[0][0]?.exchange_rate)}`
+        }
+
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            const newTransfer = {
+                id:generateUniqueId(),
+                inventory_id:product[0].inventory_id, 
+                product_name: product[0].product_name,
+                product_description: product[0].description,
+                quantity:1,
+                price:priceType
+            };
+            cart.push(newTransfer);
+        }
+        updateCartDisplay(); 
+        cartButton()
+        totals()
+    }
+
     function totals(){
+
         let totalAmount = calculateTotalAmount(cart);
         let vatAmount = calculateVAT(totalAmount);
-        let discount = parseFloat($('#id_discount').val()) || 0;
-        let delivery = parseFloat($('#id_dc_input').val()) || 0;
+        let discount = $('#id_discount').val()
+        let delivery = parseFloat($('#id_dc_input').val())
+
         console.log('vat amout: ', vatAmount)
-      
-        let payable = parseFloat(totalAmount) - parseFloat(vatAmount) + delivery;
-      
+        
+        let payable = totalAmount - vatAmount + delivery;
+        
+        // validate for not a number
         if (delivery >= 0){
-            delivery_amount = delivery
-        }else{delivery_amount = 0}
+            delivery = delivery
+        }else{delivery = 0}
+
+        delivery_amount = delivery
         vat_amount = vatAmount
+
         if(discount === 0){
-            document.getElementById("id_total_amount").textContent = `${ currencyData[0][0].symbol + ' ' + parseFloat(totalAmount).toFixed(2)}`;
-            document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + parseFloat(vatAmount).toFixed(2)}`;
-            document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + parseFloat(payable).toFixed(2)}`;
+            document.getElementById("id_total_amount").textContent = `${ currencyData[0][0].symbol + ' ' + totalAmount.toFixed(2)}`;
+            document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
+            document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + payable.toFixed(2)}`;
+
         payable_amount = payable
-        discount_amount = 0;
+        discount_amount = discountF
+
             updateTfoot(vatAmount, totalAmount, delivery, payable)
+
         }else{
-            let adjustedTotal = parseFloat(totalAmount) - discount;
-          
-            let discountAmount = parseFloat(totalAmount) - adjustedTotal;
-            let adjustedVat = calculateVAT(adjustedTotal);
-            payable = adjustedTotal + delivery;
-          
-            vat_amount = adjustedVat
+            totalAmount = totalAmount - discount
+            
+            discountAmount = calculateTotalAmount(cart) - totalAmount
+            vatAmount = (totalAmount * 0.15) / (1 + 0.15) //  to be provided from the back
+            payable = totalAmount + delivery;
+            
+            vat_amount = vatAmount
             payable_amount = payable
             discount_amount = discountAmount
-            document.getElementById("id_total_amount").textContent = `${ currencyData[0][0].symbol + ' ' + parseFloat(adjustedTotal).toFixed(2)}`;
-            document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + parseFloat(adjustedVat).toFixed(2)}`;
-            document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + parseFloat(payable).toFixed(2)}`;
-            updateTfoot(adjustedVat, adjustedTotal, delivery, payable)
+
+            document.getElementById("id_total_amount").textContent = `${ currencyData[0][0].symbol + ' ' + totalAmount.toFixed(2)}`;
+            document.getElementById("id_vat_amount").textContent =`${ currencyData[0][0].symbol + ' ' + vatAmount.toFixed(2)}`;
+            document.getElementById('id_payable').textContent = `${ currencyData[0][0].symbol + ' ' + payable.toFixed(2)}`;
+
+            updateTfoot(vatAmount, totalAmount, payable)
         }
     }
+
     function calculateTotalAmount(cart) {
-        let total = cart.reduce((total, item) => total + item.price * item.quantity, 0);
-        return total.toFixed(2)
+    let total = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    return total.toFixed(2)
     }
+
     function calculateVAT(totalAmount) {
         if( taxMethod === 'Exclusive'){
             return calculateExclusiveTax(totalAmount, 0.15)
         }else if( taxMethod === 'Inclusive'){
-            return calculateInclusiveTax(totalAmount, 0.15)
+            return calculateExclusiveTax(totalAmount, 0.15)
         }else{
             return 0;
         }
     }
+
+    // events for discount and delivery charge
     document.querySelector('#id_discount').addEventListener(
         'input', ()=>{
             totals()
         }
     )
+
     document.querySelector('#id_dc_input').addEventListener(
         'input', ()=>{
             totals()
         }
     )
+
     function updateCartDisplay() {
         const cartItemsList = document.getElementById("cart_items");
-        cartItemsList.innerHTML = "";
-  
+        cartItemsList.innerHTML = ""; 
+    
         let total = 0;
         cart.forEach((item) => {
         const row = document.createElement("tr");
@@ -1695,8 +1558,8 @@
                 <small class='d-flex align-items-center'>
                     <small><input class='form-control form-control-sm' type='number' data-id=${item.inventory_id} value='${item.quantity}' onchange='addOrDreceaseQuantity(this);' style='width:4rem;'/></small>
                 </small>
-                </td>
-            <td style='text-align:center !important;'><small>${item.product_name}</small></td>
+            </td>
+            <td style='text-align:left !important;'><small>${item.product_name}</small></td>
             <td>
                 <small>
                     <input class='form-control form-control-sm' type='number' step='0.01' data-id=${item.id} value='${parseFloat(item.price).toFixed(2)}' oninput='updatePrice(this);' style='width:7rem;'/>
@@ -1704,19 +1567,19 @@
             </td>
             <td>
                 <small id="total-${item.id}">${currencyData[0][0].symbol + ' ' + (parseInt(item.quantity) * parseFloat(item.price)).toFixed(2)}</small>
-              
-            </td>
-            <td>
-<small class='bx bx-trash-alt text-danger text-align:center ' data-id=${item.id} onclick="removeItem(this);"></small>
+                <small class='bx bx-trash-alt text-danger' data-id=${item.id} onclick="removeItem(this);"></small>
             </td>
         `;
         cartItemsList.appendChild(row);
         });
+
     }
+
     function updatePrice(input) {
         const itemId = input.getAttribute("data-id");
         const newPrice = parseFloat(input.value);
-  
+    
+        // Update the cart item's price and total cost dynamically
         const cartItem = cart.find(item => item.id == itemId);
         if (cartItem) {
             cartItem.price = newPrice;
@@ -1724,16 +1587,26 @@
             totalElement.innerText = currencyData[0][0].symbol + ' ' + (cartItem.quantity * cartItem.price).toFixed(2);
         }
         totals();
+
+        // Recalculate the cart total and update the display
+        //updateCartTotal();
+        
+    
     }
+
     function updateCartTotal() {
         let total = cart.reduce((acc, item) => acc + (item.quantity * item.price), 0);
         document.getElementById("cart_total").innerText = currencyData[0][0].symbol + ' ' + total.toFixed(2);
     }
+
     function addOrDreceaseQuantity(sm) {
         const item_id = parseInt(sm.dataset.id);
         const updatedQuantity = parseInt(sm.value);
+
         if (!updatedQuantity) return;
+
         const existingItem = cart.find(item => item.inventory_id === item_id);
+
         if (existingItem) {
             existingItem.quantity = updatedQuantity;
             updateCartDisplay();
@@ -1742,26 +1615,38 @@
         }
         console.log('updated value', cart)
     }
+
+    // update tfoot
     function updateTfoot(vat, totalAmount, payable){
         let totalDueAmount = 0;
         const symbol = currencyData[0][0].symbol;
-      
+        
         if(bal>0){
-            totalDueAmount = parseFloat(bal.toFixed(2)) + parseFloat(payable.toFixed(2));
+            totalDueAmount = parseFloat(bal.toFixed(2)) + parseFloat(payable.toFixed(2)); 
         }else{
-            totalDueAmount = parseFloat(payable.toFixed(2));
+            totalDueAmount = parseFloat(payable.toFixed(2)); 
         }
+
         const totalBalanceDue = totalDueAmount - parseFloat(amount_paid.toFixed(2));
+
+        //sub = calculateTotalAmount(cart)
+        //vatAmount = vat.toFixed(2)
+
         document.querySelector('#id_subtotal').textContent = `${ symbol + ' ' + calculateTotalAmount(cart) }`
         document.querySelector('#id_vat').textContent = `${ symbol + ' ' + vat.toFixed(2) }`
-        document.querySelector('#id_balance').textContent = `${ symbol + ' ' + totalBalanceDue.toFixed(2) }`,
+        // document.querySelector('#id_due_amount').textContent = `${ symbol + ' ' + payable.toFixed(2) }`
+        document.querySelector('#id_balance').textContent = `${ symbol + ' ' + totalBalanceDue.toFixed(2) }`, 
         document.querySelector('#total_balance_due').textContent = `${symbol + ' ' + totalDueAmount.toFixed(2) }`
+
+        // updateReceiptFooter(symbol, totalBalanceDue, totalDueAmount, payable)
     }
+
     function updateReceiptFooter(symbol, totalBalanceDue, totalDueAmount, payable){
         document.querySelector('#rid_due_amount').textContent = `${ symbol + ' ' + payable.toFixed(2) }`
-        document.querySelector('#rid_balance').textContent = `${ symbol + ' ' + totalBalanceDue.toFixed(2) }`,
+        document.querySelector('#rid_balance').textContent = `${ symbol + ' ' + totalBalanceDue.toFixed(2) }`, 
         document.querySelector('#rtotal_balance_due').textContent = `${symbol + ' ' + totalDueAmount.toFixed(2) }`
     }
+
     const removeItem = (el) => {
         const id = el.dataset.id
         cart = cart.filter((item) => item.id !== id);
@@ -1769,9 +1654,11 @@
         cartButton()
         totals()
     }
+
+    // payment methods
     document.querySelectorAll('.pm').forEach(button => {
         button.addEventListener('click', () => {
-            if (button.dataset.name === 'cash') {
+            if (button.dataset.name === 'cash') { 
                 paymentMethod = button.dataset.name;
             } else if (button.dataset.name === 'ecocash'){
                 paymentMethod = button.dataset.name;
@@ -1782,13 +1669,15 @@
             }
         });
     });
+
     async function processCart(el) {
         const amountReceived = document.getElementById('id_amount_paid');
+
         let pay_later_dates = [];
         if (paymentTerms === 'pay later') {
             const paylaterPeriod = document.getElementById('id_paylater_period');
             const manualDateInput = document.getElementById('manual_paylater_date');
-          
+            
             if (paylaterPeriod.value) {
                 const paylaterDateInputs = document.querySelectorAll('[id^="paylater_date_"]');
                 pay_later_dates = Array.from(paylaterDateInputs).map(input => input.value);
@@ -1803,6 +1692,7 @@
                 return;
             }
         }
+
         const data = [
             {
                 subtotal: calculateTotalAmount(cart),
@@ -1820,12 +1710,15 @@
                 note: invoiceNote.value
             }
         ];
+
         console.log(data)
+
         console.log(pay_later_dates, 'pay_later_dates')
-  
-        const url = el.dataset.name === 'qoutation'
-            ? "{% url 'finance:add_qoutation' %}"
+    
+        const url = el.dataset.name === 'qoutation' 
+            ? "{% url 'finance:add_qoutation' %}" 
             : "{% url 'finance:create_invoice' %}";
+
         try {
             Swal.fire({
                 title: 'Processing...',
@@ -1835,6 +1728,7 @@
                     Swal.showLoading();
                 }
             });
+
             const response = await fetch(url, {
                 method: "POST",
                 headers: {
@@ -1847,8 +1741,11 @@
                     layby_dates: layby_dates
                 }),
             });
+
             const result = await response.json();
-            Swal.close();
+
+            Swal.close(); 
+
             if (el.dataset.name === 'qoutation') {
                 Swal.fire({
                     icon: 'success',
@@ -1863,6 +1760,7 @@
                                 Swal.showLoading();
                             }
                         });
+
                         setTimeout(() => {
                             qouteModal.hide();
                             window.location.href = `/finance/qoutation/preview/${result.qoute_id}`;
@@ -1870,7 +1768,9 @@
                     }
                 });
             } else {
+
             const invoiceId = result.invoice_id;
+
             if (invoiceId) {
                 Swal.fire({
                     title: 'Printing...',
@@ -1899,10 +1799,11 @@
                     text: 'Invoice ID was not found. Please try again.',
                 });
             }
-          
+            
         }
+
     } catch (error) {
-        Swal.close();
+        Swal.close(); // Close the loading Swal if there's an error
         console.error("Error during request:", error);
         Swal.fire({
             icon: 'error',
@@ -1911,10 +1812,13 @@
         });
     }
 }
+
+
     function displayReceipt(data) {
         try {
             let content = generateReceiptContent(data);
             printReceiptSilently(content);
+
             Swal.fire({
                 title: 'Printing Receipt...',
                 text: 'Please wait while we finish printing.',
@@ -1935,6 +1839,7 @@
                     location.reload();
                 });
             });
+
         } catch (error) {
             console.error("Error:", error);
             Swal.fire({
@@ -1944,6 +1849,7 @@
             });
         }
     }
+
     function generateReceiptContent(data) {
         const { invoice, invoice_items: invoiceItems } = data;
         const {
@@ -1965,9 +1871,9 @@
             code: code,
             fiscal_day:fiscal_day
         } = invoice;
-  
+    
         const vatRate = 15;
-  
+    
         return `
             <style>
                 .receipt {
@@ -2007,6 +1913,7 @@
                     font-size:10px;
                 }
             </style>
+
             <div class="receipt">
                 <h2>Pasales Investments T/A Techcity</h2>
                 <div>
@@ -2027,13 +1934,13 @@
                         </thead>
                         <tbody>
                             ${invoiceItems.map(item => {
-                                const total = item.price * item.quantity;
+                                const total = item.unit_price * item.quantity;
                                 const vat = total - (total / (1 + vatRate / 100));
                                 return `
                                     <tr>
                                         <td>${item.item__name}</td>
                                         <td style="text-align:right;">${item.quantity}</td>
-                                        <td style="text-align:right;">${item.price}</td>
+                                        <td style="text-align:right;">${item.unit_price}</td>
                                         <td style="text-align:right;">${vat.toFixed(2)}</td>
                                         <td style="text-align:right;">${total}</td>
                                     </tr>
@@ -2049,6 +1956,7 @@
                         </tfoot>
                     </table>
                 </div>
+
                 <div class="terms">
                     <strong>Terms & Conditions:</strong>
                     <ul>
@@ -2065,11 +1973,16 @@
                     <p>Thank you for shopping with us</p>
                     <hr>
                 </div>
+
             </div>
+
         `;
     }
+
+    // Function to print the receipt silently
     function printReceiptSilently(content) {
         let printFrame = document.getElementById("print-frame");
+
         if (!printFrame) {
             printFrame = document.createElement("iframe");
             printFrame.id = "print-frame";
@@ -2080,9 +1993,11 @@
             printFrame.style.visibility = "hidden";
             document.body.appendChild(printFrame);
         }
-        const frameDoc = printFrame.contentWindow ||
-                        printFrame.contentDocument.document ||
+
+        const frameDoc = printFrame.contentWindow || 
+                        printFrame.contentDocument.document || 
                         printFrame.contentDocument;
+
         frameDoc.document.open();
         frameDoc.document.write(`
             <html>
@@ -2099,6 +2014,9 @@
         `);
         frameDoc.document.close();
     }
+
+    
+    // customer get and post
     function submitClient() {
         const data = {
             name: document.getElementById('id_name').value,
@@ -2106,6 +2024,7 @@
             phonenumber: document.getElementById('id_phonenumber').value,
             address: document.getElementById('id_address').value,
         };
+
         fetch("{% url 'finance:add_customer' %}", {
             method: "POST",
             headers: {
@@ -2142,28 +2061,34 @@
             console.error("Error:", error);
         });
     }
-      
+        
     async function fetchCustomers() {
         try {
             const response = await fetch('{% url "finance:customers" %}');
+
             if (!response.ok) {
                 throw new Error('Network response was not ok.');
             }
             const customers = await response.json();
+
             customersData.push(customers);
             displayCustomers(customers);
+
         } catch (error) {
             console.error('Error fetching customers:', error);
             productListContainer.innerHTML = '<p class="error-message">Error loading customers. Please try again later.</p>';
         }
     }
+
     fetchCustomers();
+
     function displayCustomers(customers) {
         const cusElement = document.querySelector('#search-input');
-      
+        
         while (cusElement.options.length > 1) {
             cusElement.remove(1);
         }
+
         customers.forEach((customer) => {
             const option = document.createElement('option');
             option.value = customer.id;
@@ -2171,6 +2096,7 @@
             cusElement.appendChild(option);
         });
     }
+
     async function fetchCustomerAccount(customerId) {
         try {
             const response = await fetch(`/finance/customer/account/json/${customerId}/`, {
@@ -2181,244 +2107,279 @@
                 },
                 body: JSON.stringify({}),
             });
+
             if (!response.ok) {
                 throw new Error('Network response was not ok.');
             }
+
             const data = await response.json();
-            const creditBalanceEl = document.querySelector('#credit_balance');
-            const debitBalanceEl = document.querySelector('#debit_balance');
-            creditBalanceEl.innerHTML = '';
-            debitBalanceEl.innerHTML = '';
+
+            const balanceEl = document.querySelector('#due_balance');
+            balanceEl.innerHTML = '';
+
+            const previousDueEl = document.getElementById('previous_due');
             const balance = data.find(item => item.currency__symbol === currencyData[0][0]?.symbol);
-            if (balance) {
-                if (balance.balance < 0) {
-                    creditBalance = Math.abs(balance.balance);
-                    debitBalance = 0;
-                    creditBalanceEl.textContent = `${balance.currency__symbol} ${creditBalance.toFixed(2)}`;
-                    debitBalanceEl.textContent = `${balance.currency__symbol} 0.00`;
-                    bal = creditBalance;
-                } else {
-                    debitBalance = Math.abs(balance.balance);
-                    creditBalance = 0;
-                    debitBalanceEl.textContent = `${balance.currency__symbol} ${debitBalance.toFixed(2)}`;
-                    creditBalanceEl.textContent = `${balance.currency__symbol} 0.00`;
-                    bal = -debitBalance;
-                }
+
+            if (balance.balance < 0) {
+                bal = Math.abs(balance.balance); 
             } else {
-                creditBalanceEl.textContent = "0.00";
-                debitBalanceEl.textContent = "0.00";
-                bal = 0;
+                bal = -Math.abs(balance.balance); 
             }
+
             previousDue = bal;
+            previousDueEl.textContent = (balance ? `${balance.currency__symbol} ${bal}` : "0.00");
+
+            data.forEach((balance) => {
+                const balanceItem = document.createElement('small');
+                balanceItem.id = 'id_due';
+                balanceItem.className = 'text-danger';
+                balanceItem.textContent = `${balance.currency__symbol} ${balance.balance}`;
+                balanceEl.appendChild(balanceItem);
+            });
             setCustomer(customerId)
             totals();
         } catch (error) {
             console.error('Error:', error);
         }
     }
+
     function setCustomer(customerId){
+        // customer information
         const company = document.getElementById('customerCompany');
         const name = document.getElementById('customerName');
         const cell = document.getElementById('customerPhone');
         const email = document.getElementById('customerEmail')
         const address = document.getElementById('customerAddress')
+
         data = customersData[0].filter((cus)=> cus.id == customerId)
+
         name.textContent = data[0]?.name;
         name.textContent = data[0]?.name;
         cell.textContent = data[0]?.cell;
         email.textContent = data[0]?.email;
         address.textContent = data[0]?.address;
-    }
-    function customerAccount() {
-        $.ajax({
-            url: '/finance/customer/payments/json/',
-            type: 'GET',
-            data: { 'type': 'invoice_payments', 'customer_id': 1 },
-        }).done(function (response) {
-            const data = response
-        })
-    }
-    function displaypaymentsTable(data) {
-        customerAccountTable.innerHTML = '';
-        data.forEach((d) => {
-            customerAccountTable.innerHTML += `
-          
-            <tr>
-                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${new Date(d.payment_date).toDateString()}</small></td>
-                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>#${d.invoice__invoice_number}</small></td>
-                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__products_purchased}</small></td>
-                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.invoice__amount}</small></td>
-                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.amount_paid}</small></td>
-                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.amount_due}</small></td>
-                <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.user__username}</small></td>
-            </tr>
-            `
-        })
-    }
-    const apiUrl =''
-        async function fetchCustomerData() {
-            try {
-                const response = await fetch(apiUrl);
-                const customers = await response.json();
-                if (Array.isArray(customers) && customers.length > 0) {
-                    const tableBody = document.getElementById("laybyTableBody");
-                    const recordCount = document.getElementById("count");
-                    tableBody.innerHTML = '';
-                    customers.forEach(customer => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${customer.name}</td>
-                            <td>${product}</td>
-                            <td>${amount}</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Send
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
-                                            <i class='bx bxl-whatsapp'></i></a></li>
-                                        <li><a class="dropdown-item" href='mailto:{{customer.account.customer.email}}' class="text-dark">
-                                            <i class='bx bx-envelope'></i></a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                    recordCount.innerText = customers.length;
-                } else {
-                    alert('No customer data available.');
-                }
-            } catch (error) {
-                console.error('Error fetching customer data:', error);
-                alert('Failed to load customer data. Please try again later.');
-            }
+    
         }
-        document.getElementById('laybyModal').addEventListener('shown.bs.modal', fetchCustomerData);
-  
-        async function fetchPaylaterData() {
-            try {
-                const response = await fetch('',{
-                method: "GET",
-                });
-                const customers = await response.json();
-                if (Array.isArray(customers) && customers.length > 0) {
-                    const tableBody = document.getElementById("PaylaterTableBody");
-                    const recordCount = document.getElementById("count");
-                    tableBody.innerHTML = '';
-                    customers.forEach(customer => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${customer.name}</td>
-                            <td>${product}</td>
-                            <td>${amount}</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Send
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
-                                            <i class='bx bxl-whatsapp'></i></a></li>
-                                        <li><a class="dropdown-item" href='mailto:{{customer.account.customer.email}}' class="text-dark">
-                                            <i class='bx bx-envelope'></i></a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                    recordCount.innerText = customers.length;
-                } else {
-                    showError("No customer data available.");
-                }
-            } catch (error) {
-                console.log(error)
-            }
+
+        // const getLastInvoiceNumber = async (customerId) => {
+        //     try {
+        //         const response = await fetch(`/pos/last_due_invoice/${customerId}/`);
+
+        //     if (!response.ok) {
+        //         throw new Error('Network response was not ok.');
+        //     }
+        //     const lastInvoice = await response.json();
+
+        //     // set the last invoice
+        //     //document.getElementById('id_last_invoice').textContent = lastInvoice[0].invoice_number;
+
+        //     } catch (error) {
+        //         console.error('Error fetching Last Invoice Number:', error);
+            
+        //     }
+        // }
+
+        function customerAccount() {
+            $.ajax({
+                url: '/finance/customer/payments/json/',
+                type: 'GET',
+                data: { 'type': 'invoice_payments', 'customer_id': 1 },
+            }).done(function (response) {
+                const data = response
+                //displaypaymentsTable(data)
+            })
         }
-        document.getElementById('PaylaterModal').addEventListener('shown.bs.modal', fetchPaylaterData);
-    document.getElementById('id_sortby').addEventListener('change', function() {
-        const sortValue = this.value;
-        handleSorting(sortValue);
+
+    
+        function displaypaymentsTable(data) {
+            //customerAccountTableModal.show()
+            customerAccountTable.innerHTML = '';
+            data.forEach((d) => {
+                customerAccountTable.innerHTML += `
+                
+                <tr>
+                    <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${new Date(d.payment_date).toDateString()}</small></td>
+                    <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>#${d.invoice__invoice_number}</small></td>
+                    <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__products_purchased}</small></td>
+                    <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.invoice__amount}</small></td>
+                    <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.amount_paid}</small></td>
+                    <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.invoice__currency__symbol} ${d.amount_due}</small></td>
+                    <td><small class='${d.invoice__payment_status === 'Partial' ? "text-danger" : ''}'>${d.user__username}</small></td>
+                </tr>
+                `
+            })
+        }
+
+        
+
+        const apiUrl =''//update endpoint
+            async function fetchCustomerData() {
+                try {
+                    const response = await fetch(apiUrl);  
+                    const customers = await response.json();  
+
+                    if (Array.isArray(customers) && customers.length > 0) {
+                        const tableBody = document.getElementById("laybyTableBody");
+                        const recordCount = document.getElementById("count");
+                        tableBody.innerHTML = '';
+
+                        customers.forEach(customer => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${customer.name}</td>
+                                <td>${product}</td>
+                                <td>${amount}</td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Send
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item"  href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
+                                                <i class='bx bxl-whatsapp'></i></a></li>
+                                            <li><a class="dropdown-item"  href='mailto:{{customer.account.customer.email}}' class="text-dark">
+                                                <i class='bx bx-envelope'></i></a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+
+                        // Updating the record count
+                        recordCount.innerText = customers.length;
+                    } else {
+                        alert('No customer data available.');
+                    }
+                } catch (error) {
+                    console.error('Error fetching customer data:', error);
+                    alert('Failed to load customer data. Please try again later.');
+                }
+            }
+
+            document.getElementById('laybyModal').addEventListener('shown.bs.modal', fetchCustomerData);
+
+        
+            async function fetchCustomerData() {
+                try {
+                    const response = await fetch('',{  //update url
+                    method: "GET",
+                    });
+                    const customers = await response.json();  
+
+                    if (Array.isArray(customers) && customers.length > 0) {
+                        const tableBody = document.getElementById("PaylaterTableBody");
+                        const recordCount = document.getElementById("count");
+                        tableBody.innerHTML = '';
+
+                        customers.forEach(customer => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${customer.name}</td>
+                                <td>${product}</td>
+                                <td>${amount}</td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Send
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item"  href='https://wa.me/{{customer.account.customer.phone_number}}' class="text-dark">
+                                                <i class='bx bxl-whatsapp'></i></a></li>
+                                            <li><a class="dropdown-item"  href='mailto:{{customer.account.customer.email}}' class="text-dark">
+                                                <i class='bx bx-envelope'></i></a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+
+                        recordCount.innerText = customers.length;
+                    } else {
+                        showError("No customer data available.");
+                    }
+                } catch (error) {
+                    console.log(error)
+                }
+            }
+
+            document.getElementById('PaylaterModal').addEventListener('shown.bs.modal', fetchCustomerData);
+
+
+// new JS for sorting by ascending.. whatever
+// Sort functionality
+// Sort functionality
+document.getElementById('id_sortby').addEventListener('change', function() {
+    const sortValue = this.value;
+    handleSorting(sortValue);
+});
+
+function handleSorting(sortValue) {
+    switch(sortValue) {
+        case 'price_asc':
+            sortProducts('price', 'asc');
+            break;
+        case 'price_desc':
+            sortProducts('price', 'desc');
+            break;
+        case 'name_asc':
+            sortProducts('name', 'asc');
+            break;
+        case 'name_desc':
+            sortProducts('name', 'desc');
+            break;
+        case 'stock_asc':
+            sortProducts('quantity', 'asc');
+            break;
+        case 'stock_desc':
+            sortProducts('quantity', 'desc');
+            break;
+        default:
+            // No sorting or default
+            break;
+    }
+}
+
+function sortProducts(field, direction) {
+    const productsContainer = document.getElementById('product-list');
+    const productCards = Array.from(productsContainer.getElementsByClassName('product-card'));
+    
+    productCards.sort((a, b) => {
+        const productA = JSON.parse(a.dataset.product);
+        const productB = JSON.parse(b.dataset.product);
+        
+        let valueA, valueB;
+        
+        switch(field) {
+            case 'price':
+                valueA = parseFloat(productA.price);
+                valueB = parseFloat(productB.price);
+                break;
+            case 'name':
+                valueA = productA.name.toLowerCase(); // Changed from product_name to name
+                valueB = productB.name.toLowerCase(); // Changed from product_name to name
+                break;
+            case 'quantity': // Changed from stock to quantity
+                valueA = parseInt(productA.quantity);
+                valueB = parseInt(productB.quantity);
+                break;
+        }
+        
+        if (direction === 'asc') {
+            return valueA > valueB ? 1 : -1;
+        } else {
+            return valueA < valueB ? 1 : -1;
+        }
     });
-    function handleSorting(sortValue) {
-        switch(sortValue) {
-            case 'price_asc':
-                sortProducts('price', 'asc');
-                break;
-            case 'price_desc':
-                sortProducts('price', 'desc');
-                break;
-            case 'name_asc':
-                sortProducts('name', 'asc');
-                break;
-            case 'name_desc':
-                sortProducts('name', 'desc');
-                break;
-            case 'stock_asc':
-                sortProducts('quantity', 'asc');
-                break;
-            case 'stock_desc':
-                sortProducts('quantity', 'desc');
-                break;
-            default:
-                break;
-        }
-    }
-    function sortProducts(field, direction) {
-        const productsContainer = document.getElementById('product-list');
-        const productCards = Array.from(productsContainer.querySelectorAll('.col-3'));
-      
-        productCards.sort((a, b) => {
-            const productA = JSON.parse(a.querySelector('[data-product]').dataset.product);
-            const productB = JSON.parse(b.querySelector('[data-product]').dataset.product);
-          
-            let valueA, valueB;
-          
-            switch(field) {
-                case 'price':
-                    valueA = parseFloat(productA.price);
-                    valueB = parseFloat(productB.price);
-                    break;
-                case 'name':
-                    valueA = productA.product_name.toLowerCase();
-                    valueB = productB.product_name.toLowerCase();
-                    break;
-                case 'quantity':
-                    valueA = parseInt(productA.quantity);
-                    valueB = parseInt(productB.quantity);
-                    break;
-            }
-          
-            if (direction === 'asc') {
-                return valueA > valueB ? 1 : -1;
-            } else {
-                return valueA < valueB ? 1 : -1;
-            }
-        });
-      
-        productCards.forEach(card => productsContainer.appendChild(card));
-    }
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    function calculateExclusiveTax(amount, rate) {
-        return parseFloat(amount) * parseFloat(rate);
-    }
-    function calculateInclusiveTax(amount, rate) {
-        return (parseFloat(amount) * parseFloat(rate)) / (1 + parseFloat(rate));
-    }
+    
+    // Re-append sorted products
+    productCards.forEach(card => productsContainer.appendChild(card));
+}
+
+// end of that sorting here
+
+
+
+
 </script>
-</html>

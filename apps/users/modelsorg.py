@@ -1,8 +1,17 @@
+"""
+This module manages user models and related functionality, including:
+
+* **User extension:** Customizes the built-in Django User model to include store association, unique codes, phone numbers, and role fields.
+* **User Roles:** Defines distinct user roles ('Admin', 'Accountant', 'Salesperson') for role-based access.
+* **Group Creation:** Integration with Django's auth system, automatically creating default groups during migrations.
+* **Code Generation:** Implements logic to generate random unique codes for each user. 
+"""
+
 import uuid
 import random, string
 from django.db import models
 from django.apps import apps
-from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.contrib.auth.models import AbstractUser, Group
 from django.db.models.signals import post_migrate, post_save
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
@@ -17,10 +26,10 @@ SALESPERSON_GROUP_NAME = 'Salesperson'
 class UserPermissions(models.Model):
     name = models.CharField(max_length=60)
     category = models.CharField(max_length=60)
-    
     def __str__(self):
         return f'{self.name}'
 
+    
 class CustomUserManager(BaseUserManager):
     """
     Custom user model manager with extra functionalities.
@@ -34,7 +43,6 @@ class CustomUserManager(BaseUserManager):
         if not email:
             raise ValueError('The Email field is required')
         
-        email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.is_staff = True
@@ -42,7 +50,7 @@ class CustomUserManager(BaseUserManager):
 
         if self.model.objects.count() == 1:
             user.is_superuser = True
-            user.save(using=self._db)
+        user.save(using=self._db)
         return user
 
     def create_superuser(self, email, password, **extra_fields):
@@ -68,47 +76,19 @@ class User(AbstractUser):
         ('sales', 'Salesperson'),
         ('accountant', 'Accountant')
     )
-    
-    # Use email as the username field
-    username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(unique=True)
     profile_image = models.ImageField(upload_to='Profile_images', blank=True, null=True)
     company = models.ForeignKey('company.Company', on_delete=models.CASCADE, null=True, blank=True)
     branch = models.ForeignKey('company.Branch', on_delete=models.CASCADE, null=True, blank=True)
+    # todo remove user code and groups
     code = models.CharField(max_length=50, null=True, blank=True)
-    
-    # FIXED: Use proper related_name to avoid conflicts with auth.User
-    groups = models.ManyToManyField(
-        Group,
-        verbose_name=_('groups'),
-        blank=True,
-        help_text=_('The groups this user belongs to.'),
-        related_name="custom_user_set",  # Changed from default
-        related_query_name="user",
-    )
-    
-    # FIXED: Use Django's Permission model with custom related_name
-    user_permissions = models.ManyToManyField(
-        Permission,
-        verbose_name=_('user permissions'),
-        blank=True,
-        help_text=_('Specific permissions for this user.'),
-        related_name="custom_user_set",  # Changed from default
-        related_query_name="user",
-    )
-    
-    # REMOVED: Remove the custom UserPermissions ManyToManyField
-    # user_permissions = models.ManyToManyField(UserPermissions)  # Remove this line
-    
+    groups = models.ManyToManyField(Group)
+    user_permissions = models.ManyToManyField(UserPermissions)
     phonenumber = models.CharField(max_length=13)
     role = models.CharField(choices=USER_ROLES, max_length=50)
     is_deleted = models.BooleanField(default=False)
     email_verified = models.BooleanField(default=False)
     email_verified_at = models.DateTimeField(null=True, blank=True)
-
-    # Use email as the username field
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
 
     def tokens(self):
         refresh = RefreshToken.for_user(self)
@@ -126,13 +106,9 @@ class User(AbstractUser):
                 return code
 
     def save(self, *args, **kwargs):
+        # todo remove self.code and signals
         if not self.code:
             self.code = self.code_generator()
-        
-        # Set username from email if not provided
-        if not self.username and self.email:
-            self.username = self.email
-        
         super().save(*args, **kwargs)
 
         # validate that the user's branch is associated with the same company
@@ -140,7 +116,7 @@ class User(AbstractUser):
             raise ValueError('The branch does not belong to the specified company')
     
     def __str__(self) -> str:
-        return self.email  # Use email instead of username
+        return self.username
 
     objects = CustomUserManager()
 
@@ -195,12 +171,8 @@ class PasswordResetOTP(models.Model):
 
 def assign_admin_group(sender, instance, created, **kwargs):
     if created and instance.is_superuser:
-        try:
-            admin_group = Group.objects.get(name=ADMIN_GROUP_NAME)
-            instance.groups.add(admin_group)
-        except Group.DoesNotExist:
-            # Group might not exist yet, this is handled by post_migrate
-            pass
+        admin_group = Group.objects.get(name=ADMIN_GROUP_NAME)
+        instance.groups.add(admin_group)
 
 
 def create_groups(sender, **kwargs):
@@ -211,3 +183,7 @@ def create_groups(sender, **kwargs):
 
 post_save.connect(assign_admin_group, sender=User)
 post_migrate.connect(create_groups, sender=apps.get_app_config('users'))
+
+
+
+

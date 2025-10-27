@@ -1,4 +1,4 @@
-{% load static%}
+{% load static %}
 {% load crispy_forms_tags %}
 <style>
     .btn-primary {
@@ -6,74 +6,106 @@
         padding: 6px 14px;
         font-weight: 500;
         box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-  }
+    }
+    .sidebar-link {
+        transition: background-color 0.3s;
+    }
+    .sidebar-link:hover {
+        background-color: #f8f9fa;
+    }
+    .sidebar-link.active {
+        background-color: #007bff;
+        color: white !important;
+    }
+    .circular-progress {
+        position: relative;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: conic-gradient(#007bff 0% 75%, #e9ecef 75% 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 10px auto;
+    }
+    .circular-progress::before {
+        content: '';
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: white;
+    }
+    .circular-progress span {
+        position: relative;
+        font-size: 12px;
+        font-weight: bold;
+        color: #007bff;
+    }
+    .circular-progress {
+        animation: fillProgress 5s ease-in-out infinite;
+    }
+    @keyframes fillProgress {
+        0% { background: conic-gradient(#007bff 0% 0%, #e9ecef 0% 100%); }
+        100% { background: conic-gradient(#007bff 0% 75%, #e9ecef 75% 100%); }
+    }
 </style>
+
 {% block content %}
     <nav class="d-flex flex-row justify-content-between align-items-center w-100 border">
-        <!-- toggle aside -->
+        <!-- Toggle aside -->
         <div class="w-25 d-flex align-items-center">
-            <div class="logo px-2 ">
+            <div class="logo px-2">
                 <img src="{% static 'assets/logo.png' %}" width="100px"/>
             </div>
-            <div class="">
-                {% if request.user.role == 'admin' or request.user.role == 'accountant'%}
-                    <button class="btn" id='branchBtn'>
-                        <i class='bx bxs-grid'></i>
-                    </button>
-                {% endif %}
+            <div>
+                <button class="btn" id='branchBtn'>
+                    <i class='bx bxs-grid'></i>
+                </button>
             </div>
             <div>
                 <div class='mt-2'>
-                    <h6 class='fw-bold'>{{request.user.branch.name}}</h6>
+                    <h6 class='fw-bold'>{{ request.user.branch.name }}</h6>
                 </div>
             </div>
         </div>
-        <!-- middle links -->
-        <div class='mt-3  px-2 d-flex justify-content-end w-75'>
+        <!-- Middle links -->
+        <div class='mt-3 px-2 d-flex justify-content-end w-75'>
             <ul class="menu list-unstyled d-flex align-items-center">
-                <li class="m-1 header-btn" data-bs-toggle="offcanvas" data-bs-target="#salesActionsModal">
-                    <i class="fas fa-cash-register"></i>
-                    Sales Panel
-                </li>
-                <li class="menu-link header-btn" id='end'>
-                    <i class="fa-solid fa-clipboard-check"></i>
-                    End Of Day
-                </li>
                 <li class="position-relative header-btn px-2 m-1" style="cursor:pointer;" id="stockNotificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fa-solid fa-boxes-stacked text-info me-1"></i>
-                        Stock Notifications
+                    Stock Notifications
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                         2 
-                    <span class="visually-hidden">unread stock notifications</span>
+                        <span class="visually-hidden">unread stock notifications</span>
                     </span>
                     <ul class="dropdown-menu header-btn dropdown-menu-end p-2 shadow" aria-labelledby="stockNotificationsDropdown" style="min-width: 250px;">
                         <li class="mb-2">
                             <i class="fa-solid fa-exclamation-circle text-warning me-2"></i>
-                                Low stock on Product A
+                            Low stock on Product A
                         </li>
                         <li>
-                        <i class="fa-solid fa-truck-fast text-info me-2"></i>
+                            <i class="fa-solid fa-truck-fast text-info me-2"></i>
                             New shipment arriving tomorrow
                         </li>
                     </ul>
                 </li>
-
                 <!-- System Alerts -->
                 <li class="position-relative px-2 header-btn" style="cursor:pointer;" id="systemAlertsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>
-                        System Alerts
+                    System Alerts
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                         <span class="visually-hidden">urgent system alerts</span>
                     </span>
                     <ul class="dropdown-menu dropdown-menu-end p-2 shadow" aria-labelledby="systemAlertsDropdown" style="min-width: 250px;">
                         <li>
-                        <i class="fa-solid fa-bug text-danger me-2"></i>
+                            <i class="fa-solid fa-bug text-danger me-2"></i>
                             Critical system error detected
                         </li>
                     </ul>
                 </li>
                 <li class="menu-link dropdown px-2">
-                    <small class="dropdown-toggle">{{request.user}}</small>
+                    <small class="dropdown-toggle">{{ request.user }}</small>
                     <ul class="dropdown-menu w-50 bg-light">
                         <li class="dropdown-link">
                             <a href="" class="px-3 fs-6">Profile</a>
@@ -84,43 +116,65 @@
                     </ul>
                 </li>
                 <li>
-                     {% if request.user.profile_image %}
-                        <img class="rounded-circle" src="{{request.user.profile_image.url}}" width="25px"/>
-                        {% else %}
-                        <img class="rounded-circle" src="{% static 'assets/avatar.png'%}" width="25px"/>
-                     {% endif %}
+                    {% if request.user.profile_image %}
+                        <img class="rounded-circle" src="{{ request.user.profile_image.url }}" width="25px"/>
+                    {% else %}
+                        <img class="rounded-circle" src="{% static 'assets/avatar.png' %}" width="25px"/>
+                    {% endif %}
                 </li>
-            </span>
+                <li>
+                    <button class="btn" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </li>
             </ul>
         </div>
     </nav>
-    <div class="modal fade" id="branchModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-right">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div>
-                        <p class='fw-bold'>Choose Branch</p>
+
+    <!-- Sidebar Offcanvas -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarMenuLabel">Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="list-unstyled d-flex flex-column gap-2">
+                <li>
+                    <a href="{% url 'finance:invoice' %}" class="btn btn-primary w-100 d-flex justify-content-between align-items-center sidebar-link active">
+                        <span>Sell (POS)</span>
+                        <span class="badge bg-light text-dark">{{ invoice_count }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'inventory:transfers' %}" class="btn btn-primary w-100 sidebar-link">
+                        Transfersproduct-list
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'inventory:product_list' %}" class="btn btn-primary w-100 sidebar-link">
+                        Products
+                    </a>
+                </li>
+                <li>
+                    <div class="circular-progress" data-bs-toggle="tooltip" data-bs-placement="left" title="Current vs Target: 75% achieved">
+                        <span>75%</span>
                     </div>
-                    <div class="row row-cols-3 g-3"> 
-                        {% for branch in branches %}
-                            <div class="col">
-                                <a class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center" 
-                                   href="{% url 'company:switch_branch' branch.id %}">
-                                    {{ branch.name }}
-                                </a>
-                            </div>
+                </li>
+                <li>
+                    <select id="currency" class="text-light form-select border-0" style="background: #007bff;">
+                        <option value=''>Currency</option>
+                        {% for currency in currencies %}
+                            <option value='{{ currency.id }}' {% if currency.default %}selected{% endif %}>{{ currency.name }}</option>
                         {% endfor %}
-                    </div>
-                </div>
-            </div>
+                    </select>
+                </li>
+            </ul>
         </div>
     </div>
-    <script>
-        const branchModal = new bootstrap.Modal(document.querySelector('#branchModal'))
-        const branchBtn = document.querySelector('#branchBtn')
 
-        branchBtn.addEventListener('click', ()=>{
-            branchModal.show()
-        })
+    <script>
+        // Initialize Bootstrap tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
     </script>
 {% endblock content %}

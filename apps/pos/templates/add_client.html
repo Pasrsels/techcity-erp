@@ -1,54 +1,132 @@
-{% load static%}
+{% load static %}
 {% block content %}
-<div class='client w-100'>
-        <h5 class="fw-bold">Add client</h5>
-        <form class='mt-2' id='id_client_form' method='post'>
-            <div class='mb-2'>
-                <label for="id_name">Full name:</label>
-                <input
-                    id='id_name'
-                    name='name'
-                    type="text"
-                    class='form-control'
-                />
-            </div>
+<style>
+    /* Client Modal Styles */
+    #clientModal .modal-dialog {
+        max-width: 500px;
+        margin: auto;
+    }
 
-            <div class="mb-2">
-                <label for="id_email">Email:</label>
-                <input
-                    name='email'
-                    type="text"
-                    class="form-control"
-                    id="id_email"
-                />
-            </div>
-            
-            <div class="mb-2">
-                <label for="id_phonenumber">Phonenumber:</label>
-                <input
-                    type="text"
-                    name='phonenumber'
-                    class="form-control"
-                    placeholder="+263......"
-                    id="id_phonenumber"
-                />
-            </div>
-            <div class='mb-3'>
-                <label for="id_address">Address:</label>
-                <input
-                    name='address'
-                    type="text"
-                    class="form-control"
-                    id="id_address"
-                />
-            </div>
-            <p class='text-danger' id='id_client_error'></p>
-            <div class="client-btn d-flex justify-content-end">
-                <button class="btn btn-secondary btn-sm" type='button' onclick='submitClient();'>
-                    <i class='bx bx-save'></i>
-                    save
-                </button>
-            </div>
-        </form>
+    #clientModal .modal-content {
+        border-radius: 8px;
+        border: none;
+    }
+
+    #clientModal .modal-body {
+        padding: 1.5rem;
+    }
+
+    #clientModal .input-group {
+        margin-bottom: 1rem;
+    }
+
+    /* Focus Effect */
+    #clientModal .form-control:focus {
+        border-color: #11998e;
+        box-shadow: 0 0 0 0.2rem rgba(17, 153, 142, 0.25);
+    }
+
+    /* Custom Button Style */
+    .client-btn button {
+        background-color: #11998e;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: bold;
+        width: 100%;
+    }
+
+    .client-btn button:hover {
+        background-color: #0f7e6d;
+    }
+</style>
+
+<div class="client w-100">
+    <h5 class="fw-bold text-center" style="color: teal;">Add new Customer</h5>
+    <form class="mt-3" id="id_client_form" method="post">
+        <!-- Full Name Input -->
+        <div class="mb-3">
+            <label for="id_name" class="form-label">Full Name</label>
+            <input
+                id="id_name"
+                name="name"
+                type="text"
+                class="form-control"
+                placeholder="Enter full name"
+            />
+        </div>
+
+        <!-- Email Input -->
+        <div class="mb-3">
+            <label for="id_email" class="form-label">Email</label>
+            <input
+                name="email"
+                type="email"
+                class="form-control"
+                id="id_email"
+                placeholder="Enter email"
+            />
+        </div>
+
+        <!-- Phone Number Input -->
+        <div class="mb-3">
+            <label for="id_phonenumber" class="form-label">Phone Number</label>
+            <input
+                type="text"
+                name="phonenumber"
+                class="form-control"
+                placeholder="Phonenumber (+263......)"
+                id="id_phonenumber"
+            />
+        </div>
+
+        <!-- Address Input -->
+        <div class="mb-3">
+            <label for="id_address" class="form-label">Address</label>
+            <input
+                name="address"
+                type="text"
+                class="form-control"
+                id="id_address"
+                placeholder="Enter address"
+            />
+        </div>
+
+        <!-- TIN Number Input -->
+        <div class="mb-3">
+            <label for="id_tin" class="form-label">TIN Number</label>
+            <input
+                name="tin"
+                type="text"
+                class="form-control"
+                id="id_tin"
+                placeholder="Enter TIN Number"
+            />
+        </div>
+
+        <!-- VAT Input -->
+        <div class="mb-3">
+            <label for="id_vat" class="form-label">VAT</label>
+            <input
+                name="vat"
+                type="text"
+                class="form-control"
+                id="id_vat"
+                placeholder="Enter VAT"
+            />
+        </div>
+
+        <!-- Error Message -->
+        <p class="text-danger" id="id_client_error"></p>
+
+        <!-- Submit Button -->
+        <div class="client-btn text-center">
+            <button class="btn btn-teal" type="button" onclick="submitClient();">
+                <i class="bi bi-plus-circle"></i> Add Customer
+            </button>
+        </div>
+    </form>
 </div>
+
 {% endblock content %}
