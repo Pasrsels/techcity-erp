@@ -190,13 +190,12 @@
                             <div id="due_balance" class="fw-bold text-muted px-1"></div>
                         </div>
 
-    <!-- Due Summary -->
     <div class="d-flex justify-content-between w-100 px-2 py-1 border-bottom">
       <div class="text-muted">Due</div>
       <div id="due_balance" class="fw-bold text-muted">$0.00</div>
+      <button id="qbtn"></button>
     </div>
 
-    <!-- Scrollable Cart Items -->
     <div class="cart-items bg-light rounded m-2 mt-1 overflow-auto" style="flex: 1; min-height: 150px;">
       <div class="table-responsive" id="cart_items">
         <div class="text-center" style="color: var(--text-muted); padding: 40px 0;">
@@ -207,7 +206,6 @@
       </div>
     </div>
 
-    <!-- Bottom Section -->
     <div class="p-2 border-top">
       <div class="row g-2 mb-3">
         <div class="col-6">
@@ -1187,7 +1185,7 @@
                 product_description: product[0].description,
                 quantity:1,
                 price:priceType
-            };
+            };                                                      
             cart.push(newTransfer);
         }
         updateCartDisplay(); 
@@ -2030,4 +2028,6 @@
             }
 
             document.getElementById('PaylaterModal').addEventListener('shown.bs.modal', fetchCustomerData);
+
+
 </script>

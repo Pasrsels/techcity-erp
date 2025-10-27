@@ -365,7 +365,6 @@ class Finance(View):
             'operating_expenses': operating_expenses,
         }
 
-
 # AJAX endpoint for dynamic data loading
 class FinanceDataAPI(View):
     """API endpoint for fetching finance data dynamically"""

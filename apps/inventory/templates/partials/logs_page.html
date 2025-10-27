@@ -52,7 +52,7 @@
 <!-- Infinite scroll trigger - Only show if there are more pages -->
 {% if has_next %}
 <div id="loading-indicator-{{ current_page }}"
-     hx-get="{% url 'inventory:logs_page' %}?page={{ next_page }}"
+     hx-get="{% url 'inventory:logs-page' %}?page={{ next_page }}"
      hx-trigger="revealed"
      hx-indicator="#spinner-{{ current_page }}"
      hx-swap="beforebegin"
