@@ -95,6 +95,7 @@ urlpatterns = [
 
     # transfers
     path('transfers', inventory_transfer_index, name='transfers'),
+    path('search/load/transfers/', search_load_transfers, name='search_load_transfers'),
     path('transfer_items_data/<int:id>/', inventory_transfer_item_data, name='inventory_transfer_data'),
     path('print/transfer/<int:transfer_id>/', print_transfer, name='print_transfer'),
     path('receive/transfer/', receive_inventory, name='receive_inventory'),

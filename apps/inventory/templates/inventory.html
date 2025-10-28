@@ -92,8 +92,8 @@
     /* Navigation Card */
     .inventory-card {
         background: white;
-        border-radius: var(--border-radius);
-        box-shadow: var(--shadow);
+        /* border-radius: var(--border-radius); */
+        /* box-shadow: var(--shadow); */
         transition: var(--transition);
         border: none;
         margin-bottom: 1.5rem;
@@ -111,13 +111,16 @@
         font-weight: 500;
         transition: var(--transition);
         border: 1px solid #e0e0e0;
-        background: var(--primary);
-        color: white;
+        box-shadow: var(--shadow-md);
+        background: white;
+        color: var(--primary);
+        border-color: var(--primary);
         display: inline-flex;
         align-items: center;
         gap: 6px;
         text-decoration: none;
         white-space: nowrap;
+        
     }
     
     .action-btn:hover {
@@ -185,10 +188,7 @@
     .table-wrapper {
         background: white;
         border: none;
-        box-shadow: var(--shadow);
-        border-radius: var(--border-radius);
         overflow: hidden;
-        padding: 1.5rem;
     }
 
     .inventory-table {
@@ -417,12 +417,12 @@
     }
     
     .stats-header {
-        padding: 2rem;
+        /* padding: 2rem; */
         margin-bottom: 2rem;
     }
     
     .stats-card .card-body {
-        padding: 2rem;
+        padding: 1rem;
     }
     
     .stats-card .h5 {
@@ -438,7 +438,7 @@
     }
     
     .inventory-card .card-body {
-        padding: 1.75rem;
+        padding: 1rem;
     }
     
     .action-btn {
@@ -992,12 +992,6 @@
         justify-content: space-between;
         align-items: center;
     }
-<<<<<<< HEAD
-    
-    @media screen and (max-width: 992px) {
-        .stats-cards {
-            flex-direction: column;
-=======
 
     .d-flex.flex-wrap {
         flex-wrap: wrap;
@@ -1008,7 +1002,6 @@
         from {
             opacity: 0;
             transform: translateY(10px);
->>>>>>> refs/remotes/techcity/production
         }
         to {
             opacity: 1;
@@ -1022,9 +1015,54 @@
     .stats-card {
         animation: fadeIn 0.5s ease-out;
     }
+
+.search-input {
+    /* border-radius: var(--border-radius-sm); */
+    border: none;
+    font-size: 12px;
+    background-color: white;
+    box-shadow: none;
+    outline: white;
+}
+
+.search-container {
+    margin-left: 10px;
+    margin-top: 25px;
+    border: 1px solid gray;
+    /* border-radius: var(--border-radius-sm); */
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: white;
+    height: 35px;
+    width: 200px;
+}
+
+.search-input:focus {
+    border-color: var(--primary);
+    box-shadow: none;
+    outline: none;
+}
+
+.search-input:hover {
+    border-color: var(--primary);
+}
+
+.search-input::placeholder {
+    color: #adb5bd;
+}
+
+.search-icon {
+    position: absolute;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+}
 </style>
 
-<div class="container-fluid">
+<div class="p-2" style="margin-top: -30px;">
     <div class="stats-header">
         <div class="row align-items-center justify-content-between">
             <div class="col-xl-6 col-md-6 mb-3 mb-xl-0">
@@ -1032,12 +1070,9 @@
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs" style= "color: #0000ff">Total Inventory Cost <i class="bx bx-dollar-circle mb-0"></i></div>
+                                <div class="text-xs">Total Inventory Cost <i class="bx d-none bx-dollar-circle mb-0"></i></div>
                                 <div class="h5">USD {{total_cost}}</div>
                             </div>
-                            {% comment %} <div class="col-auto">
-                                
-                            </div> {% endcomment %}
                         </div>
                     </div>
                 </div>
@@ -1048,7 +1083,7 @@
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs text-primary">Total Inventory Price <i class="bx bx-cart mb-0"></i></div>
+                                <div class="text-xs">Total Inventory Price <i class=" d-none bx bx-cart mb-0"></i></div>
                                 <div class="h5 d-flex ">USD {{total_price}}</div>
                             </div>
 
@@ -1071,8 +1106,12 @@
         </div>
     </div>
 
-    <div class="card inventory-card mb-2">
-        <div class="card-body">
+    <div class="inventory-card d-flex justify-content-between align-items-center w-100">
+        <div class="search-container" id="fixed-search">
+            <input type="text" class="search-input mt-1" placeholder="Search products..." id="searchInput" style="margin-left: 20px !important;">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+        <div>
             <div class="d-flex flex-wrap justify-content-between align-items-center">
                 <div class="d-flex flex-wrap gap-2 mb-3 mb-md-0">
                     {% if request.user.role == 'admin' %}
@@ -1092,18 +1131,14 @@
                     <a href="{% url 'inventory:stocktake' %}" class="action-btn">
                         <i class="bx bx-clipboard"></i>Stocktake
                     </a>
-                    <a href="{% url 'inventory:loss_management' %}" class="btn-outline-secondary action-btn">
+                    <a href="{% url 'inventory:loss_management' %}" class="action-btn">
                         <i class="bx bx-error-circle"></i>Loss Management
                     </a>
-                    <a href="{% url 'inventory:settings' %}" class="btn-outline-secondary action-btn">
-                        <i class='bx bx-cog'></i>Settings
-                    </a>
-                </div>
-                
-                <div class="d-flex align-items-center gap-2">
-                    <a href="?download=true&excel=true" class="btn btn-outline-secondary  btn-sm action-btn">
+
+                    <a href="?download=true&excel=true" class="btn btn-sm action-btn bg bg-light text-secondary">
                         <i class="bx bx-download mr-1"></i>Export Excel
                     </a>
+                    <!-- <div class="d-flex align-items-center gap-2">
                     <form method="get" id="filter-form">
                         <select name="category" class="form-select form-select-sm me-3 pt-2 pb-2" id="id_category">
                             <option value="">All Categories</option>
@@ -1114,14 +1149,15 @@
                             </option>
                             {% endfor %}
                         </select>
-                    </form>
+                    </form> 
+                </div> -->
                 </div>
             </div>
         </div>
     </div>
     
     <div class="row">
-        <div class="col-lg-9 mb-3 mb-lg-0">
+        <div class="col-lg-9 mb-3 mb-lg-0" style="margin-top: -25px;">
             <div class="table-wrapper">
                 {% include "components/inventory_table.html" %}
             </div>
@@ -1129,7 +1165,7 @@
         
         <div class="col-3 logs-section">
             <div class="log-container p-2 mt-1">
-                <h5 class="mb-1 d-flex align-items-center"><i class="bx bx-history bx-lg mr-2"></i><span class="ms-2">Activity Logs</span></h5>
+                <h5 class="mb-1 d-flex align-items-center"><i class="bx bx-history bx-lg mr-2" style="color: #0d6efd; !important"></i><span class="ms-2">Activity Logs</span></h5>
                 <div id="logsScroll" style="height: 70vh; overflow-y: auto;"
                      hx-get="{% url 'inventory:logs-page' %}?page=1"
                      hx-trigger="load"

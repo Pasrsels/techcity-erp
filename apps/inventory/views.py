@@ -1136,9 +1136,46 @@ def inventory_transfer_index(request):
     })
 
 @login_required
+def search_load_transfers(request):
+    q = request.GET.get('q', '') 
+
+    if q:
+        transfer_item = TransferItems.objects.filter(
+            Q(product__name__icontains=q),
+            Q(from_branch=request.user.branch) | 
+            Q(to_branch=request.user.branch),
+        )
+        return JsonResponse(list(transfer_item.values(
+            'id', 
+            'product__name', 
+            'transfer__transfer_ref',
+            'quantity', 
+            'price', 
+            'dealer_price', 
+            'received', 
+            'declined', 
+            'over_less',
+            'over_less_quantity', 
+            'over_less_description', 
+            'description', 
+            'received_quantity', 
+            'cost', 
+            'date', 
+            'date_received', 
+            'transfer__id', 
+            'from_branch__name', 
+            'to_branch__name', 
+            'action_by__username', 
+            'received_by__username', 
+            'received_back_quantity'
+        )), safe=False)
+    else:
+        return JsonResponse([], safe=False)
+
+@login_required
 def inventory_transfer_item_data(request, id):
     """
-    Transfer items of the parent transfer
+        Transfer items of the parent transfer
     """
     transfer_items = TransferItems.objects.filter(
         Q(to_branch=request.user.branch) | Q(from_branch=request.user.branch),

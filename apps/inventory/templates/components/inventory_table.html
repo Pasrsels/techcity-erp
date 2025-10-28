@@ -1,4 +1,5 @@
 {% load static%}
+{% load inventory_filters %}
 
 <style>
 :root {
@@ -30,51 +31,6 @@
     overflow: hidden;
 }
 
-/* Search Input */
-.search-container {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: white;
-    padding: 5px;
-    border-bottom: 1px solid #e0e0e0;
-    margin: 0 !important;
-}
-
-.search-input {
-    width: 90%;
-    padding: 12px 45px 12px 20px;
-    border-radius: var(--border-radius-sm);
-    border: none;
-    font-size: 14px;
-    background-color: white;
-    box-shadow: none;
-    outline: white;
-    margin: 0 !important;
-}
-
-.search-input:focus {
-    border-color: var(--primary);
-    box-shadow: none;
-    outline: none;
-}
-
-.search-input:hover {
-    border-color: var(--primary);
-}
-
-.search-input::placeholder {
-    color: #adb5bd;
-}
-
-.search-icon {
-    position: absolute;
-    right: 30px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    pointer-events: none;
-}
 
 /* Table Styling */
 .table {
@@ -107,15 +63,6 @@
     padding-left: 1.5rem;
 }
 
-.table thead th[style*="background: #ebeced"],
-.table thead th:nth-child(5),
-.table thead th:nth-child(6),
-.table thead th:nth-child(7),
-.table thead th:nth-child(8) {
-    background: #ebeced !important;
-    color: var(--text-dark);
-}
-
 .table tbody tr {
     transition: var(--transition);
     border-bottom: 1px solid #f0f0f0;
@@ -136,7 +83,7 @@
 
 .table tbody td:first-child {
     padding-left: 1.5rem;
-    color: var(--text-muted);
+    /* color: var(--text-muted); */
 }
 
 .table tbody td small {
@@ -472,28 +419,35 @@
         transform: translateX(100%);
     }
 }
+
+.sort-arrow {
+    margin-left: 4px;
+    font-size: 10px;
+    opacity: 0.5;
+}
+
+.sortable.active .sort-arrow {
+    opacity: 1;
+}
 </style>
 
 {% block content %}
-   <div class="table-responsive mt-2" style="height: 70vh; overflow-y: auto;">
+   <div id="scrollContainer" class="table-responsive" style="height: 70vh; overflow-y: auto;">
         <!-- inventory table -->
         {% include 'components/loader.html' %}
         <div class='product table-container p-1 rounded' style="background: #fff; position: relative;">
-            <div class="search-container border rounded" id="fixed-search" style="position: sticky; top: 0; z-index: 2; background: white;">
-                <input type="text" class="search-input mt-1" placeholder="Search products..." id="searchInput" style="margin-left: 20px !important;">
-                <i class="fas fa-search search-icon"></i>
-            </div>
-            <table class='table table-borderless table-hover table-responsive table-sm rounded p-2 ' style="width:100%;" id='inventory'>
-                <thead style="position: sticky; top: 28px; background-color: var(--primary); z-index: 1;">
-                    <th>Details</th>
-                    <!-- <th>Description</th> -->
-                    <!-- <th>Accessories</th> -->
-                    <th>Quantity</th>
-                    <!-- <th style="background: #ebeced;">Cost</th>
-                    <th style="background: #ebeced;">Price</th>
-                    <th style="background: #ebeced;">W/Price</th> -->
-                    <th>Actions</th>
-                </thead>
+            <table class='table table-borderless table-hover table-responsive table-sm' style="width:100%;" id='inventory'>
+                <div>
+                    <thead style="position: sticky; top: 0; background-color: var(--primary); z-index: 1;">
+                        <th data-sort="name" class="sortable w-25">Product Name <span class="sort-arrow">▼</span></th>
+                        <th data-sort="quantity" class="sortable">Quantity <span class="sort-arrow">▼</span></th>
+                        <th data-sort="cost" class="sortable">Cost <span class="sort-arrow">▼</span></th>
+                        <th data-sort="price" class="sortable">Price <span class="sort-arrow">▼</span></th>
+                        <th data-sort="gp" class="sortable">W/Price <span class="sort-arrow">▼</span></th>
+                        <th>Accessories</th>
+                        <th data-sort="gp" class="sortable">Actions <span class="sort-arrow"></span></th>
+                    </thead>
+                </div>
                 <tbody id='inventory_table'>
                     {% include 'components/inventory_rows.html' %}
                 </tbody>
@@ -821,7 +775,7 @@
             requestToken++;
             hasMore = true;
             currentPage = 1;
-            scrollContainer.scrollTop = 0;
+            scrollContainer.scrollTop = 0;  // Fixed reference
             updateUrlQuery(q);
             fetchPage(1, true, requestToken);
         }
@@ -834,6 +788,8 @@
                 resetAndSearch(q);
             }, 300);
         });
+        
+        setupSorting();
     });
 
     function addAccessory() {
@@ -996,5 +952,60 @@
         }
         return cookieValue;
     }
+
+    // Sorting functionality
+    let currentSort = null;
+    let currentSortDirection = null;
+
+    function updateSortHeaders() {
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.classList.remove('active', 'asc', 'desc');
+        });
+        if (currentSort) {
+            const activeHeader = document.querySelector(`.sortable[data-sort="${currentSort}"]`);
+            activeHeader.classList.add('active', currentSortDirection);
+        }
+    }
+
+    function setupSorting() {
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.addEventListener('click', function() {
+                const sortKey = this.dataset.sort;
+                if (currentSort === sortKey) {
+                    currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort = sortKey;
+                    currentSortDirection = 'asc';
+                }
+                updateSortHeaders();
+                resetAndSearch(searchInput.value.trim());
+            });
+        });
+    }
+
+    // Update resetAndSearch to include sort parameters
+    function resetAndSearch(q) {
+        requestToken++;
+        hasMore = true;
+        currentPage = 1;
+        scrollContainer.scrollTop = 0;
+        updateUrlQuery(q);
+        
+        // Add sort parameters to URL
+        const params = new URLSearchParams(window.location.search);
+        if (currentSort) {
+            params.set('sort', currentSort);
+            params.set('direction', currentSortDirection);
+        } else {
+            params.delete('sort');
+            params.delete('direction');
+        }
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+        
+        fetchPage(1, true, requestToken);
+    }
+
+    // Initialize sorting
 </script>
 {% endblock content %}

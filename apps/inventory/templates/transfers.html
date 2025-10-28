@@ -169,13 +169,12 @@
             
             <div class="d-flex justify-content-between align-items-center">
                 <div class="search-container w-100 border rounded" id="fixed-search" style="position: sticky; top: 0; z-index: 2; background: white;">
-                    <input type="text" class="search-input" placeholder="Search products..." id="searchInput" style="margin-left: 20px !important;">
+                    <input type="text" class="search-input" placeholder="Search products..." oninput="searchTable()" id="searchInput" style="margin-left: 20px !important;">
                     <i class="fas fa-search search-icon"></i>
                 </div>
             </div>
             {% include "components/transfers_table.html" %}
         </div>
-        
         <!-- pagination -->
         <div class="d-flex justify-content-end">
             <nav aria-label="Page navigation">
@@ -386,34 +385,35 @@
    </div>  
 <script>
     const searchTable = () => {
-        const input = document.getElementById('search-input');
-        const filter = input.value.toLowerCase();
-        const table = document.getElementById('transfers');
-        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        const input = document.getElementById('searchInput').value;
+        const tableHeader = document.getElementById('table-header');
 
-        for (let i = 0; i < rows.length; i++) {
-                const cells = rows[i].getElementsByTagName('td');
-                let found = false;
-
-                // Check each cell in the row
-                for (let j = 2; j < cells.length; j++) {
-                    const cell = cells[j];
-                    if (cell) {
-                        const txtValue = cell.textContent || cell.innerText;
-                        if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (found) {
-                    rows[i].style.display = "";
-                } else {
-                    rows[i].style.display = "none";
-                }
-            }
-        }
+        tableHeader.style.display = 'none';
+        fetch(`{% url 'inventory:search_load_transfers' %}?q=${input}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data, 'data')
+                const tableBody = document.getElementById('inventory_table');
+                tableBody.innerHTML = '';
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.style.cursor = 'pointer';
+                    row.onclick = () => {
+                        const transferModal = new bootstrap.Modal(document.querySelector('#transferModal'));
+                        transferModal.show();
+                    };
+                    row.innerHTML = `
+                        <td>${item.product__name}</td>
+                        <td>${item.transfer__transfer_ref}</td>
+                        <td>${item.received_by__username}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.cost}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            });
+       
+    }
 
         document.addEventListener('DOMContentLoaded', (event) => {
             const transferModal = new bootstrap.Modal(document.querySelector('#transferModal'));

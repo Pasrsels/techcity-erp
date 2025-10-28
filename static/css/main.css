@@ -248,10 +248,6 @@ input[type=radio]:focus {
 .techcity a {
   text-decoration: none;
 }
-.techcity .col-2 {
-  background: #373f4c !important;
-  width: 15%;
-}
 .techcity .col-lg-10,
 .techcity .col-12 {
   width: 85%;
@@ -262,20 +258,17 @@ input[type=radio]:focus {
 .techcity .aside-bar aside {
   position: relative;
   height: 100vh;
-  background: #373f4c !important;
 }
 .techcity .aside-bar aside .aside-logo {
   margin-left: 0.7rem;
 }
 .techcity .aside-bar aside a {
-  color: #fff !important;
   opacity: 0.9;
   display: flex;
   align-items: center;
-  font-size: 0.8125rem;
 }
 .techcity .aside-bar aside a i {
-  font-size: 1.25rem;
+  font-size: 1.75rem;
 }
 .techcity .aside-bar aside .menu .menu-link,
 .techcity .aside-bar aside .settings .menu-link {
@@ -321,6 +314,9 @@ input[type=radio]:focus {
 .techcity .aside-bar aside .settings {
   position: absolute;
   bottom: 0;
+}
+.techcity .aside-bar aside .menu {
+  margin-top: 5rem;
 }
 @media (max-width: 990px) {
   .techcity .aside-bar {

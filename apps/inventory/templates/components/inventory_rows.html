@@ -1,43 +1,68 @@
 {% load static %}
+{% load inventory_filters %}
+
 {% for product in products %}
     <tr>
-        <td><span class='hint--bottom' aria-label='{{ product.description }}'>
-            {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}" width="20px" class="rounded-3">
-                {% else %}
-                    <img src="{% static 'placeholder.png'%}" alt="{{ product.name }}" width="20px" class="rounded-3">
-            {% endif %}
-            {{ product.name }}</span>
-            <br>
-            <span>Cost:{{ product.cost }}</span><br>
-            <span>Price: {{ product.price }}</span><br>
-            <span>W/Price:{{ product.dealer_price }}</span>
-            <br>
-            <small class="text-muted">
-                {% if product.description %}
-                    <i class='bx bx-detail'></i>
-                    {{ product.description }}
-                {% else %}
-                    <span class="text-muted">no description</span>
-                {% endif %}
-            </small>
-        </td>
-        <!-- <td>
-            <small>
-                {% for accessory in accessories %}
-                    {% if accessory.main_product ==  product %}
-                        <ul class="list-unstyled">
-                            {% for acc in accessory.accessory_product.all %}
-                                <li>{{ acc.name }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                {% endfor %}
-            </small>
-        </td> -->
-        <td><span>{{ product.quantity }}</span></td>
         <td>
-            <span>  
+            <div class="d-flex gap-2">
+                <div class="d-flex align-items-center justify-content-center">
+                    {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" width="20px" class="rounded-3">
+                        {% else %}
+                            <img src="{% static 'placeholder.png'%}" alt="{{ product.name }}" width="20px" class="rounded-3">
+                    {% endif %}
+                </div>
+                <div class="">
+                    <span class="fs-6">{{ product.name }}</span>
+                    <br>
+                    <small class="text-muted p-1">
+                    {% if product.description %}
+                        {{ product.description }}
+                    {% else %}
+                        No description
+                    {% endif %}
+                    </small>
+                    <br>
+                    <span class=" p-1 fs-7 text-white rounded">
+                        {% if product|calculate_gp  > 50.00 %}
+                            <span class="text-white rounded" style="
+                            background: var(--primary);">{{ product|calculate_gp }}%</span>
+                        {% else %}
+                            <span class="text-white rounded bg bg-danger">{{ product|calculate_gp }}%</span>
+                        {% endif %}
+                    </span>
+                        <span class="text-primary">{{ product|calculate_average_sales }} sales/month</span>
+                </div>
+            </div>
+        </td>
+        <td>
+            <div class="">
+                <span>[{{ product.quantity }}]</span>
+            </div>
+        </td>
+        <td>
+            <div class="">
+                <span>{{ product.cost }}</span>
+            </div>
+        </td>
+        <td>
+            <div class="">
+                <span>${{ product.price }}</span>
+            </div>
+        </td>
+        <td>
+            <div class="">
+                <span>${{ product.dealer_price }}</span>
+            </div>
+        </td>
+        <td>
+            <div class="">
+                <span></span>
+            </div>
+        </td>
+        <td>
+            <div class="">
+                <span>  
                 <span>
                     <a href="{% url 'inventory:inventory_detail' product.id %}" class='text-dark'>
                         <i class='bx bx-show'></i>
@@ -63,11 +88,7 @@
                     </a>
                     {% endif %}
                 </span>
-
-                <!-- <span class="px-2">
-                    <button class="btn btn-sm btn-secondary btn-sm bx bx-cart-add" data-bs-toggle="modal" data-bs-target="#accessoriesModal" onclick="setProductForAccessories({{ product.id }},'{{ product.name }}')"></button>
-                </span> -->
-            </span>
+            </div>
         </td>
     </tr>
 {% endfor %}

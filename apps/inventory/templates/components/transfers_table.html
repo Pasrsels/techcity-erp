@@ -54,105 +54,113 @@
         font-size: 1.5rem;
         margin-right: 0.5rem;
     }
+
+    .parent-row > td:first-child {
+        margin-top: 15px;
+        width: 80px !important; 
+    }
+    .transfer-status:first-child {
+        width: auto;
+    }
+
+    .status-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+    .status-circle {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+    }
+    .status-circle.done {
+        background-color: green;
+        color: white;
+    }
+    .status-circle.pending {
+        background-color: #ff0000;
+        color: white;
+    }
+
+    .status-circle {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+
+    .status-circle.done {
+        background-color: #34c759;
+        color: #fff;
+    }
+
+    .status-circle.pending {
+        background-color: #ff0000;
+        color: #fff;
+    }
+    .bxs-right-arrow-alt.text-success {
+        color: #34c759 !important;
+    }
 </style>
 <div class="transfers-table">
     {% include 'components/loader.html' %}
     <div class='table-scroll'>
-        <table class='table table-bordereless rounded' id='transfers'>
-            <thead class="bg bg-success-subtle sticky-top">
+        <table class='table table-borderless table-hover rounded' id='transfers'>
+            <thead class="bg bg-success-subtle sticky-top" id="table-header">
                 <tr>
                     <th></th>
-                    <th class="transfer-status">Details</th>
+                    <th class="transfer-status">Date</th>
+                    <th class="text-end">Reference</th>
+                    <th class="text-end">transfered by</th>
                     <th class="text-end">Quanity</th>
                     <th class="transfer-quantity text-end">Cost</th>
                     <th class="transfer-actions text-end">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="inventory_table">
                 {% for transfer in transfers %}
                     <!-- Parent Row -->
                     <tr class="{% if transfer.transfer_to == request.user.branch %}bg-success{% else %}transfer-btn{% endif %} parent-row" data-id="{{ transfer.id }}" style="width: 50px !important;">
                         <td class="transfer-status">
-                            {% if request.user.branch in transfer.transfer_to.all %}
-                                <i class='bx bxs-right-arrow-alt text-success bx-md'></i>
-                                 {% if request.user.branch in transfer.transfer_to.all %}
-                                        {% if  transfer.total_r_difference == 0 %}
-                                        <small>
-                                            <img src="{% static 'assets/check.png' %}" width="30px">
-                                        </small>
-                                        {% else %}
-                                            <small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
-                                                <span class="text-light">{{ transfer.total_r_difference }}</span>
-                                            </small>
-                                        {% endif %}
-                                    {% else %}
-                                        {% if  transfer.total_r_difference == 0 %}
-                                        <small>
-                                            <img src="{% static 'assets/checkout.png' %}" width="30px">
-                                        </small>
-                                        {% else %}
-                                            <small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
-                                                <span class="text-light">{{ transfer.total_r_difference }}</span>
-                                            </small>
-                                        {% endif %}
-                                    {% endif %}
-                            {% else %}
-                                <i class='bx bxs-left-arrow-alt text-danger bx-md'></i>
-                                 {% if request.user.branch in transfer.transfer_to.all %}
-                                    {% if  transfer.total_r_difference == 0 %}
-                                    <small>
-                                        <img src="{% static 'assets/check.png' %}" width="30px">
-                                    </small>
-                                    {% else %}
-                                        <small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
-                                            <span class="text-light">{{ transfer.total_r_difference }}</span>
-                                        </small>
-                                    {% endif %}
-                                {% else %}
-                                    {% if  transfer.total_r_difference == 0 %}
-                                    <small>
-                                        <img src="{% static 'assets/checkout.png' %}" width="30px">
-                                    </small>
-                                    {% else %}
-                                        <small class='hint--bottom rounded-5 bg-danger border d-flex justify-content-center align-items-center' style="width: 30px; height: 30px;">
-                                            <span class="text-light">{{ transfer.total_r_difference }}</span>
-                                        </small>
-                                    {% endif %}
-                                {% endif %}
-                            {% endif %}
-                        </td>
-                        <td class="transfer-status">
-                            <div class="d-flex align-items-center">
+                            <div class="status-container">
                                 {% if request.user.branch in transfer.transfer_to.all %}
-                                    <span>
-                                        {{ transfer.transfer_ref }}
-                                        <span>
-                                            <i class='bx bx-user'></i>
-                                            {{ transfer.user.username }}
-                                        </span>
-                                        <br>
-                                        <span class="ml-1 text-muted">
-                                            <i class='bx bx-time'></i>
-                                            {{ transfer.time|date:"d/m/y H:i" }}
-                                        </span>
-                                    </span>
-                                    {% else %}
-                                    <span>
-                                        <span>
-                                            {{ transfer.transfer_ref }}
-                                         </span>
-                                        <span class="text-muted">
-                                            <i class='bx bx-user'></i>
-                                            {{ transfer.user.username }}
-                                        </span>
-                                        <br>
-                                        <span class="ml-1 text-muted">
-                                            <i class='bx bx-time'></i>
-                                            {{ transfer.time|date:"d/m/y H:i" }}
-                                        </span>
-                                    </span>
+                                    <i class='bx bxs-right-arrow-alt text-success' style="font-size: 30px;"></i>
+                                {% else %}
+                                    <i class='bx bxs-left-arrow-alt text-danger' style="font-size: 30px;"></i>
+                                {% endif %}
+                                {% if transfer.total_r_difference == 0 %}
+                                    <div class="status-circle done">
+                                        <i class='bx bx-check'></i>
+                                    </div>
+                                {% else %}
+                                    <div class="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center mt-2" 
+                                         style="width: 30px; height: 30px; font-size: 14px; font-weight: bold;">
+                                        {{ transfer.total_r_difference }}
+                                    </div>
                                 {% endif %}
                             </div>
+                         </td>
+                        <td class="">
+                            <small class="ml-1 text-muted">
+                                <i class='bx bx-time'></i>
+                                {{ transfer.time|date:"d/m/y H:i" }}
+                            </small>
+                        </td>
+                        <td class="transfer-status text-end">
+                            <small>
+                                {{ transfer.transfer_ref }}
+                            </small>
+                        </td>
+                        <td class="text-end">
+                            <small>
+                                <i class='bx bx-user'></i>
+                                {{ transfer.user.username }}
+                            </small>
                         </td>
                         <td class="text-end">
                             <span>

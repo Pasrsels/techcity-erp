@@ -310,31 +310,25 @@ input[type="radio"]:focus {
     a{
         text-decoration:none;
     }
-    .col-2{
-        background:#373f4c !important;
-        width: 15%;
-    }
     .col-lg-10, 
     .col-12{
         width: 85%;
     }
     .aside-bar{
+        // margin-top: 10rem;
         transition: transform 0.5;
         aside{
             position: relative;
             height: 100vh;
-            background:#373f4c !important;
             .aside-logo{
                 margin-left:0.7rem;
             }
             a{
-                color:#fff !important;
                 opacity:0.9;
                 display:flex;
                 align-items:center;
-                font-size: 0.8125rem;
                 i{
-                    font-size: 1.25rem;
+                    font-size: 1.75rem;
                 }
             }
             .menu,
@@ -348,6 +342,9 @@ input[type="radio"]:focus {
             .settings{
                 position: absolute;
                 bottom:0;
+            }
+            .menu{
+                margin-top: 5rem;
             }
         }
         // hide asidebar on mid and screens below
