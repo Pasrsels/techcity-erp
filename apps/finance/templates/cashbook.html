@@ -3,26 +3,257 @@
 {% block title %}Cashbook{% endblock title %}
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/finance/cashbook.css' %}">
-
 <style>
-    .transaction-table th:nth-child(1), .transaction-table td:nth-child(1) { width: 10%; } /* Date/Transaction */
-    .transaction-table th:nth-child(2), .transaction-table td:nth-child(2) { width: 30%; } /* Description - wider */
-    .transaction-table th:nth-child(3), .transaction-table td:nth-child(3) { width: 10%; } /* Branches */
-    .transaction-table th:nth-child(4), .transaction-table td:nth-child(4) { width: 8%; } /* Mode */
-    .transaction-table th:nth-child(5), .transaction-table td:nth-child(5) { width: 10%; } /* Categories */
-    .transaction-table th:nth-child(6), .transaction-table td:nth-child(6) { width: 15%; } /* Persons */
-    .transaction-table th:nth-child(7), .transaction-table td:nth-child(7) { width: 12%; } /* Amount */
-    .transaction-table th:nth-child(8), .transaction-table td:nth-child(8) { width: 5%; } /* Actions */
+    .transaction-table th:nth-child(1), .transaction-table td:nth-child(1) { width: 25%; } /* Combined Date/Branch/Person */
+    .transaction-table th:nth-child(2), .transaction-table td:nth-child(2) { width: 25%; } /* Title with Actions */
+    .transaction-table th:nth-child(3), .transaction-table td:nth-child(3) { width: 15%; } /* Mode */
+    .transaction-table th:nth-child(4), .transaction-table td:nth-child(4) { width: 15%; } /* Categories */
+    .transaction-table th:nth-child(5), .transaction-table td:nth-child(5) { width: 15%; } /* Amount */
+  
+    /* Expense row styling */
+    .expense-row {
+        color: #dc3545 !important;
+        background-color: #fff5f5 !important;
+        border-left: 3px solid #dc3545 !important;
+    }
+  
+    .expense-row:hover {
+        background-color: #ffe6e6 !important;
+    }
+  
+    /* Income row styling - default colors */
+    .income-row {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+    }
+  
+    .income-row:hover {
+        background-color: #f8f9fa !important;
+    }
+  
+    /* Enhanced collapse section styling */
+    .transaction-details {
+        background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+        border-left: 4px solid #4e73df;
+        border-radius: 0 8px 8px 0;
+        margin: 5px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+  
+    .expense-details {
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%) !important;
+        border-left: 4px solid #dc3545 !important;
+    }
+  
+    .detail-section {
+        padding: 15px 20px;
+        border-bottom: 1px solid #e3e6f0;
+    }
+  
+    .expense-details .detail-section {
+        border-bottom: 1px solid #ffcccc;
+    }
+  
+    .detail-section:last-child {
+        border-bottom: none;
+    }
+  
+    .detail-label {
+        font-weight: 600;
+        color: #4e73df;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+  
+    .expense-details .detail-label {
+        color: #dc3545 !important;
+    }
+  
+    .detail-content {
+        color: #5a5c69;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+  
+    .attachment-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+  
+    .attachment-item {
+        display: flex;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid #f8f9fc;
+    }
+  
+    .attachment-item:last-child {
+        border-bottom: none;
+    }
+  
+    .attachment-icon {
+        color: #4e73df;
+        margin-right: 8px;
+        font-size: 1.1rem;
+    }
+  
+    .expense-details .attachment-icon {
+        color: #dc3545 !important;
+    }
+  
+    .attachment-link {
+        color: #4e73df;
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: color 0.2s;
+    }
+  
+    .expense-details .attachment-link {
+        color: #dc3545 !important;
+    }
+  
+    .attachment-link:hover {
+        color: #2e59d9;
+        text-decoration: underline;
+    }
+  
+    .expense-details .attachment-link:hover {
+        color: #c82333 !important;
+    }
+  
+    .action-icons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+  
+    .icon-message, .icon-attachment {
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: transform 0.2s, color 0.2s;
+    }
+  
+    .icon-message {
+        color: #4e73df;
+    }
+  
+    .expense-row .icon-message {
+        color: #dc3545 !important;
+    }
+  
+    .icon-message:hover {
+        color: #2e59d9;
+        transform: scale(1.1);
+    }
+  
+    .expense-row .icon-message:hover {
+        color: #c82333 !important;
+    }
+  
+    .icon-attachment {
+        color: #1cc88a;
+    }
+  
+    .expense-row .icon-attachment {
+        color: #dc3545 !important;
+    }
+  
+    .icon-attachment:hover {
+        color: #17a673;
+        transform: scale(1.1);
+    }
+  
+    .expense-row .icon-attachment:hover {
+        color: #c82333 !important;
+    }
+  
+    /* Ensure text colors for expense rows */
+    .expense-row td {
+        color: #dc3545 !important;
+    }
+  
+    .expense-row td strong {
+        color: #dc3545 !important;
+    }
+  
+    /* Category search suggestions */
+    .category-suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        z-index: 1000;
+        max-height: 300px;
+        overflow-y: auto;
+        display: none;
+    }
+  
+    .category-card {
+        padding: 12px 15px;
+        border-bottom: 1px solid #f8f9fa;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+  
+    .category-card:hover {
+        background-color: #f8f9fa;
+    }
+  
+    .category-card:last-child {
+        border-bottom: none;
+    }
+  
+    .main-category {
+        font-weight: 600;
+        color: #4e73df;
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+    }
+  
+    .sub-category {
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+  
+    .sub-sub-category {
+        font-weight: 500;
+        color: #495057;
+        font-size: 0.95rem;
+    }
+  
+    /* Form validation */
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    /* Filter header styling */
+    .filter-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 12px 16px;
+    }
+    .filter-header .dropdown button {
+        min-width: 110px;
+        white-space: nowrap;
+    }
+    .filter-header .dropdown-menu {
+        min-width: 130px;
+    }
 </style>
-
 <div class="header p-0">
     <div class="header-options d-flex justify-content-between mt-2 align-items-center">
         <div class="d-flex align-items-center gap-3">
-<button class="back-btn bg-light border-0 ps-4" type="button" style="display: none;">
-  <i class="bx bx-arrow-back"></i>
-</button>
-
-            <h4 class="mb-0">Cashbook</h4>
+            <button class="back-btn bg-light border-0 ps-4" type="button" style="display: none;">
+                <i class="bx bx-arrow-back"></i>
+            </button>
+            <h4 class="mb-0" style="margin-left: 10px;">Cashbook</h4>
         </div>
         <div class="d-flex gap-2 pe-4">
             <div class="dropdown">
@@ -46,19 +277,19 @@
         </div>
     </div>
 </div>
-
 <div class="container-fluid p-4" style="max-width: 1750px;">
     <div class="d-flex justify-content-between w-100 flex-wrap">
         <div class="mb-3">
             <p class="text-muted mb-0">Manage and create cashbook transactions</p>
         </div>
+       
         <div class="finance-buttons align-items-center d-flex gap-3 pe-2">
             <button class="btn text-success" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExpense" aria-controls="offcanvasExpense" type="button">
                 Record transaction
             </button>
         </div>
     </div>
-    
+  
     <div class="p-0 w-100">
         <div class="justify-content-between p-2 mt-2 mb-4">
             <div class="row g-3">
@@ -107,157 +338,183 @@
             </div>
         </div>
     </div>
-
-        
-        <div class="bg-white rounded shadow-sm">
-                <div class="filter-section d-flex justify-content-between mb-2">
-                    <button class="filter-btn" id="search">
-                        <i class="bx bx-search"></i>
-                    </button>
-
-                    <div class="dropdown justify-content-end">
-                        <button class="filter-btn dropdown-toggle justify-content-end" type="button" data-bs-toggle="dropdown">
-                            Logs
-                        </button>
-                        <ul class="dropdown-menu" id="logs-dropdown">
-                            <li><a class="dropdown-item" href="#" data-filter="log" data-value="all">All Logs</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#" data-filter="log" data-value="Edited">Edited</a></li>
-                            <li><a class="dropdown-item" href="#" data-filter="log" data-value="Deleted">Deleted</a></li>
-                        </ul>
+    <div class="bg-white rounded shadow-sm">
+        <div class="content-section active" id="all-section">
+            <div class="table-container">
+                <div class="table-responsive">
+                    <div class="filter-header">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <input type="search" class="form-control" id="global-search" placeholder="Search transactions..." style="width: 250px; min-width: 200px;">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle px-3" type="button" data-bs-toggle="dropdown">
+                                    Branches
+                                </button>
+                                <ul class="dropdown-menu" id="branches-dropdown">
+                                    <li><a class="dropdown-item active" href="#" data-filter="branch" data-value="all">Branches</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="branch" data-value="Harare">Harare</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="branch" data-value="Mutare">Mutare</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="branch" data-value="Head Office">Head Office</a></li>
+                                </ul>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle px-3" type="button" data-bs-toggle="dropdown">
+                                    Mode
+                                </button>
+                                <ul class="dropdown-menu" id="mode-dropdown">
+                                    <li><a class="dropdown-item active" href="#" data-filter="mode" data-value="all">All Modes</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Cash">Cash</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Bank">Bank</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Ecocash">Ecocash</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Pay Pal">Pay Pal</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Cheque">Cheque</a></li>
+                                </ul>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle px-3" type="button" data-bs-toggle="dropdown">
+                                    Categories
+                                </button>
+                                <ul class="dropdown-menu" id="categories-dropdown">
+                                    <li><a class="dropdown-item active" href="#" data-filter="category" data-value="all">Categories</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="category" data-value="Car">Car</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="category" data-value="Lunch">Lunch</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="category" data-value="Bike">Bike</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="category" data-value="Phone">Phone</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="category" data-value="Laptop">Laptop</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="category" data-value="Home">Home</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="category" data-value="Monthly">Monthly</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="category" data-value="Bonus">Bonus</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="category" data-value="Freelance">Freelance</a></li>
+                                </ul>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle px-3" type="button" data-bs-toggle="dropdown">
+                                    Persons
+                                </button>
+                                <ul class="dropdown-menu" id="persons-dropdown" style="min-width: 220px;">
+                                    <li><a class="dropdown-item active" href="#" data-filter="person" data-value="all">Persons</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="p-2">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-transparent border-0"><i class="bx bx-search text-muted"></i></span>
+                                            <input type="search" name="a" class="form-control bg-light border-0" id="id_search" placeholder="Search...">
+                                        </div>
+                                    </li>
+                                    <li class="border-top">
+                                        <div class="d-flex justify-content-between gap-2 p-2">
+                                            <button class="btn btn-sm text-primary" type="button">View Contacts</button>
+                                            <button class="btn btn-sm text-primary" type="button">Add Person</button>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="dropdown">
+                                <button class="filter-btn border-0 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    Transaction
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item active" href="#" data-filter="all">Transactions</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="transaction" data-value="income">Income</a></li>
+                                    <li><a class="dropdown-item" href="#" data-filter="transaction" data-value="expenses">Expenses</a></li>
+                                </ul>
+                            </div>
+<button class="filter-btn" type="button" style="border: 2px solid rgb(243, 240, 240);">
+    Logs
+</button>
+                        </div>
                     </div>
+                    <table class="table table-borderless w-100 mb-0 transaction-table">
+                      
+                        <tbody id="transaction-tbody">
+                        </tbody>
+                    </table>
                 </div>
-
-            <div class="content-section active" id="all-section">
-                <div class="table-container">
-                    <div class="table-responsive">
-                        <table class="table table-borderless w-100 mb-0 transaction-table">
-                            <thead>
-                                <tr>
-                                    <th>
-                                        <div class="dropdown">
-                                            <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                Transaction
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li><a class="dropdown-item active" href="#" data-filter="all">Transactions</a></li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="transaction" data-value="income">Income</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="transaction" data-value="expenses">Expenses</a></li>
-                                            </ul>
-                                        </div>
-                                    </th>
-                                    <th>transa</th>
-
-                                    <th>
-                                        <div class="dropdown">
-                                            <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                Branches
-                                            </button>
-                                            <ul class="dropdown-menu" id="branches-dropdown">
-                                                <li><a class="dropdown-item active" href="#" data-filter="branch" data-value="all">Branches</a></li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="branch" data-value="Harare">Harare</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="branch" data-value="Mutare">Mutare</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="branch" data-value="Head Office">Head Office</a></li>
-                                            </ul>
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div class="dropdown">
-                                            <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                Mode
-                                            </button>
-                                            <ul class="dropdown-menu" id="mode-dropdown">
-                                                <li><a class="dropdown-item active" href="#" data-filter="mode" data-value="all">All Modes</a></li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Cash">Cash</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Bank">Bank</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Ecocash">Ecocash</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Pay Pal">Pay Pal</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Cheque">Cheque</a></li>
-                                            </ul>
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div class="dropdown">
-                                            <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                Categories
-                                            </button>
-                                            <ul class="dropdown-menu" id="categories-dropdown">
-                                                <li><a class="dropdown-item active" href="#" data-filter="category" data-value="all">Categories</a></li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Car">Car</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Lunch">Lunch</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Bike">Bike</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Phone">Phone</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Laptop">Laptop</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Home">Home</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Monthly">Monthly</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Bonus">Bonus</a></li>
-                                                <li><a class="dropdown-item" href="#" data-filter="category" data-value="Freelance">Freelance</a></li>
-                                            </ul>
-                                        </div>
-                                    </th>
-                                    
-                                    <th>
-                                        <div class="dropdown">
-                                            <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                Persons
-                                            </button>
-                                            <ul class="dropdown-menu" id="persons-dropdown">
-                                                <li><a class="dropdown-item active" href="#" data-filter="person" data-value="all">Persons</a></li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li><i class="bx bx-search ms-2"></i><input type="search" name="a" class="form-control bg-light border-0" id="id_search" placeholder="Search..."></li>
-                                                <div class="justify-content-between">
-                                                    <li><button class="btn text-primary" type="button">View Contacts</button></li>
-                                                     <li><button class="btn text-primary" type="button">Add Person</button></li>                                                    
-                                            </ul>
-                                        </div>
-                                    </th>
-
-                                    <th>Amount</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            
-                            <tbody id="transaction-tbody">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            </div>
         </div>
     </div>
+  
     <!-- canvases -->
     {% include 'cashbook/canvas/income_canvas.html' %} <!-- income -->
     {% include 'cashbook/canvas/expense_canvas.html' %} <!-- expense -->
-    {% include 'cashbook/canvas/transfer.html' %}  <!-- transfer -->
-</div>  
-
+    {% include 'cashbook/canvas/transfer.html' %} <!-- transfer -->
+</div>
 <script src="{% static 'js/finance/cashbook.js' %}"></script>
 <script>
-    // Enhanced JS to ensure filters work and update totals
     document.addEventListener('DOMContentLoaded', function() {
-        // Sample data for transactions (income/expenses for totals) - updated dates to October 2025
+        // Enhanced sample data with title, description and attachment flags
         const transactions = [
-            { date: '2025-10-20 14:30', amount: 100.00, type: 'income', person: 'John Doe', branch: 'Harare', mode: 'Cash', category: 'Sales', description: 'Sample sales transaction for monthly report.' },
-            { date: '2025-10-21 09:15', amount: 250.50, type: 'expenses', person: 'Jane Smith', branch: 'Mutare', mode: 'Bank', category: 'Purchase', description: 'Office supplies purchase for Q4.' },
-            { date: '2025-10-22 16:45', amount: 75.25, type: 'expenses', person: 'Bob Johnson', branch: 'Head Office', mode: 'Ecocash', category: 'Refund', description: 'Customer refund due to overpayment.' },
-            { date: '2025-10-23 11:20', amount: 500.00, type: 'income', person: 'Alice Brown', branch: 'Harare', mode: 'Cheque', category: 'Deposit', description: 'Security deposit for new project.' },
-            { date: '2025-10-24 13:00', amount: 125.75, type: 'expenses', person: 'Charlie Davis', branch: 'Mutare', mode: 'Wallet', category: 'Withdrawal', description: 'ATM withdrawal for petty cash.' },
-            { date: '2025-10-25 10:10', amount: 300.00, type: 'income', person: 'Diana Wilson', branch: 'Head Office', mode: 'Pay Pal', category: 'Sales', description: 'Online sales payment received.' },
-            { date: '2025-10-26 12:30', amount: 87.50, type: 'expenses', person: 'Edward Moore', branch: 'Harare', mode: 'Cash', category: 'Lunch', description: 'Team lunch expense.' },
-            { date: '2025-10-19 15:45', amount: 1200.00, type: 'expenses', person: 'Fiona Taylor', branch: 'Mutare', mode: 'Bank', category: 'Laptop', description: 'New laptop purchase for employee.' },
-            { date: '2025-10-18 08:00', amount: 45.25, type: 'expenses', person: 'George Anderson', branch: 'Head Office', mode: 'Ecocash', category: 'Phone', description: 'Mobile top-up for business line.' },
-            { date: '2025-10-27 17:15', amount: 2500.00, type: 'income', person: 'Hannah Thomas', branch: 'Harare', mode: 'Cheque', category: 'Bonus', description: 'Performance bonus payout.' }
+            { date: '2025-10-20 14:30', amount: 100.00, type: 'income', person: 'John Doe', branch: 'Harare', mode: 'Cash', category: 'Sales', title: 'Monthly Sales', description: 'Monthly sales report for October 2025 including all regional branches performance metrics.', hasDescription: true, hasAttachment: true },
+            { date: '2025-10-21 09:15', amount: 250.50, type: 'expenses', person: 'Jane Smith', branch: 'Mutare', mode: 'Bank', category: 'Purchase', title: 'Office Supplies', description: 'Purchase of office stationery, printer paper, and computer accessories for Mutare branch.', hasDescription: true, hasAttachment: false },
+            { date: '2025-10-22 16:45', amount: 75.25, type: 'expenses', person: 'Bob Johnson', branch: 'Head Office', mode: 'Ecocash', category: 'Refund', title: 'Customer Refund', description: 'Refund processed for customer order #45678 due to product quality issues.', hasDescription: true, hasAttachment: true },
+            { date: '2025-10-23 11:20', amount: 500.00, type: 'income', person: 'Alice Brown', branch: 'Harare', mode: 'Cheque', category: 'Deposit', title: 'Project Deposit', description: 'Security deposit received for new corporate project with ABC Company. Project scheduled to start November 1st.', hasDescription: true, hasAttachment: false },
+            { date: '2025-10-24 13:00', amount: 125.75, type: 'expenses', person: 'Charlie Davis', branch: 'Mutare', mode: 'Wallet', category: 'Withdrawal', title: 'Cash Withdrawal', description: '', hasDescription: false, hasAttachment: false },
+            { date: '2025-10-25 10:10', amount: 300.00, type: 'income', person: 'Diana Wilson', branch: 'Head Office', mode: 'Pay Pal', category: 'Sales', title: 'Online Payment', description: 'Online sales payment received through e-commerce platform for order #78901. Products shipped via express delivery.', hasDescription: true, hasAttachment: true },
+            { date: '2025-10-26 12:30', amount: 87.50, type: 'expenses', person: 'Edward Moore', branch: 'Harare', mode: 'Cash', category: 'Lunch', title: 'Team Lunch', description: 'Team lunch expense for monthly department meeting at local restaurant. 8 team members attended.', hasDescription: true, hasAttachment: false },
+            { date: '2025-10-19 15:45', amount: 1200.00, type: 'expenses', person: 'Fiona Taylor', branch: 'Mutare', mode: 'Bank', category: 'Laptop', title: 'New Laptop', description: '', hasDescription: false, hasAttachment: true },
+            { date: '2025-10-18 08:00', amount: 45.25, type: 'expenses', person: 'George Anderson', branch: 'Head Office', mode: 'Ecocash', category: 'Phone', title: 'Mobile Top-up', description: 'Mobile top-up for business line to ensure uninterrupted communication with clients and team members.', hasDescription: true, hasAttachment: false },
+            { date: '2025-10-27 17:15', amount: 2500.00, type: 'income', person: 'Hannah Thomas', branch: 'Harare', mode: 'Cheque', category: 'Bonus', title: 'Performance Bonus', description: 'Performance bonus payout for Q3 2025 based on exceeding sales targets and excellent customer satisfaction ratings.', hasDescription: true, hasAttachment: true }
         ];
-
+        // Hierarchical categories data
+        const hierarchicalCategories = [
+            {
+                mainCategory: "Travel",
+                subCategories: [
+                    {
+                        subCategory: "Hotel",
+                        subSubCategories: ["Food", "Accommodation", "Room Service", "Spa"]
+                    },
+                    {
+                        subCategory: "Transport",
+                        subSubCategories: ["Flight", "Taxi", "Train", "Bus", "Fuel"]
+                    },
+                    {
+                        subCategory: "Entertainment",
+                        subSubCategories: ["Tours", "Museums", "Events", "Activities"]
+                    }
+                ]
+            },
+            {
+                mainCategory: "Office",
+                subCategories: [
+                    {
+                        subCategory: "Supplies",
+                        subSubCategories: ["Stationery", "Printing", "Equipment", "Furniture"]
+                    },
+                    {
+                        subCategory: "Utilities",
+                        subSubCategories: ["Electricity", "Internet", "Water", "Rent"]
+                    },
+                    {
+                        subCategory: "Maintenance",
+                        subSubCategories: ["Cleaning", "Repairs", "IT Support"]
+                    }
+                ]
+            },
+            {
+                mainCategory: "Food",
+                subCategories: [
+                    {
+                        subCategory: "Meals",
+                        subSubCategories: ["Breakfast", "Lunch", "Dinner", "Snacks"]
+                    },
+                    {
+                        subCategory: "Beverages",
+                        subSubCategories: ["Coffee", "Tea", "Juice", "Water"]
+                    },
+                    {
+                        subCategory: "Groceries",
+                        subSubCategories: ["Fruits", "Vegetables", "Dairy", "Meat"]
+                    }
+                ]
+            }
+        ];
         const now = new Date('2025-10-27');
-
-        // Function to filter and update table (composite filters)
+        // Function to filter and update table
         function applyFilters() {
-            let filtered = transactions.slice(); // Copy to avoid mutation
-            // Apply date filter
+            let filtered = transactions.slice();
             const dateFilter = document.querySelector('[data-date-filter].active')?.dataset.dateFilter || 'all';
             if (dateFilter !== 'all') {
                 filtered = filtered.filter(t => {
@@ -278,74 +535,147 @@
                     }
                 });
             }
-            // Apply person search
+            // Global search across multiple fields
+            const globalSearchTerm = document.getElementById('global-search')?.value.trim().toLowerCase() || '';
+            if (globalSearchTerm) {
+                filtered = filtered.filter(t =>
+                    t.date.toLowerCase().includes(globalSearchTerm) ||
+                    t.title.toLowerCase().includes(globalSearchTerm) ||
+                    t.person.toLowerCase().includes(globalSearchTerm) ||
+                    t.branch.toLowerCase().includes(globalSearchTerm) ||
+                    t.mode.toLowerCase().includes(globalSearchTerm) ||
+                    t.category.toLowerCase().includes(globalSearchTerm)
+                );
+            }
+          
             const searchTerm = document.getElementById('id_search').value.trim().toLowerCase();
             if (searchTerm) {
                 filtered = filtered.filter(t => t.person.toLowerCase().includes(searchTerm));
             }
-            // Apply transaction filter
+          
             const transFilter = document.querySelector('[data-filter="transaction"].active')?.dataset.value || 'all';
             if (transFilter !== 'all') {
                 filtered = filtered.filter(t => t.type === transFilter);
             }
-            // Apply branch filter
+          
             const branchFilter = document.querySelector('[data-filter="branch"].active')?.dataset.value || 'all';
             if (branchFilter !== 'all') {
                 filtered = filtered.filter(t => t.branch === branchFilter);
             }
-            // Apply mode filter
+          
             const modeFilter = document.querySelector('[data-filter="mode"].active')?.dataset.value || 'all';
             if (modeFilter !== 'all') {
                 filtered = filtered.filter(t => t.mode === modeFilter);
             }
-            // Apply category filter
+          
             const catFilter = document.querySelector('[data-filter="category"].active')?.dataset.value || 'all';
             if (catFilter !== 'all') {
                 filtered = filtered.filter(t => t.category === catFilter);
             }
-            // Apply log filter (placeholder)
+          
             const logFilter = document.querySelector('[data-filter="log"].active')?.dataset.value || 'all';
-            // Get currency
             const currency = document.querySelector('[data-currency].active')?.dataset.currency || 'USD';
             const rate = currency === 'ZWG' ? 26 : 1;
-            // Re-render table smoothly
+          
             renderTable(filtered, currency, rate);
             updateTotals(filtered, currency, rate);
         }
-
-        // Render table rows (with swapped columns: amount to end)
+        // Enhanced render table function with colored rows based on transaction type
         function renderTable(data, currency, rate) {
             const tbody = document.getElementById('transaction-tbody');
-            // Add fade out for smooth reload
             tbody.style.opacity = '0.5';
             setTimeout(() => {
                 tbody.innerHTML = '';
                 data.forEach((t, index) => {
                     const rowId = index + 1;
-                    const hasAttachments = Math.random() > 0.3; // More likely to have attachments
-                    const attachmentsHtml = hasAttachments ? 
-                        '<ul class="list-unstyled"><li><a href="#" class="text-primary">invoice.pdf</a></li><li><a href="#" class="text-primary">receipt.jpg</a></li></ul>' : 
-                        'None';
+                    const isExpense = t.type === 'expenses';
+                    const rowClass = isExpense ? 'expense-row' : 'income-row';
+                    const detailsClass = isExpense ? 'expense-details' : '';
+                    const direction = isExpense ? 'to' : 'from';
+                  
+                    // Generate action icons based on transaction properties
+                    let actionIcons = '';
+                    if (t.hasDescription) {
+                        actionIcons += '<i class="bx bx-message icon-message" title="View Description"></i>';
+                    }
+                    if (t.hasAttachment) {
+                        actionIcons += '<i class="bx bx-paperclip icon-attachment" title="View Attachments"></i>';
+                    }
+                  
+                    // Generate attachments HTML if exists
+                    const attachmentsHtml = t.hasAttachment ?
+                        `<div class="detail-section">
+                            <div class="detail-label">Attachments</div>
+                            <div class="detail-content">
+                                <ul class="attachment-list">
+                                    <li class="attachment-item">
+                                        <i class="bx bx-file icon-attachment"></i>
+                                        <a href="#" class="attachment-link">invoice_${t.date.split(' ')[0].replace(/-/g, '')}.pdf</a>
+                                    </li>
+                                    <li class="attachment-item">
+                                        <i class="bx bx-image icon-attachment"></i>
+                                        <a href="#" class="attachment-link">receipt_${t.date.split(' ')[0].replace(/-/g, '')}.jpg</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>` :
+                        `<div class="detail-section">
+                            <div class="detail-label">Attachments</div>
+                            <div class="detail-content text-muted">No attachments available</div>
+                        </div>`;
+                  
+                    // Generate description HTML
+                    const descriptionHtml = t.hasDescription ?
+                        `<div class="detail-section">
+                            <div class="detail-label">Full Description</div>
+                            <div class="detail-content">${t.description}</div>
+                        </div>` :
+                        `<div class="detail-section">
+                            <div class="detail-label">Full Description</div>
+                            <div class="detail-content text-muted">No description available</div>
+                        </div>`;
+                  
                     const row = `
-                        <tr class="transaction-row" data-toggle="collapse" data-target="#details-${rowId}" style="cursor: pointer;">
-                            <td>${t.date}</td>
-                            <td>${t.description}</td>
-                            <td>${t.branch}</td>
-                            <td>${t.mode}</td>
-                            <td>${t.category}</td>
-                            <td>${t.person}</td>
-                            <td>${currency} ${(t.amount * rate).toFixed(2)}</td>
-                            <td class="text-center"><i class="bx bx-message text-primary" style="cursor: pointer;"></i></td>
+                        <tr class="transaction-row ${rowClass}" data-toggle="collapse" data-target="#details-${rowId}" style="cursor: pointer;">
+                            <td style="font-size: 13px;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <div style="font-weight: bold; margin-bottom: 4px;">${t.date}</div>
+                                    <div style="font-size: 12px;">${t.branch} by Example user ${direction} ${t.person}</div>
+                                </div>
+                            </td>
+                            <td style="font-size: 13px; white-space: nowrap;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <strong>${t.title}</strong>
+                                    <div class="action-icons">${actionIcons}</div>
+                                </div>
+                            </td>
+                            <td style="font-size: 13px;">${t.mode}</td>
+                            <td style="font-size: 13px;">${t.category}</td>
+                            <td style="font-size: 13px;"><strong>${currency} ${(t.amount * rate).toFixed(2)}</strong></td>
                         </tr>
                         <tr id="details-${rowId}" class="collapse">
-                            <td colspan="8" class="p-3 bg-light">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <strong>Full Description:</strong> ${t.description} (Expanded view with additional notes on transaction processing).
-                                    </div>
-                                    <div class="col-md-6">
-                                        <strong>Attachments:</strong><br>
-                                        ${attachmentsHtml}
+                            <td colspan="5" class="p-0">
+                                <div class="transaction-details ${detailsClass}">
+                                    ${descriptionHtml}
+                                    ${attachmentsHtml}
+                                    <div class="detail-section">
+                                        <div class="detail-label">Transaction Details</div>
+                                        <div class="detail-content">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <strong>Type:</strong> ${t.type.charAt(0).toUpperCase() + t.type.slice(1)}
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <strong>Branch:</strong> ${t.branch}
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <strong>Payment Mode:</strong> ${t.mode}
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <strong>Category:</strong> ${t.category}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
@@ -354,12 +684,9 @@
                     tbody.innerHTML += row;
                 });
                 tbody.style.opacity = '1';
-                // Re-attach click handlers for expand/collapse (ensures clickable anytime)
                 attachRowClicks();
             }, 150);
         }
-
-        // Update totals
         function updateTotals(data, currency, rate) {
             const cashIn = data.filter(t => t.type === 'income').reduce((sum, t) => sum + (t.amount * rate), 0);
             const cashOut = data.filter(t => t.type === 'expenses').reduce((sum, t) => sum + (t.amount * rate), 0);
@@ -368,12 +695,13 @@
             document.getElementById('cashOutAmount').innerHTML = `${currency} ${cashOut.toFixed(2)}`;
             document.getElementById('balanceAmount').innerHTML = `${currency} ${balance.toFixed(2)}`;
         }
-
-        // Attach row click handlers (for expand/collapse - works independently of filters)
         function attachRowClicks() {
             document.querySelectorAll('.transaction-row').forEach(row => {
                 row.addEventListener('click', function(e) {
-                    if (e.target.tagName === 'I' && e.target.classList.contains('bx-message')) return; // Skip message icon
+                    // Don't collapse if clicking on action icons
+                    if (e.target.closest('.action-icons')) {
+                        return;
+                    }
                     const target = this.getAttribute('data-target');
                     const detailRow = document.querySelector(target);
                     if (detailRow) {
@@ -382,23 +710,132 @@
                 });
             });
         }
-
-        // Event listeners for dropdown changes (composite filtering)
+        // Category search functionality
+        function initializeCategorySearch() {
+            const titleInput = document.getElementById('expenseTitle');
+            const suggestionsContainer = document.createElement('div');
+            suggestionsContainer.className = 'category-suggestions';
+            titleInput.parentNode.appendChild(suggestionsContainer);
+            titleInput.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.trim().toLowerCase();
+                suggestionsContainer.innerHTML = '';
+              
+                if (searchTerm.length < 2) {
+                    suggestionsContainer.style.display = 'none';
+                    return;
+                }
+                const matches = [];
+              
+                // Search through hierarchical categories
+                hierarchicalCategories.forEach(mainCat => {
+                    mainCat.subCategories.forEach(subCat => {
+                        subCat.subSubCategories.forEach(subSubCat => {
+                            if (subSubCat.toLowerCase().includes(searchTerm)) {
+                                matches.push({
+                                    mainCategory: mainCat.mainCategory,
+                                    subCategory: subCat.subCategory,
+                                    subSubCategory: subSubCat
+                                });
+                            }
+                        });
+                    });
+                });
+                if (matches.length > 0) {
+                    matches.forEach(match => {
+                        const card = document.createElement('div');
+                        card.className = 'category-card';
+                        card.innerHTML = `
+                            <div class="main-category">${match.mainCategory}</div>
+                            <div class="sub-category">${match.subCategory} → ${match.subSubCategory}</div>
+                        `;
+                        card.addEventListener('click', function() {
+                            titleInput.value = match.subSubCategory;
+                            suggestionsContainer.style.display = 'none';
+                            validateExpenseForm();
+                        });
+                        suggestionsContainer.appendChild(card);
+                    });
+                    suggestionsContainer.style.display = 'block';
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!titleInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+        }
+        // Form validation for expense recording
+        function validateExpenseForm() {
+            const title = document.getElementById('expenseTitle')?.value.trim();
+            const amount = document.getElementById('expenseAmount')?.value.trim();
+            const category = document.getElementById('expenseCategory')?.value;
+            const recordButton = document.querySelector('#offcanvasExpense .btn-success');
+          
+            if (recordButton && title && amount && category) {
+                recordButton.disabled = false;
+            } else if (recordButton) {
+                recordButton.disabled = true;
+            }
+        }
+        // Initialize form validation
+        function initializeFormValidation() {
+            const inputs = document.querySelectorAll('#offcanvasExpense input, #offcanvasExpense select');
+            inputs.forEach(input => {
+                input.addEventListener('input', validateExpenseForm);
+                input.addEventListener('change', validateExpenseForm);
+            });
+        }
+        // Handle offcanvas navigation
+        function initializeOffcanvasNavigation() {
+            const addCategoryBtn = document.querySelector('[data-bs-target="#addCategoryCanvas"]');
+            if (addCategoryBtn) {
+                addCategoryBtn.addEventListener('click', function() {
+                    const expenseOffcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasExpense'));
+                    if (expenseOffcanvas) {
+                        expenseOffcanvas.hide();
+                    }
+                });
+            }
+            // When returning from category addition
+            const categoryCanvas = document.getElementById('addCategoryCanvas');
+            if (categoryCanvas) {
+                categoryCanvas.addEventListener('hide.bs.offcanvas', function() {
+                    const expenseOffcanvas = new bootstrap.Offcanvas(document.getElementById('offcanvasExpense'));
+                    expenseOffcanvas.show();
+                });
+            }
+        }
+        // Event listeners for icons
         document.addEventListener('click', function(e) {
+            // Message icon click
+            if (e.target.classList.contains('icon-message')) {
+                e.stopPropagation();
+                const row = e.target.closest('tr');
+                const description = row.cells[1].querySelector('strong').textContent;
+                alert(`Transaction Description:\n\n${description}`);
+            }
+          
+            // Attachment icon click
+            if (e.target.classList.contains('icon-attachment')) {
+                e.stopPropagation();
+                alert('Opening attachment manager for this transaction...');
+            }
+          
+            // Filter handling
             if (e.target.matches('[data-filter]')) {
                 e.preventDefault();
                 const item = e.target;
                 const filterType = item.dataset.filter;
-                // Update active class for this filter type
                 if (filterType !== 'all') {
                     document.querySelectorAll(`[data-filter="${filterType}"]`).forEach(el => el.classList.remove('active'));
                     item.classList.add('active');
                 } else {
-                    // For 'all' items, handle separately if needed
                     const transType = item.closest('ul').querySelector('[data-filter="transaction"]');
                     if (transType) transType.classList.remove('active');
                 }
-                // Apply all filters
                 applyFilters();
             } else if (e.target.matches('[data-date-filter], [data-currency]')) {
                 e.preventDefault();
@@ -406,24 +843,17 @@
                 const attr = item.dataset.dateFilter ? 'date-filter' : 'currency';
                 document.querySelectorAll(`[data-${attr}]`).forEach(el => el.classList.remove('active'));
                 item.classList.add('active');
-                // Apply all filters
                 applyFilters();
             }
         });
-
-        // Person search input listener (real-time)
         document.getElementById('id_search').addEventListener('input', applyFilters);
-
-        // Initial render
+        document.getElementById('global-search').addEventListener('input', applyFilters);
+      
+        // Initialize new functionality
+        initializeCategorySearch();
+        initializeFormValidation();
+        initializeOffcanvasNavigation();
         applyFilters();
-
-        // Message icon click (placeholder for notes modal)
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('bx-message')) {
-                e.stopPropagation();
-                alert('Open notes/modal for this transaction');
-            }
-        });
     });
 </script>
 {% endblock %}

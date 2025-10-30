@@ -1,0 +1,652 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Cashbook{% endblock title %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/finance/cashbook.css' %}">
+
+<style>
+    .transaction-table th:nth-child(1), .transaction-table td:nth-child(1) { width: 10%; } /* Date/Transaction */
+    .transaction-table th:nth-child(2), .transaction-table td:nth-child(2) { width: 30%; } /* Description - wider */
+    .transaction-table th:nth-child(3), .transaction-table td:nth-child(3) { width: 10%; } /* Branches */
+    .transaction-table th:nth-child(4), .transaction-table td:nth-child(4) { width: 8%; } /* Mode */
+    .transaction-table th:nth-child(5), .transaction-table td:nth-child(5) { width: 10%; } /* Categories */
+    .transaction-table th:nth-child(6), .transaction-table td:nth-child(6) { width: 15%; } /* Persons */
+    .transaction-table th:nth-child(7), .transaction-table td:nth-child(7) { width: 12%; } /* Amount */
+    .transaction-table th:nth-child(8), .transaction-table td:nth-child(8) { width: 5%; } /* Actions */
+    
+    /* Expense row styling */
+    .expense-row {
+        color: #dc3545 !important;
+        background-color: #fff5f5 !important;
+        border-left: 3px solid #dc3545 !important;
+    }
+    
+    .expense-row:hover {
+        background-color: #ffe6e6 !important;
+    }
+    
+    /* Income row styling - default colors */
+    .income-row {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+    }
+    
+    .income-row:hover {
+        background-color: #f8f9fa !important;
+    }
+    
+    /* Enhanced collapse section styling */
+    .transaction-details {
+        background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+        border-left: 4px solid #4e73df;
+        border-radius: 0 8px 8px 0;
+        margin: 5px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .expense-details {
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%) !important;
+        border-left: 4px solid #dc3545 !important;
+    }
+    
+    .detail-section {
+        padding: 15px 20px;
+        border-bottom: 1px solid #e3e6f0;
+    }
+    
+    .expense-details .detail-section {
+        border-bottom: 1px solid #ffcccc;
+    }
+    
+    .detail-section:last-child {
+        border-bottom: none;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: #4e73df;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+    
+    .expense-details .detail-label {
+        color: #dc3545 !important;
+    }
+    
+    .detail-content {
+        color: #5a5c69;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    
+    .attachment-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .attachment-item {
+        display: flex;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid #f8f9fc;
+    }
+    
+    .attachment-item:last-child {
+        border-bottom: none;
+    }
+    
+    .attachment-icon {
+        color: #4e73df;
+        margin-right: 8px;
+        font-size: 1.1rem;
+    }
+    
+    .expense-details .attachment-icon {
+        color: #dc3545 !important;
+    }
+    
+    .attachment-link {
+        color: #4e73df;
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: color 0.2s;
+    }
+    
+    .expense-details .attachment-link {
+        color: #dc3545 !important;
+    }
+    
+    .attachment-link:hover {
+        color: #2e59d9;
+        text-decoration: underline;
+    }
+    
+    .expense-details .attachment-link:hover {
+        color: #c82333 !important;
+    }
+    
+    .action-icons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+    
+    .icon-message, .icon-attachment {
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: transform 0.2s, color 0.2s;
+    }
+    
+    .icon-message {
+        color: #4e73df;
+    }
+    
+    .expense-row .icon-message {
+        color: #dc3545 !important;
+    }
+    
+    .icon-message:hover {
+        color: #2e59d9;
+        transform: scale(1.1);
+    }
+    
+    .expense-row .icon-message:hover {
+        color: #c82333 !important;
+    }
+    
+    .icon-attachment {
+        color: #1cc88a;
+    }
+    
+    .expense-row .icon-attachment {
+        color: #dc3545 !important;
+    }
+    
+    .icon-attachment:hover {
+        color: #17a673;
+        transform: scale(1.1);
+    }
+    
+    .expense-row .icon-attachment:hover {
+        color: #c82333 !important;
+    }
+    
+    /* Ensure text colors for expense rows */
+    .expense-row td {
+        color: #dc3545 !important;
+    }
+    
+    .expense-row td strong {
+        color: #dc3545 !important;
+    }
+</style>
+
+<div class="header p-0">
+    <div class="header-options d-flex justify-content-between mt-2 align-items-center">
+        <div class="d-flex align-items-center gap-3">
+            <button class="back-btn bg-light border-0 ps-4" type="button" style="display: none;">
+                <i class="bx bx-arrow-back"></i>
+            </button>
+            <h4 class="mb-0">Cashbook</h4>
+        </div>
+        <div class="d-flex gap-2 pe-4">
+            <div class="dropdown">
+                <button class="filter-btn text-success border-0 dropdown-toggle" type="button" data-bs-toggle="dropdown">By Date</button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item active" href="#" data-date-filter="all">All Dates</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" data-date-filter="today">Today</a></li>
+                    <li><a class="dropdown-item" href="#" data-date-filter="week">This Week</a></li>
+                    <li><a class="dropdown-item" href="#" data-date-filter="month">This Month</a></li>
+                    <li><a class="dropdown-item" href="#" data-date-filter="year">This Year</a></li>
+                </ul>
+            </div>
+            <div class="dropdown">
+                <button class="filter-btn text-success border-0 dropdown-toggle" type="button" data-bs-toggle="dropdown">USD</button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item active" href="#" data-currency="USD">USD</a></li>
+                    <li><a class="dropdown-item" href="#" data-currency="ZWG">ZWG</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid p-4" style="max-width: 1750px;">
+    <div class="d-flex justify-content-between w-100 flex-wrap">
+        <div class="mb-3">
+            <p class="text-muted mb-0">Manage and create cashbook transactions</p>
+        </div>
+        <div class="finance-buttons align-items-center d-flex gap-3 pe-2">
+            <button class="btn text-success" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExpense" aria-controls="offcanvasExpense" type="button">
+                Record transaction
+            </button>
+        </div>
+    </div>
+    
+    <div class="p-0 w-100">
+        <div class="justify-content-between p-2 mt-2 mb-4">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-subtitle mb-2 text-muted">Cash In</h5>
+                            </div>
+                            <div class="text-end">
+                                <h5 class="mb-3" id="cashInAmount">
+                                    0.00
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-subtitle mb-2 text-muted">Cash Out</h5>
+                            </div>
+                            <div class="text-end">
+                                <h5 class="mb-3" id="cashOutAmount">
+                                    0.00
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-subtitle mb-2 text-muted">Balance</h5>
+                            </div>
+                            <div class="text-end">
+                                <h5 class="mb-3" id="balanceAmount">
+                                    0.00
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded shadow-sm">
+        <div class="filter-section d-flex justify-content-between mb-2">
+            <button class="filter-btn" id="search">
+                <i class="bx bx-search"></i>
+            </button>
+
+            <div class="dropdown justify-content-end">
+                <button class="filter-btn dropdown-toggle justify-content-end" type="button" data-bs-toggle="dropdown">
+                    Logs
+                </button>
+                <ul class="dropdown-menu" id="logs-dropdown">
+                    <li><a class="dropdown-item" href="#" data-filter="log" data-value="all">All Logs</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" data-filter="log" data-value="Edited">Edited</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="log" data-value="Deleted">Deleted</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="content-section active" id="all-section">
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table table-borderless w-100 mb-0 transaction-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <div class="dropdown">
+                                        <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            Transaction
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item active" href="#" data-filter="all">Transactions</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="transaction" data-value="income">Income</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="transaction" data-value="expenses">Expenses</a></li>
+                                        </ul>
+                                    </div>
+                                </th>
+                                <th>Description</th>
+                                <th>
+                                    <div class="dropdown">
+                                        <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            Branches
+                                        </button>
+                                        <ul class="dropdown-menu" id="branches-dropdown">
+                                            <li><a class="dropdown-item active" href="#" data-filter="branch" data-value="all">Branches</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="branch" data-value="Harare">Harare</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="branch" data-value="Mutare">Mutare</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="branch" data-value="Head Office">Head Office</a></li>
+                                        </ul>
+                                    </div>
+                                </th>
+                                <th>
+                                    <div class="dropdown">
+                                        <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            Mode
+                                        </button>
+                                        <ul class="dropdown-menu" id="mode-dropdown">
+                                            <li><a class="dropdown-item active" href="#" data-filter="mode" data-value="all">All Modes</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Cash">Cash</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Bank">Bank</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Ecocash">Ecocash</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Pay Pal">Pay Pal</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="mode" data-value="Cheque">Cheque</a></li>
+                                        </ul>
+                                    </div>
+                                </th>
+                                <th>
+                                    <div class="dropdown">
+                                        <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            Categories
+                                        </button>
+                                        <ul class="dropdown-menu" id="categories-dropdown">
+                                            <li><a class="dropdown-item active" href="#" data-filter="category" data-value="all">Categories</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="category" data-value="Car">Car</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="category" data-value="Lunch">Lunch</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="category" data-value="Bike">Bike</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="category" data-value="Phone">Phone</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="category" data-value="Laptop">Laptop</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="category" data-value="Home">Home</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="category" data-value="Monthly">Monthly</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="category" data-value="Bonus">Bonus</a></li>
+                                            <li><a class="dropdown-item" href="#" data-filter="category" data-value="Freelance">Freelance</a></li>
+                                        </ul>
+                                    </div>
+                                </th>
+                                
+                                <th>
+                                    <div class="dropdown">
+                                        <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            Persons
+                                        </button>
+                                        <ul class="dropdown-menu" id="persons-dropdown">
+                                            <li><a class="dropdown-item active" href="#" data-filter="person" data-value="all">Persons</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><i class="bx bx-search ms-2"></i><input type="search" name="a" class="form-control bg-light border-0" id="id_search" placeholder="Search..."></li>
+                                            <div class="justify-content-between">
+                                                <li><button class="btn text-primary" type="button">View Contacts</button></li>
+                                                <li><button class="btn text-primary" type="button">Add Person</button></li>                                                    
+                                        </ul>
+                                    </div>
+                                </th>
+
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        
+                        <tbody id="transaction-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- canvases -->
+    {% include 'cashbook/canvas/income_canvas.html' %} <!-- income -->
+    {% include 'cashbook/canvas/expense_canvas.html' %} <!-- expense -->
+    {% include 'cashbook/canvas/transfer.html' %}  <!-- transfer -->
+</div>  
+
+<script src="{% static 'js/finance/cashbook.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enhanced sample data with description and attachment flags
+        const transactions = [
+            { date: '2025-10-20 14:30', amount: 100.00, type: 'income', person: 'John Doe', branch: 'Harare', mode: 'Cash', category: 'Sales', description: 'Sample sales transaction for monthly report.', hasDescription: true, hasAttachment: true },
+            { date: '2025-10-21 09:15', amount: 250.50, type: 'expenses', person: 'Jane Smith', branch: 'Mutare', mode: 'Bank', category: 'Purchase', description: 'Office supplies purchase for Q4.', hasDescription: true, hasAttachment: false },
+            { date: '2025-10-22 16:45', amount: 75.25, type: 'expenses', person: 'Bob Johnson', branch: 'Head Office', mode: 'Ecocash', category: 'Refund', description: '', hasDescription: false, hasAttachment: true },
+            { date: '2025-10-23 11:20', amount: 500.00, type: 'income', person: 'Alice Brown', branch: 'Harare', mode: 'Cheque', category: 'Deposit', description: 'Security deposit for new project.', hasDescription: true, hasAttachment: false },
+            { date: '2025-10-24 13:00', amount: 125.75, type: 'expenses', person: 'Charlie Davis', branch: 'Mutare', mode: 'Wallet', category: 'Withdrawal', description: '', hasDescription: false, hasAttachment: false },
+            { date: '2025-10-25 10:10', amount: 300.00, type: 'income', person: 'Diana Wilson', branch: 'Head Office', mode: 'Pay Pal', category: 'Sales', description: 'Online sales payment received.', hasDescription: true, hasAttachment: true },
+            { date: '2025-10-26 12:30', amount: 87.50, type: 'expenses', person: 'Edward Moore', branch: 'Harare', mode: 'Cash', category: 'Lunch', description: 'Team lunch expense.', hasDescription: true, hasAttachment: false },
+            { date: '2025-10-19 15:45', amount: 1200.00, type: 'expenses', person: 'Fiona Taylor', branch: 'Mutare', mode: 'Bank', category: 'Laptop', description: '', hasDescription: false, hasAttachment: true },
+            { date: '2025-10-18 08:00', amount: 45.25, type: 'expenses', person: 'George Anderson', branch: 'Head Office', mode: 'Ecocash', category: 'Phone', description: 'Mobile top-up for business line.', hasDescription: true, hasAttachment: false },
+            { date: '2025-10-27 17:15', amount: 2500.00, type: 'income', person: 'Hannah Thomas', branch: 'Harare', mode: 'Cheque', category: 'Bonus', description: 'Performance bonus payout.', hasDescription: true, hasAttachment: true }
+        ];
+
+        const now = new Date('2025-10-27');
+
+        // Function to filter and update table
+        function applyFilters() {
+            let filtered = transactions.slice();
+            const dateFilter = document.querySelector('[data-date-filter].active')?.dataset.dateFilter || 'all';
+            if (dateFilter !== 'all') {
+                filtered = filtered.filter(t => {
+                    const tDateStr = t.date.replace(' ', 'T') + ':00';
+                    const tDate = new Date(tDateStr);
+                    switch(dateFilter) {
+                        case 'today':
+                            return tDate.toDateString() === now.toDateString();
+                        case 'week':
+                            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            return tDate >= weekAgo && tDate <= now;
+                        case 'month':
+                            return tDate.getMonth() === now.getMonth() && tDate.getFullYear() === now.getFullYear();
+                        case 'year':
+                            return tDate.getFullYear() === now.getFullYear();
+                        default:
+                            return true;
+                    }
+                });
+            }
+            
+            const searchTerm = document.getElementById('id_search').value.trim().toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(t => t.person.toLowerCase().includes(searchTerm));
+            }
+            
+            const transFilter = document.querySelector('[data-filter="transaction"].active')?.dataset.value || 'all';
+            if (transFilter !== 'all') {
+                filtered = filtered.filter(t => t.type === transFilter);
+            }
+            
+            const branchFilter = document.querySelector('[data-filter="branch"].active')?.dataset.value || 'all';
+            if (branchFilter !== 'all') {
+                filtered = filtered.filter(t => t.branch === branchFilter);
+            }
+            
+            const modeFilter = document.querySelector('[data-filter="mode"].active')?.dataset.value || 'all';
+            if (modeFilter !== 'all') {
+                filtered = filtered.filter(t => t.mode === modeFilter);
+            }
+            
+            const catFilter = document.querySelector('[data-filter="category"].active')?.dataset.value || 'all';
+            if (catFilter !== 'all') {
+                filtered = filtered.filter(t => t.category === catFilter);
+            }
+            
+            const logFilter = document.querySelector('[data-filter="log"].active')?.dataset.value || 'all';
+            const currency = document.querySelector('[data-currency].active')?.dataset.currency || 'USD';
+            const rate = currency === 'ZWG' ? 26 : 1;
+            
+            renderTable(filtered, currency, rate);
+            updateTotals(filtered, currency, rate);
+        }
+
+        // Enhanced render table function with colored rows based on transaction type
+        function renderTable(data, currency, rate) {
+            const tbody = document.getElementById('transaction-tbody');
+            tbody.style.opacity = '0.5';
+            setTimeout(() => {
+                tbody.innerHTML = '';
+                data.forEach((t, index) => {
+                    const rowId = index + 1;
+                    const isExpense = t.type === 'expenses';
+                    const rowClass = isExpense ? 'expense-row' : 'income-row';
+                    const detailsClass = isExpense ? 'expense-details' : '';
+                    
+                    // Generate action icons based on transaction properties
+                    let actionIcons = '';
+                    if (t.hasDescription) {
+                        actionIcons += '<i class="bx bx-message icon-message" title="View Description"></i>';
+                    }
+                    if (t.hasAttachment) {
+                        actionIcons += '<i class="bx bx-paperclip icon-attachment" title="View Attachments"></i>';
+                    }
+                    
+                    // Generate attachments HTML if exists
+                    const attachmentsHtml = t.hasAttachment ? 
+                        `<div class="detail-section">
+                            <div class="detail-label">Attachments</div>
+                            <div class="detail-content">
+                                <ul class="attachment-list">
+                                    <li class="attachment-item">
+                                        <i class="bx bx-file icon-attachment"></i>
+                                        <a href="#" class="attachment-link">invoice_${t.date.split(' ')[0].replace(/-/g, '')}.pdf</a>
+                                    </li>
+                                    <li class="attachment-item">
+                                        <i class="bx bx-image icon-attachment"></i>
+                                        <a href="#" class="attachment-link">receipt_${t.date.split(' ')[0].replace(/-/g, '')}.jpg</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>` : 
+                        `<div class="detail-section">
+                            <div class="detail-label">Attachments</div>
+                            <div class="detail-content text-muted">No attachments available</div>
+                        </div>`;
+                    
+                    // Generate description HTML
+                    const descriptionHtml = t.hasDescription ? 
+                        `<div class="detail-section">
+                            <div class="detail-label">Full Description</div>
+                            <div class="detail-content">${t.description}</div>
+                        </div>` : 
+                        `<div class="detail-section">
+                            <div class="detail-label">Full Description</div>
+                            <div class="detail-content text-muted">No description available</div>
+                        </div>`;
+                    
+                    const row = `
+                        <tr class="transaction-row ${rowClass}" data-toggle="collapse" data-target="#details-${rowId}" style="cursor: pointer;">
+                            <td>${t.date}</td>
+                            <td>${t.description ? (t.description.length > 50 ? t.description.substring(0, 50) + '...' : t.description) : 'No description'}</td>
+                            <td>${t.branch}</td>
+                            <td>${t.mode}</td>
+                            <td>${t.category}</td>
+                            <td>${t.person}</td>
+                            <td><strong>${currency} ${(t.amount * rate).toFixed(2)}</strong></td>
+                            <td>
+                                <div class="action-icons">
+                                    ${actionIcons}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="details-${rowId}" class="collapse">
+                            <td colspan="8" class="p-0">
+                                <div class="transaction-details ${detailsClass}">
+                                    ${descriptionHtml}
+                                    ${attachmentsHtml}
+                                    <div class="detail-section">
+                                        <div class="detail-label">Transaction Details</div>
+                                        <div class="detail-content">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <strong>Type:</strong> ${t.type.charAt(0).toUpperCase() + t.type.slice(1)}
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <strong>Branch:</strong> ${t.branch}
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <strong>Payment Mode:</strong> ${t.mode}
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <strong>Category:</strong> ${t.category}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+                tbody.style.opacity = '1';
+                attachRowClicks();
+            }, 150);
+        }
+
+        function updateTotals(data, currency, rate) {
+            const cashIn = data.filter(t => t.type === 'income').reduce((sum, t) => sum + (t.amount * rate), 0);
+            const cashOut = data.filter(t => t.type === 'expenses').reduce((sum, t) => sum + (t.amount * rate), 0);
+            const balance = cashIn - cashOut;
+            document.getElementById('cashInAmount').innerHTML = `${currency} ${cashIn.toFixed(2)}`;
+            document.getElementById('cashOutAmount').innerHTML = `${currency} ${cashOut.toFixed(2)}`;
+            document.getElementById('balanceAmount').innerHTML = `${currency} ${balance.toFixed(2)}`;
+        }
+
+        function attachRowClicks() {
+            document.querySelectorAll('.transaction-row').forEach(row => {
+                row.addEventListener('click', function(e) {
+                    // Don't collapse if clicking on action icons
+                    if (e.target.closest('.action-icons')) {
+                        return;
+                    }
+                    const target = this.getAttribute('data-target');
+                    const detailRow = document.querySelector(target);
+                    if (detailRow) {
+                        detailRow.classList.toggle('show');
+                    }
+                });
+            });
+        }
+
+        // Event listeners for icons
+        document.addEventListener('click', function(e) {
+            // Message icon click
+            if (e.target.classList.contains('icon-message')) {
+                e.stopPropagation();
+                const row = e.target.closest('tr');
+                const description = row.cells[1].textContent;
+                alert(`Transaction Description:\n\n${description}`);
+            }
+            
+            // Attachment icon click
+            if (e.target.classList.contains('icon-attachment')) {
+                e.stopPropagation();
+                alert('Opening attachment manager for this transaction...');
+            }
+            
+            // Filter handling
+            if (e.target.matches('[data-filter]')) {
+                e.preventDefault();
+                const item = e.target;
+                const filterType = item.dataset.filter;
+                if (filterType !== 'all') {
+                    document.querySelectorAll(`[data-filter="${filterType}"]`).forEach(el => el.classList.remove('active'));
+                    item.classList.add('active');
+                } else {
+                    const transType = item.closest('ul').querySelector('[data-filter="transaction"]');
+                    if (transType) transType.classList.remove('active');
+                }
+                applyFilters();
+            } else if (e.target.matches('[data-date-filter], [data-currency]')) {
+                e.preventDefault();
+                const item = e.target;
+                const attr = item.dataset.dateFilter ? 'date-filter' : 'currency';
+                document.querySelectorAll(`[data-${attr}]`).forEach(el => el.classList.remove('active'));
+                item.classList.add('active');
+                applyFilters();
+            }
+        });
+
+        document.getElementById('id_search').addEventListener('input', applyFilters);
+        applyFilters();
+    });
+</script>
+{% endblock %}
