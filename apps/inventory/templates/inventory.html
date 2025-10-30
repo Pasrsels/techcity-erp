@@ -1352,6 +1352,104 @@
     </div>
 </div>
 
+<div class="modal fade" id="productAnalyticsModal" tabindex="-1" aria-labelledby="productAnalyticsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title d-flex align-items-center gap-2" id="productAnalyticsModalLabel">
+                    <i class="bx bx-analytics fs-4"></i>
+                    <span id="analytics-product-name"></span> Analytics
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Product Info Card -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="text-primary mb-3">Product Information</h6>
+                                        <p class="mb-1"><strong>Name:</strong> <span id="analytics-product-name-detail"></span></p>
+                                        <p class="mb-1"><strong>Category:</strong> <span id="analytics-product-category"></span></p>
+                                        <p class="mb-1"><strong>Current Stock:</strong> <span id="analytics-current-stock"></span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-success mb-3">Financial Details</h6>
+                                        <p class="mb-1"><strong>Selling Price:</strong> $<span id="analytics-price"></span></p>
+                                        <p class="mb-1"><strong>Cost Price:</strong> $<span id="analytics-cost"></span></p>
+                                        <p class="mb-1"><strong>Margin:</strong> <span id="analytics-margin"></span>%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="text-warning mb-3">Performance Metrics</h6>
+                                <p class="mb-1"><strong>Avg Monthly Sales:</strong> <span id="analytics-avg-sales"></span></p>
+                                <p class="mb-1"><strong>Avg Monthly Returns:</strong> <span id="analytics-avg-returns"></span></p>
+                                <p class="mb-1"><strong>Return Rate:</strong> <span id="analytics-return-rate"></span>%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Monthly Sales (Last 12 Months)</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="monthlySalesChart" width="400" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Monthly Returns (Last 12 Months)</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="monthlyReturnsChart" width="400" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Yearly Sales</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="yearlySalesChart" width="400" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Sales vs Returns Trend</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="salesVsReturnsChart" width="400" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
 <script>
@@ -1419,6 +1517,203 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+function showProductAnalytics(productId) {
+    // Clear previous content before showing modal
+    clearAnalyticsModal();
+    
+    const modal = new bootstrap.Modal(document.getElementById('productAnalyticsModal'));
+    modal.show();
+
+    fetch(`/inventory/product-analytics/${productId}/`, { method: 'GET' })
+        .then(response => response.json())
+        .then(data => {
+            setTimeout(() => {
+                // Update modal elements after modal is shown
+                document.getElementById('analytics-product-name').textContent = data.product.name;
+                document.getElementById('productAnalyticsModalLabel').textContent = `${data.product.name} Analytics`;
+                
+                document.getElementById('analytics-product-name-detail').textContent = data.product.name;
+                document.getElementById('analytics-product-category').textContent = data.product.category;
+                document.getElementById('analytics-current-stock').textContent = data.product.current_stock;
+                document.getElementById('analytics-price').textContent = data.product.price;
+                document.getElementById('analytics-cost').textContent = data.product.cost;
+                
+                // Calculate margin
+                const margin = (((data.product.price - data.product.cost) / data.product.price) * 100).toFixed(2);
+                document.getElementById('analytics-margin').textContent = margin;
+                
+                // Update performance metrics
+                document.getElementById('analytics-avg-sales').textContent = data.performance_metrics.avg_monthly_sales.toFixed(2);
+                document.getElementById('analytics-avg-returns').textContent = data.performance_metrics.avg_monthly_returns.toFixed(2);
+                document.getElementById('analytics-return-rate').textContent = data.performance_metrics.return_rate.toFixed(2);
+                
+                initializeCharts(data);
+            }, 300);
+        })
+        .catch(error => console.error('Error fetching analytics:', error));
+}
+
+// Function to clear all modal content
+function clearAnalyticsModal() {
+    // Clear text content
+    document.getElementById('analytics-product-name').textContent = '';
+    document.getElementById('productAnalyticsModalLabel').textContent = 'Product Analytics';
+    
+    document.getElementById('analytics-product-name-detail').textContent = '';
+    document.getElementById('analytics-product-category').textContent = '';
+    document.getElementById('analytics-current-stock').textContent = '';
+    document.getElementById('analytics-price').textContent = '';
+    document.getElementById('analytics-cost').textContent = '';
+    document.getElementById('analytics-margin').textContent = '';
+    
+    document.getElementById('analytics-avg-sales').textContent = '';
+    document.getElementById('analytics-avg-returns').textContent = '';
+    document.getElementById('analytics-return-rate').textContent = '';
+    
+    // Destroy existing charts
+    if (monthlySalesChart) {
+        monthlySalesChart.destroy();
+        monthlySalesChart = null;
+    }
+    if (monthlyReturnsChart) {
+        monthlyReturnsChart.destroy();
+        monthlyReturnsChart = null;
+    }
+    if (yearlySalesChart) {
+        yearlySalesChart.destroy();
+        yearlySalesChart = null;
+    }
+    if (salesVsReturnsChart) {
+        salesVsReturnsChart.destroy();
+        salesVsReturnsChart = null;
+    }
+}
+
+// Global chart variables to store chart instances
+let monthlySalesChart = null;
+let monthlyReturnsChart = null;
+let yearlySalesChart = null;
+let salesVsReturnsChart = null;
+
+function initializeCharts(data) {
+    // Destroy existing charts if they exist
+    if (monthlySalesChart) {
+        monthlySalesChart.destroy();
+    }
+    if (monthlyReturnsChart) {
+        monthlyReturnsChart.destroy();
+    }
+    if (yearlySalesChart) {
+        yearlySalesChart.destroy();
+    }
+    if (salesVsReturnsChart) {
+        salesVsReturnsChart.destroy();
+    }
+
+    const monthlySalesCtx = document.getElementById('monthlySalesChart').getContext('2d');
+    monthlySalesChart = new Chart(monthlySalesCtx, {
+        type: 'line',
+        data: {
+            labels: data.sales_by_month.map(item => new Date(item.month).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })),
+            datasets: [{
+                label: 'Sales Quantity',
+                data: data.sales_by_month.map(item => item.total_quantity),
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true },
+                tooltip: { mode: 'index', intersect: false }
+            }
+        }
+    });
+
+    const monthlyReturnsCtx = document.getElementById('monthlyReturnsChart').getContext('2d');
+    monthlyReturnsChart = new Chart(monthlyReturnsCtx, {
+        type: 'bar',
+        data: {
+            labels: data.returns_by_month.map(item => new Date(item.month).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })),
+            datasets: [{
+                label: 'Returns Quantity',
+                data: data.returns_by_month.map(item => item.total_returns),
+                backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                borderColor: 'rgb(255, 99, 132)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true }
+            }
+        }
+    });
+
+    const yearlySalesCtx = document.getElementById('yearlySalesChart').getContext('2d');
+    yearlySalesChart = new Chart(yearlySalesCtx, {
+        type: 'bar',
+        data: {
+            labels: data.sales_by_year.map(item => item.year),
+            datasets: [{
+                label: 'Sales Quantity',
+                data: data.sales_by_year.map(item => item.total_quantity),
+                backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                borderColor: 'rgb(54, 162, 235)',
+                borderWidth: 1
+            }, {
+                label: 'Sales Revenue ($)',
+                data: data.sales_by_year.map(item => item.total_revenue),
+                backgroundColor: 'rgba(255, 205, 86, 0.8)',
+                borderColor: 'rgb(255, 205, 86)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    const salesVsReturnsCtx = document.getElementById('salesVsReturnsChart').getContext('2d');
+    salesVsReturnsChart = new Chart(salesVsReturnsCtx, {
+        type: 'line',
+        data: {
+            labels: data.sales_by_month.map(item => new Date(item.month).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })),
+            datasets: [{
+                label: 'Sales',
+                data: data.sales_by_month.map(item => item.total_quantity),
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }, {
+                label: 'Returns',
+                data: data.returns_by_month.map(item => item.total_returns || 0),
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true },
+                tooltip: { mode: 'index', intersect: false }
+            }
+        }
+    });
+}
 
 </script>
 {% endblock content %}

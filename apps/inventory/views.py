@@ -28,7 +28,9 @@ from apps.finance.models import (
     Cashbook,
     ExpenseCategory,
     AccountBalance,
-    AccountTransaction
+    AccountTransaction,
+    InvoiceItem,
+    Invoice
 )
 from . utils import (
     calculate_inventory_totals, 
@@ -83,6 +85,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from io import BytesIO
+from django.db.models.functions import TruncMonth, TruncYear
 
 now = timezone.now() 
 today = now.date()  
@@ -1136,6 +1139,77 @@ def inventory_transfer_index(request):
     })
 
 @login_required
+def product_analytics(request, product_id):
+    logger.info(product_id)
+    product = Inventory.objects.get(id=product_id)
+    
+    sales_by_month = InvoiceItem.objects.filter(
+        item=product,
+        invoice__issue_date__gte=timezone.now() - timedelta(days=365)
+    ).annotate(
+        month=TruncMonth('invoice__issue_date'),
+        year=TruncYear('invoice__issue_date')
+    ).values('month', 'year').annotate(
+        total_quantity=Sum('quantity'),
+        total_revenue=Sum(F('quantity') * F('unit_price'))
+    ).order_by('month')
+    
+    sales_by_year = InvoiceItem.objects.filter(
+        item=product
+    ).annotate(
+        year=TruncYear('invoice__issue_date')
+    ).values('year').annotate(
+        total_quantity=Sum('quantity'),
+        total_revenue=Sum(F('quantity') * F('unit_price'))
+    ).order_by('year')
+
+    returns = InvoiceItem.objects.filter(
+        item=product,
+        invoice__invoice_return=True,
+        invoice__issue_date__gte=timezone.now() - timedelta(days=365)
+    ).annotate(
+        month=TruncMonth('invoice__issue_date')
+    ).values('month').annotate(
+        total_returns=Sum('quantity')
+    ).order_by('month')
+    
+    total_sales = InvoiceItem.objects.filter(item=product).aggregate(
+        total_quantity=Sum('quantity'),
+        total_revenue=Sum(F('quantity') * F('unit_price'))
+    )
+    
+    total_returns = InvoiceItem.objects.filter(
+        item=product,
+        invoice__invoice_return=True
+    ).aggregate(
+        total_returns=Sum('quantity')
+    )
+
+    
+    data = {
+        'product': {
+            'id': product.id,
+            'name': product.name,
+            'category': product.category.name if product.category else 'N/A',
+            'current_stock': product.quantity,
+            'price': product.price,
+            'cost': product.cost
+        },
+        'sales_by_month': list(sales_by_month),
+        'sales_by_year': list(sales_by_year),
+        'returns_by_month': list(returns),
+        'total_sales': total_sales,
+        'total_returns': total_returns,
+        'performance_metrics': {
+            'avg_monthly_sales': sum(item['total_quantity'] for item in sales_by_month) / 12 if sales_by_month else 0,
+            'avg_monthly_returns': sum(item['total_returns'] for item in returns) / 12 if returns else 0,
+            'return_rate': (total_returns['total_returns'] or 0 / total_sales['total_quantity'] * 100) if total_sales['total_quantity'] else 0
+        }
+    }
+    
+    return JsonResponse(data)
+
+@login_required
 def search_load_transfers(request):
     q = request.GET.get('q', '') 
 
@@ -1210,6 +1284,61 @@ def inventory_transfer_item_data(request, id):
     )
 
     return JsonResponse(list(transfer_items), safe=False)
+
+
+@login_required
+def show_transfer_detail(request, transfer_id):
+    transfer = Transfer.objects.filter(id=transfer_id).select_related(
+        'branch', 'user'
+    ).values(
+        'id',
+        'transfer_ref',
+        'branch__name',
+        'user__username',
+        'time',
+        'description'
+    )
+
+    logger.info(transfer)   
+
+    transfer_items = TransferItems.objects.filter(
+        Q(to_branch=request.user.branch) | Q(from_branch=request.user.branch),
+        transfer__id=transfer_id
+    ).select_related(
+        'product', 'from_branch', 'to_branch', 'action_by', 'received_by', 'transfer'
+    ).annotate(
+        total_amount=F('quantity') * F('product__cost')
+    ).values(
+        'id',
+        'quantity', 
+        'over_less_quantity', 
+        'price', 
+        'dealer_price', 
+        'received', 
+        'declined', 
+        'over_less', 
+        'quantity_track', 
+        'description', 
+        'over_less_description', 
+        'received_quantity', 
+        'cost', 
+        'date', 
+        'date_received', 
+        'transfer__id',
+        'from_branch__name',
+        'product__name', 
+        'to_branch__name', 
+        'action_by__username', 
+        'received_by__username',
+        'received_back_quantity'
+    )
+
+    data = {
+        'transfer': list(transfer),
+        'transfer_items': list(transfer_items),
+    }
+
+    return JsonResponse(data)
 
 @login_required
 def add_transfer_item(request, transfer_id):

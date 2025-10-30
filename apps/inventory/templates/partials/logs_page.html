@@ -66,29 +66,41 @@
 </div>
 {% endif %}
 
-{% if current_page == 1 %}
-<div class="modal fade" id="activityModal" tabindex="-1" aria-labelledby="activityModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="activityModalLabel">
-                    <i class="bx bx-info-circle"></i> Inventory Activity Log
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id='activityBody'>
-                <!-- populated by js -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
     function showActivityModal(id) {
-        const modal = new bootstrap.Modal(document.getElementById('activityModal'));
+        // Check if modal already exists
+        let modalElement = document.getElementById('activityModal');
+        let modal;
+        if (!modalElement) {
+            // Create modal element
+            modalElement = document.createElement('div');
+            modalElement.id = 'activityModal';
+            modalElement.className = 'modal fade';
+            modalElement.tabIndex = '-1';
+            modalElement.setAttribute('aria-labelledby', 'activityModalLabel');
+            modalElement.setAttribute('aria-hidden', 'true');
+            modalElement.innerHTML = `
+                <div class="modal-dialog modal-dialog-centered modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="activityModalLabel">
+                                <i class="bx bx-info-circle"></i> Inventory Activity Log
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" id='activityBody'></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modalElement);
+            modal = new bootstrap.Modal(modalElement);
+        } else {
+            modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+        }
+
         fetch(`/inventory/stocktake/detail/${id}/`, {
             method: 'POST',
             headers: {
@@ -136,4 +148,3 @@
         }
     });
 </script>
-{% endif %}

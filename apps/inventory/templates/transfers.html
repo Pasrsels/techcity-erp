@@ -78,311 +78,458 @@
         color: var(--text-dark);
     }
 </style>
-   <div class="transfers p-2">
-        <div class="inventory-navbar">
-            <nav class="d-flex justify-content-between align-items-center text  p-2">
+<div class="transfers p-2">
+    <div class="inventory-navbar">
+        <nav class="d-flex justify-content-between align-items-center text  p-2">
+            <div>
+                <h4>Product Transfers</h4>
+                <p>Create and manage transfers</p>
+            </div>
+            <div class="d-flex align-items-center">
+                <!-- <div class="d-flex justify-content-between align-items-center">
+                    <div class="p-2 rounded">
+                        Transfered value: 
+                        {{ transferred_value }}
+                    </div>
+                    <div class="p-2 rounded mx-2">
+                        Received value: 
+                        {{ received_value }}
+                    </div>
+                </div> -->
                 <div>
-                    <h4>Product Transfers</h4>
-                    <p>Create and manage transfers</p>
+                    <a href="{% url 'inventory:add_transfer' %}" type="button" class="btn header-btn">
+                        <i class="bx bx-plus"></i>
+                        Transfer
+                    </a>
                 </div>
-                <div class="d-flex align-items-center">
-                    <!-- <div class="d-flex justify-content-between align-items-center">
-                        <div class="p-2 rounded">
-                            Transfered value: 
-                            {{ transferred_value }}
-                        </div>
-                        <div class="p-2 rounded mx-2">
-                            Received value: 
-                            {{ received_value }}
-                        </div>
-                    </div> -->
-                    <div>
-                        <a href="{% url 'inventory:add_transfer' %}" type="button" class="btn header-btn">
-                            <i class="bx bx-plus"></i>
-                            Transfer
+            </div>
+        </nav>
+    </div>
+    <div class='px-2'>
+        <div class="mt-3 mb-3 d-flex justify-content-between align-items-center p-2 mb-2 mt-2 rounded" style="background: #fff;">
+            <div class="d-flex align-items-center">
+                <div class="d-none d-md-flex align-items-center">
+                    <div class="me-2">
+                        <a href="{% url 'inventory:loss_management' %}" class="btn btn-outline-dark header-btn">
+                            Loss management
                         </a>
                     </div>
+                    <div>
+                        <button type="button" class="pdf-gen btn header-btn">
+                            Transfers Report
+                            <i class="bx bx-file text-light"></i>
+                        </button>
+                    </div>
                 </div>
-            </nav>
-        </div>
-        <div class='px-2'>
-            <div class="mt-3 mb-3 d-flex justify-content-between align-items-center p-2 mb-2 mt-2 rounded" style="background: #fff;">
-                <div class="d-flex align-items-center">
-                    <div class="d-none d-md-flex align-items-center">
-                        <div class="me-2">
-                            <a href="{% url 'inventory:loss_management' %}" class="btn btn-outline-dark header-btn">
-                                Loss management
+        
+                <div class="d-md-none">
+                    <button
+                        class="btn btn-outline-dark btn-sm dropdown-toggle"
+                        type="button"
+                        id="dropdownMenuButton"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                    >
+                        Menu
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
+                        <li class="dropdown-item bg-light">
+                            <a href="{% url 'inventory:add_transfer' %}" class="text-dark">
+                                <i class="bx bx-plus"></i>
+                                Transfer
                             </a>
-                        </div>
-                        <div>
-                            <button type="button" class="pdf-gen btn header-btn">
+                        </li>
+                        <li class="dropdown-item bg-white"> 
+                            <a href="{% url 'inventory:over_less_list_stock' %}" class="text-dark flick">
+                                Over/Less Received Stocks
+                            </a>
+                        </li>
+                        <li class="dropdown-item bg-light"> 
+                            <button class="btn btn-secondary btn-sm w-100 pdf-gen">
                                 Transfers Report
                                 <i class="bx bx-file text-light"></i>
                             </button>
-                        </div>
-                    </div>
-            
-                    <div class="d-md-none">
-                        <button
-                            class="btn btn-outline-dark btn-sm dropdown-toggle"
-                            type="button"
-                            id="dropdownMenuButton"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="false"
-                        >
-                            Menu
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-                            <li class="dropdown-item bg-light">
-                                <a href="{% url 'inventory:add_transfer' %}" class="text-dark">
-                                    <i class="bx bx-plus"></i>
-                                    Transfer
-                                </a>
-                            </li>
-                            <li class="dropdown-item bg-white"> 
-                                <a href="{% url 'inventory:over_less_list_stock' %}" class="text-dark flick">
-                                    Over/Less Received Stocks
-                                </a>
-                            </li>
-                            <li class="dropdown-item bg-light"> 
-                                <button class="btn btn-secondary btn-sm w-100 pdf-gen">
-                                    Transfers Report
-                                    <i class="bx bx-file text-light"></i>
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                 <form method="get" class="d-flex">
-                    <select name="branch" class="form- form-control mx-1">
-                        <option value="">All Branches</option>
-                        {% for branch in branches %}
-                            <option value="{{ branch.id }}">{{ branch.name }}</option>
-                            <option value="True">Delete</option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="btn header-btn btn-sm">
-                        <i class="bx bx-filter"></i>
-                    </button>
-                </form>
-            </div>
-            
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="search-container w-100 border rounded" id="fixed-search" style="position: sticky; top: 0; z-index: 2; background: white;">
-                    <input type="text" class="search-input" placeholder="Search products..." oninput="searchTable()" id="searchInput" style="margin-left: 20px !important;">
-                    <i class="fas fa-search search-icon"></i>
+                        </li>
+                    </ul>
                 </div>
             </div>
-            {% include "components/transfers_table.html" %}
-        </div>
-        <!-- pagination -->
-        <div class="d-flex justify-content-end">
-            <nav aria-label="Page navigation">
-                <ul class="pagination">
-                    {% if transfers.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}" aria-label="First">
-                                <i class='bx bx-chevrons-left'></i>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ transfers.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" aria-label="Previous">
-                                <i class='bx bx-chevron-left'></i>
-                            </a>
-                        </li>
-                    {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">
-                                <i class='bx bx-chevrons-left'></i>
-                            </span>
-                        </li>
-                        <li class="page-item disabled">
-                            <span class="page-link">
-                                <i class='bx bx-chevron-left'></i>
-                            </span>
-                        </li>
-                    {% endif %}
-
-                    <li class="page-item disabled">
-                        <span class="page-link">
-                            Page {{ transfers.number }} of {{ transfers.paginator.num_pages }}
-                        </span>
-                    </li>
-
-                    {% if transfers.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ transfers.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" aria-label="Next">
-                                <i class='bx bx-chevron-right'></i>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ transfers.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}" aria-label="Last">
-                                <i class='bx bx-chevrons-right'></i>
-                            </a>
-                        </li>
-                    {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">
-                                <i class='bx bx-chevron-right'></i>
-                            </span>
-                        </li>
-                        <li class="page-item disabled">
-                            <span class="page-link">
-                                <i class='bx bx-chevrons-right'></i>
-                            </span>
-                        </li>
-                    {% endif %}
-                </ul>
-            </nav>
+                <form method="get" class="d-flex">
+                <select name="branch" class="form- form-control mx-1">
+                    <option value="">All Branches</option>
+                    {% for branch in branches %}
+                        <option value="{{ branch.id }}">{{ branch.name }}</option>
+                        <option value="True">Delete</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn header-btn btn-sm">
+                    <i class="bx bx-filter"></i>
+                </button>
+            </form>
         </div>
         
-        <!-- transfers pdf modal -->
-        <div class="modal fade" id="transferModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body p-4">
-                        <div id="id_choice">
-                            <div class="row">
-                                <div class="col shadow bg-primary btn" data-name="All">
-                                    <div class="card bg-primary text-light d-flex align-items-center justify-content-center">
-                                        <div class="card-body" >
-                                            <p>All Transfers</p>
-                                        </div>
-                                    </div>
+        <div class="filters-container mb-3">
+            <button class="btn btn-outline-primary d-none btn-sm mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                <i class="bx bx-filter"></i> Show Filters
+            </button>
+            <div class="collapse" id="filterCollapse">
+                <div class="card card-body">
+                    <div class="row">
+                        <!-- Date Range Filter -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date Range</label>
+                            <select class="form-select" id="dateRangeFilter">
+                                <option value="">All Dates</option>
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="this_week">This Week</option>
+                                <option value="this_month">This Month</option>
+                                <option value="this_year">This Year</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                            <div id="customDateRange" class="mt-2" style="display: none;">
+                                <div class="input-group">
+                                    <input type="date" class="form-control" id="startDate">
+                                    <span class="input-group-text">to</span>
+                                    <input type="date" class="form-control" id="endDate">
                                 </div>
-                                <span class="px-1"></span>
-                                <div class="col shadow bg-success mt-2 mb-2 btn" data-name="partial">
-                                    <div class="card bg-success text-light d-flex align-items-center justify-content-center">
-                                        <div class="card-body" >
-                                            <p>Transfers (by product or branch)</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <span class="px-1"></span>
-                                {% comment %} <div class="col btn bg-warning shadow" data-name="Over/Less">
-                                    <div class="card  bg-warning text-light d-flex align-items-center justify-content-center">
-                                        <div class="card-body">
-                                            <p>Over/Less Transfers</p>
-                                        </div>
-                                    </div>
-                                </div> {% endcomment %}
                             </div>
                         </div>
-                        <div id="id_time_frame" class="hidden">
-                            <div class="d-flex justify-content-between align-items center p-2">
-                                <button type="button" data-name='time' class="bx bx-home btn back fx-4"></button>
-                                <h5 class="fw-bold choice_name"></h5>
-                            </div>
-                            <div class="row flex-column text-center">
-                                <div class="col border cursor-pointer hover-dark rounded mb-2 p-3" data-name="All">All</div>
-                                <div class="col border cursor-pointer hover-dark rounded mb-2 p-3" data-name="today">Today</div>
-                                <div class="col border cursor-pointer hover-dark rounded mb-2 p-3" data-name="yesterday">Yesterday</div>
-                                <div class="col border cursor-pointer hover-dark rounded mb-2 p-3" data-name="this week">This Week</div>
-                                <div class="col border cursor-pointer hover-dark rounded mb-2 p-3" data-name="this month">This Month</div>
-                                <div class="col border cursor-pointer hover-dark rounded mb-2 p-3" data-name="this year">This Year</div>
-                            </div>
+                        <!-- Product Category Filter -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Product Category</label>
+                            <select class="form-select" id="categoryFilter">
+                                <option value="">All Categories</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        <form method="get" id='form' class='hidden'>
-                            <div class="d-flex justify-content-between align-items center p-2">
-                                <div>
-                                    <button type="button" data-name='previous' class="bx bx-arrow-back back btn fx-4"></button>
-                                    <button type="button" data-name='choice' class="bx bx-home btn back fx-4"></button>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="applyFilters()">Apply Filters</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="search-container w-100 border rounded" id="fixed-search" style="position: sticky; top: 0; z-index: 2; background: white;">
+                <input type="text" class="search-input" placeholder="Search products..." oninput="searchTable()" id="searchInput" style="margin-left: 20px !important;">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+        </div>
+        {% include "components/transfers_table.html" %}
+    </div>
+    <!-- pagination -->
+    <div class="d-flex justify-content-end">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if transfers.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}" aria-label="First">
+                            <i class='bx bx-chevrons-left'></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ transfers.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" aria-label="Previous">
+                            <i class='bx bx-chevron-left'></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class='bx bx-chevrons-left'></i>
+                        </span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class='bx bx-chevron-left'></i>
+                        </span>
+                    </li>
+                {% endif %}
+
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        Page {{ transfers.number }} of {{ transfers.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if transfers.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ transfers.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" aria-label="Next">
+                            <i class='bx bx-chevron-right'></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ transfers.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}" aria-label="Last">
+                            <i class='bx bx-chevrons-right'></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class='bx bx-chevron-right'></i>
+                        </span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class='bx bx-chevrons-right'></i>
+                        </span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    
+    <!-- transfers pdf modal -->
+    <div class="modal fade" id="transferModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body p-4">
+                    <div id="id_choice">
+                        <div class="row">
+                            <div class="col shadow bg-primary btn" data-name="All">
+                                <div class="card bg-primary text-light d-flex align-items-center justify-content-center">
+                                    <div class="card-body" >
+                                        <p>All Transfers</p>
+                                    </div>
                                 </div>
-                                <h5 class="fw-bold choice_name"></h5>
                             </div>
-                            <div class='mb-2'>
-                                <label for="id_product">Select Product</label>
-                                    <select
-                                        class="form-select"
-                                        name="branch"
-                                        id="id_product"
-                                    >
-                                        <option value="">All products</option>
-                                        {% for product in inventory %}
-                                            <option value="{{ product.product.id }}">{{product.product.name}}</option>
-                                        {% endfor %}
-                                    </select>
+                            <span class="px-1"></span>
+                            <div class="col shadow bg-success mt-2 mb-2 btn" data-name="partial">
+                                <div class="card bg-success text-light d-flex align-items-center justify-content-center">
+                                    <div class="card-body" >
+                                        <p>Transfers (by product or branch)</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class='mb-2'>
-                                <label for="id_branch">Select Destination Branch</label>
+                            <span class="px-1"></span>
+                            {% comment %} <div class="col btn bg-warning shadow" data-name="Over/Less">
+                                <div class="card  bg-warning text-light d-flex align-items-center justify-content-center">
+                                    <div class="card-body">
+                                        <p>Over/Less Transfers</p>
+                                    </div>
+                                </div>
+                            </div> {% endcomment %}
+                        </div>
+                    </div>
+                    <div id="id_time_frame" class="hidden">
+                        <div class="d-flex justify-content-between align-items center p-2">
+                            <button type="button" data-name='time' class="bx bx-home btn back fx-4"></button>
+                            <h5 class="fw-bold choice_name"></h5>
+                        </div>
+                        <div class="row flex-column text-center">
+                            <div class="col border cursor-pointer hover-dark rounded mb-2 p-3" data-name="All">All</div>
+                            <div class="col border cursor-pointer hover-dark rounded mb-2 p-3" data-name="today">Today</div>
+                            <div class="col border cursor-pointer hover-dark rounded mb-2 p-3" data-name="yesterday">Yesterday</div>
+                            <div class="col border cursor-pointer hover-dark rounded mb-2 p-3" data-name="this week">This Week</div>
+                            <div class="col border cursor-pointer hover-dark rounded mb-2 p-3" data-name="this month">This Month</div>
+                            <div class="col border cursor-pointer hover-dark rounded mb-2 p-3" data-name="this year">This Year</div>
+                        </div>
+                    </div>
+                    <form method="get" id='form' class='hidden'>
+                        <div class="d-flex justify-content-between align-items center p-2">
+                            <div>
+                                <button type="button" data-name='previous' class="bx bx-arrow-back back btn fx-4"></button>
+                                <button type="button" data-name='choice' class="bx bx-home btn back fx-4"></button>
+                            </div>
+                            <h5 class="fw-bold choice_name"></h5>
+                        </div>
+                        <div class='mb-2'>
+                            <label for="id_product">Select Product</label>
                                 <select
                                     class="form-select"
                                     name="branch"
-                                    id="id_branch"
+                                    id="id_product"
                                 >
-                                    <option value="">All branches</option>
-                                    {% for branch in branches %}
-                                        {% if branch.name != request.user.branch.name %}
-                                            <option value="{{branch.id}}">{{branch.name}}</option>
-                                        {% endif %}
+                                    <option value="">All products</option>
+                                    {% for product in inventory %}
+                                        <option value="{{ product.product.id }}">{{product.product.name}}</option>
                                     {% endfor %}
                                 </select>
-                            </div>
-                            <div class="d-flex justify-content-end mt-3">
-                                <button id='viewBtn' class="btn btn-secondary btn-sm" type="button">
-                                    <i class="bx bx-show"></i>
-                                    view report
+                        </div>
+                        <div class='mb-2'>
+                            <label for="id_branch">Select Destination Branch</label>
+                            <select
+                                class="form-select"
+                                name="branch"
+                                id="id_branch"
+                            >
+                                <option value="">All branches</option>
+                                {% for branch in branches %}
+                                    {% if branch.name != request.user.branch.name %}
+                                        <option value="{{branch.id}}">{{branch.name}}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="d-flex justify-content-end mt-3">
+                            <button id='viewBtn' class="btn btn-secondary btn-sm" type="button">
+                                <i class="bx bx-show"></i>
+                                view report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="transferReportModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    {% include 'view_transfer.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addTransfer" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <h5 class="fw-bold">Add Transfer</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div id="div_id_transfer_to" class="mb-3"> 
+                        <label for="id_transfer_to" class="form-label requiredField">Transfer to<span class="asteriskField">*</span> </label> 
+                            <select name="transfer_to" class="select form-select" required id="id_transfer_to"> 
+                                <option value="" selected>---------</option> 
+                                {% for branch in branches %}
+                                    {% if branch.name != request.user.branch.name %}
+                                        <option value="{{branch.id}}">{{branch.name}}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select> 
+                        </div> 
+                        <div id="div_id_description" class="mb-3"> 
+                            <label for="id_description" class="form-label requiredField">Description<span class="asteriskField">*</span> </label> 
+                            <input type="text" name="description" maxlength="266" class="textinput form-control" required id="id_description"> 
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <div class="">
+                                <button type="reset" class="btn btn-danger btn-sm w-100">
+                                    <i class='bx bx-reset'></i>
+                                    Reset
                                 </button>
                             </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="transferReportModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        {% include 'view_transfer.html' %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="addTransfer" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        <h5 class="fw-bold">Add Transfer</h5>
-                        <form method="post">
-                            {% csrf_token %}
-                            <div id="div_id_transfer_to" class="mb-3"> 
-                            <label for="id_transfer_to" class="form-label requiredField">Transfer to<span class="asteriskField">*</span> </label> 
-                                <select name="transfer_to" class="select form-select" required id="id_transfer_to"> 
-                                    <option value="" selected>---------</option> 
-                                    {% for branch in branches %}
-                                        {% if branch.name != request.user.branch.name %}
-                                            <option value="{{branch.id}}">{{branch.name}}</option>
-                                        {% endif %}
-                                    {% endfor %}
-                                </select> 
-                            </div> 
-                            <div id="div_id_description" class="mb-3"> 
-                                <label for="id_description" class="form-label requiredField">Description<span class="asteriskField">*</span> </label> 
-                                <input type="text" name="description" maxlength="266" class="textinput form-control" required id="id_description"> 
+                            <span class="px-1"></span>
+                            <div class="">
+                                <button type="submit" class="btn btn-success btn-sm w-100">
+                                    <i class='bx bx-save'></i>
+                                    Proceed
+                                </button>
                             </div>
-                            <div class="d-flex justify-content-end">
-                                <div class="">
-                                    <button type="reset" class="btn btn-danger btn-sm w-100">
-                                        <i class='bx bx-reset'></i>
-                                        Reset
-                                    </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <div class="modal fade" id="transferDetailModal" tabindex="-1" aria-labelledby="transferDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="transferDetailModalLabel">
+                        <i class="bx bx-transfer"></i> Transfer Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card mb-3 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Transfer Ref:</strong> <i class="bx bx-barcode"></i> <span id="transfer-ref"></span></p>
+                                    <p class="mb-1"><strong>Description:</strong> <i class="bx bx-description"></i> <span id="transfer-description"></span></p>
                                 </div>
-                                <span class="px-1"></span>
-                                <div class="">
-                                    <button type="submit" class="btn btn-success btn-sm w-100">
-                                        <i class='bx bx-save'></i>
-                                        Proceed
-                                    </button>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>User:</strong> <i class="bx bx-user"></i> <span id="transfer-user"></span></p>
+                                    <p class="mb-1"><strong>Time:</strong> <i class="bx bx-time"></i> <span id="transfer-time"></span></p>
                                 </div>
                             </div>
-                        </form>
+                        </div>
                     </div>
+
+                    <div class="table-responsive">
+                        <h6 class="fw-bold mt-4 mb-3">Transfer Items</h6>
+                        <table class="table table-hover table-borderless">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Cost</th>
+                                    <th>Received</th>
+                                    <th>Declined</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transfer-items-body">
+                                <!-- Items will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
-   </div>  
+    </div>
+
+    <div class="modal fade" id="transferReportModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    {% include 'view_transfer.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addTransfer" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <h5 class="fw-bold">Add Transfer</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div id="div_id_transfer_to" class="mb-3"> 
+                        <label for="id_transfer_to" class="form-label requiredField">Transfer to<span class="asteriskField">*</span> </label> 
+                            <select name="transfer_to" class="select form-select" required id="id_transfer_to"> 
+                                <option value="" selected>---------</option> 
+                                {% for branch in branches %}
+                                    {% if branch.name != request.user.branch.name %}
+                                        <option value="{{branch.id}}">{{branch.name}}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select> 
+                        </div> 
+                        <div id="div_id_description" class="mb-3"> 
+                            <label for="id_description" class="form-label requiredField">Description<span class="asteriskField">*</span> </label> 
+                            <input type="text" name="description" maxlength="266" class="textinput form-control" required id="id_description"> 
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <div class="">
+                                <button type="reset" class="btn btn-danger btn-sm w-100">
+                                    <i class='bx bx-reset'></i>
+                                    Reset
+                                </button>
+                            </div>
+                            <span class="px-1"></span>
+                            <div class="">
+                                <button type="submit" class="btn btn-success btn-sm w-100">
+                                    <i class='bx bx-save'></i>
+                                    Proceed
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
     const searchTable = () => {
         const input = document.getElementById('searchInput').value;
@@ -399,8 +546,8 @@
                     const row = document.createElement('tr');
                     row.style.cursor = 'pointer';
                     row.onclick = () => {
-                        const transferModal = new bootstrap.Modal(document.querySelector('#transferModal'));
-                        transferModal.show();
+                        showTransfer(item.transfer__id);
+                        $('#transferDetailModal').modal('show');
                     };
                     row.innerHTML = `
                         <td>${item.product__name}</td>
@@ -412,132 +559,185 @@
                     tableBody.appendChild(row);
                 });
             });
-       
+        
     }
 
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const transferModal = new bootstrap.Modal(document.querySelector('#transferModal'));
-            const transferReportModal = new bootstrap.Modal(document.querySelector('#transferReportModal'));
+    function showTransfer(transfer_id){
+        fetch(`/inventory/show/transfer/${transfer_id}/`, { method: 'GET' })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data, 'data')
+                const tableBody = document.getElementById('transfer-items-body');
+                tableBody.innerHTML = '';
+                document.getElementById('transfer-ref').textContent = data.transfer[0].transfer_ref;
+                document.getElementById('transfer-user').textContent = data.transfer[0].user__username;
+                document.getElementById('transfer-time').textContent = data.transfer[0].time;
+                document.getElementById('transfer-description').textContent = data.transfer[0].description;
+                data.transfer_items.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.style.cursor = 'pointer';
+                    row.onclick = () => {
+                        showTransfer(item.transfer_id);
+                    };
+                    row.innerHTML = `
+                        <td>${item.product__name}</td>
+                        <td>${item.transfer__transfer_ref}</td>
+                        <td>${item.received_by__username}</td>
+                        <td>${item.received_quantity}/${item.quantity}</td>
+                        <td>${item.cost}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            });
+    }
 
-            //const addTranferBtn = document.querySelector('#addTbtn');
-            const addTransfer = new bootstrap.Modal(document.querySelector('#addTransfer'));
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const transferModal = new bootstrap.Modal(document.querySelector('#transferModal'));
+        const transferReportModal = new bootstrap.Modal(document.querySelector('#transferReportModal'));
 
-            const transfersTable = document.querySelector('#transfersTable');
-            const transfersOutTable = document.querySelector('#transfersOutTable');
+        //const addTranferBtn = document.querySelector('#addTbtn');
+        const addTransfer = new bootstrap.Modal(document.querySelector('#addTransfer'));
 
-            let type = '';
-            let timeFrame = '';
-            const choiceValueEl = document.querySelectorAll('.choice_name');
-            const backBtn = document.querySelectorAll('.back');
+        const transfersTable = document.querySelector('#transfersTable');
+        const transfersOutTable = document.querySelector('#transfersOutTable');
 
-            const choice = document.querySelector('#id_choice');
-            const colEls = choice.querySelectorAll('.col');
+        let type = '';
+        let timeFrame = '';
+        const choiceValueEl = document.querySelectorAll('.choice_name');
+        const backBtn = document.querySelectorAll('.back');
 
-            const time = document.querySelector('#id_time_frame');
-            const colElsTime = time.querySelectorAll('.col');
+        const choice = document.querySelector('#id_choice');
+        const colEls = choice.querySelectorAll('.col');
 
-            const form = document.querySelector('#form');
+        const time = document.querySelector('#id_time_frame');
+        const colElsTime = time.querySelectorAll('.col');
 
+        const form = document.querySelector('#form');
+
+        
+        $(document).ready(function() {
+            const transfersCount = parseInt($('.flick').text()); 
             
-            $(document).ready(function() {
-                const transfersCount = parseInt($('.flick').text()); 
-              
-                if (transfersCount > 0) {
-                  $('.btn-success.flick').addClass('animated infinite flash'); 
-                }
-              });
-              
-            colEls.forEach((col)=>{
-                col.addEventListener('click', ()=>{
-                    type = col.dataset.name;
+            if (transfersCount > 0) {
+                $('.btn-success.flick').addClass('animated infinite flash'); 
+            }
+            });
+            
+        colEls.forEach((col)=>{
+            col.addEventListener('click', ()=>{
+                type = col.dataset.name;
 
-                    if (type === 'All'){
-                        transfers()
-                        choice.classList.add('hidden')
-                        transferReportModal.show()
-                    }else{
-                        choice.classList.add('hidden');
-                        time.classList.remove('hidden')
-                        choiceValueEl[0].textContent = type;
-                    }
-                })
-            })
-
-            colElsTime.forEach((col)=>{
-                col.addEventListener('click', ()=>{
-                    timeFrame = col.dataset.name;
-                    choice.classList.add('hidden');
-                    time.classList.add('hidden');
-                    form.classList.remove('hidden');
-                    choiceValueEl[1].textContent = type + ' ' + `(${timeFrame})`;
-                })
-            })
-
-            backBtn.forEach((btn)=>{
-                btn.addEventListener('click',()=>{
-                    if (btn.dataset.name === 'time'){
-                        choice.classList.remove('hidden');
-                        time.classList.add('hidden');
-                    }else if (btn.dataset.name === 'previous'){
-                        choice.classList.add('hidden');
-                        time.classList.remove('hidden');
-                        form.classList.add('hidden');
-                    }else{
-                        choice.classList.remove('hidden');
-                        time.classList.add('hidden');
-                        form.classList.add('hidden');
-                    }
-                })
-            })
-
-            {% comment %} addTranferBtn.addEventListener('click', ()=>{
-                addTransfer.show()
-            }) {% endcomment %}
-
-
-            document.querySelector('.pdf-gen').addEventListener(
-                'click', ()=>{
-                    transferModal.show()
-                }
-            )
-
-            document.querySelector('#viewBtn').addEventListener(
-                'click', ()=>{
-                    transferModal.hide()
-                    transferReportModal.show()
+                if (type === 'All'){
                     transfers()
+                    choice.classList.add('hidden')
+                    transferReportModal.show()
+                }else{
+                    choice.classList.add('hidden');
+                    time.classList.remove('hidden')
+                    choiceValueEl[0].textContent = type;
                 }
-            )
-            
-            function transfers(){
-                $.ajax({
-                    url: '{% url "inventory:transfers_report" %}',
-                    type: 'GET',
-                    data:{
-                        product: $('#id_product').val(),
-                        branch: $('#id_branch').val(),
-                        type: type,
-                        timeFrame: timeFrame,
-                        view: true,
-                    } 
-                    }).done(function(response) {
-                        console.log(response)
-                        const data = response;
-                        displayTransfersTable(data);
-                    })
-            } 
+            })
+        })
 
-            function displayTransfersTable(data){
-                transfersTable.innerHTML = ''
-                transfersOutTable.innerHTML = ''
-                data.forEach((data)=>{
-                    if(data.to_branch__id === {{ request.user.branch.id }}){
-                        transfersTable.innerHTML +=`
+        colElsTime.forEach((col)=>{
+            col.addEventListener('click', ()=>{
+                timeFrame = col.dataset.name;
+                choice.classList.add('hidden');
+                time.classList.add('hidden');
+                form.classList.remove('hidden');
+                choiceValueEl[1].textContent = type + ' ' + `(${timeFrame})`;
+            })
+        })
+
+        backBtn.forEach((btn)=>{
+            btn.addEventListener('click',()=>{
+                if (btn.dataset.name === 'time'){
+                    choice.classList.remove('hidden');
+                    time.classList.add('hidden');
+                }else if (btn.dataset.name === 'previous'){
+                    choice.classList.add('hidden');
+                    time.classList.remove('hidden');
+                    form.classList.add('hidden');
+                }else{
+                    choice.classList.remove('hidden');
+                    time.classList.add('hidden');
+                    form.classList.add('hidden');
+                }
+            })
+        })
+
+        {% comment %} addTranferBtn.addEventListener('click', ()=>{
+            addTransfer.show()
+        }) {% endcomment %}
+
+
+        document.querySelector('.pdf-gen').addEventListener(
+            'click', ()=>{
+                transferModal.show()
+            }
+        )
+
+        document.querySelector('#viewBtn').addEventListener(
+            'click', ()=>{
+                transferModal.hide()
+                transferReportModal.show()
+                transfers()
+            }
+        )
+        
+        function transfers(){
+            $.ajax({
+                url: '{% url "inventory:transfers_report" %}',
+                type: 'GET',
+                data:{
+                    product: $('#id_product').val(),
+                    branch: $('#id_branch').val(),
+                    type: type,
+                    timeFrame: timeFrame,
+                    view: true,
+                } 
+                }).done(function(response) {
+                    console.log(response)
+                    const data = response;
+                    displayTransfersTable(data);
+                })
+        } 
+
+        function displayTransfersTable(data){
+            transfersTable.innerHTML = ''
+            transfersOutTable.innerHTML = ''
+            data.forEach((data)=>{
+                if(data.to_branch__id === {{ request.user.branch.id }}){
+                    transfersTable.innerHTML +=`
+                    <tr>
+                        <td><small>${new Date(data.date).toLocaleDateString()}</small></td>
+                        <td><small>${data.product__name}</small></td>
+                        <td><small>${data.quantity}</small></td>
+                        <td><small>${data.from_branch__name}</small></td>
+                        <td><small>${data.received_by__username}</small></td>
+                        <td>
+                            <span>
+                            ${data.declined ? (
+                                `<small class='text-danger'>Declined</small>`
+                            ) : (
+                                data.received ? (
+                                `<small>${data.description}</small>`
+                                ) : (
+                                `<small>Not yet received</small>`
+                                )
+                            )}
+                            </span>
+                        </td>
+                
+                    </tr>
+                    `
+                }else if(data.from_branch__id === {{ request.user.branch.id }}){
+                    transfersOutTable.innerHTML +=`
                         <tr>
                             <td><small>${new Date(data.date).toLocaleDateString()}</small></td>
                             <td><small>${data.product__name}</small></td>
                             <td><small>${data.quantity}</small></td>
-                            <td><small>${data.from_branch__name}</small></td>
+                            <td><small>${data.to_branch__name}</small></td>
                             <td><small>${data.received_by__username}</small></td>
                             <td>
                                 <span>
@@ -554,50 +754,26 @@
                             </td>
                     
                         </tr>
-                        `
-                    }else if(data.from_branch__id === {{ request.user.branch.id }}){
-                        transfersOutTable.innerHTML +=`
-                            <tr>
-                                <td><small>${new Date(data.date).toLocaleDateString()}</small></td>
-                                <td><small>${data.product__name}</small></td>
-                                <td><small>${data.quantity}</small></td>
-                                <td><small>${data.to_branch__name}</small></td>
-                                <td><small>${data.received_by__username}</small></td>
-                                <td>
-                                    <span>
-                                    ${data.declined ? (
-                                        `<small class='text-danger'>Declined</small>`
-                                    ) : (
-                                        data.received ? (
-                                        `<small>${data.description}</small>`
-                                        ) : (
-                                        `<small>Not yet received</small>`
-                                        )
-                                    )}
-                                    </span>
-                                </td>
-                        
-                            </tr>
-                        `
-                    }
-                })
-            }
-            $('#downloadTransferReport').click(function(e) {
-                e.preventDefault();
-                const data = {
-                    product: $('#id_product').val(),
-                    branch: $('#id_branch').val(),
-                    date_from: $('#id_to').val(),
-                    date_to: $('#id_from').val(),
+                    `
                 }
-                $.ajax({
-                    url: '{% url 'inventory:transfers_report'%}',
-                    type: 'GET',
-                    data: data,
-                    }).done(function(response) {
+            })
+        }
+        $('#downloadTransferReport').click(function(e) {
+            e.preventDefault();
+            const data = {
+                product: $('#id_product').val(),
+                branch: $('#id_branch').val(),
+                date_from: $('#id_to').val(),
+                date_to: $('#id_from').val(),
+            }
+            $.ajax({
+                url: '{% url 'inventory:transfers_report'%}',
+                type: 'GET',
+                data: data,
+                }).done(function(response) {
 
-                })
             })
         })
-    </script>
+    })
+</script>
 {% endblock content %}

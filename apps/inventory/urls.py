@@ -31,6 +31,7 @@ urlpatterns = [
     path('delete_product', delete_product, name='delete'),
     path('add-inventory', add_inventory_view, name="add-inventory"),
     path('logs/page/', logs_page, name='logs-page'),
+    path('product-analytics/<int:product_id>/', product_analytics, name='product_analytics'),
     
     # settings
     path('settings/', settings, name='settings'),
@@ -97,6 +98,7 @@ urlpatterns = [
     path('transfers', inventory_transfer_index, name='transfers'),
     path('search/load/transfers/', search_load_transfers, name='search_load_transfers'),
     path('transfer_items_data/<int:id>/', inventory_transfer_item_data, name='inventory_transfer_data'),
+    path('show/transfer/<int:transfer_id>/', show_transfer_detail, name='show_transfer_detail'),
     path('print/transfer/<int:transfer_id>/', print_transfer, name='print_transfer'),
     path('receive/transfer/', receive_inventory, name='receive_inventory'),
     path('receive/transfer/json/', receive_inventory_json, name='receive_inventory_json'),
