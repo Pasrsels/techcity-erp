@@ -57,6 +57,8 @@ urlpatterns = [
     path('credit-note/create/', create_credit_note, name='create_credit_note'),
     path('credit-note/items/<int:invoice_id>/', get_credit_note_items, name='get_credit_note_items'),
     path('reset/', reset_pc_pasels_invoices, name='reset_pc_pasels_invoices'),
+    path('invoice_json/', invoice_json, name='invoice_json'),
+    
     
     # path('api/v1/invoices/', invoice_api, name='invoice-list'),
     

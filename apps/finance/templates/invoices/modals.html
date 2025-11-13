@@ -1,0 +1,500 @@
+{% load static %}
+<style>
+    .receipt {
+        font-family: Arial, sans-serif;
+    }
+    .contact-info i {
+        min-width: 20px;
+        text-align: center;
+    }
+    .contact-info > div {
+        line-height: 1.4;
+        padding: 2px 0;
+    }
+    .contact-info i {
+        color: #000000 !important;
+    }
+    .qr-code {
+        text-align: center;
+        margin: 20px 0;
+    }
+    .header-color {
+        background: #ff6600 !important;
+        height: 20px;
+        margin: -20px -20px 0 -20px;
+    }
+    .minus-margin {
+        margin-top: -15px;
+    }
+    .receipt-content {
+        padding: 20px;
+    }
+    .receipt-title {
+        height: 50px;
+        width: 100%;
+        margin-top: 10px;
+        padding: 10px 0;
+        background: #343a40;
+        color: white;
+        text-align: center;
+    }
+    .receipt-sectio {
+        margin: 15px 0;
+    }
+    .section-t {
+        background: #343a40;
+        color: white;
+        padding: 5px 5px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .receipt-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+    }
+    .receipt-table th {
+        background: #ff6600;
+        color: white;
+        padding: 8px;
+        text-align: left;
+    }
+    .receipt-table td {
+        padding: 8px;
+        border: 1px solid #dee2e6;
+    }
+    .text-right {
+        text-align: right;
+    }
+    .text-bold {
+        font-weight: bold;
+    }
+    .terms-list {
+        font-size: 0.8em;
+        margin: 15px 0;
+        padding-left: 20px;
+    }
+    .terms-list li {
+        margin-bottom: 5px;
+    }
+    .fiscal-details {
+        font-size: 0.8em;
+        margin-top: 20px;
+        text-align: center;
+        border-top: 1px dashed #ccc;
+        padding-top: 10px;
+    }
+    .qr-code {
+        text-align: center;
+        margin: 15px 0;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const printButton = document.getElementById('printButton');
+        if (printButton) {
+            printButton.addEventListener('click', printInvoice);
+        }
+    });
+
+    function printInvoice() {
+        const modal = document.getElementById('previewModal');
+        if (!modal) {
+            console.error('Modal not found');
+            alert('Error: Could not find the receipt modal');
+            return;
+        }
+        
+        const receiptElement = modal.querySelector('.receipt');
+        if (!receiptElement) {
+            console.error('Receipt content not found');
+            alert('Error: Could not find receipt content to print');
+            return;
+        }
+        
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Please allow popups for this site to print receipts');
+            return;
+        }
+        
+        const receiptContent = receiptElement.cloneNode(true);
+        
+        printWindow.document.open();
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <style>
+                        ${receiptElement.ownerDocument.querySelector('style').textContent}
+                    </style>
+                </head>
+                <body>
+                    ${receiptContent.outerHTML}
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+        
+        // Wait for the content to load before printing
+        printWindow.onload = function() {
+            try {
+                printWindow.focus();
+                // Small delay to ensure everything is rendered
+                setTimeout(() => {
+                    printWindow.print();
+                }, 500);
+            } catch (e) {
+                console.error('Error during printing:', e);
+                alert('Error occurred while preparing the print. Please try again.');
+                printWindow.close();
+            }
+        };
+    }
+</script>
+
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content p-0">
+            <div class="header-color"></div>
+            <div class="modal-body">
+                <div class="receipt invoice-preview">
+                    <div class="receipt-content">
+                        <div class='d-flex justify-content-between align-items-center'>
+                            <div class='details'>
+                                <img src='{% static 'assets/logo.png' %}' width='200px' class="mb-3"/>
+                                <div id="preview-branch"></div>
+                                <p class="mb-1">Tel: 7776079245 | Email: info@techcity.co.zw</p>
+                            </div>
+                            <div>
+                                <div class='receipt-title'>
+                                    <h2 class='fw-bold mb-0'>INVOICE</h2>
+                                </div>
+                                <table class='mt-3'>
+                                    <tr>
+                                        <td class='fw-bold'>Invoice #:</td>
+                                        <td class="px-2" id="preview-invoice-number"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class='fw-bold'>Date:</td>
+                                        <td class="px-2" id="preview-date"></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class='d-flex justify-content-between align-items-start mt-4'>
+                            <div class='receipt-sectio' style="width: 48%;">
+                                <div class='section-t'>BILL TO</div>
+                                <div class="contact-info">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class='bx bx-user me-2'></i>
+                                        <span id="preview-customer"></span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class='bx bx-phone me-2'></i>
+                                        <span id="preview-phone"></span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class='bx bx-envelope me-2'></i>
+                                        <span id="preview-email"></span>
+                                    </div>
+                                    <div class="d-flex align-items-start">
+                                        <i class='bx bx-map me-2 mt-1'></i>
+                                        <span id="preview-address"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class='receipt-sectio' style="width: 48%;">
+                                <div class='section-t'>PROCESSED BY</div>
+                                <div class="contact-info">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class='bx bx-user-pin me-2'></i>
+                                        <span id="preview-staff"></span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class='bx bx-badge-check me-2'></i>
+                                        <span id="preview-status"></span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class='bx bx-time me-2'></i>
+                                        <span id="preview-payment-terms"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="receipt-section">
+                            <table class="receipt-table">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Description</th>
+                                        <th>Qty</th>
+                                        <th>Price</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="preview-items">
+                                    <!-- Items will be inserted here by JavaScript -->
+                                </tbody>
+                            </table>
+                            
+                            <div class="d-flex justify-content-end mt-3">
+                                <table style="width: 300px;">
+                                    <tr>
+                                        <td class="text-end">Sub Total:</td>
+                                        <td class="text-end" id="preview-subtotal"></td>
+                                    </tr>
+                                    <tr id="discount-row" style="display: none;">
+                                        <td class="text-end">Discount:</td>
+                                        <td class="text-end" id="preview-discount"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-end">VAT @15%:</td>
+                                        <td class="text-end" id="preview-vat"></td>
+                                    </tr>
+                                    <tr id="delivery-row" style="display: none;">
+                                        <td class="text-end">Delivery:</td>
+                                        <td class="text-end" id="preview-delivery"></td>
+                                    </tr>
+                                    <tr class="table-active">
+                                        <td class="text-end fw-bold">Total:</td>
+                                        <td class="text-end fw-bold" id="preview-total"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-end">Amount Paid:</td>
+                                        <td class="text-end" id="preview-paid"></td>
+                                    </tr>
+                                    <tr class="table-active">
+                                        <td class="text-end fw-bold">Balance Due:</td>
+                                        <td class="text-end fw-bold" id="preview-due"></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="receipt-section">
+                            <div class="section-t">Terms and Conditions</div>
+                            <ul class="terms-list">
+                                <li>All laptop in-built batteries attract 1 month warranty.</li>
+                                <li>Non in-built batteries attract 48hrs warranty.</li>
+                                <li>Warranty for all preowned laptops is 5 months. Tech City does not warranty laptops if damaged by water, liquids or short circuits.</li>
+                                <li>Any withdrawn deposits for any purchase will attract 10% administration fee.</li>
+                                <li>Tech City only accepts exchanges on faulty laptops.</li>
+                            </ul>
+                        </div>
+
+                            <div class="qr-code">
+                                <img id="receipt-qrcode" src="" alt="QR Code" style="max-width: 150px; display: block; margin: 0 auto;">
+                            </div>
+
+                        <div class="fiscal-details text-center mt-3">
+                            <p class="mb-1">TIN: 1012345678</p>
+                            <p class="mb-1">Fiscal Receipt #: <span id="fiscal-number"></span></p>
+                            <p class="mb-1">Fiscal Day: <span id="fiscal-day"></span></p>
+                            <p class="mb-1">Device ID: <span id="device-id"></span></p>
+                            <p class="mb-1">VAT Registration: 1001234567</p>
+                            <p class="mb-0">Thank you for your business!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="d-flex justify-content-between w-100">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class='bx bx-x me-1'></i> Close
+                    </button>
+                    <div>
+                            <button type="button" class="btn btn-primary me-2" id="printButton">
+                                <i class='bx bx-printer me-1'></i> Print
+                            </button>
+                            <button type="button" class="btn btn-success me-2" onclick="sendInvoiceEmail()">
+                                <i class='bx bx-envelope me-1'></i> Email
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="sendInvoiceWhatsApp()">
+                                <i class='bx bxl-whatsapp me-1'></i> WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="appModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Sending invoice to WhatsApp...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body" id='payment_content'>
+                {% include 'invoices/update_invoice.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                {% include 'invoices/update_receipt.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="paymentsModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center" id='payment_content'>
+                {% include 'invoices/invoice_payments.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="receiptItems" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="d-flex justify-content-between">
+                    <div class="">
+                        <h5>SALE RETURN</h5>
+                        <p id="id_date">DATE: </p>
+                    </div>
+                    <div>
+                        <h5 id="id_invoice_number"></h5>
+                        <p id="id_invoice_date">DATE: </p>
+                    </div>
+                </div>
+                
+                <table id="returnsTable" class="table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th id="unit_price_header">Price</th>
+                            <th id="id_total_header">Total</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Invoice items will be inserted here -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3"></td>
+                            <td class="fw-bold">Total (with VAT)</td>
+                            <td class="fw-bold" id="id_total"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3"></td>
+                            <td class="fw-bold">Paid</td>
+                            <td class="fw-bold" id="id_paid"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3"></td>
+                            <td class="fw-bold">Balance</td>
+                            <td class="fw-bold" id="id_balance"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <hr />
+                <h5>Items selected for refund</h5>
+                <table>
+                    <tbody id="id_refund_items"></tbody>
+                </table>
+                <hr/>
+
+                <h3>Total Refund: <span class="mx-2" id="id_refund_total"></span></h3>
+                
+                <hr/>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body" id='delete_content'>
+                <h5 class='fw-bold'>Delete Invoice</h5>
+                <div>
+                    <button class='btn btn-secondary w-100' onclick='deleteInvoice();'>Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="creditNoteModal" tabindex="-1" aria-labelledby="creditNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="creditNoteModalLabel">Issue Credit Note</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="creditNoteForm">
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Reason for Credit Note</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Available Qty</th>
+                                    <th>Unit Price</th>
+                                    <th>Credit Qty</th>
+                                    <th>Discount Amount</th>
+                                    <th>Return</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="creditNoteItems">
+                                <!-- Items will be populated here -->
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6" class="text-end"><strong>Subtotal:</strong></td>
+                                    <td id="creditNoteSubtotal">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="6" class="text-end"><strong>VAT:</strong></td>
+                                    <td id="creditNoteVAT">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="6" class="text-end"><strong>Total:</strong></td>
+                                    <td id="creditNoteTotal">0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="submitCreditNote">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>

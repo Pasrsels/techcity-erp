@@ -1479,6 +1479,27 @@
 
             const result = await response.json();
 
+            if (!result.success) {
+                const errorMessage = result.message || result.error || 'Failed to process request';
+                
+                if (result.offline) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No Internet Connection',
+                        text: errorMessage,
+                        footer: 'Please check your internet connection and try again'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Processing Failed',
+                        text: errorMessage,
+                        confirmButtonText: 'OK'
+                    });
+                }
+                return;
+            }
+
             Swal.close(); 
 
             if (el.dataset.name === 'qoutation') {
@@ -1531,7 +1552,7 @@
                 Swal.fire({
                     icon: 'warning',
                     title: 'Missing Invoice',
-                    text: 'Invoice ID was not found. Please try again.',
+                    text:  'Invoice ID was not found. Please try again.',
                 });
             }
             

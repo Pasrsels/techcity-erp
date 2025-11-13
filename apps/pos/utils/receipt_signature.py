@@ -141,12 +141,13 @@ def generate_receipt_data(invoice, invoice_items, request):
         
         previous_invoice = Invoice.objects.filter(
             issue_date__date=datetime.today(),
-            branch=request.user.branch
+            branch=request.user.branch,
+            code__isnull=False
         ).exclude(id=invoice.id).order_by('-id').first()
         
+        logger.info(f'Previous invoice: {previous_invoice}')
 
         for index, item in enumerate(invoice_items, start=1):
-            print(item.item.tax_type)
             line_total = float(item.unit_price) * item.quantity
         
             # Determine tax details
@@ -154,9 +155,7 @@ def generate_receipt_data(invoice, invoice_items, request):
             tax_percent = item.item.tax_type.tax_percent  # None for exempt
             tax_code = item.item.tax_type.tax_code        # e.g., "A", "B", "C"
 
-            print('here')
-            # Calculate tax amount
-            
+            #calculate tax amount
             if tax_id != 1:
                 if tax_percent is not None:
                     tax_amount = round(line_total * (tax_percent / (100 + tax_percent)), 2)
@@ -188,8 +187,6 @@ def generate_receipt_data(invoice, invoice_items, request):
 
             receipt_lines.append(line_data)
             total_tax_amount += tax_amount
-            
-        print('done')
 
         # Construct receiptTaxes from actual usage
         receipt_taxes = []
@@ -210,27 +207,32 @@ def generate_receipt_data(invoice, invoice_items, request):
             
         print(fiscal_day.receipt_count + 1)
 
-        receipt_data = {
-            "receiptType": "FiscalInvoice",
-            "receiptCurrency": invoice.currency.name.upper(),
-            "receiptCounter": fiscal_day.receipt_count  + 1,
-            "receiptGlobalNo": new_receipt_global_no,
-            "invoiceNo": f"{invoice.branch.name}{new_receipt_global_no}",
-            "receiptNotes": "Thank you for shopping with us!",
-            "receiptDate": datetime.now().replace(microsecond=0).isoformat(),
-            "receiptLinesTaxInclusive": True,
-            "receiptLines": receipt_lines,
-            "receiptTaxes": receipt_taxes,
-            "receiptPayments": [
-                {
-                    "moneyTypeCode": invoice.payment_terms,
-                    "paymentAmount": float(invoice.amount)
-                }
-            ],
-            "receiptTotal": float(invoice.amount),
-            "receiptPrintForm": "Receipt48",
-            "previousReceiptHash": "" if fiscal_day.receipt_count == 0 else previous_invoice.receipt_hash,
-        }
+        try:
+
+            receipt_data = {
+                "receiptType": "FiscalInvoice",
+                "receiptCurrency": invoice.currency.name.upper(),
+                "receiptCounter": fiscal_day.receipt_count  + 1,
+                "receiptGlobalNo": new_receipt_global_no,
+                "invoiceNo": f"{invoice.branch.name}{new_receipt_global_no}",
+                "receiptNotes": "Thank you for shopping with us!",
+                "receiptDate": datetime.now().replace(microsecond=0).isoformat(),
+                "receiptLinesTaxInclusive": True,
+                "receiptLines": receipt_lines,
+                "receiptTaxes": receipt_taxes,
+                "receiptPayments": [
+                    {
+                        "moneyTypeCode": invoice.payment_terms,
+                        "paymentAmount": float(invoice.amount)
+                    }
+                ],
+                "receiptTotal": float(invoice.amount),
+                "receiptPrintForm": "Receipt48",
+                "previousReceiptHash": "" if not previous_invoice else previous_invoice.receipt_hash,  #to be revised
+            }
+        except Exception as e:
+            logger.error(f"Error generating receipt data: {e}")
+            return None
 
         print(receipt_data)
         signature_data = receipt_signature(

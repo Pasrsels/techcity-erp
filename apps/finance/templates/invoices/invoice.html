@@ -1,9 +1,8 @@
 {% extends "base.html" %}
-{% load static%}
-{% block title%} Invoices {% endblock%}
+{% load static %}
+{% block title %} Invoices {% endblock %}
 {% block content %}
 <style>
-
 :root {
     --primary: #11998e;
     --primary-no-gradient: #11998e;
@@ -25,764 +24,560 @@
     --border-radius: 16px;
     --border-radius-sm: 8px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --m-bottom: 20px;
+}
+
+.financ {
+    background: white;
+    min-height: 100vh;
 }
 
 .header {
-    grid-area: header;
     padding: 20px 30px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: var(--shadow);
+    border-bottom: 1px solid #e9ecef;
+    background: white;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.search-container {
+    padding: 15px 30px;
+    background: white;
+    position: sticky;
+    top: 80px;
+    z-index: 99;
+    border-bottom: 1px solid #e9ecef;
 }
 
 .search-input {
     width: 100%;
-    padding: 15px 50px 15px 20px;
-    border-radius: var(--border-radius);
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    color: var(--text-light);
-    font-size: 16px;
+    padding: 12px 20px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid #ddd;
+    font-size: 15px;
     transition: var(--transition);
 }
 
 .search-input:focus {
-        outline: none;
-        border-color: rgba(102, 126, 234, 0.5);
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
+}
 
-.search-input::placeholder {
+.invoice-section {
+    margin: 20px 30px;
+}
+
+.section-header {
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
+    border: 1px solid #e9ecef;
+    border-bottom: none;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
     color: var(--text-dark);
-}
-
-.form-control {
-    width: 100%;
-    padding: 8px;
-    border-radius: var(--border-radius-sm);
-    border: 1px solid var(--glass-border);
-}
-
-.form-group label {
-    display: block;
     margin-bottom: 5px;
-    color: var(--text-dark);
 }
 
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 1000;
+.section-summary {
+    display: flex;
+    gap: 20px;
+    font-size: 0.9rem;
+    color: #6c757d;
 }
 
-.modal-content {
-    position: relative;
-    background: white;
-    margin: 15% auto;
-    padding: 20px;
-    width: 80%;
-    max-width: 500px;
-    border-radius: var(--border-radius);
-}
-
-.close-modal {
-    position: absolute;
-    right: 20px;
-    top: 10px;
-    font-size: 24px;
-    cursor: pointer;
-}
-
-
-.search-icon {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-}
-
-.table-container {
-    max-width: 100%;
-    margin: auto;
-    overflow-x: auto;
-    background-color: white;
-}
-
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: var(--glass);
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--primary);
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-dark);
-}
-
-table {
+.invoice-table {
     width: 100%;
     border-collapse: collapse;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-top: none;
+}
+
+.invoice-table thead {
+    background: var(--primary);
+    color: white;
+}
+
+.invoice-table th {
+    padding: 12px;
     text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.invoice-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 0.9rem;
+}
+
+.invoice-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.customer-link {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.customer-link:hover {
+    text-decoration: underline;
+}
+
+.text-success {
+    color: #28a745;
+}
+
+.text-danger {
+    color: #dc3545;
+}
+
+.action-icons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.action-icon {
+    cursor: pointer;
+    padding: 5px;
+    transition: var(--transition);
+}
+
+.action-icon:hover {
+    transform: scale(1.2);
+}
+
+.loading-container {
+    text-align: center;
+    padding: 40px;
+}
+
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.no-more-data {
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+    font-style: italic;
 }
 
 .btn {
-        flex: 1;
-        padding: 10px;
-        border-radius: var(--border-radius-sm);
-        border:none;
-        color: var(--text-dark);
-        cursor: pointer;
-        transition: var(--transition);
-        font-size: 12px;
-    }
-
-
-thead th {
-    background-color: #f9f9f9;
-    padding: 8px 10px;
-    border-bottom: 1px solid #ddd;
-    cursor: pointer;
-}
-
-tbody td {
-    padding: 8px 10px;
-    border-bottom: 1px solid #eee;
-}
-
-tbody tr:hover {
-    background-color: #f1f1f1;
-}
-
-input[type="checkbox"] {
-    cursor: pointer;
-}
-
-.status {
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 0.9em;
-}
-
-.status.completed {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.status.pending {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-
-.payment-btn {
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9em;
-}
-
-.payment-btn.paid {
-    background-color: #28a745;
-    color: white;
-}
-
-.payment-btn.due {
-    background-color: #dc3545;
-    color: white;
-}
-
-.table-container {
-    max-height: 100vh !important;
-    overflow-y: auto;
-    position: relative;
-}
-
-.sticky-top-search {
-    position: sticky;
-    top: 0;
-    background-color: white;
-    z-index: 100;
-    padding: 10px 0;
-    border-bottom: 2px solid #ccc;
-}
-
-.sticky-header th {
-    position: sticky;
-    top: 56px; 
-    z-index: 99;
-    background-color: var(--primary); 
-    color: white;
-}
-
-.table-scroll {
-    width: 100%;
-    display: block;
-}
-.heading-item{
-    font-size: 12px;
-}
-
-.footer-btn {
     padding: 8px 16px;
     border-radius: var(--border-radius-sm);
-    background: var(--primary-no-gradient);
-    border: 1px solid var(--glass-border);
-    color: var(--text-light);
-    text-decoration: none;
+    border: none;
+    cursor: pointer;
     transition: var(--transition);
     font-size: 14px;
-    cursor: pointer;
 }
 
-.footer-btn:hover {
-    background: var(--primary);
-    transform: translateY(-1px);
+.btn-outline-dark {
+    background: white;
+    border: 1px solid #333;
+    color: #333;
 }
 
+.btn-outline-dark:hover {
+    background: #333;
+    color: white;
+}
+
+.form-select {
+    padding: 8px 12px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid #ddd;
+}
+
+.form-control {
+    padding: 8px 12px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid #ddd;
+}
+
+@media (max-width: 768px) {
+    .invoice-table {
+        font-size: 0.8rem;
+    }
+    
+    .invoice-table th,
+    .invoice-table td {
+        padding: 8px;
+    }
+    
+    .section-summary {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
 </style>
+
 <div class="financ">
     <div class="header">
-        <div class='h5'>
-            Invoices
-        </div>
-        <div class="d-flex justify-content-between mt-1">
+        <div class='h5'>Invoices</div>
+        <div class="d-flex justify-content-between mt-3">
             <div>
                 <select class="form-select" id="filterSelect" onchange="filterCashBook()">
-                    <option value="today" {% if filter_option == 'today' %}selected{% endif %}>Today</option>
-                    <option value="this_week" {% if filter_option == 'this_week' %}selected{% endif %}>This Week</option>
-                    <option value="yesterday" {% if filter_option == 'yesterday' %}selected{% endif %}>Yesterday</option>
-                    <option value="this_month" {% if filter_option == 'this_month' %}selected{% endif %}>This Month</option>
-                    <option value="last_month" {% if filter_option == 'last_month' %}selected{% endif %}>Last Month</option>
-                    <option value="this_year" {% if filter_option == 'this_year' %}selected{% endif %}>This Year</option>
+                    <option value="today">Today</option>
+                    <option value="this_week">This Week</option>
+                    <option value="yesterday">Yesterday</option>
+                    <option value="this_month">This Month</option>
+                    <option value="last_month">Last Month</option>
+                    <option value="this_year">This Year</option>
                 </select>
             </div>
             <div id="customDateRange" class="d-flex mx-2">
-                <input type="date" id="startDate" value="{{ start_date }}" class="form-control" placeholder="Start Date">
-                <input type="date" id="endDate" value="{{ end_date}}" class="form-control mx-2" placeholder="End Date">
+                <input type="date" id="startDate" class="form-control" placeholder="Start Date">
+                <input type="date" id="endDate" class="form-control mx-2" placeholder="End Date">
                 <button class="btn btn-outline-dark btn-sm" onclick="applyCustomFilter()">Apply</button>
             </div>
             <button class="btn btn-outline-dark btn-sm" onclick="downloadReport()">Download Report</button>
         </div>
     </div>
-        <!-- {% include 'components/loader.html' %} -->
-        <div class='table-responsive' style="height: 100vh;">
-            <div class="search-container sticky-top-search">
-                <input type="text" id="searchInput" class="search-input" placeholder="Search invoices...">
-                <i class="fas fa-search search-icon"></i>
-            </div>
-            {% for date_heading, data in grouped_invoices.items %}
-                <div class="mb-4">
-                    <h4 class="mt-3 d-flex flex-column justify-content-center">
-                        <span>{{ date_heading }}</span>
-                        <div class="d-flex gap-3 text-muted">
-                            <small class="heading-item">{{ data.invoices|length }} invoice{{ data.invoices|length|pluralize }}</small>
-                            <small class="heading-item">Total: {{ data.invoices.0.currency.symbol }}{{ data.total_amount }}</small>
-                            <small class="heading-item">Due: {{ data.invoices.0.currency.symbol }}{{ data.amount_due }}</small>
-                        </div>
-                    </h4>
-                    
-                    <table class="sticky-header table-stripped w-100" id="invoiceTable">
-                        <thead>
-                            <tr>
-                                <th>Customer Name &#9650;</th>
-                                <th>Reference &#9650;</th>
-                                <th>Date &#9650;</th>
-                                <th>Products</th>
-                                <th>Grand Total &#9650;</th>
-                                <th>Paid &#9650;</th>
-                                <th>Due &#9650;</th>                
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for invoice in data.invoices %}
-                            <tr>
-                                <td><small><a href="{% url 'finance:customer' invoice.customer.id %}">{{ invoice.customer.name }}</a></small></td>
-                                <td><small>#{{ invoice.invoice_number }}</small></td>
-                                <td><small>{{ invoice.issue_date|date:"d/m/y H:i" }}</small></td>
-                                <td><small>
-                                    {% for item in invoice_items %}
-                                        {% if item.invoice == invoice %}
-                                            <span style="margin-right:5px;">{{item.item.name }} x {{item.quantity}}</span>
-                                        {% endif %}
-                                    {% endfor %}
-                                </small></td>
-                                <td><small>{{ invoice.currency.symbol }} {{ invoice.amount }}</small></td>
-                                <td id="tr" data-invoiceID="{{ invoice.id }}"><small>{{ invoice.currency.symbol }} {{ invoice.amount_paid }}</small></td>
-                                <td>
-                                    {% if invoice.amount_due > 0 %}
-                                    <small class="text-danger">
-                                        {{ invoice.currency.symbol }} {{ invoice.amount_due }}
-                                    </small>
-                                    {% else %}
-                                    <small class="text-success">
-                                        {{ invoice.currency.symbol }} {{ invoice.amount_paid }}
-                                    </small>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <span class='px-2'>
-                                        <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Preview Invoice' data-id="{{ invoice.id }}" id='previewBtn'>
-                                            <i class='bx bx-file'></i>
-                                        </span>
-                                    </span>
-                                    <span>
-                                        {% if invoice.amount_due > 0 %}
-                                        <span style='cursor:pointer;' data-id="{{ invoice.id }}" data-amount="{{ invoice.amount_due }}" id='id_update' class="text-dark">
-                                            <i class='bx bx-right-arrow bg-success'></i>
-                                        </span>
-                                        {% else %}
-                                        <span style='cursor:pointer;' class="text-dark hint--bottom" aria-label='Invoice fully paid'>
-                                            <i class='bx bx-bx-right-arrow bg-danger'></i>
-                                        </span>
-                                        {% endif %}
-                                    </span>
-                                    <span class='px-2'>
-                                        <span style='cursor:pointer;' data-id="{{ invoice.id }}" id='id_credit_note' class="text-dark hint--bottom" aria-label='Issue Credit Note'>
-                                            <i class='bx bx-credit-card'></i>
-                                        </span>
-                                    </span>
-                                    <span>
-                                        {% if request.user.role == 'admin' %}
-                                            <span id='id_delete' data-id="{{ invoice.id }}" class="text-dark hint--bottom" aria-label='sales return'>
-                                                <img width="18px" src="{% static 'assets/return.png' %}" />
-                                            </span>
-                                        {% endif %}
-                                    </span>
-                                    {% if invoice.payment_terms == 'pay later' %}
-                                        <span class='px-2'>
-                                            <span style='cursor:pointer;' class="text-dark" data-bs-toggle="modal" data-bs-target="#paylaterModal{{ invoice.id }}">
-                                                <i class='bx bx-calendar'></i>
-                                            </span>
-                                        </span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% endfor %}
-        </div>
-        
-        <div class="modal fade" id="appModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body text-center">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-2">Sending invoice to WhatsApp...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body" id='payment_content'>
-                        {% include 'invoices/update_invoice.html' %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        {% include 'invoices/update_receipt.html' %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="paymentsModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body text-center" id='payment_content'>
-                        {% include 'invoices/invoice_payments.html' %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="receiptItems" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body text-center">
-                        <div class="d-flex justify-content-between">
-                            <div class="">
-                                <h5>SALE RETURN</h5>
-                                <p id="id_date">DATE: </p>
-                            </div>
-                            <div>
-                                <h5 id="id_invoice_number"></h5>
-                                <p id="id_invoice_date">DATE: </p>
-                            </div>
-                        </div>
-                        
-                        <table id="returnsTable" class="table" style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>Product</th>
-                                    <th>Quantity</th>
-                                    <th id="unit_price_header">Price</th>
-                                    <th id="id_total_header">Total</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Invoice items will be inserted here -->
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="3"></td>
-                                    <td class="fw-bold">Total (with VAT)</td>
-                                    <td class="fw-bold" id="id_total"></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="3"></td>
-                                    <td class="fw-bold">Paid</td>
-                                    <td class="fw-bold" id="id_paid"></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="3"></td>
-                                    <td class="fw-bold">Balance</td>
-                                    <td class="fw-bold" id="id_balance"></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                        <hr />
-                        <h5>Items selected for refund</h5>
-                        <table>
-                            <tbody id="id_refund_items"></tbody>
-                        </table>
-                        <hr/>
-
-                        <h3>Total Refund: <span class="mx-2" id="id_refund_total"></span></h3>
-                        
-                        <hr/>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body" id='delete_content'>
-                        <h5 class='fw-bold'>Delete Invoice</h5>
-                        <div>
-                            <button class='btn btn-secondary w-100' onclick='deleteInvoice();'>Yes</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="creditNoteModal" tabindex="-1" aria-labelledby="creditNoteModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="creditNoteModalLabel">Issue Credit Note</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="creditNoteForm">
-                            <div class="mb-3">
-                                <label for="reason" class="form-label">Reason for Credit Note</label>
-                                <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
-                            </div>
-                            
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Item</th>
-                                            <th>Available Qty</th>
-                                            <th>Unit Price</th>
-                                            <th>Credit Qty</th>
-                                            <th>Discount Amount</th>
-                                            <th>Return</th>
-                                            <th>Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="creditNoteItems">
-                                        <!-- Items will be populated here -->
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colspan="6" class="text-end"><strong>Subtotal:</strong></td>
-                                            <td id="creditNoteSubtotal">0.00</td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="6" class="text-end"><strong>VAT:</strong></td>
-                                            <td id="creditNoteVAT">0.00</td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="6" class="text-end"><strong>Total:</strong></td>
-                                            <td id="creditNoteTotal">0.00</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" id="submitCreditNote">Submit</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-</div>
-
-<!-- Paylater Modals -->
-{% for date_heading, invoices in grouped_invoices.items %}
-    {% for invoice in invoices %}
-        {% if invoice.payment_terms == 'pay later' %}
-        <div class="modal fade" id="paylaterModal{{ invoice.id }}" tabindex="-1" aria-labelledby="paylaterModalLabel{{ invoice.id }}" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="paylaterModalLabel{{ invoice.id }}">Pay Later Details - Invoice #{{ invoice.invoice_number }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <ul class="nav nav-tabs" id="paylaterTabs{{ invoice.id }}" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="dates-tab{{ invoice.id }}" data-bs-toggle="tab" data-bs-target="#dates{{ invoice.id }}" type="button" role="tab">Payment Dates</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="payments-tab{{ invoice.id }}" data-bs-toggle="tab" data-bs-target="#payments{{ invoice.id }}" type="button" role="tab">Payment History</button>
-                            </li>
-                        </ul>
-                        <div class="tab-content" id="paylaterTabContent{{ invoice.id }}">
-                            <div class="tab-pane fade show active" id="dates{{ invoice.id }}" role="tabpanel">
-                                <div class="table-responsive mt-3">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Due Date</th>
-                                                <th>Amount</th>
-                                                <th>Status</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for paylater_date in invoice.paylater.paylaterdates_set.all %}
-                                            <tr>
-                                                <td>{{ paylater_date.due_date|date:"d/m/Y" }}</td>
-                                                <td>{{ invoice.currency.symbol }} {{ paylater_date.amount }}</td>
-                                                <td>
-                                                    <span class="badge {% if paylater_date.paid %}bg-success{% else %}bg-warning{% endif %}">
-                                                        {% if paylater_date.paid %}Paid{% else %}Pending{% endif %}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    {% if not paylater_date.paid %}
-                                                    <button class="btn btn-sm btn-primary" onclick="processPaylaterPayment({{ paylater_date.id }})">
-                                                        Pay Now
-                                                    </button>
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div class="tab-pane fade" id="payments{{ invoice.id }}" role="tabpanel">
-                                <div class="table-responsive mt-3">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Payment Date</th>
-                                                <th>Amount</th>
-                                                <th>Payment Method</th>
-                                                <th>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for payment in invoice.paylater.paylaterdates_set.all %}
-                                            {% if payment.paid %}
-                                            <tr>
-                                                <td>{{ payment.payment_date|date:"d/m/Y" }}</td>
-                                                <td>{{ invoice.currency.symbol }} {{ payment.amount }}</td>
-                                                <td>{{ payment.payment_method }}</td>
-                                                <td>
-                                                    <span class="badge bg-success">Paid</span>
-                                                </td>
-                                            </tr>
-                                            {% endif %}
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-    {% endfor %}
-{% endfor %}
-
-<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="previewModalLabel">Invoice Preview</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="invoice-preview">
-                    <div class="row mb-4">
-                        <div class="col-6">
-                            <h4>Invoice #<span id="preview-invoice-number"></span></h4>
-                            <p class="mb-1">Date: <span id="preview-date"></span></p>
-                            <p class="mb-1">Customer: <span id="preview-customer"></span></p>
-                            <p class="mb-1">Email: <span id="preview-email"></span></p>
-                            <p class="mb-1">Phone: <span id="preview-phone"></span></p>
-                            <p class="mb-1">Address: <span id="preview-address"></span></p>
-                        </div>
-                        <div class="col-6 text-end">
-                            <h4>TechCity</h4>
-                            <p class="mb-1">Branch: <span id="preview-branch"></span></p>
-                            <p class="mb-1">Status: <span id="preview-status"></span></p>
-                            <p class="mb-1">Payment Terms: <span id="preview-payment-terms"></span></p>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th>Description</th>
-                                    <th>Quantity</th>
-                                    <th>Unit Price</th>
-                                    <th>Total</th>
-                                </tr>
-                            </thead>
-                            <tbody id="preview-items">
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
-                                    <td id="preview-subtotal"></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="4" class="text-end"><strong>VAT:</strong></td>
-                                    <td id="preview-vat"></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="4" class="text-end"><strong>Total:</strong></td>
-                                    <td id="preview-total"></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="4" class="text-end"><strong>Amount Paid:</strong></td>
-                                    <td id="preview-paid"></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="4" class="text-end"><strong>Amount Due:</strong></td>
-                                    <td id="preview-due"></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <div class="d-flex justify-content-end w-100">
-                    <div>
-                        <button type="button" class="me-2 footer-btn" onclick="printInvoice()">
-                            <i class='bx bx-printer'></i> Print
-                        </button>
-                        <button type="button" class="footer-btn" onclick="sendInvoiceEmail()">
-                            <i class='bx bx-envelope'></i> Send Email
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search invoices...">
     </div>
+
+    <div id="invoiceContent"></div>
+
+    {% include 'invoices/modals.html' %}
 </div>
 
-<script type="text/javascript">
+<script>
+class InvoiceManager {
+    constructor() {
+        this.currentPage = 1;
+        this.isLoading = false;
+        this.hasMore = true;
+        this.allInvoices = [];
+        this.searchTimeout = null;
+        this.init();
+    }
+
+    init() {
+        this.loadInvoices();
+        this.setupInfiniteScroll();
+        this.setupSearch();
+    }
+
+    async loadInvoices() {
+        if (this.isLoading || !this.hasMore) return;
+        
+        this.isLoading = true;
+        this.showLoading();
+        
+        try {
+            const response = await fetch(`/finance/invoice_json/?page=${this.currentPage}&json=true`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.allInvoices = [...this.allInvoices, ...data.invoices];
+                this.hasMore = data.pagination.has_next;
+                this.currentPage++;
+                this.render();
+            }
+        } catch (error) {
+            console.error('Error loading invoices:', error);
+            this.showError();
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    groupInvoicesByDate(invoices) {
+        const grouped = {};
+        
+        invoices.forEach(invoice => {
+            const date = new Date(invoice.date);
+            const dateKey = date.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+            });
+            
+            if (!grouped[dateKey]) {
+                grouped[dateKey] = {
+                    invoices: [],
+                    totalAmount: 0,
+                    totalDue: 0
+                };
+            }
+            
+            grouped[dateKey].invoices.push(invoice);
+            grouped[dateKey].totalAmount += parseFloat(invoice.total);
+            grouped[dateKey].totalDue += parseFloat(invoice.balance);
+        });
+        
+        return grouped;
+    }
+
+    render() {
+        const content = document.getElementById('invoiceContent');
+        
+        if (this.allInvoices.length === 0 && !this.isLoading) {
+            content.innerHTML = '<div class="no-more-data">No invoices found</div>';
+            return;
+        }
+
+        const grouped = this.groupInvoicesByDate(this.allInvoices);
+        const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+
+        let html = '';
+        sortedDates.forEach(date => {
+            const data = grouped[date];
+            html += this.renderSection(date, data);
+        });
+
+        content.innerHTML = html;
+
+        if (this.hasMore) {
+            content.innerHTML += `
+                <div class="loading-container">
+                    <div class="spinner"></div>
+                    <p>Loading more invoices...</p>
+                </div>
+            `;
+        } else if (this.allInvoices.length > 0) {
+            content.innerHTML += '<div class="no-more-data">No more invoices to load</div>';
+        }
+
+        this.attachEventListeners();
+    }
+
+    renderSection(dateHeading, data) {
+        console.log(data);
+        return `
+            <div class="invoice-section">
+                <div class="section-header">
+                    <div class="section-title">${dateHeading}</div>
+                    <div class="section-summary">
+                        <span>${data.invoices.length} invoice${data.invoices.length !== 1 ? 's' : ''}</span>
+                        <span>Total: USD ${data.totalAmount.toFixed(2)}</span>
+                        <span>Due: USD ${data.totalDue.toFixed(2)}</span>
+                    </div>
+                </div>
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th>Reference</th>
+                            <th>Customer Name</th>
+                            <th>Products</th>
+                            <th>Grand Total</th>
+                            <th>Paid</th>
+                            <th>Due</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.invoices.map(inv => this.renderInvoiceRow(inv)).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    renderInvoiceRow(invoice) {
+        const time = new Date(invoice.date).toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false
+        });
+        const date = new Date(invoice.date).toLocaleDateString('en-GB');
+
+        const dueClass = parseFloat(invoice.balance) > 0 ? 'text-danger' : 'text-success';
+
+        return `
+            <tr>
+                <td>
+                    <small>
+                        <i class="bx bx-file"></i> #${invoice.invoice_number}
+                        <br>
+                        <i class="bx bx-time"></i> ${date} ${time}
+                    </small>
+                </td>
+                <td>
+                    <small>
+                        <a href="/finance/customer/${invoice.customer_id}/" class="customer-link">
+                            ${invoice.customer_name}
+                        </a>
+                    </small>
+                </td>
+                <td>
+                    <small>
+                        ${invoice.invoice_items.map(item => item.item__name + ' x ' + item.quantity).join(', ')}
+                    </small>
+                </td>
+                <td><small>USD ${parseFloat(invoice.total).toFixed(2)}</small></td>
+                <td><small>USD ${parseFloat(invoice.paid).toFixed(2)}</small></td>
+                <td>
+                    <small class="${dueClass}">
+                        USD ${parseFloat(invoice.balance).toFixed(2)}
+                    </small>
+                </td>
+                <td>
+                    <div class="action-icons">
+                        <span class="action-icon" data-action="preview" data-id="${invoice.id}" title="Preview Invoice">
+                            <i class='bx bx-file'></i>
+                        </span>
+                        ${parseFloat(invoice.balance) > 0 ? `
+                            <span class="action-icon" data-action="payment" data-id="${invoice.id}" data-amount="${invoice.balance}" title="Make Payment">
+                                <i class='bx bx-right-arrow'></i>
+                            </span>
+                        ` : ''}
+                        <span class="action-icon" data-action="credit-note" data-id="${invoice.id}" title="Issue Credit Note">
+                            <i class='bx bx-credit-card'></i>
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    attachEventListeners() {
+        document.querySelectorAll('[data-action="preview"]').forEach(el => {
+            el.addEventListener('click', () => {
+                const invoiceId = el.dataset.id;
+                fetchInvoicePreview(invoiceId);
+            });
+        });
+
+        document.querySelectorAll('[data-action="payment"]').forEach(el => {
+            el.addEventListener('click', () => {
+                invoiceId = el.dataset.id;
+                invoiceAmountDue = el.dataset.amount;
+                updateModal.show();
+            });
+        });
+
+        document.querySelectorAll('[data-action="credit-note"]').forEach(el => {
+            el.addEventListener('click', () => {
+                currentInvoiceId = el.dataset.id;
+                fetchInvoiceItems(currentInvoiceId);
+            });
+        });
+    }
+
+    showLoading() {
+        const content = document.getElementById('invoiceContent');
+        if (this.currentPage === 1) {
+            content.innerHTML = `
+                <div class="loading-container">
+                    <div class="spinner"></div>
+                    <p>Loading invoices...</p>
+                </div>
+            `;
+        }
+    }
+
+    showError() {
+        const content = document.getElementById('invoiceContent');
+        content.innerHTML = `
+            <div class="no-more-data">
+                <p>Failed to load invoices. Please try again.</p>
+                <button class="btn btn-outline-dark" onclick="location.reload()">Retry</button>
+            </div>
+        `;
+    }
+
+    setupInfiniteScroll() {
+        window.addEventListener('scroll', () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+                this.loadInvoices();
+            }
+        });
+    }
+
+    setupSearch() {
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => {
+                this.handleSearch(e.target.value);
+            }, 300);
+        });
+    }
+
+    handleSearch(query) {
+        const searchTerm = query.toLowerCase();
+        const filtered = this.allInvoices.filter(invoice => {
+            return invoice.customer_name.toLowerCase().includes(searchTerm) ||
+                   invoice.invoice_number.toString().includes(searchTerm) ||
+                   invoice.total.toString().includes(searchTerm) ||
+                   invoice.invoice_items.map(item => item.item__name).join(', ').toLowerCase().includes(searchTerm);
+        });
+
+        const grouped = this.groupInvoicesByDate(filtered);
+        const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+
+        const content = document.getElementById('invoiceContent');
+        if (filtered.length === 0) {
+            content.innerHTML = '<div class="no-more-data">No invoices found matching your search</div>';
+            return;
+        }
+
+        let html = '';
+        sortedDates.forEach(date => {
+            const data = grouped[date];
+            html += this.renderSection(date, data);
+        });
+
+        content.innerHTML = html;
+        this.attachEventListeners();
+    }
+}
+
+// Initialize the invoice manager when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    window.invoiceManager = new InvoiceManager();
+});
+
 
     let invoiceId = '';
     let invoiceAmountDue = '';
     let paymentMethod = '';
+     let currentInvoiceId = null;
     let duePaid = 0;
 
     const whatsappBtn = document.getElementById('whatsappBtn');
     const appModal = new bootstrap.Modal(document.getElementById('appModal'));
-
     const trEl = document.querySelectorAll('#tr')
     const paymentsModal = new bootstrap.Modal(document.getElementById('paymentsModal'));
-
     const deleteBtn = document.querySelectorAll('#id_delete')
-
     const updateBtn = document.querySelectorAll('#id_update')
     const updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
-
     const loader = new bootstrap.Modal(document.getElementById('loaderModal'));
-
     const error = document.querySelector('#id_amount_error');
     const returnsModal = new bootstrap.Modal(document.getElementById('receiptItems'));
     const tableEl = document.querySelector('#invoiceTable');
     const loaderSpin = document.querySelector('#loader');
-
     const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
-
     const creditNoteModal = new bootstrap.Modal(document.getElementById('creditNoteModal'));
     const creditNoteBtns = document.querySelectorAll('#id_credit_note');
-    
-    let currentInvoiceId = null;
     const previewBtn = document.querySelectorAll('#previewBtn');
     const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
-
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        const searchValue = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#invoiceTable tbody tr');
-        
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            let found = false;
-
-            cells.forEach(cell => {
-                if (cell.textContent.toLowerCase().includes(searchValue)) {
-                    found = true;
-                }
-            });
-
-            if (found) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    });
 
     const headers = document.querySelectorAll("thead th");
     const tableBody = document.querySelector("tbody");
@@ -1632,6 +1427,8 @@ input[type="checkbox"] {
 
             const data = await response.json();
             const { invoice, invoice_items: invoiceItems } = data;
+
+            console.log(data)
             
             document.getElementById('preview-invoice-number').textContent = invoice.invoice_number;
             document.getElementById('preview-date').textContent = new Date(invoice.issue_date).toLocaleDateString();
@@ -1659,6 +1456,27 @@ input[type="checkbox"] {
             document.getElementById('preview-total').textContent = `${invoice.currency_symbol} ${invoice.amount}`;
             document.getElementById('preview-paid').textContent = `${invoice.currency_symbol} ${invoice.amount_paid}`;
             document.getElementById('preview-due').textContent = `${invoice.currency_symbol} ${invoice.amount_due || 0.00}`;
+
+            const qrCodeElement = document.getElementById('receipt-qrcode');
+            if (invoice.qr_code && qrCodeElement) {
+                qrCodeElement.src = invoice.qr_code;
+                qrCodeElement.style.display = 'block';
+            } else {
+                if (qrCodeElement) qrCodeElement.style.display = 'none';
+            }
+            
+            const setText = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = value || '';
+            };
+
+            setText('fiscal-number', invoice.code);
+            setText('fiscal-day', invoice.fiscal_day);
+            setText('device-id', invoice.device_id);
+            
+            setText('preview-branch', invoice.branch_name);
+            setText('preview-phone', invoice.customer_cell);
+            setText('preview-staff', invoice.user_username);
 
             previewModal.show();
         } catch (error) {
@@ -1755,6 +1573,5 @@ input[type="checkbox"] {
         printWindow.document.close();
     }
 </script>
-
 
 {% endblock content %}
