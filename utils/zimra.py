@@ -545,6 +545,7 @@ class ZIMRA:
             self.apply_async(countdown=reporting_frequency)
             
             return response.json()
+        
         except requests.RequestException as e:
             logger.error(f"Ping error: {e}")
             return f"Error: {e}"

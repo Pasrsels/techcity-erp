@@ -386,6 +386,14 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                  </div>
                     <div class="modal-body">
+                         <div class="mb-4">
+                            <label for="customer_vat">Customer Vat </label>
+                            <input class="form-control" id="customer_vat"/>
+                       </div>
+                        <div class="mb-4">
+                            <label for="customer_tin">Customer Tin Number</label>
+                            <input class="form-control" id="customer_tin"/>
+                       </div>
                        <div class="mb-4">
                             <label for="paid_amount">Amount paid</label>
                             <input class="paid_amount form-control" id="paid_amount" readonly/>
@@ -1397,6 +1405,8 @@
 
     async function processCart(el) {
         const amountReceived = document.getElementById('id_amount_paid');
+        const tinNumber = document.getElementById('customer_tin');
+        const vatNumber = document.getElementById('customer_vat');
 
         let pay_later_dates = [];
         if (paymentTerms === 'pay later') {
@@ -1432,14 +1442,14 @@
                 hold_status: holdStatus,
                 pay_later_dates: pay_later_dates,
                 change_deposit: changeToBeDeposited,
-                note: invoiceNote.value
+                note: invoiceNote.value,
+                vat:vatNumber.value.trim() || '',
+                tin:tinNumber.value.trim() || ''
             }
         ];
 
         console.log(data)
 
-        console.log(pay_later_dates, 'pay_later_dates')
-    
         const url = el.dataset.name === 'qoutation' 
             ? "{% url 'finance:add_qoutation' %}" 
             : "{% url 'finance:create_invoice' %}";
@@ -1576,6 +1586,7 @@
     }
 
     function generateReceiptContent(data) {
+        console.log('data', data)
         const { invoice, invoice_items: invoiceItems } = data;
         const {
             invoice_number: invoiceNumber,
@@ -1595,7 +1606,9 @@
             branch_email: branchEmail,
             code: code,
             fiscal_day:fiscal_day,
-            customer_name: customer_name
+            customer_name: customer_name,
+            tin: tin,
+            vat_number: vat_number
         } = invoice;
     
         const vatRate = 15;
@@ -1682,6 +1695,8 @@
                 <p class="center"><strong>FISCAL TAX INVOICE</strong></p>
                 <p><strong>Cashier:</strong> {{ request.user.get_full_name }}</p>
                 <p><strong>Buyer:</strong> ${customer_name || 'N/A'}</p>
+                <p><strong>Vat:</strong> ${data.vat_number || 'N/A'}</p>
+                <p><strong>Tin:</strong> ${data.tin|| 'N/A'}</p>
 
                 <div class="header-row">
                     <p>

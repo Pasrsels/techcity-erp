@@ -61,7 +61,7 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
                         
             from django.core.files.base import ContentFile
             
-            fiscal_day = FiscalDay.objects.filter(created_at__date=datetime.today(), is_open=True).first()
+            fiscal_day = FiscalDay.objects.filter(is_open=True).first()
             logger.info(f'fiscal_day: {fiscal_day}')
 
             invoice.qr_code.save(f"qr_{invoice.invoice_number}.png", ContentFile(qr_io.getvalue()), save=False)

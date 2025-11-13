@@ -808,13 +808,6 @@ input[type="checkbox"] {
         });
     });
 
-    {% comment %}     
-    setTimeout(()=>{
-        loaderSpin.classList.add('hidden');
-        loaderSpin.classList.remove('d-flex')
-        // tableEl.classList.remove('hidden')
-    }, 300) {% endcomment %}
-
     // payment methods
     document.querySelectorAll('.pm').forEach(button => {
         button.addEventListener('click', () => {
@@ -1553,6 +1546,8 @@ input[type="checkbox"] {
             </html>
         `);
         frameDoc.document.close();
+
+        }
     function processPaylaterPayment(paylaterDateId) {
         Swal.fire({
             title: 'Process Payment',

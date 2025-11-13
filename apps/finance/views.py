@@ -866,7 +866,7 @@ def update_expense_status(request):
 @login_required
 def invoice(request):
     form = InvoiceForm()
-    invoices = Invoice.objects.filter(branch=request.user.branch, status=True, cancelled=False).select_related(
+    invoices = Invoice.objects.filter(branch=request.user.branch, status=True, cancelled=False, code__isnull=False).select_related(
         'branch',
         'currency',
         'user'
@@ -1135,8 +1135,12 @@ def create_invoice(request):
                     payment_terms = invoice_data['paymentTerms'],
                     hold_status = invoice_data['hold_status'],
                     amount_received = amount_paid,
-                    products_purchased = ''
+                    products_purchased = '',
+                    tin = invoice_data['tin'],
+                    vat_number = invoice_data['vat']
                 )
+
+                logger.info(f'{invoice.tin}, {invoice.vat_number}')
                 
                 category = IncomeCategory.objects.filter(name='sales').first() 
                 
@@ -1361,6 +1365,8 @@ def create_invoice(request):
                     submit_receipt_data(request, receipt_data, credit_note_data, hash_sig_data['hash'], hash_sig_data['signature'], invoice.id)
                     
                     invoice_data = invoice_preview_json(request, invoice.id)
+                    invoice_data['vat_number'] = invoice.vat_number
+                    invoice_data['tin'] = invoice.tin
                     logger.info(invoice_data)
 
                 except Exception as e:
@@ -2732,6 +2738,12 @@ def invoice_preview_json(request, invoice_id):
     invoice_dict['device_serial_number'] = os.getenv("DEVICE_SERIAL_NUMBER")
     invoice_dict['code'] =  invoice.code
     invoice_dict['fiscal_day'] = invoice.fiscal_day
+    invoice_dict['tin'] = invoice.tin
+    invoice_dict['vat'] = invoice.vat_number
+
+    if invoice.tin:
+        logger.info(f'{invoice.tin}')
+        return
 
     if invoice.branch:
         invoice_dict['branch_name'] = invoice.branch.name
@@ -2758,6 +2770,8 @@ def invoice_preview_json(request, invoice_id):
         'invoice_items': list(invoice_items),
         'dates': list(dates)
     }
+
+    logger.info(invoice_dict)
     return invoice_data
 
 @login_required
@@ -14739,7 +14753,7 @@ def close_fiscal_day(request):
     """
     if request.method == 'GET':
         try:
-            fiscal_day = FiscalDay.objects.filter(created_at__date=datetime.datetime.today(), is_open=True).first()
+            fiscal_day = FiscalDay.objects.filter(is_open=True).first()
             if not fiscal_day:
                 return JsonResponse({'success': False, 'message': 'No open fiscal day found for today'}, status=404)
                 

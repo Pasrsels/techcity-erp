@@ -156,31 +156,14 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-
-    # 'default': dj_database_url.config(
-    #     default=os.environ.get('DATABASE_URL')
-    # )
-    # 'default': dj_database_url.config(
-    #     default=os.environ.get('DATABASE_URL')
-    # )
-
     'default': {
-         'ENGINE': 'django.db.backends.postgresql',
+          'ENGINE': 'django.db.backends.postgresql',
          'NAME':  'techcity_db',
          'USER': 'postgres',
          'PASSWORD': 'neverfail',
          'HOST': 'localhost',
          'PORT': '5432'
      }
-    
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME':  'testt',
-    #     'USER': 'postgres',
-    #     'PASSWORD': 'neverfail',
-    #     'HOST': 'localhost',
-    #     'PORT': '5432'
-    # }
 }
 
 if os.environ.get('TESTING'):

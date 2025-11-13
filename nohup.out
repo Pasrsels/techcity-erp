@@ -1,0 +1,1770 @@
+Invalid line: DEVICE_SERIAL_NUMBER = parsales-1
+Invalid line: CERTIFICATE = cert.pem
+Invalid line: CERTIFICATE_KEY = cert_private.pem
+Invalid line: DEVICE_SERIAL_NUMBER = parsales-1
+Invalid line: CERTIFICATE = cert.pem
+Invalid line: CERTIFICATE_KEY = cert_private.pem
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+November 04, 2025 - 13:02:02
+Django version 4.2.16, using settings 'techcity.settings.development'
+Starting development server at http://0.0.0.0:9100/
+Quit the server with CONTROL-C.
+
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 13:06:16] "GET / HTTP/1.1" 302 0
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 13:06:16] "GET /users/login/ HTTP/1.1" 200 12195
+[04/Nov/2025 13:06:16] "GET /static/css/main.css HTTP/1.1" 200 12770
+[04/Nov/2025 13:06:16] "GET /static/css/bootstrap/js/bootstrap.min.js HTTP/1.1" 200 60577
+[04/Nov/2025 13:06:16] "GET /static/css/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 232948
+[04/Nov/2025 13:06:17] "GET /static/assets/logo.png HTTP/1.1" 200 10482
+[04/Nov/2025 13:06:17] "GET /static/images/favicons/favicon.ico HTTP/1.1" 404 1842
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:32] "GET /pos/ HTTP/1.1" 200 128467
+[04/Nov/2025 14:14:32] "GET /static/css/main.css HTTP/1.1" 200 12770
+[04/Nov/2025 14:14:32] "GET /static/css/bootstrap/js/bootstrap.min.js HTTP/1.1" 200 60577
+[04/Nov/2025 14:14:32] "GET /static/css/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 80663
+[04/Nov/2025 14:14:32] "GET /static/assets/logo.png HTTP/1.1" 200 10482
+[04/Nov/2025 14:14:32] "GET /static/js/jquery.js HTTP/1.1" 200 87532
+[04/Nov/2025 14:14:32] "GET /static/css/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 232948
+[04/Nov/2025 14:14:32] "GET /static/assets/boxicons/css/boxicons.css HTTP/1.1" 200 89592
+[04/Nov/2025 14:14:32] "GET /static/assets/avatar.png HTTP/1.1" 200 15076
+[04/Nov/2025 14:14:32] "GET /static/assets/loader.gif HTTP/1.1" 200 74012
+[04/Nov/2025 14:14:32] "GET /static/js/app_modules/signature_sign.js HTTP/1.1" 200 2824
+[04/Nov/2025 14:14:32] "GET /static/assets/fonts/GraphikRegular.otf HTTP/1.1" 200 125772
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:33] "GET /static/images/favicons/favicon.ico HTTP/1.1" 404 1842
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:33] "GET /finance/currency/json?id=2 HTTP/1.1" 200 100
+[04/Nov/2025 14:14:33] "GET /finance/customers/ HTTP/1.1" 200 21962
+[04/Nov/2025 14:14:33] "GET /finance/end_of_day/ HTTP/1.1" 200 915
+[04/Nov/2025 14:14:33] "GET /inventory/product/list/ HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:33] "GET /inventory/product/list/ HTTP/1.1" 200 163304
+[04/Nov/2025 14:14:33] "GET /static/placeholder.png HTTP/1.1" 200 957
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 14:14:33] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+Not Found: /pos/placeholder.png
+[04/Nov/2025 14:14:33] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/airpods.png
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 14:14:33] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+[04/Nov/2025 14:14:33] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 14:14:33] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:37] "GET /inventory/product/list/?q=T HTTP/1.1" 200 98748
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 14:14:37] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+Not Found: /pos/placeholder.png
+[04/Nov/2025 14:14:37] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:37] "GET /inventory/product/list/?q=TE HTTP/1.1" 200 37634
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 14:14:37] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:38] "GET /inventory/product/list/?q=TEC HTTP/1.1" 200 2645
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 14:14:38] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:44] "GET /inventory/product/list/?q=TE HTTP/1.1" 200 37634
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 14:14:44] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:44] "GET /inventory/product/list/?q=T HTTP/1.1" 200 98748
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 14:14:44] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+[04/Nov/2025 14:14:44] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:44] "GET /inventory/product/list/?q= HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/car_modulator_allison.png
+Not Found: /pos/product_images/airpods.png
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 14:14:45] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+Not Found: /pos/placeholder.png
+[04/Nov/2025 14:14:45] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+[04/Nov/2025 14:14:45] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+[04/Nov/2025 14:14:45] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 14:14:45] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:46] "GET /inventory/product/list/?q=S HTTP/1.1" 200 87748
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 14:14:46] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 14:14:46] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 14:14:46] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+[04/Nov/2025 14:14:46] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:46] "GET /inventory/product/list/?q=SP HTTP/1.1" 200 7794
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 14:14:46] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:49] "GET /inventory/product/list/?q=S HTTP/1.1" 200 87748
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+Not Found: /pos/placeholder.png
+[04/Nov/2025 14:14:49] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+[04/Nov/2025 14:14:49] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 14:14:49] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 14:14:49] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:50] "GET /inventory/product/list/?q=SP HTTP/1.1" 200 7794
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 14:14:50] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:50] "GET /inventory/product/list/?q=SPA HTTP/1.1" 200 658
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 14:14:51] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:51] "GET /inventory/product/list/?q=SPAE HTTP/1.1" 200 2
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:52] "GET /inventory/product/list/?q=SPA HTTP/1.1" 200 658
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 14:14:52] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:52] "GET /inventory/product/list/?q=SP HTTP/1.1" 200 7794
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 14:14:52] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:53] "GET /inventory/product/list/?q=S HTTP/1.1" 200 87748
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 14:14:53] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+Not Found: /pos/product_images/2.5_hdd_casing.png
+Not Found: /pos/placeholder.png
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 14:14:53] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+[04/Nov/2025 14:14:53] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+[04/Nov/2025 14:14:53] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:53] "GET /inventory/product/list/?q= HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 14:14:53] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 14:14:53] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+[04/Nov/2025 14:14:53] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+Not Found: /pos/placeholder.png
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 14:14:53] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+[04/Nov/2025 14:14:53] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:14:57] "GET /inventory/transfers HTTP/1.1" 200 258354
+[04/Nov/2025 14:14:57] "GET /static/assets/hint.css/hint.min.css HTTP/1.1" 200 9747
+[04/Nov/2025 14:14:57] "GET /static/assets/check.png HTTP/1.1" 200 43744
+[04/Nov/2025 14:14:57] "GET /static/assets/DataTables/datatables.min.css HTTP/1.1" 200 56155
+[04/Nov/2025 14:14:57] "GET /static/css/bootstrap/css/bootstrap.css HTTP/1.1" 200 280836
+[04/Nov/2025 14:14:57] "GET /static/assets/DataTables/datatables.min.js HTTP/1.1" 200 2551109
+[04/Nov/2025 14:14:57] "GET /static/assets/checkout.png HTTP/1.1" 200 25537
+[04/Nov/2025 14:14:58] "GET /static/assets/boxicons/fonts/boxicons.woff2 HTTP/1.1" 200 112140
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:15:03] "GET /inventory/transfer_items_data/536/ HTTP/1.1" 200 2951
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:15:12] "GET /inventory/transfer_items_data/535/ HTTP/1.1" 200 16492
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:15:21] "GET /inventory/transfers HTTP/1.1" 200 258354
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:18:55] "GET /inventory/transfer_items_data/496/ HTTP/1.1" 200 598
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:25:38] "GET /inventory/transfer_items_data/520/ HTTP/1.1" 200 602
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:26:07] "GET /inventory/transfer_items_data/494/ HTTP/1.1" 200 597
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:26:11] "GET /inventory/transfer_items_data/496/ HTTP/1.1" 200 598
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:27:27] "GET /inventory/transfer_items_data/538/ HTTP/1.1" 200 2415
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:27:30] "GET /inventory/transfer_items_data/535/ HTTP/1.1" 200 16492
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:27:39] "GET /pos/ HTTP/1.1" 200 128467
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:27:39] "GET /finance/end_of_day/ HTTP/1.1" 200 915
+[04/Nov/2025 14:27:39] "GET /inventory/product/list/ HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:27:39] "GET /finance/customers/ HTTP/1.1" 200 21962
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 14:27:39] "GET /finance/currency/json?id=2 HTTP/1.1" 200 100
+[04/Nov/2025 14:27:39] "GET /inventory/product/list/ HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 14:27:39] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+Not Found: /pos/placeholder.png
+[04/Nov/2025 14:27:39] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 14:27:39] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 14:27:39] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 14:27:39] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+[04/Nov/2025 14:54:01] code 400, message Bad request version ('ID')
+[04/Nov/2025 14:54:01] "%-12345X@PJL INFO ID" 400 -
+[04/Nov/2025 15:35:31] code 400, message Bad request version ('ID')
+[04/Nov/2025 15:35:31] "%-12345X@PJL INFO ID" 400 -
+Invalid line: DEVICE_SERIAL_NUMBER = parsales-1
+Invalid line: CERTIFICATE = cert.pem
+Invalid line: CERTIFICATE_KEY = cert_private.pem
+Invalid line: DEVICE_SERIAL_NUMBER = parsales-1
+Invalid line: CERTIFICATE = cert.pem
+Invalid line: CERTIFICATE_KEY = cert_private.pem
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Error: That port is already in use.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 16:44:07] "GET / HTTP/1.1" 302 0
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 16:44:07] "GET /users/login/ HTTP/1.1" 200 12195
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 16:44:16] "GET /users/login/ HTTP/1.1" 200 12195
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 16:52:31] "GET / HTTP/1.1" 302 0
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 16:52:31] "GET /users/login/ HTTP/1.1" 200 12195
+[04/Nov/2025 16:52:31] "GET /static/css/main.css HTTP/1.1" 200 12770
+[04/Nov/2025 16:52:31] "GET /static/css/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 232948
+[04/Nov/2025 16:52:38] "GET /static/assets/logo.png HTTP/1.1" 200 10482
+[04/Nov/2025 16:52:38] "GET /static/css/bootstrap/js/bootstrap.min.js HTTP/1.1" 200 60577
+[04/Nov/2025 16:52:45] "GET /static/images/favicons/favicon.ico HTTP/1.1" 404 1842
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 16:53:23] "GET /pos/ HTTP/1.1" 200 128467
+[04/Nov/2025 16:53:23] "GET /static/css/main.css HTTP/1.1" 200 12770
+[04/Nov/2025 16:53:23] "GET /static/css/bootstrap/js/bootstrap.min.js HTTP/1.1" 200 60577
+[04/Nov/2025 16:53:23] "GET /static/assets/boxicons/css/boxicons.css HTTP/1.1" 200 89592
+[04/Nov/2025 16:53:23] "GET /static/js/jquery.js HTTP/1.1" 200 87532
+[04/Nov/2025 16:53:23] "GET /static/css/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 80663
+[04/Nov/2025 16:53:23] "GET /static/js/app_modules/signature_sign.js HTTP/1.1" 200 2824
+[04/Nov/2025 16:53:23] "GET /static/css/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 232948
+[04/Nov/2025 16:53:23] "GET /static/assets/avatar.png HTTP/1.1" 200 15076
+[04/Nov/2025 16:53:23] "GET /static/assets/logo.png HTTP/1.1" 200 10482
+[04/Nov/2025 16:53:23] "GET /static/assets/loader.gif HTTP/1.1" 200 74012
+[04/Nov/2025 16:53:24] "GET /static/assets/fonts/GraphikRegular.otf HTTP/1.1" 200 125772
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 16:53:24] "GET /inventory/product/list/ HTTP/1.1" 200 163304
+[04/Nov/2025 16:53:24] "GET /finance/end_of_day/ HTTP/1.1" 200 3881
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 16:53:24] "GET /finance/customers/ HTTP/1.1" 200 21962
+[04/Nov/2025 16:53:24] "GET /finance/currency/json?id=2 HTTP/1.1" 200 100
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 16:53:24] "GET /inventory/product/list/ HTTP/1.1" 200 163304
+[04/Nov/2025 16:53:24] "GET /static/images/favicons/favicon.ico HTTP/1.1" 404 1842
+[04/Nov/2025 16:53:24] "GET /static/placeholder.png HTTP/1.1" 200 957
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 16:53:24] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 16:53:24] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+Not Found: /pos/product_images/airpods.png
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 16:53:24] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+[04/Nov/2025 16:53:24] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 16:53:24] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:25:15] "GET /inventory/product/list/?q=m HTTP/1.1" 200 80096
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:25:15] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+[04/Nov/2025 17:25:15] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:26:48] "GET /inventory/product/list/?q= HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:26:48] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:26:48] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:26:48] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:26:48] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 17:26:48] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:26:52] "GET /inventory/product/list/?q=1 HTTP/1.1" 200 63714
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:26:52] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:26:53] "GET /inventory/product/list/?q=15 HTTP/1.1" 200 7687
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:26:53] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:26:54] "GET /inventory/product/list/?q=15. HTTP/1.1" 200 3804
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:26:54] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:26:55] "GET /inventory/product/list/?q=15.6 HTTP/1.1" 200 3804
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:26:55] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:00] "GET /inventory/product/list/?product=2866 HTTP/1.1" 200 330
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:02] "GET /inventory/product/list/?q=15. HTTP/1.1" 200 3804
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:27:02] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:03] "GET /inventory/product/list/?q=15 HTTP/1.1" 200 7687
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:27:03] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:03] "GET /inventory/product/list/?q=1 HTTP/1.1" 200 63714
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:27:03] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:11] "GET /inventory/product/list/?q=1a HTTP/1.1" 200 2
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:11] "GET /inventory/product/list/?q=1ai HTTP/1.1" 200 2
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:12] "GET /inventory/product/list/?q=1air HTTP/1.1" 200 2
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:13] "GET /inventory/product/list/?q=1ai HTTP/1.1" 200 2
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:14] "GET /inventory/product/list/?q=1a HTTP/1.1" 200 2
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:14] "GET /inventory/product/list/?q=1 HTTP/1.1" 200 63714
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:27:14] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:20] "POST /finance/customer/account/json/59/ HTTP/1.1" 200 96
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+2025-11-04 17:27:31.665 | INFO     | apps.finance.views:create_invoice:1078 - Account Balance: Harare Techcity usd Cash Account (CA):usd-104471.59
+2025-11-04 17:27:31.672 | INFO     | apps.finance.views:create_invoice:1088 - Tafadzwa
+2025-11-04 17:27:31.677 | INFO     | apps.finance.views:create_invoice:1103 - Amount paid: 50
+2025-11-04 17:27:31.678 | INFO     | apps.finance.views:create_invoice:1115 - amount due: 0
+2025-11-04 17:27:31.678 | INFO     | apps.finance.views:create_invoice:1120 - Harare Techcity
+2025-11-04 17:27:31.687 | INFO     | apps.finance.views:create_invoice:1143 - , 
+2025-11-04 17:27:31.693 | INFO     | apps.finance.views:create_invoice:1156 - Income created: 2025-11-04 15:27:31.691151+00:00 - sales -  - $50
+2025-11-04 17:27:31.695 | INFO     | apps.finance.views:create_invoice:1165 - Finance log created for invoice: Invoice #None - Tafadzwa
+2025-11-04 17:27:31.695 | INFO     | apps.finance.views:create_invoice:1167 - Invoice created for customer: Invoice #None - Tafadzwa
+2025-11-04 17:27:31.700 | INFO     | apps.finance.views:create_invoice:1255 - Creating transaction obj for invoice: Invoice #None - Tafadzwa
+2025-11-04 17:27:31.722 | INFO     | apps.finance.views:create_invoice:1356 - [<InvoiceItem: 1 x  for Invoice #None>]
+2025-11-04 17:27:31.723 | INFO     | apps.pos.utils.receipt_signature:generate_receipt_data:114 - invoice items: Invoice #None - Tafadzwa
+2025-11-04 17:27:31.727 | INFO     | apps.pos.utils.receipt_signature:generate_receipt_data:116 - FiscalDay object (304)
+2025-11-04 17:27:31.728 | INFO     | apps.pos.utils.receipt_signature:generate_receipt_data:117 - Processing Invoice: None Invoice #None - Tafadzwa
+2025-11-04 17:27:31.728 | INFO     | apps.pos.utils.receipt_signature:generate_receipt_data:132 - FiscalDay object (304)
+2025-11-04 17:27:31.734 | INFO     | apps.pos.utils.receipt_signature:get_last_receipt_numbers:101 - last_receipt: Receipt 817 - Submitted: False
+2025-11-04 17:27:31.735 | INFO     | apps.pos.utils.receipt_signature:get_last_receipt_numbers:105 - last receiptGlobalNo: 35
+2025-11-04 17:27:31.735 | INFO     | apps.pos.utils.receipt_signature:generate_receipt_data:136 - Global number: 36
+Standard rated 15%
+here
+done
+[{'taxID': 3, 'taxCode': 'C', 'taxAmount': 6.52, 'salesAmountWithTax': 50.0, 'taxPercent': 15.0}]
+18
+{'receiptType': 'FiscalInvoice', 'receiptCurrency': 'USD', 'receiptCounter': 18, 'receiptGlobalNo': 36, 'invoiceNo': 'Harare Techcity36', 'receiptNotes': 'Thank you for shopping with us!', 'receiptDate': '2025-11-04T17:27:31', 'receiptLinesTaxInclusive': True, 'receiptLines': [{'receiptLineType': 'Sale', 'receiptLineNo': 1, 'receiptLineHSCode': '01010101', 'receiptLineName': '15.6 sliM 40 pin Frameles', 'receiptLinePrice': 50.0, 'receiptLineQuantity': 1, 'receiptLineTotal': 50.0, 'taxID': 3, 'taxCode': 'C', 'taxPercent': 15.0}], 'receiptTaxes': [{'taxID': 3, 'taxCode': 'C', 'taxAmount': 6.52, 'salesAmountWithTax': 50.0, 'taxPercent': 15.0}], 'receiptPayments': [{'moneyTypeCode': 'cash', 'paymentAmount': 50.0}], 'receiptTotal': 50.0, 'receiptPrintForm': 'Receipt48', 'previousReceiptHash': None}
+2025-11-04 17:27:31.746 | INFO     | apps.pos.utils.receipt_signature:generate_receipt_data:247 - Signature data: 31213FISCALINVOICEUSD362025-11-04T17:27:315000C15.006525000
+2025-11-04 17:27:31.747 | INFO     | apps.pos.utils.receipt_signature:generate_receipt_data:248 - Receipt_data: {'receiptType': 'FiscalInvoice', 'receiptCurrency': 'USD', 'receiptCounter': 18, 'receiptGlobalNo': 36, 'invoiceNo': 'Harare Techcity36', 'receiptNotes': 'Thank you for shopping with us!', 'receiptDate': '2025-11-04T17:27:31', 'receiptLinesTaxInclusive': True, 'receiptLines': [{'receiptLineType': 'Sale', 'receiptLineNo': 1, 'receiptLineHSCode': '01010101', 'receiptLineName': '15.6 sliM 40 pin Frameles', 'receiptLinePrice': 50.0, 'receiptLineQuantity': 1, 'receiptLineTotal': 50.0, 'taxID': 3, 'taxCode': 'C', 'taxPercent': 15.0}], 'receiptTaxes': [{'taxID': 3, 'taxCode': 'C', 'taxAmount': 6.52, 'salesAmountWithTax': 50.0, 'taxPercent': 15.0}], 'receiptPayments': [{'moneyTypeCode': 'cash', 'paymentAmount': 50.0}], 'receiptTotal': 50.0, 'receiptPrintForm': 'Receipt48', 'previousReceiptHash': None}
+2025-11-04 17:27:31.747 | INFO     | apps.finance.views:create_invoice:1360 - sig_data: 31213FISCALINVOICEUSD362025-11-04T17:27:315000C15.006525000
+Hash: iVPHwaGVPrAE4B4e+8fl9D1iJjz/J7ZxRomr6r1aQ24=
+Signature: Q7DntiNy4bmiEHndsIXJEqBwNAYpvNkLVQMfEjNC1yJy4ErVUAPykPn60kXLtuq+R0fQapm002fJDeTf1M/0M4F6iC28p/gMBGJBxIKhOAwa4UugWZCfy85jFfeSQfAa0zvRVY8N9LUJ/Ly9AFqNvyTCVmzD8mf2wR8xDXBf+QrvLEbmtyp8i1j3ixwsTXA/lzP5VE5XbMci/znU+UazRIFUiIhw8+hg7CyaJVklHpF7XDVAGHwOHCNIcGYAZMG3ufiL6amSxht59AAdWKF9ZWGFezH4xkmaHEtgpGA3TsHJ+QMU/SP7+jXrZ6Vs+IVAyEeiGBEecOm6Ac284CttcA==
+2025-11-04 17:27:31.829 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:18 - 2591
+2025-11-04 17:27:31.833 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:25 - Receipt saved offline: Receipt 818 - Submitted: False
+2025-11-04 17:27:31.833 | INFO     | utils.zimra:submit_receipt:218 - here
+2025-11-04 17:27:31.833 | INFO     | utils.zimra:submit_receipt:223 - {'receipt': {'receiptType': 'FiscalInvoice', 'receiptCurrency': 'USD', 'receiptCounter': 18, 'receiptGlobalNo': 36, 'invoiceNo': 'Harare Techcity36', 'receiptNotes': 'Thank you for shopping with us!', 'receiptDate': '2025-11-04T17:27:31', 'receiptLinesTaxInclusive': True, 'receiptLines': [{'receiptLineType': 'Sale', 'receiptLineNo': 1, 'receiptLineHSCode': '01010101', 'receiptLineName': '15.6 sliM 40 pin Frameles', 'receiptLinePrice': 50.0, 'receiptLineQuantity': 1, 'receiptLineTotal': 50.0, 'taxID': 3, 'taxCode': 'C', 'taxPercent': 15.0}], 'receiptTaxes': [{'taxID': 3, 'taxCode': 'C', 'taxAmount': 6.52, 'salesAmountWithTax': 50.0, 'taxPercent': 15.0}], 'receiptPayments': [{'moneyTypeCode': 'cash', 'paymentAmount': 50.0}], 'receiptTotal': 50.0, 'receiptPrintForm': 'Receipt48', 'previousReceiptHash': None, 'receiptDeviceSignature': {'hash': 'iVPHwaGVPrAE4B4e+8fl9D1iJjz/J7ZxRomr6r1aQ24=', 'signature': 'Q7DntiNy4bmiEHndsIXJEqBwNAYpvNkLVQMfEjNC1yJy4ErVUAPykPn60kXLtuq+R0fQapm002fJDeTf1M/0M4F6iC28p/gMBGJBxIKhOAwa4UugWZCfy85jFfeSQfAa0zvRVY8N9LUJ/Ly9AFqNvyTCVmzD8mf2wR8xDXBf+QrvLEbmtyp8i1j3ixwsTXA/lzP5VE5XbMci/znU+UazRIFUiIhw8+hg7CyaJVklHpF7XDVAGHwOHCNIcGYAZMG3ufiL6amSxht59AAdWKF9ZWGFezH4xkmaHEtgpGA3TsHJ+QMU/SP7+jXrZ6Vs+IVAyEeiGBEecOm6Ac284CttcA=='}}}
+2025-11-04 17:27:32.107 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:29 - Receipt submission response: {'receiptID': 213461768, 'serverDate': '2025-11-04T17:27:32', 'receiptServerSignature': {'certificateThumbprint': '290E2791C18C4CE35D74BA5AAB514A65F54B3BD1', 'hash': 'pIpnGv4WjnmX15P1/88O3sOqy7jgD0j7v1B+iiL+uSg=', 'signature': 'gArLEL3A4m+5IAkifhaSjEoP94fABhdbr4aGmBGu5cqJEqE6MnjpBFTPhnRBJZPY7crHPje0R6FWKyW0VVB0nSmmHii4E8Nn89tRgKDmqP65JX35YVhMOsw1dAl7xOm3krdFR04C3Ypcag6G/1wtKsctHbAkCD3yQwyVHuQ0mik61Xh5YXhKgYjBdlylJs9dzSfDgKcciA/JmWWMoEEhExPcHEw3oYsXbKD6Xu903tOd2xpNEGAjaYoPhCndMfYo7NpHW1iTfib095+7jbTQKb8mk2yUOUQKBk6wLY6NnUX6NAaVqw/kuy3TZbTbykVxPwIytlW9j7YRxVkVN3+cvg=='}, 'validationErrors': [{'validationErrorCode': 'RCPT020', 'validationErrorColor': 'Red'}, {'validationErrorCode': 'RCPT025', 'validationErrorColor': 'Red'}, {'validationErrorCode': 'RCPT041', 'validationErrorColor': 'Yellow'}], 'operationID': '0HNGRKGH8Q418:00000001'}
+2025-11-04 17:27:32.108 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:32 - Zimra invoice id: 213461768
+2025-11-04 17:27:32.108 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:35 - here
+2025-11-04 17:27:32.114 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:50 - 0000031213, 04112025, 0000000036 B7161E02DFC2A1E2
+2025-11-04 17:27:32.184 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:65 - fiscal_day: FiscalDay object (304)
+2025-11-04 17:27:32.189 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:69 - B7161E02DFC2A1E2
+2025-11-04 17:27:32.202 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:80 - invoice saved: Invoice #Har-36 - Tafadzwa
+2025-11-04 17:27:32.204 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:92 - Fiscale day incremented.
+2025-11-04 17:27:32.205 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:102 - Tax percent: 15.0
+2025-11-04 17:27:32.226 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:170 - Receipt signature and QR code saved to invoice.
+2025-11-04 17:27:32.237 | INFO     | apps.finance.views:invoice_preview_json:12139 - http://192.168.1.2:9100/media/qr_codes/qr_None_E4nqpA3.png
+2025-11-04 17:27:32.240 | INFO     | apps.finance.views:create_invoice:1370 - {'invoice': {'customer_name': 'Tafadzwa', 'customer_email': '', 'customer_cell': '0783187312', 'customer_address': '', 'currency_symbol': 'USD', 'amount_paid': Decimal('50.00'), 'payment_terms': 'cash', 'amount': Decimal('50.00'), 'invoice_number': 'Har-36', 'receipt_hash': 'iVPHwaGVPrAE4B4e+8fl9D1iJjz/J7ZxRomr6r1aQ24=', 'subtotal': Decimal('50.00'), 'vat': Decimal('6.52'), 'device_id': '31213', 'device_serial_number': 'parsales-1', 'code': 'B7161E02DFC2A1E2', 'fiscal_day': 4, 'branch_name': 'Harare Techcity', 'branch_phone': '0777808552', 'branch_email': 'info@techcity.co.zw', 'user_username': 'runyararo@techcity', 'receipt_signature': 'Q7DntiNy4bmiEHndsIXJEqBwNAYpvNkLVQMfEjNC1yJy4ErVUAPykPn60kXLtuq+R0fQapm002fJDeTf1M/0M4F6iC28p/gMBGJBxIKhOAwa4UugWZCfy85jFfeSQfAa0zvRVY8N9LUJ/Ly9AFqNvyTCVmzD8mf2wR8xDXBf+QrvLEbmtyp8i1j3ixwsTXA/lzP5VE5XbMci/znU+UazRIFUiIhw8+hg7CyaJVklHpF7XDVAGHwOHCNIcGYAZMG3ufiL6amSxht59AAdWKF9ZWGFezH4xkmaHEtgpGA3TsHJ+QMU/SP7+jXrZ6Vs+IVAyEeiGBEecOm6Ac284CttcA==', 'qr_code': 'http://192.168.1.2:9100/media/qr_codes/qr_None_E4nqpA3.png'}, 'invoice_items': [{'item__name': '15.6 sliM 40 pin Frameles', 'quantity': 1, 'item__description': '', 'total_amount': Decimal('50.00'), 'unit_price': Decimal('50.00'), 'item__tax_type__tax_percent': 15.0, 'item__tax_type__name': 'Standard rated 15%'}], 'dates': [], 'vat_number': '', 'tin': ''}
+2025-11-04 17:27:32.241 | INFO     | apps.finance.views:create_invoice:1376 - inventory creation successfully done: Invoice #None - Tafadzwa
+[04/Nov/2025 17:27:32] "POST /finance/invoice/create/ HTTP/1.1" 200 1362
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:32] "GET /media/qr_codes/qr_None_E4nqpA3.png HTTP/1.1" 200 862
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:38] "GET /pos/ HTTP/1.1" 200 128467
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:38] "GET /inventory/product/list/ HTTP/1.1" 200 163304
+[04/Nov/2025 17:27:38] "GET /finance/end_of_day/ HTTP/1.1" 200 4025
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:38] "GET /finance/currency/json?id=2 HTTP/1.1" 200 100
+[04/Nov/2025 17:27:38] "GET /inventory/product/list/ HTTP/1.1" 200 163304
+[04/Nov/2025 17:27:38] "GET /finance/customers/ HTTP/1.1" 200 21962
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:27:39] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+[04/Nov/2025 17:27:39,034] - Broken pipe from ('192.168.1.126', 61534)
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:27:39] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:27:39] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+[04/Nov/2025 17:27:39] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:27:39] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:41] "GET /inventory/product/list/?q= HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:27:41] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 17:27:41] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+Not Found: /pos/placeholder.png
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:27:41] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:27:41] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+[04/Nov/2025 17:27:41] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:42] "GET /inventory/product/list/?q=a HTTP/1.1" 200 116943
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 17:27:43] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+Not Found: /pos/product_images/airpods.png
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:27:43] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+Not Found: /pos/product_images/car_modulator_allison.png
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:27:43] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+[04/Nov/2025 17:27:43] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+[04/Nov/2025 17:27:43] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:43] "GET /inventory/product/list/?q=ai HTTP/1.1" 200 14541
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:27:43] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:27:43] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:43] "GET /inventory/product/list/?q=air HTTP/1.1" 200 991
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:27:43] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:27:43] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:44] "GET /inventory/product/list/?q=airp HTTP/1.1" 200 331
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:27:44] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:44] "GET /inventory/product/list/?q=airpo HTTP/1.1" 200 331
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:27:44] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:45] "GET /inventory/product/list/?q=airpod HTTP/1.1" 200 331
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:27:45] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:27:47] "GET /inventory/product/list/?product=2376 HTTP/1.1" 200 331
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:28:15] "POST /finance/customer/account/json/74/ HTTP/1.1" 200 96
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+2025-11-04 17:28:28.071 | INFO     | apps.finance.views:create_invoice:1078 - Account Balance: Harare Techcity usd Cash Account (CA):usd-104421.59
+2025-11-04 17:28:28.076 | INFO     | apps.finance.views:create_invoice:1088 - wise
+2025-11-04 17:28:28.081 | INFO     | apps.finance.views:create_invoice:1103 - Amount paid: 20
+2025-11-04 17:28:28.081 | INFO     | apps.finance.views:create_invoice:1115 - amount due: 0
+2025-11-04 17:28:28.082 | INFO     | apps.finance.views:create_invoice:1120 - Harare Techcity
+2025-11-04 17:28:28.089 | INFO     | apps.finance.views:create_invoice:1143 - , 
+2025-11-04 17:28:28.095 | INFO     | apps.finance.views:create_invoice:1156 - Income created: 2025-11-04 15:28:28.093178+00:00 - sales -  - $15
+2025-11-04 17:28:28.097 | INFO     | apps.finance.views:create_invoice:1165 - Finance log created for invoice: Invoice #None - wise
+2025-11-04 17:28:28.097 | INFO     | apps.finance.views:create_invoice:1167 - Invoice created for customer: Invoice #None - wise
+2025-11-04 17:28:28.102 | INFO     | apps.finance.views:create_invoice:1255 - Creating transaction obj for invoice: Invoice #None - wise
+2025-11-04 17:28:28.123 | INFO     | apps.finance.views:create_invoice:1356 - [<InvoiceItem: 1 x airpods for Invoice #None>]
+2025-11-04 17:28:28.124 | INFO     | apps.pos.utils.receipt_signature:generate_receipt_data:114 - invoice items: Invoice #None - wise
+2025-11-04 17:28:28.126 | INFO     | apps.pos.utils.receipt_signature:generate_receipt_data:116 - FiscalDay object (304)
+2025-11-04 17:28:28.127 | INFO     | apps.pos.utils.receipt_signature:generate_receipt_data:117 - Processing Invoice: None Invoice #None - wise
+2025-11-04 17:28:28.127 | INFO     | apps.pos.utils.receipt_signature:generate_receipt_data:132 - FiscalDay object (304)
+2025-11-04 17:28:28.130 | INFO     | apps.pos.utils.receipt_signature:get_last_receipt_numbers:101 - last_receipt: Receipt 818 - Submitted: False
+2025-11-04 17:28:28.130 | INFO     | apps.pos.utils.receipt_signature:get_last_receipt_numbers:105 - last receiptGlobalNo: 36
+2025-11-04 17:28:28.130 | INFO     | apps.pos.utils.receipt_signature:generate_receipt_data:136 - Global number: 37
+Standard rated 15%
+here
+done
+[{'taxID': 3, 'taxCode': 'C', 'taxAmount': 1.96, 'salesAmountWithTax': 15.0, 'taxPercent': 15.0}]
+19
+{'receiptType': 'FiscalInvoice', 'receiptCurrency': 'USD', 'receiptCounter': 19, 'receiptGlobalNo': 37, 'invoiceNo': 'Harare Techcity37', 'receiptNotes': 'Thank you for shopping with us!', 'receiptDate': '2025-11-04T17:28:28', 'receiptLinesTaxInclusive': True, 'receiptLines': [{'receiptLineType': 'Sale', 'receiptLineNo': 1, 'receiptLineHSCode': '01010101', 'receiptLineName': 'airpods', 'receiptLinePrice': 15.0, 'receiptLineQuantity': 1, 'receiptLineTotal': 15.0, 'taxID': 3, 'taxCode': 'C', 'taxPercent': 15.0}], 'receiptTaxes': [{'taxID': 3, 'taxCode': 'C', 'taxAmount': 1.96, 'salesAmountWithTax': 15.0, 'taxPercent': 15.0}], 'receiptPayments': [{'moneyTypeCode': 'cash', 'paymentAmount': 15.0}], 'receiptTotal': 15.0, 'receiptPrintForm': 'Receipt48', 'previousReceiptHash': 'iVPHwaGVPrAE4B4e+8fl9D1iJjz/J7ZxRomr6r1aQ24='}
+2025-11-04 17:28:28.138 | INFO     | apps.pos.utils.receipt_signature:generate_receipt_data:247 - Signature data: 31213FISCALINVOICEUSD372025-11-04T17:28:281500C15.001961500iVPHwaGVPrAE4B4e+8fl9D1iJjz/J7ZxRomr6r1aQ24=
+2025-11-04 17:28:28.139 | INFO     | apps.pos.utils.receipt_signature:generate_receipt_data:248 - Receipt_data: {'receiptType': 'FiscalInvoice', 'receiptCurrency': 'USD', 'receiptCounter': 19, 'receiptGlobalNo': 37, 'invoiceNo': 'Harare Techcity37', 'receiptNotes': 'Thank you for shopping with us!', 'receiptDate': '2025-11-04T17:28:28', 'receiptLinesTaxInclusive': True, 'receiptLines': [{'receiptLineType': 'Sale', 'receiptLineNo': 1, 'receiptLineHSCode': '01010101', 'receiptLineName': 'airpods', 'receiptLinePrice': 15.0, 'receiptLineQuantity': 1, 'receiptLineTotal': 15.0, 'taxID': 3, 'taxCode': 'C', 'taxPercent': 15.0}], 'receiptTaxes': [{'taxID': 3, 'taxCode': 'C', 'taxAmount': 1.96, 'salesAmountWithTax': 15.0, 'taxPercent': 15.0}], 'receiptPayments': [{'moneyTypeCode': 'cash', 'paymentAmount': 15.0}], 'receiptTotal': 15.0, 'receiptPrintForm': 'Receipt48', 'previousReceiptHash': 'iVPHwaGVPrAE4B4e+8fl9D1iJjz/J7ZxRomr6r1aQ24='}
+2025-11-04 17:28:28.140 | INFO     | apps.finance.views:create_invoice:1360 - sig_data: 31213FISCALINVOICEUSD372025-11-04T17:28:281500C15.001961500iVPHwaGVPrAE4B4e+8fl9D1iJjz/J7ZxRomr6r1aQ24=
+Hash: R6WwzfP9C04OalhoTpVKLgb67el/oTyPgtbEFdhYl+w=
+Signature: IC6uiJREXZo6dYEOx818hp/MA00eMJ8xXGbvaoKHg8vpCxp0+zPnYeMIWpCGGrJ3b/xk1gVL83FYXblLfuRGMciq6L9HIPEcWTxEs9kQMGIYY3bU29NhpiP3gishtru9X8lfcNlzh5qM6IGKVE/tnK0rwLr37GHopEL9n5mf50KOMYHTKsS7HAJ1qBsn064JR4vvvyGqQUwNB+TZ4GNInMDZyMjGA5p98Np8CQmZGrvmSVTOcT0nibQTT84re5cgjTWJvukJ+WQEtk3kuuBJQJw6AWLyKorHKp0mDBuQ8wePMoaZezPYbn2LEDCHYEX3zpaCBZ4YdH9MkDHZWxbQOw==
+2025-11-04 17:28:28.210 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:18 - 2592
+2025-11-04 17:28:28.212 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:25 - Receipt saved offline: Receipt 819 - Submitted: False
+2025-11-04 17:28:28.212 | INFO     | utils.zimra:submit_receipt:218 - here
+2025-11-04 17:28:28.212 | INFO     | utils.zimra:submit_receipt:223 - {'receipt': {'receiptType': 'FiscalInvoice', 'receiptCurrency': 'USD', 'receiptCounter': 19, 'receiptGlobalNo': 37, 'invoiceNo': 'Harare Techcity37', 'receiptNotes': 'Thank you for shopping with us!', 'receiptDate': '2025-11-04T17:28:28', 'receiptLinesTaxInclusive': True, 'receiptLines': [{'receiptLineType': 'Sale', 'receiptLineNo': 1, 'receiptLineHSCode': '01010101', 'receiptLineName': 'airpods', 'receiptLinePrice': 15.0, 'receiptLineQuantity': 1, 'receiptLineTotal': 15.0, 'taxID': 3, 'taxCode': 'C', 'taxPercent': 15.0}], 'receiptTaxes': [{'taxID': 3, 'taxCode': 'C', 'taxAmount': 1.96, 'salesAmountWithTax': 15.0, 'taxPercent': 15.0}], 'receiptPayments': [{'moneyTypeCode': 'cash', 'paymentAmount': 15.0}], 'receiptTotal': 15.0, 'receiptPrintForm': 'Receipt48', 'previousReceiptHash': 'iVPHwaGVPrAE4B4e+8fl9D1iJjz/J7ZxRomr6r1aQ24=', 'receiptDeviceSignature': {'hash': 'R6WwzfP9C04OalhoTpVKLgb67el/oTyPgtbEFdhYl+w=', 'signature': 'IC6uiJREXZo6dYEOx818hp/MA00eMJ8xXGbvaoKHg8vpCxp0+zPnYeMIWpCGGrJ3b/xk1gVL83FYXblLfuRGMciq6L9HIPEcWTxEs9kQMGIYY3bU29NhpiP3gishtru9X8lfcNlzh5qM6IGKVE/tnK0rwLr37GHopEL9n5mf50KOMYHTKsS7HAJ1qBsn064JR4vvvyGqQUwNB+TZ4GNInMDZyMjGA5p98Np8CQmZGrvmSVTOcT0nibQTT84re5cgjTWJvukJ+WQEtk3kuuBJQJw6AWLyKorHKp0mDBuQ8wePMoaZezPYbn2LEDCHYEX3zpaCBZ4YdH9MkDHZWxbQOw=='}}}
+2025-11-04 17:28:28.401 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:29 - Receipt submission response: {'receiptID': 213463109, 'serverDate': '2025-11-04T17:28:28', 'receiptServerSignature': {'certificateThumbprint': '290E2791C18C4CE35D74BA5AAB514A65F54B3BD1', 'hash': 'Nt9logoT/0tFCrMOyfQvwdFx7Q3BUY5/IWgmSSKLtfc=', 'signature': 'Cko9RjenF1y9FXFnVHhGHmuu0+kTI8qiFRuZYsokfrun8NxnA+TM0OO76JTU9nK9I3QHkVwFGHQB4HsXGmfjVbIxIc7sJmVaW1onnMQm8LohBridjUDTKiR2FoSJTLyJVLC8KBjBlAHSXcwQthOeDqFI0phLAUPIV+Gscx58DYjwKGTi4B+1i1mSEES81j0jd/tbW+z8nIsjjnF5Ive3uEG8o9fakLf1CiL8e4p5O6VFvzRUOG9hYuLr16Bu9VPsylt6JSYK6vE8uKWGp+5fnuuSOHCAQ1yIWJ/1S0Z9ggZo6iymH0cgXamDsiH80FCE4saHWWdWdeeQC8cGDbB4rg=='}, 'validationErrors': [{'validationErrorCode': 'RCPT020', 'validationErrorColor': 'Red'}, {'validationErrorCode': 'RCPT025', 'validationErrorColor': 'Red'}, {'validationErrorCode': 'RCPT041', 'validationErrorColor': 'Yellow'}], 'operationID': '0HNGRKGH8Q5T3:00000001'}
+2025-11-04 17:28:28.401 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:32 - Zimra invoice id: 213463109
+2025-11-04 17:28:28.402 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:35 - here
+2025-11-04 17:28:28.406 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:50 - 0000031213, 04112025, 0000000037 79E8AE5E0CD4A8A7
+2025-11-04 17:28:28.426 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:65 - fiscal_day: FiscalDay object (304)
+2025-11-04 17:28:28.427 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:69 - 79E8AE5E0CD4A8A7
+2025-11-04 17:28:28.438 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:80 - invoice saved: Invoice #Har-37 - wise
+2025-11-04 17:28:28.440 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:92 - Fiscale day incremented.
+2025-11-04 17:28:28.441 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:102 - Tax percent: 15.0
+2025-11-04 17:28:28.448 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:127 - Updated SaleByTax counter: 4 : (SaleByTax - usd - 65.00)
+2025-11-04 17:28:28.457 | INFO     | apps.pos.utils.submit_receipt_data:submit_receipt_data:170 - Receipt signature and QR code saved to invoice.
+2025-11-04 17:28:28.468 | INFO     | apps.finance.views:invoice_preview_json:12139 - http://192.168.1.2:9100/media/qr_codes/qr_None_kqVm4xh.png
+2025-11-04 17:28:28.470 | INFO     | apps.finance.views:create_invoice:1370 - {'invoice': {'customer_name': 'wise', 'customer_email': '', 'customer_cell': '0789077230', 'customer_address': '', 'currency_symbol': 'USD', 'amount_paid': Decimal('15.00'), 'payment_terms': 'cash', 'amount': Decimal('15.00'), 'invoice_number': 'Har-37', 'receipt_hash': 'R6WwzfP9C04OalhoTpVKLgb67el/oTyPgtbEFdhYl+w=', 'subtotal': Decimal('15.00'), 'vat': Decimal('1.96'), 'device_id': '31213', 'device_serial_number': 'parsales-1', 'code': '79E8AE5E0CD4A8A7', 'fiscal_day': 4, 'branch_name': 'Harare Techcity', 'branch_phone': '0777808552', 'branch_email': 'info@techcity.co.zw', 'user_username': 'runyararo@techcity', 'receipt_signature': 'IC6uiJREXZo6dYEOx818hp/MA00eMJ8xXGbvaoKHg8vpCxp0+zPnYeMIWpCGGrJ3b/xk1gVL83FYXblLfuRGMciq6L9HIPEcWTxEs9kQMGIYY3bU29NhpiP3gishtru9X8lfcNlzh5qM6IGKVE/tnK0rwLr37GHopEL9n5mf50KOMYHTKsS7HAJ1qBsn064JR4vvvyGqQUwNB+TZ4GNInMDZyMjGA5p98Np8CQmZGrvmSVTOcT0nibQTT84re5cgjTWJvukJ+WQEtk3kuuBJQJw6AWLyKorHKp0mDBuQ8wePMoaZezPYbn2LEDCHYEX3zpaCBZ4YdH9MkDHZWxbQOw==', 'qr_code': 'http://192.168.1.2:9100/media/qr_codes/qr_None_kqVm4xh.png'}, 'invoice_items': [{'item__name': 'airpods', 'quantity': 1, 'item__description': 'airpods', 'total_amount': Decimal('15.00'), 'unit_price': Decimal('15.00'), 'item__tax_type__tax_percent': 15.0, 'item__tax_type__name': 'Standard rated 15%'}], 'dates': [], 'vat_number': '', 'tin': ''}
+2025-11-04 17:28:28.471 | INFO     | apps.finance.views:create_invoice:1376 - inventory creation successfully done: Invoice #None - wise
+[04/Nov/2025 17:28:28] "POST /finance/invoice/create/ HTTP/1.1" 200 1347
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:28:28] "GET /media/qr_codes/qr_None_kqVm4xh.png HTTP/1.1" 200 827
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:28:42] "GET /pos/ HTTP/1.1" 200 128467
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:28:43] "GET /inventory/product/list/ HTTP/1.1" 200 163304
+[04/Nov/2025 17:28:43] "GET /finance/end_of_day/ HTTP/1.1" 200 4153
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:28:43] "GET /finance/currency/json?id=2 HTTP/1.1" 200 100
+[04/Nov/2025 17:28:43] "GET /inventory/product/list/ HTTP/1.1" 200 163304
+[04/Nov/2025 17:28:43] "GET /finance/customers/ HTTP/1.1" 200 21962
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:28:43] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:28:43] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:28:43] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:28:43] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+[04/Nov/2025 17:28:43] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:29:19] "GET /inventory/product/list/?q=airpo HTTP/1.1" 200 331
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:29:19] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:29:19] "GET /inventory/product/list/?q=airp HTTP/1.1" 200 331
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:29:19] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:29:19] "GET /inventory/product/list/?q=air HTTP/1.1" 200 991
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:29:19] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:29:19] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:29:19] "GET /inventory/product/list/?q=ai HTTP/1.1" 200 14541
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:29:20] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:29:20] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:29:20] "GET /inventory/product/list/?q=a HTTP/1.1" 200 116943
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:29:20] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/car_modulator_allison.png
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:29:20] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+[04/Nov/2025 17:29:20] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:29:20] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+[04/Nov/2025 17:29:20] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:29:21] "GET /inventory/product/list/?q= HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:29:21] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:29:21] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:29:21] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:29:21] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 17:29:21] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:29:21] "GET /inventory/product/list/?q=1 HTTP/1.1" 200 63714
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:29:22] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:29:22] "GET /inventory/product/list/?q=15 HTTP/1.1" 200 7687
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:29:22] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:29:23] "GET /inventory/product/list/?q=15. HTTP/1.1" 200 3804
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:29:23] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:29:24] "GET /inventory/product/list/?q=15.6 HTTP/1.1" 200 3804
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:29:24] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:29:29] "GET /inventory/product/list/?product=2829 HTTP/1.1" 200 376
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:25] "GET /inventory/product/list/?product=2829 HTTP/1.1" 200 376
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:35] "GET /inventory/product/list/?q=15. HTTP/1.1" 200 3804
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:32:35] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:35] "GET /inventory/product/list/?q=15 HTTP/1.1" 200 7687
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:32:35] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:35] "GET /inventory/product/list/?q=1 HTTP/1.1" 200 63714
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:32:35] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:35] "GET /inventory/product/list/?q= HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:32:35] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/car_modulator_allison.png
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:32:35] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:32:35] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 17:32:35] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+[04/Nov/2025 17:32:35] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:36] "GET /inventory/product/list/?q=s HTTP/1.1" 200 87748
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:32:36] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/2.5_hdd_casing.png
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:32:36] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+[04/Nov/2025 17:32:36] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 17:32:36] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:37] "GET /inventory/product/list/?q=s9 HTTP/1.1" 200 2
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:37] "GET /inventory/product/list/?q=s90 HTTP/1.1" 200 2
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:38] "GET /inventory/product/list/?q=s900 HTTP/1.1" 200 2
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:39] "GET /inventory/product/list/?q=s90 HTTP/1.1" 200 2
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:39] "GET /inventory/product/list/?q=s9 HTTP/1.1" 200 2
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:39] "GET /inventory/product/list/?q=s HTTP/1.1" 200 87748
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:32:39] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:32:39] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:32:39] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 17:32:39] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+[04/Nov/2025 17:32:39] "GET /inventory/product/list/?q= HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:32:40] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/2.5_hdd_casing.png
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 17:32:40] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+[04/Nov/2025 17:32:40] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+Not Found: /pos/product_images/airpods.png
+[04/Nov/2025 17:32:40] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:32:40] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:40] "GET /inventory/product/list/?q=m HTTP/1.1" 200 80096
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:32:40] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:32:40] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:41] "GET /inventory/product/list/?q=mo HTTP/1.1" 200 21611
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:32:41] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:32:41] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:41] "GET /inventory/product/list/?q=mou HTTP/1.1" 200 3619
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:32:41] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:42] "GET /inventory/product/list/?q=mous HTTP/1.1" 200 3296
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:32:42] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:32:42] "GET /inventory/product/list/?q=mouse HTTP/1.1" 200 3296
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:32:42] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:33:42] "GET /inventory/product/list/?product=2346 HTTP/1.1" 200 318
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:33:55] "POST /finance/customer/account/json/55/ HTTP/1.1" 200 101
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:19] "GET /pos/ HTTP/1.1" 200 128467
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:19] "GET /finance/end_of_day/ HTTP/1.1" 200 4153
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:19] "GET /inventory/product/list/ HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:19] "GET /finance/customers/ HTTP/1.1" 200 21962
+[04/Nov/2025 17:34:19] "GET /finance/currency/json?id=2 HTTP/1.1" 200 100
+[04/Nov/2025 17:34:19] "GET /inventory/product/list/ HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:19] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:34:19] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+Not Found: /pos/product_images/airpods.png
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 17:34:19] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:34:19] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+[04/Nov/2025 17:34:19] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:34] "GET /pos/ HTTP/1.1" 200 128467
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:34] "GET /inventory/product/list/ HTTP/1.1" 200 163304
+[04/Nov/2025 17:34:34] "GET /finance/end_of_day/ HTTP/1.1" 200 4153
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:34] "GET /finance/customers/ HTTP/1.1" 200 21962
+[04/Nov/2025 17:34:34] "GET /finance/currency/json?id=2 HTTP/1.1" 200 100
+[04/Nov/2025 17:34:34] "GET /inventory/product/list/ HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:34:34] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:34] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/airpods.png
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:34:34] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+[04/Nov/2025 17:34:34] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 17:34:34] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:38] "GET /inventory/product/list/?q=1 HTTP/1.1" 200 63714
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:38] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:39] "GET /inventory/product/list/?q=15 HTTP/1.1" 200 7687
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:39] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:40] "GET /inventory/product/list/?q=15. HTTP/1.1" 200 3804
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:40] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:41] "GET /inventory/product/list/?q=15.6 HTTP/1.1" 200 3804
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:41] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:46] "GET /inventory/product/list/?product=2829 HTTP/1.1" 200 376
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:49] "GET /inventory/product/list/?q=15. HTTP/1.1" 200 3804
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:49] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:50] "GET /inventory/product/list/?q=15 HTTP/1.1" 200 7687
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:50] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:50] "GET /inventory/product/list/?q=1 HTTP/1.1" 200 63714
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:50] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:50] "GET /inventory/product/list/?q= HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:50] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:34:50] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 17:34:50] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+Not Found: /pos/product_images/airpods.png
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:34:50] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+[04/Nov/2025 17:34:50] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:51] "GET /inventory/product/list/?q=h HTTP/1.1" 200 90665
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:51] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:34:51] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+[04/Nov/2025 17:34:51] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:51] "GET /inventory/product/list/?q=hp HTTP/1.1" 200 21368
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:51] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:52] "GET /inventory/product/list/?q=hp HTTP/1.1" 200 21368
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:52] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:52] "GET /inventory/product/list/?q=hp%20m HTTP/1.1" 200 326
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:52] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:52] "GET /inventory/product/list/?q=hp%20mo HTTP/1.1" 200 326
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:53] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:53] "GET /inventory/product/list/?q=hp%20mou HTTP/1.1" 200 326
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:53] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:55] "GET /inventory/product/list/?q=hp%20mo HTTP/1.1" 200 326
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:55] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:55] "GET /inventory/product/list/?q=hp%20m HTTP/1.1" 200 326
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:55] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:55] "GET /inventory/product/list/?q=hp HTTP/1.1" 200 21368
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:55] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:55] "GET /inventory/product/list/?q=hp HTTP/1.1" 200 21368
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:55] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:55] "GET /inventory/product/list/?q=h HTTP/1.1" 200 90665
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:55] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+[04/Nov/2025 17:34:55] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:34:55] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+[04/Nov/2025 17:34:55,966] - Broken pipe from ('192.168.1.126', 64828)
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:56] "GET /inventory/product/list/?q= HTTP/1.1" 200 163304
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/2.5_hdd_casing.png
+[04/Nov/2025 17:34:56] "GET /pos/product_images/2.5_hdd_casing.png HTTP/1.1" 404 6888
+Not Found: /pos/product_images/airpods.png
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:56] "GET /pos/product_images/airpods.png HTTP/1.1" 404 6867
+[04/Nov/2025 17:34:56] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/hysen_hdd_casing.jpeg
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:34:56] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+[04/Nov/2025 17:34:56] "GET /pos/product_images/hysen_hdd_casing.jpeg HTTP/1.1" 404 6897
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:57] "GET /inventory/product/list/?q=m HTTP/1.1" 200 80096
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:34:57] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:57] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:57] "GET /inventory/product/list/?q=mo HTTP/1.1" 200 21611
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:57] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+Not Found: /pos/product_images/car_modulator_allison.png
+[04/Nov/2025 17:34:57] "GET /pos/product_images/car_modulator_allison.png HTTP/1.1" 404 6909
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:57] "GET /inventory/product/list/?q=mou HTTP/1.1" 200 3619
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:57] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:58] "GET /inventory/product/list/?q=mous HTTP/1.1" 200 3296
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:58] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:34:58] "GET /inventory/product/list/?q=mouse HTTP/1.1" 200 3296
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+Not Found: /pos/placeholder.png
+[04/Nov/2025 17:34:59] "GET /pos/placeholder.png HTTP/1.1" 404 6834
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:35:15] "GET /inventory/product/list/?product=2346 HTTP/1.1" 200 318
+WARNING:  database "techcity_db" has a collation version mismatch
+DETAIL:  The database was created using collation version 2.40, but the operating system provides version 2.39.
+HINT:  Rebuild all objects in this database that use the default collation and run ALTER DATABASE techcity_db REFRESH COLLATION VERSION, or build PostgreSQL with the right library version.
+[04/Nov/2025 17:35:23] "POST /finance/customer/account/json/55/ HTTP/1.1" 200 101

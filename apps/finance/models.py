@@ -344,6 +344,8 @@ class Invoice(models.Model):
     cash_up_status = models.BooleanField(default=False, null=True)
     zimra_inv_id = models.CharField(max_length=255, null=True)
     fiscal_day = models.IntegerField(null=True)
+    tin = models.CharField(max_length=100, null=True)
+    vat_number = models.CharField(max_length=100, null=True)
 
     category = models.ForeignKey(InvoiceCategory, on_delete=models.CASCADE, null=True)
     

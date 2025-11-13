@@ -110,8 +110,8 @@ def generate_receipt_data(invoice, invoice_items, request):
     """
         Transform invoice data to receipt format, save offline, and submit to FDMS.
     """
-    logger.info('here')
     try:
+        logger.info(f'invoice items: {invoice}')
         fiscal_day = FiscalDay.objects.filter(is_open=True).first()
         logger.info(fiscal_day)
         logger.info(f"Processing Invoice: {invoice.invoice_number} {invoice}")
@@ -132,29 +132,24 @@ def generate_receipt_data(invoice, invoice_items, request):
         logger.info(fiscal_day)
 
         last_global_no = get_last_receipt_numbers()
-        logger.info(last_global_no)
-        new_receipt_global_no = last_global_no + 1
+        new_receipt_global_no = int(last_global_no) + 1
         logger.info(f'Global number: {new_receipt_global_no}')
 
         receipt_lines = []
         total_tax_amount = 0
         tax_group_totals = defaultdict(lambda: {"taxAmount": 0.00, "salesAmountWithTax": 0.00})
-      
         
         previous_invoice = Invoice.objects.filter(
             issue_date__date=datetime.today(),
             branch=request.user.branch
         ).exclude(id=invoice.id).order_by('-id').first()
         
-        logger.info('invoice items', invoice_items)
 
         for index, item in enumerate(invoice_items, start=1):
-            print(item)
+            print(item.item.tax_type)
             line_total = float(item.unit_price) * item.quantity
         
-
             # Determine tax details
-            tax_name = item.item.tax_type.name
             tax_id = item.item.tax_type.tax_id
             tax_percent = item.item.tax_type.tax_percent  # None for exempt
             tax_code = item.item.tax_type.tax_code        # e.g., "A", "B", "C"
