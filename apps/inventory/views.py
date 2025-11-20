@@ -87,8 +87,44 @@ from reportlab.lib.units import inch
 from io import BytesIO
 from django.db.models.functions import TruncMonth, TruncYear
 
+# added for export
+import csv
+from django.http import HttpResponse
+from .models import Product
+
 now = timezone.now() 
 today = now.date()  
+
+
+def export_products_csv(request):
+    # Create the HttpResponse object with CSV header
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="products.csv"'
+
+    writer = csv.writer(response)
+    # Write the header row
+    writer.writerow(['Name', 'Price', 'Cost', 'Quantity', 'Dealer Price', 'Suppliers', 'Category', 'Description'])
+
+    # Fetch all products
+    products = Product.objects.all().prefetch_related('suppliers')
+
+    for product in products:
+        suppliers = ", ".join([supplier.name for supplier in product.suppliers.all()])
+        category_name = product.category.name if hasattr(product, 'category') and product.category else ''
+        writer.writerow([
+            product.name,
+            product.price,
+            product.cost,
+            product.quantity,
+            product.dealer_price,
+            suppliers,
+            category_name,
+            product.description
+        ])
+
+    return response
+
+
 
 @login_required
 def notifications_json(request):
@@ -5167,3 +5203,6 @@ def get_cart_items(request):
             'success': False,
             'message': str(e)
         }, status=400)
+
+
+

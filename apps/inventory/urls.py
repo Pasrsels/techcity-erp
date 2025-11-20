@@ -8,6 +8,9 @@ from .api import *
 from apps.finance.apis.cashbook_apis import *
 from .a import *
 
+from django.urls import path
+from .views import export_products_csv
+
 router = DefaultRouter()
 # router.register(r'products', InventoryViewset, basename='api_products')
 
@@ -214,4 +217,6 @@ urlpatterns = [
     path('api/v1/accessories_view/<int:product_id>/', AccessoriesView.as_view(), name='api_accessories_view'),
 
     path('get-cart-items/', get_cart_items, name='get_cart_items'),
+    # added for export
+     path('export-products/', export_products_csv, name='export_products_csv'),
 ]
