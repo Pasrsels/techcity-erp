@@ -451,6 +451,9 @@ class InvoiceManager {
                         <span class="action-icon" data-action="credit-note" data-id="${invoice.id}" title="Issue Credit Note">
                             <i class='bx bx-credit-card'></i>
                         </span>
+                       <span id='id_delete' class="deleteBtn action-icon" data-id="${invoice.id}" title="Undo Invoice">
+                            <i class='bx bx-undo'></i>
+                        </span>
                     </div>
                 </td>
             </tr>
@@ -477,6 +480,28 @@ class InvoiceManager {
             el.addEventListener('click', () => {
                 currentInvoiceId = el.dataset.id;
                 fetchInvoiceItems(currentInvoiceId);
+            });
+        });
+
+        document.querySelectorAll('.deleteBtn').forEach(el => {
+            el.addEventListener('click', () => {
+                invoiceId = el.dataset.id;
+                console.info(invoiceId)
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'You won\'t be able to revert this!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'No, cancel!',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // salesReturns()
+                        deleteInvoice(invoiceId);
+                    }
+                });
             });
         });
     }
@@ -549,7 +574,6 @@ class InvoiceManager {
     }
 }
 
-// Initialize the invoice manager when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     window.invoiceManager = new InvoiceManager();
 });
@@ -565,7 +589,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const appModal = new bootstrap.Modal(document.getElementById('appModal'));
     const trEl = document.querySelectorAll('#tr')
     const paymentsModal = new bootstrap.Modal(document.getElementById('paymentsModal'));
-    const deleteBtn = document.querySelectorAll('#id_delete')
     const updateBtn = document.querySelectorAll('#id_update')
     const updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
     const loader = new bootstrap.Modal(document.getElementById('loaderModal'));
@@ -685,28 +708,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }    
         )
     })
-
-    deleteBtn.forEach((btn) => {
-        btn.addEventListener('click', () => {
-            invoiceId = btn.dataset.id;
-            console.info(invoiceId)
-            Swal.fire({
-                title: 'Are you sure?',
-                text: 'You won\'t be able to revert this!',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'No, cancel!',
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // salesReturns()
-                    deleteInvoice(invoiceId);
-                }
-            });
-        });
-    });
 
     const salesReturns = () => {
         fetch(`/finance/invoice/preview/json/${invoiceId}/`, {
@@ -1307,7 +1308,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // Function to print the receipt silently
     function printReceiptSilently(content) {
         let printFrame = document.getElementById("print-frame");
 
@@ -1543,7 +1543,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const printContent = document.querySelector('.invoice-preview').innerHTML;
         const originalContent = document.body.innerHTML;
         
-        // Create a print-friendly version
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`
             <html>

@@ -59,7 +59,6 @@ urlpatterns = [
     path('reset/', reset_pc_pasels_invoices, name='reset_pc_pasels_invoices'),
     path('invoice_json/', invoice_json, name='invoice_json'),
     
-    
     # path('api/v1/invoices/', invoice_api, name='invoice-list'),
     
     #customer

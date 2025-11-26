@@ -36,4 +36,5 @@ admin.site.register(ValueAddedTax)
 admin.site.register(Paylater)
 admin.site.register(paylaterDates)
 admin.site.register(InvoiceCategory)
+admin.site.register(TaxConfiguration)
 

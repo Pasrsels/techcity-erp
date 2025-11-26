@@ -872,8 +872,9 @@ def invoice(request):
 def invoice_json(request):
     invoice_list = Invoice.objects.filter(
         branch=request.user.branch, 
-        code__isnull=False
-    ).select_related('branch', 'currency', 'user').order_by('-invoice_number') 
+        code__isnull=False,
+        cancelled=False,    
+    ).select_related('branch', 'currency', 'user').order_by('-id') 
 
     logger.info(invoice_list.count())
  
@@ -1153,14 +1154,16 @@ def create_invoice(request):
                 hash_sig_data = run(sig_data)
                 
                 credit_note_data = []
-                zimra_response = submit_receipt_data(
-                    request, 
-                    receipt_data, 
-                    credit_note_data, 
-                    hash_sig_data['hash'], 
-                    hash_sig_data['signature'], 
-                    temp_invoice.id
-                )
+
+                logger.info(f'Invoice {sig_data} {hash_sig_data} created successfully')
+                # zimra_response = submit_receipt_data(
+                #     request, 
+                #     receipt_data, 
+                #     credit_note_data, 
+                #     hash_sig_data['hash'], 
+                #     hash_sig_data['signature'], 
+                #     temp_invoice.id
+                # )
                     
             except Exception as e:
                 logger.error(f'ZIMRA submission failed: {e}')
@@ -12051,7 +12054,7 @@ def invoice_preview_json(request, invoice_id):
         'total_amount',
         'unit_price',
         'item__tax_type__tax_percent',
-        'item__tax_type__name'
+        'item__tax_type__tax_name'
     )
 
     invoice_dict = {}
@@ -14668,11 +14671,42 @@ def tax(request):
 @login_required
 def get_config(request):
     try:
+        zimra = ZIMRA()
         get_config_response = zimra.get_config()
         logger.info(get_config_response)
-        return JsonResponse({'success':True, 'data':get_config_response})
+
+        if get_config_response and 'applicableTaxes' in get_config_response:
+            for tax_data in get_config_response['applicableTaxes']:
+                tax_name = tax_data['taxName']
+                tax_code = None
+
+                if tax_name == "Exempt":
+                    tax_code = 'A'
+                elif tax_name == "Standard rated 15%":
+                    tax_code = 'C'
+                elif tax_name == "Zero rate 0%":
+                    tax_code = 'B'
+                else:
+                    tax_code = 'D'
+
+                logger.info(f'Tax code: {tax_code}')
+
+                TaxConfiguration.objects.update_or_create(
+                    tax_id=tax_data['taxID'],
+                    defaults={
+                        'tax_name': tax_data['taxName'],
+                        'tax_percent': tax_data.get('taxPercent'),
+                        'valid_from': tax_data.get('validFrom'),
+                        'is_active': True,
+                        'code':tax_code
+                    }
+                )
+            logger.success(f"taxes updated successfully")
+
+        return JsonResponse({'success': True, 'data': get_config_response})
     except Exception as e:
-        return JsonResponse({'success':False, 'message':f'{e}'})
+        logger.error(f"Error in get_config: {str(e)}")
+        return JsonResponse({'success': False, 'message': str(e)})
 
 @login_required
 def open_fiscal_day(request):

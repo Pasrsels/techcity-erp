@@ -136,11 +136,9 @@
         `);
         printWindow.document.close();
         
-        // Wait for the content to load before printing
         printWindow.onload = function() {
             try {
                 printWindow.focus();
-                // Small delay to ensure everything is rendered
                 setTimeout(() => {
                     printWindow.print();
                 }, 500);
@@ -236,7 +234,6 @@
                                     </tr>
                                 </thead>
                                 <tbody id="preview-items">
-                                    <!-- Items will be inserted here by JavaScript -->
                                 </tbody>
                             </table>
                             
@@ -393,7 +390,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Invoice items will be inserted here -->
                     </tbody>
                     <tfoot>
                         <tr>
@@ -471,7 +467,6 @@
                                 </tr>
                             </thead>
                             <tbody id="creditNoteItems">
-                                <!-- Items will be populated here -->
                             </tbody>
                             <tfoot>
                                 <tr>

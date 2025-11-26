@@ -29,7 +29,8 @@
                     <span class='px-2'>Customers</span>
                 </a>
             </li>
-            <li class="menu-link mb-4">
+            <!-- willl need to uncomment this -->
+            <!-- <li class="menu-link mb-4">
                 <a href="{% url 'inventory:transfers' %}">
                     <i class='bx bx-transfer-alt'></i>
                     <span class='px-2'>Transfers</span>
@@ -39,7 +40,7 @@
                     </span>
                     {% endif %}
                 </a>
-            </li>
+            </li> -->
             <li class="menu-link mb-4">
                 <a href='{% url 'inventory:reorder_list' %}'>
                     <i class='bx bx-cabinet'></i>
@@ -76,8 +77,8 @@
                     <span class='px-2'>Products</span>
                 </a>
             </li>
-
-            <li class="menu-link mb-4">
+<!-- wil need to uncomment transfers -->
+            <!-- <li class="menu-link mb-4">
                 <a href="{% url 'inventory:transfers' %}">
                     <i class='bx bx-transfer-alt'></i>
                     <span class='px-2'>Transfers</span>
@@ -87,7 +88,7 @@
                     </span>
                     {% endif %}
                 </a>
-            </li>
+            </li> -->
             <li class="menu-link mb-4">
                 <a href="{% url 'finance:invoice' %}">
                     <i class='bx bx-dollar'></i>
@@ -121,12 +122,13 @@
                     <span class='px-2'>Services</span>
                 </a>
             </li>
-            <li class="menu-link mb-4">
+            <!-- Will need to uncomment the branches -->
+            <!-- <li class="menu-link mb-4">
                 <a href="{% url 'company:branch_list' %}">
                     <i class='bx bx-building'></i>
                     <span class='px-2'>Branches</span>
                 </a>
-            </li>
+            </li> -->
             <li class="menu-link mb-4">
                 <a href="{% url 'users:users' %}">
                     <i class='bx bx-user'></i>

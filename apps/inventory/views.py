@@ -188,8 +188,8 @@ def product_list(request):
         'quantity',
         'dealer_price',
         'image',
-        'tax_type__tax_code',
-        'tax_type__name',
+        'tax_type__code',
+        'tax_type__tax_name',
         'tax_type__tax_percent'
     ))
     
@@ -205,8 +205,8 @@ def product_list(request):
     'quantity': item['quantity'],
     'dealer_price': item['dealer_price'],
     'image': item['image'],
-    'tax_code': item['tax_type__tax_code'],
-    'tax_name': item['tax_type__name'],
+    'tax_code': item['tax_type__code'],
+    'tax_name': item['tax_type__tax_name'],
     'tax_percent': item['tax_type__tax_percent'],
 } for item in inventory_data]
 
@@ -286,7 +286,6 @@ class AddProductView(LoginRequiredMixin, View):
         )
 
 from django.apps import apps
-
 
 class ProcessTransferCartView(LoginRequiredMixin, View):
     """Handle product transfers between branches."""

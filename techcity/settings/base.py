@@ -158,7 +158,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 DATABASES = {
     'default': {
           'ENGINE': 'django.db.backends.postgresql',
-         'NAME':  'techcity_db',
+         'NAME':  'fiscal',
          'USER': 'postgres',
          'PASSWORD': 'neverfail',
          'HOST': 'localhost',

@@ -153,7 +153,7 @@ def generate_receipt_data(invoice, invoice_items, request):
             # Determine tax details
             tax_id = item.item.tax_type.tax_id
             tax_percent = item.item.tax_type.tax_percent  # None for exempt
-            tax_code = item.item.tax_type.tax_code        # e.g., "A", "B", "C"
+            tax_code = item.item.tax_type.code        # e.g., "A", "B", "C"
 
             #calculate tax amount
             if tax_id != 1:
