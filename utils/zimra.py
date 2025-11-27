@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 from apps.finance.models import Invoice
 from django.conf import settings
 from apps.settings.models import OfflineReceipt, FiscalDay, FiscalCounter
+from utils.whatsapp import send_whatsapp_message
+from time import sleep
 
 load_dotenv()
 
@@ -33,11 +35,11 @@ class ZIMRA:
         self.activation_key = os.getenv("ACTIVATION_KEY")
         self.device_model_name = os.getenv("DEVICE_MODEL_NAME")
         self.device_model_version = os.getenv("DEVICE_MODEL_VERSION")
-        self.device_id = os.getenv("DEVICE_ID")
+        self.device_id = 23265
         self.certificate_path = os.getenv("CERTIFICATE_PATH", "cert.pem")
         self.certificate_key = os.getenv("CERTIFICATE_KEY", "cert_private.pem")
-        self.registration_url = f'https://fdmsapi.zimra.co.zw/Public/v1/{self.device_id}'
-        self.base_url = f'https://fdmsapi.zimra.co.zw/Device/v1/{self.device_id}'
+        self.registration_url = f'https://fdmsapitest.zimra.co.zw/Public/v1/{self.device_id}'
+        self.base_url = f'https://fdmsapitest.zimra.co.zw/Device/v1/{self.device_id}'
 
     def register_device(self):
         payload = {
@@ -106,7 +108,7 @@ class ZIMRA:
             print("Issue Certificate Response:", data)
             
             if "certificate" in data:
-                with open("cert.pem", "w") as cert_file:
+                with open("cerrt.pem", "w") as cert_file:
                     cert_file.write(data["certificate"])
                 print("Certificate saved to cert.pem")
 
@@ -510,9 +512,16 @@ class ZIMRA:
             active_day.save()
 
             logger.info(f"Fiscal Day {active_day.day_no} closed successfully.")
+
+            sleep(10)
+
+            status = self.get_status()
+
+            send_whatsapp_message(user=None, message=status)
             return response.json()
         except requests.RequestException as e:
             logger.error(f"Error closing fiscal day: {e}")
+            send_whatsapp_message(user=None, message=f"Error closing fiscal day: {e}")
             return f"Error closing fiscal day: {e}"
     
     @shared_task(bind=True)
@@ -524,7 +533,7 @@ class ZIMRA:
         }
         try:    
             response = requests.post(
-                f"https://fdmsapi.zimra.co.zw/Device/v1/31213/Ping", 
+                f"https://fdmsapi.zimra.co.zw/Device/v1/{self.device_id}/Ping", 
                 headers=headers, 
                 cert=(os.getenv("CERTIFICATE_PATH", "cert.pem"), os.getenv("CERTIFICATE_KEY", "cert_private.pem"))
             )

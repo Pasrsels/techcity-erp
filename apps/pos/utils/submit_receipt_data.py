@@ -62,6 +62,8 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
             from django.core.files.base import ContentFile
             
             fiscal_day = FiscalDay.objects.filter(is_open=True).first()
+            fiscal_day.global_count += 1
+            fiscal_day.save()
             logger.info(f'fiscal_day: {fiscal_day}')
 
             invoice.qr_code.save(f"qr_{invoice.invoice_number}.png", ContentFile(qr_io.getvalue()), save=False)
@@ -100,13 +102,6 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
 
 
                 logger.info(f'Tax percent: {tax_percent}')
-                
-                if tax_id == 1:
-                    tax_percent = None
-                if tax_id == 2:
-                    tax_percent = 0.00
-                if tax_id == 3:
-                    tax_percent = 15.00
                     
                 sale_by_tax_counter, created_sbt = FiscalCounter.objects.get_or_create(
                     fiscal_counter_type='SaleByTax',

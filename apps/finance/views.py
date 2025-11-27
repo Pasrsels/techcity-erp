@@ -1041,27 +1041,27 @@ def update_invoice_amounts(invoice, amount_paid):
 def create_invoice(request):
     from utils.check_connectivity import check_connectivity_for_invoice
 
-    try:
-        connectivity_response = check_connectivity_for_invoice(request)
-        if not connectivity_response.status_code == 200:
-            return connectivity_response
+    # try:
+    #     connectivity_response = check_connectivity_for_invoice(request)
+    #     if not connectivity_response.status_code == 200:
+    #         return connectivity_response
             
-        connectivity = json.loads(connectivity_response.content)
-        logger.info(f"{connectivity} - connectivity")
+    #     connectivity = json.loads(connectivity_response.content)
+    #     logger.info(f"{connectivity} - connectivity")
         
-        if not connectivity.get('can_create_invoice', False):
-            return JsonResponse({
-                'success': False,
-                'online': connectivity.get('online', False),
-                'zimra_reachable': connectivity.get('zimra_reachable', False),
-                'message': connectivity.get('message', 'Cannot proceed with invoice creation')
-            })
-    except Exception as e:
-        logger.error(f"Connectivity check failed: {e}")
-        return JsonResponse({
-            'success': False,
-            'message': 'Failed to check system connectivity. Please try again.'
-        }, status=500)
+    #     if not connectivity.get('can_create_invoice', False):
+    #         return JsonResponse({
+    #             'success': False,
+    #             'online': connectivity.get('online', False),
+    #             'zimra_reachable': connectivity.get('zimra_reachable', False),
+    #             'message': connectivity.get('message', 'Cannot proceed with invoice creation')
+    #         })
+    # except Exception as e:
+    #     logger.error(f"Connectivity check failed: {e}")
+    #     return JsonResponse({
+    #         'success': False,
+    #         'message': 'Failed to check system connectivity. Please try again.'
+    #     }, status=500)
 
     if request.method == 'POST':
         try:
@@ -1156,14 +1156,14 @@ def create_invoice(request):
                 credit_note_data = []
 
                 logger.info(f'Invoice {sig_data} {hash_sig_data} created successfully')
-                # zimra_response = submit_receipt_data(
-                #     request, 
-                #     receipt_data, 
-                #     credit_note_data, 
-                #     hash_sig_data['hash'], 
-                #     hash_sig_data['signature'], 
-                #     temp_invoice.id
-                # )
+                zimra_response = submit_receipt_data(
+                    request, 
+                    receipt_data, 
+                    credit_note_data, 
+                    hash_sig_data['hash'], 
+                    hash_sig_data['signature'], 
+                    temp_invoice.id
+                )
                     
             except Exception as e:
                 logger.error(f'ZIMRA submission failed: {e}')
@@ -14668,11 +14668,13 @@ def tax(request):
         'receipts_count':tax_receipts.count(),
     })
 
-@login_required
+# @login_required
 def get_config(request):
     try:
         zimra = ZIMRA()
         get_config_response = zimra.get_config()
+        status = zimra.get_status()
+        logger.info(status)
         logger.info(get_config_response)
 
         if get_config_response and 'applicableTaxes' in get_config_response:

@@ -36,21 +36,98 @@ def settings(request):
     notifications_settings = NotificationsSettings.objects.filter(user=request.user).first()
     tax_settings = TaxSettings.objects.all()
 
+    whatsapp_config, created = WhatsAppConfig.objects.get_or_create(
+        user=request.user,
+        defaults={
+            'api_key': '',
+            'phone_number': ''
+        }
+    )
+
     return render(request, 'settings/settings.html', {
         'printer': printer_data,
         'email_form': email_form,
         'tax_settings':tax_settings,
-        'notifications': notifications_settings
+        'notifications': notifications_settings,
+        'whatsapp_config': whatsapp_config
     })
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Notifications settings >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+@login_required
+@require_http_methods(["POST"])
+def save_whatsapp_config(request):
+    """Save WhatsApp configuration"""
+    try:
+        api_key = request.POST.get('api_key', '').strip()
+        phone_number = request.POST.get('phone_number', '').strip()
+        
+        # Validate phone number format (basic validation)
+        if phone_number and not phone_number.startswith('+'):
+            return JsonResponse({
+                'success': False,
+                'message': 'Phone number must start with country code (e.g., +1234567890)'
+            })
+        
+        # Get or create WhatsApp config for the user
+        whatsapp_config, created = WhatsAppConfig.objects.get_or_create(
+            user=request.user
+        )
+        
+        # Update the configuration
+        whatsapp_config.api_key = api_key
+        whatsapp_config.phone_number = phone_number
+        whatsapp_config.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'WhatsApp settings saved successfully',
+            'data': {
+                'api_key': api_key,
+                'phone_number': phone_number
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error saving WhatsApp settings: {str(e)}'
+        })
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_whatsapp_config(request):
+    """Get WhatsApp configuration"""
+    try:
+        whatsapp_config = WhatsAppConfig.objects.filter(user=request.user).first()
+        
+        if whatsapp_config:
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'api_key': whatsapp_config.api_key or '',
+                    'phone_number': whatsapp_config.phone_number or ''
+                }
+            })
+        else:
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'api_key': '',
+                    'phone_number': ''
+                }
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error loading WhatsApp settings: {str(e)}'
+        })
+
 
 def validate_payload(payload):
-    # check payload for status and notification
     if 'notification' not in payload:
         return JsonResponse({'success': False, 'error': 'Notification not provided'}, status=400)
     notification = payload.get('notification')
-    # check if notification is in database
     logger.info(f'Notifications in database: {NotificationsSettings._meta.get_fields()}')
     if notification not in NotificationsSettings._meta.get_fields():
         return JsonResponse({'success': False, 'error': 'Invalid notification'}, status=400)
@@ -332,7 +409,6 @@ def get_printers(request):
 
     return JsonResponse({"success": True, "printers": printer_list}, status=200)
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DONE >>>>>>>>>>>>>>>>>>>>>>>>...
 
 async def get_bluetooth_device(address):
     devices = await BleakScanner.discover()
@@ -352,14 +428,12 @@ def update_tax_method(request):
 
             logger.info(TaxSettings.objects.all().values())
             
-            # remove the selected on any tax_setting method
             selected_settings = TaxSettings.objects.filter(selected=True)
 
             for setting in selected_settings:
                 setting.selected = False
                 setting.save()
 
-            # assign the selected tax_method to be default
             tax_setting.selected = True 
             tax_setting.save()
           
@@ -374,14 +448,3 @@ def update_tax_method(request):
         return JsonResponse({'success': False, }, status=400)
     
 
-# @login_required
-# def update_api_settings(request):
-#     setting = APISettings.objects.get(name="FDMS")
-#     if request.method == "POST":
-#         form = APISettingsForm(request.POST, instance=setting)
-#         if form.is_valid():
-#             form.save()
-#             return JsonResponse({'success':True}) 
-#     else:
-#         form = APISettingsForm(instance=setting)
-#     return render(request, "update_api_settings.html", {"form": form})

@@ -22,4 +22,7 @@ urlpatterns = [
     
     # tax settings
     path('update_tax_method/', update_tax_method, name='update_tax_method'),
+
+    path('save-whatsapp-config/', save_whatsapp_config, name='save_whatsapp_config'),
+    path('get-whatsapp-config/', get_whatsapp_config, name='get_whatsapp_config'),
 ]

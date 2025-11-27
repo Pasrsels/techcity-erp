@@ -1,6 +1,7 @@
 from django.db import models
 from cryptography.fernet import Fernet
 from django.conf import settings
+from apps.users.models import User
 
 class OfflineReceipt(models.Model):
     invoice = models.ForeignKey("finance.Invoice", on_delete=models.CASCADE, null=True, blank=True)
@@ -16,6 +17,7 @@ class FiscalDay(models.Model):
     day_no = models.IntegerField(default=1)
     is_open = models.BooleanField(default=False)
     global_count = models.IntegerField(default=0)
+    lastReceiptGlobalCount = models.IntegerField(default=0, null=True)
     receipt_count = models.IntegerField(default=0)
     total_sales = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -60,7 +62,7 @@ class FiscalCounter(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.fiscal_day.day_no} : ({self.fiscal_counter_type} - {self.fiscal_counter_currency} - {self.fiscal_counter_value})"
+        return f": ({self.fiscal_counter_type} - {self.fiscal_counter_currency} - {self.fiscal_counter_value})"
 
 
 
@@ -125,3 +127,20 @@ class TaxSettings(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class WhatsAppConfig(models.Model):
+    """Model to store WhatsApp API configuration"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='whatsapp_config')
+    api_key = models.CharField(max_length=255, blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'whatsapp_config'
+        verbose_name = 'WhatsApp Configuration'
+        verbose_name_plural = 'WhatsApp Configurations'
+
+    def __str__(self):
+        return f"WhatsApp Config for {self.user.username}"

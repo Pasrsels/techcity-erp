@@ -37,6 +37,12 @@ from apps.finance.models import (
 from apps.inventory.models import ActivityLog
 from datetime import timedelta
 from django.template.loader import render_to_string
+from utils.whatsapp import send_whatsapp_message
+from utils.zimra import ZIMRA
+from apps.settings.models import FiscalDay
+
+# Initialize ZIMRA instance
+zimra = ZIMRA()
 
 @login_required
 @transaction.atomic
@@ -44,7 +50,7 @@ def pos(request):
     form = CashWithdrawForm()
     invoice_count = Invoice.objects.filter(issue_date=timezone.now(), branch=request.user.branch).count()
     held_invoices_count = Invoice.objects.filter(hold_status=True, branch=request.user.branch).count()
-            
+
     return render(request, 'pos.html', {
         'invoice_count':invoice_count, 
         'form':form, 

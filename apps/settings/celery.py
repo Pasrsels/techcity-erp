@@ -29,9 +29,9 @@ app.conf.update(
     CELERY_BEAT_SCHEDULE={
         'close-day-notification': {
             'task': 'close_day_notification',
-            'schedule': 600.0, 
+            'schedule': 600.0,  # Run every 10 minutes (600 seconds)
             'options': {
-                'expires': 300.0,  
+                'expires': 300.0,  # Expire after 5 minutes if not executed
             },
         },
     }
