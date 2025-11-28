@@ -1625,11 +1625,15 @@
             branch_name: branchName,
             branch_phone: branchPhone,
             branch_email: branchEmail,
+            branch_address: branchAddress,
             code: code,
             fiscal_day:fiscal_day,
             customer_name: customer_name,
+            customer_phone: customerPhone,
+            customer_email: customerEmail,
+            customer_address: customerAddress,
             tin: tin,
-            vat_number: vat_number
+            vat_number: vat_number,
         } = invoice;
     
         const vatRate = 15;
@@ -1638,40 +1642,6 @@
     
         return `
         <style>
-            .receipt {
-                font-family: Arial, sans-serif;
-                font-size: 12px;
-                width: 6.5cm;
-                margin: auto;
-                padding: 8px;
-            }
-            .center { text-align: center; }
-            .right { text-align: right; }
-            .left { text-align: left; }
-            .receipt h2 { margin: 5px 0; font-size: 14px; }
-            .header-row {
-                display: flex;
-                justify-content: space-between;
-                font-size: 11px;
-            }
-            .receipt-body table {
-                width: 100%;
-                margin-top: 8px;
-                border-collapse: collapse;
-            }
-            .receipt-body th, .receipt-body td {
-                padding: 2px;
-            }
-            .receipt-body th { font-weight: bold; }
-            .qr-code {
-                text-align: center;
-                margin-top: 10px;
-            }
-            .footer {
-                font-size: 11px;
-                margin-top: 10px;
-                text-align: center;
-            }
            .receipt {
                 font-family: Arial, sans-serif;
                 font-size: 12px;
@@ -1683,6 +1653,7 @@
             .right { text-align: right; }
             .left { text-align: left; }
             .receipt h2 { margin: 5px 0; font-size: 14px; }
+
             .header-row {
                 display: flex;
                 justify-content: space-between;
@@ -1705,35 +1676,67 @@
                 font-size: 11px;
                 margin-top: 10px;
                 text-align: center;
-            } 
+            }
+            .m-0 { margin: 0; } 
+            thead{
+                border-bottom: 1px solid #000;
+                border-top: 1px solid #000;
+                padding-bottom: 5px;
+                padding-top: 5px;
+            }
+            td{
+                font-size: 12px;
+            }
+            th{
+                font-size: 12px;
+            }
+            .terms{
+                font-size: 11px;
+            }
         </style>
 
             <div class="receipt">
-                <h2>Pasales Investments T/A Techcity</h2>
-                <div>
-                    <img src="{% static 'assets/logo.png' %}" width="250px;"/>
+                <p class="center" style="font-size: 15px;">Pasales Investments</p>
+
+                <div class="center">
+                    <p>Tin No: ${data.tin|| '220356643'}</p>
+                    <p>Vat No: ${data.vat_number || '2001020099'}</p>
                 </div>
-                <p class="center"><strong>FISCAL TAX INVOICE</strong></p>
-                <p><strong>Cashier:</strong> {{ request.user.get_full_name }}</p>
-                <p><strong>Buyer:</strong> ${customer_name || 'N/A'}</p>
-                <p><strong>Vat:</strong> ${data.vat_number || 'N/A'}</p>
-                <p><strong>Tin:</strong> ${data.tin|| 'N/A'}</p>
+
+                <div class="center">
+                    <p class="m-0">Techcity: ${branchName}</p>
+                    <p class="m-0">${branchAddress || '65, speke avenue, Harare, Harare'}</p>
+                    <p class="m-0">${branchEmail || 'N/A'}</p>
+                    <p class="m-0">${branchPhone || 'N/A'}</p>
+                </div>
+
+                <hr>
+                    <p class="center">FISCAL TAX INVOICE</p>
+                <hr>
+
+                <strong>Invoice No:</strong> ${invoiceNumber}<br>
+
+                <div>
+                    <p class="m-0">Buyer: ${customer_name || 'N/A'}</p>
+                    <p class="m-0">Phone: ${customerPhone}</p>
+                    <p class="m-0">Email: ${customerEmail}</p>
+                    <p class="m-0">Address: ${customerAddress}</p>
+                </div>
+
+                <div>
+                    <p>
+                        Fiscal Day No: ${fiscal_day}<br>
+                        Device ID: ${deviceId}<br>
+                        Device Serial: ${deviceSerialNumber}<br>
+                        Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
+                    </p>
+                </div>
 
                 <div class="header-row">
-                    <p>
-                        <strong>Fiscal Day No:</strong> ${fiscal_day}<br>
-                        <strong>Device ID:</strong> ${deviceId}<br>
-                        <strong>Device Serial:</strong> ${deviceSerialNumber}
-                    </p>
-
-                    <p>
-                        <strong>Invoice No:</strong> ${invoiceNumber}<br>
-                        <strong>Branch:</strong> ${branchName || 'Main'}<br>
-                        <strong>Phone:</strong> ${branchPhone || 'N/A'}<br>
-                        <strong>Email:</strong> ${branchEmail || 'N/A'}
-                    </p>
+                    <p>Cashier: {{request.user.get_full_name}}</p>
+                    <p>Base Currency: ${currencySymbol}</p>
                 </div>
-                <p><strong>Base Currency:</strong> ${currencySymbol}</p>
+
                 <div class="receipt-body">
                     <table>
                         <thead>
@@ -1837,7 +1840,6 @@
                         Verification URL: https://fdms.zimra.co.zw/
                     </p>
                     <hr>
-                    ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
                     <p>Thank you for shopping with us</p>
                     <hr>
                 </div>
