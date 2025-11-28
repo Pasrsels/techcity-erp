@@ -6,21 +6,17 @@
             <div class="logo px-2 ">
                 <img src="{% static 'assets/logo.png' %}" width="100px"/>
             </div>
-            <div class="px-2">
+            <div class="ms-2 d-flex align-items-center">
                 {% if request.user.role == 'admin' or request.user.role == 'accountant'%}
                     <button class="btn" id='branchBtn'>
                         <i class='bx bxs-grid'></i>
                     </button>
                 {% endif %}
+                <span class='fw-bold fs-6'>{{request.user.branch.name}}</span>
             </div>
             
         </div>
-        <!-- middle links -->
-        <div class='w-100 text-center'>
-            <div>
-                <h3 class='fw-bold'>{{request.user.branch.name}}</h3>
-            </div>
-        </div>
+
         <!-- user and logout -->
         <div class='user mt-3  px-2 d-flex justify-content-end w-25'>
             <ul class="menu list-unstyled d-flex align-items-center">

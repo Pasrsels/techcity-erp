@@ -460,7 +460,7 @@ class ZIMRA:
                 fiscal_counter_data = {
                     "fiscalCounterType": counter.fiscal_counter_type,
                     "fiscalCounterCurrency": counter.fiscal_counter_currency,
-                    "fiscalCounterTaxPercent": float(counter.fiscal_counter_tax_percent) if counter.fiscal_counter_tax_id != 1 else None,
+                    "fiscalCounterTaxPercent": float(counter.fiscal_counter_tax_percent) if counter.fiscal_counter_tax_id != 3 else None,
                     "fiscalCounterTaxID": counter.fiscal_counter_tax_id,
                     "fiscalCounterValue": float(round(counter.fiscal_counter_value, 2)),
                 }

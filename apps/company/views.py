@@ -170,12 +170,20 @@ def branch_list(request):
 def branch_switch(request, branch_id):
     """ Enables the admin or the owner to switch between branches """
     user = request.user
+    redirect_url = request.META.get('HTTP_REFERER', 'pos:pos')  
+    
     if user.role.lower() in ['admin', 'owner', 'accountant']:
-        user.branch = Branch.objects.get(id=branch_id)
+        user.branch = Branch.objects.filter(id=branch_id).first()
+
+        if user.branch.disable:
+            messages.error(request, 'Branch is disabled')
+            return redirect('users:login')
+
         user.save()
     else:
         messages.error(request, 'You are not authorized')
-    return redirect('pos:pos')
+        return redirect(redirect_url)  
+    return redirect(redirect_url)  
 
 @login_required
 def add_branch(request):
@@ -184,11 +192,6 @@ def add_branch(request):
         merge_from_branch = request.POST.get('from_branch')
         try:
             if form.is_valid():
-                """ take data for merging data"""
-                # merge_from_branch = form.cleaned_data.get('from_branch')
-                # selected_options = form.cleaned_data.get('options')
-                
-                # logger.info(f'product option {selected_options}')
                 form.save()
                 return JsonResponse({'success': True, 'message': 'Branch added successfully!'})
         except Exception as e:
