@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from apps.finance.models import Invoice
 from django.conf import settings
 from apps.settings.models import OfflineReceipt, FiscalDay, FiscalCounter
-# from utils.whatsapp import send_whatsapp_message
+from utils.whatsapp import send_whatsapp_message
 from time import sleep
 
 load_dotenv()
@@ -29,7 +29,7 @@ class DateTimeEncoder(json.JSONEncoder):
 
 class ZIMRA:
 
-    device_identification = os.getenv("DEVICE_ID")
+    device_identification = 31213
 
     def __init__(self):
         self.activation_key = os.getenv("ACTIVATION_KEY")
