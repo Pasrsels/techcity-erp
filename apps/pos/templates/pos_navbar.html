@@ -28,6 +28,26 @@
                 </div>
             </div>
         </div>
+        <!-- Fiscal Day Controls -->
+        <li class="nav-item dropdown px-2">
+            <a class="nav-link dropdown-toggle" href="#" id="fiscalDayDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fa-solid fa-calendar-day text-primary me-1"></i>
+                Fiscal Day
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end p-2 shadow" aria-labelledby="fiscalDayDropdown">
+                <li>
+                    <button class="dropdown-item text-success" onclick="openFiscalDay()">
+                        <i class="fa-solid fa-door-open me-2"></i>Open Day
+                    </button>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <button class="dropdown-item text-danger" onclick="closeFiscalDay()">
+                        <i class="fa-solid fa-door-closed me-2"></i>Close Day
+                    </button>
+                </li>
+            </ul>
+        </li>
         <!-- middle links -->
         <div class='mt-3  px-2 d-flex justify-content-end w-75'>
             <ul class="menu list-unstyled d-flex align-items-center">
@@ -125,5 +145,118 @@
         branchBtn.addEventListener('click', ()=>{
             branchModal.show()
         })
+
+            function openFiscalDay() {
+        fetch('{% url "finance:get_status" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFTOKEN': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Fiscal day opened successfully!',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to open fiscal day',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to open fiscal day',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        });
+    }
+
+    async function closeFiscalDay() {
+        const confirmation = await Swal.fire({
+            title: "Are you sure?",
+            text: "Do you really want to close the fiscal day?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, close it",
+            cancelButtonText: "Cancel"
+        });
+
+        if (!confirmation.isConfirmed) {
+            return; 
+        }
+
+        const response = await fetch('/finance/close_fiscal/');
+        const result = await response.json();
+
+        if (!result.success) {
+            Swal.fire("Error", "Unable to prepare fiscal day closing.", "error");
+            return;
+        }
+
+        await Swal.fire({
+            icon: 'success',
+            title: 'Fiscal Day Prepared!',
+            text: 'Proceeding to finalize closing...'
+        });
+
+        const postResponse = await fetch('{% url "finance:close_fiscal" %}', {
+            method: 'POST',
+            headers:{
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                sig_string: result.data
+            })
+        });
+
+        const postData = await postResponse.json();
+
+        if (postData.success) {
+            Swal.fire("Success", "Fiscal Day Closed Successfully!", "success");
+        } else {
+            Swal.fire("Error", postData.message || "Something went wrong.", "error");
+        }
+    }
+
+
+    function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
     </script>
 {% endblock content %}

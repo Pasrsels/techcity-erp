@@ -23,7 +23,18 @@ app.conf.update(
     # },
     broker_connection_retry_on_startup=True,
     broker_connection_max_retries=10,
-    broker_connection_timeout=30
+    broker_connection_timeout=30,
+    
+    # Configure Celery Beat schedule
+    CELERY_BEAT_SCHEDULE={
+        'close-day-notification': {
+            'task': 'close_day_notification',
+            'schedule': 600.0, 
+            'options': {
+                'expires': 300.0,  
+            },
+        },
+    }
 )
 
 # Read config from Django settings using CELERY_ namespace

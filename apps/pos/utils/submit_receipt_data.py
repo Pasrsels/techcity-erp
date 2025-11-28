@@ -40,7 +40,7 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
             invoice.receiptServerSignature = signature
             invoice.receipt_hash = hash
 
-            base_url = "https://fdmstest.zimra.co.zw"
+            base_url = "https://fdms.zimra.co.zw"
             
             device_id = f'00000{os.getenv('DEVICE_ID')}'
             receipt_date = datetime.strptime(receipt_data['receiptDate'], "%Y-%m-%dT%H:%M:%S").strftime('%d%m%Y')
@@ -49,7 +49,6 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
             
             logger.info(f'{device_id}, {receipt_date}, {receipt_global_no} {receipt_qr_data}')
 
-            # qr_url = "https://invoice.zimra.co.zw"  
             full_url = f"{base_url}/{device_id}{receipt_date}{receipt_global_no}{receipt_qr_data}"
 
             # Generate QR code
@@ -62,6 +61,8 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
             from django.core.files.base import ContentFile
             
             fiscal_day = FiscalDay.objects.filter(is_open=True).first()
+            fiscal_day.global_count += 1
+            fiscal_day.save()
             logger.info(f'fiscal_day: {fiscal_day}')
 
             invoice.qr_code.save(f"qr_{invoice.invoice_number}.png", ContentFile(qr_io.getvalue()), save=False)
@@ -71,7 +72,7 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
             try:
                 invoice.code=code
                 invoice.fiscal_day=fiscal_day.day_no
-                invoice.invoice_number = f"{invoice.branch.name[:3]}-{receipt_data['receiptGlobalNo']}"
+                invoice.invoice_number = f"{receipt_data['invoiceNo']}"
 
                 if invoiceId:
                     invoice.zimra_inv_id = invoiceId
@@ -100,13 +101,6 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
 
 
                 logger.info(f'Tax percent: {tax_percent}')
-                
-                if tax_id == 1:
-                    tax_percent = None
-                if tax_id == 2:
-                    tax_percent = 0.00
-                if tax_id == 3:
-                    tax_percent = 15.00
                     
                 sale_by_tax_counter, created_sbt = FiscalCounter.objects.get_or_create(
                     fiscal_counter_type='SaleByTax',

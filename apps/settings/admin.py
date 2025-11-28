@@ -7,3 +7,4 @@ admin.site.register(FiscalDay)
 admin.site.register(OfflineReceipt)
 admin.site.register(FiscalCounter)
 
+

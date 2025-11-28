@@ -15,7 +15,7 @@ import qrcode, os
 from io import BytesIO
 from apps.finance.models import Invoice
 from collections import defaultdict
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from django.utils.timezone import now
 import binascii
 load_dotenv()
@@ -113,23 +113,9 @@ def generate_receipt_data(invoice, invoice_items, request):
     try:
         logger.info(f'invoice items: {invoice}')
         fiscal_day = FiscalDay.objects.filter(is_open=True).first()
-        logger.info(fiscal_day)
+        logger.info(f"Fiscal day {fiscal_day.day_no}")
         logger.info(f"Processing Invoice: {invoice.invoice_number} {invoice}")
         
-        if not fiscal_day:
-            print('here')
-            zimra = ZIMRA()
-            response = zimra.open_day()  
-            
-            logger.info(f'ZIMRA response for open day: {response}')
-            
-            fiscal_day = FiscalDay.objects.filter(is_open=True).first()
-            if fiscal_day:
-                logger.info(f'Fiscal Day number: {fiscal_day.day_no}')
-            else:
-                raise Exception("Failed to create FiscalDay after opening")
-        
-        logger.info(fiscal_day)
 
         last_global_no = get_last_receipt_numbers()
         new_receipt_global_no = int(last_global_no) + 1
@@ -142,7 +128,6 @@ def generate_receipt_data(invoice, invoice_items, request):
         previous_invoice = Invoice.objects.filter(
             issue_date__date=datetime.today(),
             branch=request.user.branch,
-            code__isnull=False
         ).exclude(id=invoice.id).order_by('-id').first()
         
         logger.info(f'Previous invoice: {previous_invoice}')
@@ -152,25 +137,28 @@ def generate_receipt_data(invoice, invoice_items, request):
         
             # Determine tax details
             tax_id = item.item.tax_type.tax_id
-            tax_percent = item.item.tax_type.tax_percent  # None for exempt
+            tax_percent = float(item.item.tax_type.tax_percent)  # None for exempt
             tax_code = item.item.tax_type.code        # e.g., "A", "B", "C"
 
+            logger.info(f'Tax ID: {tax_id}')
+            logger.info(f'Tax Percent: {tax_percent}')
+            logger.info(f'Tax Code: {tax_code}')
+
             #calculate tax amount
-            if tax_id != 1:
-                if tax_percent is not None:
-                    tax_amount = round(line_total * (tax_percent / (100 + tax_percent)), 2)
-                else:
-                    tax_amount = 0.
-            else:
-                tax_amount = 0.00
-                tax_percent = None
+            try:
+                tax_amount = (line_total * (tax_percent / (100 + tax_percent)))
+                logger.info(f'Tax Amount: {tax_amount}')
+            except Exception as e:
+                logger.info(f'Error calculating tax amount: {e}')
+                return
+            
 
             # Accumulate tax group totals
             key = (tax_id, tax_percent, tax_code)
             tax_group_totals[key]["taxAmount"] += tax_amount
             tax_group_totals[key]["salesAmountWithTax"] += line_total
 
-            # Add line
+            logger.info(f'Tax Group Totals: {tax_group_totals}')
             line_data = {
                 "receiptLineType": "Sale",
                 "receiptLineNo": index,
@@ -228,7 +216,7 @@ def generate_receipt_data(invoice, invoice_items, request):
                 ],
                 "receiptTotal": float(invoice.amount),
                 "receiptPrintForm": "Receipt48",
-                "previousReceiptHash": "" if not previous_invoice else previous_invoice.receipt_hash,  #to be revised
+                "previousReceiptHash": "" if fiscal_day.receipt_count == 0 else previous_invoice.receipt_hash
             }
         except Exception as e:
             logger.error(f"Error generating receipt data: {e}")
