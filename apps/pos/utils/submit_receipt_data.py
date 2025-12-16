@@ -32,9 +32,6 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
         logger.info(f'Zimra invoice id: {invoiceId}')
 
         if response:
-            logger.info('here')
-
-            # Updated to include branch filtering like in the second code
             invoice = Invoice.objects.filter(issue_date__date=datetime.today(), branch=request.user.branch).order_by('-id').first()
 
             invoice.receiptServerSignature = signature
@@ -51,7 +48,6 @@ def submit_receipt_data(request, receipt_data, credit_note, hash, signature, inv
 
             full_url = f"{base_url}/{device_id}{receipt_date}{receipt_global_no}{receipt_qr_data}"
 
-            # Generate QR code
             qr = qrcode.make(full_url)
 
             qr_io = BytesIO()
