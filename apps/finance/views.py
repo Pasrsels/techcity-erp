@@ -14860,43 +14860,26 @@ def close_fiscal_day(request):
             # Create strings for hashing
             logger.info(f'sale_by_tax_dict: {sale_by_tax_dict}')
             for key, data in sorted(sale_by_tax_dict.items(), key=lambda x: (x[1]["currency"] != "USD", x[1]["currency"], x[1]["tax_percent"])):
-                print(data, counter.fiscal_counter_tax_id )
                 if data['tax_percent'] == 0.0 or data['tax_percent'] == 15.0:
-                    print(f'fiscal counter: {counter.fiscal_counter_tax_id}')
                     tax_percent = format_tax_percent(data["tax_percent"])
                     sale_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
-                    print('sale_by_tax_string:')
-                    print(sale_by_tax_string)
-                    print('here')
                 else:
-                    print('here 2')
                     sale_by_tax_string += f"{data['type']}{data['currency']}{data['value']}"
-                    print('sale_by_tax_string:')
-                    print(sale_by_tax_string)
 
             for key, data in sorted(sale_tax_by_tax_dict.items(), key=lambda x: (x[1]["currency"] != "USD", x[1]["currency"], x[1]["tax_percent"])):
-                print(data)
                 if counter.fiscal_counter_tax_id:
                     tax_percent = format_tax_percent(data["tax_percent"])
-                    print('tax percent', tax_percent)
                     sale_tax_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
-                    print('sale_tax_by_tax_string 1:')
-                    print(sale_tax_by_tax_string)
                 else:
                     sale_tax_by_tax_string += f"{data['type']}{data['currency']}{data['value']}"
-                    print('sale_tax_by_tax_string 2:')
-                    print(sale_tax_by_tax_string)
 
             if credit_note_by_tax_dict:
-                print('credit_note_by_tax_string:')
                 for key, data in sorted(credit_note_by_tax_dict.items(), key=lambda x: (x[1]["currency"] != "USD", x[1]["currency"], x[1]["tax_percent"])):
                     if counter.fiscal_counter_tax_id is not None:
                         tax_percent = format_tax_percent(data["tax_percent"])
                         credit_note_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
                     else:
                         credit_note_by_tax_string += f"{data['type']}{data['currency']}{data['value']}"
-                        print('credit_note_by_tax_string:')
-                        print(credit_note_by_tax_string)
 
                 for key, data in sorted(credit_note_tax_by_tax_dict.items(), key=lambda x: (x[1]["currency"] != "USD", x[1]["currency"], x[1]["tax_percent"])):
                     if counter.fiscal_counter_tax_id is not None:
@@ -14904,8 +14887,6 @@ def close_fiscal_day(request):
                         credit_note_tax_by_tax_string += f"{data['type']}{data['currency']}{tax_percent}{data['value']}"
                     else:
                         credit_note_tax_by_tax_string += f"{data['type']}{data['currency']}{data['value']}"
-                        print('credit_note_tax_by_tax_string:')
-                        print(credit_note_tax_by_tax_string)
 
 
             logger.info(f'Balance by currency and type: {balance_by_currency_and_type}')
@@ -14943,7 +14924,7 @@ def close_fiscal_day(request):
             if not signature_string:
                 return JsonResponse({'message':'Hash data missing.', 'success':False})
             
-            fiscal_day = FiscalDay.objects.filter(created_at__date=datetime.datetime.today(), is_open=True).first()
+            fiscal_day = FiscalDay.objects.filter(is_open=True).first()
             fiscal_day_counters = FiscalCounter.objects.filter(fiscal_day=fiscal_day)
             
             day_signature = run(signature_string)

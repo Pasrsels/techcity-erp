@@ -432,6 +432,8 @@ class ZIMRA:
         """
         active_day = FiscalDay.objects.filter(is_open=True).first()
 
+        logger.info(f'fiscal counters: {counters}')
+
         if not active_day: 
             logger.info("No active fiscal day to close.")
             return
