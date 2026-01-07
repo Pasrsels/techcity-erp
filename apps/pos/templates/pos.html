@@ -1061,18 +1061,20 @@
                     const productDiv = document.createElement('div');
                     productDiv.className = 'col-3';
                     productDiv.innerHTML = `
-                        <div class="card mb-4" id='id_product_card' data-product='${JSON.stringify(product)}'>
-                            <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart" data-product='${product.inventory_id}'>
-                                <div>
-                                    <img src="{% static 'placeholder.png' %}" alt="${product.product_name}">
-                                </div>
-                                <p class='text-center mt-2'><small class="fw-bold">${product.product_name}</small></p>
-                                <p class='text-center'><small class="text-muted">${product.description}</small></p>
-                                <p class='text-center'><small class="text-muted">[${product.quantity}]</small></p>
-                                <span class='btn btn-outline-secondary btn-sm w-100' data-product='${product.inventory_id}' data-price='rp' onclick='fetchProductData(this)'>RP ${product.price}</span>
-                                <span class='btn btn-outline-secondary btn-sm mt-2 w-100' data-product='${product.inventory_id}' data-price='wp' onclick='fetchProductData(this)'>WP${product.dealer_price}</span> 
-                            </div>
-                        </div>
+<div class="card mb-4" id='id_product_card' data-product='${JSON.stringify(product)}'>
+    <div class="card-body d-flex flex-column align-items-center justify-content-center" id="id_add_to_cart" data-product='${product.inventory_id}'>
+        <div>
+            <img src="/static/products/${product.product_name.toLowerCase().replace(/[^a-z0-9]/g, '_')}.png" 
+                 onerror="this.src='/static/placeholder.png'; this.onerror=null;" 
+                 alt="${product.product_name}">
+        </div>
+        <p class='text-center mt-2'><small class="fw-bold">${product.product_name}</small></p>
+        <p class='text-center'><small class="text-muted">${product.description}</small></p>
+        <p class='text-center'><small class="text-muted">[${product.quantity}]</small></p>
+        <span class='btn btn-outline-secondary btn-sm w-100' data-product='${product.inventory_id}' data-price='rp' onclick='fetchProductData(this)'>RP ${product.price}</span>
+        <span class='btn btn-outline-secondary btn-sm mt-2 w-100' data-product='${product.inventory_id}' data-price='wp' onclick='fetchProductData(this)'>WP${product.dealer_price}</span> 
+    </div>
+</div>
                     `;
                     productListContainer.appendChild(productDiv); 
                 }
