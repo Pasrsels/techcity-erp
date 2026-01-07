@@ -258,7 +258,8 @@ input[type=radio]:focus {
 .techcity .aside-bar aside {
   position: relative;
   height: 100vh;
-  background-color: #242140;
+  /* background-color: #242140; */
+    background-color: #f7f8fa;
 }
 .techcity .aside-bar aside .aside-logo {
   margin-left: 0.7rem;
