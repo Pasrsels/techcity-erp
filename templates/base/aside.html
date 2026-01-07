@@ -7,12 +7,127 @@
     aside a{
         color: #0d6efd !important;
     }
+    
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+        .position-fixed {
+            position: relative !important;
+            width: 100% !important;
+            height: auto !important;
+        }
+        
+        .menu {
+            position: relative !important;
+            padding: 10px !important;
+        }
+        
+        .menu ul {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+            gap: 10px !important;
+            width: 100% !important;
+        }
+        
+        .menu-link {
+            flex: 1 0 auto !important;
+            min-width: 120px !important;
+            max-width: 150px !important;
+        }
+        
+        .menu-link a {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+            padding: 10px 5px !important;
+        }
+        
+        .menu-link i {
+            font-size: 1.5rem !important;
+            margin-bottom: 5px !important;
+        }
+        
+        .menu-link span:not(.badge) {
+            font-size: 0.8rem !important;
+            line-height: 1.2 !important;
+            padding: 0 !important;
+        }
+        
+        .logo img {
+            width: 120px !important;
+            max-width: 100% !important;
+        }
+        
+        .px-4 {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .menu-link {
+            min-width: 100px !important;
+        }
+        
+        .menu-link i {
+            font-size: 1.2rem !important;
+        }
+        
+        .menu-link span:not(.badge) {
+            font-size: 0.75rem !important;
+        }
+        
+        .d-flex.flex-row {
+            flex-direction: column !important;
+        }
+        
+        .menu ul {
+            gap: 8px !important;
+        }
+        
+        .px-4 {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+    }
+    
+    @media (max-width: 400px) {
+        .menu ul {
+            flex-direction: column !important;
+            align-items: stretch !important;
+        }
+        
+        .menu-link {
+            max-width: 100% !important;
+            min-width: 100% !important;
+        }
+        
+        .menu-link a {
+            flex-direction: row !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
+            padding: 8px 15px !important;
+        }
+        
+        .menu-link i {
+            margin-bottom: 0 !important;
+            margin-right: 10px !important;
+            font-size: 1.2rem !important;
+        }
+    }
+    
+    /* Ensure sidebar doesn't overflow on mobile */
+    .position-fixed {
+        overflow-y: auto;
+        max-height: 100vh;
+    }
 </style>
 
 <aside class="d-flex flex-column position-fixed">
     <div class="d-flex flex-column align-items-center">
         <div class="logo px-1 ">
-            <img src="{% static 'assets/logo.png' %}" width="150px"/>
+            <img src="{% static 'assets/logo.png' %}" width="150px" style="max-width: 100%; height: auto;"/>
         </div>
         <div class="px-1 d-flex ms-4 mt-3 align-items-center" style="color: #0d6efd !important;">
             <span class='fw-bold fs-6'>{{request.user.branch.name}}</span>
